@@ -1,0 +1,62 @@
+apiVersion: v1
+entries:
+  karpenter-config:
+  - apiVersion: v2
+    created: "2023-04-13T15:27:14.893628568Z"
+    description: ArgoCD Applications for karpenter config
+    digest: 758c9f4a4aa40951a84bc0d477d8cb40b4b5d0034652997fe019db5d8f947753
+    maintainers:
+    - name: truefoundry
+    name: karpenter-config
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/karpenter-config-0.0.4/karpenter-config-0.0.4.tgz
+    version: 0.0.4
+  tfy-agent:
+  - apiVersion: v2
+    created: "2023-04-13T15:27:15.107653189Z"
+    description: Truefoundry agent for kubernetes clusters
+    digest: 42a51d035349385c9ce6db32404a9fc404e92e0f1106b5a070b2ac35df443c23
+    maintainers:
+    - name: truefoundry
+    name: tfy-agent
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-agent-0.3.49/tfy-agent-0.3.49.tgz
+    version: 0.3.49
+  tfy-gpu-operator:
+  - apiVersion: v2
+    created: "2023-04-13T15:27:15.340895263Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.3.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    description: Truefoundry GPU Operator
+    digest: 15448bea33abf7706905dfca9e3fec44259eae0f352289255259adb03973fe79
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.0.2/tfy-gpu-operator-0.0.2.tgz
+    version: 0.0.2
+  tfy-istio-ingress:
+  - apiVersion: v2
+    created: "2023-04-13T15:27:15.526824413Z"
+    dependencies:
+    - name: gateway
+      repository: https://istio-release.storage.googleapis.com/charts
+      version: 1.15.3
+    description: ArgoCD Applications for istio ingress config
+    digest: bc8025bd09da5c72bf29d0742032a7a3d6a24a9c003698573371499e2ed0c4b4
+    maintainers:
+    - name: truefoundry
+    name: tfy-istio-ingress
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-istio-ingress-0.0.6/tfy-istio-ingress-0.0.6.tgz
+    version: 0.0.6
+generated: "2023-04-13T15:27:15.526829713Z"
