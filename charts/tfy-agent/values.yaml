@@ -1,0 +1,86 @@
+global: {}
+imageRepository: truefoundrycloud/tfy-agent
+imagePullPolicy: IfNotPresent
+envSecretName: tfy-agent-env-secret
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 3000
+    path: /
+  liveness:
+    port: 3000
+    path: /
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+serviceAccount:
+  create: true
+  name: tfy-agent
+  annotations: {}
+rbac:
+  enabled: true
+name: tfy-agent
+imageTag: 3d06de50b82e08f40f35268d6fd35c26590484a1
+env:
+  NODE_ENV: production
+  PROMETHEUS_POLL_INTERVAL: '180000'
+  PROMETHEUS_ENDPOINT: http://prometheus-operated.prometheus.svc.cluster.local:9090
+  OPENCOST_POLL_INTERVAL: '180000'
+  OPENCOST_ENDPOINT: http://opencost.opencost.svc.cluster.local:9090
+  CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+  CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  WORKLOAD_NAMESPACE: '{{ .Release.Namespace }}'
+  CONTROL_PLANE_NATS_PORT: '443'
+  ALERT_URL: https://auth.truefoundry.com
+tfyAgentProxy:
+  enabled: true
+  imageTag: 987c2e9442de1814f1601cf726cc9c997fea8433
+  imageRepository: truefoundrycloud/tfy-agent-proxy
+  type: ClusterIP
+  resources:
+    limits:
+      cpu: '1'
+      ephemeral-storage: 500M
+      memory: 500M
+    requests:
+      cpu: 50m
+      ephemeral-storage: 200M
+      memory: 100M
+  env:
+    CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+    CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}

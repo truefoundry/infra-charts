@@ -1,0 +1,10 @@
+apiVersion: karpenter.sh/v1alpha5
+kind: Provisioner
+metadata:
+  name: default
+  namespace: karpenter
+spec:
+{{ toYaml .Values.karpenter.defaultProvisionerSpec | indent 2 }}
+  providerRef:
+    name: default
+  ttlSecondsAfterEmpty: 30

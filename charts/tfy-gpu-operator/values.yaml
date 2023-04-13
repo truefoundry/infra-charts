@@ -1,0 +1,76 @@
+clusterType:
+  awsEks: false
+  gcpGkeStandard: false
+  gcpGkeAutopilot: false
+
+aws-eks-gpu-operator:
+  toolkit:
+    version: v1.13.0-centos7
+  node-feature-discovery:
+    worker:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: karpenter.k8s.aws/instance-family
+                operator: In
+                values:
+                - p2
+                - p3
+                - p4d
+                - p4de
+                - g4dn
+                - g5
+  validator:
+    plugin:
+      env:
+      - name: WITH_WORKLOAD
+        value: "false"
+  dcgmExporter:
+    version: 3.1.7-3.1.4-ubuntu20.04
+    args: ["-c", "5000"]
+    serviceMonitor:
+      enabled: false
+
+gcp-gke-standard-dcgm-exporter:
+  image:
+    tag: 3.1.7-3.1.4-ubuntu20.04
+  arguments: ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
+  namespaceOverride: tfy-gpu-operator
+  serviceMonitor:
+    enabled: false
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: cloud.google.com/gke-accelerator
+            operator: Exists
+  tolerations:
+  - operator: "Exists"
+  mapPodsMetrics: true
+  securityContext:
+    privileged: true
+  priorityClassName: ""
+  extraEnv:
+  - name: NVIDIA_INSTALL_DIR_HOST
+    value: /home/kubernetes/bin/nvidia
+  - name: NVIDIA_INSTALL_DIR_CONTAINER
+    value: /usr/local/nvidia
+  - name: DCGM_EXPORTER_COLLECTORS
+    value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  extraHostVolumes:
+  - name: dev
+    hostPath: "/dev"
+  - name: nvidia-install-dir-host
+    hostPath: "/home/kubernetes/bin/nvidia"
+  - name: nvidia-config
+    hostPath: "/etc/nvidia"
+  extraVolumeMounts:
+  - name: dev
+    mountPath: /dev
+  - name: nvidia-install-dir-host
+    mountPath: /usr/local/nvidia
+  - name: nvidia-config
+    mountPath: /etc/nvidia

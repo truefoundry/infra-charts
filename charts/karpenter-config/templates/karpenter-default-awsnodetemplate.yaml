@@ -1,0 +1,20 @@
+apiVersion: karpenter.k8s.aws/v1alpha1
+kind: AWSNodeTemplate
+metadata:
+  name: default
+  namespace: karpenter
+spec:
+  instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  subnetSelector:
+    kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+    subnet: private
+  securityGroupSelector:
+    karpenter.sh/discovery: {{ .Values.cluster.name }}
+  tags:
+    karpenter.sh/discovery: {{ .Values.cluster.name }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 100Gi
+        volumeType: gp3
+        deleteOnTermination: true

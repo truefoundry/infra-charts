@@ -1,0 +1,38 @@
+cluster:
+  name: ""
+  endpoint: ""
+
+karpenter:
+  instanceProfile: ""
+  defaultProvisionerSpec:
+    kubeletConfiguration:
+      maxPods: 110
+    requirements:
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values: ["spot"]
+      - key: "topology.kubernetes.io/zone"
+        operator: In
+        values: ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+      - key: kubernetes.io/arch
+        operator: In
+        values: ["amd64"]
+    limits:
+      resources:
+        cpu: "500"
+  gpuProvisionerSpec:
+    enabled: false
+    capacityType:
+      - spot
+      - on-demand
+    regions:
+      - eu-west-1a
+      - eu-west-1b
+      - eu-west-1c
+    instanceFamilies:
+      - p2
+      - p3
+      - g4dn
+      - g5
+      - p4d
+      - p4de
