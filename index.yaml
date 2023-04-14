@@ -1,0 +1,50 @@
+apiVersion: v1
+entries:
+  tfy-gpu-operator:
+  - apiVersion: v2
+    created: "2023-04-14T11:23:17.352751947Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.3.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    description: Truefoundry GPU Operator
+    digest: 5a7cea76c7864529060f59239319e16f093d8903ab2b61df10f4e05e82aba8dd
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.0/tfy-gpu-operator-0.1.0.tgz
+    version: 0.1.0
+  tfy-istio-ingress:
+  - apiVersion: v2
+    created: "2023-04-14T11:23:17.524146677Z"
+    dependencies:
+    - name: gateway
+      repository: https://istio-release.storage.googleapis.com/charts
+      version: 1.15.3
+    description: ArgoCD Applications for istio ingress config
+    digest: e9cfdf3799c80cdca6735f0d23591058dfc502c2882f372312806dfb6522cc9e
+    maintainers:
+    - name: truefoundry
+    name: tfy-istio-ingress
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-istio-ingress-0.1.0/tfy-istio-ingress-0.1.0.tgz
+    version: 0.1.0
+  tfy-karpenter-config:
+  - apiVersion: v2
+    created: "2023-04-14T11:23:17.695043906Z"
+    description: ArgoCD Applications for karpenter config
+    digest: a01089f85c512709d6d33a87b08f78767ee24b1502b3bb18ed44e9620bd5f930
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.0/tfy-karpenter-config-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-04-14T11:23:17.695048906Z"
