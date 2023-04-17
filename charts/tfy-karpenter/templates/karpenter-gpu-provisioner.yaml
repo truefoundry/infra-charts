@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.provisioners.gpuProvisionerSpec.enabled }}
+{{- if .Values.karpenter.gpuProvisionerSpec.enabled }}
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner
 metadata:
@@ -6,8 +6,11 @@ metadata:
   namespace: karpenter
 spec:
   weight: 10
-    consolidation:
-      enabled: true
+  kubeletConfiguration:
+    maxPods: 110
+  limits:
+    resources:
+      cpu: "500"
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
@@ -36,4 +39,5 @@ spec:
       effect: "NoSchedule"
   providerRef:
     name: default
+  ttlSecondsAfterEmpty: 30
 {{- end }}
