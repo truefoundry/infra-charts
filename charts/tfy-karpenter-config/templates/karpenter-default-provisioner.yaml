@@ -7,4 +7,6 @@ spec:
 {{ toYaml .Values.karpenter.defaultProvisionerSpec | indent 2 }}
   providerRef:
     name: default
+{{- if not .Values.karpenter.defaultProvisionerSpec.consolidation.enabled }}
   ttlSecondsAfterEmpty: 30
+{{- end }}

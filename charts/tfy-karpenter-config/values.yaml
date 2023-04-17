@@ -4,9 +4,10 @@ cluster:
 
 karpenter:
   instanceProfile: ""
+  
   defaultProvisionerSpec:
-    kubeletConfiguration:
-      maxPods: 110
+    consolidation:
+      enabled: true
     requirements:
       - key: karpenter.sh/capacity-type
         operator: In
@@ -17,9 +18,7 @@ karpenter:
       - key: kubernetes.io/arch
         operator: In
         values: ["amd64"]
-    limits:
-      resources:
-        cpu: "500"
+  
   gpuProvisionerSpec:
     enabled: false
     capacityType:
