@@ -1,12 +1,12 @@
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner
 metadata:
-  name: default
+  name: {{ .Values.provisioners.defaultProvisionerSpec.name }}-{{ .Values.karpenter.settings.aws.clusterName }}
   namespace: karpenter
 spec:
-{{ toYaml .Values.karpenter.defaultProvisionerSpec | indent 2 }}
+{{ toYaml .Values.provisioners.defaultProvisionerSpec | indent 2 }}
   providerRef:
     name: default
-{{- if not .Values.karpenter.defaultProvisionerSpec.consolidation.enabled }}
+{{- if not .Values.provisioners.defaultProvisionerSpec.consolidation.enabled }}
   ttlSecondsAfterEmpty: 30
 {{- end }}

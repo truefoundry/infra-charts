@@ -4,14 +4,14 @@ metadata:
   name: default
   namespace: karpenter
 spec:
-  instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  instanceProfile: {{ .Values.karpenter.settings.aws.defaultInstanceProfile }}
   subnetSelector:
-    kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+    kubernetes.io/cluster/{{ .Values.karpenter.settings.aws.clusterName }}: shared
     subnet: private
   securityGroupSelector:
-    karpenter.sh/discovery: {{ .Values.cluster.name }}
+    karpenter.sh/discovery: {{ .Values.karpenter.settings.aws.clusterName }}
   tags:
-    karpenter.sh/discovery: {{ .Values.cluster.name }}
+    karpenter.sh/discovery: {{ .Values.karpenter.settings.aws.clusterName }}
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
