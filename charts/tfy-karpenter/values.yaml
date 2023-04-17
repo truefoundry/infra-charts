@@ -1,0 +1,56 @@
+# upstream karpenter chart configurations
+karpenter:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: ""
+  settings:
+    aws:
+      # name of the cluster to deploy karpenter
+      clusterName: ""
+
+      # endpoint of the cluster
+      clusterEndpoint: ""
+
+      # instance profile created for karpenter
+      defaultInstanceProfile: ""
+  controller:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+provisioners:
+  
+  defaultProvisionerSpec:
+    consolidation:
+      enabled: true
+    requirements:
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values: ["spot"]
+      - key: "topology.kubernetes.io/zone"
+        operator: In
+        values: ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+      - key: kubernetes.io/arch
+        operator: In
+        values: ["amd64"]
+  
+  gpuProvisionerSpec:
+    enabled: false
+    capacityType:
+      - spot
+      - on-demand
+    regions:
+      - eu-west-1a
+      - eu-west-1b
+      - eu-west-1c
+    instanceFamilies:
+      - p2
+      - p3
+      - g4dn
+      - g5
+      - p4d
+      - p4de
