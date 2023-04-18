@@ -4,9 +4,9 @@ metadata:
   name: default
   namespace: karpenter
 spec:
-{{ toYaml .Values.karpenter.provisioners.defaultProvisionerSpec | indent 2 }}
+{{ toYaml .Values.karpenter.defaultProvisionerSpec | indent 2 }}
   providerRef:
     name: default
-{{- if not .Values.karpenter.provisioners.defaultProvisionerSpec.consolidation.enabled }}
+{{- if not .Values.karpenter.defaultProvisionerSpec.consolidation.enabled }}
   ttlSecondsAfterEmpty: 30
 {{- end }}
