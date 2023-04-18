@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.provisioners.gpuProvisionerSpec.enabled }}
+{{- if .Values.karpenter.gpuProvisionerSpec.enabled }}
 apiVersion: karpenter.sh/v1alpha5
 kind: Provisioner
 metadata:
@@ -6,8 +6,8 @@ metadata:
   namespace: karpenter
 spec:
   weight: 10
-    consolidation:
-      enabled: true
+  consolidation:
+    enabled: true
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
