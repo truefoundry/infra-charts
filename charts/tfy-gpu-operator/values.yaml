@@ -4,10 +4,33 @@ clusterType:
   gcpGkeAutopilot: false
 
 aws-eks-gpu-operator:
+  operator:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 200Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
   toolkit:
     version: v1.13.0-centos7
   node-feature-discovery:
+    master:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 200Mi
     worker:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 200Mi
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -29,6 +52,13 @@ aws-eks-gpu-operator:
         value: "false"
   dcgmExporter:
     version: 3.1.7-3.1.4-ubuntu20.04
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 100m
+        memory: 200Mi
     args: ["-c", "5000"]
     serviceMonitor:
       enabled: false
@@ -37,6 +67,13 @@ gcp-gke-standard-dcgm-exporter:
   image:
     tag: 3.1.7-3.1.4-ubuntu20.04
   arguments: ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 200Mi
   namespaceOverride: tfy-gpu-operator
   serviceMonitor:
     enabled: false
@@ -48,29 +85,29 @@ gcp-gke-standard-dcgm-exporter:
           - key: cloud.google.com/gke-accelerator
             operator: Exists
   tolerations:
-  - operator: "Exists"
+    - operator: "Exists"
   mapPodsMetrics: true
   securityContext:
     privileged: true
   priorityClassName: ""
   extraEnv:
-  - name: NVIDIA_INSTALL_DIR_HOST
-    value: /home/kubernetes/bin/nvidia
-  - name: NVIDIA_INSTALL_DIR_CONTAINER
-    value: /usr/local/nvidia
-  - name: DCGM_EXPORTER_COLLECTORS
-    value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+    - name: NVIDIA_INSTALL_DIR_HOST
+      value: /home/kubernetes/bin/nvidia
+    - name: NVIDIA_INSTALL_DIR_CONTAINER
+      value: /usr/local/nvidia
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
   extraHostVolumes:
-  - name: dev
-    hostPath: "/dev"
-  - name: nvidia-install-dir-host
-    hostPath: "/home/kubernetes/bin/nvidia"
-  - name: nvidia-config
-    hostPath: "/etc/nvidia"
+    - name: dev
+      hostPath: "/dev"
+    - name: nvidia-install-dir-host
+      hostPath: "/home/kubernetes/bin/nvidia"
+    - name: nvidia-config
+      hostPath: "/etc/nvidia"
   extraVolumeMounts:
-  - name: dev
-    mountPath: /dev
-  - name: nvidia-install-dir-host
-    mountPath: /usr/local/nvidia
-  - name: nvidia-config
-    mountPath: /etc/nvidia
+    - name: dev
+      mountPath: /dev
+    - name: nvidia-install-dir-host
+      mountPath: /usr/local/nvidia
+    - name: nvidia-config
+      mountPath: /etc/nvidia
