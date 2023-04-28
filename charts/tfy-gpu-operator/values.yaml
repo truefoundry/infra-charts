@@ -2,6 +2,7 @@ clusterType:
   awsEks: false
   gcpGkeStandard: false
   gcpGkeAutopilot: false
+  azureAks: false
 
 aws-eks-gpu-operator:
   operator:
@@ -22,7 +23,7 @@ aws-eks-gpu-operator:
           memory: 100Mi
         limits:
           cpu: 50m
-          memory: 200Mi
+          memory: 300Mi
     worker:
       resources:
         requests:
@@ -30,26 +31,26 @@ aws-eks-gpu-operator:
           memory: 100Mi
         limits:
           cpu: 50m
-          memory: 200Mi
+          memory: 300Mi
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: karpenter.k8s.aws/instance-family
-                operator: In
-                values:
-                - p2
-                - p3
-                - p4d
-                - p4de
-                - g4dn
-                - g5
+              - matchExpressions:
+                  - key: karpenter.k8s.aws/instance-family
+                    operator: In
+                    values:
+                      - p2
+                      - p3
+                      - p4d
+                      - p4de
+                      - g4dn
+                      - g5
   validator:
     plugin:
       env:
-      - name: WITH_WORKLOAD
-        value: "false"
+        - name: WITH_WORKLOAD
+          value: "false"
   dcgmExporter:
     version: 3.1.7-3.1.4-ubuntu20.04
     resources:
@@ -58,7 +59,7 @@ aws-eks-gpu-operator:
         memory: 100Mi
       limits:
         cpu: 100m
-        memory: 200Mi
+        memory: 300Mi
     args: ["-c", "5000"]
     serviceMonitor:
       enabled: false
@@ -66,14 +67,15 @@ aws-eks-gpu-operator:
 gcp-gke-standard-dcgm-exporter:
   image:
     tag: 3.1.7-3.1.4-ubuntu20.04
-  arguments: ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
+  arguments:
+    ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
   resources:
     requests:
       cpu: 10m
       memory: 100Mi
     limits:
       cpu: 100m
-      memory: 200Mi
+      memory: 300Mi
   namespaceOverride: tfy-gpu-operator
   serviceMonitor:
     enabled: false
@@ -81,9 +83,61 @@ gcp-gke-standard-dcgm-exporter:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
-        - matchExpressions:
-          - key: cloud.google.com/gke-accelerator
-            operator: Exists
+          - matchExpressions:
+              - key: cloud.google.com/gke-accelerator
+                operator: Exists
+  tolerations:
+    - operator: "Exists"
+  mapPodsMetrics: true
+  securityContext:
+    privileged: true
+  priorityClassName: ""
+  extraEnv:
+    - name: NVIDIA_INSTALL_DIR_HOST
+      value: /home/kubernetes/bin/nvidia
+    - name: NVIDIA_INSTALL_DIR_CONTAINER
+      value: /usr/local/nvidia
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  extraHostVolumes:
+    - name: dev
+      hostPath: "/dev"
+    - name: nvidia-install-dir-host
+      hostPath: "/home/kubernetes/bin/nvidia"
+    - name: nvidia-config
+      hostPath: "/etc/nvidia"
+  extraVolumeMounts:
+    - name: dev
+      mountPath: /dev
+    - name: nvidia-install-dir-host
+      mountPath: /usr/local/nvidia
+    - name: nvidia-config
+      mountPath: /etc/nvidia
+
+azure-aks-dcgm-exporter:
+  image:
+    tag: 3.1.7-3.1.4-ubuntu20.04
+  arguments:
+    ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 300Mi
+  namespaceOverride: tfy-gpu-operator
+  serviceMonitor:
+    enabled: false
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.azure.com/accelerator
+                operator: In
+                values:
+                  - nvidia
   tolerations:
     - operator: "Exists"
   mapPodsMetrics: true
