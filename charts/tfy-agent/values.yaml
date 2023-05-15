@@ -102,10 +102,13 @@ env:
   ALERT_URL: https://auth.truefoundry.com
 
 tfyAgentProxy:
+  # specifies if agent proxy should be enabled or not
   enabled: true
   imageTag: 987c2e9442de1814f1601cf726cc9c997fea8433
   imageRepository: truefoundrycloud/tfy-agent-proxy
   type: ClusterIP
+
+  # resource section for tfy agent proxy
   resources:
     limits:
       cpu: '1'
@@ -115,6 +118,8 @@ tfyAgentProxy:
       cpu: 50m
       ephemeral-storage: 200M
       memory: 100M
+
+  # env variabled to pass to tfy agent proxy
   env:
     CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
     CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
