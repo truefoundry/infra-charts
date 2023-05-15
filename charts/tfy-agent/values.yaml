@@ -1,23 +1,57 @@
+# Default values for sample.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
 global: {}
-imageRepository: truefoundrycloud/tfy-agent
-imagePullPolicy: IfNotPresent
-envSecretName: tfy-agent-env-secret
-# imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
-# imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+
+image:
+  repository: truefoundrycloud/tfy-agent
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "b1634362e72e43a63bcfb735249977e5a6f28b9a"
+
 imagePullSecrets: []
-nameOverride: ''
-fullnameOverride: ''
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "tfy-agent"
+
+
+envSecretName: tfy-agent-env-secret
 podAnnotations: {}
+
 podSecurityContext: {}
+  # fsGroup: 2000
+
 securityContext: {}
-healthcheck:
-  enabled: true
-  readiness:
-    port: 3000
-    path: /
-  liveness:
-    port: 3000
-    path: /
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+
 resources:
   limits:
     cpu: 200m
@@ -27,34 +61,33 @@ resources:
     cpu: 100m
     memory: 300Mi
     ephemeral-storage: 128Mi
+
+
+healthcheck:
+  enabled: true
+  readiness:
+    port: 3000
+    path: /
+  liveness:
+    port: 3000
+    path: /
+
 nodeSelector: {}
 tolerations: {}
 affinity: {}
-ingress:
-  enabled: false
-  annotations: {}
-  labels: {}
-  ingressClassName: istio
-  tls: []
-  hosts: []
+
 istio:
   virtualservice:
     enabled: false
     annotations: {}
     gateways: []
     hosts: []
-service:
-  type: ClusterIP
-  port: 3000
-  annotations: {}
-serviceAccount:
-  create: true
-  name: tfy-agent
-  annotations: {}
+
 rbac:
   enabled: true
+
 name: tfy-agent
-imageTag: b1634362e72e43a63bcfb735249977e5a6f28b9a
+
 env:
   NODE_ENV: production
   PROMETHEUS_POLL_INTERVAL: '60000'
@@ -67,6 +100,7 @@ env:
   WORKLOAD_NAMESPACE: '{{ .Release.Namespace }}'
   CONTROL_PLANE_NATS_PORT: '443'
   ALERT_URL: https://auth.truefoundry.com
+
 tfyAgentProxy:
   enabled: true
   imageTag: 987c2e9442de1814f1601cf726cc9c997fea8433

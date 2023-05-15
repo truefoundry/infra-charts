@@ -119,11 +119,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
-{{- define "app.imagePullSecrets" }}
-{{- if (tpl .Values.imagePullCredentials .) }}
-- name: {{ include "app.fullname" . }}-image-pull-secret
-{{- end }}
-{{- if (tpl .Values.imagePullSecretName .) }}
-- name: {{ tpl .Values.imagePullSecretName . }}
-{{- end }}
-{{- end }}
+# {{- define "app.imagePullSecrets" }}
+# {{- if (tpl .Values.imagePullCredentials .) }}
+# - name: {{ include "app.fullname" . }}-image-pull-secret
+# {{- end }}
+# {{- if (tpl .Values.imagePullSecretName .) }}
+# - name: {{ tpl .Values.imagePullSecretName . }}
+# {{- end }}
+# {{- end }}
