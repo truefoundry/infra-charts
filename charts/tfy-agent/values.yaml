@@ -1,0 +1,125 @@
+# Default values for sample.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global: {}
+
+image:
+  repository: truefoundrycloud/tfy-agent
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "4c0ca0a13b934f81f49ad41a39d3f1e86476511b"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "tfy-agent"
+
+
+envSecretName: tfy-agent-env-secret
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+
+
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 300Mi
+    ephemeral-storage: 128Mi
+
+
+healthcheck:
+  enabled: true
+  readiness:
+    port: 3000
+    path: /
+  liveness:
+    port: 3000
+    path: /
+
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+
+rbac:
+  enabled: true
+
+name: tfy-agent
+
+env:
+  NODE_ENV: production
+  PROMETHEUS_POLL_INTERVAL: '60000'
+  PROMETHEUS_ENDPOINT: http://prometheus-operated.prometheus.svc.cluster.local:9090
+  OPENCOST_POLL_INTERVAL: '180000'
+  OPENCOST_ENDPOINT: http://opencost.opencost.svc.cluster.local:9090
+  CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+  CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  WORKLOAD_NAMESPACE: '{{ .Release.Namespace }}'
+  CONTROL_PLANE_NATS_PORT: '443'
+  ALERT_URL: https://auth.truefoundry.com
+
+tfyAgentProxy:
+  # specifies if agent proxy should be enabled or not
+  enabled: true
+  imageTag: "00f2e71680781ab9e1e64270525b97d01e0ba236"
+  imageRepository: truefoundrycloud/tfy-agent-proxy
+  type: ClusterIP
+
+  # resource section for tfy agent proxy
+  resources:
+    limits:
+      cpu: '1'
+      ephemeral-storage: 500M
+      memory: 500M
+    requests:
+      cpu: 50m
+      ephemeral-storage: 200M
+      memory: 100M
+
+  # env variabled to pass to tfy agent proxy
+  env:
+    CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+    CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
