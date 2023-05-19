@@ -22,7 +22,8 @@ spec:
       containers:
         - name: tfy-agent-proxy
           env:
-            {{- include "app.tfyAgentProxy.env" . | trim | nindent 12 }}
+            CLUSTER_TOKEN: {{ include "env.CLUSTER_TOKEN" }}
+            CONTROL_PLANE_URL: {{include "env.CONTROL_PLANE_URL" }}
           image: "{{ .Values.tfyAgentProxy.imageRepository }}:{{ .Values.tfyAgentProxy.imageTag }}"
           imagePullPolicy: IfNotPresent
           resources:
