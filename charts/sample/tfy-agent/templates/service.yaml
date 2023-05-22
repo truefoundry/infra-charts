@@ -1,0 +1,23 @@
+{{- if .Values.tfyAgent.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}
+  labels:
+    {{- include "tfy-agent.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.tfyAgent.service.type }}
+  ports:
+    - port: {{ .Values.tfyAgent.service.port }}
+    {{- if eq .Values.tfyAgent.service.type "NodePort" }}
+      nodePort: {{ .Values.tfyAgent.service.nodePort }}
+    {{- end }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "tfy-agent.selectorLabels" . | nindent 4 }}
+    {{- if .Values.tfyAgent.service.sessionAffinity }}
+    sessionAffinity: {{ .Values.tfyAgent.service.sessionAffinity }}
+    {{- end }}
+{{- end }}
