@@ -2,7 +2,9 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-global: {}
+global:
+  config: {}
+  clusterToken: ${k8s-secret/CLUSTER_TOKEN}
 
 image:
   repository: truefoundrycloud/tfy-agent
@@ -95,7 +97,7 @@ env:
   OPENCOST_POLL_INTERVAL: '180000'
   OPENCOST_ENDPOINT: http://opencost.opencost.svc.cluster.local:9090
   CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
-  CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
+  CLUSTER_TOKEN: '{{ .Values.global.clusterToken }}'
   TENANT_NAME: '{{ .Values.global.tenantName }}'
   WORKLOAD_NAMESPACE: '{{ .Release.Namespace }}'
   CONTROL_PLANE_NATS_PORT: '443'
@@ -118,6 +120,8 @@ tfyAgentProxy:
       cpu: 50m
       ephemeral-storage: 200M
       memory: 100M
-  # any additional env vars for tfy-agent-proxy
-  # can skip CLUSTER_TOKEN and CONTROL_PLANE_URL as they are read from .Value.env
+
+  # env variables to pass to tfy agent proxy
   env:
+    CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+    CLUSTER_TOKEN: '{{ .Values.global.clusterToken }}'

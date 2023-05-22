@@ -1,0 +1,55 @@
+{{- if .Values.tfyAgentProxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-agent-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.tfyAgentProxy.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-agent-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyAgentProxy.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-agent-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.tfyAgentProxy.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}-proxy
+          securityContext:
+            {{- toYaml .Values.tfyAgentProxy.securityContext | nindent 12 }}
+          env:
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.config.controlPlaneURL | quote }}
+            - name: CLUSTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: token
+                  name: {{ include "tfy-agent.secretName" .}}
+          image: "{{ .Values.tfyAgentProxy.image.repository }}:{{ .Values.tfyAgentProxy.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.tfyAgentProxy.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.tfyAgentProxy.resources | nindent 12 }}
+      {{- with .Values.tfyAgentProxy.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyAgentProxy.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyAgentProxy.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}       
