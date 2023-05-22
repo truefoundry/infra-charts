@@ -36,7 +36,7 @@ spec:
                 secretKeyRef:
                   key: token
                   name: {{ include "tfy-agent.secretName" .}}
-          image: "{{ .Values.tfyAgentProxy.imageRepository }}:{{ .Values.tfyAgentProxy.imageTag | default .Chart.AppVersion }}"
+          image: "{{ .Values.tfyAgentProxy.image.repository }}:{{ .Values.tfyAgentProxy.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.tfyAgentProxy.image.pullPolicy }}
           resources:
             {{- toYaml .Values.tfyAgentProxy.resources | nindent 12 }}
