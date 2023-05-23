@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.tfyAgentProxy.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       {{- include "tfy-agent-proxy.selectorLabels" . | nindent 6 }}
@@ -36,6 +36,10 @@ spec:
                 secretKeyRef:
                   key: token
                   name: {{ include "tfy-agent.secretName" .}}
+          {{- range $val := .Values.tfyAgentProxy.extraEnvVars }}
+            - name: {{ $val.name }}
+              value: {{ $val.value }}
+          {{- end }}
           image: "{{ .Values.tfyAgentProxy.image.repository }}:{{ .Values.tfyAgentProxy.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.tfyAgentProxy.image.pullPolicy }}
           resources:
