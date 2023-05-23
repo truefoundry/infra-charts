@@ -57,8 +57,8 @@ tfyAgent:
   enabled: true
 
   ## Number of replicas of tfyAgent
-  #
-  replicaCount: 1
+  ## value kept for future use, ketp 1
+  # replicaCount: 1
 
   ## Annotations for Alertmanager
   ##
@@ -77,6 +77,15 @@ tfyAgent:
     name: ""
     # enabled automounting of service account token inside the pod
     automountServiceAccountToken: true
+
+  ## Adding extra envrionment variable for tfyAgent
+  #
+  extraEnvVars: []
+  ##
+  # Example:
+  # extraEnvVars:
+  #   - name: KEY1
+  #     value: VALUE1
 
   ## Configuration for tfyAgent service
   ##
@@ -197,9 +206,9 @@ tfyAgentProxy:
   #
   enabled: true
 
-  ## Number of replicas of tfyAgent
-  #
-  replicaCount: 1
+  ## Number of replicas of tfyAgentProxy
+  ## value kept for future use, ketp 1
+  # replicaCount: 1
 
   ## Annotations for tfyAgentProxy
   ##
@@ -212,6 +221,15 @@ tfyAgentProxy:
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: "00f2e71680781ab9e1e64270525b97d01e0ba236"
+
+  ## Adding extra envrionment variable for tfyAgentProxy
+  #
+  extraEnvVars: []
+  ##
+  # Example:
+  # extraEnvVars:
+  #   - name: KEY1
+  #     value: VALUE1
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -284,13 +302,3 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-# Enabling virtual services for istio
-# disabled by default
-# required when tfy-agent is to be exposed outside
-istio:
-  virtualservice:
-    enabled: false
-    annotations: {}
-    gateways: []
-    hosts: []
