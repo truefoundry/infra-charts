@@ -1,16 +1,16 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "app.name" -}}
+{{- define "tfy-agent.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-  Create a default fully qualified app name.
-  We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-  If release name contains chart name it will be used as a full name.
-  */}}
-{{- define "app.fullname" -}}
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "tfy-agent.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,106 +24,75 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-Define full name for tfy-agent-proxy
+Create a default fully qualified tfy-agent-proxy name
 */}}
-{{- define "app.tfyAgentProxy.fullname" -}}
-{{- include "app.fullname" . | trunc 57 | trimSuffix "-" }}-proxy
+{{- define "tfy-agent-proxy.fullname" -}}
+{{- include "tfy-agent.fullname" . | trunc 57 | trimSuffix "-" }}-proxy
 {{- end }}
 
 {{/*
-  Create chart name and version as used by the chart label.
-  */}}
-{{- define "app.chart" -}}
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "tfy-agent.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-  Common labels
-  */}}
-{{- define "app.labels" -}}
-helm.sh/chart: {{ include "app.chart" . }}
-{{ include "app.selectorLabels" . }}
-{{- if .Values.imageTag }}
-app.kubernetes.io/version: {{ .Values.imageTag | quote }}
+Common labels
+*/}}
+{{- define "tfy-agent.labels" -}}
+helm.sh/chart: {{ include "tfy-agent.chart" . }}
+{{ include "tfy-agent.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-  Selector labels
-  */}}
-{{- define "app.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "app.name" . }}
+Selector labels for tfyAgent
+*/}}
+{{- define "tfy-agent.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Create the name of the service account to use
-  */}}
-{{- define "app.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "app.fullname" .) .Values.serviceAccount.name }}
+Common labels
+*/}}
+{{- define "tfy-agent-proxy.labels" -}}
+helm.sh/chart: {{ include "tfy-agent.chart" . }}
+{{ include "tfy-agent-proxy.selectorLabels" . }}
+app.kubernetes.io/version: {{ .Values.tfyAgentProxy.imageTag | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels for tfyAgentProxy
+*/}}
+{{- define "tfy-agent-proxy.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "tfy-agent.serviceAccountName" -}}
+{{- if .Values.tfyAgent.serviceAccount.create }}
+{{- default (include "tfy-agent.fullname" .) .Values.tfyAgent.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- default "default" .Values.tfyAgent.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Parse env from template
-  */}}
-{{- define "app.parseEnv" -}}
-{{ tpl (.Values.env | toYaml) . }}
-{{- end }}
-
-
-{{/*
-  Create the env file
-  */}}
-{{- define "app.env" }}
-{{- range $key, $val := (include "app.parseEnv" .) | fromYaml }}
-{{- if and $val (contains "${k8s-secret" ($val | toString)) }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $.Values.envSecretName }}
-      key: {{ $val | trimPrefix "${k8s-secret/" | trimSuffix "}" }}
+Create the name of the secret which will contain cluster token
+*/}}
+{{- define "tfy-agent.secretName" -}}
+{{- if .Values.config.clusterTokenSecret }}
+{{- .Values.config.clusterTokenSecret }}
 {{- else }}
-- name: {{ $key }}
-  value: {{ $val | quote }}
+{{- include "tfy-agent.fullname" . | trunc 57 | trimSuffix "-" }}-token
 {{- end }}
 {{- end }}
-{{- end }}
-
-{{/*
-  Parse env from template
-  */}}
-{{- define "app.tfyAgentProxy.parseEnv" -}}
-{{ tpl (.Values.tfyAgentProxy.env | toYaml) . }}
-{{- end }}
-
-{{/*
-  Create the env file
-  */}}
-{{- define "app.tfyAgentProxy.env" }}
-{{- range $key, $val := (include "app.tfyAgentProxy.parseEnv" .) | fromYaml }}
-{{- if and $val (contains "${k8s-secret" ($val | toString)) }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $.Values.envSecretName }}
-      key: {{ $val | trimPrefix "${k8s-secret/" | trimSuffix "}" }}
-{{- else }}
-- name: {{ $key }}
-  value: {{ $val | quote }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-# {{- define "app.imagePullSecrets" }}
-# {{- if (tpl .Values.imagePullCredentials .) }}
-# - name: {{ include "app.fullname" . }}-image-pull-secret
-# {{- end }}
-# {{- if (tpl .Values.imagePullSecretName .) }}
-# - name: {{ tpl .Values.imagePullSecretName . }}
-# {{- end }}
-# {{- end }}
