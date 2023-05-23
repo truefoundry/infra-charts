@@ -1,11 +1,11 @@
-{{- if .Values.rbac.enabled -}}
+{{- if .Values.global.rbac.enabled -}}
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ include "app.fullname" . }}-admin-rbac
+  name: {{ include "tfy-agent.fullname" . }}-admin-rbac
 subjects:
   - kind: ServiceAccount
-    name: {{ include "app.serviceAccountName" . }}
+    name: {{ include "tfy-agent.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole

@@ -1,17 +1,15 @@
 {{- if .Values.istio.virtualservice.enabled -}}
-{{- $serviceName := include "app.fullname" . -}}
-{{- $servicePort := .Values.service.port -}}
+{{- $fullName := include "tfy-agent.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: {{ include "app.fullname" . }}
+  name: {{ $fullName }}
   labels:
-    {{- include "app.labels" . | nindent 4 }}
+    {{- include "tfy-agent.labels" . | nindent 4 }}
   {{- if .Values.istio.virtualservice.annotations }}
     annotations:
-    {{- range $key, $value := .Values.istio.virtualservice.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
+        {{- toYaml . | nindent 4 }}
   {{- end }}
   namespace: {{ .Release.Namespace }}
 spec:
@@ -26,7 +24,7 @@ spec:
   http:
   - route:
     - destination:
-        host: {{ include "app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        host: {{ $fullName }}}.{{ .Release.Namespace }}.svc.cluster.local
         port:
-          number: {{ .Values.service.port }}
+          number: {{ $svcPort }}
 {{- end }}

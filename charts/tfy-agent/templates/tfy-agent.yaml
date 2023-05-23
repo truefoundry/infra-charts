@@ -1,0 +1,81 @@
+{{- if .Values.tfyAgent.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}
+  labels:
+    {{- include "tfy-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.tfyAgent.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyAgent.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.tfyAgent.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.tfyAgent.securityContext | nindent 12 }}
+          env:
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.config.controlPlaneURL | quote }}
+            - name: TENANT_NAME
+              value:  {{ .Values.config.tenantName | quote }}
+            - name: CONTROL_PLANE_NATS_PORT
+              value: {{ .Values.config.natsPort | quote }}
+            - name: OPENCOST_ENDPOINT
+              value: {{ .Values.config.opencost.endpoint | quote }}
+            - name: OPENCOST_POLL_INTERVAL
+              value: {{ .Values.config.opencost.pollInterval | quote }}
+            - name: PROMETHEUS_POLL_INTERVAL
+              value: {{ .Values.config.prometheus.pollInterval | quote }}
+            - name: PROMETHEUS_ENDPOINT
+              value: {{ .Values.config.prometheus.endpoint | quote }}
+            - name: ALERT_URL
+              value: {{ .Values.config.alertURL | quote }}
+            - name: NODE_ENV
+              value: {{ .Values.config.nodeEnv | quote }}
+            - name: WORKLOAD_NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+            - name: CLUSTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: token
+                  name: {{ include "tfy-agent.secretName" .}} 
+          image: "{{ .Values.tfyAgent.image.repository }}:{{ .Values.tfyAgent.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.tfyAgent.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyAgent.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.tfyAgent.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.tfyAgent.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.tfyAgent.resources | nindent 12 }}
+      {{- with .Values.tfyAgent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyAgent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyAgent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
