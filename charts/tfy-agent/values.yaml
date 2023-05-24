@@ -1,36 +1,169 @@
-# Default values for sample.
+# Default values for tfy-agent.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-global: {}
+# global settings
+global:
+  rbac:
+    enabled: true
 
-image:
-  repository: truefoundrycloud/tfy-agent
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "a9af8a51d8b0373f4d0c469119ed88a488c5709f"
+# configuration for tfy-agent and tfy-agent-proxy
+config:
+  # token to connect to the contorl plane
+  clusterToken: ""
+
+  # name of the secret containing the cluster token
+  # the key must be token
+  # if this is set it will override config.clusterToken
+  clusterTokenSecret: ""
+
+  # url of the control plane
+  # format: https://<>
+  controlPlaneURL: ""
+
+  # name of the tenant where your control plane is hosted
+  tenantName: ""
+
+  # nats port
+  natsPort: '443'
+
+  # configurations for opencost
+  opencost:
+    # time in milliseconds for opencost scraping
+    pollInterval: '180000'
+    # endpoint to connect to opencost
+    endpoint: http://opencost.opencost.svc.cluster.local:9090
+
+  # configurations for prometheus
+  prometheus:
+    # time in milliseconds for prometheus scraping config
+    pollInterval: '60000'
+    # endpoint to connect to prometheus
+    endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
+  
+  alertURL: "https://auth.truefoundry.com"
+
+  nodeEnv: production
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
+# configuration related to tfy-agent
+tfyAgent:
+
+  ## Deploy tfyAgent
+  #
+  enabled: true
+
+  ## Number of replicas of tfyAgent
+  ## value kept for future use, ketp 1
+  # replicaCount: 1
+
+  ## Annotations for Alertmanager
+  ##
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: "tfy-agent"
 
+  ## Service account for Alertmanager to use.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # enabled automounting of service account token inside the pod
+    automountServiceAccountToken: true
 
-envSecretName: tfy-agent-env-secret
-podAnnotations: {}
+  ## Adding extra envrionment variable for tfyAgent
+  #
+  extraEnvVars: []
+  ##
+  # Example:
+  # extraEnvVars:
+  #   - name: KEY1
+  #     value: VALUE1
 
-podSecurityContext: {}
-  # fsGroup: 2000
+  ## Configuration for tfyAgent service
+  ##
+  service:
+    annotations: {}
+    labels: {}
+    clusterIP: ""
 
-securityContext: {}
+    ## Port for tfyAgent Service to listen on
+    ##
+    port: 3000
+    ## Port to expose on each node
+    ## Only used if service.type is 'NodePort'
+    ##
+    nodePort: ""
+    ## List of IP addresses at which the tfyAgent server service is available
+    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ##
+
+    ## If you want to make sure that connections from a particular client are passed to the same Pod each time
+    ## Accepts 'ClientIP' or ''
+    ##
+    sessionAffinity: ""
+
+    ## Service type
+    ##
+    type: ClusterIP
+
+  ## Image of tfyAgent
+  ##
+  image:
+    repository: truefoundrycloud/tfy-agent
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "a9af8a51d8b0373f4d0c469119ed88a488c5709f"
+
+  ## Define resources requests and limits for single Pods.
+  ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  ## customized resource limits are very general in nature and must be kept the same
+  ## decreasing the resource might make the service UNAVAILABLE
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      ephemeral-storage: 256Mi
+    requests:
+      cpu: 300m
+      memory: 256Mi
+      ephemeral-storage: 128Mi
+
+  livenessProbe:
+    failureThreshold: 5
+    httpGet:
+      path: /
+      port: 3000
+      scheme: HTTP
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+    initialDelaySeconds: 15
+
+  readinessProbe:
+    failureThreshold: 5
+    httpGet:
+      path: /
+      port: 3000
+      scheme: HTTP
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+    initialDelaySeconds: 15
+  
+  ## SecurityContext holds pod-level security attributes and common container settings.
+  ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -38,86 +171,117 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 3000
-  annotations: {}
+  ## If specified, the pod's tolerations.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+  # - key: "key"
+  #   operator: "Equal"
+  #   value: "value"
+  #   effect: "NoSchedule"
+    
+  ## Define which Nodes the Pods are scheduled on.
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
 
+  ## Assign custom affinity rules to the tfyAgent instance
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: {}
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: kubernetes.io/e2e-az-name
+  #         operator: In
+  #         values:
+  #         - e2e-az1
+  #         - e2e-az2
 
-ingress:
-  enabled: false
-  annotations: {}
-  labels: {}
-  ingressClassName: istio
-  tls: []
-  hosts: []
-
-resources:
-  limits:
-    cpu: 200m
-    memory: 512Mi
-    ephemeral-storage: 256Mi
-  requests:
-    cpu: 100m
-    memory: 300Mi
-    ephemeral-storage: 128Mi
-
-
-healthcheck:
-  enabled: true
-  readiness:
-    port: 3000
-    path: /
-  liveness:
-    port: 3000
-    path: /
-
-nodeSelector: {}
-tolerations: {}
-affinity: {}
-
-istio:
-  virtualservice:
-    enabled: false
-    annotations: {}
-    gateways: []
-    hosts: []
-
-rbac:
-  enabled: true
-
-name: tfy-agent
-
-env:
-  NODE_ENV: production
-  PROMETHEUS_POLL_INTERVAL: '60000'
-  PROMETHEUS_ENDPOINT: http://prometheus-operated.prometheus.svc.cluster.local:9090
-  OPENCOST_POLL_INTERVAL: '180000'
-  OPENCOST_ENDPOINT: http://opencost.opencost.svc.cluster.local:9090
-  CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
-  CLUSTER_TOKEN: ${k8s-secret/CLUSTER_TOKEN}
-  TENANT_NAME: '{{ .Values.global.tenantName }}'
-  WORKLOAD_NAMESPACE: '{{ .Release.Namespace }}'
-  CONTROL_PLANE_NATS_PORT: '443'
-  ALERT_URL: https://auth.truefoundry.com
-
+# configuration for tfy-agent-proxy
 tfyAgentProxy:
-  # specifies if agent proxy should be enabled or not
-  enabled: true
-  imageTag: "00f2e71680781ab9e1e64270525b97d01e0ba236"
-  imageRepository: truefoundrycloud/tfy-agent-proxy
-  type: ClusterIP
 
-  # resource section for tfy agent proxy
+  ## Deploy tfyAgentProxy
+  #
+  enabled: true
+
+  ## Number of replicas of tfyAgentProxy
+  ## value kept for future use, ketp 1
+  # replicaCount: 1
+
+  ## Annotations for tfyAgentProxy
+  ##
+  annotations: {}
+
+  ## Image of tfyAgentProxy
+  ##
+  image:
+    repository: truefoundrycloud/tfy-agent-proxy
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "00f2e71680781ab9e1e64270525b97d01e0ba236"
+
+  ## Adding extra envrionment variable for tfyAgentProxy
+  #
+  extraEnvVars: []
+  ##
+  # Example:
+  # extraEnvVars:
+  #   - name: KEY1
+  #     value: VALUE1
+
+  ## Define resources requests and limits for single Pods.
+  ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  ## customized resource limits are very general in nature and must be kept the same
+  ## decreasing the resource might make the service UNAVAILABLE
   resources:
     limits:
-      cpu: '1'
+      cpu: 500m
+      memory: 512Mi
       ephemeral-storage: 500M
-      memory: 500M
     requests:
       cpu: 50m
+      memory: 128Mi
       ephemeral-storage: 200M
-      memory: 100M
-  # any additional env vars for tfy-agent-proxy
-  # can skip CLUSTER_TOKEN and CONTROL_PLANE_URL as they are read from .Value.env
-  env:
+  
+  ## SecurityContext holds pod-level security attributes and common container settings.
+  ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
+  securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+  ## If specified, the pod's tolerations.
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  tolerations: []
+  # - key: "key"
+  #   operator: "Equal"
+  #   value: "value"
+  #   effect: "NoSchedule"
+    
+  ## Define which Nodes the Pods are scheduled on.
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+
+  ## Assign custom affinity rules to the tfyAgent instance
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  ##
+  affinity: {}
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: kubernetes.io/e2e-az-name
+  #         operator: In
+  #         values:
+  #         - e2e-az1
+  #         - e2e-az2
