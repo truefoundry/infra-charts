@@ -124,18 +124,17 @@ install_istio() {
     local cluster_token=$2
     local ip_adress=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p')
 
-    response=$(curl -X POST "http://localhost:3000/v1/cluster-onboarding/configure-ingress" \
-        -H "Content-Type: application/json" \
-        -d "{
-        "tenantName": $tenant_name,
-        "clusterToken": $cluster_token,
-        "ip": $ip_adress
-        }" \
+    response=$(curl -X POST 'http://localhost:3000/v1/cluster-onboarding/configure-ingress' \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "tenantName": "'$tenant_name'",
+            "ip": "'$ip_adress'",
+            "clusterToken": "'$cluster_token'"
+        }' \
         -w "%{http_code}" \
         -o response.json \
         --silent)
-
-    if [ "$response" == "200" ]; then
+    if [ "$response" == "201" ]; then
         echo "Istio installed successfully"
     else
         echo "Failed to install istio response code: $response"
