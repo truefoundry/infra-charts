@@ -137,7 +137,7 @@ get_cluster_ip() {
 install_istio() {
     local tenant_name=$1
     local cluster_token=$2
-    local ip_adress=$3
+    local ip_adress=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p')
 
     response=$(curl -X POST "http://localhost:3000/v1/cluster-onboarding/configure-ingress" \
         -H "Content-Type: application/json" \
