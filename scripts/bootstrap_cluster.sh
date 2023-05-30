@@ -119,21 +119,6 @@ install_argocd_helm_chart() {
     --set controller.extraArgs[0]='--application-namespaces="*"'
 }
 
-get_cluster_ip() {
-    local cluster_type=$1
-    local cluster_name=$2
-    local endpoint=''
-
-    if [ "$cluster_type" == "aws-eks" ]; then
-        endpont=$(aws eks describe-cluster --name $cluster_name --query "cluster.endpoint")
-    else if [ "$cluster_type" == "gcp-gke" ]; then
-        endpoint=$(gcloud container clusters describe $cluster_name --format="value(endpoint)")
-    else if [ "$cluster_type" == "azure-aks" ]; then
-        endpoint=$(az aks show --name $cluster_name --query 'fqdn')
-
-    return $endpoint
-}
-
 install_istio() {
     local tenant_name=$1
     local cluster_token=$2
@@ -190,11 +175,7 @@ installation_guide() {
         # Istio CRDs are already installed, skip the entire Istio installation
         print_yellow "Skipping istio charts installation."
     else
-        ip_adress=get_cluster_ip()
-        install_istio "$tenant_name" "$cluster_token" "$ip_adress" 
-        # helm repo add istio https://istio-release.storage.googleapis.com/charts
-        # install_helm_chart "istio" "base" "istio-system" "1.15.3"
-        # install_helm_chart "istio" "istiod" "istio-system" "1.15.3"
+        install_istio "$tenant_name" "$cluster_token"
     fi
     
     # Guide the user through installing Tfy-agent chart
