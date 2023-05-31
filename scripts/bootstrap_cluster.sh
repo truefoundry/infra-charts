@@ -126,7 +126,7 @@ install_istio() {
     local control_plane_url=$3
     local ip_address=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" )
 
-    response=$(curl -X POST "$control_plane_url/v1/cluster-onboarding/configure-ingress" \
+    response=$(curl -X POST "$control_plane_url/api/svc/v1/cluster-onboarding/configure-ingress" \
         -H 'Content-Type: application/json' \
         -d '{
             "tenantName": "'$tenant_name'",
