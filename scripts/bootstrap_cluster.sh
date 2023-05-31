@@ -130,7 +130,7 @@ install_istio() {
         -H 'Content-Type: application/json' \
         -d '{
             "tenantName": "'$tenant_name'",
-            "ip": "'$ip_adress'",
+            "ip": "'$ip_address'",
             "clusterToken": "'$cluster_token'"
         }' \
         -w "%{http_code}" \
