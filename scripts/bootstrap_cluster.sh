@@ -124,7 +124,7 @@ install_istio() {
     local tenant_name=$1
     local cluster_token=$2
     local control_plane_url=$3
-    local ip_adress=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p')
+    local ip_address=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" )
 
     response=$(curl -X POST "$control_plane_url/v1/cluster-onboarding/configure-ingress" \
         -H 'Content-Type: application/json' \
@@ -204,9 +204,8 @@ fi
 
 control_plane_url=""
 if [ $# == 2 ]; then
-    print_yellow "User can optionally pass control plane url as 3rd argument"
     control_plane_url="https://$1.truefoundry.cloud"
-    print_yellow "Setting control plane url to $control_plane_url"
+    print_yellow "Control plane URL inferred as $control_plane_url"
 fi
 
 if [ $# == 3 ]; then
