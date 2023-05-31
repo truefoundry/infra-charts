@@ -44,7 +44,7 @@ check_kubectl_context() {
         print_yellow "Current kubectl context: $current_context"
         read -rp "Is this the correct cluster you want to proceed with? (y/N): " confirm
         
-        if [[ "$confirm" != [Yy] && -z "$confirm" ]]; then
+        if [[ "$confirm" != [Yy] || -z "$confirm" ]]; then
             print_red "Aborting installation."
             exit 1
         fi
