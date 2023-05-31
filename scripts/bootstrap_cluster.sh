@@ -140,7 +140,7 @@ install_istio() {
         echo "Istio installed successfully"
     else
         echo "Failed to install istio response code: $response"
-        return 1
+        exit 1
     fi
 }
 
