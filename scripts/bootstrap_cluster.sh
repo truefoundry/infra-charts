@@ -205,8 +205,8 @@ fi
 control_plane_url=""
 if [ $# == 2 ]; then
     print_yellow "User can optionally pass control plane url as 3rd argument"
-    print_yellow "Setting control plane url to $control_plane_url"
     control_plane_url="https://$1.truefoundry.cloud"
+    print_yellow "Setting control plane url to $control_plane_url"
 fi
 
 if [ $# == 3 ]; then
