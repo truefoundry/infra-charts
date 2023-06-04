@@ -5,7 +5,7 @@ metadata:
     app: notebook-controller
     control-plane: controller-manager
     kustomize.component: notebook-controller
-  name: notebook-controller-system
+  name: nb-ctl-system
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -14,7 +14,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-service-account
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -23,7 +23,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-leader-election-role
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 rules:
 - apiGroups:
   - ""
@@ -171,7 +171,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-leader-election-rolebinding
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -179,7 +179,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: notebook-controller-service-account
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -195,7 +195,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: notebook-controller-service-account
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 ---
 apiVersion: v1
 data:
@@ -211,7 +211,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-config-mkgtkhmkhk
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 ---
 apiVersion: v1
 kind: Service
@@ -220,7 +220,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-service
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 spec:
   ports:
   - port: 443
@@ -235,7 +235,7 @@ metadata:
     app: notebook-controller
     kustomize.component: notebook-controller
   name: notebook-controller-deployment
-  namespace: notebook-controller-system
+  namespace: nb-ctl-system
 spec:
   selector:
     matchLabels:
