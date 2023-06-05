@@ -91,13 +91,14 @@ install_helm_chart() {
     local chart_version=$4
     local tenant_name=$5
     local cluster_token=$6
+    local control_plane_url=$7
     
     print_green "Installing '$chart_name' chart in the '$chart_namespace' namespace..."
     
     if [ "$chart_name" == "tfy-agent" ]; then
         helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" \
         --set config.tenantName="$tenant_name" \
-        --set config.controlPlaneURL="https://$tenant_name.truefoundry.cloud" \
+        --set config.controlPlaneURL="$control_plane_url" \
         --set config.clusterToken="$cluster_token" \
         truefoundry/"$chart_name" --create-namespace
     else
@@ -123,6 +124,8 @@ install_argocd_helm_chart() {
 installation_guide() {
     local tenant_name=$1
     local cluster_token=$2
+    local control_plane_url=$3
+
     print_yellow "Starting TrueFoundry agent installation..."
     echo
     
@@ -163,7 +166,7 @@ installation_guide() {
         print_yellow "The 'tfy-agent' chart is already installed. Skipping tfy-agent installation."
     else
         helm repo add truefoundry https://truefoundry.github.io/infra-charts/
-        install_helm_chart "truefoundry" "tfy-agent" "tfy-agent" "0.1.1" "$tenant_name" "$cluster_token"
+        install_helm_chart "truefoundry" "tfy-agent" "tfy-agent" "0.1.1" "$tenant_name" "$cluster_token" "$control_plane_url"
     fi
     
     # Completion message
@@ -177,4 +180,14 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-installation_guide "$1" "$2"
+control_plane_url=""
+if [ $# == 2 ]; then
+    control_plane_url="https://$1.truefoundry.cloud"
+    print_yellow "Control plane URL inferred as $control_plane_url"
+fi
+
+if [ $# == 3 ]; then
+    control_plane_url="$3"
+fi
+
+installation_guide "$1" "$2" "$control_plane_url"
