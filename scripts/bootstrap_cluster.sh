@@ -44,7 +44,7 @@ check_kubectl_context() {
         print_yellow "Current kubectl context: $current_context"
         read -rp "Is this the correct cluster you want to proceed with? (y/N): " confirm
         
-        if [[ "$confirm" != [Yy] || -z "$confirm" ]]; then
+        if [[ "$confirm" != [Yy] && -z "$confirm" ]]; then
             print_red "Aborting installation."
             exit 1
         fi
@@ -120,30 +120,6 @@ install_argocd_helm_chart() {
     --set controller.extraArgs[0]='--application-namespaces="*"'
 }
 
-install_istio() {
-    local tenant_name=$1
-    local cluster_token=$2
-    local control_plane_url=$3
-    local ip_address=$(kubectl cluster-info | head -n 1 | grep -oE '[^[:space:]]+' | sed -n '7p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" )
-
-    response=$(curl -X POST "$control_plane_url/api/svc/v1/cluster-onboarding/configure-ingress" \
-        -H 'Content-Type: application/json' \
-        -d '{
-            "tenantName": "'$tenant_name'",
-            "ip": "'$ip_address'",
-            "clusterToken": "'$cluster_token'"
-        }' \
-        -w "%{http_code}" \
-        -o response.json \
-        --silent)
-    if [ "$response" == "201" ]; then
-        echo "Istio installed successfully"
-    else
-        echo "Failed to install istio response code: $response"
-        exit 1
-    fi
-}
-
 # Function to guide the user through the installation process
 installation_guide() {
     local tenant_name=$1
@@ -178,7 +154,9 @@ installation_guide() {
         # Istio CRDs are already installed, skip the entire Istio installation
         print_yellow "Skipping istio charts installation."
     else
-        install_istio "$tenant_name" "$cluster_token" "$control_plane_url"
+        helm repo add istio https://istio-release.storage.googleapis.com/charts
+        install_helm_chart "istio" "base" "istio-system" "1.15.3"
+        install_helm_chart "istio" "istiod" "istio-system" "1.15.3"
     fi
     
     # Guide the user through installing Tfy-agent chart
