@@ -72,7 +72,6 @@ Selector labels for tfyAgentProxy
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
