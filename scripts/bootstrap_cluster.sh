@@ -120,11 +120,20 @@ install_argocd_helm_chart() {
     --set controller.extraArgs[0]='--application-namespaces="*"'
 }
 
+save_istio_values() {
+    local cluster_type=$1
+    response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/tfy-istio-ingress.yaml")
+    echo "$response" > istio-values.yaml
+    yq '.spec.source.helm.values' istio-values.yaml > values.yaml
+    return
+}
+
 # Function to guide the user through the installation process
 installation_guide() {
     local tenant_name=$1
-    local cluster_token=$2
-    local control_plane_url=$3
+    local cluster_type=$2
+    local cluster_token=$3
+    local control_plane_url=$4
 
     print_yellow "Starting TrueFoundry agent installation..."
     echo
@@ -154,6 +163,7 @@ installation_guide() {
         # Istio CRDs are already installed, skip the entire Istio installation
         print_yellow "Skipping istio charts installation."
     else
+        save_istio_values
         helm repo add istio https://istio-release.storage.googleapis.com/charts
         install_helm_chart "istio" "base" "istio-system" "1.15.3"
         install_helm_chart "istio" "istiod" "istio-system" "1.15.3"
@@ -174,20 +184,28 @@ installation_guide() {
 }
 
 # Start the installation guide with tenantName and clusterToken as arguments
-if [ $# -lt 2 ]; then
-    echo "Error: Insufficient arguments. Please provide the tenantName and clusterToken."
-    echo "Usage: $0 <tenantName> <clusterToken>"
+if [ $# -lt 3 ]; then
+    echo "Error: Insufficient arguments. Please provide the tenantName, clusterType and clusterToken."
+    echo "Usage: $0 <tenantName> <clusterType> <clusterToken>"
+    echo "Warning: User can optionally pass control plane url as 4th argument" 
+    exit 1
+fi
+
+if ! command -v yq &> /dev/null; then
+    echo "yq is not installed."
+    echo "Please install yq to proceed."
+    echo "For installation instructions, visit: https://github.com/mikefarah/yq"
     exit 1
 fi
 
 control_plane_url=""
-if [ $# == 2 ]; then
+if [ $# == 3 ]; then
     control_plane_url="https://$1.truefoundry.cloud"
     print_yellow "Control plane URL inferred as $control_plane_url"
 fi
 
-if [ $# == 3 ]; then
+if [ $# == 4 ]; then
     control_plane_url="$3"
 fi
 
-installation_guide "$1" "$2" "$control_plane_url"
+installation_guide "$1" "$2" "$3" "$control_plane_url"
