@@ -108,6 +108,19 @@ install_helm_chart() {
     print_green "The '$chart_name' chart has been successfully installed."
 }
 
+install_helm_chart_with_values() {
+    local chart_repo=$1
+    local chart_name=$2
+    local chart_namespace=$3
+    local chart_version=$4
+    local values_file=$5
+    
+    print_green "Installing '$chart_name' chart in the '$chart_namespace' namespace..."
+    helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" "$chart_repo"/"$chart_name" --values "./$values_file" --create-namespace
+    print_green "The '$chart_name' chart has been successfully installed."
+    rm -f "./$values_file"
+}
+
 
 install_argocd_helm_chart() {
     helm install argocd argo/argo-cd --version 5.16.13 \
@@ -123,8 +136,9 @@ install_argocd_helm_chart() {
 save_istio_values() {
     local cluster_type=$1
     response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/tfy-istio-ingress.yaml")
-    echo "$response" > istio-values.yaml
-    yq '.spec.source.helm.values' istio-values.yaml > values.yaml
+    echo "$response" > application.yaml
+    yq '.spec.source.helm.values' application.yaml > values.yaml
+    rm -f application.yaml
     return
 }
 
@@ -163,9 +177,9 @@ installation_guide() {
         # Istio CRDs are already installed, skip the entire Istio installation
         print_yellow "Skipping istio charts installation."
     else
-        save_istio_values
+        save_istio_values "$cluster_type"
         helm repo add istio https://istio-release.storage.googleapis.com/charts
-        install_helm_chart "istio" "base" "istio-system" "1.15.3"
+        install_helm_chart_with_values "istio" "base" "istio-system" "1.15.3" "values.yaml"
         install_helm_chart "istio" "istiod" "istio-system" "1.15.3"
     fi
     
