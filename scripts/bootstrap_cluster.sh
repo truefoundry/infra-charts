@@ -113,12 +113,13 @@ install_helm_chart_with_values() {
     local chart_name=$2
     local chart_namespace=$3
     local chart_version=$4
-    local values_file=$5
+    local values=$5
+    echo "$values" > values_file.yaml
     
     print_green "Installing '$chart_name' chart in the '$chart_namespace' namespace..."
-    helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" "$chart_repo"/"$chart_name" --values "./$values_file" --create-namespace
+    helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" "$chart_repo"/"$chart_name" --values "values_file.yaml" --create-namespace
     print_green "The '$chart_name' chart has been successfully installed."
-    rm -f "./$values_file"
+    rm -f "values_file.yaml"
 }
 
 
@@ -133,13 +134,27 @@ install_argocd_helm_chart() {
     --set controller.extraArgs[0]='--application-namespaces="*"'
 }
 
-save_istio_values() {
+install_istio_dependencies() {
     local cluster_type=$1
-    response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/tfy-istio-ingress.yaml")
-    echo "$response" > application.yaml
-    yq '.spec.source.helm.values' application.yaml > values.yaml
-    rm -f application.yaml
-    return
+    local istio_dependencies=('tfy-istio-ingress' 'istio-base' 'istio-discovery');
+
+    for istio_dependency in "${istio_dependencies[@]}"; do
+        response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/$istio_dependency.yaml")
+        echo "$response" > application.yaml
+
+        values=$(yq '.spec.source.helm.values' application.yaml)
+        repoURL=$(yq '.spec.source.repoURL' application.yaml)
+        without_protocol="${repoURL#*://}"
+        repo_name="/${without_protocol#*/}"
+        repo_name="${repo_name%/}" && repo_name="${repo_name#/}"
+        release_name=$(yq '.spec.source.chart' application.yaml)
+        chart_name=$(yq '.spec.source.chart' application.yaml)
+        chart_version=$(yq '.spec.source.targetRevision' application.yaml)
+        namespace="istio-system"
+
+        install_helm_chart_with_values "$repo_name" "$chart_name" "istio-system" "$chart_version" "$values"
+        rm -f application.yaml
+    done
 }
 
 # Function to guide the user through the installation process
@@ -177,10 +192,7 @@ installation_guide() {
         # Istio CRDs are already installed, skip the entire Istio installation
         print_yellow "Skipping istio charts installation."
     else
-        save_istio_values "$cluster_type"
-        helm repo add istio https://istio-release.storage.googleapis.com/charts
-        install_helm_chart_with_values "istio" "base" "istio-system" "1.15.3" "values.yaml"
-        install_helm_chart "istio" "istiod" "istio-system" "1.15.3"
+        install_istio_dependencies "$cluster_type"
     fi
     
     # Guide the user through installing Tfy-agent chart
