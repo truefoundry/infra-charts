@@ -1,16 +1,14 @@
 #!/bin/bash
+set -e
 
-# Function to display messages in green color
 print_green() {
     echo "$(tput setaf 2)$1$(tput sgr0)"
 }
 
-# Function to display messages in yellow color
 print_yellow() {
     echo "$(tput setaf 3)$1$(tput sgr0)"
 }
 
-# Function to display messages in red color
 print_red() {
     echo "$(tput setaf 1)$1$(tput sgr0)"
 }
@@ -23,6 +21,13 @@ check_helm_installed() {
     fi
 }
 
+# Function to check if yq is installed
+check_yq_installed() {
+    if ! [ -x "$(command -v yq)" ]; then
+        print_red "yq is not installed. Please install yq first."
+        exit 1
+    fi
+}
 # Function to check if a Kubernetes cluster is reachable
 check_kubernetes_cluster() {
     if ! kubectl cluster-info > /dev/null 2>&1; then
@@ -124,7 +129,7 @@ install_helm_chart_with_values() {
 
 
 install_argocd_helm_chart() {
-    helm install argocd argo/argo-cd --version 5.16.13 \
+    helm install argod argo/argo-cd --version 5.16.13 \
     --namespace argocd --create-namespace --wait \
     --set applicationSet.enabled=false \
     --set notifications.enabled=false \
@@ -134,27 +139,49 @@ install_argocd_helm_chart() {
     --set controller.extraArgs[0]='--application-namespaces="*"'
 }
 
+install_argo_charts() {
+    local cluster_type=$1
+    local argo_charts=('argocd' 'argo-rollouts')
+
+    for argo_chart in "${argo_charts[@]}"; do
+        response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/$argo_chart.yaml")
+        echo "$response" > /tmp/application.yaml
+        
+        kubectl apply -f /tmp/application.yaml -n argocd
+        rm -f /tmp/application.yaml
+    done
+}
+
 install_istio_dependencies() {
     local cluster_type=$1
-    local istio_dependencies=('tfy-istio-ingress' 'istio-base' 'istio-discovery');
+    local istio_dependencies=('istio-base' 'istio-discovery' 'tfy-istio-ingress');
 
     for istio_dependency in "${istio_dependencies[@]}"; do
         response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/$istio_dependency.yaml")
-        echo "$response" > application.yaml
-
-        values=$(yq '.spec.source.helm.values' application.yaml)
-        repoURL=$(yq '.spec.source.repoURL' application.yaml)
-        without_protocol="${repoURL#*://}"
-        repo_name="/${without_protocol#*/}"
-        repo_name="${repo_name%/}" && repo_name="${repo_name#/}"
-        release_name=$(yq '.spec.source.chart' application.yaml)
-        chart_name=$(yq '.spec.source.chart' application.yaml)
-        chart_version=$(yq '.spec.source.targetRevision' application.yaml)
-        namespace="istio-system"
-
-        install_helm_chart_with_values "$repo_name" "$chart_name" "istio-system" "$chart_version" "$values"
-        rm -f application.yaml
+        echo "$response" > /tmp/application.yaml
+        
+        kubectl apply -f /tmp/application.yaml -n argocd
+        rm -f /tmp/application.yaml
     done
+}
+
+install_tfy_agent() {
+    local cluster_type=$1
+    local tenant_name=$2
+    local cluster_token=$3
+    local control_plane_url=$4
+
+    response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/tfy-agent.yaml")
+    echo "$response" > /tmp/application.yaml
+    
+    agent_value="config:
+    clusterToken: $cluster_token
+    tenantName: $tenant_name
+    controlPlaneURL: $control_plane_url"
+
+    yq -yi ".spec.source.helm.values = \"$agent_value\"" /tmp/application.yaml
+    kubectl apply -f /tmp/application.yaml -n argocd
+    rm -f /tmp/application.yaml
 }
 
 # Function to guide the user through the installation process
@@ -169,6 +196,9 @@ installation_guide() {
     
     # Check if Helm is installed
     check_helm_installed
+
+    # Check if yq is installed
+    check_yq_installed
     
     # Check if Kubernetes cluster is reachable
     check_kubernetes_cluster
@@ -177,32 +207,26 @@ installation_guide() {
     check_kubectl_context
     
     # Guide the user through installing Argocd chart if not already installed
-    print_yellow "Let's start by installing Argocd..."
+    print_yellow "Let's start by installing argocd..."
     
     if check_argocd_crds_installed; then
         # ArgoCD CRDs are already installed, skip the entire ArgoCD installation
         print_yellow "Skipping argocd installation."
     else
-        helm repo add argo https://argoproj.github.io/argo-helm
-        install_argocd_helm_chart
-        install_helm_chart "argo" "argo-rollouts" "argo-rollouts" "2.25.0"
+    helm repo add argo https://argoproj.github.io/argo-helm
+    install_argocd_helm_chart
+    install_argo_charts "$cluster_type"
     fi
-    
-    if check_istio_crds_installed; then
-        # Istio CRDs are already installed, skip the entire Istio installation
-        print_yellow "Skipping istio charts installation."
-    else
-        install_istio_dependencies "$cluster_type"
-    fi
+
+    install_istio_dependencies "$cluster_type"
     
     # Guide the user through installing Tfy-agent chart
     print_yellow "Next, we'll install the tfy-agent chart..."
-    
     if check_chart_installed "tfy-agent" "tfy-agent"; then
         print_yellow "The 'tfy-agent' chart is already installed. Skipping tfy-agent installation."
     else
         helm repo add truefoundry https://truefoundry.github.io/infra-charts/
-        install_helm_chart "truefoundry" "tfy-agent" "tfy-agent" "0.1.1" "$tenant_name" "$cluster_token" "$control_plane_url"
+        install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
     fi
     
     # Completion message
@@ -217,13 +241,6 @@ if [ $# -lt 3 ]; then
     exit 1
 fi
 
-if ! command -v yq &> /dev/null; then
-    echo "yq is not installed."
-    echo "Please install yq to proceed."
-    echo "For installation instructions, visit: https://github.com/mikefarah/yq"
-    exit 1
-fi
-
 control_plane_url=""
 if [ $# == 3 ]; then
     control_plane_url="https://$1.truefoundry.cloud"
@@ -231,7 +248,8 @@ if [ $# == 3 ]; then
 fi
 
 if [ $# == 4 ]; then
-    control_plane_url="$3"
+    control_plane_url="$4"
 fi
 
 installation_guide "$1" "$2" "$3" "$control_plane_url"
+# install_istio_dependencies aws-eks
