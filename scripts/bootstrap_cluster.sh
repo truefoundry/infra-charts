@@ -252,4 +252,3 @@ if [ $# == 4 ]; then
 fi
 
 installation_guide "$1" "$2" "$3" "$control_plane_url"
-# install_istio_dependencies aws-eks
