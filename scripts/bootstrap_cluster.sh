@@ -21,13 +21,6 @@ check_helm_installed() {
     fi
 }
 
-# Function to check if yq is installed
-check_yq_installed() {
-    if ! [ -x "$(command -v yq)" ]; then
-        print_red "yq is not installed. Please install yq first."
-        exit 1
-    fi
-}
 # Function to check if a Kubernetes cluster is reachable
 check_kubernetes_cluster() {
     if ! kubectl cluster-info > /dev/null 2>&1; then
@@ -69,19 +62,6 @@ check_argocd_crds_installed() {
 check_istio_crds_installed() {
     if kubectl get crd | grep -q 'istio.io'; then
         print_yellow "At least one Istio CRD is already installed."
-        return 0
-    fi
-    
-    return 1
-}
-
-# Function to check if Helm chart is already installed
-check_chart_installed() {
-    local chart_name=$1
-    local chart_namespace=$2
-    
-    if helm list -n "$chart_namespace" | grep -q "$chart_name"; then
-        print_yellow "The '$chart_name' chart is already installed in the '$chart_namespace' namespace."
         return 0
     fi
     
@@ -173,13 +153,17 @@ install_tfy_agent() {
 
     response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/tfy-agent.yaml")
     echo "$response" > /tmp/application.yaml
-    
-    agent_value="config:
-    clusterToken: $cluster_token
-    tenantName: $tenant_name
-    controlPlaneURL: $control_plane_url"
 
-    yq -yi ".spec.source.helm.values = \"$agent_value\"" /tmp/application.yaml
+    if [ "$(uname)" == "Darwin" ]; then
+        sed -i "" "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" tfy-agent.yaml
+        sed -i "" "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" tfy-agent.yaml
+        sed -i "" "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" tfy-agent.yaml
+    else
+        sed -i "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" tfy-agent.yaml
+        sed -i "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" tfy-agent.yaml
+        sed -i "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" tfy-agent.yaml
+    fi
+
     kubectl apply -f /tmp/application.yaml -n argocd
     rm -f /tmp/application.yaml
 }
@@ -196,9 +180,6 @@ installation_guide() {
     
     # Check if Helm is installed
     check_helm_installed
-
-    # Check if yq is installed
-    check_yq_installed
     
     # Check if Kubernetes cluster is reachable
     check_kubernetes_cluster
@@ -222,12 +203,8 @@ installation_guide() {
     
     # Guide the user through installing Tfy-agent chart
     print_yellow "Next, we'll install the tfy-agent chart..."
-    if check_chart_installed "tfy-agent" "tfy-agent"; then
-        print_yellow "The 'tfy-agent' chart is already installed. Skipping tfy-agent installation."
-    else
-        helm repo add truefoundry https://truefoundry.github.io/infra-charts/
-        install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
-    fi
+    helm repo add truefoundry https://truefoundry.github.io/infra-charts/
+    install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
     
     # Completion message
     print_green "Congratulations! The installation process is complete."
