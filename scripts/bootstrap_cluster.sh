@@ -155,13 +155,13 @@ install_tfy_agent() {
     echo "$response" > /tmp/application.yaml
 
     if [ "$(uname)" == "Darwin" ]; then
-        sed -i "" "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" tfy-agent.yaml
-        sed -i "" "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" tfy-agent.yaml
-        sed -i "" "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" tfy-agent.yaml
+        sed -i "" "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" /tmp/application.yaml
+        sed -i "" "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" /tmp/application.yaml
+        sed -i "" "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" /tmp/application.yaml
     else
-        sed -i "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" tfy-agent.yaml
-        sed -i "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" tfy-agent.yaml
-        sed -i "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" tfy-agent.yaml
+        sed -i "s#\(\s*clusterToken:\s*\).*#\1 $cluster_token#" /tmp/application.yaml
+        sed -i "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" /tmp/application.yaml
+        sed -i "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" /tmp/application.yaml
     fi
 
     kubectl apply -f /tmp/application.yaml -n argocd
