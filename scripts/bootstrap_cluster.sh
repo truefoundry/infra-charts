@@ -124,7 +124,7 @@ install_argo_charts() {
     local argo_charts=('argocd' 'argo-rollouts')
 
     for argo_chart in "${argo_charts[@]}"; do
-        response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/$argo_chart.yaml")
+        response=$(curl --silent "https://catalogue.truefoundry.com/$cluster_type/templates/$argo_chart.yaml")
         echo "$response" > /tmp/application.yaml
         
         kubectl apply -f /tmp/application.yaml -n argocd
@@ -137,7 +137,8 @@ install_istio_dependencies() {
     local istio_dependencies=('istio-base' 'istio-discovery' 'tfy-istio-ingress');
 
     for istio_dependency in "${istio_dependencies[@]}"; do
-        response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/istio/$istio_dependency.yaml")
+        echo "Installing ${istio_dependency}..."
+        response=$(curl --silent "https://catalogue.truefoundry.com/$cluster_type/templates/istio/$istio_dependency.yaml")
         echo "$response" > /tmp/application.yaml
         
         kubectl apply -f /tmp/application.yaml -n argocd
@@ -151,7 +152,7 @@ install_tfy_agent() {
     local cluster_token=$3
     local control_plane_url=$4
 
-    response=$(curl "https://catalogue.truefoundry.com/$cluster_type/templates/tfy-agent.yaml")
+    response=$(curl --silent "https://catalogue.truefoundry.com/$cluster_type/templates/tfy-agent.yaml")
     echo "$response" > /tmp/application.yaml
 
     if [ "$(uname)" == "Darwin" ]; then
