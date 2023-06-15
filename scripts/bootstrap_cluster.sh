@@ -81,11 +81,11 @@ install_helm_chart() {
     print_green "Installing '$chart_name' chart in the '$chart_namespace' namespace..."
     
     if [ "$chart_name" == "tfy-agent" ]; then
-        helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" \
+        helm install "$chart_name" truefoundry/"$chart_name" --version "$chart_version" \
+        --namespace "$chart_namespace" --create-namespace --wait \
         --set config.tenantName="$tenant_name" \
         --set config.controlPlaneURL="$control_plane_url" \
-        --set config.clusterToken="$cluster_token" \
-        truefoundry/"$chart_name" --create-namespace
+        --set config.clusterToken="$cluster_token" 
     else
         helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" "$chart_repo"/"$chart_name" --create-namespace
     fi
