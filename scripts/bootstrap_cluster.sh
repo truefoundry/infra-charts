@@ -68,31 +68,6 @@ check_istio_crds_installed() {
     return 1
 }
 
-# Function to install a Helm chart
-install_helm_chart() {
-    local chart_repo=$1
-    local chart_name=$2
-    local chart_namespace=$3
-    local chart_version=$4
-    local tenant_name=$5
-    local cluster_token=$6
-    local control_plane_url=$7
-    
-    print_green "Installing '$chart_name' chart in the '$chart_namespace' namespace..."
-    
-    if [ "$chart_name" == "tfy-agent" ]; then
-        helm install "$chart_name" truefoundry/"$chart_name" --version "$chart_version" \
-        --namespace "$chart_namespace" --create-namespace --wait \
-        --set config.tenantName="$tenant_name" \
-        --set config.controlPlaneURL="$control_plane_url" \
-        --set config.clusterToken="$cluster_token" 
-    else
-        helm install "$chart_name" -n "$chart_namespace" --version "$chart_version" "$chart_repo"/"$chart_name" --create-namespace
-    fi
-    
-    print_green "The '$chart_name' chart has been successfully installed."
-}
-
 install_helm_chart_with_values() {
     local chart_repo=$1
     local chart_name=$2
@@ -109,7 +84,7 @@ install_helm_chart_with_values() {
 
 
 install_argocd_helm_chart() {
-    helm install argod argo/argo-cd --version 5.16.13 \
+    helm install argocd argo/argo-cd --version 5.16.13 \
     --namespace argocd --create-namespace --wait \
     --set applicationSet.enabled=false \
     --set notifications.enabled=false \
@@ -208,7 +183,7 @@ installation_guide() {
     install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
     
     # Completion message
-    print_green "Congratulations! The installation process is complete."
+    print_green "The installation process is complete."
 }
 
 # Start the installation guide with tenantName and clusterToken as arguments
