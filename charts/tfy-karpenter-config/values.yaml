@@ -18,6 +18,9 @@ karpenter:
       - key: kubernetes.io/arch
         operator: In
         values: ["amd64"]
+      - key: karpenter.k8s.aws/instance-family
+        operator: NotIn
+        values: ["p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
   
   gpuProvisionerSpec:
     enabled: false
