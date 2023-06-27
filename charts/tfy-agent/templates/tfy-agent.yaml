@@ -70,10 +70,14 @@ spec:
             {{- toYaml .Values.tfyAgent.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.tfyAgent.resources | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.tfyAgent.extraVolumeMounts | nindent 12 }}
       {{- with .Values.tfyAgent.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        {{- toYaml .Values.tfyAgent.extraVolumes | nindent 8 }}
       {{- with .Values.tfyAgent.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
