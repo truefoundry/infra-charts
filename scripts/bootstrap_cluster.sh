@@ -92,6 +92,16 @@ install_argocd_helm_chart() {
     --set server.extraArgs[0]="--insecure" \
     --set server.extraArgs[1]='--application-namespaces="*"' \
     --set controller.extraArgs[0]='--application-namespaces="*"'
+    if [[ ${?} -eq 0 ]]
+    then
+        print_green "Argocd Installed successfully. Continuing ..."
+        output=$(kubectl get pods -n argocd)
+        print_green $output
+        sleep 5
+    else
+        print_red "Argocd failed to install"
+        exit 2
+    fi
 }
 
 install_argo_charts() {
@@ -105,6 +115,15 @@ install_argo_charts() {
         kubectl apply -f /tmp/application.yaml -n argocd
         rm -f /tmp/application.yaml
     done
+}
+
+restart_argocd_if_needed() {
+    output=$(kubectl get app -A | grep -e "Unknown" -e "Missing"| wc -l)
+    if [[ ${output} -ge 1 ]]
+    then
+        print_yellow "Restarting Argocd ..."
+        kubectl rollout restart sts/argocd-application-controller -n argocd
+    fi
 }
 
 install_istio_dependencies() {
@@ -173,15 +192,17 @@ installation_guide() {
     helm repo add argo https://argoproj.github.io/argo-helm
     install_argocd_helm_chart
     install_argo_charts "$cluster_type"
+    sleep 2
     fi
 
     install_istio_dependencies "$cluster_type"
-    
+
     # Guide the user through installing Tfy-agent chart
     print_yellow "Next, we'll install the tfy-agent chart..."
     helm repo add truefoundry https://truefoundry.github.io/infra-charts/
     install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
     
+    restart_argocd_if_needed
     # Completion message
     print_green "The installation process is complete."
 }
