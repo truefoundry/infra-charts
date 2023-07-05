@@ -139,16 +139,22 @@ install_istio_dependencies() {
         sleep 1
         if [[ $istio_dependency == 'istio-discovery' ]]
         then
+            counter=0
             while True 
             do
-                istio_pods=$(kubectl get pods -n istio-system -l app=istiod -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep -v Running | wc -l)
-                if [[ $istio_pods -eq 0 ]]
+                istio_pods=$(kubectl get pods -n istio-system -l app=istiod -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep Running | wc -l)
+                if [[ $istio_pods -ge 2 ]]
                 then
                     print_green "istio-discovery is installed successfully"
                     break
+                elif [[ $counter -ge 5 ]]
+                then
+                    print_green "istio-discovery not installed yet"
                 else
                     print_yellow "Waiting for istio-discovery pods to come up ..."
                 fi
+                ((counter++))
+                sleep 5
             done
         fi
 
@@ -179,14 +185,20 @@ install_tfy_agent() {
     sleep 1
     while True
     do
+        counter=0
         agent_pods=$(kubectl get pods -n tfy-agent -l app.kubernetes.io/name=tfy-agent -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep 'Running' | wc -l)
-        if [[ $agent_pods -ge 2 ]]
+        if [[ $agent_pods -ge 1 ]]
         then
             print_green "Agent installed successfully"
             break
+        elif [[ $counter -ge 10 ]]
+        then
+            print_green "Agent is not in the running state yet. Exiting"
         else
             print_yellow "Waiting for agent pods to come up ..."
         fi
+        ((counter++))
+        sleep 5
     done
 
     rm -f /tmp/application.yaml
