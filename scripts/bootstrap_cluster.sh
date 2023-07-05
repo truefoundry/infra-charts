@@ -150,6 +150,7 @@ install_istio_dependencies() {
                 elif [[ $counter -ge 5 ]]
                 then
                     print_green "istio-discovery not installed yet"
+                    break
                 else
                     print_yellow "Waiting for istio-discovery pods to come up ..."
                 fi
@@ -194,6 +195,7 @@ install_tfy_agent() {
         elif [[ $counter -ge 10 ]]
         then
             print_green "Agent is not in the running state yet. Exiting"
+            break
         else
             print_yellow "Waiting for agent pods to come up ..."
         fi
