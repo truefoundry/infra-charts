@@ -136,6 +136,22 @@ install_istio_dependencies() {
         echo "$response" > /tmp/application.yaml
         
         kubectl apply -f /tmp/application.yaml -n argocd
+        sleep 1
+        if [[ $istio_dependency == 'istio-discovery' ]]
+        then
+            while True 
+            do
+                istio_pods=$(kubectl get pods -n istio-system -l app=istiod -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep -v Running | wc -l)
+                if [[ $istio_pods -eq 0 ]]
+                then
+                    print_green "istio-discovery is installed successfully"
+                    break
+                else
+                    print_yellow "Waiting for istio-discovery pods to come up ..."
+                fi
+            done
+        fi
+
         rm -f /tmp/application.yaml
     done
 }
@@ -158,8 +174,21 @@ install_tfy_agent() {
         sed -i "s#\(\s*tenantName:\s*\).*#\1 $tenant_name#" /tmp/application.yaml
         sed -i "s#\(\s*controlPlaneURL:\s*\).*#\1 $control_plane_url#" /tmp/application.yaml
     fi
-
+    
     kubectl apply -f /tmp/application.yaml -n argocd
+    sleep 1
+    while True
+    do
+        agent_pods=$(kubectl get pods -n tfy-agent -l app.kubernetes.io/name=tfy-agent -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep 'Running' | wc -l)
+        if [[ $agent_pods -ge 2 ]]
+        then
+            print_green "Agent installed successfully"
+            break
+        else
+            print_yellow "Waiting for agent pods to come up ..."
+        fi
+    done
+
     rm -f /tmp/application.yaml
 }
 
