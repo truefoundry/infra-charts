@@ -68,6 +68,27 @@ check_istio_crds_installed() {
     return 1
 }
 
+check_tfy_agent() {
+    while True
+    do
+        counter=0
+        agent_pods=$(kubectl get pods -n tfy-agent -l app.kubernetes.io/name=tfy-agent -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep 'Running' | wc -l)
+        if [[ $agent_pods -ge 1 ]]
+        then
+            print_green "Agent installed successfully"
+            break
+        elif [[ $counter -ge 10 ]]
+        then
+            print_red "Agent is not in the running state yet. Exiting"
+            exit 1
+        else
+            print_yellow "Waiting for agent pods to come up ..."
+        fi
+        ((counter++))
+        sleep 5
+    done
+}
+
 install_helm_chart_with_values() {
     local chart_repo=$1
     local chart_name=$2
@@ -131,7 +152,7 @@ install_istio_dependencies() {
     local istio_dependencies=('istio-base' 'istio-discovery' 'tfy-istio-ingress');
 
     for istio_dependency in "${istio_dependencies[@]}"; do
-        echo "Installing ${istio_dependency}..."
+        print_yellow "Installing ${istio_dependency}..."
         response=$(curl --silent "https://catalogue.truefoundry.com/$cluster_type/templates/istio/$istio_dependency.yaml")
         echo "$response" > /tmp/application.yaml
         
@@ -145,6 +166,7 @@ install_istio_dependencies() {
                 istio_pods=$(kubectl get pods -n istio-system -l app=istiod -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep Running | wc -l)
                 if [[ $istio_pods -ge 2 ]]
                 then
+                    sleep 5
                     print_green "istio-discovery is installed successfully"
                     break
                 elif [[ $counter -ge 5 ]]
@@ -183,25 +205,6 @@ install_tfy_agent() {
     fi
     
     kubectl apply -f /tmp/application.yaml -n argocd
-    sleep 1
-    while True
-    do
-        counter=0
-        agent_pods=$(kubectl get pods -n tfy-agent -l app.kubernetes.io/name=tfy-agent -o custom-columns=:.metadata.name,.:.status.phase --no-headers | grep 'Running' | wc -l)
-        if [[ $agent_pods -ge 1 ]]
-        then
-            print_green "Agent installed successfully"
-            break
-        elif [[ $counter -ge 10 ]]
-        then
-            print_green "Agent is not in the running state yet. Exiting"
-            break
-        else
-            print_yellow "Waiting for agent pods to come up ..."
-        fi
-        ((counter++))
-        sleep 5
-    done
 
     rm -f /tmp/application.yaml
 }
@@ -214,7 +217,6 @@ installation_guide() {
     local control_plane_url=$4
 
     print_yellow "Starting TrueFoundry agent installation..."
-    echo
     
     # Check if Helm is installed
     check_helm_installed
@@ -244,7 +246,9 @@ installation_guide() {
     print_yellow "Next, we'll install the tfy-agent chart..."
     helm repo add truefoundry https://truefoundry.github.io/infra-charts/
     install_tfy_agent "$cluster_type" "$tenant_name" "$cluster_token" "$control_plane_url"
-    
+
+    check_tfy_agent
+
     restart_argocd_if_needed
     # Completion message
     print_green "The installation process is complete."
@@ -252,9 +256,9 @@ installation_guide() {
 
 # Start the installation guide with tenantName and clusterToken as arguments
 if [ $# -lt 3 ]; then
-    echo "Error: Insufficient arguments. Please provide the tenantName, clusterType and clusterToken."
-    echo "Usage: $0 <tenantName> <clusterType> <clusterToken>"
-    echo "Warning: User can optionally pass control plane url as 4th argument" 
+    print_red "Error: Insufficient arguments. Please provide the tenantName, clusterType and clusterToken."
+    print_red "Usage: $0 <tenantName> <clusterType> <clusterToken>"
+    print_red "Warning: User can optionally pass control plane url as 4th argument" 
     exit 1
 fi
 
