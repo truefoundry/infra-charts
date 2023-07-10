@@ -20,7 +20,10 @@ karpenter:
         values: ["amd64"]
       - key: karpenter.k8s.aws/instance-family
         operator: NotIn
-        values: ["p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+        values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+      - key: karpenter.k8s.aws/instance-size
+        operator: NotIn
+        values: ["nano", "micro", "metal"]
   
   gpuProvisionerSpec:
     enabled: false
