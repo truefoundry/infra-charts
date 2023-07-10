@@ -1,0 +1,111 @@
+global: {}
+imageRepository: truefoundrycloud/servicefoundry-server
+replicaCount: 1
+environmentName: default
+envSecretName: servicefoundry-server-env-secret
+imagePullPolicy: IfNotPresent
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 3000
+    path: /
+  liveness:
+    port: 3000
+    path: /
+resources:
+  limits:
+    cpu: 400m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 3000
+  annotations: {}
+serviceAccount:
+  create: true
+  name: servicefoundry-server
+  annotations: {}
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  S3_BUCKET_NAME: ''
+  GS_BUCKET_NAME: ''
+  DB_NAME: ${k8s-secret/DB_NAME}
+  DB_USERNAME: ${k8s-secret/DB_USERNAME}
+  DB_PASSWORD: ${k8s-secret/DB_PASSWORD}
+  DB_HOST: ${k8s-secret/DB_HOST}
+  DB_PORT: '5432'
+  STRIPE_KEY: ''
+  SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/SVC_FOUNDRY_SERVICE_API_KEY}
+  PORT: '3000'
+  SWAGGER_ENABLE: '0'
+  NODE_ENV: production
+  GITHUB_PRIVATE_KEY: ''
+  GITHUB_APP_ID: ''
+  BITBUCKET_CLIENT_ID: ''
+  BITBUCKET_CLIENT_SECRET: ''
+  GITHUB_INSTALLATION_URL: ''
+  CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
+  TFY_BUILD_LOGS_URL: '{{ .Values.global.controlPlaneURL }}/api/tfy-build'
+  TFY_BUILD_URL: http://{{ .Release.Name }}-tfy-build.truefoundry.svc.cluster.local:5000
+  TFY_BUILD_WS_URL: '{{ .Values.global.controlPlaneURL }}'
+  TFY_BUILD_WS_PATH: /api/tfy-build-ws
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  ISTIO_INJECTION_STATE: disabled
+  WORKSPACE_PER_USER_WITHOUT_PAYMENT: '-1'
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  MULTITENANT: 'false'
+  MANIFEST_SERVICE_URL: >-
+    http://{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace
+    }}.svc.cluster.local:8080
+  MLFOUNDRY_SERVER_URL: >-
+    http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:5000
+  KUBEVELA_VERSION: 0.0.13
+  DEFAULT_CLOUD_PROVIDER: aws
+  MIN_CLI_VERSION: 0.9.0
+  HONEYCOMB_API_KEY: ''
+  OTEL_SERVICE_NAME: sfy-server
+  NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
+  NATS_URL: >-
+    http://{{ .Release.Name }}-nats.{{ .Release.Namespace
+    }}.svc.cluster.local:4222
+  SECRET_STORE: aws-ssm
+  CLUSTER_PROXY_URL: >-
+    http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace
+    }}.svc.cluster.local:8123
+  ENABLE_SERVER_SIDE_APPLY: 'true'
+  DEMO_ENABLED: 'false'
+  DEMO_TENANT_NAME: truefoundry
+  DEMO_WORKSPACE_ID: ''
+imageTag: e4b9c0dbcae1f6321582bc1e930595245ffd4460

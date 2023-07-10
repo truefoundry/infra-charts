@@ -1,0 +1,102 @@
+global: {}
+imageRepository: truefoundrycloud/tfy-build-server
+replicaCount: 1
+environmentName: default
+envSecretName: tfy-build-server-env-secret
+imagePullPolicy: IfNotPresent
+imagePullSecrets: []
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 5000
+    path: /
+  liveness:
+    port: 5000
+    path: /
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+rbac:
+  enabled: true
+serviceAccount:
+  create: true
+  name: tfy-build
+  annotations: {}
+env:
+  NODE_ENV: production
+  BUILD_NAMESPACE: truefoundry
+  BUILD_SERVICEACCOUNT_NAME: tfy-build
+  BUILD_SERVICE: argo
+  LOKI_HOST: loki.loki.svc.cluster.local:3100
+  LOKI_TSL_PROTOCOL: 'false'
+  LOKI_ORG_ID: tfy-supercluster-kube
+  USE_DEPOT: ''
+  DEPOT_PROJECT_ID: ''
+  DEPOT_TOKEN: ''
+imageTag: 127216490b7762fc3ee1f9addff12ae2850f5eaa
+truefoundryWorkflows:
+  enabled: true
+  sfyBuilder:
+    version: 0.6.8
+    resources:
+      limits:
+        cpu: 2
+        ephemeral-storage: 20Gi
+        memory: 2Gi
+      requests:
+        cpu: 1
+        ephemeral-storage: 15Gi
+        memory: 1Gi
+  dind:
+    resources:
+      limits:
+        cpu: 2
+        ephemeral-storage: 20Gi
+        memory: 8Gi
+      requests:
+        cpu: 1
+        ephemeral-storage: 15Gi
+        memory: 1Gi
+  logMarkers:
+    error: \u001b[31m[Error]\u001b[0m
+    done: \u001b[32m[Done]\u001b[0m
+    start: \u001b[36m[Start]\u001b[0m
+    clientPrefix:
+      - TFY-CLIENT
+    supportSlack: >-
+      https://join.slack.com/t/truefoundry/shared_invite/zt-11ht512jq-nDJq~HJMqc6wBw90JVlo7g
+    serviceFoundryUiUrl: https://app.truefoundry.com/workspace

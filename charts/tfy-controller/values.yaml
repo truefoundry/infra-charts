@@ -1,0 +1,48 @@
+global: {}
+imageRepository: truefoundrycloud/tfy-controller
+environmentName: default
+envSecretName: sfy-manifest-service-env-secret
+imagePullPolicy: IfNotPresent
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: false
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+service:
+  type: ClusterIP
+  port: 8123
+  annotations: {}
+serviceAccount:
+  create: true
+  name: tfy-controller
+  annotations: {}
+env:
+  GIN_MODE: release
+  SFY_SERVER_URL: >-
+    http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:3000
+  SFY_API_KEY: ${k8s-secret/SFY_API_KEY}
+  SFY_MANIFEST_SERVER_URL: >-
+    http://{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace
+    }}.svc.cluster.local:8080
+  PROXY_SERVER_PORT: '{{ .Values.service.port }}'
+  PROXY_SERVER_ENABLED: 'true'
+imageTag: 7ac1e32500839990587f884e6a9bb6b168b3df1c
