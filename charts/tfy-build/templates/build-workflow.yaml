@@ -1,0 +1,271 @@
+{{- if .Values.truefoundryWorkflows.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: build
+spec:
+  workflowMetadata:
+    labelsFrom:
+      "truefoundry.com/buildName":
+        expression: workflow.name
+  entrypoint: build
+  onExit: exit-handler
+  arguments:
+    parameters:
+      - name: callbackURL
+      - name: buildSource
+      - name: buildConfig
+      - name: dockerRegistryURL
+      - name: dockerRegistryUsername
+      - name: dockerRegistryPassword
+      - name: dockerRepo
+      - name: dockerTag
+  templates:
+  - name: build
+    inputs:
+      parameters:
+        - name: buildSource
+        - name: buildConfig
+        - name: dockerRegistryURL
+        - name: dockerRegistryUsername
+        - name: dockerRegistryPassword
+        - name: dockerRepo
+        - name: dockerTag
+    steps:
+    - - name: build-and-push
+        template: build-and-push
+        arguments:
+          parameters:
+          - name: buildSource
+            value: "{{`{{inputs.parameters.buildSource}}`}}"
+          - name: buildConfig
+            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: dockerRegistryURL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: dockerRegistryUsername
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: dockerRegistryPassword
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: dockerRepo
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: dockerTag
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+  - name: build-and-push
+    retryStrategy:
+      limit: 5
+      retryPolicy: "Always"
+      backoff:
+        duration: "30"
+        factor: 2
+        maxDuration: "2m"
+    inputs:
+      parameters:
+        - name: buildSource
+        - name: buildConfig
+        - name: dockerRegistryURL
+        - name: dockerRegistryUsername
+        - name: dockerRegistryPassword
+        - name: dockerRepo
+        - name: dockerTag
+    volumes:
+    - name: truefoundry-docker-config
+      secret:
+        items:
+        - key: .dockerconfigjson
+          path: base_config.json
+        secretName: truefoundry-image-pull-secret
+    script:
+      image: truefoundrycloud/sfy-builder:{{ .Values.truefoundryWorkflows.sfyBuilder.version }}
+      command: [bash]
+      workingDir: /mnt/vol
+      env:
+      - name: DOCKER_HOST
+        value: tcp://localhost:2375/
+      source: |
+        #!/bin/bash
+        set -e -o pipefail
+
+        mkdir -p /root/.docker/
+        cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json
+
+        BUILD_SOURCE='{{`{{inputs.parameters.buildSource}}`}}'
+        BUILD_TYPE=$(echo $BUILD_SOURCE | jq -r '.type')
+        
+        rm -f -R ./source-code
+
+        if [[ $BUILD_TYPE == "remote" ]]; then
+            REMOTE_URL=$(echo $BUILD_SOURCE | jq -r '.remote_uri')
+            printf "\033[36m[Start]\033[0m Downloading source code from remote source\n"
+            mkdir -p source-code
+            curl -s -o project-files.tar.gz $REMOTE_URL
+            tar -xf project-files.tar.gz -C source-code
+            cd source-code
+        elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "bitbucket" || $BUILD_TYPE == "github" ]]; then
+            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+            printf "\033[36m[Start]\033[0m Downloading source code from $GIT_URL\n"
+            git clone $GIT_URL source-code
+            cd source-code && git reset --hard $GIT_REF
+        elif [[ $BUILD_TYPE == "notebook_build" ]]; then
+            :
+        else
+            printf "{{ .Values.truefoundryWorkflows.logMarkers.error }} Source type '$BUILD_TYPE' not supported.\n"
+            exit 1
+        fi
+        printf "{{ .Values.truefoundryWorkflows.logMarkers.done }} Download code completed\n"
+        
+        until docker ps -q 2> /dev/null; do sleep 3; done;
+
+        printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please find the logs below\n"
+        
+        docker login -u "{{`{{inputs.parameters.dockerRegistryUsername}}`}}" -p "{{`{{inputs.parameters.dockerRegistryPassword}}`}}" "{{`{{inputs.parameters.dockerRegistryURL}}`}}" 2> /dev/null
+        
+        IMAGE="{{`{{inputs.parameters.dockerRegistryURL}}`}}"/"{{`{{inputs.parameters.dockerRepo}}`}}"
+        printf "\033[36m[==== Docker logs start ====]\033[0m\n"
+
+        docker pull $IMAGE:latest 2> /dev/null || true
+        
+        sfy build --build-config {{`{{inputs.parameters.buildConfig}}`}} --cache $IMAGE:latest --name $IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}"
+        docker push $IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}"
+        docker tag $IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" $IMAGE:latest
+        docker push $IMAGE:latest
+        printf "\033[36m[==== Docker logs end ====]\033[0m\n"
+        SIZE_MSG=$(docker images $IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --format "[==== Docker Image Size:- {{`{{.Size}}`}} ====]" | sed 's/^/\\u001b[33m/' | sed 's/.*/&\\u001b[0m/')
+        printf "$SIZE_MSG\n"
+        printf "{{ .Values.truefoundryWorkflows.logMarkers.done }} Docker image built and pushed\n"
+      volumeMounts:
+      - name: workdir
+        mountPath: /mnt/vol
+      - name: truefoundry-docker-config
+        mountPath: /root/.truefoundry/.docker/
+      resources:
+        {{- toYaml .Values.truefoundryWorkflows.sfyBuilder.resources | nindent 8 }}
+    sidecars:
+    - name: dind
+      image: docker:23.0.0-dind-rootless
+      command: [dockerd-entrypoint.sh]
+      env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+      securityContext:
+        privileged: true
+      mirrorVolumeMounts: true
+      resources:
+        {{- toYaml .Values.truefoundryWorkflows.dind.resources | nindent 8 }}
+  - name: exit-handler
+    inputs:
+      parameters:
+        - name: callbackURL
+        - name: dockerRegistryURL
+        - name: dockerRepo
+        - name: dockerTag
+    steps:
+    - - name: success-callback
+        when: "{{`{{workflow.status}}`}} == Succeeded"
+        template: send-api-request
+        arguments:
+          parameters:
+          - name: url
+            value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: method
+            value: "PATCH"
+          - name: payload
+            value: '{"status": "SUCCEEDED", "imageUri": "{{`{{inputs.parameters.dockerRegistryURL}}`}}/{{`{{inputs.parameters.dockerRepo}}`}}:{{`{{inputs.parameters.dockerTag}}`}}"}'
+          - name: token
+            value: ""
+      - name: failure-callback
+        when: "{{`{{workflow.status}}`}} != Succeeded"
+        template: send-api-request
+        arguments:
+          parameters:
+          - name: url
+            value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: method
+            value: "PATCH"
+          - name: payload
+            value: '{"status": "FAILED"}'
+          - name: token
+            value: ""
+    - - name: end-marker
+        template: end-marker
+  - name: end-marker
+    retryStrategy:
+      limit: 5
+      retryPolicy: "Always"
+      backoff:
+        duration: "30"
+        factor: 2
+        maxDuration: "2m"
+    script:
+      resources:
+        limits:
+          cpu: 200m
+          ephemeral-storage: 256Mi
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          ephemeral-storage: 128Mi
+          memory: 128Mi
+      image: ubuntu
+      command: [bash]
+      source: |
+        #!/bin/bash
+        set -e
+        if [[ "{{`{{workflow.status}}`}}" == "Succeeded" ]]; then
+          echo -e "{{ .Values.truefoundryWorkflows.logMarkers.done }} Image Built Successfully."
+          echo -e "{{ .Values.truefoundryWorkflows.logMarkers.done }} Kubernetes deployment triggered. It may take 5-10s for the application to be live."
+        else
+          echo -e "{{ .Values.truefoundryWorkflows.logMarkers.error }} Error occured while building and pushing docker image."
+          echo -e "{{ .Values.truefoundryWorkflows.logMarkers.error }} Build Image Failed."
+        fi
+        echo "PIPELINE_RUN_{{`{{workflow.name}}`}}_ENDED"
+  - name: send-api-request
+    retryStrategy:
+      limit: 20
+      retryPolicy: "Always"
+      backoff:
+        duration: "30"
+        factor: 2
+        maxDuration: "2m"
+    inputs:
+      parameters:
+        - name: url
+        - name: method
+        - name: payload
+        - name: token
+    script:
+      resources:
+        limits:
+          cpu: 200m
+          ephemeral-storage: 256Mi
+          memory: 256Mi
+        requests:
+          cpu: 100m
+          ephemeral-storage: 128Mi
+          memory: 128Mi
+      image: nyurik/alpine-python3-requests
+      command: [python3]
+      source: |
+        import logging
+        import requests
+        import sys
+        import time
+        import json
+
+        def api_call():
+            try:
+                payload = '{{`{{inputs.parameters.payload}}`}}'
+                url= "{{`{{inputs.parameters.url}}`}}"
+                method= "{{`{{inputs.parameters.method}}`}}"
+                token= "{{`{{inputs.parameters.token}}`}}"
+                msg = "\033[36m[Start]\033[0m Sending request to url: {} with json {}".format(url, payload)
+                print(msg)
+                r = requests.request(method, url=url, json=json.loads(payload), headers={"authorization": "Bearer "+ token})
+                r.raise_for_status()
+            except Exception as e:
+                print("{{ .Values.truefoundryWorkflows.logMarkers.error }} Error occured while notifying server")
+                print("Error occured", e)
+                time.sleep(60)
+                sys.exit(1)
+        api_call()
+{{- end }}

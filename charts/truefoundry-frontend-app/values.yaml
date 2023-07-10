@@ -1,0 +1,96 @@
+global: {}
+imageRepository: truefoundrycloud/truefoundry-frontend-app
+replicaCount: 1
+envSecretName: truefoundry-frontend-app-env-secret
+imagePullPolicy: IfNotPresent
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: false
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+serviceAccount:
+  create: true
+  name: truefoundry-frontend-app
+  annotations: {}
+imageTag: 2252e1eafc8fabceeb2c9f7c2d4e88919aff3d1f
+servicefoundryServerHost: >-
+  {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+  }}.svc.cluster.local
+mlfoundryServerHost: >-
+  {{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace
+  }}.svc.cluster.local
+mlMonitoringServerHost: >-
+  {{ .Release.Name }}-ml-monitoring-server.{{ .Release.Namespace
+  }}.svc.cluster.local
+tfyBuildServerHost: '{{ .Release.Name }}-tfy-build.truefoundry.svc.cluster.local'
+natsServerHost: '{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local'
+proxyServerHost: '{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local'
+llmPlaygroundHost: '{{ .Release.Name }}-llm-playground.{{ .Release.Namespace }}.svc.cluster.local'
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  VITE_FUSIONAUTH_URL: https://login.truefoundry.com
+  VITE_AUTHSERVER_URL: https://auth.truefoundry.com
+  VITE_MLFOUNDRY_URL: /api/ml
+  VITE_SVCFOUNDRY_URL: /api/svc
+  VITE_SOCKET_URL: ''
+  VITE_MONITORINGFOUNDRY_URL: /api/monitoring
+  VITE_ENABLE_SENTRY: 'false'
+  VITE_SENTRY_DSN: ''
+  VITE_ENABLE_HOTJAR: 'false'
+  VITE_HOTJAR_ID: ''
+  VITE_HOTJAR_SNIPPET_VERSION: ''
+  VITE_APEX_DOMAIN: http://truefoundry.com/
+  VITE_DATAGRID_LICENSE_KEY: >-
+    1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
+  VITE_ANALYTICS: 'false'
+  VITE_STRIPE_PUBLISHABLE_KEY: ''
+  VITE_MULTITENANT_ENABLED: 'false'
+  VITE_TENANT_NAME: '{{ .Values.global.tenantName }}'
+  VITE_FEATURE_IN_DEVELOPMENT_MODEL_CATALOGUE: 'false'
+  VITE_FEATURE_IN_DEVELOPMENT_MODEL_FINETUNE: 'false'
+  VITE_FEATURE_IN_DEVELOPMENT_ENABLE_SETUP_ACCOUNT: 'false'
+  VITE_FEATURE_ENABLE_COMPANY_REGISTRATION: 'false'
+  VITE_ENABLE_PAGESENSE: 'true'
+  VITE_NATS_URL: ''
+  NATS_URL: ws://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:443
+  VITE_SENTRY_AUTH_TOKEN: ''
+  VITE_APP_ENVIRONMENT: ''
+  VITE_LLM_PLAYGROUND_PATH: llm-playground
+  VITE_LLM_PLAYGROUND_ENABLED: 'false'

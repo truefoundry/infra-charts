@@ -1,0 +1,73 @@
+global: {}
+imageRepository: truefoundrycloud/sfy-manifest-service
+replicaCount: 1
+environmentName: default
+envSecretName: sfy-manifest-service-env-secret
+imagePullPolicy: IfNotPresent
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 8080
+    path: /healthy
+  liveness:
+    port: 8080
+    path: /healthy
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+serviceAccount:
+  create: true
+  name: sfy-manifest-service
+  annotations: {}
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  GIN_MODE: release
+  PORT: '8080'
+  SFY_SERVER_URL: >-
+    http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:3000
+  MLF_SERVER_URL: >-
+    http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:5000
+  SFY_API_KEY: ${k8s-secret/SFY_API_KEY}
+  PROCESS_TICKER_PERIOD_SECONDS: '5'
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+imageTag: 433052035018b792ea6d01378110b61c4ac49163

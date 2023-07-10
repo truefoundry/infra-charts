@@ -1,0 +1,69 @@
+global: {}
+imageRepository: truefoundrycloud/ml-monitoring-server
+replicaCount: 1
+environmentName: default
+envSecretName: ml-monitoring-server-env-secret
+imagePullPolicy: IfNotPresent
+imagePullCredentials: '{{ .Values.global.imagePullCredentials }}'
+imagePullSecretName: '{{ .Values.global.imagePullSecretName }}'
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+healthcheck:
+  enabled: false
+  readiness:
+    port: 8000
+    path: /
+  liveness:
+    port: 8000
+    path: /
+resources:
+  limits:
+    cpu: 400m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 8000
+  annotations: {}
+serviceAccount:
+  create: true
+  name: ml-monitoring-server
+  annotations: {}
+imageTag: f1db2e33bb2bf36a91d4416345b4f1bb0cc245d8
+env:
+  DB_NAME: mlmonitoring
+  DB_USERNAME: ${k8s-secret/DB_USERNAME}
+  DB_PASSWORD: ${k8s-secret/DB_PASSWORD}
+  DB_HOST: ${k8s-secret/DB_HOST}
+  DB_PORT: '5432'
+  DB_DIALECT: postgresql+asyncpg
+  DB_DIALECT_ALEMBIC: postgresql
+  TZ: UTC
+  RUN_TYPE: SERVICE
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/SVC_FOUNDRY_SERVICE_API_KEY}
+  CONTROL_PLANE_URL: '{{ .Values.global.controlPlaneURL }}'
