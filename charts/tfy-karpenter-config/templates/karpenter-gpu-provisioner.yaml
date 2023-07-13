@@ -6,8 +6,13 @@ metadata:
   namespace: karpenter
 spec:
   weight: 10
+  {{- if .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
   consolidation:
     enabled: true
+  {{- end }}
+{{- if not .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
+  ttlSecondsAfterEmpty: {{ .Values.karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty }}
+{{- end }}
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
