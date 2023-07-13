@@ -5,9 +5,19 @@ cluster:
 karpenter:
   instanceProfile: ""
   
+  ##
+  # default provisioner for non-GPU workloads
   defaultProvisionerSpec:
+    ## 
+    # nodes should consolidate to fit in the right instance size
     consolidation:
       enabled: true
+
+    ##
+    # seconds after which nodes should be removed 
+    # ttlSecondsAfterEmpty can only be used if consolidation is disabled
+    # ttlSecondsAfterEmpty: 30
+
     requirements:
       - key: karpenter.sh/capacity-type
         operator: In
@@ -24,10 +34,25 @@ karpenter:
       - key: karpenter.k8s.aws/instance-size
         operator: NotIn
         values: ["nano", "micro", "metal"]
+
     providerRef:
       name: default
+
+  ## provisioner for GPU workloads
   gpuProvisionerSpec:
+    
     enabled: false
+
+    ## 
+    # nodes should consolidate to fit in the right instance size
+    consolidation:
+      enabled: true
+    
+    ##
+    # seconds after which nodes should be removed 
+    # ttlSecondsAfterEmpty can only be used if consolidation is disabled
+    # ttlSecondsAfterEmpty: 300
+    
     capacityTypes:
       - spot
       - on-demand
