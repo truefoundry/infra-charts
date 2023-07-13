@@ -6,7 +6,7 @@ metadata:
 spec:
 {{ toYaml .Values.karpenter.defaultProvisionerSpec | indent 2 }}
   providerRef:
-    name: default
+    name: {{ .Values.karpenter.defaultProvisionerSpec.providerRefName }}
 {{- if not .Values.karpenter.defaultProvisionerSpec.consolidation.enabled }}
   ttlSecondsAfterEmpty: 30
 {{- end }}
