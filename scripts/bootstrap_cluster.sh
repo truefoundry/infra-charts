@@ -270,6 +270,9 @@ fi
 
 if [ $# == 4 ]; then
     control_plane_url="$4"
+    if [[ ! $control_plane_url =~ ^(https?://).* ]]; then
+        control_plane_url="https://$control_plane_url"
+    fi
 fi
 
 installation_guide "$1" "$2" "$3" "$control_plane_url"
