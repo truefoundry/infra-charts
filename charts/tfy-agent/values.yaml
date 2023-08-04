@@ -1,81 +1,112 @@
-# Default values for truefoundry agent.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# global settings
+## @section Global parameters
+## @param global.rbac.enabled Enable RBAC globally
+##
 global:
   rbac:
     enabled: true
 
-# configuration for tfyAgent and tfyAgentProxy
+## @section Configuration parameters
+## Parameters to configure tfyAgent and tfyAgentProxy
+##
 config:
-  # token to connect to the contorl plane
+  ## @param config.clusterToken Token to connect to the control plane
+  ##
   clusterToken: ""
 
-  # name of the secret containing the cluster token
-  # the key must be CLUSTER_TOKEN
-  # if this is set it will override config.clusterToken
+  ## @param config.clusterTokenSecret Secret of token to connect to control plane, secret key must be `CLUSTER_TOKEN`. This overrides config.clusterToken
+  ##
   clusterTokenSecret: ""
 
-  # url of the control plane
-  # format: https://<>
+  ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
+  ##
   controlPlaneURL: ""
 
-  # name of the tenant where your control plane is hosted
+  ## @param config.tenantName Tenant Name
+  ##
   tenantName: ""
 
-  # nats port
+  ## @param config.natsPort Port at which nats should connect 
+  ##
   natsPort: "443"
 
-  # configurations for opencost
+  ## Opencost configuration
+  ##
   opencost:
-    # time in milliseconds for opencost scraping
+
+    ## @param config.opencost.pollInterval Time in milliseconds for opencost scraping
+    ##
     pollInterval: "180000"
-    # endpoint to connect to opencost
+
+    ## @param config.opencost.endpoint Endpoint to connect to opencost
+    ##
     endpoint: http://opencost.opencost.svc.cluster.local:9003
 
-  # configurations for prometheus
+  ## Prometheus configuration
+  ##
   prometheus:
-    # time in milliseconds for prometheus scraping config
+    ## @param config.prometheus.pollInterval Time in milliseconds for prometheus scraping config
+    ##
     pollInterval: "60000"
-    # endpoint to connect to prometheus
+
+    ## @param config.prometheus.endpoint Endpoint to connect to prometheus
+    ##
     endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
 
+  ## @param config.alertURL Truefoundry alert URL
+  ##
   alertURL: "https://auth.truefoundry.com"
 
+  ## @param config.nodeEnv
   nodeEnv: production
 
+## @param imagePullSecrets Secrets to pull images
+##
 imagePullSecrets: []
+
+## @param nameOverride String to override partial name passed in helm install command
+##
 nameOverride: ""
+
+## @param fullnameOverride String to override full name passed in helm install command
+##
 fullnameOverride: ""
 
-# configuration related to tfyAgent
+## @section tfyAgent configuration parameters
+##
 tfyAgent:
-  ## Deploy tfyAgent
-  #
+  ## @param tfyAgent.enabled Bool value to deploy tfyAgent
+  ##
   enabled: true
 
   ## Number of replicas of tfyAgent
   ## value kept for future use, kept 1
   # replicaCount: 1
 
+  ## @param tfyAgent.annotations Add annotations to tfyAgent pods
+  ##
   annotations: {}
 
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
-    # Specifies whether a service account should be created
+    ## @param tfyAgent.serviceAccount.create Bool to enable serviceAccount creation 
+    ##
     create: true
-    # Annotations to add to the service account
+
+    ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
+    ## 
     annotations: {}
-    # The name of the service account to use.
-    # If not set and create is true, a name is generated using the fullname template
+
+    ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+    ## 
     name: ""
-    # enabled automounting of service account token inside the pod
+
+    ## @param tfyAgent.serviceAccount.automountServiceAccountToken Enable automounting of service account token inside the pod
+    ## 
     automountServiceAccountToken: true
 
-  ## Adding extra envrionment variable for tfyAgent
-  #
+  ## @param tfyAgent.extraEnvVars Additional envrionment variables for tfyAgent
+  ##
   extraEnvVars: []
   ##
   # Example:
@@ -86,15 +117,22 @@ tfyAgent:
   ## Configuration for tfyAgent service
   ##
   service:
+
+    ## @param tfyAgent.service.annotations Annotations to add to the tfyAgent service
+    ##   
     annotations: {}
+    ## @param tfyAgent.service.labels Labels to add to the tfyAgent service
+    ##     
     labels: {}
+    ## @param tfyAgent.service.clusterIP Cluster IP for tfyAgent service
+    ## 
     clusterIP: ""
 
-    ## Port for tfyAgent Service to listen on
+    ## @param tfyAgent.service.port Port for tfyAgent service
     ##
     port: 3000
-    ## Port to expose on each node
-    ## Only used if service.type is 'NodePort'
+    
+    ## @param tfyAgent.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
     ## List of IP addresses at which the tfyAgent server service is available
@@ -104,18 +142,25 @@ tfyAgent:
     ## If you want to make sure that connections from a particular client are passed to the same Pod each time
     ## Accepts 'ClientIP' or ''
     ##
+    ## @param tfyAgent.service.sessionAffinity SessionAffinity for tfyAgent Service
+    ##
     sessionAffinity: ""
 
-    ## Service type
+    ## @param tfyAgent.service.type Type for tfyAgent Service
     ##
     type: ClusterIP
 
   ## Image of tfyAgent
   ##
   image:
+    ## @param tfyAgent.image.repository tfyAgent repository
+    ##
     repository: truefoundrycloud/tfy-agent
+    ## @param tfyAgent.image.pullPolicy Pull policy for tfyAgent
+    ##
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
+    ## @param tfyAgent.image.tag Image tag whose default is the chart appVersion.
+    ##
     tag: "c1afb81d5a82fd7ff1e05817d9d10b4b0e4384fc"
 
   ## Define resources requests and limits for single Pods.
@@ -123,6 +168,14 @@ tfyAgent:
   ##
   ## customized resource limits are very general in nature and must be kept the same
   ## decreasing the resource might make the service UNAVAILABLE
+
+  ## @param tfyAgent.resources.limits.cpu CPU resource limits for tfyAgent container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgent.resources.limits.memory Memory Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgent.resources.limits.ephemeral-storage Ephemeral storage Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgent.resources.requests.cpu CPU resource requests for tfyAgent container. Advised to only increase the requests and not decrease it
+  ## @param tfyAgent.resources.requests.memory Memory Resource requests for tfyAgent container. Advised to only increase the requests and not decrease it
+  ## @param tfyAgent.resources.requests.ephemeral-storage Ephemeral storage Resource requests for tfyAgent container. Advised to only increase the requests and not decrease it
+  ##
   resources:
     limits:
       cpu: 500m
@@ -133,6 +186,15 @@ tfyAgent:
       memory: 256Mi
       ephemeral-storage: 128Mi
 
+  ## @param tfyAgent.livenessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.httpGet.scheme Scheme for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.periodSeconds Seconds for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.successThreshold Success threshold for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.timeoutSeconds Timeout seconds value for liveness probe of tfyAgent container
+  ## @param tfyAgent.livenessProbe.initialDelaySeconds Initial delay seconds value for liveness probe of tfyAgent container
+  ##
   livenessProbe:
     failureThreshold: 5
     httpGet:
@@ -144,6 +206,14 @@ tfyAgent:
     timeoutSeconds: 1
     initialDelaySeconds: 15
 
+  ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.httpGet.scheme Scheme for http request for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.periodSeconds Seconds for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.successThreshold Success threshold for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.timeoutSeconds Timeout seconds value for liveness probe of tfyAgent container
+  ## @param tfyAgent.readinessProbe.initialDelaySeconds Initial delay seconds value for liveness probe of tfyAgent container
   readinessProbe:
     failureThreshold: 5
     httpGet:
@@ -158,6 +228,8 @@ tfyAgent:
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+
+  ## @param tfyAgent.securityContext Security Context for the tfyAgent container
   ##
   securityContext: {}
   # capabilities:
@@ -170,6 +242,8 @@ tfyAgent:
   ## If specified, the pod's tolerations.
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
+  ## @param tfyAgent.tolerations Taints that pod can tolerate
+  ##
   tolerations: []
   # - key: "key"
   #   operator: "Equal"
@@ -179,16 +253,22 @@ tfyAgent:
   ## Define which Nodes the Pods are scheduled on.
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
+  ## @param tfyAgent.nodeSelector Parameters to select for scheduling of pod on a node
+  ##
   nodeSelector: {}
 
-  # Extra volumes to mount
+  ## @param tfyAgent.extraVolumes Extra volume for tfyAgent container
+  ##
   extraVolumes: []
-  # Extra volumemounts referring to the volumes mentioned before
+  ## @param tfyAgent.extraVolumeMounts Extra volume mount for tfyAgent container
+  ##
   extraVolumeMounts: []
 
   ## Assign custom affinity rules to the tfyAgent instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
+  ## @param tfyAgent.affinity Affinity rules for pod scheduling on a node
+  ##  
   affinity: {}
   # nodeAffinity:
   #   requiredDuringSchedulingIgnoredDuringExecution:
@@ -200,30 +280,36 @@ tfyAgent:
   #         - e2e-az1
   #         - e2e-az2
 
-# configuration for tfyAgentProxy
+## @section tfyAgentProxy configuration parameters
+##
 tfyAgentProxy:
-  ## Deploy tfyAgentProxy
-  #
+  ## @param tfyAgentProxy.enabled Bool value to deploy tfyAgentProxy
+  ##
   enabled: true
 
   ## Number of replicas of tfyAgentProxy
   ## value kept for future use, ketp 1
   # replicaCount: 1
 
-  ## Annotations for tfyAgentProxy
+  ## @param tfyAgentProxy.annotations Add annotations to tfyAgentProxy pods
   ##
   annotations: {}
 
   ## Image of tfyAgentProxy
   ##
   image:
+    ## @param tfyAgentProxy.image.repository tfyAgentProxy repository
+    ##
     repository: truefoundrycloud/tfy-agent-proxy
+    ## @param tfyAgentProxy.image.pullPolicy Pull policy for tfyAgentProxy
+    ##
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
+    ## @param tfyAgentProxy.image.tag Image tag whose default is the chart appVersion.
+    ##
     tag: "d4185e308b8fdf846ff6e370750da1c1d729f1a4"
 
-  ## Adding extra envrionment variable for tfyAgentProxy
-  #
+  ## @param tfyAgentProxy.extraEnvVars Additional envrionment variables for tfyAgentPRoxy
+  ##
   extraEnvVars: []
   ##
   # Example:
@@ -236,6 +322,13 @@ tfyAgentProxy:
   ##
   ## customized resource limits are very general in nature and must be kept the same
   ## decreasing the resource might make the service UNAVAILABLE
+  ## @param tfyAgentProxy.resources.limits.cpu CPU resource limits for tfyAgentProxy container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgentProxy.resources.limits.memory Memory Resource limits for tfyAgentProxy container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgentProxy.resources.limits.ephemeral-storage Ephemeral storage Resource limits for tfyAgentProxy container. Advised to only increase the limits and not decrease it
+  ## @param tfyAgentProxy.resources.requests.cpu CPU resource requests for tfyAgentProxy container. Advised to only increase the requests and not decrease it
+  ## @param tfyAgentProxy.resources.requests.memory Memory Resource requests for tfyAgentProxy container. Advised to only increase the requests and not decrease it
+  ## @param tfyAgentProxy.resources.requests.ephemeral-storage Ephemeral storage Resource requests for tfyAgentProxy container. Advised to only increase the requests and not decrease it
+  ##
   resources:
     limits:
       cpu: 500m
@@ -250,6 +343,8 @@ tfyAgentProxy:
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   ##
+  ## @param tfyAgentProxy.securityContext Security Context for the tfyAgentProxy container
+  ##
   securityContext: {}
   # capabilities:
   #   drop:
@@ -261,6 +356,8 @@ tfyAgentProxy:
   ## If specified, the pod's tolerations.
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
+  ## @param tfyAgentProxy.tolerations Taints that pod can tolerate
+  ##
   tolerations: []
   # - key: "key"
   #   operator: "Equal"
@@ -270,11 +367,15 @@ tfyAgentProxy:
   ## Define which Nodes the Pods are scheduled on.
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
+  ## @param tfyAgentProxy.nodeSelector Parameters to select for scheduling of pod on a node
+  ##
   nodeSelector: {}
 
   ## Assign custom affinity rules to the tfyAgentProxy instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
+  ## @param tfyAgentProxy.affinity Affinity rules for pod scheduling on a node
+  ## 
   affinity: {}
   # nodeAffinity:
   #   requiredDuringSchedulingIgnoredDuringExecution:
