@@ -1,9 +1,5 @@
-istio:
-  virtualservice:
-    enabled: true
-    gateways: ["istio-system/tfy-wildcard"]
-    hosts: []
-
+host: ""
+gateway: "istio-system/tfy-wildcard"
 grafana:
   replicas: 2
   resources:
@@ -33,10 +29,17 @@ grafana:
         memory: 50Mi
   datasources:
     datasources.yaml:
-       apiVersion: 1
-       datasources:
-       - name: Prometheus
-         type: prometheus
-         url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
-         access: proxy
-         isDefault: true
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+  persistence:
+    enabled: true
+    size: 10Gi

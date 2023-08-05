@@ -1,17 +1,13 @@
-{{- if and .Values.istio.virtualservice.enabled .Values.istio.virtualservice.hosts }}
+{{- if and .Values.host }}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: grafana-vs
 spec:
   gateways:
-  {{- range .Values.istio.virtualservice.gateways }}
-    - {{ . }}
-  {{- end }}
+  - {{ .Values.gateway }}
   hosts:
-  {{- range .Values.istio.virtualservice.hosts }}
-  - {{ . }}
-  {{- end }}
+  - {{ .Values.host }}
   http:
   - route:
     - destination:
