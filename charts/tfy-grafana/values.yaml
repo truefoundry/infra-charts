@@ -1,0 +1,42 @@
+istio:
+  virtualservice:
+    enabled: true
+    gateways: ["istio-system/tfy-wildcard"]
+    hosts: []
+
+grafana:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  adminUser: ''
+  adminPassword: ''
+  initChownData:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  sidecar:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 100Mi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+  datasources:
+    datasources.yaml:
+       apiVersion: 1
+       datasources:
+       - name: Prometheus
+         type: prometheus
+         url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+         access: proxy
+         isDefault: true
