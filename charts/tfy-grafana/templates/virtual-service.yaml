@@ -1,0 +1,21 @@
+{{- if and .Values.istio.virtualservice.enabled .Values.istio.virtualservice.hosts }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grafana-vs
+spec:
+  gateways:
+  {{- range .Values.istio.virtualservice.gateways }}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.istio.virtualservice.hosts }}
+  - {{ . }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: grafana.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: 80
+{{- end }}
