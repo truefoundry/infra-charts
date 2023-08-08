@@ -71,8 +71,8 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
       serviceAccountName: notebook-controller-service-account
+      {{- with .Values.tolerations }}
       tolerations:
-        - key: CriticalAddonsOnly
-          value: "true"
-          effect: NoSchedule
-          operator: Equal
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        

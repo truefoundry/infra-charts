@@ -13,4 +13,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: notebook-controller-service-account
-    namespace: {{ tpl .Values.namespace . }}
+    namespace: {{ default .Release.Namespace .Values.namespaceOverride }}

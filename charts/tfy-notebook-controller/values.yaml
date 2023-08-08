@@ -1,7 +1,7 @@
 labels:
   app: notebook-controller
   kustomize.component: notebook-controller
-namespace: '{{ .Release.Namespace }}'
+namespaceOverride: 'test2'
 istioGateway: istio-system/tfy-wildcard
 imageTag: v0.0.1
 resources:
@@ -13,3 +13,8 @@ resources:
     cpu: 50m
     memory: 128Mi
     ephemeral-storage: 128Mi
+tolerations:
+  - key: CriticalAddonsOnly
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
