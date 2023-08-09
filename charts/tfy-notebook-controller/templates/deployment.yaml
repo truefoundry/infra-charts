@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  name: notebook-controller-deployment
+spec:
+  selector:
+    matchLabels:
+    {{- with .Values.labels }}
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- with .Values.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      containers:
+        - command:
+            - /manager
+          env:
+            - name: USE_ISTIO
+              valueFrom:
+                configMapKeyRef:
+                  key: USE_ISTIO
+                  name: notebook-controller-config-map
+            - name: ISTIO_GATEWAY
+              valueFrom:
+                configMapKeyRef:
+                  key: ISTIO_GATEWAY
+                  name: notebook-controller-config-map
+            - name: CLUSTER_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  key: CLUSTER_DOMAIN
+                  name: notebook-controller-config-map
+            - name: ENABLE_CULLING
+              valueFrom:
+                configMapKeyRef:
+                  key: ENABLE_CULLING
+                  name: notebook-controller-config-map
+            - name: CULL_IDLE_TIME
+              valueFrom:
+                configMapKeyRef:
+                  key: CULL_IDLE_TIME
+                  name: notebook-controller-config-map
+            - name: IDLENESS_CHECK_PERIOD
+              valueFrom:
+                configMapKeyRef:
+                  key: IDLENESS_CHECK_PERIOD
+                  name: notebook-controller-config-map
+          image: "docker.io/truefoundryuser/notebook-controller:{{ .Values.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          name: manager
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      serviceAccountName: notebook-controller-service-account
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+        

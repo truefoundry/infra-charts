@@ -1,1 +1,20 @@
-
+labels:
+  app: notebook-controller
+  kustomize.component: notebook-controller
+namespaceOverride: ''
+istioGateway: istio-system/tfy-wildcard
+imageTag: v0.1.0
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+tolerations:
+  - key: CriticalAddonsOnly
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
