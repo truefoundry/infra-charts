@@ -36,6 +36,12 @@ spec:
       {{- range .Values.karpenter.gpuProvisionerSpec.instanceFamilies  }}
         - {{ . | quote }}
       {{- end }}
+    - key: karpenter.k8s.aws/instance-size
+      operator: NotIn
+      values:
+      {{- range .Values.karpenter.gpuProvisionerSpec.instanceSizes.notAllowed  }}
+        - {{ . | quote }}
+      {{- end }}
   taints:
     - key: "nvidia.com/gpu"
       effect: "NoSchedule"
