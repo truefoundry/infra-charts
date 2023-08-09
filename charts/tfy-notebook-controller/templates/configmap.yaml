@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  {{- with .Values.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  name: notebook-controller-config-map
+data:
+  CLUSTER_DOMAIN: cluster.local
+  CULL_IDLE_TIME: "7200"
+  ENABLE_CULLING: "true"
+  IDLENESS_CHECK_PERIOD: "1"
+  ISTIO_GATEWAY: {{ .Values.istioGateway }}
+  USE_ISTIO: "false"
