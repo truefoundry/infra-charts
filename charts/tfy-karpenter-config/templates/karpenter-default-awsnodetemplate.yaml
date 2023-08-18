@@ -12,6 +12,9 @@ spec:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
+  {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
+    {{ $key }}: {{ $val }} 
+  {{- end }}
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
