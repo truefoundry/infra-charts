@@ -50,12 +50,13 @@ spec:
           value: spot
           effect: NoSchedule
       containers:
-        - image: mcr.microsoft.com/oss/nvidia/k8s-device-plugin:1.11
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.14.1
           name: nvidia-device-plugin-ctr
+          env:
+            - name: PASS_DEVICE_SPECS
+              value: "true"
           securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
+            privileged: true
           volumeMounts:
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
