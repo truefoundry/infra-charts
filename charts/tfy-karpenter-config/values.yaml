@@ -72,10 +72,7 @@ karpenter:
       - on-demand
     ## @param karpenter.gpuProvisionerSpec.zones Zones to launch instances for GPU provisioner
     ## 
-    zones:
-      - eu-west-1a
-      - eu-west-1b
-      - eu-west-1c
+    zones: []
     ## @param karpenter.gpuProvisionerSpec.instanceFamilies Instance families to launch instances for GPU provisioner
     ## 
     instanceFamilies:
@@ -85,6 +82,16 @@ karpenter:
       - g5
       - p4d
       - p4de
+    ## @param karpenter.gpuProvisionerSpec.instanceSizes.notAllowed Instance sizes that are not allowed.
+    ##
+    instanceSizes:
+      notAllowed:
+        - nano
+        - micro
+        - metal
     ## @param karpenter.gpuProvisionerSpec.providerRefName Name of AWS node template to be used for GPU provisioner
-    ## 
+    ##
     providerRefName: default
+
+  defaultNodeTemplate:
+    extraTags: {}
