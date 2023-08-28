@@ -1,3 +1,10 @@
+## @section Global parameters
+## @param global.rbac.enabled Enable RBAC globally
+##
+global:
+  rbac:
+    enabled: true
+
 ## @section Configuration for the cluster type flags.
 ##
 ## @param clusterType.awsEks Flag indicating AWS EKS cluster type.
@@ -14,7 +21,7 @@ clusterType:
   gcpGkeAutopilot: false
   azureAks: false
 
-## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator.
+## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
   ## Operator configuration.
@@ -138,7 +145,7 @@ aws-eks-gpu-operator:
     serviceMonitor:
       enabled: false
 
-## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter.
+## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
 gcp-gke-standard-dcgm-exporter:
   ## Docker image tag for the DCGM Exporter.
@@ -245,7 +252,7 @@ gcp-gke-standard-dcgm-exporter:
     - name: nvidia-config
       mountPath: /etc/nvidia
 
-## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter.
+## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
 ##
 azure-aks-dcgm-exporter:
   ## Docker image tag for the DCGM Exporter.
