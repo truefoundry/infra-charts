@@ -1,4 +1,4 @@
-## Configuration for the Gateway component.
+## @section gateway Configuration for the Gateway component.
 ##
 gateway:
   ## @param gateway.autoscaling.minReplicas Minimum number of replicas for autoscaling the Gateway.
@@ -8,45 +8,45 @@ gateway:
   ## Service configuration for the Gateway.
   ##
   service:
-    ## @param gateway.service.ports List of ports exposed by the Gateway service.
-    ##
-    ports:
-      ## @param gateway.service.ports.status-port Configuration for the status-port.
+      ## @param gateway.service.ports[0].name Name of the port.
+      ## @param gateway.service.ports[0].port Port number.
+      ## @param gateway.service.ports[0].protocol Protocol of the port.
+      ## @param gateway.service.ports[0].targetPort Target port.
       ##
-      ## @skip gateway.service.ports[0]
+      ## @param gateway.service.ports[1].name Name of the port.
+      ## @param gateway.service.ports[1].port Port number.
+      ## @param gateway.service.ports[1].protocol Protocol of the port.
+      ## @param gateway.service.ports[1].targetPort Target port.
+      ##
+      ## @param gateway.service.ports[2].name Name of the port.
+      ## @param gateway.service.ports[2].port Port number.
+      ## @param gateway.service.ports[2].protocol Protocol of the port.
+      ## @param gateway.service.ports[2].targetPort Target port.
+      ##
+    ports:
       - name: status-port
         port: 15021
         protocol: TCP
         targetPort: 15021
-      ## @param gateway.service.ports.http2 Configuration for the HTTP2 port.
-      ##
-      ## @skip gateway.service.ports[1]
       - name: http2
         port: 80
         protocol: TCP
         targetPort: 80
-      ## @param gateway.service.ports.https Configuration for the HTTPS port.
-      ##
-      ## @skip gateway.service.ports[2]
       - name: https
         port: 443
         protocol: TCP
         targetPort: 443
 
-## Configuration for the tfyGateway.
+## @section tfyGateway Configuration for the tfyGateway.
 ##
 tfyGateway:
   ## @param tfyGateway.name Name of the tfyGateway.
   ##
   name: ''
-  ## @param tfyGateway.spec.selector Selector for the tfyGateway.
-  ##
   spec:
     selector:
-      ## @skip tfyGateway.spec.selector.istio
+      ## @param tfyGateway.spec.selector.istio Selector to enable istio for tfyGateway
       istio: '{{ .Release.Name }}'
-    ## @param tfyGateway.spec.servers List of servers for the tfyGateway.
-    ##
     servers:
       ## @param tfyGateway.spec.servers[0].hosts List of hosts for the first server.
       ##
@@ -59,7 +59,7 @@ tfyGateway:
         ##
         ## @param tfyGateway.spec.servers[0].port.protocol Protocol of the port.
         ##
-        ## @param tfyGateway.spec.servers[0].port.tls.httpRedirect TLS configuration for the port.
+        ## @param tfyGateway.spec.servers[0].port.tls.httpsRedirect TLS configuration for the port.
         ##
         port:
           name: http-tfy-wildcard
