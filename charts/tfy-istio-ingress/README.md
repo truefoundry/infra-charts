@@ -1,5 +1,5 @@
 # Tfy-istio-ingress helm chart packaged by TrueFoundry
-Tfy-istio-ingress is an <empty>
+Tfy-istio-ingress is a Helm chart that facilitates the deployment and configuration of Istio Ingress Gateway on a Kubernetes cluster.
 
 ## Parameters
 
