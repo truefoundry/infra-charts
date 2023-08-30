@@ -33,6 +33,6 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `tfyGateway.spec.servers[0].port.protocol`          | Protocol of the port.                   | `HTTP`                |
 | `tfyGateway.spec.servers[0].port.tls.httpsRedirect` | TLS configuration for the port.         | `true`                |
 | `tfyGateway.spec.servers[1].hosts`                  | List of hosts for the second server.    | `[]`                  |
-| `tfyGateway.spec.servers[1].port.name`              | Name of the port for https.             | `https-tfy-wildcard`  |
-| `tfyGateway.spec.servers[1].port.number`            | Port number.                            | `443`                 |
+| `tfyGateway.spec.servers[1].port.name`              | Name of the port.                       | `https-tfy-wildcard`  |
+| `tfyGateway.spec.servers[1].port.number`            | Port number for https.                  | `443`                 |
 | `tfyGateway.spec.servers[1].port.protocol`          | Protocol of the port.                   | `HTTPS`               |
