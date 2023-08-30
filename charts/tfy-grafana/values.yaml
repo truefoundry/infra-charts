@@ -29,9 +29,9 @@ grafana:
         cpu: 50m
         memory: 50Mi
   datasources:
-    datasources.yaml:
+    datasources:
       apiVersion: 1
-      datasources:
+      datasources.yaml:
       - name: Prometheus
         type: prometheus
         url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
@@ -39,8 +39,9 @@ grafana:
         isDefault: true
       - name: Loki
         type: loki
-        access: proxy
         url: http://loki.loki.svc.cluster.local:3100
+        access: proxy
+        isDefault: false
   persistence:
     enabled: true
     size: 10Gi

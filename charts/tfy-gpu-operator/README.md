@@ -12,7 +12,7 @@ Tfy-gpu-operator is an <empty>
 | `clusterType.gcpGkeAutopilot` | Flag indicating GCP GKE Autopilot cluster type. | `false` |
 | `clusterType.azureAks`        | Flag indicating Azure AKS cluster type.         | `false` |
 
-### aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator.
+### aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 
 | Name                                                                           | Description                                               | Value                     |
 | ------------------------------------------------------------------------------ | --------------------------------------------------------- | ------------------------- |
@@ -39,7 +39,7 @@ Tfy-gpu-operator is an <empty>
 | `aws-eks-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                          | `["-c","5000"]`           |
 | `aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled`                     | Enable or disable ServiceMonitor for DCGM Exporter.       | `false`                   |
 
-### gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter.
+### gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 
 | Name                                                            | Description                                                          | Value                                                                                                           |
 | --------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -51,6 +51,7 @@ Tfy-gpu-operator is an <empty>
 | `gcp-gke-standard-dcgm-exporter.resources.limits.memory`        | Memory limit for the DCGM Exporter.                                  | `300Mi`                                                                                                         |
 | `gcp-gke-standard-dcgm-exporter.namespaceOverride`              | Namespace override for the DCGM Exporter.                            | `tfy-gpu-operator`                                                                                              |
 | `gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled`         | Enable or disable ServiceMonitor for DCGM Exporter.                  | `false`                                                                                                         |
+| `gcp-gke-standard-dcgm-exporter.tolerations[0].operator`        | Toleration configuration for worker nodes.                           | `Exists`                                                                                                        |
 | `gcp-gke-standard-dcgm-exporter.mapPodsMetrics`                 | Enable mapping of pod metrics.                                       | `true`                                                                                                          |
 | `gcp-gke-standard-dcgm-exporter.securityContext.privileged`     | Set the container to privileged mode.                                | `true`                                                                                                          |
 | `gcp-gke-standard-dcgm-exporter.priorityClassName`              | Priority class name for the DCGM Exporter.                           | `""`                                                                                                            |
@@ -61,7 +62,7 @@ Tfy-gpu-operator is an <empty>
 | `gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].name`      | Name for the additional volume mounts for the DCGM Exporter.         | `dev`                                                                                                           |
 | `gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].mountPath` | Mount Path for the additional volume mounts for the DCGM Exporter.   | `/dev`                                                                                                          |
 
-### azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter.
+### azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
 
 | Name                                                     | Description                                                           | Value                                                                  |
 | -------------------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
