@@ -1,8 +1,24 @@
+## @param host Host name for Grafana.
+##
 host: ""
+## @param gateway Gateway for Grafana.
+##
 gateway: "istio-system/tfy-wildcard"
+
+## @section grafana Configuration for Grafana deployment.
 grafana:
+  ## @param grafana.replicas StatefulSet configuration for Grafana.
+  ## @param grafana.useStatefulSet Replicas configuration for Grafana.
+  #
   replicas: 1
   useStatefulSet: true
+  ## Resource configuration for Grafana.
+  ##
+  ## @param grafana.resources.limits.cpu CPU limit for Grafana.
+  ## @param grafana.resources.limits.memory Memory limit for Grafana.
+  ## @param grafana.resources.requests.cpu CPU request for Grafana.
+  ## @param grafana.resources.requests.memory Memory request for Grafana.
+  ##
   resources:
     limits:
       cpu: 100m
@@ -10,8 +26,20 @@ grafana:
     requests:
       cpu: 100m
       memory: 128Mi
+  ## Admin user and password for Grafana.
+  ##
+  ## @param grafana.adminUser Admin user for Grafana.
+  ## @param grafana.adminPassword Admin password for Grafana.
+  ##
   adminUser: ''
   adminPassword: ''
+  ## Resource configuration for initializing chown data.
+  ##
+  ## @param grafana.initChownData.resources.limits.cpu CPU limit for initializing chown data.
+  ## @param grafana.initChownData.resources.limits.memory Memory limit for initializing chown data.
+  ## @param grafana.initChownData.resources.requests.cpu CPU request for initializing chown data.
+  ## @param grafana.initChownData.resources.requests.memory Memory request for initializing chown data.
+  ##
   initChownData:
     resources:
       limits:
@@ -20,6 +48,13 @@ grafana:
       requests:
         cpu: 100m
         memory: 128Mi
+  ## Resource configuration for Grafana sidecar container.
+  ##
+  ## @param grafana.sidecar.resources.limits.cpu CPU limit for Grafana sidecar.
+  ## @param grafana.sidecar.resources.limits.memory Memory limit for Grafana sidecar.
+  ## @param grafana.sidecar.resources.requests.cpu CPU request for Grafana sidecar.
+  ## @param grafana.sidecar.resources.requests.memory Memory request for Grafana sidecar.
+  ##
   sidecar:
     resources:
       limits:
@@ -28,19 +63,38 @@ grafana:
       requests:
         cpu: 50m
         memory: 50Mi
+  ## Datasources configuration for Grafana.
+  ##
   datasources:
+    ## Datasource configuration file.
+    ## @param grafana.datasources.datasources\.yaml.apiVersion API version for the datasource configuration.
+    ## @param grafana.datasources.datasources\.yaml.datasources[0].name Name of the Prometheus datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[0].type Type of the Prometheus datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[0].url URL for the Prometheus datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[0].access Access type for the Prometheus datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[0].isDefault Specify if the Prometheus datasource is the default.
+    ## @param grafana.datasources.datasources\.yaml.datasources[1].name Name of the Loki datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[1].type Type of the Loki datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[1].url URL for the Loki datasource.
+    ## @param grafana.datasources.datasources\.yaml.datasources[1].access Access type for the Loki datasource.
+    ##
     datasources.yaml:
       apiVersion: 1
       datasources:
-      - name: Prometheus
-        type: prometheus
-        url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
-        access: proxy
-        isDefault: true
-      - name: Loki
-        type: loki
-        access: proxy
-        url: http://loki.loki.svc.cluster.local:3100
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+          access: proxy
+          isDefault: true
+        - name: Loki
+          type: loki
+          url: http://loki.loki.svc.cluster.local:3100
+          access: proxy
+  ## Persistence configuration for Grafana.
+  ##
+  ## @param grafana.persistence.enabled Enable or disable persistence for Grafana.
+  ## @param grafana.persistence.size Size of the persisted storage for Grafana.
+  ##
   persistence:
     enabled: true
     size: 10Gi

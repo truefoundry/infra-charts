@@ -28,7 +28,14 @@ jobs:
           files_changed="$(sed -nr 's/[\-\+]{3} [ab]\/(.*)/\1/p' $TEMP_FILE | sort | uniq)"
           # Adding || true to avoid "Process exited with code 1" errors
           charts_dirs_changed="$(echo "$files_changed" | xargs dirname | grep -o "charts/[^/]*" | sort | uniq || true)"
-          readme-generator --values "charts/tfy-agent/values.yaml" --readme "charts/tfy-agent/README.md"
+          for chart in ${charts_dirs_changed}; do
+            if [ "${chart}" != "grafana" ]; then
+              echo "Updating README.md for ${chart}"
+              readme-generator --values "charts/${chart}/values.yaml" --readme "charts/${chart}/README.md" --schema "/tmp/schema.json"
+            else
+              echo "Skipping README.md update for ${chart}"
+            fi
+          done
       - name: Configure Git and push changes
         run: |
             if git status -s | grep charts; then
