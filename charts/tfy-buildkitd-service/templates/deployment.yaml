@@ -33,6 +33,10 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.extraEnvs }}
+          env:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
           args:
             - --addr
             - unix:///run/buildkit/buildkitd.sock
@@ -56,6 +60,10 @@ spec:
                 - workers
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
