@@ -31,7 +31,7 @@ jobs:
           for chart in ${charts_dirs_changed}; do
             if [ "${chart}" != "grafana" ]; then
               echo "Updating README.md for ${chart}"
-              readme-generator --values "charts/${chart}/values.yaml" --readme "charts/${chart}/README.md" --schema "/tmp/schema.json"
+              readme-generator --values "${chart}/values.yaml" --readme "${chart}/README.md" --schema "/tmp/schema.json"
             else
               echo "Skipping README.md update for ${chart}"
             fi
