@@ -59,10 +59,10 @@ aws-eks-gpu-operator:
       resources:
         requests:
           cpu: 10m
-          memory: 100Mi
+          memory: 400Mi
         limits:
           cpu: 50m
-          memory: 300Mi
+          memory: 600Mi
     worker:
       resources:
         requests:
@@ -152,7 +152,14 @@ gcp-gke-standard-dcgm-exporter:
   ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
   ##
   arguments:
-    ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv", "--kubernetes-gpu-id-type", "device-name"]
+    [
+      "-c",
+      '"5000"',
+      "-f",
+      "/etc/dcgm-exporter/dcp-metrics-included.csv",
+      "--kubernetes-gpu-id-type",
+      "device-name",
+    ]
   ## Resource configuration for DCGM Exporter requests and limits.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
