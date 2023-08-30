@@ -93,6 +93,29 @@ karpenter:
     ##
     providerRefName: default
 
+
+  controlPlaneProvisioner:
+    enabled: true
+
+    consolidation:
+      enabled: true
+
+    ttlSecondsAfterEmpty: 30
+  
+    capacityTypes:
+      - spot
+      - on-demand
+    zones: []
+    instanceFamilies:
+      allowed: [] 
+      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+    instanceSizes:
+      allowed: []
+      notAllowed: ["nano", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal"]
+    providerRefName: default
+    taints: {}
+    labels: {}
+
   ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
   ##
   defaultNodeTemplate:
