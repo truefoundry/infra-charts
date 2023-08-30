@@ -3,7 +3,7 @@ Tfy-buildkitd-service is a Helm chart provided by TrueFoundry that facilitates t
 
 ## Parameters
 
-### Global parameters
+### Parameters for Tfy-buildkitd-service
 
 | Name                                         | Description                                                                                                       | Value           |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------- |
