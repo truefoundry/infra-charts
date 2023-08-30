@@ -29,9 +29,7 @@ jobs:
           # Adding || true to avoid "Process exited with code 1" errors
           charts_dirs_changed="$(echo "$files_changed" | xargs dirname | grep -o "charts/[^/]*" | sort | uniq || true)"
           for chart in ${charts_dirs_changed}; do
-            echo "Chart value: ${chart}"
-            echo "Chart type: $(declare -p chart)"
-            if [ "${chart}" != "tfy-grafana" ]; then
+            if [ "${chart}" != "charts/tfy-grafana" ]; then
               echo "Updating README.md for ${chart}"
               readme-generator --values "${chart}/values.yaml" --readme "${chart}/README.md" --schema "/tmp/schema.json"
             else
