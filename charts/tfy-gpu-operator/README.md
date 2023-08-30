@@ -22,9 +22,9 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.operator.resources.limits.memory`                        | Memory limit for the operator.                            | `300Mi`                   |
 | `aws-eks-gpu-operator.toolkit.version`                                         | Version of the toolkit.                                   | `v1.13.0-centos7`         |
 | `aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu`    | CPU request for master node feature discovery.            | `10m`                     |
-| `aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory` | Memory request for master node feature discovery.         | `100Mi`                   |
+| `aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory` | Memory request for master node feature discovery.         | `400Mi`                   |
 | `aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.cpu`      | CPU limit for master node feature discovery.              | `50m`                     |
-| `aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.memory`   | Memory limit for master node feature discovery.           | `300Mi`                   |
+| `aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.memory`   | Memory limit for master node feature discovery.           | `600Mi`                   |
 | `aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu`    | CPU request for worker node feature discovery.            | `10m`                     |
 | `aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory` | Memory request for worker node feature discovery.         | `100Mi`                   |
 | `aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu`      | CPU limit for worker node feature discovery.              | `50m`                     |
