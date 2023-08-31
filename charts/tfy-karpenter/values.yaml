@@ -1,18 +1,31 @@
-# upstream karpenter chart configurations
+## @section Upstream karpenter configurations
+##
 karpenter:
+  ## @param karpenter.serviceAccount.annotations.eks.amazonaws.com/role-arn Karpenter role ARN
+  ##
   serviceAccount:
     annotations:
       eks.amazonaws.com/role-arn: ""
+  ## @param karpenter.settings.aws.clusterName Name of the EKS cluster
+  ##
   settings:
     aws:
-      # name of the cluster to deploy karpenter
+      ## @param karpenter.settings.aws.clusterName Name of the EKS cluster
+      ##
       clusterName: ""
 
-      # endpoint of the cluster
+      ## @param karpenter.settings.aws.clusterEndpoint Endpoint URL of the EKS cluster
+      ##
       clusterEndpoint: ""
 
-      # instance profile created for karpenter
+      ## @param karpenter.settings.aws.defaultInstanceProfile Instance profile of the karpenter
+      ##
       defaultInstanceProfile: ""
+  ## @param karpenter.controller.resources.requests.cpu CPU requests for karpenter container
+  ## @param karpenter.controller.resources.requests.memory Memory requests for karpenter container
+  ## @param karpenter.controller.resources.limits.cpu CPU limits for karpenter container
+  ## @param karpenter.controller.resources.limits.memory Memory requests for karpenter container
+  ##
   controller:
     resources:
       requests:

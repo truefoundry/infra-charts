@@ -1,11 +1,35 @@
+## @section Configuration for the cluster type flags.
+##
+## @param clusterType.awsEks Flag indicating AWS EKS cluster type.
+##
+## @param clusterType.gcpGkeStandard Flag indicating GCP GKE Standard cluster type.
+##
+## @param clusterType.gcpGkeAutopilot Flag indicating GCP GKE Autopilot cluster type.
+##
+## @param clusterType.azureAks Flag indicating Azure AKS cluster type.
+##
 clusterType:
   awsEks: false
   gcpGkeStandard: false
   gcpGkeAutopilot: false
   azureAks: false
 
+## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
+##
 aws-eks-gpu-operator:
+  ## Operator configuration.
+  ##
   operator:
+    ## Resource configuration for operator requests and limits.
+    ##
+    ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
+    ##
+    ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
+    ##
+    ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
+    ##
+    ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ##
     resources:
       requests:
         cpu: 10m
@@ -13,9 +37,24 @@ aws-eks-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
+  ## Toolkit configuration.
+  ##
+  ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
   toolkit:
     version: v1.13.0-centos7
+  ## Node Feature Discovery configuration.
+  ##
   node-feature-discovery:
+    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.cpu CPU limit for master node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.memory Memory limit for master node feature discovery.
+    ##
+    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
+    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+    ##
     master:
       resources:
         requests:
@@ -33,6 +72,7 @@ aws-eks-gpu-operator:
           cpu: 50m
           memory: 300Mi
       affinity:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -68,8 +108,23 @@ aws-eks-gpu-operator:
   validator:
     plugin:
       env:
+        ## @param aws-eks-gpu-operator.validator.plugin.env[0].name Name of the Evironment Variable for the Validator Plugin
+        ## @param aws-eks-gpu-operator.validator.plugin.env[0].value Value of the Evironment Variable for the Validator Plugin
         - name: WITH_WORKLOAD
           value: "false"
+  ## DCGM Exporter configuration.
+  ##
+  ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
+  ##
+  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+  ##
+  ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
+  ##
+  ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+  ##
   dcgmExporter:
     version: 3.1.7-3.1.4-ubuntu20.04
     resources:
@@ -83,9 +138,19 @@ aws-eks-gpu-operator:
     serviceMonitor:
       enabled: false
 
+## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
+##
 gcp-gke-standard-dcgm-exporter:
+  ## Docker image tag for the DCGM Exporter.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
+  ##
   image:
     tag: 3.1.7-3.1.4-ubuntu20.04
+  ## Arguments to pass to the DCGM Exporter.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
+  ##
   arguments:
     [
       "-c",
@@ -95,6 +160,13 @@ gcp-gke-standard-dcgm-exporter:
       "--kubernetes-gpu-id-type",
       "device-name",
     ]
+  ## Resource configuration for DCGM Exporter requests and limits.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
+  ## @param gcp-gke-standard-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
+  ## @param gcp-gke-standard-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+  ## @param gcp-gke-standard-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
+  ##
   resources:
     requests:
       cpu: 10m
@@ -102,49 +174,105 @@ gcp-gke-standard-dcgm-exporter:
     limits:
       cpu: 100m
       memory: 300Mi
+  ## Namespace override for the DCGM Exporter.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
+  ##
   namespaceOverride: tfy-gpu-operator
+  ## ServiceMonitor configuration for Prometheus monitoring.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+  ##
   serviceMonitor:
     enabled: false
+  ## Node affinity configuration for worker nodes with GKE accelerators.
+  ##
   affinity:
+    ## @skip gcp-gke-standard-dcgm-exporter.affinity.nodeAffinity
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
               - key: cloud.google.com/gke-accelerator
                 operator: Exists
+  ## @param gcp-gke-standard-dcgm-exporter.tolerations[0].operator Toleration configuration for worker nodes.
+  ##
   tolerations:
     - operator: "Exists"
+  ## @param gcp-gke-standard-dcgm-exporter.mapPodsMetrics Enable mapping of pod metrics.
+  ##
   mapPodsMetrics: true
+  ## Security context configuration.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
+  ##
   securityContext:
     privileged: true
+  ## @param gcp-gke-standard-dcgm-exporter.priorityClassName Priority class name for the DCGM Exporter.
+  ##
   priorityClassName: ""
+  ## Additional environment variables for the DCGM Exporter.
+  ##
   extraEnv:
+    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].name Name for the additional environment variable for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].value Value for the additional environment variable for the DCGM Exporter.
     - name: NVIDIA_INSTALL_DIR_HOST
       value: /home/kubernetes/bin/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[1]
     - name: NVIDIA_INSTALL_DIR_CONTAINER
       value: /usr/local/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[2]
     - name: DCGM_EXPORTER_COLLECTORS
       value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  ## Additional host volumes for the DCGM Exporter.
+  ##
   extraHostVolumes:
+    ## @param gcp-gke-standard-dcgm-exporter.extraHostVolumes[0].name Name for the additional host volume for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraHostVolumes[0].hostPath Host Path for the additional host volume for the DCGM Exporter.
     - name: dev
       hostPath: "/dev"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraHostVolumes[1]
     - name: nvidia-install-dir-host
       hostPath: "/home/kubernetes/bin/nvidia"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraHostVolumes[2]
     - name: nvidia-config
       hostPath: "/etc/nvidia"
+  ## Additional volume mounts for the DCGM Exporter.
+  ##
   extraVolumeMounts:
+    ## @param gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].name Name for the additional volume mounts for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].mountPath Mount Path for the additional volume mounts for the DCGM Exporter.
     - name: dev
       mountPath: /dev
+    ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[1]
     - name: nvidia-install-dir-host
       mountPath: /usr/local/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
 
+## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
+##
 azure-aks-dcgm-exporter:
+  ## Docker image tag for the DCGM Exporter.
+  ##
+  ## @param azure-aks-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
+  ##
   image:
     tag: 3.1.7-3.1.4-ubuntu20.04
+  ## Arguments to pass to the DCGM Exporter.
+  ##
+  ## @param azure-aks-dcgm-exporter.arguments Arguments for the DCGM Exporter.
+  ##
   arguments:
     ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
+  ## Resource configuration for DCGM Exporter requests and limits.
+  ##
+  ## @param azure-aks-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
+  ## @param azure-aks-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
+  ## @param azure-aks-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+  ## @param azure-aks-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
+  ##
   resources:
     requests:
       cpu: 10m
@@ -152,10 +280,21 @@ azure-aks-dcgm-exporter:
     limits:
       cpu: 100m
       memory: 300Mi
+  ## Namespace override for the DCGM Exporter.
+  ##
+  ## @param azure-aks-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
+  ##
   namespaceOverride: tfy-gpu-operator
+  ## ServiceMonitor configuration for Prometheus monitoring.
+  ##
+  ## @param azure-aks-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+  ##
   serviceMonitor:
     enabled: false
+  ## Node affinity configuration for worker nodes with NVIDIA accelerators.
+  ##
   affinity:
+    ## @skip azure-aks-dcgm-exporter.affinity.nodeAffinity
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
@@ -164,30 +303,63 @@ azure-aks-dcgm-exporter:
                 operator: In
                 values:
                   - nvidia
+  ## Toleration configuration for worker nodes.
+  ##
   tolerations:
+    ## @skip azure-aks-dcgm-exporter.tolerations[0].operator
     - operator: "Exists"
+  ## Enable mapping of pod metrics.
+  ##
+  ## @param azure-aks-dcgm-exporter.mapPodsMetrics Enable or disable mapping of pod metrics.
+  ##
   mapPodsMetrics: true
+  ## Security context configuration.
+  ##
+  ## @param azure-aks-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
+  ##
   securityContext:
     privileged: true
+  ## Priority class name for the DCGM Exporter.
+  ##
+  ## @param azure-aks-dcgm-exporter.priorityClassName Priority class name for the DCGM Exporter.
+  ##
   priorityClassName: ""
+  ## Additional environment variables for the DCGM Exporter.
+  ##
   extraEnv:
+    ## @param azure-aks-dcgm-exporter.extraEnv[0].name Name for the additional environment variables for the DCGM Exporter.
+    ## @param azure-aks-dcgm-exporter.extraEnv[0].value Value for the additional environment variables for the DCGM Exporter.
     - name: NVIDIA_INSTALL_DIR_HOST
       value: /home/kubernetes/bin/nvidia
+    ## @skip azure-aks-dcgm-exporter.extraEnv[1]
     - name: NVIDIA_INSTALL_DIR_CONTAINER
       value: /usr/local/nvidia
+    ## @skip azure-aks-dcgm-exporter.extraEnv[2]
     - name: DCGM_EXPORTER_COLLECTORS
       value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  ## Additional host volumes for the DCGM Exporter.
+  ##
   extraHostVolumes:
+    ## @param azure-aks-dcgm-exporter.extraHostVolumes[0].name Name for the additional host volumes for the DCGM Exporter.
+    ## @param azure-aks-dcgm-exporter.extraHostVolumes[0].hostPath Host Path for the additional host volumes for the DCGM Exporter.
     - name: dev
       hostPath: "/dev"
+    ## @skip azure-aks-dcgm-exporter.extraHostVolumes[1]
     - name: nvidia-install-dir-host
       hostPath: "/home/kubernetes/bin/nvidia"
+    ## @skip azure-aks-dcgm-exporter.extraHostVolumes[2]
     - name: nvidia-config
       hostPath: "/etc/nvidia"
+  ## Additional volume mounts for the DCGM Exporter.
+  ##
   extraVolumeMounts:
+    ## @param azure-aks-dcgm-exporter.extraVolumeMounts[0].name Name for the additional volume mounts for the DCGM Exporter.
+    ## @param azure-aks-dcgm-exporter.extraVolumeMounts[0].mountPath Mount Path for the additional volume mounts for the DCGM Exporter.
     - name: dev
       mountPath: /dev
+    ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[1]
     - name: nvidia-install-dir-host
       mountPath: /usr/local/nvidia
+    ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
