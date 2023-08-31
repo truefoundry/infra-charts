@@ -1,9 +1,31 @@
+## @section Parameters for tfyBuildkitdService
+
+## @param labels.app Label for the application.
+## @param labels.kustomize.component Label for the Kustomize component.
+##
 labels:
   app: notebook-controller
   kustomize.component: notebook-controller
+## @param namespaceOverride Namespace override for the notebook controller.
+##
 namespaceOverride: ""
+## @param istioGateway Istio Gateway for the notebook controller.
+##
 istioGateway: istio-system/tfy-wildcard
+## Image tag for the notebook controller.
+##
+## @param imageTag Image tag for the notebook controller.
+##
 imageTag: 0.1.0
+## Resource configuration for the notebook controller.
+##
+## @param resources.limits.cpu CPU limit for the notebook controller.
+## @param resources.limits.memory Memory limit for the notebook controller.
+## @param resources.limits.ephemeral-storage Ephemeral storage limit for the notebook controller.
+## @param resources.requests.cpu CPU request for the notebook controller.
+## @param resources.requests.memory Memory request for the notebook controller.
+## @param resources.requests.ephemeral-storage Ephemeral storage request for the notebook controller.
+##
 resources:
   limits:
     cpu: 100m
@@ -13,6 +35,13 @@ resources:
     cpu: 50m
     memory: 128Mi
     ephemeral-storage: 128Mi
+## Tolerations for the notebook controller deployment.
+##
+## @param tolerations[0].key Key for the first toleration.
+## @param tolerations[0].value Value for the first toleration.
+## @param tolerations[0].effect Effect for the first toleration.
+## @param tolerations[0].operator Operator for the first toleration.
+##
 tolerations:
   - key: CriticalAddonsOnly
     value: "true"

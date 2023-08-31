@@ -1,23 +1,34 @@
+## @section Cluster configurations
+##
 cluster:
+  ## @param cluster.name Name of the EKS cluster
+  ##
   name: ""
+  ## @param cluster.endpoint Endpoint of the EKS cluster
+  ##
   endpoint: ""
 
+## @section Karpenter configurations
+##
 karpenter:
+  ## @param karpenter.instanceProfile Instance profile of the karpenter
+  ##
   instanceProfile: ""
   
   ##
   # default provisioner for non-GPU workloads
   defaultProvisionerSpec:
-    ## 
     # nodes should consolidate to fit in the right instance size
     consolidation:
+      ## @param karpenter.defaultProvisionerSpec.consolidation.enabled Enable consolidation for default provisioner
+      ##
       enabled: true
 
-    ##
-    # seconds after which nodes should be removed 
-    # ttlSecondsAfterEmpty can only be used if consolidation is disabled
+    ## @extra karpenter.defaultProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmtpy should be used
+    ## 
     # ttlSecondsAfterEmpty: 30
-
+    
+    ## @skip karpenter.defaultProvisionerSpec.requirements
     requirements:
       - key: karpenter.sh/capacity-type
         operator: In
@@ -35,28 +46,35 @@ karpenter:
         operator: NotIn
         values: ["nano", "micro", "metal"]
 
+    ## @param karpenter.defaultProvisionerSpec.providerRef.name AWS node template name for default provisioner
+    ##
     providerRef:
       name: default
 
   ## provisioner for GPU workloads
   gpuProvisionerSpec:
-    
+    ## @param karpenter.gpuProvisionerSpec.enabled Enable GPU provisioner for GPU nodes
     enabled: false
 
-    ## 
-    # nodes should consolidate to fit in the right instance size
+    ## @param karpenter.gpuProvisionerSpec.consolidation.enabled Enable consolidation for GPU provisioner
+    ##
     consolidation:
       enabled: true
     
-    ##
-    # seconds after which nodes should be removed 
-    # ttlSecondsAfterEmpty can only be used if consolidation is disabled
+    ## @extra karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmtpy should be used
+    ## 
     # ttlSecondsAfterEmpty: 300
     
+    ## @param karpenter.gpuProvisionerSpec.capacityTypes Capacity types for GPU provisioner
+    ##    
     capacityTypes:
       - spot
       - on-demand
+    ## @param karpenter.gpuProvisionerSpec.zones Zones to launch instances for GPU provisioner
+    ## 
     zones: []
+    ## @param karpenter.gpuProvisionerSpec.instanceFamilies Instance families to launch instances for GPU provisioner
+    ## 
     instanceFamilies:
       - p2
       - p3
@@ -64,12 +82,18 @@ karpenter:
       - g5
       - p4d
       - p4de
+    ## @param karpenter.gpuProvisionerSpec.instanceSizes.notAllowed Instance Sizes that are not allowed to launch instances for GPU provisioner
+    ##
     instanceSizes:
       notAllowed:
         - nano
         - micro
         - metal
+    ## @param karpenter.gpuProvisionerSpec.providerRefName Name of AWS node template to be used for GPU provisioner
+    ##
     providerRefName: default
 
+  ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
+  ##
   defaultNodeTemplate:
     extraTags: {}

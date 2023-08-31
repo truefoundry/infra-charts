@@ -1,30 +1,87 @@
+## @section Parameters for tfyBuildkitdService
+
+## @param replicaCount Number of replicas of  Value kept for future use, kept 1
+##
 replicaCount: 1
 
+## Image of tfyBuildkitdService
+##
 image:
+  ## @param image.repository tfyBuildkitdService repository
+  ##
   repository: moby/buildkit
+  ## @param image.pullPolicy Pull policy for tfyBuildkitdService
+  ##
   pullPolicy: IfNotPresent
+  ## @param image.tag Image tag whose default is the chart appVersion.
+  ##
   tag: "v0.12.0"
 
+## @param imagePullSecrets Secrets to pull images
+##
 imagePullSecrets: []
+
+## @param nameOverride String to override partial name passed in helm install command
+##
 nameOverride: ""
+
+## @param fullnameOverride String to override full name passed in helm install command
+##
 fullnameOverride: ""
 
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
 serviceAccount:
+  ## @param serviceAccount.create Bool to enable serviceAccount creation 
+  ##
   create: true
+
+  ## @param serviceAccount.annotations Annotations to add to the serviceAccount
+  ##
   annotations: {}
+
+  ## @param serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+  ##
   name: ""
 
+## @param podAnnotations Annotations to be added to the pod
+##
 podAnnotations: {}
 
+## @param podSecurityContext Security context for the pod
+##
 podSecurityContext: {}
 
+## SecurityContext holds pod-level security attributes and common container settings.
+## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+
+## @param securityContext.privileged Security Context for the tfyBuildkitdServiceProxy container
+##
 securityContext:
   privileged: true
 
+## Configuration for tfyBuildkitdService service
+##
 service:
+  ## @param service.type Type for tfyBuildkitdService Service
+  ##
   type: ClusterIP
+  ## @param service.port Port for tfyBuildkitdService service
+  ##
   port: 1234
 
+## Define resources requests and limits for single Pods.
+## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+##
+## customized resource limits are very general in nature and must be kept the same
+## decreasing the resource might make the service UNAVAILABLE
+
+## @param resources.limits.cpu CPU resource limits for tfyBuildkitdService container.
+## @param resources.limits.memory Memory Resource limits for tfyBuildkitdService container.
+## @param resources.requests.cpu CPU resource requests for tfyBuildkitdService container.
+## @param resources.requests.memory Memory Resource requests for tfyBuildkitdService container.
+##
 resources:
   limits:
     cpu: 2
@@ -33,10 +90,25 @@ resources:
     cpu: 2
     memory: 8Gi
 
+## @param extraVolumes List of Volumes to attach to tfyBuildkitdService container
+## @param extraVolumeMounts List of Volume Mounts to attach to tfyBuildkitdService container
+## @param extraEnvs List of Environment Variables to attach to tfyBuildkitdService container
 extraVolumes: []
 extraVolumeMounts: []
 extraEnvs: []
 
+## Autoscaling configuration
+##
+## @param autoscaling.enabled Enable or disable autoscaling for the deployment.
+##
+## @param autoscaling.minReplicas Minimum number of replicas for autoscaling.
+##
+## @param autoscaling.maxReplicas Maximum number of replicas for autoscaling.
+##
+## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage for autoscaling.
+##
+# @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage for autoscaling.
+##
 autoscaling:
   enabled: true
   minReplicas: 1
@@ -44,8 +116,36 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
   # targetMemoryUtilizationPercentage: 80
 
+## Define which Nodes the Pods are scheduled on.
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+##
+## @param nodeSelector Parameters to select for scheduling of pod on a node
+##
 nodeSelector: {}
 
+## If specified, the pod's tolerations.
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+## @param tolerations Taints that pod can tolerate
+##
 tolerations: []
+ # - key: "key"
+  #   operator: "Equal"
+  #   value: "value"
+  #   effect: "NoSchedule"
 
+## Assign custom affinity rules to the tfyBuildkitdServiceProxy instance
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+##
+## @param affinity Affinity rules for pod scheduling on a node
+## 
 affinity: {}
+# nodeAffinity:
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#     - matchExpressions:
+#       - key: kubernetes.io/e2e-az-name
+#         operator: In
+#         values:
+#         - e2e-az1
+#         - e2e-az2
