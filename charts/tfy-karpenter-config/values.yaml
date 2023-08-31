@@ -24,7 +24,7 @@ karpenter:
       ##
       enabled: true
 
-    ## @extra karpenter.defaultProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmtpy should be used
+    ## @extra karpenter.defaultProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used
     ## 
     # ttlSecondsAfterEmpty: 30
     
@@ -54,6 +54,7 @@ karpenter:
   ## provisioner for GPU workloads
   gpuProvisionerSpec:
     ## @param karpenter.gpuProvisionerSpec.enabled Enable GPU provisioner for GPU nodes
+    ##
     enabled: false
 
     ## @param karpenter.gpuProvisionerSpec.consolidation.enabled Enable consolidation for GPU provisioner
@@ -61,7 +62,7 @@ karpenter:
     consolidation:
       enabled: true
     
-    ## @extra karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmtpy should be used
+    ## @extra karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used
     ## 
     # ttlSecondsAfterEmpty: 300
     
@@ -92,6 +93,61 @@ karpenter:
     ## @param karpenter.gpuProvisionerSpec.providerRefName Name of AWS node template to be used for GPU provisioner
     ##
     providerRefName: default
+
+  ## Provisioner for Control plane workloads
+  controlPlaneProvisioner:
+    ## @param karpenter.controlPlaneProvisioner.enabled Enable control plane provisioner for control plane workloads
+    ##
+    enabled: true
+
+    ## @param karpenter.controlPlaneProvisioner.consolidation.enabled Enable consolidation for control plane provisioner
+    ##
+    consolidation:
+      enabled: true
+
+    ## @param karpenter.controlPlaneProvisioner.ttlSecondsAfterEmpty Time (in seconds) after which node will be drained. Either one of consolidation or ttlSecondsAfterEmpty can be used
+    ##
+    ttlSecondsAfterEmpty: 30
+  
+    ## @param karpenter.controlPlaneProvisioner.capacityTypes Capacity types of control plane provisioner
+    ## 
+    capacityTypes:
+      - spot
+      - on-demand
+
+    ## @param karpenter.controlPlaneProvisioner.zones Zones to launch instances for control plane workloads
+    ##
+    zones: []
+
+    instanceFamilies:
+      ## @param karpenter.controlPlaneProvisioner.instanceFamilies.allowed Allowed instance families for control plane workloads
+      ##    
+      allowed: []
+
+      ## @param karpenter.controlPlaneProvisioner.instanceFamilies.notAllowed Not allowed instance families for control plane workloads
+      ##      
+      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+
+    instanceSizes:
+      ## @param karpenter.controlPlaneProvisioner.instanceSizes.allowed Allowed instance sizes for control plane workloads
+      ##  
+      allowed: []
+
+      ## @param karpenter.controlPlaneProvisioner.instanceSizes.notAllowed Not allowed instance sizes for control plane workloads
+      ## 
+      notAllowed: ["nano", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal"]
+
+    ## @param karpenter.controlPlaneProvisioner.providerRefName Name of AWS node template to be used for control plane provisioner
+    ##
+    providerRefName: default
+
+    ## @param karpenter.controlPlaneProvisioner.taints Taints to be applied on the control plane provisioner nodes
+    ##
+    taints: {}
+
+    ## @param karpenter.controlPlaneProvisioner.labels Labels to be applied on the control plane provisioner nodes
+    ##
+    labels: {}
 
   ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
   ##
