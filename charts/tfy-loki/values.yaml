@@ -1,23 +1,38 @@
+## @section Upstream Loki configurations
+##
 loki:
+  ## @param loki.enabled Enable loki
   enabled: true
   loki:
     storage:
+      ## @param loki.loki.storage.type Method to use for storage
       type: filesystem
     compactor:
+      ## @param loki.loki.compactor.shared_store The shared store used for storing boltdb files.
       shared_store: filesystem
+      ## @param loki.loki.compactor.retention_enabled Activate custom (per-stream,per-tenant) retention.
       retention_enabled: true
+    ## @param loki.loki.auth_enabled Enables authentication through the X-Scope-OrgID header
     auth_enabled: false
+    ## @skip loki.loki.commonConfig.replication_factor
     commonConfig:
       replication_factor: 1
+    ## @param loki.loki.limits_config.retention_period Retention period to apply to stored data.
+    ## @param loki.loki.limits_config.max_query_lookback Limit how far back in time series data and metadata can be queried, up until lookback duration ago.
+    ## @param loki.loki.limits_config.split_queries_by_interval Split queries by a time interval and execute in parallel.
+    ## @param loki.loki.limits_config.max_entries_limit_per_query Maximum number of log entries that will be returned for a query.
     limits_config:
       retention_period: 168h
       max_query_lookback: 168h
       split_queries_by_interval: 10h
       max_entries_limit_per_query: 30000
+  ## @skip loki.test.enabled
   test:
     enabled: false
+  ## @skip loki.gateway.enabled
   gateway:
     enabled: false
+  ## @skip loki.monitoring
   monitoring:
     rules:
       enabled: false
@@ -32,38 +47,53 @@ loki:
     serviceMonitor:
       enabled: false
   singleBinary:
+    ## @param loki.singleBinary.replicas Number of replicas for the single binary
     replicas: 1
+    ## @param loki.singleBinary.resources.requests.cpu CPU requests for promtail container
+    ## @param loki.singleBinary.resources.requests.memory Memory requests for promtail container
     resources:
       requests:
         cpu: 0.03
         memory: 250Mi
+    ## @param loki.singleBinary.persistence.size Size of persistent disk
     persistence:
       size: 50Gi
 
 promtail:
+  ## @param promtail.enabled Enable promtail
   enabled: true
   config:
     clients:
+      ## @param promtail.config.clients[0].url Loki push API URL
       - url: http://loki:3100/loki/api/v1/push
     snippets:
+      ## @skip promtail.config.snippets.extraRelabelConfigs
       extraRelabelConfigs:
         - regex: __meta_kubernetes_pod_label_(.+)
           action: labelmap
+  ## @param promtail.resources.requests.cpu CPU requests for promtail container
+  ## @param promtail.resources.requests.memory Memory requests for promtail container
+  ## @param promtail.resources.requests.ephemeral-storage Ephemeral storage requests for promtail container
   resources:
     requests:
       cpu: 40m
       memory: 100Mi
       ephemeral-storage: 256Mi
   tolerations:
+    ## @skip promtail.tolerations[0]
     - key: node-role.kubernetes.io/master
       effect: NoSchedule
       operator: Exists
+    ## @skip promtail.tolerations[1]
     - key: node-role.kubernetes.io/control-plane
       effect: NoSchedule
       operator: Exists
+    ## @skip promtail.tolerations[2]
     - effect: NoSchedule
       operator: Exists
+    ## @skip promtail.tolerations[3]
     - key: CriticalAddonsOnly
       operator: Exists
+    ## @skip promtail.tolerations[4]
     - effect: NoExecute
       operator: Exists
