@@ -1,0 +1,41 @@
+# karpenter-config helm chart packaged by TrueFoundry
+A Helm chart for Karpenter provisioners.
+
+## Parameters
+
+### Cluster configurations
+
+| Name               | Description                 | Value |
+| ------------------ | --------------------------- | ----- |
+| `cluster.name`     | Name of the EKS cluster     | `""`  |
+| `cluster.endpoint` | Endpoint of the EKS cluster | `""`  |
+
+### Karpenter configurations
+
+| Name                                                            | Description                                                                                                                     | Value                                                                                      |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `karpenter.instanceProfile`                                     | Instance profile of the karpenter                                                                                               | `""`                                                                                       |
+| `karpenter.defaultProvisionerSpec.consolidation.enabled`        | Enable consolidation for default provisioner                                                                                    | `true`                                                                                     |
+| `karpenter.defaultProvisionerSpec.ttlSecondsAfterEmpty`         | Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used |                                                                                            |
+| `karpenter.defaultProvisionerSpec.providerRef.name`             | AWS node template name for default provisioner                                                                                  | `default`                                                                                  |
+| `karpenter.gpuProvisionerSpec.enabled`                          | Enable GPU provisioner for GPU nodes                                                                                            | `false`                                                                                    |
+| `karpenter.gpuProvisionerSpec.consolidation.enabled`            | Enable consolidation for GPU provisioner                                                                                        | `true`                                                                                     |
+| `karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty`             | Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used |                                                                                            |
+| `karpenter.gpuProvisionerSpec.capacityTypes`                    | Capacity types for GPU provisioner                                                                                              | `["spot","on-demand"]`                                                                     |
+| `karpenter.gpuProvisionerSpec.zones`                            | Zones to launch instances for GPU provisioner                                                                                   | `[]`                                                                                       |
+| `karpenter.gpuProvisionerSpec.instanceFamilies`                 | Instance families to launch instances for GPU provisioner                                                                       | `["p2","p3","g4dn","g5","p4d","p4de"]`                                                     |
+| `karpenter.gpuProvisionerSpec.instanceSizes.notAllowed`         | Instance Sizes that are not allowed to launch instances for GPU provisioner                                                     | `["nano","micro","metal"]`                                                                 |
+| `karpenter.gpuProvisionerSpec.providerRefName`                  | Name of AWS node template to be used for GPU provisioner                                                                        | `default`                                                                                  |
+| `karpenter.controlPlaneProvisioner.enabled`                     | Enable control plane provisioner for control plane workloads                                                                    | `false`                                                                                    |
+| `karpenter.controlPlaneProvisioner.consolidation.enabled`       | Enable consolidation for control plane provisioner                                                                              | `true`                                                                                     |
+| `karpenter.controlPlaneProvisioner.ttlSecondsAfterEmpty`        | Time (in seconds) after which node will be drained. Either one of consolidation or ttlSecondsAfterEmpty can be used             | `30`                                                                                       |
+| `karpenter.controlPlaneProvisioner.capacityTypes`               | Capacity types of control plane provisioner                                                                                     | `["spot","on-demand"]`                                                                     |
+| `karpenter.controlPlaneProvisioner.zones`                       | Zones to launch instances for control plane workloads                                                                           | `[]`                                                                                       |
+| `karpenter.controlPlaneProvisioner.instanceFamilies.allowed`    | Allowed instance families for control plane workloads                                                                           | `[]`                                                                                       |
+| `karpenter.controlPlaneProvisioner.instanceFamilies.notAllowed` | Not allowed instance families for control plane workloads                                                                       | `["t3","t2","t3a","p2","p3","p4d","p4de","g4dn","g5","g4ad","inf1","inf2","trn1","trn1n"]` |
+| `karpenter.controlPlaneProvisioner.instanceSizes.allowed`       | Allowed instance sizes for control plane workloads                                                                              | `[]`                                                                                       |
+| `karpenter.controlPlaneProvisioner.instanceSizes.notAllowed`    | Not allowed instance sizes for control plane workloads                                                                          | `["nano","12xlarge","16xlarge","24xlarge","32xlarge","metal"]`                             |
+| `karpenter.controlPlaneProvisioner.providerRefName`             | Name of AWS node template to be used for control plane provisioner                                                              | `default`                                                                                  |
+| `karpenter.controlPlaneProvisioner.taints`                      | Taints to be applied on the control plane provisioner nodes                                                                     | `{}`                                                                                       |
+| `karpenter.controlPlaneProvisioner.labels`                      | Labels to be applied on the control plane provisioner nodes                                                                     | `{}`                                                                                       |
+| `karpenter.defaultNodeTemplate.extraTags`                       | Additional tags for the node template.                                                                                          | `{}`                                                                                       |
