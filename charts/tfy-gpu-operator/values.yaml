@@ -41,10 +41,19 @@ aws-eks-gpu-operator:
   ##
   ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
   toolkit:
-    version: v1.13.0-centos7
+    version: v1.13.4-centos7
+  ## Device Plugin configuration.
+  ##
+  ## @skip aws-eks-gpu-operator.devicePlugin.env[0]
+  devicePlugin:
+    env:
+      - name: PASS_DEVICE_SPECS
+        value: "true"
   ## Node Feature Discovery configuration.
   ##
   node-feature-discovery:
+    ## @param aws-eks-gpu-operator.node-feature-discovery.image.tag Image tag for K8s node-feature-discovery master and worker
+    ##
     ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
     ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
     ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.cpu CPU limit for master node feature discovery.
@@ -105,6 +114,8 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+  ## Validator configuration.
+  ##
   validator:
     plugin:
       env:
@@ -126,14 +137,14 @@ aws-eks-gpu-operator:
   ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
   ##
   dcgmExporter:
-    version: 3.1.7-3.1.4-ubuntu20.04
+    version: 3.1.8-3.1.5-ubuntu20.04
     resources:
       requests:
         cpu: 10m
-        memory: 100Mi
+        memory: 300Mi
       limits:
         cpu: 100m
-        memory: 300Mi
+        memory: 400Mi
     args: ["-c", "5000"]
     serviceMonitor:
       enabled: false
@@ -146,7 +157,7 @@ gcp-gke-standard-dcgm-exporter:
   ## @param gcp-gke-standard-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
   ##
   image:
-    tag: 3.1.7-3.1.4-ubuntu20.04
+    tag: 3.1.8-3.1.5-ubuntu20.04
   ## Arguments to pass to the DCGM Exporter.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
@@ -170,10 +181,10 @@ gcp-gke-standard-dcgm-exporter:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 300Mi
     limits:
       cpu: 100m
-      memory: 300Mi
+      memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
@@ -214,8 +225,7 @@ gcp-gke-standard-dcgm-exporter:
   ## Additional environment variables for the DCGM Exporter.
   ##
   extraEnv:
-    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].name Name for the additional environment variable for the DCGM Exporter.
-    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].value Value for the additional environment variable for the DCGM Exporter.
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[0]
     - name: NVIDIA_INSTALL_DIR_HOST
       value: /home/kubernetes/bin/nvidia
     ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[1]
@@ -259,7 +269,7 @@ azure-aks-dcgm-exporter:
   ## @param azure-aks-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
   ##
   image:
-    tag: 3.1.7-3.1.4-ubuntu20.04
+    tag: 3.1.8-3.1.5-ubuntu20.04
   ## Arguments to pass to the DCGM Exporter.
   ##
   ## @param azure-aks-dcgm-exporter.arguments Arguments for the DCGM Exporter.
@@ -276,10 +286,10 @@ azure-aks-dcgm-exporter:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 300Mi
     limits:
       cpu: 100m
-      memory: 300Mi
+      memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
   ## @param azure-aks-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
