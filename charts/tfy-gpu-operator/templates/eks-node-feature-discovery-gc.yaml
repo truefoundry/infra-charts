@@ -1,0 +1,102 @@
+{{- if .Values.clusterType.awsEks }}
+{{- if .Values.aws-eks-gpu-operator.node-feature-discovery.gc.enable }}
+{{- if .Values.aws-eks-gpu-operator.node-feature-discovery.gc.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- if .Values.aws-eks-gpu-operator.node-feature-discovery.gc.rbac.create }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/proxy
+  verbs:
+  - get
+- apiGroups:
+  - topology.node.k8s.io
+  resources:
+  - noderesourcetopologies
+  verbs:
+  - delete
+  - list
+- apiGroups:
+  - nfd.k8s-sigs.io
+  resources:
+  - nodefeatures
+  verbs:
+  - delete
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-node-feature-discovery-gc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    role: gc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      role: gc
+  template:
+    metadata:
+      labels:
+        role: gc
+    spec:
+      serviceAccountName: {{ .Release.Name }}-node-feature-discovery-gc
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: gc
+          image: registry.k8s.io/nfd/node-feature-discovery:v0.14.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          command:
+            - "nfd-gc"
+          args:
+            {{- if .Values.aws-eks-gpu-operator.node-feature-discovery.gc.interval | empty | not }}
+            - "-gc-interval={{ .Values.aws-eks-gpu-operator.node-feature-discovery.gc.interval }}"
+            {{- end }}
+          resources:
+            {{- toYaml .Values.aws-eks-gpu-operator.node-feature-discovery.gc.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true      
+{{- end }}
+{{- end }}

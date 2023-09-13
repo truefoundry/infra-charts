@@ -105,6 +105,23 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+    gc:
+      enable: true
+      serviceAccount:
+        create: true
+      rbac:
+        create: true
+      interval: 30m
+      resources:
+        requests:
+          cpu: 10m
+          memory: 300Mi
+        limits:
+          cpu: 50m
+          memory: 600Mi
+
+  ## Validator configuration.
+  ##
   validator:
     plugin:
       env:
@@ -130,10 +147,10 @@ aws-eks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 100Mi
+        memory: 300Mi
       limits:
         cpu: 100m
-        memory: 300Mi
+        memory: 400Mi
     args: ["-c", "5000"]
     serviceMonitor:
       enabled: false
@@ -170,10 +187,10 @@ gcp-gke-standard-dcgm-exporter:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 300Mi
     limits:
       cpu: 100m
-      memory: 300Mi
+      memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
@@ -276,10 +293,10 @@ azure-aks-dcgm-exporter:
   resources:
     requests:
       cpu: 10m
-      memory: 100Mi
+      memory: 300Mi
     limits:
       cpu: 100m
-      memory: 300Mi
+      memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
   ## @param azure-aks-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
