@@ -9,10 +9,9 @@ spec:
   {{- if .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
   consolidation:
     enabled: true
-  {{- end }}
-{{- if not .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
+  {{- else }}
   ttlSecondsAfterEmpty: {{ .Values.karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty }}
-{{- end }}
+  {{- end }}
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
