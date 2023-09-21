@@ -45,22 +45,20 @@ aws-eks-gpu-operator:
   ## Node Feature Discovery configuration.
   ##
   node-feature-discovery:
-    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.cpu CPU limit for master node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.limits.memory Memory limit for master node feature discovery.
-    ##
-    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-    ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
-    ##
     master:
+      ##
+      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
       resources:
         requests:
           cpu: 10m
           memory: 400Mi
     worker:
+      ##
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
       resources:
         requests:
           cpu: 10m
@@ -103,6 +101,13 @@ aws-eks-gpu-operator:
                       - g5.24xlarge
                       - g5.48xlarge
     gc:
+      ##
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
+      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.rbac.create
+      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.serviceAccount.create
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
       enable: true
       serviceAccount:
         create: true
