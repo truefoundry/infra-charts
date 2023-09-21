@@ -117,7 +117,14 @@ aws-eks-gpu-operator:
       resources:
         requests:
           cpu: 10m
-          memory: 300Mi
+          memory: 100Mi
+      tolerations:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: PreferNoSchedule
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[1]
+        - operator: Exists
 
   ## Validator configuration.
   ##
