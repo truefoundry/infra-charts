@@ -37,11 +37,31 @@ aws-eks-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
+  
   ## Toolkit configuration.
   ##
   ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
+  ## @skip aws-eks-gpu-operator.toolkit.env
   toolkit:
-    version: v1.13.0-centos7
+    version: v1.13.5-centos7
+    env:
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
+        value: 'false'
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
+        value: 'true'
+  
+  ## Device Plugin configuration.
+  ##
+  ## @skip aws-eks-gpu-operator.devicePlugin.env
+  devicePlugin:
+    env:
+      - name: PASS_DEVICE_SPECS
+        value: 'true'
+      - name: DEVICE_LIST_STRATEGY
+        value: volume-mounts
+      - name: DEVICE_ID_STRATEGY
+        value: index
+  
   ## Node Feature Discovery configuration.
   ##
   node-feature-discovery:
@@ -84,6 +104,7 @@ aws-eks-gpu-operator:
                       - p3dn.24xlarge
                       - p4d.24xlarge
                       - p4de.24xlarge
+                      - p5.48xlarge
                       - g4dn.xlarge
                       - g4dn.2xlarge
                       - g4dn.4xlarge
@@ -135,6 +156,7 @@ aws-eks-gpu-operator:
         ## @param aws-eks-gpu-operator.validator.plugin.env[0].value Value of the Evironment Variable for the Validator Plugin
         - name: WITH_WORKLOAD
           value: "false"
+  
   ## DCGM Exporter configuration.
   ##
   ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.

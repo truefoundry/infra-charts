@@ -41,7 +41,7 @@ karpenter:
         values: ["amd64"]
       - key: karpenter.k8s.aws/instance-family
         operator: NotIn
-        values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+        values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
       - key: karpenter.k8s.aws/instance-size
         operator: NotIn
         values: ["nano", "micro", "metal"]
@@ -92,7 +92,7 @@ karpenter:
         - metal
     ## @param karpenter.gpuProvisionerSpec.providerRefName Name of AWS node template to be used for GPU provisioner
     ##
-    providerRefName: default
+    providerRefName: gpu-default
 
   ## Provisioner for Control plane workloads
   controlPlaneProvisioner:
@@ -126,7 +126,7 @@ karpenter:
 
       ## @param karpenter.controlPlaneProvisioner.instanceFamilies.notAllowed Not allowed instance families for control plane workloads
       ##      
-      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
 
     instanceSizes:
       ## @param karpenter.controlPlaneProvisioner.instanceSizes.allowed Allowed instance sizes for control plane workloads
