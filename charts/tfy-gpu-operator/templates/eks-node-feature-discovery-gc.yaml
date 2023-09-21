@@ -1,13 +1,13 @@
 {{- if .Values.clusterType.awsEks }}
-{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.enable) }}
-{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.serviceAccount.create) }}
+{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "enable") }}
+{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "serviceAccount" "create") }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-node-feature-discovery-gc
   namespace: {{ .Release.Namespace }}
 {{- end }}
-{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.rbac.create) }}
+{{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "rbac" "create") }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -87,11 +87,11 @@ spec:
           command:
             - "nfd-gc"
           args:
-            {{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.interval) | empty | not }}
-            - "-gc-interval={{ (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.interval) }}"
+            {{- if (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "interval") | empty | not }}
+            - "-gc-interval={{ (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "interval") }}"
             {{- end }}
           resources:
-            {{- toYaml (index .Values "aws-eks-gpu-operator" "node-feature-discovery" .gc.resources) | nindent 12 }}
+            {{- toYaml (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "resources") | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
