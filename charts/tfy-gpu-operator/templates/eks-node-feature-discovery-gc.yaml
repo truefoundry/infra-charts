@@ -100,5 +100,7 @@ spec:
             runAsNonRoot: true
       tolerations:
         {{- toYaml (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "tolerations") | nindent 8 }}
+      affinity:
+        {{- toYaml (index .Values "aws-eks-gpu-operator" "node-feature-discovery" "gc" "affinity") | nindent 8 }}
 {{- end }}
 {{- end }}
