@@ -388,6 +388,32 @@ entries:
     version: 0.1.0
   tfy-gpu-operator:
   - apiVersion: v2
+    created: "2023-10-04T07:05:31.897257727Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.3.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    - alias: azure-aks-dcgm-exporter
+      condition: clusterType.azureAks
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    description: Truefoundry GPU Operator
+    digest: 3770f164158450a587df308daca5e8354d26889dd78dd7f8b15eef8d3b3ae0ac
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.9-rc.2/tfy-gpu-operator-0.1.9-rc.2.tgz
+    version: 0.1.9-rc.2
+  - apiVersion: v2
     created: "2023-09-21T12:39:26.005759027Z"
     dependencies:
     - alias: aws-eks-gpu-operator
@@ -774,6 +800,15 @@ entries:
     version: 0.1.0
   tfy-karpenter-config:
   - apiVersion: v2
+    created: "2023-10-04T07:05:32.126847569Z"
+    description: ArgoCD Applications for karpenter config
+    digest: db094d5be0324e069f8701a0a17e1b58f14ddc2e03fbfeba12422364e931ef44
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.15-rc.1/tfy-karpenter-config-0.1.15-rc.1.tgz
+    version: 0.1.15-rc.1
+  - apiVersion: v2
     created: "2023-09-28T12:56:43.665252293Z"
     description: ArgoCD Applications for karpenter config
     digest: b6de6f866b88e3a5ff85c2b9063afcc512286062e6451be387151c53c8e51ef2
@@ -1107,4 +1142,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.1.0/tfy-notebook-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2023-09-28T12:56:43.665583996Z"
+generated: "2023-10-04T07:05:32.127102176Z"
