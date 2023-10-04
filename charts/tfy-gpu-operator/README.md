@@ -20,7 +20,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.operator.resources.requests.memory`                      | Memory request for the operator.                             | `200Mi`                   |
 | `aws-eks-gpu-operator.operator.resources.limits.cpu`                           | CPU limit for the operator.                                  | `50m`                     |
 | `aws-eks-gpu-operator.operator.resources.limits.memory`                        | Memory limit for the operator.                               | `300Mi`                   |
-| `aws-eks-gpu-operator.toolkit.version`                                         | Version of the toolkit.                                      | `v1.13.0-centos7`         |
+| `aws-eks-gpu-operator.toolkit.version`                                         | Version of the toolkit.                                      | `v1.13.5-centos7`         |
 | `aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu`    | CPU request for master node feature discovery.               | `10m`                     |
 | `aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory` | Memory request for master node feature discovery.            | `400Mi`                   |
 | `aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu`    | CPU request for worker node feature discovery.               | `10m`                     |
@@ -30,7 +30,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.node-feature-discovery.gc.enable`                        | Enable node feature discovery garbage collector.             | `true`                    |
 | `aws-eks-gpu-operator.node-feature-discovery.gc.interval`                      | Interval between two garbage collection runs.                | `30m`                     |
 | `aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu`        | CPU request for node feature discovery garbage collector.    | `10m`                     |
-| `aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory`     | Memory request for node feature discovery garbage collector. | `300Mi`                   |
+| `aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory`     | Memory request for node feature discovery garbage collector. | `100Mi`                   |
 | `aws-eks-gpu-operator.validator.plugin.env[0].name`                            | Name of the Evironment Variable for the Validator Plugin     | `WITH_WORKLOAD`           |
 | `aws-eks-gpu-operator.validator.plugin.env[0].value`                           | Value of the Evironment Variable for the Validator Plugin    | `false`                   |
 | `aws-eks-gpu-operator.dcgmExporter.version`                                    | Version of the DCGM Exporter.                                | `3.1.7-3.1.4-ubuntu20.04` |
