@@ -178,6 +178,18 @@ aws-eks-gpu-operator:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
         - operator: Exists
 
+  ## Daemonsets configuration
+  ##
+  ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
+  daemonsets:
+    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart
+    # The downside being Daemonset will not be updated until it is manually deleted,
+    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
+    # If needed, older nodes can be drained to force a newer versions on a newer nodes
+    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
+    # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
+    updateStrategy: "OnDelete"
+  
   ## Validator configuration.
   ##
   validator:
