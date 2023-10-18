@@ -14,7 +14,7 @@ karpenter:
   ## @param karpenter.instanceProfile Instance profile of the karpenter
   ##
   instanceProfile: ""
-  
+
   ##
   # default provisioner for non-GPU workloads
   defaultProvisionerSpec:
@@ -27,24 +27,24 @@ karpenter:
     ## @extra karpenter.defaultProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used
     ## 
     # ttlSecondsAfterEmpty: 30
-    
+
     ## @skip karpenter.defaultProvisionerSpec.requirements
     requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["spot"]
-      - key: "topology.kubernetes.io/zone"
-        operator: In
-        values: ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
-      - key: kubernetes.io/arch
-        operator: In
-        values: ["amd64"]
-      - key: karpenter.k8s.aws/instance-family
-        operator: NotIn
-        values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
-      - key: karpenter.k8s.aws/instance-size
-        operator: NotIn
-        values: ["nano", "micro", "metal"]
+    - key: karpenter.sh/capacity-type
+      operator: In
+      values: ["spot"]
+    - key: "topology.kubernetes.io/zone"
+      operator: In
+      values: ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+    - key: kubernetes.io/arch
+      operator: In
+      values: ["amd64"]
+    - key: karpenter.k8s.aws/instance-family
+      operator: NotIn
+      values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+    - key: karpenter.k8s.aws/instance-size
+      operator: NotIn
+      values: ["nano", "micro", "metal"]
 
     ## @param karpenter.defaultProvisionerSpec.providerRef.name AWS node template name for default provisioner
     ##
@@ -61,35 +61,35 @@ karpenter:
     ##
     consolidation:
       enabled: true
-    
+
     ## @param karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used
     ## 
     ttlSecondsAfterEmpty: 300
-    
+
     ## @param karpenter.gpuProvisionerSpec.capacityTypes Capacity types for GPU provisioner
     ##    
     capacityTypes:
-      - spot
-      - on-demand
+    - spot
+    - on-demand
     ## @param karpenter.gpuProvisionerSpec.zones Zones to launch instances for GPU provisioner
     ## 
     zones: []
     ## @param karpenter.gpuProvisionerSpec.instanceFamilies Instance families to launch instances for GPU provisioner
     ## 
     instanceFamilies:
-      - p2
-      - p3
-      - g4dn
-      - g5
-      - p4d
-      - p4de
+    - p2
+    - p3
+    - g4dn
+    - g5
+    - p4d
+    - p4de
     ## @param karpenter.gpuProvisionerSpec.instanceSizes.notAllowed Instance Sizes that are not allowed to launch instances for GPU provisioner
     ##
     instanceSizes:
       notAllowed:
-        - nano
-        - micro
-        - metal
+      - nano
+      - micro
+      - metal
     ## @param karpenter.gpuProvisionerSpec.providerRefName Name of AWS node template to be used for GPU provisioner
     ##
     providerRefName: gpu-default
@@ -108,12 +108,12 @@ karpenter:
     ## @param karpenter.controlPlaneProvisioner.ttlSecondsAfterEmpty Time (in seconds) after which node will be drained. Either one of consolidation or ttlSecondsAfterEmpty can be used
     ##
     ttlSecondsAfterEmpty: 30
-  
+
     ## @param karpenter.controlPlaneProvisioner.capacityTypes Capacity types of control plane provisioner
     ## 
     capacityTypes:
-      - spot
-      - on-demand
+    - spot
+    - on-demand
 
     ## @param karpenter.controlPlaneProvisioner.zones Zones to launch instances for control plane workloads
     ##
@@ -155,7 +155,7 @@ karpenter:
     rootVolumeSize: 100Gi
     ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
     extraTags: {}
-    
+
   ## Defautl GPU Node Template Config
   gpuDefaultNodeTemplate:
     ## @param karpenter.gpuDefaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
@@ -196,7 +196,7 @@ karpenter:
       address = "/run/containerd/containerd.sock"
 
       [plugins.cri]
-      sandbox_image = "602401143452.dkr.ecr.eu-west-1.amazonaws.com/eks/pause:3.5"
+      sandbox_image = "SANDBOX_IMAGE"
 
       [plugins.cri.registry]
       config_path = "/etc/containerd/certs.d:/etc/docker/certs.d"
