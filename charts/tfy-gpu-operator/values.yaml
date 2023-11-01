@@ -23,13 +23,9 @@ aws-eks-gpu-operator:
     ## Resource configuration for operator requests and limits.
     ##
     ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
-    ##
     resources:
       requests:
         cpu: 10m
@@ -202,19 +198,15 @@ aws-eks-gpu-operator:
   
   ## DCGM Exporter configuration.
   ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-  ##
   dcgmExporter:
+    ##
+    ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
     version: 3.1.7-3.1.4-ubuntu20.04
+    ##
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -222,7 +214,11 @@ aws-eks-gpu-operator:
       limits:
         cpu: 100m
         memory: 400Mi
+    ##
+    ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
+    ##
+    ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
 
@@ -338,6 +334,45 @@ gcp-gke-standard-dcgm-exporter:
     ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
+
+## @section azure-aks-dcgm-exporter Configuration for the Azure AKS Nvidia Device Plugin. This section will only be used when clusterType.azureAks is set to true.
+##
+azure-aks-nvidia-device-plugin:
+  namespaceOverride: tfy-gpu-operator
+  updateStrategy:
+    type: OnDelete
+  podAnnotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  compatWithCPUManager: true
+  deviceListStrategy: volume-mounts
+  deviceIDStrategy: index
+  securityContext:
+    privileged: true
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.azure.com/accelerator
+                operator: In
+                values:
+                  - nvidia
+  tolerations:
+    # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+    # This, along with the annotation above marks this pod as a critical add-on.
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+    - key: sku
+      operator: Equal
+      value: gpu
+      effect: NoSchedule
+    - key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: spot
+      effect: NoSchedule
 
 ## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
 ##
