@@ -13,6 +13,7 @@ clusterType:
   gcpGkeStandard: false
   gcpGkeAutopilot: false
   azureAks: false
+  civoTalos: false
 
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
@@ -451,3 +452,81 @@ azure-aks-dcgm-exporter:
     ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
+
+
+civo-talos-nvidia-device-plugin:
+  namespaceOverride: tfy-gpu-operator
+  updateStrategy:
+    type: OnDelete
+  compatWithCPUManager: true
+  deviceListStrategy: volume-mounts
+  deviceIDStrategy: index
+  securityContext:
+    privileged: true
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values:
+                  - g4g.kube.small
+                  - g4g.kube.medium
+                  - g4g.kube.large
+                  - g4g.kube.xlarge
+  tolerations:
+    # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+    # This, along with the annotation above marks this pod as a critical add-on.
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+
+
+civo-talos-dcgm-exporter:
+  namespaceOverride: tfy-gpu-operator
+  image:
+    tag: 3.2.6-3.1.9-ubuntu20.04
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                values:
+                  - g4g.kube.small
+                  - g4g.kube.medium
+                  - g4g.kube.large
+                  - g4g.kube.xlarge
+                operator: In
+  extraEnv:
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: /etc/dcgm-exporter/dcp-metrics-included.csv
+  arguments:
+    - '-c'
+    - '"5000"'
+    - '-f'
+    - /etc/dcgm-exporter/dcp-metrics-included.csv
+  resources:
+    limits:
+      cpu: 100m
+      memory: 400Mi
+    requests:
+      cpu: 10m
+      memory: 300Mi
+  tolerations:
+    - operator: Exists
+  mapPodsMetrics: true
+  serviceMonitor:
+    enabled: false
+  securityContext:
+    privileged: true
+  extraHostVolumes:
+    - name: dev
+      hostPath: /dev
+  extraVolumeMounts:
+    - name: dev
+      mountPath: /dev
+  
