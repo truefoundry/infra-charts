@@ -8,11 +8,14 @@
 ##
 ## @param clusterType.azureAks Flag indicating Azure AKS cluster type.
 ##
+## @param clusterType.civoTalos Flag indicating Civo Talos cluster type.
+##
 clusterType:
   awsEks: false
   gcpGkeStandard: false
   gcpGkeAutopilot: false
   azureAks: false
+  civoTalos: false
 
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
@@ -181,6 +184,7 @@ aws-eks-gpu-operator:
   ## Daemonsets configuration
   ##
   ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
+  ##
   daemonsets:
     # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart
     # The downside being Daemonset will not be updated until it is manually deleted,
@@ -451,3 +455,129 @@ azure-aks-dcgm-exporter:
     ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
+
+
+## @section civo-talos-nvidia-device-plugin Configuration for the Civo Talos Nvidia Device Plugin. This section will only be used when clusterType.civoTalos is set to true.
+##
+civo-talos-nvidia-device-plugin:
+  ## @param civo-talos-nvidia-device-plugin.namespaceOverride Namespace override for the Device Plugin.
+  ##
+  namespaceOverride: tfy-gpu-operator
+  ## @param civo-talos-nvidia-device-plugin.updateStrategy.type Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
+  ##
+  updateStrategy:
+    type: OnDelete
+  ## @param civo-talos-nvidia-device-plugin.compatWithCPUManager Enable compatibility with CPUManager and PASS_DEVICE_SPECS
+  ##
+  compatWithCPUManager: true
+  ## @param civo-talos-nvidia-device-plugin.deviceListStrategy How device plugin should list devices - one of ["volume-mounts", "envvar"]
+  ##
+  deviceListStrategy: volume-mounts
+  ## @param civo-talos-nvidia-device-plugin.deviceIDStrategy How device plugin should pass device IDs - one of ["uuid", "index"]
+  ##
+  deviceIDStrategy: index
+  ## @skip civo-talos-nvidia-device-plugin.securityContext.privileged
+  ##
+  securityContext:
+    privileged: true
+  ## @skip civo-talos-nvidia-device-plugin.affinity
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values:
+                  - g4g.kube.small
+                  - g4g.kube.medium
+                  - g4g.kube.large
+                  - g4g.kube.xlarge
+  ## @skip civo-talos-nvidia-device-plugin.tolerations
+  ##
+  tolerations:
+    - operator: Exists
+
+
+civo-talos-dcgm-exporter:
+  ## @param civo-talos-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
+  ##
+  namespaceOverride: tfy-gpu-operator
+  ## @param civo-talos-dcgm-exporter.image.tag Image tag for the DCGM Exporter.
+  ##
+  image:
+    tag: 3.2.6-3.1.9-ubuntu20.04
+  ## @skip civo-talos-dcgm-exporter.extraEnv[0].name
+  ## @skip civo-talos-dcgm-exporter.extraEnv[0].value
+  ## 
+  extraEnv:
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: /etc/dcgm-exporter/dcp-metrics-included.csv
+  ## @param civo-talos-dcgm-exporter.arguments Arguments for the DCGM Exporter.
+  ##
+  arguments:
+    - '-c'
+    - '"5000"'
+    - '-f'
+    - /etc/dcgm-exporter/dcp-metrics-included.csv
+  ## Resource configuration for DCGM Exporter requests and limits.
+  ##
+  ## @param civo-talos-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
+  ## @param civo-talos-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
+  ## @param civo-talos-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+  ## @param civo-talos-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
+  ##
+  resources:
+    limits:
+      cpu: 100m
+      memory: 400Mi
+    requests:
+      cpu: 10m
+      memory: 300Mi
+  ## Security context configuration.
+  ##
+  ## @param civo-talos-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
+  ##
+  securityContext:
+    privileged: true
+  ## @skip civo-talos-dcgm-exporter.affinity
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                values:
+                  - g4g.kube.small
+                  - g4g.kube.medium
+                  - g4g.kube.large
+                  - g4g.kube.xlarge
+                operator: In
+  ## @skip civo-talos-dcgm-exporter.tolerations
+  ##
+  tolerations:
+    - operator: Exists
+  ## @param civo-talos-dcgm-exporter.mapPodsMetrics Enable mapping of pod metrics.
+  ##
+  mapPodsMetrics: true
+  ## @param civo-talos-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+  ##
+  serviceMonitor:
+    enabled: false
+  ## @skip civo-talos-dcgm-exporter.extraHostVolumes[0].name
+  ## @skip civo-talos-dcgm-exporter.extraHostVolumes[0].hostPath
+  ##
+  extraHostVolumes:
+    - name: dev
+      hostPath: /dev
+  ## @skip civo-talos-dcgm-exporter.extraVolumeMounts[0].name
+  ## @skip civo-talos-dcgm-exporter.extraVolumeMounts[0].mountPath
+  ##
+  extraVolumeMounts:
+    - name: dev
+      mountPath: /dev
+
+
+
