@@ -11,6 +11,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `clusterType.gcpGkeStandard`  | Flag indicating GCP GKE Standard cluster type.  | `false` |
 | `clusterType.gcpGkeAutopilot` | Flag indicating GCP GKE Autopilot cluster type. | `false` |
 | `clusterType.azureAks`        | Flag indicating Azure AKS cluster type.         | `false` |
+| `clusterType.civoTalos`       | Flag indicating Civo Talos cluster type.        | `false` |
 
 ### aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 
@@ -86,3 +87,23 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `azure-aks-dcgm-exporter.extraHostVolumes[0].hostPath`   | Host Path for the additional host volumes for the DCGM Exporter.      | `/dev`                                                                 |
 | `azure-aks-dcgm-exporter.extraVolumeMounts[0].name`      | Name for the additional volume mounts for the DCGM Exporter.          | `dev`                                                                  |
 | `azure-aks-dcgm-exporter.extraVolumeMounts[0].mountPath` | Mount Path for the additional volume mounts for the DCGM Exporter.    | `/dev`                                                                 |
+
+### civo-talos-nvidia-device-plugin Configuration for the Civo Talos Nvidia Device Plugin. This section will only be used when clusterType.civoTalos is set to true.
+
+| Name                                                   | Description                                                                | Value                                                                  |
+| ------------------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `civo-talos-nvidia-device-plugin.namespaceOverride`    | Namespace override for the Device Plugin.                                  | `tfy-gpu-operator`                                                     |
+| `civo-talos-nvidia-device-plugin.updateStrategy.type`  | Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]      | `OnDelete`                                                             |
+| `civo-talos-nvidia-device-plugin.compatWithCPUManager` | Enable compatibility with CPUManager and PASS_DEVICE_SPECS                 | `true`                                                                 |
+| `civo-talos-nvidia-device-plugin.deviceListStrategy`   | How device plugin should list devices - one of ["volume-mounts", "envvar"] | `volume-mounts`                                                        |
+| `civo-talos-nvidia-device-plugin.deviceIDStrategy`     | How device plugin should pass device IDs - one of ["uuid", "index"]        | `index`                                                                |
+| `civo-talos-dcgm-exporter.namespaceOverride`           | Namespace override for the DCGM Exporter.                                  | `tfy-gpu-operator`                                                     |
+| `civo-talos-dcgm-exporter.image.tag`                   | Image tag for the DCGM Exporter.                                           | `3.2.6-3.1.9-ubuntu20.04`                                              |
+| `civo-talos-dcgm-exporter.arguments`                   | Arguments for the DCGM Exporter.                                           | `["-c","\"5000\"","-f","/etc/dcgm-exporter/dcp-metrics-included.csv"]` |
+| `civo-talos-dcgm-exporter.resources.requests.cpu`      | CPU request for the DCGM Exporter.                                         | `10m`                                                                  |
+| `civo-talos-dcgm-exporter.resources.requests.memory`   | Memory request for the DCGM Exporter.                                      | `300Mi`                                                                |
+| `civo-talos-dcgm-exporter.resources.limits.cpu`        | CPU limit for the DCGM Exporter.                                           | `100m`                                                                 |
+| `civo-talos-dcgm-exporter.resources.limits.memory`     | Memory limit for the DCGM Exporter.                                        | `400Mi`                                                                |
+| `civo-talos-dcgm-exporter.securityContext.privileged`  | Set the container to privileged mode.                                      | `true`                                                                 |
+| `civo-talos-dcgm-exporter.mapPodsMetrics`              | Enable mapping of pod metrics.                                             | `true`                                                                 |
+| `civo-talos-dcgm-exporter.serviceMonitor.enabled`      | Enable or disable ServiceMonitor for DCGM Exporter.                        | `false`                                                                |
