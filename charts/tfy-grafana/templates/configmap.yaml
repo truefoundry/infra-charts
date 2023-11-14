@@ -1,0 +1,12 @@
+{{- range $path, $name := .Files.Glob "dashboards/*" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tfy-dashboard-{{ $path | replace "dashboards/" "" | replace ".json" "" }}
+  labels:
+    truefoundry_truevisibility: "owner"
+data:
+  {{ $path | replace "dashboards/" ""   }}: |-
+    {{ $name | toString | nindent 4 }}
+{{- end }}
