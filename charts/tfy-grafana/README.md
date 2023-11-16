@@ -1,6 +1,14 @@
 # Header
 subheading
 
+## Upgrade Guide
+
+### From 1.3 to 1.4
+- Default dashboards are now included with the grafana charts
+- You can add the dashboards in the `dashboards/` folder
+- Apply a label to the configmap via `.grafana.sidecar.dashboards.label` and `.grafana.sidecar.dashboards.labelValue`.
+
+
 ## Parameters
 
 ### grafana Configuration for Grafana deployment.
