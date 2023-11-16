@@ -63,6 +63,13 @@ grafana:
       requests:
         cpu: 50m
         memory: 50Mi
+    ## @param grafana.sidecar.dashboards.enabled Whether to enable/disable dashboards
+    ## @param grafana.sidecar.dashboards.label Label key for grafana dashboard configmap
+    ## @param grafana.sidecar.dashboards.labelValue Label value for grafana dashboard configmap
+    dashboards:
+      enabled: false
+      label: truefoundry_truevisibility
+      labelValue: owner
   ## Datasources configuration for Grafana.
   ##
   datasources:
@@ -81,18 +88,19 @@ grafana:
     datasources.yaml:
       apiVersion: 1
       datasources:
-        - name: Prometheus
-          type: prometheus
-          url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
-          access: proxy
-          isDefault: true
-        - name: Loki
-          type: loki
-          url: http://loki.loki.svc.cluster.local:3100
-          access: proxy
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+      - name: Loki
+        type: loki
+        url: http://loki.loki.svc.cluster.local:3100
+        access: proxy
   ## Persistence configuration for Grafana.
   ##
   ## @param grafana.persistence.enabled Enable or disable persistence for Grafana.
+  ## @param grafana.persistence.type Type of the persisted storage for Grafana.
   ## @param grafana.persistence.size Size of the persisted storage for Grafana.
   ##
   persistence:
