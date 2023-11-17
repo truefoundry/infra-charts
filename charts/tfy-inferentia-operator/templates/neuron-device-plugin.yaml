@@ -84,7 +84,7 @@ spec:
       affinity:
         {{- toYaml (index .Values "devicePlugin" "affinity") | nindent 8 }}
       containers:
-      - image: .Values.devicePlugin.image
+      - image: {{ .Values.devicePlugin.image }}
         imagePullPolicy: Always
         name: neuron-device-plugin
         resources:
