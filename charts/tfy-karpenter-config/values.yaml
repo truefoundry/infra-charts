@@ -222,3 +222,40 @@ karpenter:
       else
           echo "CONTAINERD_VERSION is empty or not within the specified range."
       fi
+
+  ## provisioner for inferentia workloads
+  inferentiaProvisionerSpec:
+    ## @param karpenter.inferentiaProvisionerSpec.enabled Enable inferentia provisioner for inferentia nodes
+    ##
+    enabled: false
+
+    ## @param karpenter.inferentiaProvisionerSpec.consolidation.enabled Enable consolidation for inferentia provisioner
+    ##
+    consolidation:
+      enabled: false
+
+    ## @param karpenter.inferentiaProvisionerSpec.ttlSecondsAfterEmpty Seconds after which node should be deleted once it is empty. Either one of consolidation or ttlSecondsAfterEmpty should be used
+    ## 
+    ttlSecondsAfterEmpty: 300
+
+    ## @param karpenter.inferentiaProvisionerSpec.capacityTypes Capacity types for inferentia provisioner
+    ##    
+    capacityTypes:
+    - spot
+    - on-demand
+    ## @param karpenter.inferentiaProvisionerSpec.zones Zones to launch instances for inferentia provisioner
+    ## 
+    zones: []
+    ## @param karpenter.inferentiaProvisionerSpec.instanceFamilies Instance families to launch instances for inferentia provisioner
+    ## 
+    instanceFamilies:
+    - inf1
+    - inf2
+    ## @param karpenter.inferentiaProvisionerSpec.instanceSizes.notAllowed Instance Sizes that are not allowed to launch instances for inferentia provisioner
+    ##
+    instanceSizes:
+      notAllowed:
+      - 48xlarge
+    ## @param karpenter.inferentiaProvisionerSpec.providerRefName Name of AWS node template to be used for inferentia provisioner
+    ##
+    providerRefName: default
