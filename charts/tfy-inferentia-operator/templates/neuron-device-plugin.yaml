@@ -73,7 +73,7 @@ spec:
       labels:
         name: {{ .Release.Name }}-neuron-device-plugin-ds
     spec:
-      serviceAccount: neuron-device-plugin
+      serviceAccount: {{ .Release.Name }}-neuron-device-plugin
       tolerations:
       {{- range .Values.devicePlugin.tolerations }}
         - {{ . | toYaml | nindent 10 | trim }}
