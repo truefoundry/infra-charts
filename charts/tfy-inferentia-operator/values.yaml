@@ -1,0 +1,41 @@
+## @section Configuration for the device plugin responsible for node feature discovery
+## @param devicePlugin.enabled Enable device plugin Daemonset.
+## @param devicePlugin.resources.requests.cpu CPU request for device plugin Daemonset.
+## @param devicePlugin.resources.requests.memory Memory request for device plugin Daemonset.
+## @param devicePlugin.image Image to use for device plugin Daemonset.
+devicePlugin:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128MiB
+  image: public.ecr.aws/neuron/neuron-device-plugin:2.16.18.0
+  tolerations:
+      ## @skip devicePlugin.tolerations[0]
+      ## @skip devicePlugin.tolerations[1]
+    - key: CriticalAddonsOnly
+      operator: Exists
+    - key: aws.amazon.com/neuron
+      operator: Exists
+      effect: NoSchedule
+  affinity:
+    ## @skip devicePlugin.affinity.nodeAffinity
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: "node.kubernetes.io/instance-type"
+                operator: In
+                values:
+                  - inf1.xlarge
+                  - inf1.2xlarge
+                  - inf1.6xlarge
+                  - inf1.24xlarge
+                  - inf2.xlarge
+                  - inf2.4xlarge
+                  - inf2.8xlarge
+                  - inf2.24xlarge
+                  - inf2.48xlarge
+                  - trn1.2xlarge
+                  - trn1.32xlarge
+                  - trn1n.32xlarge
