@@ -1,5 +1,6 @@
-# Header
-subheading
+# Grafana helm chart powered by truefoundry
+Tfy-grafana is a helm chart to power monitoring via grafana
+
 
 ## Upgrade Guide
 
