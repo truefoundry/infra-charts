@@ -44,6 +44,7 @@ devicePlugin:
 ## @param scheduler.enabled Enable Scheduler.
 ## @param scheduler.schedulerName Name of the scheduler.
 ## @param scheduler.image K8s Scheduler image.
+## @skip scheduler.args
 ## @param scheduler.resources.requests.cpu CPU request for K8s scheduler.
 ## @param scheduler.resources.requests.memory Memory request for K8s scheduler.
 ## @param scheduler.extension.image Neuron scheduler extension image.
@@ -53,6 +54,12 @@ scheduler:
   enabled: true
   schedulerName: neuron-scheduler
   image: registry.k8s.io/kube-scheduler:v1.27.7
+  args:
+    - --config=/etc/kubernetes/neuron-scheduler/neuron-scheduler-config.yaml
+    - --leader-elect=true
+    - --v=2
+    - --lock-object-name=neuron-scheduler
+    - --pod-max-in-unschedulable-pods-duration=30s
   resources:
     requests:
       cpu: 100m
