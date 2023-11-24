@@ -1,0 +1,162 @@
+{{- if .Values.scheduler.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-as-kube-scheduler
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: system:kube-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-as-volume-scheduler
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: system:volume-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+  - get
+  - list
+  - update
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-neuron-scheduler
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-config
+  namespace: {{ .Release.Namespace }}
+data:
+  neuron-scheduler-config.yaml: |
+    apiVersion: kubescheduler.config.k8s.io/v1beta2
+    kind: KubeSchedulerConfiguration
+    profiles:
+      - schedulerName: {{ .Values.scheduler.schedulerName }}
+    extenders:
+      - urlPrefix: 'http://{{ .Release.Name }}-neuron-scheduler-extension.{{ .Release.Namespace }}.svc.cluster.local:12345'
+        filterVerb: filter
+        bindVerb: bind
+        enableHTTPS: false
+        nodeCacheCapable: true
+        managedResources:
+          - name: 'aws.amazon.com/neuron'
+            ignoredByScheduler: false
+          - name: 'aws.amazon.com/neuroncore'
+            ignoredByScheduler: false
+          - name: 'aws.amazon.com/neurondevice'
+            ignoredByScheduler: false
+        ignorable: false
+    leaderElection:
+      leaderElect: true
+      resourceNamespace: {{ .Release.Namespace }}
+      resourceName: {{ .Release.Name }}-neuron-scheduler
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: scheduler
+    tier: control-plane
+  name: {{ .Release.Name }}-neuron-scheduler
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-neuron-scheduler
+      component: scheduler
+      tier: control-plane
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-neuron-scheduler
+        component: scheduler
+        tier: control-plane
+        version: second
+    spec:
+      priorityClassName: system-cluster-critical
+      serviceAccountName: {{ .Release.Name }}-neuron-scheduler
+      tolerations:
+      {{- range .Values.scheduler.tolerations }}
+        - {{ . | toYaml | nindent 10 | trim }}
+      {{- else }}
+        []
+      {{- end }}
+      containers:
+      - args:
+        - --config=/etc/kubernetes/neuron-scheduler/neuron-scheduler-config.yaml
+        - --leader-elect=true
+        - --v=2
+        - --lock-object-name=neuron-scheduler
+        command:
+        - /usr/local/bin/kube-scheduler
+        image: {{ .Values.scheduler.image }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10259
+            scheme: HTTPS
+          initialDelaySeconds: 15
+        name: neuron-scheduler
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10259
+            scheme: HTTPS
+        resources:
+          {{- toYaml (index .Values "scheduler" "resources") | nindent 10 }}
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/kubernetes/neuron-scheduler
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-neuron-scheduler-config
+{{- end }}
