@@ -91,16 +91,16 @@ spec:
       serviceAccountName: {{ .Release.Name }}-neuron-scheduler-extension
       schedulerName: {{ .Values.scheduler.schedulerName }} 
       tolerations:
-      {{- range .Values.scheduler.schedulerExtensionTolerations }}
+      {{- range .Values.scheduler.extension.tolerations }}
         - {{ . | toYaml | nindent 10 | trim }}
       {{- else }}
         []
       {{- end }}
       containers:
         - name: neuron-scheduler-exp
-          image: {{ .Values.scheduler.schedulerExtensionImage }}
+          image: {{ .Values.scheduler.extension.image }}
           resources:
-            {{- toYaml (index .Values "scheduler" "schedulerExtensionResources") | nindent 12 }}
+            {{- toYaml (index .Values "scheduler" "extension.resources") | nindent 12 }}
           env:
           - name: PORT
             value: "12345"

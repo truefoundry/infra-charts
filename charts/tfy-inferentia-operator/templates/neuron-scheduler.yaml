@@ -124,7 +124,7 @@ spec:
       priorityClassName: system-cluster-critical
       serviceAccountName: {{ .Release.Name }}-neuron-scheduler
       tolerations:
-      {{- range .Values.scheduler.schedulerTolerations }}
+      {{- range .Values.scheduler.tolerations }}
         - {{ . | toYaml | nindent 10 | trim }}
       {{- else }}
         []
@@ -137,7 +137,7 @@ spec:
         - --lock-object-name=neuron-scheduler
         command:
         - /usr/local/bin/kube-scheduler
-        image: {{ .Values.scheduler.schedulerImage }}
+        image: {{ .Values.scheduler.image }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -151,7 +151,7 @@ spec:
             port: 10259
             scheme: HTTPS
         resources:
-          {{- toYaml (index .Values "scheduler" "schedulerResources") | nindent 10 }}
+          {{- toYaml (index .Values "scheduler" "resources") | nindent 10 }}
         volumeMounts:
           - name: config-volume
             mountPath: /etc/kubernetes/neuron-scheduler
