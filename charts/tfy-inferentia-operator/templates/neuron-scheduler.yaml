@@ -130,11 +130,13 @@ spec:
         []
       {{- end }}
       containers:
-      - args:
-        - --config=/etc/kubernetes/neuron-scheduler/neuron-scheduler-config.yaml
-        - --leader-elect=true
-        - --v=2
-        - --lock-object-name=neuron-scheduler
+      - image: {{ .Values.scheduler.image }}
+        args:
+        {{- range .Values.scheduler.args }}
+          - {{ . | quote | nindent 10 | trim }}
+        {{- else }}
+          []
+        {{- end }}
         command:
         - /usr/local/bin/kube-scheduler
         image: {{ .Values.scheduler.image }}
