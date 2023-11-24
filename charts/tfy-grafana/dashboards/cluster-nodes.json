@@ -68,7 +68,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -148,7 +148,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -165,7 +165,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -245,7 +245,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -262,7 +262,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -325,7 +325,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -408,7 +408,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -482,7 +482,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "ceil(sum by (instance_type,capacity_type) (\n(\nclamp_max(max_over_time(node_time_seconds{job=\"node-exporter\"}[$__interval:]), time()) \n-\nclamp_min(\n  min_over_time(node_boot_time_seconds{job=\"node-exporter\"}[$__interval:])\n  , time() - $__interval_ms / 1000 * 1\n  )\n) \n* on (node) group_left (instance_type, capacity_type) (max_over_time(max by (node, instance_type, capacity_type) (kube_node_labels{job=\"kube-state-metrics\",instance_type=~\"$instance_type\",node=~\"$node\"})[$__interval:])) ) / 60)",
@@ -499,7 +499,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -579,7 +579,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -597,7 +597,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -678,7 +678,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -696,7 +696,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -780,7 +780,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "max by (node, instance_type) (max_over_time((instance:node_cpu_utilisation:rate5m[$__interval])) * 100.0 * on (node) group_left (instance_type, capacity_type) max by (node, instance_type, capacity_type) (kube_node_labels{job=\"kube-state-metrics\", instance_type=~\"$instance_type\",node=~\"$node\"}))",
@@ -795,7 +795,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -876,7 +876,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "max by (node, instance_type) (max_over_time(instance:node_memory_utilisation:ratio[$__interval]) * 100 * on (node) group_left (instance_type, capacity_type) max by (node, instance_type, capacity_type) (kube_node_labels{job=\"kube-state-metrics\",instance_type=~\"$instance_type\",node=~\"$node\"}))",
@@ -891,7 +891,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -972,7 +972,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by (node, instance_type) (((1 - sum by (node) (node_filesystem_avail_bytes{device!=\"rootfs\", job=\"node-exporter\"}) / sum by (node)( node_filesystem_size_bytes{device!=\"rootfs\",job=\"node-exporter\"})) * 100) * on (node) group_left (instance_type, capacity_type) max by (node, instance_type, capacity_type) (kube_node_labels{job=\"kube-state-metrics\",job=\"kube-state-metrics\",instance_type=~\"$instance_type\",node=~\"$node\"}))",
@@ -1018,7 +1018,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${datasource}"
         },
         "definition": "label_values(kube_node_labels,instance_type)",
         "hide": 0,
@@ -1042,7 +1042,7 @@
         "current": {},
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${datasource}"
         },
         "definition": "label_values(kube_node_labels{instance_type=~\"$instance_type\"},node)",
         "hide": 0,
