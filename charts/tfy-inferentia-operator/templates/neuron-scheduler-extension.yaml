@@ -3,7 +3,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
 rules:
 - apiGroups:
   - ""
@@ -51,27 +51,27 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
 subjects:
 - kind: ServiceAccount
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
 ---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
@@ -79,16 +79,16 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-        app: {{ .Release.Name }}-neuron-scheduler
-        component: neuron-scheduler-extension
+        app: {{ .Release.Name }}-scheduler
+        component: scheduler-extension
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-neuron-scheduler
-        component: neuron-scheduler-extension
+        app: {{ .Release.Name }}-scheduler
+        component: scheduler-extension
     spec:
       priorityClassName: system-cluster-critical
-      serviceAccountName: {{ .Release.Name }}-neuron-scheduler-extension
+      serviceAccountName: {{ .Release.Name }}-scheduler-extension
       schedulerName: {{ .Values.scheduler.schedulerName }} 
       tolerations:
       {{- range .Values.scheduler.extension.tolerations }}
@@ -97,7 +97,7 @@ spec:
         []
       {{- end }}
       containers:
-        - name: neuron-scheduler-exp
+        - name: scheduler-exp
           image: {{ .Values.scheduler.extension.image }}
           resources:
             {{- toYaml (index .Values "scheduler" "extension.resources") | nindent 12 }}
@@ -110,17 +110,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-neuron-scheduler-extension
+  name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ .Release.Name }}-neuron-scheduler
-    component: neuron-scheduler-extension
+    app: {{ .Release.Name }}-scheduler
+    component: scheduler-extension
 spec:
   ports:
   - port: 12345
     name: http
     targetPort: 12345
   selector:
-    app: neuron-scheduler
-    component: neuron-scheduler-extension   
+    app: {{ .Release.Name }}-scheduler
+    component: scheduler-extension   
 {{- end }}
