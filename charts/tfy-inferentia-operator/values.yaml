@@ -39,3 +39,34 @@ devicePlugin:
                   - trn1.2xlarge
                   - trn1.32xlarge
                   - trn1n.32xlarge
+
+## @section Configuration for the scheduler responsible for scheduling neuron pods
+## @param scheduler.enabled Enable Scheduler.
+## @param scheduler.schedulerName Name of the scheduler.
+## @param scheduler.schedulerImage K8s Scheduler image.
+## @param scheduler.schedulerResources.requests.cpu CPU request for K8s scheduler.
+## @param scheduler.schedulerResources.requests.memory Memory request for K8s scheduler.
+## @param scheduler.schedulerExtensionImage Neuron scheduler extension image.
+## @param scheduler.schedulerExtensionResources.requests.cpu CPU request for Neuron scheduler extension.
+## @param scheduler.schedulerExtensionResources.requests.memory Memory request for Neuron scheduler extension.
+scheduler:
+  enabled: true
+  schedulerName: neuron-scheduler
+  schedulerImage: registry.k8s.io/kube-scheduler:v1.27.7
+  schedulerResources:
+    requests:
+      cpu: 100m
+      memory: 50Mi
+  schedulerTolerations:
+      ## @skip scheduler.schedulerTolerations[0]
+    - key: CriticalAddonsOnly
+      operator: Exists
+  schedulerExtensionImage: public.ecr.aws/neuron/neuron-scheduler:2.18.3.0
+  schedulerExtensionResources:
+    requests:
+      cpu: '0.1'
+      memory: 50Mi
+  schedulerExtensionTolerations:
+      ## @skip scheduler.schedulerExtensionTolerations[0]
+    - key: CriticalAddonsOnly
+      operator: Exists

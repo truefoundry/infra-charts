@@ -1,0 +1,126 @@
+{{- if .Values.scheduler.enabled }}
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/status
+  verbs:
+  - update
+  - patch
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - update
+  - patch
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - bindings
+  - pods/binding
+  verbs:
+  - create
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+  namespace: {{ .Release.Namespace }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+subjects:
+- kind: ServiceAccount
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+  namespace: {{ .Release.Namespace }}
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+        app: {{ .Release.Name }}-neuron-scheduler
+        component: neuron-scheduler-extension
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-neuron-scheduler
+        component: neuron-scheduler-extension
+    spec:
+      priorityClassName: system-cluster-critical
+      serviceAccountName: {{ .Release.Name }}-neuron-scheduler-extension
+      schedulerName: {{ .Values.scheduler.schedulerName }} 
+      tolerations:
+      {{- range .Values.scheduler.schedulerExtensionTolerations }}
+        - {{ . | toYaml | nindent 10 | trim }}
+      {{- else }}
+        []
+      {{- end }}
+      containers:
+        - name: neuron-scheduler-exp
+          image: {{ .Values.scheduler.schedulerExtensionImage }}
+          resources:
+            {{- toYaml (index .Values "scheduler" "schedulerExtensionResources") | nindent 12 }}
+          env:
+          - name: PORT
+            value: "12345"
+
+# service.yaml            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-neuron-scheduler-extension
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-neuron-scheduler
+    component: neuron-scheduler-extension
+spec:
+  ports:
+  - port: 12345
+    name: http
+    targetPort: 12345
+  selector:
+    app: neuron-scheduler
+    component: neuron-scheduler-extension   
+{{- end }}
