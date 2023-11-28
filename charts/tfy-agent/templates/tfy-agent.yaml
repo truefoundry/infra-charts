@@ -86,4 +86,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.tfyAgent.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
 {{- end }}
