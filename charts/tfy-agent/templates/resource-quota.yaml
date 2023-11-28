@@ -1,0 +1,15 @@
+{{- if .Values.resourceQuota.enabled -}}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}-critical-pods
+spec:
+  scopeSelector:
+    matchExpressions:
+    - operator: In
+      scopeName: PriorityClass
+      values:
+      {{- with .Values.resourceQuota.priorityClasses }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
