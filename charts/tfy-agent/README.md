@@ -100,3 +100,10 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgentProxy.nodeSelector`                         | Parameters to select for scheduling of pod on a node                                                                       | `{}`                                              |
 | `tfyAgentProxy.affinity`                             | Affinity rules for pod scheduling on a node                                                                                | `{}`                                              |
 | `tfyAgentProxy.priorityClassName`                    | PriorityClass name for the pod.                                                                                            | `system-cluster-critical`                         |
+
+### resourceQuota Add a ResourceQuota to enable priority class in a namspace.
+
+| Name                            | Description                | Value                         |
+| ------------------------------- | -------------------------- | ----------------------------- |
+| `resourceQuota.enabled`         | Create the ResourceQuota.  | `true`                        |
+| `resourceQuota.priorityClasses` | PriorityClasses to enable. | `["system-cluster-critical"]` |
