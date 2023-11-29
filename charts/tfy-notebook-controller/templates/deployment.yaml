@@ -53,8 +53,8 @@ spec:
                 configMapKeyRef:
                   key: IDLENESS_CHECK_PERIOD
                   name: notebook-controller-config-map
-          image: "docker.io/truefoundryuser/notebook-controller:{{ .Values.imageTag }}"
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
