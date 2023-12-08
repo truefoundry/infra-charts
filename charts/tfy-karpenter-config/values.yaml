@@ -206,6 +206,13 @@ karpenter:
       WantedBy=multi-user.target
       EOF
 
+        mkdir -p /etc/soci-snapshotter-grpc
+
+        cat > /etc/soci-snapshotter-grpc/config.toml << EOF
+      [http]
+      MaxRetries=1
+      EOF
+
         systemctl daemon-reload
         systemctl enable --now soci-snapshotter
         systemctl status soci-snapshotter
