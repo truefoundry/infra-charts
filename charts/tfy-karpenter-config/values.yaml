@@ -157,115 +157,7 @@ karpenter:
     extraTags: {}
     ## @skip karpenter.defaultNodeTemplate.userData
     # Set this to "" to disable this injection
-    userData: |
-      #!/bin/bash
-      set -ex
-
-      version_lte() {
-          printf '%s\n' "$1" "$2" | sort -C -V
-      }
-
-      version_lt() {
-          ! version_lte "$2" "$1"
-      }
-
-      CONTAINERD_VERSION_OUTPUT="$(containerd --version)"
-      IFS=" " read -a  CONTAINERD_VERSION_STRING <<< "${CONTAINERD_VERSION_OUTPUT}"
-      CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
-      echo containerd version "${CONTAINERD_VERSION}"
-
-      setup_soci() {( set -ex
-        yum install fuse -y
-        modprobe fuse
-
-        curl \
-        --silent \
-        --show-error \
-        --retry 10 \
-        --retry-delay 1 \
-        -L https://github.com/awslabs/soci-snapshotter/releases/download/v0.4.0/soci-snapshotter-0.4.0-linux-amd64.tar.gz \
-        -o soci-snapshotter-0.4.0-linux-amd64.tar.gz
-
-        tar -C /usr/local/bin -xvf soci-snapshotter-0.4.0-linux-amd64.tar.gz soci soci-snapshotter-grpc
-        rm soci-snapshotter-0.4.0-linux-amd64.tar.gz
-
-        cat > /etc/systemd/system/soci-snapshotter.service << EOF
-      [Unit]
-      Description=soci snapshotter containerd plugin
-      Documentation=https://github.com/awslabs/soci-snapshotter
-      After=network.target
-      Before=containerd.service
-
-      [Service]
-      Type=notify
-      ExecStart=/usr/local/bin/soci-snapshotter-grpc
-      Restart=always
-      RestartSec=5
-
-      [Install]
-      WantedBy=multi-user.target
-      EOF
-
-        mkdir -p /etc/soci-snapshotter-grpc
-
-        cat > /etc/soci-snapshotter-grpc/config.toml << EOF
-      [http]
-      MinWaitMsec=15
-      MaxRetries=2
-      EOF
-
-        systemctl daemon-reload
-        systemctl enable --now soci-snapshotter
-        systemctl status soci-snapshotter
-
-        echo patching /etc/eks/containerd/containerd-config.toml
-        cat > /etc/eks/containerd/containerd-config.toml << EOF
-      version = 2
-      root = "/var/lib/containerd"
-      state = "/run/containerd"
-
-      [grpc]
-      address = "/run/containerd/containerd.sock"
-
-      [plugins."io.containerd.grpc.v1.cri".containerd]
-      default_runtime_name = "runc"
-      discard_unpacked_layers = true
-      ## ENABLE SOCI SNAPSHOTTER
-      snapshotter = "soci"
-      disable_snapshot_annotations = false
-      ##
-
-      [plugins."io.containerd.grpc.v1.cri"]
-      sandbox_image = "SANDBOX_IMAGE"
-
-      [plugins."io.containerd.grpc.v1.cri".registry]
-      config_path = "/etc/containerd/certs.d:/etc/docker/certs.d"
-
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-      runtime_type = "io.containerd.runc.v2"
-
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-      SystemdCgroup = true
-
-      [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "/opt/cni/bin"
-      conf_dir = "/etc/cni/net.d"
-
-      ## SOCI PLUGIN
-      [proxy_plugins]
-      [proxy_plugins.soci]
-      type = "snapshot"
-      address = "/run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"
-      ##
-      EOF
-
-      )}
-
-      if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
-      setup_soci
-      else
-          echo "CONTAINERD_VERSION is empty or not within the specified range."
-      fi
+    userData: ""
 
   ## Defautl GPU Node Template Config
   gpuDefaultNodeTemplate:
@@ -290,69 +182,7 @@ karpenter:
       CONTAINERD_VERSION_OUTPUT="$(containerd --version)"
       IFS=" " read -a  CONTAINERD_VERSION_STRING <<< "${CONTAINERD_VERSION_OUTPUT}"
       CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
-      echo containerd version "${CONTAINERD_VERSION}"
-
-      setup_soci() {( set -ex
-        yum install fuse -y
-        modprobe fuse
-
-        curl \
-        --silent \
-        --show-error \
-        --retry 10 \
-        --retry-delay 1 \
-        -L https://github.com/awslabs/soci-snapshotter/releases/download/v0.4.0/soci-snapshotter-0.4.0-linux-amd64.tar.gz \
-        -o soci-snapshotter-0.4.0-linux-amd64.tar.gz
-
-        tar -C /usr/local/bin -xvf soci-snapshotter-0.4.0-linux-amd64.tar.gz soci soci-snapshotter-grpc
-        rm soci-snapshotter-0.4.0-linux-amd64.tar.gz
-
-        cat > /etc/systemd/system/soci-snapshotter.service << EOF
-      [Unit]
-      Description=soci snapshotter containerd plugin
-      Documentation=https://github.com/awslabs/soci-snapshotter
-      After=network.target
-      Before=containerd.service
-
-      [Service]
-      Type=notify
-      ExecStart=/usr/local/bin/soci-snapshotter-grpc
-      Restart=always
-      RestartSec=5
-
-      [Install]
-      WantedBy=multi-user.target
-      EOF
-
-        mkdir -p /etc/soci-snapshotter-grpc
-
-        cat > /etc/soci-snapshotter-grpc/config.toml << EOF
-      [http]
-      MinWaitMsec=15
-      MaxRetries=2
-      EOF
-
-        systemctl daemon-reload
-        systemctl enable --now soci-snapshotter
-        systemctl status soci-snapshotter
-
-        echo patching /etc/eks/containerd/containerd-config.toml
-
-        cat >> /etc/eks/containerd/containerd-config.toml << EOF
-      ## ENABLE SOCI SNAPSHOTTER
-      snapshotter = "soci"
-      disable_snapshot_annotations = false
-      ##
-
-      ## SOCI PLUGIN
-      [proxy_plugins]
-      [proxy_plugins.soci]
-      type = "snapshot"
-      address = "/run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"
-      ##
-      EOF
-
-      )}
+      echo "${CONTAINERD_VERSION}"
 
       if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
           echo "CONTAINERD_VERSION is not empty and within the range [1.5.0, 2.0)."
@@ -373,6 +203,9 @@ karpenter:
       [plugins.cri.registry]
       config_path = "/etc/containerd/certs.d:/etc/docker/certs.d"
 
+      [plugins.cri.containerd]
+      default_runtime_name = "nvidia"
+
       [plugins.cri.containerd.runtimes.nvidia]
       privileged_without_host_devices = false
       runtime_engine = ""
@@ -383,13 +216,8 @@ karpenter:
       Runtime = "/etc/docker-runtimes.d/nvidia"
       SystemdCgroup = true
 
-      # soci will append more config later.
-      # We need to keep `[plugins.cri.containerd]` in the very end of the file
-      [plugins.cri.containerd]
-      default_runtime_name = "nvidia"
       EOF
 
-          setup_soci
       else
           echo "CONTAINERD_VERSION is empty or not within the specified range."
       fi
