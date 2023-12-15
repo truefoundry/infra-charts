@@ -20,6 +20,11 @@ clusterType:
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
+  ## Driver configuration
+  ## @param aws-eks-gpu-operator.driver.enabled Enabled/Disable driver installation.
+  driver:
+    enabled: false
+  
   ## Operator configuration.
   ##
   operator:
@@ -205,7 +210,7 @@ aws-eks-gpu-operator:
           value: "false"
   
   ## DCGM Exporter configuration.
-  ##
+  ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
   ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
   ##
   ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
@@ -218,6 +223,7 @@ aws-eks-gpu-operator:
   ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
   ##
   dcgmExporter:
+    enabled: false
     version: 3.1.7-3.1.4-ubuntu20.04
     resources:
       requests:
