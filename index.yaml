@@ -488,6 +488,37 @@ entries:
     version: 0.1.0
   tfy-gpu-operator:
   - apiVersion: v2
+    created: "2023-12-15T10:58:39.178432012Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.3.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    - alias: azure-aks-dcgm-exporter
+      condition: clusterType.azureAks
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    - alias: civo-talos-nvidia-device-plugin
+      condition: clusterType.civoTalos
+      name: nvidia-device-plugin
+      repository: https://nvidia.github.io/k8s-device-plugin
+      version: 0.14.1
+    description: Truefoundry GPU Operator
+    digest: 79f2e2d859f18ddd017af511051cc660acc1c76ebea669c88dac0c1010e872bd
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.10-rc.2/tfy-gpu-operator-0.1.10-rc.2.tgz
+    version: 0.1.10-rc.2
+  - apiVersion: v2
     created: "2023-11-06T14:34:45.683239629Z"
     dependencies:
     - alias: aws-eks-gpu-operator
@@ -1687,4 +1718,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.1.0/tfy-notebook-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2023-12-15T09:49:18.076985808Z"
+generated: "2023-12-15T10:58:39.178669196Z"
