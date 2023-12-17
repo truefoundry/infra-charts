@@ -17,6 +17,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 | Name                                                                           | Description                                                           | Value                     |
 | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ------------------------- |
+| `aws-eks-gpu-operator.driver.enabled`                                          | Enabled/Disable driver installation.                                  | `false`                   |
 | `aws-eks-gpu-operator.operator.resources.requests.cpu`                         | CPU request for the operator.                                         | `10m`                     |
 | `aws-eks-gpu-operator.operator.resources.requests.memory`                      | Memory request for the operator.                                      | `200Mi`                   |
 | `aws-eks-gpu-operator.operator.resources.limits.cpu`                           | CPU limit for the operator.                                           | `50m`                     |
@@ -35,6 +36,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.daemonsets.updateStrategy`                               | Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"] | `OnDelete`                |
 | `aws-eks-gpu-operator.validator.plugin.env[0].name`                            | Name of the Evironment Variable for the Validator Plugin              | `WITH_WORKLOAD`           |
 | `aws-eks-gpu-operator.validator.plugin.env[0].value`                           | Value of the Evironment Variable for the Validator Plugin             | `false`                   |
+| `aws-eks-gpu-operator.dcgmExporter.enabled`                                    | Enabled/Disable DCGM Exporter.                                        | `false`                   |
 | `aws-eks-gpu-operator.dcgmExporter.version`                                    | Version of the DCGM Exporter.                                         | `3.1.7-3.1.4-ubuntu20.04` |
 | `aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu`                     | CPU request for the DCGM Exporter.                                    | `10m`                     |
 | `aws-eks-gpu-operator.dcgmExporter.resources.requests.memory`                  | Memory request for the DCGM Exporter.                                 | `300Mi`                   |
