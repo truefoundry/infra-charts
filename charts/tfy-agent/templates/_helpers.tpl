@@ -63,7 +63,7 @@ Common labels
 {{- define "tfy-agent-proxy.labels" -}}
 helm.sh/chart: {{ include "tfy-agent.chart" . }}
 {{ include "tfy-agent-proxy.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Values.tfyAgentProxy.imageTag | quote }}
+app.kubernetes.io/version: {{ .Values.tfyAgentProxy.image.tag | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
