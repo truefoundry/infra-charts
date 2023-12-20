@@ -15,6 +15,7 @@ spec:
   {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val }} 
   {{- end }}
+  amiFamily: {{ .Values.karpenter.gpuDefaultNodeTemplate.amiFamily }}
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
