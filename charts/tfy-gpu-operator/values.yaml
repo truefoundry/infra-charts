@@ -236,6 +236,22 @@ aws-eks-gpu-operator:
     serviceMonitor:
       enabled: false
 
+
+## @section gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
+## The exact driver installed will depend on the COS version (decided by the GKE version)
+## usually `default` is the stable older driver version and `latest` is experimental newer driver version
+## On some COS versions default and latest will point to the same stable driver verison
+## Please see relevant GKE and COS release notes: 
+## https://cloud.google.com/container-optimized-os/docs/release-notes
+## https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#installing_drivers
+## Note: `nvidia-l4` is kept in latest for older GKE versions running COS 105 where latest points to newer compatible driver version. We will remove it and place it back in `default` as older GKE version reaches EOL
+gcp-gke-standard-driver:
+  ## @param gcp-gke-standard-driver.latest.gkeAccelerators Install latest driver for these GKE accelerators.
+  latest:
+    gkeAccelerators:
+      - nvidia-l4
+
+
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
 gcp-gke-standard-dcgm-exporter:
