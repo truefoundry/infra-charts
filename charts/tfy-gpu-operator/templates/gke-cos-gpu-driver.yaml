@@ -1,4 +1,5 @@
 {{- if .Values.clusterType.gcpGkeStandard }}
+{{- $gkeAcceleratorsForLatestDriver := (index .Values "gcp-gke-standard-driver" "latest" "gkeAccelerators") }}
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -41,12 +42,16 @@ spec:
               - matchExpressions:
                   - key: cloud.google.com/gke-accelerator
                     operator: Exists
+                  - key: cloud.google.com/gke-gpu-driver-version
+                    operator: DoesNotExist
+                  {{- if and $gkeAcceleratorsForLatestDriver ($gkeAcceleratorsForLatestDriver | empty | not) }}
                   - key: cloud.google.com/gke-accelerator
                     operator: NotIn
                     values:
-                      - nvidia-l4
-                  - key: cloud.google.com/gke-gpu-driver-version
-                    operator: DoesNotExist
+                    {{- range $gkeAcceleratorsForLatestDriver }}
+                      - {{ . | quote }}
+                    {{- end }}
+                  {{- end }}
       tolerations:
         - operator: "Exists"
       hostNetwork: true
@@ -105,7 +110,20 @@ spec:
               mountPath: /root
             - name: cos-tools
               mountPath: /build/cos-tools
-        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:c54fd003948fac687c2a93a55ea6e4d47ffbd641278a9191e75e822fe72471c2"
+          command:
+            - bash
+            - -c
+            - | 
+              echo "Checking for existing GPU driver modules"
+              if lsmod | grep nvidia; then
+                echo "GPU driver is already installed, the installed version may or may not be the driver version being tried to install, skipping installation"
+                exit 0
+              else
+                echo "No GPU driver module detected, installing default driver now"
+                /cos-gpu-installer install
+                chmod 755 /root/home/kubernetes/bin/nvidia
+              fi
+        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -125,25 +143,26 @@ spec:
       containers:
         - image: "gcr.io/google-containers/pause:2.0"
           name: pause
+{{- if and $gkeAcceleratorsForLatestDriver ($gkeAcceleratorsForLatestDriver | empty | not) }}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ .Release.Name }}-nvidia-l4-driver-installer
+  name: {{ .Release.Name }}-nvidia-latest-driver-installer
   namespace: {{ .Release.Namespace }}
   labels:
-    k8s-app: {{ .Release.Name }}-nvidia-l4-driver-installer
+    k8s-app: {{ .Release.Name }}-nvidia-latest-driver-installer
 spec:
   selector:
     matchLabels:
-      k8s-app: {{ .Release.Name }}-nvidia-l4-driver-installer
+      k8s-app: {{ .Release.Name }}-nvidia-latest-driver-installer
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
       labels:
-        name: {{ .Release.Name }}-nvidia-l4-driver-installer
-        k8s-app: {{ .Release.Name }}-nvidia-l4-driver-installer
+        name: {{ .Release.Name }}-nvidia-latest-driver-installer
+        k8s-app: {{ .Release.Name }}-nvidia-latest-driver-installer
     spec:
       priorityClassName: system-node-critical
       affinity:
@@ -152,11 +171,15 @@ spec:
             nodeSelectorTerms:
               - matchExpressions:
                   - key: cloud.google.com/gke-accelerator
-                    operator: In
-                    values:
-                      - nvidia-l4
+                    operator: Exists
                   - key: cloud.google.com/gke-gpu-driver-version
                     operator: DoesNotExist
+                  - key: cloud.google.com/gke-accelerator
+                    operator: In
+                    values:
+                    {{- range $gkeAcceleratorsForLatestDriver }}
+                      - {{ . | quote }}
+                    {{- end }}
       tolerations:
         - operator: "Exists"
       hostNetwork: true
@@ -215,8 +238,20 @@ spec:
               mountPath: /root
             - name: cos-tools
               mountPath: /build/cos-tools
-          command: ['/cos-gpu-installer', 'install', '--version=latest']
-        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:c54fd003948fac687c2a93a55ea6e4d47ffbd641278a9191e75e822fe72471c2"
+          command:
+            - bash
+            - -c
+            - | 
+              echo "Checking for existing GPU driver modules"
+              if lsmod | grep nvidia; then
+                echo "GPU driver is already installed, the installed version may or may not be the driver version being tried to install, skipping installation"
+                exit 0
+              else
+                echo "No GPU driver module detected, installing latest driver now"
+                /cos-gpu-installer install --version=latest
+                chmod 755 /root/home/kubernetes/bin/nvidia
+              fi
+        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -236,5 +271,6 @@ spec:
       containers:
         - image: "gcr.io/google-containers/pause:2.0"
           name: pause
+{{- end }}
 ---
 {{- end }}
