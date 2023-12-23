@@ -184,7 +184,9 @@ aws-eks-gpu-operator:
                       - g5.48xlarge
       tolerations:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
-        - operator: Exists
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
 
   ## Daemonsets configuration
   ##
@@ -523,91 +525,9 @@ civo-talos-nvidia-device-plugin:
   ## @skip civo-talos-nvidia-device-plugin.tolerations
   ##
   tolerations:
-    - operator: Exists
-
-
-civo-talos-dcgm-exporter:
-  ## @param civo-talos-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
-  ##
-  namespaceOverride: tfy-gpu-operator
-  ## @param civo-talos-dcgm-exporter.image.tag Image tag for the DCGM Exporter.
-  ##
-  image:
-    tag: 3.2.6-3.1.9-ubuntu20.04
-  ## @skip civo-talos-dcgm-exporter.extraEnv[0].name
-  ## @skip civo-talos-dcgm-exporter.extraEnv[0].value
-  ## 
-  extraEnv:
-    - name: DCGM_EXPORTER_COLLECTORS
-      value: /etc/dcgm-exporter/dcp-metrics-included.csv
-  ## @param civo-talos-dcgm-exporter.arguments Arguments for the DCGM Exporter.
-  ##
-  arguments:
-    - '-c'
-    - '"5000"'
-    - '-f'
-    - /etc/dcgm-exporter/dcp-metrics-included.csv
-  ## Resource configuration for DCGM Exporter requests and limits.
-  ##
-  ## @param civo-talos-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
-  ## @param civo-talos-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
-  ## @param civo-talos-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-  ## @param civo-talos-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
-  ##
-  resources:
-    limits:
-      cpu: 100m
-      memory: 400Mi
-    requests:
-      cpu: 10m
-      memory: 300Mi
-  ## Security context configuration.
-  ##
-  ## @param civo-talos-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
-  ##
-  securityContext:
-    privileged: true
-  ## @skip civo-talos-dcgm-exporter.affinity
-  ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: node.kubernetes.io/instance-type
-                values:
-                  - g4g.kube.small
-                  - g4g.kube.medium
-                  - g4g.kube.large
-                  - g4g.kube.xlarge
-                  - g4g.40.kube.small
-                  - g4g.40.kube.medium
-                  - g4g.40.kube.large
-                  - g4g.40.kube.xlarge
-                operator: In
-  ## @skip civo-talos-dcgm-exporter.tolerations
-  ##
-  tolerations:
-    - operator: Exists
-  ## @param civo-talos-dcgm-exporter.mapPodsMetrics Enable mapping of pod metrics.
-  ##
-  mapPodsMetrics: true
-  ## @param civo-talos-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-  ##
-  serviceMonitor:
-    enabled: false
-  ## @skip civo-talos-dcgm-exporter.extraHostVolumes[0].name
-  ## @skip civo-talos-dcgm-exporter.extraHostVolumes[0].hostPath
-  ##
-  extraHostVolumes:
-    - name: dev
-      hostPath: /dev
-  ## @skip civo-talos-dcgm-exporter.extraVolumeMounts[0].name
-  ## @skip civo-talos-dcgm-exporter.extraVolumeMounts[0].mountPath
-  ##
-  extraVolumeMounts:
-    - name: dev
-      mountPath: /dev
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
 
 
 
