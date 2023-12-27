@@ -16,12 +16,18 @@ spec:
     {{ $key }}: {{ $val }} 
   {{- end }}
   amiFamily: {{ .Values.karpenter.gpuDefaultNodeTemplate.amiFamily }}
+  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvdb
+      ebs:
+  {{- else }}
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
+  {{- end }}
         volumeSize: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
-  {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "")}}
+  {{- if and (not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "")) (not (eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket")) }}
   userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}

@@ -16,9 +16,15 @@ spec:
     {{ $key }}: {{ $val }} 
   {{- end }}
   amiFamily: {{ .Values.karpenter.defaultNodeTemplate.amiFamily }}
+  {{- if eq .Values.karpenter.defaultNodeTemplate.amiFamily "Bottlerocket" }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvdb
+      ebs:
+  {{- else }}
   blockDeviceMappings:
     - deviceName: /dev/xvda
       ebs:
+  {{- end }}
         volumeSize: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
