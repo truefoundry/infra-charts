@@ -12,6 +12,10 @@ spec:
   {{- else }}
   ttlSecondsAfterEmpty: {{ .Values.karpenter.inferentiaProvisionerSpec.ttlSecondsAfterEmpty }}
   {{- end }}
+  {{- if .Values.karpenter.inferentiaProvisionerSpec.labels }}
+  labels:
+    {{- .Values.karpenter.inferentiaProvisionerSpec.labels | toYaml | nindent 4 }}
+  {{- end }}
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
