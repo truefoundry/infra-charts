@@ -14,7 +14,7 @@ spec:
   {{- end }}
   {{- if .Values.karpenter.inferentiaProvisionerSpec.labels }}
   labels:
-    {{ .Values.karpenter.inferentiaProvisionerSpec.labels | toYaml }}
+    {{- .Values.karpenter.inferentiaProvisionerSpec.labels | toYaml | nindent 4 }}
   {{- end }}
   requirements:
     - key: karpenter.sh/capacity-type

@@ -14,7 +14,7 @@ spec:
   {{- end }}
   {{- if .Values.karpenter.gpuProvisionerSpec.labels }}
   labels:
-    {{ .Values.karpenter.gpuProvisionerSpec.labels | toYaml }}
+    {{- .Values.karpenter.gpuProvisionerSpec.labels | toYaml | nindent 4 }}
   {{- end }}
   requirements:
     - key: karpenter.sh/capacity-type
