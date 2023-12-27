@@ -45,6 +45,12 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                                      | `["-c","5000"]`           |
 | `aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled`                     | Enable or disable ServiceMonitor for DCGM Exporter.                   | `false`                   |
 
+### gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
+
+| Name                                             | Description                                       | Value           |
+| ------------------------------------------------ | ------------------------------------------------- | --------------- |
+| `gcp-gke-standard-driver.latest.gkeAccelerators` | Install latest driver for these GKE accelerators. | `["nvidia-l4"]` |
+
 ### gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 
 | Name                                                            | Description                                                          | Value                                                                                                           |
@@ -92,20 +98,10 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 ### civo-talos-nvidia-device-plugin Configuration for the Civo Talos Nvidia Device Plugin. This section will only be used when clusterType.civoTalos is set to true.
 
-| Name                                                   | Description                                                                | Value                                                                  |
-| ------------------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `civo-talos-nvidia-device-plugin.namespaceOverride`    | Namespace override for the Device Plugin.                                  | `tfy-gpu-operator`                                                     |
-| `civo-talos-nvidia-device-plugin.updateStrategy.type`  | Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]      | `OnDelete`                                                             |
-| `civo-talos-nvidia-device-plugin.compatWithCPUManager` | Enable compatibility with CPUManager and PASS_DEVICE_SPECS                 | `true`                                                                 |
-| `civo-talos-nvidia-device-plugin.deviceListStrategy`   | How device plugin should list devices - one of ["volume-mounts", "envvar"] | `volume-mounts`                                                        |
-| `civo-talos-nvidia-device-plugin.deviceIDStrategy`     | How device plugin should pass device IDs - one of ["uuid", "index"]        | `index`                                                                |
-| `civo-talos-dcgm-exporter.namespaceOverride`           | Namespace override for the DCGM Exporter.                                  | `tfy-gpu-operator`                                                     |
-| `civo-talos-dcgm-exporter.image.tag`                   | Image tag for the DCGM Exporter.                                           | `3.2.6-3.1.9-ubuntu20.04`                                              |
-| `civo-talos-dcgm-exporter.arguments`                   | Arguments for the DCGM Exporter.                                           | `["-c","\"5000\"","-f","/etc/dcgm-exporter/dcp-metrics-included.csv"]` |
-| `civo-talos-dcgm-exporter.resources.requests.cpu`      | CPU request for the DCGM Exporter.                                         | `10m`                                                                  |
-| `civo-talos-dcgm-exporter.resources.requests.memory`   | Memory request for the DCGM Exporter.                                      | `300Mi`                                                                |
-| `civo-talos-dcgm-exporter.resources.limits.cpu`        | CPU limit for the DCGM Exporter.                                           | `100m`                                                                 |
-| `civo-talos-dcgm-exporter.resources.limits.memory`     | Memory limit for the DCGM Exporter.                                        | `400Mi`                                                                |
-| `civo-talos-dcgm-exporter.securityContext.privileged`  | Set the container to privileged mode.                                      | `true`                                                                 |
-| `civo-talos-dcgm-exporter.mapPodsMetrics`              | Enable mapping of pod metrics.                                             | `true`                                                                 |
-| `civo-talos-dcgm-exporter.serviceMonitor.enabled`      | Enable or disable ServiceMonitor for DCGM Exporter.                        | `false`                                                                |
+| Name                                                   | Description                                                                | Value              |
+| ------------------------------------------------------ | -------------------------------------------------------------------------- | ------------------ |
+| `civo-talos-nvidia-device-plugin.namespaceOverride`    | Namespace override for the Device Plugin.                                  | `tfy-gpu-operator` |
+| `civo-talos-nvidia-device-plugin.updateStrategy.type`  | Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]      | `OnDelete`         |
+| `civo-talos-nvidia-device-plugin.compatWithCPUManager` | Enable compatibility with CPUManager and PASS_DEVICE_SPECS                 | `true`             |
+| `civo-talos-nvidia-device-plugin.deviceListStrategy`   | How device plugin should list devices - one of ["volume-mounts", "envvar"] | `volume-mounts`    |
+| `civo-talos-nvidia-device-plugin.deviceIDStrategy`     | How device plugin should pass device IDs - one of ["uuid", "index"]        | `index`            |
