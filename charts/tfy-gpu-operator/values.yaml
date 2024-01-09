@@ -20,6 +20,12 @@ clusterType:
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
+  nfd:
+    enabled: true
+  
+  gfd:
+    enabled: true
+
   ## Driver configuration
   ## @param aws-eks-gpu-operator.driver.enabled Enabled/Disable driver installation.
   driver:
@@ -29,15 +35,10 @@ aws-eks-gpu-operator:
   ##
   operator:
     ## Resource configuration for operator requests and limits.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ##
     ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
-    ##
     resources:
       requests:
         cpu: 10m
@@ -48,10 +49,11 @@ aws-eks-gpu-operator:
   
   ## Toolkit configuration.
   ##
-  ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
-  ## @skip aws-eks-gpu-operator.toolkit.env
   toolkit:
+    enabled: true
+    ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.13.5-centos7
+    ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
         value: 'false'
@@ -62,6 +64,7 @@ aws-eks-gpu-operator:
   ##
   ## @skip aws-eks-gpu-operator.devicePlugin.env
   devicePlugin:
+    enabled: true
     env:
       - name: PASS_DEVICE_SPECS
         value: 'true'
@@ -73,8 +76,8 @@ aws-eks-gpu-operator:
   ## Node Feature Discovery configuration.
   ##
   node-feature-discovery:
+    enableNodeFeatureApi: true
     master:
-      ##
       ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
       ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
       resources:
@@ -82,7 +85,6 @@ aws-eks-gpu-operator:
           cpu: 10m
           memory: 400Mi
     worker:
-      ##
       ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
       ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
       ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
@@ -94,8 +96,8 @@ aws-eks-gpu-operator:
         limits:
           cpu: 50m
           memory: 300Mi
+      ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
       affinity:
-        ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -130,7 +132,6 @@ aws-eks-gpu-operator:
                       - g5.24xlarge
                       - g5.48xlarge
     gc:
-      ##
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
       ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.rbac.create
       ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.serviceAccount.create
@@ -191,9 +192,8 @@ aws-eks-gpu-operator:
   ## Daemonsets configuration
   ##
   ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-  ##
   daemonsets:
-    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart
+    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
     # The downside being Daemonset will not be updated until it is manually deleted,
     # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
     # If needed, older nodes can be drained to force a newer versions on a newer nodes
@@ -211,32 +211,39 @@ aws-eks-gpu-operator:
         - name: WITH_WORKLOAD
           value: "false"
   
+  dcgm:
+    enabled: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 400Mi
+
   ## DCGM Exporter configuration.
-  ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-  ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
-  ##
-  ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
   ##
   dcgmExporter:
-    enabled: false
+    ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
+    enabled: true
+    ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+    serviceMonitor:
+      enabled: false
+    ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
     version: 3.1.7-3.1.4-ubuntu20.04
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
         memory: 300Mi
       limits:
-        cpu: 100m
+        cpu: 50m
         memory: 400Mi
+    ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
-    serviceMonitor:
-      enabled: false
 
 
 ## @section gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
@@ -288,7 +295,7 @@ gcp-gke-standard-dcgm-exporter:
       cpu: 10m
       memory: 300Mi
     limits:
-      cpu: 100m
+      cpu: 50m
       memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
@@ -394,7 +401,7 @@ azure-aks-dcgm-exporter:
       cpu: 10m
       memory: 300Mi
     limits:
-      cpu: 100m
+      cpu: 50m
       memory: 400Mi
   ## Namespace override for the DCGM Exporter.
   ##
@@ -483,51 +490,110 @@ azure-aks-dcgm-exporter:
 
 ## @section civo-talos-nvidia-device-plugin Configuration for the Civo Talos Nvidia Device Plugin. This section will only be used when clusterType.civoTalos is set to true.
 ##
-civo-talos-nvidia-device-plugin:
-  ## @param civo-talos-nvidia-device-plugin.namespaceOverride Namespace override for the Device Plugin.
-  ##
-  namespaceOverride: tfy-gpu-operator
-  ## @param civo-talos-nvidia-device-plugin.updateStrategy.type Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-  ##
-  updateStrategy:
-    type: OnDelete
-  ## @param civo-talos-nvidia-device-plugin.compatWithCPUManager Enable compatibility with CPUManager and PASS_DEVICE_SPECS
-  ##
-  compatWithCPUManager: true
-  ## @param civo-talos-nvidia-device-plugin.deviceListStrategy How device plugin should list devices - one of ["volume-mounts", "envvar"]
-  ##
-  deviceListStrategy: volume-mounts
-  ## @param civo-talos-nvidia-device-plugin.deviceIDStrategy How device plugin should pass device IDs - one of ["uuid", "index"]
-  ##
-  deviceIDStrategy: index
-  ## @skip civo-talos-nvidia-device-plugin.securityContext.privileged
-  ##
-  securityContext:
-    privileged: true
-  ## @skip civo-talos-nvidia-device-plugin.affinity
-  ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: node.kubernetes.io/instance-type
-                operator: In
-                values:
-                  - g4g.kube.small
-                  - g4g.kube.medium
-                  - g4g.kube.large
-                  - g4g.kube.xlarge
-                  - g4g.40.kube.small
-                  - g4g.40.kube.medium
-                  - g4g.40.kube.large
-                  - g4g.40.kube.xlarge
-  ## @skip civo-talos-nvidia-device-plugin.tolerations
-  ##
-  tolerations:
-    - key: nvidia.com/gpu
-      operator: Exists
-      effect: NoSchedule
-
-
-
+civo-talos-gpu-operator:
+  nfd:
+    enabled: true
+  
+  gfd:
+    enabled: true
+  
+  operator:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+  
+  node-feature-discovery:
+    enableNodeFeatureApi: true
+    gc:
+      enable: true
+      interval: 30m
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+      affinity:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: NotIn
+                    values:
+                      - g4g.40.kube.small
+                      - g4g.40.kube.medium
+                      - g4g.40.kube.large
+                      - g4g.40.kube.xlarge
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
+      tolerations:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+    worker:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values:
+                      - g4g.40.kube.small
+                      - g4g.40.kube.medium
+                      - g4g.40.kube.large
+                      - g4g.40.kube.xlarge
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
+      tolerations:
+        - key: nvidia.com/gpu
+          effect: NoSchedule
+          operator: Exists
+  
+  driver:
+    enabled: false
+  
+  toolkit:
+    enabled: false
+  
+  devicePlugin:
+    enabled: true
+    env:
+      - name: PASS_DEVICE_SPECS
+        value: 'true'
+      - name: DEVICE_LIST_STRATEGY
+        value: volume-mounts
+      - name: DEVICE_ID_STRATEGY
+        value: index
+  
+  dcgm:
+    enabled: true
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 400Mi
+  
+  dcgmExporter:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 400Mi
+    args: ["-c", "5000"]

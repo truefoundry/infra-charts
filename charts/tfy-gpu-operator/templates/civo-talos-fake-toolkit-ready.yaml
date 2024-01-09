@@ -1,0 +1,76 @@
+{{- if .Values.clusterType.civoTalos }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-fake-toolkit-ready
+  namespace: tfy-gpu-operator
+spec:
+  selector:
+    matchLabels:
+      k8s-app: {{ .Release.Name }}-fake-toolkit-ready
+  template:
+    metadata:
+      labels:
+        name: {{ .Release.Name }}-fake-toolkit-ready
+        k8s-app: {{ .Release.Name }}-fake-toolkit-ready
+    spec:
+      volumes:
+        - name: run-nvidia
+          hostPath:
+            path: /run/nvidia
+            type: ''
+      containers:
+        - name: main
+          image: alpine:3.19
+          command:
+            - sh
+            - '-c'
+          args:
+            - >-
+              mkdir -p /run/nvidia/validations/;
+              touch /run/nvidia/validations/toolkit-ready;
+              sleep infinity;
+          resources:
+            requests:
+              cpu: 5m
+              memory: 10Mi
+            limits:
+              cpu: 10m
+              memory: 50Mi
+          volumeMounts:
+            - name: run-nvidia
+              mountPath: /run/nvidia
+              mountPropagation: HostToContainer
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    values:
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
+                      - g4g.40.kube.small
+                      - g4g.40.kube.medium
+                      - g4g.40.kube.large
+                      - g4g.40.kube.xlarge
+                    operator: In
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      priorityClassName: system-node-critical
+      runtimeClassName: nvidia
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  revisionHistoryLimit: 1
+{{- end }}
