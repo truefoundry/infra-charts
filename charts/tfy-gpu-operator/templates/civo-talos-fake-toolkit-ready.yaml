@@ -51,22 +51,21 @@ spec:
             nodeSelectorTerms:
               - matchExpressions:
                   - key: node.kubernetes.io/instance-type
+                    operator: In
                     values:
-                      - g4g.kube.small
-                      - g4g.kube.medium
-                      - g4g.kube.large
-                      - g4g.kube.xlarge
                       - g4g.40.kube.small
                       - g4g.40.kube.medium
                       - g4g.40.kube.large
                       - g4g.40.kube.xlarge
-                    operator: In
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
       tolerations:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
       priorityClassName: system-node-critical
-      runtimeClassName: nvidia
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
