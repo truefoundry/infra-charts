@@ -211,9 +211,9 @@ aws-eks-gpu-operator:
         - name: WITH_WORKLOAD
           value: "false"
   
-  
   dcgm:
     enabled: true
+    version: 3.3.0-1-ubuntu22.04
     resources:
       requests:
         cpu: 10m
@@ -221,17 +221,26 @@ aws-eks-gpu-operator:
       limits:
         cpu: 50m
         memory: 400Mi
-
+    
   ## DCGM Exporter configuration.
   ##
   dcgmExporter:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
+    ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
+    version: 3.3.0-3.2.0-ubuntu22.04
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
-    ## @param aws-eks-gpu-operator.dcgmExporter.version Version of the DCGM Exporter.
-    version: 3.1.7-3.1.4-ubuntu20.04
+    env:
+      - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
+        value: uid
+      - name: DCGM_EXPORTER_LISTEN
+        value: :9400
+      - name: DCGM_EXPORTER_KUBERNETES
+        value: "true"
+      - name: DCGM_EXPORTER_COLLECTORS
+        value: /etc/dcgm-exporter/dcp-metrics-included.csv
     ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
     ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
     ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
@@ -245,6 +254,9 @@ aws-eks-gpu-operator:
         memory: 400Mi
     ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
+
+  migManager:
+    enabled: false
 
 
 ## @section gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
@@ -260,7 +272,6 @@ gcp-gke-standard-driver:
   latest:
     gkeAccelerators:
       - nvidia-l4
-
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
@@ -374,6 +385,7 @@ gcp-gke-standard-dcgm-exporter:
     ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[2]
     - name: nvidia-config
       mountPath: /etc/nvidia
+
 
 ## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
 ##
@@ -590,6 +602,15 @@ civo-talos-gpu-operator:
     enabled: true
     serviceMonitor:
       enabled: false
+    env:
+      - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
+        value: uid
+      - name: DCGM_EXPORTER_LISTEN
+        value: :9400
+      - name: DCGM_EXPORTER_KUBERNETES
+        value: "true"
+      - name: DCGM_EXPORTER_COLLECTORS
+        value: /etc/dcgm-exporter/dcp-metrics-included.csv
     resources:
       requests:
         cpu: 10m
@@ -598,3 +619,6 @@ civo-talos-gpu-operator:
         cpu: 50m
         memory: 400Mi
     args: ["-c", "5000"]
+
+  migManager:
+    enabled: false

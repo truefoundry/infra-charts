@@ -17,8 +17,7 @@ spec:
       volumes:
         - name: run-nvidia
           hostPath:
-            path: /run/nvidia
-            type: ''
+            path: /run/nvidia/validations/
       containers:
         - name: main
           image: alpine:3.19
@@ -26,8 +25,9 @@ spec:
             - sh
             - '-c'
           args:
-            - >-
-              mkdir -p /run/nvidia/validations/;
+            - |-
+              set -ex;
+              touch /run/nvidia/validations/host-driver-ready;
               touch /run/nvidia/validations/toolkit-ready;
               sleep infinity;
           resources:
@@ -42,8 +42,6 @@ spec:
               mountPath: /run/nvidia
               mountPropagation: HostToContainer
           imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
       restartPolicy: Always
       affinity:
         nodeAffinity:
