@@ -29,11 +29,6 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-
-  ## Driver configuration
-  driver:
-    ## @param aws-eks-gpu-operator.driver.enabled Enable/Disable driver installation.
-    enabled: false
   
   ## Operator configuration.
   operator:
@@ -41,7 +36,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
     ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
     ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-      ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
     resources:
       requests:
         cpu: 10m
@@ -49,7 +44,12 @@ aws-eks-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
-  
+
+  ## Driver configuration
+  driver:
+    ## @param aws-eks-gpu-operator.driver.enabled Enable/Disable driver installation.
+    enabled: false
+    
   ## Toolkit configuration.
   toolkit:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
@@ -99,8 +99,8 @@ aws-eks-gpu-operator:
         limits:
           cpu: 50m
           memory: 300Mi
-      ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
       affinity:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -134,6 +134,11 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+      tolerations:
+        ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.tolerations[0]
+        - key: nvidia.com/gpu
+          effect: NoSchedule
+          operator: Exists
     gc:
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
       enable: true
@@ -338,7 +343,7 @@ gcp-gke-standard-dcgm-exporter:
           - matchExpressions:
               - key: cloud.google.com/gke-accelerator
                 operator: Exists
-  ## @param gcp-gke-standard-dcgm-exporter.tolerations[0].operator Toleration configuration for worker nodes.
+  ## @skip gcp-gke-standard-dcgm-exporter.tolerations[0]
   ##
   tolerations:
     - operator: "Exists"
@@ -450,7 +455,7 @@ azure-aks-dcgm-exporter:
   ## Toleration configuration for worker nodes.
   ##
   tolerations:
-    ## @skip azure-aks-dcgm-exporter.tolerations[0].operator
+    ## @skip azure-aks-dcgm-exporter.tolerations[0]
     - operator: "Exists"
   ## Enable mapping of pod metrics.
   ##
@@ -509,57 +514,59 @@ azure-aks-dcgm-exporter:
       mountPath: /etc/nvidia
 
 
-## @section civo-talos-nvidia-device-plugin Configuration for the Civo Talos Nvidia Device Plugin. This section will only be used when clusterType.civoTalos is set to true.
+## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
 ##
 civo-talos-gpu-operator:
+  ## Node Feature Discovery enabled/disable configuration.
   nfd:
+    ## @param civo-talos-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
   
+  ## GPU Feature Discovery configuration.
   gfd:
+    ## @param civo-talos-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
   
+  ## Operator configuration.
   operator:
+    ## Resource configuration for operator requests and limits.
+    ## @param civo-talos-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
+    ## @param civo-talos-gpu-operator.operator.resources.requests.memory Memory request for the operator.
+    ## @param civo-talos-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
+    ## @param civo-talos-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
     resources:
       requests:
         cpu: 10m
-        memory: 50Mi
+        memory: 100Mi
       limits:
         cpu: 50m
         memory: 300Mi
   
+  ## Node Feature Discovery configuration.
   node-feature-discovery:
+    ## @param civo-talos-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
-    gc:
-      enable: true
-      interval: 30m
+    master:
+      ## @param civo-talos-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 200Mi
+    worker:
+      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
-        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node.kubernetes.io/instance-type
-                    operator: NotIn
-                    values:
-                      - g4g.40.kube.small
-                      - g4g.40.kube.medium
-                      - g4g.40.kube.large
-                      - g4g.40.kube.xlarge
-                      - g4g.kube.small
-                      - g4g.kube.medium
-                      - g4g.kube.large
-                      - g4g.kube.xlarge
-      tolerations:
-        ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
-        - key: nvidia.com/gpu
-          operator: Exists
-          effect: NoSchedule
-    worker:
-      affinity:
+        ## @skip civo-talos-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -576,18 +583,59 @@ civo-talos-gpu-operator:
                       - g4g.kube.large
                       - g4g.kube.xlarge
       tolerations:
+        ## @skip civo-talos-gpu-operator.node-feature-discovery.worker.tolerations[0]
         - key: nvidia.com/gpu
-          effect: NoSchedule
           operator: Exists
-  
+          effect: NoSchedule
+    gc:
+      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
+      enable: true
+      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
+      interval: 30m
+      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+      affinity:
+        ## @skip civo-talos-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: NotIn
+                    values:
+                      - g4g.40.kube.small
+                      - g4g.40.kube.medium
+                      - g4g.40.kube.large
+                      - g4g.40.kube.xlarge
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
+      tolerations:
+        ## @skip civo-talos-gpu-operator.node-feature-discovery.gc.tolerations[0]
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+    
+  ## Driver configuration
   driver:
+    ## @param civo-talos-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: false
   
+  ## Toolkit configuration.
   toolkit:
+    ## @param civo-talos-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: false
   
+  ## Device Plugin configuration.
   devicePlugin:
+    ## @param civo-talos-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @skip civo-talos-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
         value: 'true'
@@ -595,9 +643,15 @@ civo-talos-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
-  
+
+  ## DCGM configuration
   dcgm:
+    ## @param civo-talos-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: true
+    ## @param civo-talos-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
+    ## @param civo-talos-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
+    ## @param civo-talos-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
+    ## @param civo-talos-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
     resources:
       requests:
         cpu: 10m
@@ -605,11 +659,15 @@ civo-talos-gpu-operator:
       limits:
         cpu: 50m
         memory: 400Mi
-  
+
+  ## DCGM Exporter configuration.
   dcgmExporter:
+    ## @param civo-talos-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
+    ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
+    ## @skip civo-talos-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
         value: uid
@@ -619,6 +677,10 @@ civo-talos-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
+    ## @param civo-talos-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+    ## @param civo-talos-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+    ## @param civo-talos-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+    ## @param civo-talos-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -626,7 +688,9 @@ civo-talos-gpu-operator:
       limits:
         cpu: 50m
         memory: 400Mi
+    ## @param civo-talos-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
 
   migManager:
+    ## @skip civo-talos-gpu-operator.migManager.enabled
     enabled: false
