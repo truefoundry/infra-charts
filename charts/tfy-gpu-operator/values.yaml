@@ -20,25 +20,28 @@ clusterType:
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
+  ## Node Feature Discovery enabled/disable configuration.
   nfd:
+    ## @param aws-eks-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
   
+  ## GPU Feature Discovery configuration.
   gfd:
+    ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
 
   ## Driver configuration
-  ## @param aws-eks-gpu-operator.driver.enabled Enabled/Disable driver installation.
   driver:
+    ## @param aws-eks-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: false
   
   ## Operator configuration.
-  ##
   operator:
     ## Resource configuration for operator requests and limits.
     ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
     ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
     ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+      ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
     resources:
       requests:
         cpu: 10m
@@ -48,8 +51,8 @@ aws-eks-gpu-operator:
         memory: 300Mi
   
   ## Toolkit configuration.
-  ##
   toolkit:
+    ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.13.5-centos7
@@ -61,10 +64,10 @@ aws-eks-gpu-operator:
         value: 'true'
   
   ## Device Plugin configuration.
-  ##
-  ## @skip aws-eks-gpu-operator.devicePlugin.env
   devicePlugin:
+    ## @param aws-eks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @skip aws-eks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
         value: 'true'
@@ -74,8 +77,8 @@ aws-eks-gpu-operator:
         value: index
   
   ## Node Feature Discovery configuration.
-  ##
   node-feature-discovery:
+    ## @param aws-eks-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
       ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
@@ -133,17 +136,17 @@ aws-eks-gpu-operator:
                       - g5.48xlarge
     gc:
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
-      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.rbac.create
-      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.serviceAccount.create
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
       enable: true
+      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.serviceAccount.create
       serviceAccount:
         create: true
+      ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.rbac.create
       rbac:
         create: true
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
       resources:
         requests:
           cpu: 10m
@@ -190,9 +193,8 @@ aws-eks-gpu-operator:
           effect: NoSchedule
 
   ## Daemonsets configuration
-  ##
-  ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
   daemonsets:
+    ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
     # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
     # The downside being Daemonset will not be updated until it is manually deleted,
     # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
@@ -202,18 +204,23 @@ aws-eks-gpu-operator:
     updateStrategy: "OnDelete"
   
   ## Validator configuration.
-  ##
   validator:
     plugin:
+      ## @skip aws-eks-gpu-operator.validator.plugin.env
       env:
-        ## @param aws-eks-gpu-operator.validator.plugin.env[0].name Name of the Evironment Variable for the Validator Plugin
-        ## @param aws-eks-gpu-operator.validator.plugin.env[0].value Value of the Evironment Variable for the Validator Plugin
         - name: WITH_WORKLOAD
           value: "false"
   
+  ## DCGM configuration
   dcgm:
+    ## @param aws-eks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: true
+    ## @param aws-eks-gpu-operator.dcgm.version Version of the DCGM.
     version: 3.3.0-1-ubuntu22.04
+    ## @param aws-eks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
+    ## @param aws-eks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
+    ## @param aws-eks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
+    ## @param aws-eks-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
     resources:
       requests:
         cpu: 10m
@@ -223,7 +230,6 @@ aws-eks-gpu-operator:
         memory: 400Mi
     
   ## DCGM Exporter configuration.
-  ##
   dcgmExporter:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
@@ -232,6 +238,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
+    ## @skip aws-eks-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
         value: uid
@@ -256,6 +263,7 @@ aws-eks-gpu-operator:
     args: ["-c", "5000"]
 
   migManager:
+    ## @skip aws-eks-gpu-operator.migManager.enabled
     enabled: false
 
 
