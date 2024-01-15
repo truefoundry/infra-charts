@@ -39,13 +39,13 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu`        | CPU request for node feature discovery garbage collector.             | `10m`                     |
 | `aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory`     | Memory request for node feature discovery garbage collector.          | `100Mi`                   |
 | `aws-eks-gpu-operator.daemonsets.updateStrategy`                               | Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"] | `OnDelete`                |
-| `aws-eks-gpu-operator.dcgm.enabled`                                            | Enabled/Disable standalone DCGM.                                      | `true`                    |
+| `aws-eks-gpu-operator.dcgm.enabled`                                            | Enabled/Disable standalone DCGM.                                      | `false`                   |
 | `aws-eks-gpu-operator.dcgm.version`                                            | Version of the DCGM.                                                  | `3.3.0-1-ubuntu22.04`     |
 | `aws-eks-gpu-operator.dcgm.resources.requests.cpu`                             | CPU request for standalone DCGM container                             | `10m`                     |
 | `aws-eks-gpu-operator.dcgm.resources.requests.memory`                          | Memory request for standalone DCGM container                          | `100Mi`                   |
 | `aws-eks-gpu-operator.dcgm.resources.limits.cpu`                               | CPU limit for standalone DCGM container                               | `50m`                     |
 | `aws-eks-gpu-operator.dcgm.resources.limits.memory`                            | Memory limit for standalone DCGM container                            | `400Mi`                   |
-| `aws-eks-gpu-operator.dcgmExporter.enabled`                                    | Enabled/Disable DCGM Exporter.                                        | `true`                    |
+| `aws-eks-gpu-operator.dcgmExporter.enabled`                                    | Enabled/Disable DCGM Exporter.                                        | `false`                   |
 | `aws-eks-gpu-operator.dcgmExporter.version`                                    | Version of the DCGM Exporter.                                         | `3.3.0-3.2.0-ubuntu22.04` |
 | `aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled`                     | Enable or disable ServiceMonitor for DCGM Exporter.                   | `false`                   |
 | `aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu`                     | CPU request for the DCGM Exporter.                                    | `10m`                     |
@@ -128,12 +128,12 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `civo-talos-gpu-operator.driver.enabled`                                          | Enable/Disable driver installation.                          | `false`         |
 | `civo-talos-gpu-operator.toolkit.enabled`                                         | Enable/Disable nvidia container toolkit installation.        | `false`         |
 | `civo-talos-gpu-operator.devicePlugin.enabled`                                    | Enable/Disable nvidia device plugin installation.            | `true`          |
-| `civo-talos-gpu-operator.dcgm.enabled`                                            | Enabled/Disable standalone DCGM.                             | `true`          |
+| `civo-talos-gpu-operator.dcgm.enabled`                                            | Enabled/Disable standalone DCGM.                             | `false`         |
 | `civo-talos-gpu-operator.dcgm.resources.requests.cpu`                             | CPU request for standalone DCGM container                    | `10m`           |
 | `civo-talos-gpu-operator.dcgm.resources.requests.memory`                          | Memory request for standalone DCGM container                 | `100Mi`         |
 | `civo-talos-gpu-operator.dcgm.resources.limits.cpu`                               | CPU limit for standalone DCGM container                      | `50m`           |
 | `civo-talos-gpu-operator.dcgm.resources.limits.memory`                            | Memory limit for standalone DCGM container                   | `400Mi`         |
-| `civo-talos-gpu-operator.dcgmExporter.enabled`                                    | Enabled/Disable DCGM Exporter.                               | `true`          |
+| `civo-talos-gpu-operator.dcgmExporter.enabled`                                    | Enabled/Disable DCGM Exporter.                               | `false`         |
 | `civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled`                     | Enable or disable ServiceMonitor for DCGM Exporter.          | `false`         |
 | `civo-talos-gpu-operator.dcgmExporter.resources.requests.cpu`                     | CPU request for the DCGM Exporter.                           | `10m`           |
 | `civo-talos-gpu-operator.dcgmExporter.resources.requests.memory`                  | Memory request for the DCGM Exporter.                        | `100Mi`         |
