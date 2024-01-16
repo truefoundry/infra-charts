@@ -227,6 +227,17 @@ karpenter:
           echo "CONTAINERD_VERSION is empty or not within the specified range."
       fi
 
+      rmmod nvidia_drm
+      rmmod nvidia_modeset
+      rmmod nvidia_uvm
+      rmmod nvidia
+      echo "Writing NVreg_EnableGpuFirmware=0 to /etc/modprobe.d/nvidia.conf"
+      echo "options nvidia NVreg_EnableGpuFirmware=0" | tee --append /etc/modprobe.d/nvidia.conf
+      echo "Writing NVreg_EnableGpuFirmware=0 to /etc/modprobe.d/nvidia-gsp.conf"
+      echo "options nvidia NVreg_EnableGpuFirmware=0" | tee --append /etc/modprobe.d/nvidia-gsp.conf
+      echo "Running dracut"
+      dracut -f
+
   ## Default Inferentia Node Template Config
   inferentiaDefaultNodeTemplate:
     ## @param karpenter.inferentiaDefaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
