@@ -14,10 +14,6 @@ spec:
   {{- else }}
   ttlSecondsAfterEmpty: {{ .Values.karpenter.controlPlaneProvisioner.ttlSecondsAfterEmpty }}
   {{- end }}
-  {{- if .Values.karpenter.controlPlaneProvisioner.labels }}
-  labels:
-    {{- .Values.karpenter.controlPlaneProvisioner.labels | toYaml | nindent 4 }}
-  {{- end }}
   requirements:
   - key: karpenter.sh/capacity-type
     operator: In
