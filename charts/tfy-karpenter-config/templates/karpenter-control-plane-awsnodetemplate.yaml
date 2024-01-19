@@ -14,7 +14,7 @@ spec:
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}
-    {{ $key }}: {{ $val }} 
+    {{ $key }}: {{ $val | quote }} 
   {{- end }}
   amiFamily: {{ .Values.karpenter.controlPlaneNodeTemplate.amiFamily }}
   {{- if eq .Values.karpenter.controlPlaneNodeTemplate.amiFamily "Bottlerocket" }}
