@@ -149,6 +149,25 @@ karpenter:
     ##
     labels: {}
 
+  ## control plane node template
+  ## control plane provisioner by default will use default node template
+  ## if needed we can supply a different node template for control plane provisioner as well
+  controlPlaneNodeTemplate:
+    ## @param karpenter.controlPlaneNodeTemplate.enabled Size for the root volume attached to node
+    enabled: true
+    ## @param karpenter.controlPlaneNodeTemplate.enabled Size for the root volume attached to node
+    name: controlplane-node-template
+    ## @param karpenter.controlPlaneNodeTemplate.rootVolumeSize Size for the root volume attached to node
+    rootVolumeSize: 100Gi
+    ## @param karpenter.controlPlaneNodeTemplate.extraTags Additional tags for the node template.
+    extraTags:
+      cp: true
+    ## @param karpenter.controlPlaneNodeTemplate.amiFamily AMI family to use for node template
+    amiFamily: "Bottlerocket"
+    ## @skip karpenter.controlPlaneNodeTemplate.userData
+    # Set this to "" to disable this injection
+    userData: ""
+
   ## Default Node Template Config
   defaultNodeTemplate:
     ## @param karpenter.defaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
