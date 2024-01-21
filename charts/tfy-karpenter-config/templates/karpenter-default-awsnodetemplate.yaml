@@ -13,7 +13,7 @@ spec:
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
-    {{ $key }}: {{ $val }} 
+    {{ $key }}: {{ $val | quote }} 
   {{- end }}
   amiFamily: {{ .Values.karpenter.defaultNodeTemplate.amiFamily }}
   {{- if eq .Values.karpenter.defaultNodeTemplate.amiFamily "Bottlerocket" }}
