@@ -36,6 +36,10 @@ gateway:
         port: 443
         protocol: TCP
         targetPort: 443
+      - name: ssh
+        port: 2222
+        protocol: TCP
+        targetPort: 2222
 
 ## @section tfyGateway Configuration for the tfyGateway.
 ##
@@ -81,4 +85,16 @@ tfyGateway:
         port:
           name: https-tfy-wildcard
           number: 443
-          protocol: HTTPS
+      - hosts: []
+        ## Configuration for the port of the third server.
+        ##
+        ## @param tfyGateway.spec.servers[1].port.name Name of the port.
+        ##
+        ## @param tfyGateway.spec.servers[1].port.number Port number for https.
+        ##
+        ## @param tfyGateway.spec.servers[1].port.protocol Protocol of the port.
+        ##
+        port:
+          name: ssh-tfy-wildcard
+          number: 2222
+          protocol: HTTP
