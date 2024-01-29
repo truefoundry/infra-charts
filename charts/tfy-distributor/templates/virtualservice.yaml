@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Values.global.name }}-port-3000-vs
+spec:
+  gateways:
+    - {{ .Values.global.gateway }}
+  hosts:
+    - {{ .Values.service.host }}
+  http:
+    - {{- if .Values.service.path }}
+      match:
+        - uri:
+            prefix: {{ .Values.service.path }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ .Values.global.name }}
+            port:
+              number: 3000

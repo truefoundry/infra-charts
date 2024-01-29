@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Release.Name }}-nats-vs
+spec:
+  gateways:
+    - {{ .Values.global.gateway }}
+  hosts:
+    - {{ .Values.nats.host }}
+  http:
+    - {{- if .Values.nats.path }}
+      match:
+        - uri:
+            prefix: {{ .Values.nats.path }}
+      {{- end }}
+      route:
+        - destination:
+            host: {{ .Release.Name }}-nats
+            port:
+              number: 8080

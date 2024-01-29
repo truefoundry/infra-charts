@@ -1,0 +1,31 @@
+# deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.global.name }}
+spec:
+  replicas: {{ .Values.service.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.global.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.global.name }}
+    spec:
+      containers:
+        - name: {{ .Values.global.name }}
+          image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NATS_AUTH_CONFIG
+              value: '{"user": "{{ (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ (index .Values.nats.config.merge.authorization.users 0).password }}"}'
+            - name: NATS_CONNECTION_CONFIG
+              value: '{"servers": "ws://{{ .Release.Name }}-nats:8080", "pingInterval": 5000, "maxPingOut": 3}'
+            - name: SERVICE_STREAM_REPLICAS
+              value: {{ .Values.service.serviceStreamReplicas | quote }}
+          resources:
+            {{- toYaml .Values.service.resources | nindent 12 }}

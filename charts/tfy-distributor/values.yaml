@@ -1,0 +1,129 @@
+# Distributor Configuration
+global:
+  name: distributor
+  gateway: <gateway-placeholder>
+
+# service configuration
+service:
+  # Resource limits and requests
+  resources:
+    limits:
+      cpu: 0.1
+      memory: 150M
+    requests:
+      cpu: 0.1
+      memory: 150M
+
+  # Replicas configuration for service stream
+  serviceStreamReplicas: 2
+
+  # Base URL and path for the distributor service
+  # Please replace the placeholders with actual values
+  host: <host-placeholder>
+  path:
+
+  # Istio gateway for the virtual service
+  # Specify the Istio gateway here
+
+# NATS Configuration
+nats:
+  # Base URL and path for the distributor nats
+  # Please replace the placeholders with actual values
+  host: <host-placeholder>
+  path:
+
+  # NATS server configuration
+  config:
+    nats:
+      port: 4222
+
+    # Merge configuration for NATS authorization
+    merge:
+      authorization:
+        users:
+          - user: <user>
+            password: <your-secure-password>
+            permissions:
+              publish:
+                - ">"
+              subscribe:
+                - ">"
+        timeout: 5
+
+    # Cluster configuration
+    cluster:
+      port: 6222
+      enabled: true
+      replicas: 3
+
+    # Monitoring configuration
+    monitor:
+      tls:
+        enabled: false
+      port: 8222
+      enabled: true
+
+    # Jetstream configuration
+    jetstream:
+      enabled: true
+      fileStore:
+        dir: /data
+        pvc:
+          size: 2Gi
+          enabled: true
+          storageClassName: gp3
+        enabled: true
+      memoryStore:
+        enabled: true
+        maxSize: 250Mi
+
+    # Websocket configuration
+    websocket:
+      port: 8080
+      enabled: true
+
+  # NATS Box configuration
+  natsBox:
+    enabled: false
+
+  # NATS service configuration
+  service:
+    ports:
+      monitor:
+        enabled: true
+
+  # Container configuration for NATS
+  container:
+    image:
+      tag: 2.10.7-alpine
+      pullPolicy: IfNotPresent
+      repository: nats
+    merge:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 250Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+
+  # Pod template configuration for NATS
+  podTemplate:
+    merge:
+      metadata:
+        annotations:
+          prometheus.io/port: "7777"
+          prometheus.io/scrape: "true"
+    topologySpreadConstraints:
+      kubernetes.io/hostname:
+        maxSkew: 1
+        whenUnsatisfiable: DoNotSchedule
+
+  # Prometheus exporter configuration for NATS
+  promExporter:
+    port: 7777
+    image:
+      tag: 0.13.0
+      pullPolicy: IfNotPresent
+      repository: natsio/prometheus-nats-exporter
+    enabled: true
