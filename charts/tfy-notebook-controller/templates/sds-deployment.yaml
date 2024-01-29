@@ -63,7 +63,7 @@ spec:
           memory: 30M
       volumeMounts:
         - mountPath: /secrets/secrets.yaml
-          name: sds-config-map-volume
+          name: sds-secret-volume
           subPath: secrets.yaml
   topologySpreadConstraints:
     - labelSelector:
@@ -73,6 +73,7 @@ spec:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
   volumes:
-    - configMap:
-        name: sds-config-map
-      name: sds-config-map-volume
+    - name: sds-secret-volume 
+      secret:
+        name: sds-secret
+      
