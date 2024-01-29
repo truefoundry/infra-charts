@@ -23,11 +23,6 @@ spec:
         - command:
             - /manager
           env:
-            - name: USE_ISTIO
-              valueFrom:
-                configMapKeyRef:
-                  key: USE_ISTIO
-                  name: notebook-controller-config-map
             - name: ISTIO_GATEWAY
               valueFrom:
                 configMapKeyRef:
@@ -53,6 +48,13 @@ spec:
                 configMapKeyRef:
                   key: IDLENESS_CHECK_PERIOD
                   name: notebook-controller-config-map
+            - name: NOTEBOOK_BASE_DOMAIN_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: NOTEBOOK_BASE_DOMAIN_URL
+                  name: notebook-controller-config-map
+            - name: SDS_SERVICE_URL
+              value: "sds-service.{{ .Release.Namespace }}.svc.cluster.local:8000"
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
