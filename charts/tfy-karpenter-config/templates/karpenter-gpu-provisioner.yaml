@@ -12,13 +12,15 @@ spec:
   {{- else }}
   ttlSecondsAfterEmpty: {{ .Values.karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty }}
   {{- end }}
-  {{- if .Values.karpenter.gpuProvisionerSpec.labels }}
   labels:
     {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
     nvidia.com/gpu.deploy.operands: 'false'
-    {{- end }}  
+    {{- else }}
+    nvidia.com/gpu.deploy.operands: 'true'
+    {{- end }}
+    {{- if .Values.karpenter.gpuProvisionerSpec.labels }}
     {{- .Values.karpenter.gpuProvisionerSpec.labels | toYaml | nindent 4 }}
-  {{- end }}
+    {{- end }}
   requirements:
     - key: karpenter.sh/capacity-type
       operator: In
