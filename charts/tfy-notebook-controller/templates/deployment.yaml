@@ -23,11 +23,6 @@ spec:
         - command:
             - /manager
           env:
-            - name: ISTIO_GATEWAY
-              valueFrom:
-                configMapKeyRef:
-                  key: ISTIO_GATEWAY
-                  name: notebook-controller-config-map
             - name: CLUSTER_DOMAIN
               valueFrom:
                 configMapKeyRef:
@@ -48,6 +43,16 @@ spec:
                 configMapKeyRef:
                   key: IDLENESS_CHECK_PERIOD
                   name: notebook-controller-config-map
+            - name: ISTIO_GATEWAY
+              valueFrom:
+                configMapKeyRef:
+                  key: ISTIO_GATEWAY
+                  name: notebook-controller-config-map
+            - name: ISTIO_GATEWAY_SELECTOR
+              valueFrom:
+                configMapKeyRef:
+                  key: ISTIO_GATEWAY_SELECTOR
+                  name: notebook-controller-config-map
             - name: NOTEBOOK_BASE_DOMAIN_URL
               valueFrom:
                 configMapKeyRef:
@@ -55,6 +60,37 @@ spec:
                   name: notebook-controller-config-map
             - name: SDS_SERVICE_URL
               value: "sds-service.{{ .Release.Namespace }}.svc.cluster.local:8000"
+            - name: IS_OAUTH_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: IS_OAUTH_ENABLED
+                  name: notebook-controller-config-map
+            - name: OAUTH_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_CLIENT_ID
+                  name: notebook-controller-config-map
+            - name: OAUTH_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_BASE_URL
+                  name: notebook-controller-config-map
+            - name: OAUTH_TOKEN_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_TOKEN_ENDPOINT
+                  name: notebook-controller-config-map
+            - name: OAUTH_AUTHORIZATION_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_AUTHORIZATION_ENDPOINT
+                  name: notebook-controller-config-map
+            - name: OAUTH_JWKS_URI
+              valueFrom:
+                configMapKeyRef:
+                  key: OAUTH_JWKS_URI
+                  name: notebook-controller-config-map
+
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
