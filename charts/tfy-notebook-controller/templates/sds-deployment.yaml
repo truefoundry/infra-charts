@@ -23,23 +23,23 @@ spec:
     spec:
       affinity:
         {{- with .Values.sdsServer.affinity }}
-        {{- toYaml . | nindent 4  }}
+        {{- toYaml . | nindent 8  }}
         {{- end }}
       containers:
         - command:
             {{- with .Values.sdsServer.command }}
-            {{- toYaml . | nindent 8  }}
+            {{- toYaml . | nindent 12  }}
             {{- end }}
           image: "{{ .Values.sdsServer.image }}"
           imagePullPolicy: IfNotPresent
           name: sds-server
           ports:
             {{- with .Values.sdsServer.port }}
-            {{- toYaml . | nindent 8  }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           resources:
             {{- with .Values.sdsServer.resources }}
-            {{- toYaml . | nindent 8  }}
+            {{- toYaml . | nindent 12  }}
             {{- end }}
           volumeMounts:
             - mountPath: /secrets/secrets.yaml
@@ -47,7 +47,7 @@ spec:
               subPath: secrets.yaml
       topologySpreadConstraints:
         {{- with .Values.sdsServer.topologySpreadConstraints }}
-        {{- toYaml . | nindent 4  }}
+        {{- toYaml . | nindent 8  }}
         {{- end }}
       volumes:
         - name: sds-secret-volume 
