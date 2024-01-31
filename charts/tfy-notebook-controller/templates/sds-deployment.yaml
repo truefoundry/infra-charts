@@ -20,37 +20,37 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
         app: tfy-sds-server
-  spec:
-    affinity:
-      {{- with .Values.sdsServer.affinity }}
-      {{- toYaml . | nindent 4  }}
-      {{- end }}
-    containers:
-      - command:
-          {{- with .Values.sdsServer.command }}
-          {{- toYaml . | nindent 8  }}
-          {{- end }}
-        image: "{{ .Values.sdsServer.image }}"
-        imagePullPolicy: IfNotPresent
-        name: sds-server
-        ports:
-          {{- with .Values.sdsServer.port }}
-          {{- toYaml . | nindent 8  }}
-          {{- end }}
-        resources:
-          {{- with .Values.sdsServer.resources }}
-          {{- toYaml . | nindent 8  }}
-          {{- end }}
-        volumeMounts:
-          - mountPath: /secrets/secrets.yaml
-            name: sds-secret-volume
-            subPath: secrets.yaml
-    topologySpreadConstraints:
-      {{- with .Values.sdsServer.topologySpreadConstraints }}
-      {{- toYaml . | nindent 4  }}
-      {{- end }}
-    volumes:
-      - name: sds-secret-volume 
-        secret:
-          name: tfy-oauth-secret
-      
+    spec:
+      affinity:
+        {{- with .Values.sdsServer.affinity }}
+        {{- toYaml . | nindent 4  }}
+        {{- end }}
+      containers:
+        - command:
+            {{- with .Values.sdsServer.command }}
+            {{- toYaml . | nindent 8  }}
+            {{- end }}
+          image: "{{ .Values.sdsServer.image }}"
+          imagePullPolicy: IfNotPresent
+          name: sds-server
+          ports:
+            {{- with .Values.sdsServer.port }}
+            {{- toYaml . | nindent 8  }}
+            {{- end }}
+          resources:
+            {{- with .Values.sdsServer.resources }}
+            {{- toYaml . | nindent 8  }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /secrets/secrets.yaml
+              name: sds-secret-volume
+              subPath: secrets.yaml
+      topologySpreadConstraints:
+        {{- with .Values.sdsServer.topologySpreadConstraints }}
+        {{- toYaml . | nindent 4  }}
+        {{- end }}
+      volumes:
+        - name: sds-secret-volume 
+          secret:
+            name: tfy-oauth-secret
+        
