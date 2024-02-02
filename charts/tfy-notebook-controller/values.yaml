@@ -1,29 +1,35 @@
 ## @section Parameters for tfy-notebook-controller
 
+## Labels for the notebook controller.
 ## @param labels.app Label for the application.
 ## @param labels.kustomize.component Label for the Kustomize component.
 ##
 labels:
   app: notebook-controller
   kustomize.component: notebook-controller
+
+## Namespace override for the notebook controller.
 ## @param namespaceOverride Namespace override for the notebook controller.
 ##
 namespaceOverride: ""
+
+## Istio Gateway for the notebook controller.
 ## @param istioGateway Istio Gateway for the notebook controller.
 ##
 istioGateway: istio-system/tfy-wildcard
+
+## Image configuration for the notebook controller.
 ## Image tag for the notebook controller.
-##
 ## @param image.pullPolicy Pull Policy for notebook controller.
-## @param image.repository Image repostiory for the notebook controller.
+## @param image.repository Image repository for the notebook controller.
 ## @param image.tag Image tag for the notebook controller.
 ##
 image:
   pullPolicy: IfNotPresent
   repository: "docker.io/truefoundryuser/notebook-controller"
   tag: "0.1.2"
-## Resource configuration for the notebook controller.
-##
+
+## Resource limits and requests for the notebook controller.
 ## @param resources.limits.cpu CPU limit for the notebook controller.
 ## @param resources.limits.memory Memory limit for the notebook controller.
 ## @param resources.limits.ephemeral-storage Ephemeral storage limit for the notebook controller.
@@ -40,8 +46,8 @@ resources:
     cpu: 50m
     memory: 128Mi
     ephemeral-storage: 128Mi
+
 ## Tolerations for the notebook controller deployment.
-##
 ## @param tolerations[0].key Key for the first toleration.
 ## @param tolerations[0].value Value for the first toleration.
 ## @param tolerations[0].effect Effect for the first toleration.
@@ -52,3 +58,101 @@ tolerations:
     value: "true"
     effect: NoSchedule
     operator: Equal
+
+## Base domain URL for the notebook without scheme.
+## Can be a wildcard like *.example.com
+## @param notebookBaseDomainUrl Base domain URL for the notebook.
+notebookBaseDomainUrl: <to_be_provided>
+
+## OAuth2 configuration settings.
+##
+## @param oauth.enabled Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.type Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.clientId Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.tokenEndpoint Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.authorizationEndpoint Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.jwksUri Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.clientSecret Secret key used for OAuth2 authentication. This key should be kept confidential.
+## @param oauth.hmac HMAC key used for encoding/decoding tokens in OAuth2. This key is crucial for maintaining token integrity and security.
+##
+oauth:
+  enabled: true
+  type: truefoundry
+  clientId: ""
+  tokenEndpoint: ""
+  authorizationEndpoint: ""
+  jwksUri: ""
+  clientSecret: ""
+  hmac: ""
+
+
+## Config for SDS service
+##
+sdsServer:
+  ## @param sdsServer.image image for sds-server
+  image: ""
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key key to assign affinity
+              - key: karpenter.sh/capacity-type
+                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].operator operator to assign affinity
+                operator: In
+                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].values values for assigning affinity
+                values:
+                  - spot
+          ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight weight for current preference
+          weight: 100
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key key to assign affinity
+              - key: karpenter.sh/capacity-type
+                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator operator to assign affinity
+                operator: In
+                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values values for assigning affinity
+                values:
+                  - spot
+                  - on-demand
+  ## @param sdsServer.command Command and arguments to start the sds-server application.
+  command:
+    - /app/sds-server
+    - "--port"
+    - "8000"
+    - "--file"
+    - /secrets/secrets.yaml
+  ## @param sdsServer.port[0].containerPort The port on which the container is listening.
+  port:
+    - containerPort: 8000
+      ## @param sdsServer.port[0].name The name assigned to this port.
+      name: port-8000
+      ## @param sdsServer.port[0].protocol The protocol used by this port (TCP/UDP).
+      protocol: TCP
+  resources:
+    limits:
+      ## @param sdsServer.resources.limits.cpu The maximum CPU resources allocated.
+      cpu: 0.02
+      ## @param sdsServer.resources.limits.ephemeral-storage The maximum ephemeral storage allocated.
+      ephemeral-storage: 20M
+      ## @param sdsServer.resources.limits.memory The maximum memory resources allocated.
+      memory: 50M
+    requests:
+      ## @param sdsServer.resources.requests.cpu The minimum CPU resources requested.
+      cpu: 0.01
+      ## @param sdsServer.resources.requests.ephemeral-storage The minimum ephemeral storage requested.
+      ephemeral-storage: 10M
+      ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
+      memory: 30M
+  topologySpreadConstraints:
+    - labelSelector:
+        matchLabels:
+          ## @param sdsServer.topologySpreadConstraints[0].labelSelector.matchLabels.truefoundry.com/component Component label for the sds-server.
+          truefoundry.com/component: sds-server
+      ## @param sdsServer.topologySpreadConstraints[0].maxSkew Define the maximum skew of pods across topology domains.
+      maxSkew: 1
+      ## @param sdsServer.topologySpreadConstraints[0].topologyKey The key for the node labels used in determining the topology spread.
+      topologyKey: topology.kubernetes.io/zone
+      ## @param sdsServer.topologySpreadConstraints[0].whenUnsatisfiable Behavior policy when spreading constraints cannot be satisfied.
+      whenUnsatisfiable: ScheduleAnyway
