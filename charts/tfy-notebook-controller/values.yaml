@@ -91,6 +91,7 @@ oauth:
 sdsServer:
   ## @param sdsServer.image image for sds-server
   image: "public.ecr.aws/truefoundrycloud/sds-server:cb6f4be9a5e342ad7a3ba4eb72bcc158501500d8"
+  ## @param sdsServer.affinity Node affinity for sds-server
   affinity:
   ## @param sdsServer.command Command and arguments to start the sds-server application.
   command:
@@ -121,6 +122,7 @@ sdsServer:
       ephemeral-storage: 10M
       ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
       memory: 30M
+  ## @param sdsServer.tolerations [array] Spot tolerations for the notebook controller deployment.
   tolerations:
     - effect: NoSchedule
       key: cloud.google.com/gke-spot
