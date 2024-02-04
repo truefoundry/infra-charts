@@ -1,10 +1,11 @@
 # Distributor Configuration
+# @param global [object]
 global:
-  name: distributor
   gateway: <gateway-placeholder>
 
 # service configuration
-service:
+# @param distributor [object]
+distributor:
   # Resource limits and requests
   resources:
     limits:
@@ -22,10 +23,15 @@ service:
   host: <host-placeholder>
   path:
 
-  # Istio gateway for the virtual service
-  # Specify the Istio gateway here
+  image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
+  ports:
+    - name: port-3000
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
 
 # NATS Configuration
+# @param nats [object]
 nats:
   # Base URL and path for the distributor nats
   # Please replace the placeholders with actual values

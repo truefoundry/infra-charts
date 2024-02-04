@@ -3,29 +3,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.global.name }}
+  name: {{ .Release.Name }}-distributor
 spec:
-  replicas: {{ .Values.service.replicaCount | default 1 }}
+  replicas: {{ .Values.distributor.replicaCount | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Values.global.name }}
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ .Values.global.name }}
+        app: {{ .Release.Name }}
     spec:
       containers:
-        - name: {{ .Values.global.name }}
-          image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
+        - name: {{ .Release.Name }}
+          image: {{ .Values.distributor.image }}
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3000
+            - containerPort: {{ .Values.distributor.port }}
           env:
             - name: NATS_AUTH_CONFIG
               value: '{"user": "{{ (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ (index .Values.nats.config.merge.authorization.users 0).password }}"}'
             - name: NATS_CONNECTION_CONFIG
               value: '{"servers": "ws://{{ .Release.Name }}-nats:8080", "pingInterval": 5000, "maxPingOut": 3}'
             - name: SERVICE_STREAM_REPLICAS
-              value: {{ .Values.service.serviceStreamReplicas | quote }}
+              value: {{ .Values.distributor.serviceStreamReplicas | quote }}
           resources:
-            {{- toYaml .Values.service.resources | nindent 12 }}
+            {{- toYaml .Values.distributor.resources | nindent 12 }}

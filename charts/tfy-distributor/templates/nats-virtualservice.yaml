@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: {{ .Release.Name }}-nats-vs
+  name: {{ .Release.Name }}-nats
 spec:
   gateways:
     - {{ .Values.global.gateway }}
@@ -17,4 +17,4 @@ spec:
         - destination:
             host: {{ .Release.Name }}-nats
             port:
-              number: 8080
+              number: {{ .nats.websocket.port }}
