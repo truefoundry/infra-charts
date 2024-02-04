@@ -25,6 +25,10 @@ spec:
         {{- with .Values.sdsServer.affinity }}
         {{- toYaml . | nindent 8  }}
         {{- end }}
+      tolerations:
+        {{- with .Values.sdsServer.tolerations }}
+        {{- toYaml . | nindent 8  }}
+        {{- end }}
       containers:
         - command:
             {{- with .Values.sdsServer.command }}

@@ -92,30 +92,6 @@ sdsServer:
   ## @param sdsServer.image image for sds-server
   image: "public.ecr.aws/truefoundrycloud/sds-server:cb6f4be9a5e342ad7a3ba4eb72bcc158501500d8"
   affinity:
-    nodeAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - preference:
-            matchExpressions:
-                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].key key to assign affinity
-              - key: karpenter.sh/capacity-type
-                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].operator operator to assign affinity
-                operator: In
-                ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchExpressions[0].values values for assigning affinity
-                values:
-                  - spot
-          ## @param sdsServer.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution[0].weight weight for current preference
-          weight: 100
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].key key to assign affinity
-              - key: karpenter.sh/capacity-type
-                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].operator operator to assign affinity
-                operator: In
-                ## @param sdsServer.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms[0].matchExpressions[0].values values for assigning affinity
-                values:
-                  - spot
-                  - on-demand
   ## @param sdsServer.command Command and arguments to start the sds-server application.
   command:
     - /app/sds-server
@@ -145,6 +121,15 @@ sdsServer:
       ephemeral-storage: 10M
       ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
       memory: 30M
+  tolerations:
+    - effect: NoSchedule
+      key: cloud.google.com/gke-spot
+      operator: Equal
+      value: 'true'
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: 'spot'
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:
