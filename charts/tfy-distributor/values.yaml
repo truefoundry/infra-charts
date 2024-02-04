@@ -1,253 +1,253 @@
 # Global configuration parameters
-# @param global [object] Global settings for the application
+## @param global [object] Global settings for the application
 global:
   # Gateway URL for global access
-  # @param global.gateway [string] The gateway URL for the application
+  ## @param global.gateway [string] The gateway URL for the application
   gateway: <gateway-placeholder>
 
 # Distributor service configuration
-# @param distributor [object] Configuration for the distributor service
+## @param distributor [object] Configuration for the distributor service
 distributor:
   # Resource limits and requests for the distributor service
-  # @param distributor.resources [object] Resource configuration for the distributor service
+  ## @param distributor.resources [object] Resource configuration for the distributor service
   resources:
     limits:
       # CPU limit for the distributor service
-      # @param distributor.resources.limits.cpu [string] The maximum amount of CPU the service can use
+      ## @param distributor.resources.limits.cpu [string] The maximum amount of CPU the service can use
       cpu: 0.1
       # Memory limit for the distributor service
-      # @param distributor.resources.limits.memory [string] The maximum amount of memory the service can use
+      ## @param distributor.resources.limits.memory [string] The maximum amount of memory the service can use
       memory: 150M
     requests:
       # CPU request for the distributor service
-      # @param distributor.resources.requests.cpu [string] The amount of CPU the service requests
+      ## @param distributor.resources.requests.cpu [string] The amount of CPU the service requests
       cpu: 0.1
       # Memory request for the distributor service
-      # @param distributor.resources.requests.memory [string] The amount of memory the service requests
+      ## @param distributor.resources.requests.memory [string] The amount of memory the service requests
       memory: 150M
 
   # Number of replicas for the service stream
-  # @param distributor.serviceStreamReplicas [integer] Number of replicas for the service stream
+  ## @param distributor.serviceStreamReplicas [integer] Number of replicas for the service stream
   serviceStreamReplicas: 2
 
   # Base URL for the distributor service
-  # @param distributor.host [string] The host URL for the distributor service
+  ## @param distributor.host [string] The host URL for the distributor service
   host: <host-placeholder>
   # Path for the distributor service
-  # @param distributor.path [string] The path for the distributor service API
+  ## @param distributor.path [string] The path for the distributor service API
   path:
 
   # Image configuration for the distributor service
-  # @param distributor.image [string] The docker image for the distributor service
+  ## @param distributor.image [string] The docker image for the distributor service
   image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
   # Port configuration for the distributor service
-  # @param distributor.ports [array] Ports configuration for the distributor service
+  ## @param distributor.ports [array] Ports configuration for the distributor service
   ports:
     - # Port name and number configuration
-      # @param distributor.ports.name [string] Name of the port
+      ## @param distributor.ports.name [string] Name of the port
       name: port-3000
-      # @param distributor.ports.port [integer] Port number for the service
+      ## @param distributor.ports.port [integer] Port number for the service
       port: 3000
       # Protocol used by the service
-      # @param distributor.ports.protocol [string] The protocol used by the port
+      ## @param distributor.ports.protocol [string] The protocol used by the port
       protocol: TCP
       # Target port on the container
-      # @param distributor.ports.targetPort [integer] The container port to which traffic is directed
+      ## @param distributor.ports.targetPort [integer] The container port to which traffic is directed
       targetPort: 3000
 
 # NATS configuration
-# @param nats [object] Configuration for NATS messaging system
+## @param nats [object] Configuration for NATS messaging system
 nats:
   # Base URL for NATS
-  # @param nats.host [string] The host URL for NATS
+  ## @param nats.host [string] The host URL for NATS
   host: <host-placeholder>
   # Path for NATS
-  # @param nats.path [string] The path for NATS access
+  ## @param nats.path [string] The path for NATS access
   path:
 
   # NATS server specific configuration
-  # @param nats.config [object] NATS server and feature configurations
+  ## @param nats.config [object] NATS server and feature configurations
   config:
     nats:
       # Port for NATS server
-      # @param nats.config.nats.port [integer] The port on which the NATS server is running
+      ## @param nats.config.nats.port [integer] The port on which the NATS server is running
       port: 4222
 
     merge:
       # Authorization configuration for NATS
-      # @param nats.config.merge.authorization [object] Authorization settings for NATS
+      ## @param nats.config.merge.authorization [object] Authorization settings for NATS
       authorization:
         users:
           - # First user in the NATS authorization configuration
-            # @param nats.config.merge.authorization.users[0].user [string] Username for NATS authentication
+            ## @param nats.config.merge.authorization.users[0].user [string] Username for NATS authentication
             user: <user>
             # Password for the first user
-            # @param nats.config.merge.authorization.users[0].password [string] Password for NATS authentication
+            ## @param nats.config.merge.authorization.users[0].password [string] Password for NATS authentication
             password: <your-secure-password>
             permissions:
               # Publishing permissions for the first user
-              # @param nats.config.merge.authorization.users[0].permissions.publish [array] Topics the user can publish to
+              ## @param nats.config.merge.authorization.users[0].permissions.publish [array] Topics the user can publish to
               publish:
                 - ">"
               # Subscription permissions for the first user
-              # @param nats.config.merge.authorization.users[0].permissions.subscribe [array] Topics the user can subscribe to
+              ## @param nats.config.merge.authorization.users[0].permissions.subscribe [array] Topics the user can subscribe to
               subscribe:
                 - ">"
         # Authorization timeout
-        # @param nats.config.merge.authorization.timeout [integer] Timeout for NATS authorization in seconds
+        ## @param nats.config.merge.authorization.timeout [integer] Timeout for NATS authorization in seconds
         timeout: 5
 
     # Cluster configuration for NATS
-    # @param nats.config.cluster [object] Configuration for NATS clustering
+    ## @param nats.config.cluster [object] Configuration for NATS clustering
     cluster:
       # Cluster port
-      # @param nats.config.cluster.port [integer] Port for NATS cluster communication
+      ## @param nats.config.cluster.port [integer] Port for NATS cluster communication
       port: 6222
       # Enable/disable clustering
-      # @param nats.config.cluster.enabled [boolean] Whether NATS clustering is enabled
+      ## @param nats.config.cluster.enabled [boolean] Whether NATS clustering is enabled
       enabled: true
       # Number of replicas in the NATS cluster
-      # @param nats.config.cluster.replicas [integer] Number of replicas in the NATS cluster
+      ## @param nats.config.cluster.replicas [integer] Number of replicas in the NATS cluster
       replicas: 3
 
     # Monitoring configuration for NATS
-    # @param nats.config.monitor [object] Configuration for NATS monitoring
+    ## @param nats.config.monitor [object] Configuration for NATS monitoring
     monitor:
       tls:
         # Enable/disable TLS for monitoring
-        # @param nats.config.monitor.tls.enabled [boolean] Whether TLS is enabled for NATS monitoring
+        ## @param nats.config.monitor.tls.enabled [boolean] Whether TLS is enabled for NATS monitoring
         enabled: false
       # Monitoring port
-      # @param nats.config.monitor.port [integer] Port for NATS monitoring
+      ## @param nats.config.monitor.port [integer] Port for NATS monitoring
       port: 8222
       # Enable/disable monitoring
-      # @param nats.config.monitor.enabled [boolean] Whether NATS monitoring is enabled
+      ## @param nats.config.monitor.enabled [boolean] Whether NATS monitoring is enabled
       enabled: true
 
     # Jetstream configuration for NATS
-    # @param nats.config.jetstream [object] Configuration for NATS Jetstream
+    ## @param nats.config.jetstream [object] Configuration for NATS Jetstream
     jetstream:
       # Enable/disable Jetstream
-      # @param nats.config.jetstream.enabled [boolean] Whether NATS Jetstream is enabled
+      ## @param nats.config.jetstream.enabled [boolean] Whether NATS Jetstream is enabled
       enabled: true
       fileStore:
         # Directory for file storage
-        # @param nats.config.jetstream.fileStore.dir [string] Directory for Jetstream file storage
+        ## @param nats.config.jetstream.fileStore.dir [string] Directory for Jetstream file storage
         dir: /data
         pvc:
           # PVC size for file storage
-          # @param nats.config.jetstream.fileStore.pvc.size [string] PVC size for Jetstream file storage
+          ## @param nats.config.jetstream.fileStore.pvc.size [string] PVC size for Jetstream file storage
           size: 2Gi
           # Enable/disable PVC for file storage
-          # @param nats.config.jetstream.fileStore.pvc.enabled [boolean] Whether PVC is enabled for Jetstream file storage
+          ## @param nats.config.jetstream.fileStore.pvc.enabled [boolean] Whether PVC is enabled for Jetstream file storage
           enabled: true
           # Storage class name for PVC
-          # @param nats.config.jetstream.fileStore.pvc.storageClassName [string] Storage class for PVC of Jetstream file storage
+          ## @param nats.config.jetstream.fileStore.pvc.storageClassName [string] Storage class for PVC of Jetstream file storage
           storageClassName: gp3
         # Enable/disable file storage
-        # @param nats.config.jetstream.fileStore.enabled [boolean] Whether file storage is enabled for Jetstream
+        ## @param nats.config.jetstream.fileStore.enabled [boolean] Whether file storage is enabled for Jetstream
         enabled: true
       memoryStore:
         # Enable/disable memory storage
-        # @param nats.config.jetstream.memoryStore.enabled [boolean] Whether memory storage is enabled for Jetstream
+        ## @param nats.config.jetstream.memoryStore.enabled [boolean] Whether memory storage is enabled for Jetstream
         enabled: true
         # Maximum size for memory storage
-        # @param nats.config.jetstream.memoryStore.maxSize [string] Maximum size for Jetstream memory storage
+        ## @param nats.config.jetstream.memoryStore.maxSize [string] Maximum size for Jetstream memory storage
         maxSize: 250Mi
 
     # Websocket configuration for NATS
-    # @param nats.config.websocket [object] Configuration for NATS websocket support
+    ## @param nats.config.websocket [object] Configuration for NATS websocket support
     websocket:
       # Websocket port
-      # @param nats.config.websocket.port [integer] Port for NATS websocket
+      ## @param nats.config.websocket.port [integer] Port for NATS websocket
       port: 8080
       # Enable/disable websocket support
-      # @param nats.config.websocket.enabled [boolean] Whether websocket support is enabled for NATS
+      ## @param nats.config.websocket.enabled [boolean] Whether websocket support is enabled for NATS
       enabled: true
 
   # NATS Box tool configuration
-  # @param nats.natsBox [object] Configuration for enabling NATS Box tool
+  ## @param nats.natsBox [object] Configuration for enabling NATS Box tool
   natsBox:
     # Enable/disable NATS Box tool
-    # @param nats.natsBox.enabled [boolean] Whether NATS Box is enabled
+    ## @param nats.natsBox.enabled [boolean] Whether NATS Box is enabled
     enabled: false
 
   # Configuration for NATS service ports
-  # @param nats.service [object] Configuration for NATS service-related ports
+  ## @param nats.service [object] Configuration for NATS service-related ports
   service:
     ports:
       monitor:
         # Enable/disable monitoring port
-        # @param nats.service.ports.monitor.enabled [boolean] Whether the monitoring port is enabled for NATS service
+        ## @param nats.service.ports.monitor.enabled [boolean] Whether the monitoring port is enabled for NATS service
         enabled: true
 
   # Container configuration for NATS
-  # @param nats.container [object] Configuration for the NATS container
+  ## @param nats.container [object] Configuration for the NATS container
   container:
     image:
       # Docker image tag for NATS
-      # @param nats.container.image.tag [string] The tag of the NATS docker image
+      ## @param nats.container.image.tag [string] The tag of the NATS docker image
       tag: 2.10.7-alpine
       # Docker image pull policy
-      # @param nats.container.image.pullPolicy [string] Pull policy for the NATS docker image
+      ## @param nats.container.image.pullPolicy [string] Pull policy for the NATS docker image
       pullPolicy: IfNotPresent
       # Docker image repository for NATS
-      # @param nats.container.image.repository [string] Repository for the NATS docker image
+      ## @param nats.container.image.repository [string] Repository for the NATS docker image
       repository: nats
     merge:
       resources:
         limits:
           # CPU limit for the NATS container
-          # @param nats.container.merge.resources.limits.cpu [string] The maximum amount of CPU the NATS container can use
+          ## @param nats.container.merge.resources.limits.cpu [string] The maximum amount of CPU the NATS container can use
           cpu: 100m
           # Memory limit for the NATS container
-          # @param nats.container.merge.resources.limits.memory [string] The maximum amount of memory the NATS container can use
+          ## @param nats.container.merge.resources.limits.memory [string] The maximum amount of memory the NATS container can use
           memory: 250Mi
         requests:
           # CPU request for the NATS container
-          # @param nats.container.merge.resources.requests.cpu [string] The amount of CPU the NATS container requests
+          ## @param nats.container.merge.resources.requests.cpu [string] The amount of CPU the NATS container requests
           cpu: 100m
           # Memory request for the NATS container
-          # @param nats.container.merge.resources.requests.memory [string] The amount of memory the NATS container requests
+          ## @param nats.container.merge.resources.requests.memory [string] The amount of memory the NATS container requests
           memory: 250Mi
 
   # Pod template configuration for NATS
-  # @param nats.podTemplate [object] Configuration for the NATS pod template
+  ## @param nats.podTemplate [object] Configuration for the NATS pod template
   podTemplate:
     merge:
       metadata:
         annotations:
           # Prometheus port annotation for NATS pod
-          # @param nats.podTemplate.merge.metadata.annotations.prometheus.io/port [string] The port for Prometheus to scrape NATS metrics
+          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/port [string] The port for Prometheus to scrape NATS metrics
           prometheus.io/port: "7777"
           # Enable/disable Prometheus scraping for NATS pod
-          # @param nats.podTemplate.merge.metadata.annotations.prometheus.io/scrape [boolean] Whether Prometheus scraping is enabled for the NATS pod
+          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/scrape [boolean] Whether Prometheus scraping is enabled for the NATS pod
           prometheus.io/scrape: "true"
     topologySpreadConstraints:
       kubernetes.io/hostname:
         # Maximum skew for pod distribution across nodes
-        # @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.maxSkew [integer] Maximum skew for pod distribution
+        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.maxSkew [integer] Maximum skew for pod distribution
         maxSkew: 1
         # Unsatisfiable constraint action
-        # @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.whenUnsatisfiable [string] Action when pod distribution constraints are unsatisfiable
+        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.whenUnsatisfiable [string] Action when pod distribution constraints are unsatisfiable
         whenUnsatisfiable: DoNotSchedule
 
   # Prometheus exporter configuration for NATS
-  # @param nats.promExporter [object] Configuration for the Prometheus exporter for NATS
+  ## @param nats.promExporter [object] Configuration for the Prometheus exporter for NATS
   promExporter:
     # Port for the Prometheus exporter
-    # @param nats.promExporter.port [integer] Port for the NATS Prometheus exporter
+    ## @param nats.promExporter.port [integer] Port for the NATS Prometheus exporter
     port: 7777
     image:
       # Tag for the Prometheus exporter image
-      # @param nats.promExporter.image.tag [string] The tag of the Prometheus NATS exporter docker image
+      ## @param nats.promExporter.image.tag [string] The tag of the Prometheus NATS exporter docker image
       tag: 0.13.0
       # Pull policy for the Prometheus exporter image
-      # @param nats.promExporter.image.pullPolicy [string] Pull policy for the Prometheus NATS exporter docker image
+      ## @param nats.promExporter.image.pullPolicy [string] Pull policy for the Prometheus NATS exporter docker image
       pullPolicy: IfNotPresent
       # Repository for the Prometheus exporter image
-      # @param nats.promExporter.image.repository [string] Repository for the Prometheus NATS exporter docker image
+      ## @param nats.promExporter.image.repository [string] Repository for the Prometheus NATS exporter docker image
       repository: natsio/prometheus-nats-exporter
     # Enable/disable the Prometheus exporter
-    # @param nats.promExporter.enabled [boolean] Whether the Prometheus exporter is enabled for NATS
+    ## @param nats.promExporter.enabled [boolean] Whether the Prometheus exporter is enabled for NATS
     enabled: true
