@@ -18,7 +18,7 @@ distributor:
       ## @param distributor.resources.requests.memory [string] The amount of memory the service requests
       memory: 150M
 
-  ## @param distributor.serviceStreamReplicas [integer] Number of replicas for the service stream
+  ## @param distributor.serviceStreamReplicas Number Number of replicas for the service stream
   serviceStreamReplicas: 2
 
   # Base URL for the distributor service
@@ -33,11 +33,11 @@ distributor:
   ports:
     - ## @param distributor.ports.name [string] Name of the port
       name: port-3000
-      ## @param distributor.ports.port [integer] Port number for the service
+      ## @param distributor.ports.port Number Port number for the service
       port: 3000
       ## @param distributor.ports.protocol [string] The protocol used by the port
       protocol: TCP
-      ## @param distributor.ports.targetPort [integer] The container port to which traffic is directed
+      ## @param distributor.ports.targetPort Number The container port to which traffic is directed
       targetPort: 3000
 
 ## @param nats [object] Configuration for NATS messaging system
@@ -50,7 +50,7 @@ nats:
   ## @param nats.config [object] NATS server and feature configurations
   config:
     nats:
-      ## @param nats.config.nats.port [integer] The port on which the NATS server is running
+      ## @param nats.config.nats.port Number The port on which the NATS server is running
       port: 4222
 
     merge:
@@ -65,31 +65,31 @@ nats:
                 - ">"
               subscribe:
                 - ">"
-        ## @param nats.config.merge.authorization.timeout [integer] Timeout for NATS authorization in seconds
+        ## @param nats.config.merge.authorization.timeout Number Timeout for NATS authorization in seconds
         timeout: 5
 
     ## @param nats.config.cluster [object] Configuration for NATS clustering
     cluster:
-      ## @param nats.config.cluster.port [integer] Port for NATS cluster communication
+      ## @param nats.config.cluster.port Number Port for NATS cluster communication
       port: 6222
-      ## @param nats.config.cluster.enabled [boolean] Whether NATS clustering is enabled
+      ## @param nats.config.cluster.enabled Enabled Whether NATS clustering is enabled
       enabled: true
-      ## @param nats.config.cluster.replicas [integer] Number of replicas in the NATS cluster
+      ## @param nats.config.cluster.replicas Number Number of replicas in the NATS cluster
       replicas: 3
 
     ## @param nats.config.monitor [object] Configuration for NATS monitoring
     monitor:
       tls:
-        ## @param nats.config.monitor.tls.enabled [boolean] Whether TLS is enabled for NATS monitoring
+        ## @param nats.config.monitor.tls.enabled Enabled Whether TLS is enabled for NATS monitoring
         enabled: false
-      ## @param nats.config.monitor.port [integer] Port for NATS monitoring
+      ## @param nats.config.monitor.port Number Port for NATS monitoring
       port: 8222
-      ## @param nats.config.monitor.enabled [boolean] Whether NATS monitoring is enabled
+      ## @param nats.config.monitor.enabled Enabled Whether NATS monitoring is enabled
       enabled: true
 
     ## @param nats.config.jetstream [object] Configuration for NATS Jetstream
     jetstream:
-      ## @param nats.config.jetstream.enabled [boolean] Whether NATS Jetstream is enabled
+      ## @param nats.config.jetstream.enabled Enabled Whether NATS Jetstream is enabled
       enabled: true
       fileStore:
         ## @param nats.config.jetstream.fileStore.dir [string] Directory for Jetstream file storage
@@ -97,35 +97,35 @@ nats:
         pvc:
           ## @param nats.config.jetstream.fileStore.pvc.size [string] PVC size for Jetstream file storage
           size: 2Gi
-          ## @param nats.config.jetstream.fileStore.pvc.enabled [boolean] Whether PVC is enabled for Jetstream file storage
+          ## @param nats.config.jetstream.fileStore.pvc.enabled Enabled Whether PVC is enabled for Jetstream file storage
           enabled: true
           ## @param nats.config.jetstream.fileStore.pvc.storageClassName [string] Storage class for PVC of Jetstream file storage
           storageClassName: gp3
-        ## @param nats.config.jetstream.fileStore.enabled [boolean] Whether file storage is enabled for Jetstream
+        ## @param nats.config.jetstream.fileStore.enabled Enabled Whether file storage is enabled for Jetstream
         enabled: true
       memoryStore:
-        ## @param nats.config.jetstream.memoryStore.enabled [boolean] Whether memory storage is enabled for Jetstream
+        ## @param nats.config.jetstream.memoryStore.enabled Enabled Whether memory storage is enabled for Jetstream
         enabled: true
         ## @param nats.config.jetstream.memoryStore.maxSize [string] Maximum size for Jetstream memory storage
         maxSize: 250Mi
 
     ## @param nats.config.websocket [object] Configuration for NATS websocket support
     websocket:
-      ## @param nats.config.websocket.port [integer] Port for NATS websocket
+      ## @param nats.config.websocket.port Number Port for NATS websocket
       port: 8080
-      ## @param nats.config.websocket.enabled [boolean] Whether websocket support is enabled for NATS
+      ## @param nats.config.websocket.enabled Enabled Whether websocket support is enabled for NATS
       enabled: true
 
   ## @param nats.natsBox [object] Configuration for enabling NATS Box tool
   natsBox:
-    ## @param nats.natsBox.enabled [boolean] Whether NATS Box is enabled
+    ## @param nats.natsBox.enabled Enabled Whether NATS Box is enabled
     enabled: false
 
   ## @param nats.service [object] Configuration for NATS service-related ports
   service:
     ports:
       monitor:
-        ## @param nats.service.ports.monitor.enabled [boolean] Whether the monitoring port is enabled for NATS service
+        ## @param nats.service.ports.monitor.enabled Enabled Whether the monitoring port is enabled for NATS service
         enabled: true
 
   ## @param nats.container [object] Configuration for the NATS container
@@ -157,18 +157,18 @@ nats:
         annotations:
           ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/port [string] The port for Prometheus to scrape NATS metrics
           prometheus.io/port: "7777"
-          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/scrape [boolean] Whether Prometheus scraping is enabled for the NATS pod
+          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/scrape Enabled Whether Prometheus scraping is enabled for the NATS pod
           prometheus.io/scrape: "true"
     topologySpreadConstraints:
       kubernetes.io/hostname:
-        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.maxSkew [integer] Maximum skew for pod distribution
+        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.maxSkew Number Maximum skew for pod distribution
         maxSkew: 1
         ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.whenUnsatisfiable [string] Action when pod distribution constraints are unsatisfiable
         whenUnsatisfiable: DoNotSchedule
 
   ## @param nats.promExporter [object] Configuration for the Prometheus exporter for NATS
   promExporter:
-    ## @param nats.promExporter.port [integer] Port for the NATS Prometheus exporter
+    ## @param nats.promExporter.port Number Port for the NATS Prometheus exporter
     port: 7777
     image:
       ## @param nats.promExporter.image.tag [string] The tag of the Prometheus NATS exporter docker image
@@ -177,5 +177,5 @@ nats:
       pullPolicy: IfNotPresent
       ## @param nats.promExporter.image.repository [string] Repository for the Prometheus NATS exporter docker image
       repository: natsio/prometheus-nats-exporter
-    ## @param nats.promExporter.enabled [boolean] Whether the Prometheus exporter is enabled for NATS
+    ## @param nats.promExporter.enabled Enabled Whether the Prometheus exporter is enabled for NATS
     enabled: true
