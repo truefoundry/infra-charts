@@ -9,10 +9,10 @@ metadata:
   name: sds-server
 spec:
   ports:
-    - name: port-{{ .Values.sdsServer.ports[0].containerPort }}
-      port: {{ .Values.sdsServer.ports[0].containerPort }}
+    - name: port-{{ (index .Values.sdsServer.ports 0).containerPort }}
+      port: {{ (index .Values.sdsServer.ports 0).containerPort }}
       protocol: TCP
-      targetPort: {{ .Values.sdsServer.ports[0].containerPort }}
+      targetPort: {{ (index .Values.sdsServer.ports 0).containerPort }}
   selector:
     {{- with .Values.labels }}
     {{- toYaml . | nindent 4 }}
