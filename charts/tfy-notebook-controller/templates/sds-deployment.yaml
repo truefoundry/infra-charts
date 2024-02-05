@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: sds-deployment
+  name: sds-server
 spec:
   selector:
     matchLabels:
@@ -39,7 +39,7 @@ spec:
           imagePullPolicy: IfNotPresent
           name: sds-server
           ports:
-            {{- with .Values.sdsServer.port }}
+            {{- with .Values.sdsServer.ports }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           resources:

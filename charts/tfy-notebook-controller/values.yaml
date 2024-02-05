@@ -92,7 +92,7 @@ sdsServer:
   ## @param sdsServer.image image for sds-server
   image: "public.ecr.aws/truefoundrycloud/sds-server:cb6f4be9a5e342ad7a3ba4eb72bcc158501500d8"
   ## @param sdsServer.affinity [object] Node affinity for sds-server
-  affinity:
+  affinity: {}
   ## @param sdsServer.command Command and arguments to start the sds-server application.
   command:
     - /app/sds-server
@@ -101,7 +101,7 @@ sdsServer:
     - "--file"
     - /secrets/secrets.yaml
   ## @param sdsServer.port[0].containerPort The port on which the container is listening.
-  port:
+  ports:
     - containerPort: 8000
       ## @param sdsServer.port[0].name The name assigned to this port.
       name: port-8000
