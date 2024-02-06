@@ -1,9 +1,9 @@
 # Tfy-notebook-controller helm chart packaged by TrueFoundry
                                                                             
 
-                                                                            ## Parameters
+## Parameters
 
-### grafana Configuration for Grafana deployment.
+### tfy-notebook-controller Configuration for tfy-notebook-controller deployment.
 | Name                                                            | Description                                        | Value                        |
 | --------------------------------------------------------------- | -------------------------------------------------- | ---------------------------- |
 | `grafana.replicas`                                              | StatefulSet configuration for Grafana.             | `1`                          |
