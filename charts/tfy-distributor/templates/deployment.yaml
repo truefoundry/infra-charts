@@ -19,7 +19,7 @@ spec:
           image: {{ .Values.distributor.image }}
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: {{ .Values.distributor.port }}
+            - containerPort: {{ (index .Values.distributor.ports 0).port }}
           env:
             - name: NATS_AUTH_CONFIG
               value: '{"user": "{{ (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ (index .Values.nats.config.merge.authorization.users 0).password }}"}'

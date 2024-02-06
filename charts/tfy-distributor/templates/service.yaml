@@ -5,7 +5,7 @@ metadata:
 spec:
   ports:
   {{- range $val := .Values.distributor.ports }}
-    {{ . }}
+    {{- toYaml $val | nindent 4 }}
   {{- end }}
   selector:
     app: {{ .Release.Name }}
