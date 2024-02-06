@@ -75,6 +75,9 @@ aws-eks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+    
+    config:
+      name: time-slicing-config
   
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -139,6 +142,10 @@ aws-eks-gpu-operator:
         - key: nvidia.com/gpu
           effect: NoSchedule
           operator: Exists
+        - key: nvidia.com/fractional-gpu
+          value: allow
+          effect: NoSchedule
+          operator: Equal
     gc:
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
       enable: true
@@ -190,6 +197,10 @@ aws-eks-gpu-operator:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
+        - key: nvidia.com/fractional-gpu
+          value: allow
+          effect: NoSchedule
+          operator: Equal
 
   ## Daemonsets configuration
   daemonsets:
@@ -201,6 +212,16 @@ aws-eks-gpu-operator:
     # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
     # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
     updateStrategy: "OnDelete"
+
+    tolerations:
+      ## @skip aws-eks-gpu-operator.daemonsets.tolerations
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      - key: nvidia.com/fractional-gpu
+        value: allow
+        effect: NoSchedule
+        operator: Equal
   
   ## Validator configuration.
   validator:

@@ -1,0 +1,16 @@
+{{- if .Values.clusterType.azureAks }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: time-slicing-config
+  namespace: {{ .Release.Namespace }}
+data:
+  fractional-10: |-
+    version: v1
+    sharing:
+      timeSlicing:
+        resources:
+        - name: nvidia.com/gpu
+          replicas: 10
+{{- end }}
