@@ -1,3 +1,4 @@
+{{- if .Values.oauth.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
@@ -5,15 +6,16 @@ metadata:
   labels:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: sds-service
+  name: sds-server
 spec:
   ports:
-    - name: port-8000
-      port: 8000
+    - name: port-{{ (index .Values.sdsServer.ports 0).containerPort }}
+      port: {{ (index .Values.sdsServer.ports 0).containerPort }}
       protocol: TCP
-      targetPort: 8000
+      targetPort: {{ (index .Values.sdsServer.ports 0).containerPort }}
   selector:
     {{- with .Values.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
     app: tfy-sds-server
+{{- end }}

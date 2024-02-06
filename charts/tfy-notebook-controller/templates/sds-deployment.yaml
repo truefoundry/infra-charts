@@ -1,3 +1,4 @@
+{{- if .Values.oauth.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,8 +6,9 @@ metadata:
   labels:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: sds-deployment
+  name: sds-server
 spec:
+  replicas: {{ .Values.sdsServer.replicas}}
   selector:
     matchLabels:
       {{- with .Values.labels }}
@@ -25,6 +27,10 @@ spec:
         {{- with .Values.sdsServer.affinity }}
         {{- toYaml . | nindent 8  }}
         {{- end }}
+      tolerations:
+        {{- with .Values.sdsServer.tolerations }}
+        {{- toYaml . | nindent 8  }}
+        {{- end }}
       containers:
         - command:
             {{- with .Values.sdsServer.command }}
@@ -34,7 +40,7 @@ spec:
           imagePullPolicy: IfNotPresent
           name: sds-server
           ports:
-            {{- with .Values.sdsServer.port }}
+            {{- with .Values.sdsServer.ports }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           resources:
@@ -53,4 +59,4 @@ spec:
         - name: sds-secret-volume 
           secret:
             secretName: tfy-oauth-secret
-        
+{{- end }}
