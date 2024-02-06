@@ -8,13 +8,13 @@ spec:
   hosts:
     - {{ .Values.distributor.host }}
   http:
-    - {{- if .Values.distributor.path }}
+    - {{ if .Values.distributor.path -}}
       match:
         - uri:
             prefix: {{ .Values.distributor.path }}
-      {{- end }}
+      {{ end -}}
       route:
         - destination:
             host: {{ .Release.Name }}
             port:
-              number: {{ .Values.distributor.port }}
+              number: {{ (index .Values.distributor.ports 0).port }}
