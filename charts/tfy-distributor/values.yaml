@@ -24,7 +24,7 @@ distributor:
   ## @param distributor.host The host URL for the distributor service
   host: <host-placeholder>
   ## @param distributor.path The path for the distributor service API
-  path: <path-placeholder>
+  path: /
 
   ## @param distributor.image the docker image for the distributor service
   image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
@@ -43,7 +43,7 @@ nats:
   ## @param nats.host The host URL for NATS
   host: <host-placeholder>
   ## @param nats.path The path for NATS access
-  path: <path-placeholder>
+  path: /
 
   config:
     nats:
@@ -70,7 +70,7 @@ nats:
       ## @param nats.config.cluster.enabled Enabled Whether NATS clustering is enabled
       enabled: true
       ## @param nats.config.cluster.replicas Number Number of replicas in the NATS cluster
-      replicas: 3
+      replicas: 2
 
     monitor:
       tls:
@@ -93,7 +93,7 @@ nats:
           ## @param nats.config.jetstream.fileStore.pvc.enabled filestore pvc enabled
           enabled: true
           ## @param nats.config.jetstream.fileStore.pvc.storageClassName Storage class for PVC of Jetstream file storage
-          storageClassName: gp3
+          storageClassName:
         ## @param nats.config.jetstream.fileStore.enabled Enabled Whether file storage is enabled for Jetstream
         enabled: true
       memoryStore:

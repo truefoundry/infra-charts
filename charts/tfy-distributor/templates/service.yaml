@@ -4,9 +4,9 @@ metadata:
   name: {{ .Release.Name }}-distributor
 spec:
   ports:
-  {{- range $val := .Values.distributor.ports }}
-    {{- toYaml $val | nindent 4 }}
-  {{- end }}
+  {{ range $val := .Values.distributor.ports -}}
+    - {{ toYaml $val | nindent 6 }}
+  {{ end -}}
   selector:
     app: {{ .Release.Name }}
   type: ClusterIP
