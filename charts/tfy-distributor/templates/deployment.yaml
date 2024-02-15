@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-distributor
 spec:
-  replicas: {{ .Values.distributor.replicaCount | default 1 }}
+  replicas: {{ .Values.distributor.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -14,17 +14,27 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      tolerations:
+      {{- range .Values.distributor.tolerations }}
+        - {{ . | toYaml | nindent 10 | trim }}
+      {{- else }}
+        []
+      {{- end }}
+      {{- with .Values.distributor.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Release.Name }}
           image: {{ .Values.distributor.image }}
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: {{ (index .Values.distributor.ports 0).port }}
+            - containerPort: {{ .Values.distributor.port }}
           env:
             - name: NATS_AUTH_CONFIG
               value: '{"user": "{{ (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ (index .Values.nats.config.merge.authorization.users 0).password }}"}'
             - name: NATS_CONNECTION_CONFIG
-              value: '{"servers": "ws://{{ .Release.Name }}-nats:8080", "pingInterval": 5000, "maxPingOut": 3}'
+              value: '{"servers": "ws://{{ .Release.Name }}-nats:{{ .Values.nats.config.websocket.port }}", "pingInterval": 5000, "maxPingOut": 3}'
             - name: SERVICE_STREAM_REPLICAS
               value: {{ .Values.distributor.serviceStreamReplicas | quote }}
           resources:

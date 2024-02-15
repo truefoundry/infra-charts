@@ -5,6 +5,17 @@ global:
 
 ## Distributor configs
 distributor:
+  replicas: 1
+  tolerations:
+    - effect: NoSchedule
+      key: cloud.google.com/gke-spot
+      operator: Equal
+      value: 'true'
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: 'spot'
+  affinity: {}
   resources:
     limits:
       ## @param distributor.resources.limits.cpu The maximum amount of CPU the service can use
@@ -18,33 +29,24 @@ distributor:
       memory: 150M
 
   ## @param distributor.serviceStreamReplicas Number Number of replicas for the service stream
-  serviceStreamReplicas: 2
+  serviceStreamReplicas: 3
 
-  # Base URL for the distributor service
-  ## @param distributor.host The host URL for the distributor service
-  host: <host-placeholder>
-  ## @param distributor.path The path for the distributor service API
-  path: /
+  ingress:
+    enabled: false
+    ## @param distributor.ingress.host The host URL for the distributor service
+    host: ""
+    ## @param distributor.ingress.path The path for the distributor service API
+    path: ""
 
   ## @param distributor.image the docker image for the distributor service
   image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
-  ## @param distributor.ports[0].name name of the port
-  ports:
-    - name: port-3000
-      ## @param distributor.ports[0].port port number for the service
-      port: 3000
-      ## @param distributor.ports[0].protocol the protocol used by the port
-      protocol: TCP
-      ## @param distributor.ports[0].targetPort number The container port to which traffic is directed
-      targetPort: 3000
+  ## @param distributor.port number of the port
+  port: 3000
 
 ## Nats configs
 nats:
-  ## @param nats.host The host URL for NATS
+  ## @param nats.host The host used to connect to nats server websocket
   host: <host-placeholder>
-  ## @param nats.path The path for NATS access
-  path: /
-
   config:
     nats:
       ## @param nats.config.nats.port Number The port on which the NATS server is running
@@ -54,8 +56,8 @@ nats:
       authorization:
         ## @param nats.config.merge.authorization.users [array] user config NATS authentication
         users:
-          - user: <user>
-            password: <your-secure-password>
+          - user: adminx
+            password: e0738f0cx
             permissions:
               publish:
                 - ">"
@@ -70,7 +72,7 @@ nats:
       ## @param nats.config.cluster.enabled Enabled Whether NATS clustering is enabled
       enabled: true
       ## @param nats.config.cluster.replicas Number Number of replicas in the NATS cluster
-      replicas: 2
+      replicas: 3
 
     monitor:
       tls:
@@ -141,6 +143,16 @@ nats:
 
   podTemplate:
     merge:
+      spec:
+        tolerations:
+          - effect: NoSchedule
+            key: cloud.google.com/gke-spot
+            operator: Equal
+            value: 'true'
+          - effect: NoSchedule
+            key: kubernetes.azure.com/scalesetpriority
+            operator: Equal
+            value: 'spot' 
       metadata:
         annotations:
           ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/port The port for Prometheus to scrape NATS metrics
