@@ -8,12 +8,7 @@ spec:
   hosts:
     - {{ .Values.nats.host }}
   http:
-    - {{- if .Values.nats.path }}
-      match:
-        - uri:
-            prefix: {{ .Values.nats.path }}
-      {{- end }}
-      route:
+    - route:
         - destination:
             host: {{ .Release.Name }}-nats
             port:

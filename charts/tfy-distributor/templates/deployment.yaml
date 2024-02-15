@@ -32,7 +32,7 @@ spec:
             - containerPort: {{ .Values.distributor.port }}
           env:
             - name: NATS_AUTH_CONFIG
-              value: '{"user": "{{ (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ (index .Values.nats.config.merge.authorization.users 0).password }}"}'
+              value: '{"user": "{{ required "password not provided at nats.config.merge.authorization.users[0]" (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ required "password not provided at nats.config.merge.authorization.users[0]" (index .Values.nats.config.merge.authorization.users 0).password }}"}'
             - name: NATS_CONNECTION_CONFIG
               value: '{"servers": "ws://{{ .Release.Name }}-nats:{{ .Values.nats.config.websocket.port }}", "pingInterval": 5000, "maxPingOut": 3}'
             - name: SERVICE_STREAM_REPLICAS
