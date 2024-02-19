@@ -102,9 +102,7 @@ sdsServer:
     - "8000"
     - "--file"
     - /secrets/secrets.yaml
-  ## @param sdsServer.readinessProbe Readiness probe for the sds-server application
   readinessProbe:
-    ## @param sdsServer.readinessProbe.tcpSocket TCP socket for the sds-server application
     tcpSocket:
       ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
       port: 8000
@@ -112,9 +110,7 @@ sdsServer:
     initialDelaySeconds: 15
     ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
     periodSeconds: 10
-  ## @param sdsServer.livenessProbe Liveness probe configuration for the sds-server application
   livenessProbe:
-    ## @param sdsServer.livenessProbe.tcpSocket TCP socket configuration for the sds-server liveness probe
     tcpSocket:
       ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
       port: 8000
@@ -122,11 +118,9 @@ sdsServer:
     initialDelaySeconds: 15
     ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
     periodSeconds: 10
-  ## @param sdsServer.deploymentStrategy Deployment strategy for rolling updates
   deploymentStrategy:
     ## @param sdsServer.deploymentStrategy.type Type of deployment strategy
     type: RollingUpdate
-    ## @param sdsServer.deploymentStrategy.rollingUpdate Rolling update configuration
     rollingUpdate:
       ## @param sdsServer.deploymentStrategy.rollingUpdate.maxSurge Max pods above desired number
       maxSurge: 1
