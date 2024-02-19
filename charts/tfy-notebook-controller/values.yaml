@@ -102,20 +102,35 @@ sdsServer:
     - "8000"
     - "--file"
     - /secrets/secrets.yaml
+  ## @param sdsServer.readinessProbe Readiness probe for the sds-server application
   readinessProbe:
+    ## @param sdsServer.tcpSocket TCP socket for the sds-server application
     tcpSocket:
+      ## @param sdsServer.tcpSocket.port Port for TCP socket used in readiness probe
       port: 8000
+    ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
     initialDelaySeconds: 15
+    ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
     periodSeconds: 10
+  ## @param sdsServer.livenessProbe Liveness probe configuration for the sds-server application
   livenessProbe:
+    ## @param sdsServer.tcpSocket TCP socket configuration for the sds-server liveness probe
     tcpSocket:
+      ## @param sdsServer.tcpSocket.port Port for TCP socket used in liveness probe
       port: 8000
+    ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
     initialDelaySeconds: 15
+    ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
     periodSeconds: 10
+  ## @param deploymentStrategy Deployment strategy for rolling updates
   deploymentStrategy:
+    ## @param deploymentStrategy.type Type of deployment strategy
     type: RollingUpdate
+    ## @param deploymentStrategy.rollingUpdate Rolling update configuration
     rollingUpdate:
+      ## @param deploymentStrategy.rollingUpdate.maxSurge Max pods above desired number
       maxSurge: 1
+      ## @param deploymentStrategy.rollingUpdate.maxUnavailable Max pods unavailable during update
       maxUnavailable: 1
   ## @param sdsServer.ports[0].containerPort The port on which the container is listening.
   ports:
