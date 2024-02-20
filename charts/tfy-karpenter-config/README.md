@@ -66,14 +66,6 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-mkdir -p /etc/soci-snapshotter-grpc
-
-cat > /etc/soci-snapshotter-grpc/config.toml << EOF
-[http]
-MinWaitMsec=15
-MaxRetries=2
-EOF
-
 systemctl daemon-reload
 systemctl enable --now soci-snapshotter
 systemctl status soci-snapshotter
