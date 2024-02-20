@@ -20,19 +20,21 @@ The script in `userData` does the following,
 set -ex
 
 version_lte() {
-  printf '%s\n' "$1" "$2" | sort -C -V
+printf '%s\n' "$1" "$2" | sort -C -V
 }
 
 version_lt() {
-  ! version_lte "$2" "$1"
+! version_lte "$2" "$1"
 }
-
 CONTAINERD_VERSION_OUTPUT="$(containerd --version)"
 IFS=" " read -a  CONTAINERD_VERSION_STRING <<< "${CONTAINERD_VERSION_OUTPUT}"
 CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
 echo containerd version "${CONTAINERD_VERSION}"
 
 setup_soci() {( set -ex
+
+SOCI_RELEASE_VERSION="0.5.0"
+
 yum install fuse -y
 modprobe fuse
 
@@ -41,11 +43,11 @@ curl \
 --show-error \
 --retry 10 \
 --retry-delay 1 \
--L https://github.com/awslabs/soci-snapshotter/releases/download/v0.4.0/soci-snapshotter-0.4.0-linux-amd64.tar.gz \
--o soci-snapshotter-0.4.0-linux-amd64.tar.gz
+-L https://github.com/awslabs/soci-snapshotter/releases/download/v$SOCI_RELEASE_VERSION/soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz \
+-o soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz
 
-tar -C /usr/local/bin -xvf soci-snapshotter-0.4.0-linux-amd64.tar.gz soci soci-snapshotter-grpc
-rm soci-snapshotter-0.4.0-linux-amd64.tar.gz
+tar -C /usr/local/bin -xvf soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz ./soci ./soci-snapshotter-grpc
+rm soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz
 
 cat > /etc/systemd/system/soci-snapshotter.service << EOF
 [Unit]
@@ -122,7 +124,7 @@ EOF
 if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
 setup_soci
 else
-  echo "CONTAINERD_VERSION is empty or not within the specified range."
+echo "CONTAINERD_VERSION is empty or not within the specified range."
 fi
 ```
 
@@ -150,6 +152,9 @@ CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
 echo containerd version "${CONTAINERD_VERSION}"
 
 setup_soci() {( set -ex
+
+SOCI_RELEASE_VERSION="0.5.0"
+
 yum install fuse -y
 modprobe fuse
 
@@ -158,11 +163,11 @@ curl \
 --show-error \
 --retry 10 \
 --retry-delay 1 \
--L https://github.com/awslabs/soci-snapshotter/releases/download/v0.4.0/soci-snapshotter-0.4.0-linux-amd64.tar.gz \
--o soci-snapshotter-0.4.0-linux-amd64.tar.gz
+-L https://github.com/awslabs/soci-snapshotter/releases/download/v$SOCI_RELEASE_VERSION/soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz \
+-o soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz
 
-tar -C /usr/local/bin -xvf soci-snapshotter-0.4.0-linux-amd64.tar.gz soci soci-snapshotter-grpc
-rm soci-snapshotter-0.4.0-linux-amd64.tar.gz
+tar -C /usr/local/bin -xvf soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz ./soci ./soci-snapshotter-grpc
+rm soci-snapshotter-$SOCI_RELEASE_VERSION-linux-amd64.tar.gz
 
 cat > /etc/systemd/system/soci-snapshotter.service << EOF
 [Unit]
@@ -251,6 +256,36 @@ else
   echo "CONTAINERD_VERSION is empty or not within the specified range."
 fi
 ```
+
+### Debugging
+
+https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25ef9b5c75f/docs/debug.md
+
+1. Shell into the Node.
+2. To identify whether the snapshotter is being used, we can use the command below.
+   ```
+   mount | grep fuse
+   ```
+
+   We should see mounts like,
+   ```
+   fusectl on /sys/fs/fuse/connections type fusectl (rw,relatime)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/63/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/67/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/72/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/75/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/81/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/84/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   soci on /var/lib/soci-snapshotter-grpc/snapshotter/snapshots/87/fs type fuse.rawBridge (rw,nodev,relatime,user_id=0,group_id=0,allow_other,max_read=131072)
+   ```
+
+   If you do not see any fuse mounts, that means the snapshotter may not be running or no container image has soci index.
+
+3. Use the commands below to check the status of the snapshotter service and logs.
+   ```
+   systemctl status soci-snapshotter
+   journalctl -u soci-snapshotter -e
+   ```
 
 ## Parameters
 
