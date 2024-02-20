@@ -1,0 +1,22 @@
+{{- if .Values.distributor.ingress.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Release.Name }}-distributor
+spec:
+  gateways:
+    - {{ .Values.global.gateway }}
+  hosts:
+    - {{ .Values.distributor.ingress.host }}
+  http:
+    - {{ if .Values.distributor.ingress.path -}}
+      match:
+        - uri:
+            prefix: {{ .Values.distributor.ingress.path }}
+      {{ end -}}
+      route:
+        - destination:
+            host: {{ .Release.Name }}-distributor
+            port:
+              number: {{ .Values.distributor.port }}
+{{- end }}

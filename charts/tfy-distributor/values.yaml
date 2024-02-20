@@ -1,0 +1,185 @@
+## Global configs
+global:
+  ## @param global.gateway the gateway URL for the application
+  gateway: <gateway-placeholder>
+
+## Distributor configs
+distributor:
+  ## @param distributor.replicas number of replicas of distributor service
+  replicas: 1
+  ## @param distributor.tolerations [array] Spot tolerations for the distributor service
+  tolerations:
+    - effect: NoSchedule
+      key: cloud.google.com/gke-spot
+      operator: Equal
+      value: 'true'
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: 'spot'
+  ## @param distributor.affinity [object] Node affinity for distributor service
+  affinity: {}
+  resources:
+    limits:
+      ## @param distributor.resources.limits.cpu The maximum amount of CPU the service can use
+      cpu: 0.1
+      ## @param distributor.resources.limits.memory The maximum amount of memory the service can use
+      memory: 150M
+    requests:
+      ## @param distributor.resources.requests.cpu The amount of CPU the service requests
+      cpu: 0.1
+      ## @param distributor.resources.requests.memory The amount of memory the service requests
+      memory: 150M
+
+  ## @param distributor.serviceStreamReplicas Number Number of replicas for the service stream
+  serviceStreamReplicas: 3
+
+  ingress:
+    ## @param distributor.ingress.enabled Enable ingress
+    enabled: false
+    ## @param distributor.ingress.host The host URL for the distributor service
+    host: ""
+    ## @param distributor.ingress.path The path for the distributor service API
+    path: ""
+
+  ## @param distributor.image the docker image for the distributor service
+  image: public.ecr.aws/truefoundrycloud/async-service-distributor:5d48113bc678d694a0c8f8dabb2207c5aa2cfc53
+  ## @param distributor.port number of the port
+  port: 3000
+
+## Nats configs
+nats:
+  ## @param nats.host [nullable] The host used to connect to nats server websocket
+  host: null
+  config:
+    nats:
+      ## @param nats.config.nats.port Number The port on which the NATS server is running
+      port: 4222
+
+    merge:
+      authorization:
+        ## @param nats.config.merge.authorization.users [array] user config NATS authentication
+        users:
+          - user: <placeholder>
+            password: <placeholder>
+            permissions:
+              publish:
+                - ">"
+              subscribe:
+                - ">"
+        ## @param nats.config.merge.authorization.timeout Number Timeout for NATS authorization in seconds
+        timeout: 5
+
+    cluster:
+      ## @param nats.config.cluster.port Number Port for NATS cluster communication
+      port: 6222
+      ## @param nats.config.cluster.enabled Enabled Whether NATS clustering is enabled
+      enabled: true
+      ## @param nats.config.cluster.replicas Number Number of replicas in the NATS cluster
+      replicas: 3
+
+    monitor:
+      tls:
+        ## @param nats.config.monitor.tls.enabled Enabled Whether TLS is enabled for NATS monitoring
+        enabled: false
+      ## @param nats.config.monitor.port Number Port for NATS monitoring
+      port: 8222
+      ## @param nats.config.monitor.enabled Enabled Whether NATS monitoring is enabled
+      enabled: true
+
+    jetstream:
+      ## @param nats.config.jetstream.enabled Enabled Whether NATS Jetstream is enabled
+      enabled: true
+      fileStore:
+        ## @param nats.config.jetstream.fileStore.dir Directory for Jetstream file storage
+        dir: /data
+        pvc:
+          ## @param nats.config.jetstream.fileStore.pvc.size PVC size for Jetstream file storage
+          size: 2Gi
+          ## @param nats.config.jetstream.fileStore.pvc.enabled filestore pvc enabled
+          enabled: true
+          ## @param nats.config.jetstream.fileStore.pvc.storageClassName [nullable] storage class for PVC of Jetstream file storage
+          storageClassName:
+        ## @param nats.config.jetstream.fileStore.enabled Enabled Whether file storage is enabled for Jetstream
+        enabled: true
+      memoryStore:
+        ## @param nats.config.jetstream.memoryStore.enabled Enabled Whether memory storage is enabled for Jetstream
+        enabled: true
+        ## @param nats.config.jetstream.memoryStore.maxSize Maximum size for Jetstream memory storage
+        maxSize: 250Mi
+
+    websocket:
+      ## @param nats.config.websocket.port Number Port for NATS websocket
+      port: 8080
+      ## @param nats.config.websocket.enabled Enabled Whether websocket support is enabled for NATS
+      enabled: true
+
+  natsBox:
+    ## @param nats.natsBox.enabled Enabled Whether NATS Box is enabled
+    enabled: false
+
+  service:
+    ports:
+      monitor:
+        ## @param nats.service.ports.monitor.enabled Enabled Whether the monitoring port is enabled for NATS service
+        enabled: true
+
+  container:
+    image:
+      ## @param nats.container.image.tag The tag of the NATS docker image
+      tag: 2.10.7-alpine
+      ## @param nats.container.image.pullPolicy Pull policy for the NATS docker image
+      pullPolicy: IfNotPresent
+      ## @param nats.container.image.repository Repository for the NATS docker image
+      repository: nats
+    merge:
+      resources:
+        limits:
+          ## @param nats.container.merge.resources.limits.cpu The maximum amount of CPU the NATS container can use
+          cpu: 100m
+          ## @param nats.container.merge.resources.limits.memory The maximum amount of memory the NATS container can use
+          memory: 250Mi
+        requests:
+          ## @param nats.container.merge.resources.requests.cpu The amount of CPU the NATS container requests
+          cpu: 100m
+          ## @param nats.container.merge.resources.requests.memory The amount of memory the NATS container requests
+          memory: 250Mi
+
+  podTemplate:
+    merge:
+      spec:
+        ## @param nats.podTemplate.merge.spec.tolerations [array] Spot tolerations for the nats pods
+        tolerations:
+          - effect: NoSchedule
+            key: cloud.google.com/gke-spot
+            operator: Equal
+            value: 'true'
+          - effect: NoSchedule
+            key: kubernetes.azure.com/scalesetpriority
+            operator: Equal
+            value: 'spot' 
+      metadata:
+        annotations:
+          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/port The port for Prometheus to scrape NATS metrics
+          prometheus.io/port: "7777"
+          ## @param nats.podTemplate.merge.metadata.annotations.prometheus.io/scrape Enabled Whether Prometheus scraping is enabled for the NATS pod
+          prometheus.io/scrape: "true"
+    topologySpreadConstraints:
+      kubernetes.io/hostname:
+        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.maxSkew Number Maximum skew for pod distribution
+        maxSkew: 1
+        ## @param nats.podTemplate.topologySpreadConstraints.kubernetes.io/hostname.whenUnsatisfiable Action when pod distribution constraints are unsatisfiable
+        whenUnsatisfiable: DoNotSchedule
+
+  promExporter:
+    ## @param nats.promExporter.port Number Port for the NATS Prometheus exporter
+    port: 7777
+    image:
+      ## @param nats.promExporter.image.tag The tag of the Prometheus NATS exporter docker image
+      tag: 0.13.0
+      ## @param nats.promExporter.image.pullPolicy Pull policy for the Prometheus NATS exporter docker image
+      pullPolicy: IfNotPresent
+      ## @param nats.promExporter.image.repository Repository for the Prometheus NATS exporter docker image
+      repository: natsio/prometheus-nats-exporter
+    ## @param nats.promExporter.enabled Enabled Whether the Prometheus exporter is enabled for NATS
+    enabled: true

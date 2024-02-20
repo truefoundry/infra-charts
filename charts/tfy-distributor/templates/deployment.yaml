@@ -1,0 +1,41 @@
+# deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-distributor
+spec:
+  replicas: {{ .Values.distributor.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-distributor
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-distributor
+    spec:
+      tolerations:
+      {{- range .Values.distributor.tolerations }}
+        - {{ . | toYaml | nindent 10 | trim }}
+      {{- else }}
+        []
+      {{- end }}
+      {{- with .Values.distributor.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-distributor
+          image: {{ .Values.distributor.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.distributor.port }}
+          env:
+            - name: NATS_AUTH_CONFIG
+              value: '{"user": "{{ required "password not provided at nats.config.merge.authorization.users[0]" (index .Values.nats.config.merge.authorization.users 0).user }}", "password": "{{ required "password not provided at nats.config.merge.authorization.users[0]" (index .Values.nats.config.merge.authorization.users 0).password }}"}'
+            - name: NATS_CONNECTION_CONFIG
+              value: '{"servers": "ws://{{ .Release.Name }}-nats:{{ .Values.nats.config.websocket.port }}", "pingInterval": 5000, "maxPingOut": 3}'
+            - name: SERVICE_STREAM_REPLICAS
+              value: {{ .Values.distributor.serviceStreamReplicas | quote }}
+          resources:
+            {{- toYaml .Values.distributor.resources | nindent 12 }}
