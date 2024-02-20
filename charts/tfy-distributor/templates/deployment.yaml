@@ -8,11 +8,11 @@ spec:
   replicas: {{ .Values.distributor.replicas | default 1 }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      app: {{ .Release.Name }}-distributor
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        app: {{ .Release.Name }}-distributor
     spec:
       tolerations:
       {{- range .Values.distributor.tolerations }}
@@ -25,7 +25,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: {{ .Release.Name }}
+        - name: {{ .Release.Name }}-distributor
           image: {{ .Values.distributor.image }}
           imagePullPolicy: IfNotPresent
           ports:

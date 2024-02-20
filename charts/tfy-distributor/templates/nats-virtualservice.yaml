@@ -1,3 +1,4 @@
+{{- if .Values.nats.host }}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
@@ -13,3 +14,4 @@ spec:
             host: {{ .Release.Name }}-nats
             port:
               number: {{ .Values.nats.config.websocket.port }}
+{{- end }}
