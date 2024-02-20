@@ -70,7 +70,7 @@ mkdir -p /etc/soci-snapshotter-grpc
 
 cat > /etc/soci-snapshotter-grpc/config.toml << EOF
 [http]
-MinWaitMsec=10
+MinWaitMsec=15
 MaxRetries=2
 EOF
 
