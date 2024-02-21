@@ -20,11 +20,11 @@ The script in `userData` does the following,
 set -ex
 
 version_lte() {
-printf '%s\n' "$1" "$2" | sort -C -V
+  printf '%s\n' "$1" "$2" | sort -C -V
 }
 
 version_lt() {
-! version_lte "$2" "$1"
+  ! version_lte "$2" "$1"
 }
 CONTAINERD_VERSION_OUTPUT="$(containerd --version)"
 IFS=" " read -a  CONTAINERD_VERSION_STRING <<< "${CONTAINERD_VERSION_OUTPUT}"
@@ -64,6 +64,22 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
+EOF
+
+KUBELET_CONFIG_PATH=/etc/kubernetes/kubelet/kubelet-config.json
+
+if [ -f "$KUBELET_CONFIG_PATH" ]; then
+  cat $KUBELET_CONFIG_PATH | jq '. |= if has("imageServiceEndpoint") then . else .imageServiceEndpoint = "unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock" end' > $KUBELET_CONFIG_PATH.tmp && mv -f $KUBELET_CONFIG_PATH.tmp $KUBELET_CONFIG_PATH
+else
+  echo Kubelet Config not found at $KUBELET_CONFIG_PATH. SOCI will not work for private image.
+fi
+
+mkdir -p /etc/soci-snapshotter-grpc
+
+cat > /etc/soci-snapshotter-grpc/config.toml << EOF
+[cri_keychain]
+enable_keychain=true
+image_service_path="/run/containerd/containerd.sock"
 EOF
 
 systemctl daemon-reload
@@ -116,7 +132,7 @@ EOF
 if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
 setup_soci
 else
-echo "CONTAINERD_VERSION is empty or not within the specified range."
+  echo "CONTAINERD_VERSION is empty or not within the specified range."
 fi
 ```
 
