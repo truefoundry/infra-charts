@@ -194,12 +194,20 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+KUBELET_CONFIG_PATH=/etc/kubernetes/kubelet/kubelet-config.json
+
+if [ -f "$KUBELET_CONFIG_PATH" ]; then
+  cat $KUBELET_CONFIG_PATH | jq '.imageServiceEndpoint = "unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"' > $KUBELET_CONFIG_PATH.tmp && mv -f $KUBELET_CONFIG_PATH.tmp $KUBELET_CONFIG_PATH
+else
+  echo Kubelet Config not found at $KUBELET_CONFIG_PATH. SOCI will not work for private image.
+fi
+
 mkdir -p /etc/soci-snapshotter-grpc
 
 cat > /etc/soci-snapshotter-grpc/config.toml << EOF
-[http]
-MinWaitMsec=15
-MaxRetries=2
+[cri_keychain]
+enable_keychain=true
+image_service_path="/run/containerd/containerd.sock"
 EOF
 
 systemctl daemon-reload
