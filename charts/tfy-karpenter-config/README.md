@@ -69,7 +69,7 @@ EOF
 KUBELET_CONFIG_PATH=/etc/kubernetes/kubelet/kubelet-config.json
 
 if [ -f "$KUBELET_CONFIG_PATH" ]; then
-  cat $KUBELET_CONFIG_PATH | jq '. |= if has("imageServiceEndpoint") then . else .imageServiceEndpoint = "unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock" end' > $KUBELET_CONFIG_PATH.tmp && mv -f $KUBELET_CONFIG_PATH.tmp $KUBELET_CONFIG_PATH
+  cat $KUBELET_CONFIG_PATH | jq '.imageServiceEndpoint = "unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"' > $KUBELET_CONFIG_PATH.tmp && mv -f $KUBELET_CONFIG_PATH.tmp $KUBELET_CONFIG_PATH
 else
   echo Kubelet Config not found at $KUBELET_CONFIG_PATH. SOCI will not work for private image.
 fi
