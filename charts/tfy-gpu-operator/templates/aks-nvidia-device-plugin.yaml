@@ -55,6 +55,10 @@ spec:
           env:
             - name: PASS_DEVICE_SPECS
               value: "true"
+            {{- range $val := .Values.azure-aks-device-plugin.extraEnvVars }}
+            - name: {{ $val.name }}
+              value: {{ $val.value }}
+            {{- end }}
           securityContext:
             privileged: true
           volumeMounts:
