@@ -17,6 +17,7 @@ clusterType:
   azureAks: false
   civoTalos: false
 
+
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
@@ -228,7 +229,7 @@ aws-eks-gpu-operator:
     
   ## DCGM Exporter configuration.
   dcgmExporter:
-    ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. This is turned off by default because of GSP issues with EKS AMI. If you are on tfy-karpenter-config 0.18+ then this is mostly safe to enable
     enabled: false
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
@@ -257,6 +258,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
 
+  ## MIG Manager configuration.
   migManager:
     ## @skip aws-eks-gpu-operator.migManager.enabled
     enabled: false
@@ -275,7 +277,6 @@ gcp-gke-standard-driver:
   latest:
     gkeAccelerators:
       - nvidia-l4
-
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
@@ -394,139 +395,173 @@ gcp-gke-standard-dcgm-exporter:
 ## @section azure-aks-gpu-operator Configuration for the Azure AKS GPU operator. This section will only be used when clusterType.azureAks is set to true.
 ##
 azure-aks-gpu-operator:
+  ## Node Feature Discovery enabled/disable configuration.
   nfd:
+    ## @param azure-aks-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
-
+  
+  ## GPU Feature Discovery configuration.
   gfd:
+    ## @param azure-aks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-
+  
+  ## Operator configuration.
   operator:
+    ## Resource configuration for operator requests and limits.
+    ## @param azure-aks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
+    ## @param azure-aks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
+    ## @param azure-aks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
+    ## @param azure-aks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
     resources:
-      limits:
-        cpu: 50m
-        memory: 300Mi
       requests:
         cpu: 10m
         memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+    ## @skip azure-aks-gpu-operator.operator.tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Equal
         value: ''
         effect: NoSchedule
-        operator: Equal
       - key: node-role.kubernetes.io/control-plane
+        operator: Equal
         value: ''
         effect: NoSchedule
-        operator: Equal
       - key: kubernetes.azure.com/scalesetpriority
+        operator: Equal
         value: spot
         effect: NoSchedule
-        operator: Equal
 
+  ## Node Feature Discovery configuration.
   node-feature-discovery:
-    gc:
-      enable: true
-      interval: 30m
-      resources:
-        requests:
-          cpu: 10m
-          memory: 100Mi
-      tolerations:
-        - key: nvidia.com/gpu
-          effect: NoSchedule
-          operator: Exists
-        - key: node-role.kubernetes.io/master
-          value: ''
-          effect: NoSchedule
-          operator: Equal
-        - key: node-role.kubernetes.io/control-plane
-          value: ''
-          effect: NoSchedule
-          operator: Equal
-        - key: kubernetes.azure.com/scalesetpriority
-          value: spot
-          effect: NoSchedule
-          operator: Equal
+    ## @param azure-aks-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
+    enableNodeFeatureApi: true
     master:
+      ## @param azure-aks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
       resources:
         requests:
           cpu: 10m
           memory: 200Mi
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          value: ''
-          effect: NoSchedule
-          operator: Equal
-        - key: node-role.kubernetes.io/control-plane
-          value: ''
-          effect: NoSchedule
-          operator: Equal
-        - key: kubernetes.azure.com/scalesetpriority
-          value: spot
-          effect: NoSchedule
-          operator: Equal
     worker:
+      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
+        ## @skip azure-aks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
                   - key: kubernetes.azure.com/accelerator
+                    operator: In
                     values:
                       - nvidia
-                    operator: In
+      ## @skip azure-aks-gpu-operator.node-feature-discovery.worker.tolerations
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        - key: sku
+          operator: Equal
+          value: gpu
+          effect: NoSchedule
+        - key: kubernetes.azure.com/scalesetpriority
+          operator: Equal
+          value: spot
+          effect: NoSchedule
+    gc:
+      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
+      enable: true
+      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
+      interval: 30m
+      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
       resources:
-        limits:
-          cpu: 50m
-          memory: 300Mi
         requests:
           cpu: 10m
           memory: 100Mi
+      affinity:
+        ## @skip azure-aks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.azure.com/accelerator
+                    operator: NotIn
+                    values:
+                      - nvidia
+      ## @skip azure-aks-gpu-operator.node-feature-discovery.gc.tolerations
       tolerations:
         - key: nvidia.com/gpu
-          effect: NoSchedule
           operator: Exists
-        - key: sku
-          value: gpu
           effect: NoSchedule
-          operator: Equal
         - key: kubernetes.azure.com/scalesetpriority
+          operator: Equal
           value: spot
           effect: NoSchedule
-          operator: Equal
-    enableNodeFeatureApi: true
 
+  ## Daemonsets configuration
   daemonsets:
+    ## @param azure-aks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
+    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
+    # The downside being Daemonset will not be updated until it is manually deleted,
+    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
+    # If needed, older nodes can be drained to force a newer versions on a newer nodes
+    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
+    # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
+    updateStrategy: OnDelete
+    ## @param azure-aks-gpu-operator.daemonsets.priorityClassName Priority class for Daemonsets
+    priorityClassName: system-node-critical
+    ## @skip azure-aks-gpu-operator.daemonsets.tolerations
     tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       - key: nvidia.com/gpu
-        effect: NoSchedule
         operator: Exists
+        effect: NoSchedule
       - key: sku
+        operator: Equal
         value: gpu
         effect: NoSchedule
-        operator: Equal
       - key: kubernetes.azure.com/scalesetpriority
+        operator: Equal
         value: spot
         effect: NoSchedule
-        operator: Equal
-    updateStrategy: OnDelete
-    priorityClassName: system-node-critical
 
+  ## Driver configuration
   driver:
+    ## @param azure-aks-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: false
 
+  ## Toolkit configuration.
   toolkit:
+    ## @param azure-aks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
+    ## @param azure-aks-gpu-operator.toolkit.version Version of the toolkit. Note for Aure Linux change `-ubuntu20.04` to `-centos7`. However at the time of writing Azure Linux only supports V100 and T4 GPUs
     version: v1.14.5-ubuntu20.04
+    ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
         value: 'false'
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
         value: 'true'
 
+  ## Device Plugin configuration.
   devicePlugin:
+    ## @param azure-aks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @skip azure-aks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
         value: 'true'
@@ -535,46 +570,57 @@ azure-aks-gpu-operator:
       - name: DEVICE_ID_STRATEGY
         value: index
 
+  ## DCGM configuration
   dcgm:
+    ## @param azure-aks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
+    ## @param azure-aks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
+    ## @param azure-aks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
+    ## @param azure-aks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
+    ## @param azure-aks-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
     resources:
-      limits:
-        cpu: 50m
-        memory: 400Mi
       requests:
         cpu: 10m
         memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 400Mi
 
+  ## DCGM Exporter configuration.
   dcgmExporter:
+    ## @param azure-aks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
+    ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+    serviceMonitor:
+      enabled: false
+    ## @skip azure-aks-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
         value: uid
       - name: DCGM_EXPORTER_LISTEN
-        value: ':9400'
+        value: :9400
       - name: DCGM_EXPORTER_KUBERNETES
-        value: 'true'
+        value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    args:
-      - '-c'
-      - '5000'
+    ## @param azure-aks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+    ## @param azure-aks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+    ## @param azure-aks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+    ## @param azure-aks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
     resources:
-      limits:
-        cpu: 50m
-        memory: 400Mi
       requests:
         cpu: 10m
         memory: 100Mi
-    serviceMonitor:
-      enabled: false
+      limits:
+        cpu: 50m
+        memory: 400Mi
+    ## @param azure-aks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
+    args: ["-c", "5000"]
 
+  ## MIG Manager configuration.
   migManager:
+    ## @skip azure-aks-gpu-operator.migManager.enabled
     enabled: false
-    env:
-      - name: WITH_REBOOT
-        value: 'true'
-
 
 ## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
 ##
@@ -761,6 +807,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
 
+  ## MIG Manager configuration.
   migManager:
     ## @skip civo-talos-gpu-operator.migManager.enabled
     enabled: false
