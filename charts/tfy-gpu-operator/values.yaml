@@ -276,6 +276,7 @@ gcp-gke-standard-driver:
     gkeAccelerators:
       - nvidia-l4
 
+
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
 gcp-gke-standard-dcgm-exporter:
@@ -390,118 +391,189 @@ gcp-gke-standard-dcgm-exporter:
       mountPath: /etc/nvidia
 
 
-## @section azure-aks-dcgm-exporter Configuration for the Azure AKS DCGM Exporter. This section will only be used when clusterType.azureAks is set to true.
+## @section azure-aks-gpu-operator Configuration for the Azure AKS GPU operator. This section will only be used when clusterType.azureAks is set to true.
 ##
-azure-aks-dcgm-exporter:
-  ## Docker image tag for the DCGM Exporter.
-  ##
-  ## @param azure-aks-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
-  ##
-  image:
-    tag: 3.1.7-3.1.4-ubuntu20.04
-  ## Arguments to pass to the DCGM Exporter.
-  ##
-  ## @param azure-aks-dcgm-exporter.arguments Arguments for the DCGM Exporter.
-  ##
-  arguments:
-    ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv"]
-  ## Resource configuration for DCGM Exporter requests and limits.
-  ##
-  ## @param azure-aks-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
-  ## @param azure-aks-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
-  ## @param azure-aks-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-  ## @param azure-aks-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
-  ##
-  resources:
-    requests:
-      cpu: 10m
-      memory: 300Mi
-    limits:
-      cpu: 50m
-      memory: 400Mi
-  ## Namespace override for the DCGM Exporter.
-  ##
-  ## @param azure-aks-dcgm-exporter.namespaceOverride Namespace override for the DCGM Exporter.
-  ##
-  namespaceOverride: tfy-gpu-operator
-  ## ServiceMonitor configuration for Prometheus monitoring.
-  ##
-  ## @param azure-aks-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-  ##
-  serviceMonitor:
+azure-aks-gpu-operator:
+  nfd:
+    enabled: true
+
+  gfd:
+    enabled: true
+
+  operator:
+    resources:
+      limits:
+        cpu: 50m
+        memory: 300Mi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        value: ''
+        effect: NoSchedule
+        operator: Equal
+      - key: node-role.kubernetes.io/control-plane
+        value: ''
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.azure.com/scalesetpriority
+        value: spot
+        effect: NoSchedule
+        operator: Equal
+
+  node-feature-discovery:
+    gc:
+      enable: true
+      interval: 30m
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+      tolerations:
+        - key: nvidia.com/gpu
+          effect: NoSchedule
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          value: ''
+          effect: NoSchedule
+          operator: Equal
+        - key: node-role.kubernetes.io/control-plane
+          value: ''
+          effect: NoSchedule
+          operator: Equal
+        - key: kubernetes.azure.com/scalesetpriority
+          value: spot
+          effect: NoSchedule
+          operator: Equal
+    master:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 200Mi
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          value: ''
+          effect: NoSchedule
+          operator: Equal
+        - key: node-role.kubernetes.io/control-plane
+          value: ''
+          effect: NoSchedule
+          operator: Equal
+        - key: kubernetes.azure.com/scalesetpriority
+          value: spot
+          effect: NoSchedule
+          operator: Equal
+    worker:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.azure.com/accelerator
+                    values:
+                      - nvidia
+                    operator: In
+      resources:
+        limits:
+          cpu: 50m
+          memory: 300Mi
+        requests:
+          cpu: 10m
+          memory: 100Mi
+      tolerations:
+        - key: nvidia.com/gpu
+          effect: NoSchedule
+          operator: Exists
+        - key: sku
+          value: gpu
+          effect: NoSchedule
+          operator: Equal
+        - key: kubernetes.azure.com/scalesetpriority
+          value: spot
+          effect: NoSchedule
+          operator: Equal
+    enableNodeFeatureApi: true
+
+  daemonsets:
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: nvidia.com/gpu
+        effect: NoSchedule
+        operator: Exists
+      - key: sku
+        value: gpu
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.azure.com/scalesetpriority
+        value: spot
+        effect: NoSchedule
+        operator: Equal
+    updateStrategy: OnDelete
+    priorityClassName: system-node-critical
+
+  driver:
     enabled: false
-  ## Node affinity configuration for worker nodes with NVIDIA accelerators.
-  ##
-  affinity:
-    ## @skip azure-aks-dcgm-exporter.affinity.nodeAffinity
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: kubernetes.azure.com/accelerator
-                operator: In
-                values:
-                  - nvidia
-  ## Toleration configuration for worker nodes.
-  ##
-  tolerations:
-    ## @skip azure-aks-dcgm-exporter.tolerations[0]
-    - operator: "Exists"
-  ## Enable mapping of pod metrics.
-  ##
-  ## @param azure-aks-dcgm-exporter.mapPodsMetrics Enable or disable mapping of pod metrics.
-  ##
-  mapPodsMetrics: true
-  ## Security context configuration.
-  ##
-  ## @param azure-aks-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
-  ##
-  securityContext:
-    privileged: true
-  ## Priority class name for the DCGM Exporter.
-  ##
-  ## @param azure-aks-dcgm-exporter.priorityClassName Priority class name for the DCGM Exporter.
-  ##
-  priorityClassName: ""
-  ## Additional environment variables for the DCGM Exporter.
-  ##
-  extraEnv:
-    ## @param azure-aks-dcgm-exporter.extraEnv[0].name Name for the additional environment variables for the DCGM Exporter.
-    ## @param azure-aks-dcgm-exporter.extraEnv[0].value Value for the additional environment variables for the DCGM Exporter.
-    - name: NVIDIA_INSTALL_DIR_HOST
-      value: /home/kubernetes/bin/nvidia
-    ## @skip azure-aks-dcgm-exporter.extraEnv[1]
-    - name: NVIDIA_INSTALL_DIR_CONTAINER
-      value: /usr/local/nvidia
-    ## @skip azure-aks-dcgm-exporter.extraEnv[2]
-    - name: DCGM_EXPORTER_COLLECTORS
-      value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
-  ## Additional host volumes for the DCGM Exporter.
-  ##
-  extraHostVolumes:
-    ## @param azure-aks-dcgm-exporter.extraHostVolumes[0].name Name for the additional host volumes for the DCGM Exporter.
-    ## @param azure-aks-dcgm-exporter.extraHostVolumes[0].hostPath Host Path for the additional host volumes for the DCGM Exporter.
-    - name: dev
-      hostPath: "/dev"
-    ## @skip azure-aks-dcgm-exporter.extraHostVolumes[1]
-    - name: nvidia-install-dir-host
-      hostPath: "/home/kubernetes/bin/nvidia"
-    ## @skip azure-aks-dcgm-exporter.extraHostVolumes[2]
-    - name: nvidia-config
-      hostPath: "/etc/nvidia"
-  ## Additional volume mounts for the DCGM Exporter.
-  ##
-  extraVolumeMounts:
-    ## @param azure-aks-dcgm-exporter.extraVolumeMounts[0].name Name for the additional volume mounts for the DCGM Exporter.
-    ## @param azure-aks-dcgm-exporter.extraVolumeMounts[0].mountPath Mount Path for the additional volume mounts for the DCGM Exporter.
-    - name: dev
-      mountPath: /dev
-    ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[1]
-    - name: nvidia-install-dir-host
-      mountPath: /usr/local/nvidia
-    ## @skip azure-aks-dcgm-exporter.extraVolumeMounts[2]
-    - name: nvidia-config
-      mountPath: /etc/nvidia
+
+  toolkit:
+    enabled: true
+    version: v1.14.5-ubuntu20.04
+    env:
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
+        value: 'false'
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
+        value: 'true'
+
+  devicePlugin:
+    enabled: true
+    env:
+      - name: PASS_DEVICE_SPECS
+        value: 'true'
+      - name: DEVICE_LIST_STRATEGY
+        value: volume-mounts
+      - name: DEVICE_ID_STRATEGY
+        value: index
+
+  dcgm:
+    enabled: false
+    resources:
+      limits:
+        cpu: 50m
+        memory: 400Mi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+
+  dcgmExporter:
+    enabled: true
+    env:
+      - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
+        value: uid
+      - name: DCGM_EXPORTER_LISTEN
+        value: ':9400'
+      - name: DCGM_EXPORTER_KUBERNETES
+        value: 'true'
+      - name: DCGM_EXPORTER_COLLECTORS
+        value: /etc/dcgm-exporter/dcp-metrics-included.csv
+    args:
+      - '-c'
+      - '5000'
+    resources:
+      limits:
+        cpu: 50m
+        memory: 400Mi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    serviceMonitor:
+      enabled: false
+
+  migManager:
+    enabled: false
+    env:
+      - name: WITH_REBOOT
+        value: 'true'
 
 
 ## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
@@ -645,7 +717,7 @@ civo-talos-gpu-operator:
   ## DCGM configuration
   dcgm:
     ## @param civo-talos-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
-    enabled: false
+    enabled: true
     ## @param civo-talos-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
     ## @param civo-talos-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
     ## @param civo-talos-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
@@ -661,7 +733,7 @@ civo-talos-gpu-operator:
   ## DCGM Exporter configuration.
   dcgmExporter:
     ## @param civo-talos-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
-    enabled: false
+    enabled: true
     ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
