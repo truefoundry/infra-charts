@@ -595,6 +595,37 @@ entries:
     version: 0.0.1
   tfy-gpu-operator:
   - apiVersion: v2
+    created: "2024-02-26T10:05:35.246072632Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    - alias: azure-aks-gpu-operator
+      condition: clusterType.azureAks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: civo-talos-gpu-operator
+      condition: clusterType.civoTalos
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    description: Truefoundry GPU Operator
+    digest: 531bf5db8ff4def94045a76f3f13dd4d1c6d14f725e50fb6bf6e01662d272a99
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.12-rc.5/tfy-gpu-operator-0.1.12-rc.5.tgz
+    version: 0.1.12-rc.5
+  - apiVersion: v2
     created: "2024-01-21T23:35:24.280797241Z"
     dependencies:
     - alias: aws-eks-gpu-operator
@@ -1687,6 +1718,15 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.19-rc.1/tfy-karpenter-config-0.1.19-rc.1.tgz
     version: 0.1.19-rc.1
   - apiVersion: v2
+    created: "2024-02-26T10:05:35.396084303Z"
+    description: ArgoCD Applications for karpenter config
+    digest: e7910d4402a3fac0f5661f598aeb28342e6470169fccfc84e1c64b6cf0769157
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.19-rc.1/tfy-karpenter-config-0.1.19-rc.1.tgz
+    version: 0.1.19-rc.1
+  - apiVersion: v2
     created: "2024-01-21T08:44:59.904749056Z"
     description: ArgoCD Applications for karpenter config
     digest: 0e0673f58696d18ca0b5808237adff3380b11699c0f51db3f3dade890e8e8690
@@ -2356,4 +2396,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.1.0/tfy-notebook-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2024-02-21T12:54:19.505648887Z"
+generated: "2024-02-26T10:05:35.396890336Z"
