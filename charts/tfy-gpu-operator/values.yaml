@@ -30,15 +30,6 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-    env:
-    - name: MIG_STRATEGY
-      value: single
-    - name: NVIDIA_MIG_MONITOR_DEVICES
-      value: all
-    - name: GFD_SLEEP_INTERVAL
-      value: 60s
-    - name: GFD_FAIL_ON_INIT_ERROR
-      value: "true"
   
   ## Operator configuration.
   operator:
@@ -85,10 +76,6 @@ aws-eks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
-      - name: MIG_STRATEGY
-        value: single
-      - name: NVIDIA_MIG_MONITOR_DEVICES
-        value: all
   
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -417,6 +404,16 @@ azure-aks-gpu-operator:
   gfd:
     ## @param azure-aks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @skip zure-aks-gpu-operator.gfd.env 
+    env:
+      - name: MIG_STRATEGY
+        value: single
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: all
+      - name: GFD_SLEEP_INTERVAL
+        value: 60s
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
   
   ## Operator configuration.
   operator:
@@ -582,6 +579,10 @@ azure-aks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: MIG_STRATEGY
+        value: single
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: all
 
   ## DCGM configuration
   dcgm:
