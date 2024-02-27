@@ -48,16 +48,14 @@ resources:
     ephemeral-storage: 128Mi
 
 ## Tolerations for the notebook controller deployment.
-## @param tolerations[0].key Key for the first toleration.
-## @param tolerations[0].value Value for the first toleration.
-## @param tolerations[0].effect Effect for the first toleration.
-## @param tolerations[0].operator Operator for the first toleration.
+## @param tolerations list of tolerations
 ##
-tolerations:
-  - key: CriticalAddonsOnly
-    value: "true"
-    effect: NoSchedule
-    operator: Equal
+tolerations: []
+
+## Affinity for notebook controller deployment
+## @param affinity Affinity for the notebook controller deployment
+affinity: {}
+
 
 ## Base domain URL for the notebook without scheme.
 ## Can be a wildcard like *.example.com
@@ -97,11 +95,11 @@ sdsServer:
   affinity: {}
   ## @param sdsServer.command Command and arguments to start the sds-server application.
   command:
-    - /app/sds-server
-    - "--port"
-    - "8000"
-    - "--file"
-    - /secrets/secrets.yaml
+  - /app/sds-server
+  - "--port"
+  - "8000"
+  - "--file"
+  - /secrets/secrets.yaml
   readinessProbe:
     tcpSocket:
       ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
@@ -128,11 +126,11 @@ sdsServer:
       maxUnavailable: 1
   ## @param sdsServer.ports[0].containerPort The port on which the container is listening.
   ports:
-    - containerPort: 8000
-      ## @param sdsServer.ports[0].name The name assigned to this port.
-      name: port-8000
-      ## @param sdsServer.ports[0].protocol The protocol used by this port (TCP/UDP).
-      protocol: TCP
+  - containerPort: 8000
+    ## @param sdsServer.ports[0].name The name assigned to this port.
+    name: port-8000
+    ## @param sdsServer.ports[0].protocol The protocol used by this port (TCP/UDP).
+    protocol: TCP
   resources:
     limits:
       ## @param sdsServer.resources.limits.cpu The maximum CPU resources allocated.
@@ -150,22 +148,22 @@ sdsServer:
       memory: 30M
   ## @param sdsServer.tolerations [array] Spot tolerations for the notebook controller deployment.
   tolerations:
-    - effect: NoSchedule
-      key: cloud.google.com/gke-spot
-      operator: Equal
-      value: 'true'
-    - effect: NoSchedule
-      key: kubernetes.azure.com/scalesetpriority
-      operator: Equal
-      value: 'spot'
+  - effect: NoSchedule
+    key: cloud.google.com/gke-spot
+    operator: Equal
+    value: 'true'
+  - effect: NoSchedule
+    key: kubernetes.azure.com/scalesetpriority
+    operator: Equal
+    value: 'spot'
   topologySpreadConstraints:
-    - labelSelector:
-        matchLabels:
-          ## @param sdsServer.topologySpreadConstraints[0].labelSelector.matchLabels.truefoundry.com/component Component label for the sds-server.
-          truefoundry.com/component: sds-server
-      ## @param sdsServer.topologySpreadConstraints[0].maxSkew Define the maximum skew of pods across topology domains.
-      maxSkew: 1
-      ## @param sdsServer.topologySpreadConstraints[0].topologyKey The key for the node labels used in determining the topology spread.
-      topologyKey: topology.kubernetes.io/zone
-      ## @param sdsServer.topologySpreadConstraints[0].whenUnsatisfiable Behavior policy when spreading constraints cannot be satisfied.
-      whenUnsatisfiable: ScheduleAnyway
+  - labelSelector:
+      matchLabels:
+        ## @param sdsServer.topologySpreadConstraints[0].labelSelector.matchLabels.truefoundry.com/component Component label for the sds-server.
+        truefoundry.com/component: sds-server
+    ## @param sdsServer.topologySpreadConstraints[0].maxSkew Define the maximum skew of pods across topology domains.
+    maxSkew: 1
+    ## @param sdsServer.topologySpreadConstraints[0].topologyKey The key for the node labels used in determining the topology spread.
+    topologyKey: topology.kubernetes.io/zone
+    ## @param sdsServer.topologySpreadConstraints[0].whenUnsatisfiable Behavior policy when spreading constraints cannot be satisfied.
+    whenUnsatisfiable: ScheduleAnyway
