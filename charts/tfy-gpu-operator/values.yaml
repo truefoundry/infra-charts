@@ -595,6 +595,20 @@ azure-aks-gpu-operator:
         value: single
       - name: NVIDIA_MIG_MONITOR_DEVICES
         value: all
+    ## @skip azure-aks-gpu-operator.devicePlugin.config
+    config:
+      data:
+        all: ''
+        fract-10: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 8
+      name: time-slicing-config
+      create: true
+      default: all
 
   ## DCGM configuration
   dcgm:
