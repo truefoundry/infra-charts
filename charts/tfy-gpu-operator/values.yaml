@@ -30,6 +30,13 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+
+    ## @skip aws-eks-gpu-operator.gfd.env
+    env:
+      - name: MIG_STRATEGY
+        value: mixed
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: all
   
   ## Operator configuration.
   operator:
@@ -76,6 +83,25 @@ aws-eks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: MIG_STRATEGY
+        value: mixed
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: all
+    ## @skip aws-eks-gpu-operator.devicePlugin.config
+    config:
+      data:
+        all: ''
+        time-sliced-10: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              renameByDefault: true
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 10
+      name: time-slicing-config
+      create: true
+      default: all
   
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -407,7 +433,7 @@ azure-aks-gpu-operator:
     ## @skip azure-aks-gpu-operator.gfd.env 
     env:
       - name: MIG_STRATEGY
-        value: single
+        value: mixed
       - name: NVIDIA_MIG_MONITOR_DEVICES
         value: all
       - name: GFD_SLEEP_INTERVAL
@@ -592,7 +618,7 @@ azure-aks-gpu-operator:
       - name: DEVICE_ID_STRATEGY
         value: index
       - name: MIG_STRATEGY
-        value: single
+        value: mixed
       - name: NVIDIA_MIG_MONITOR_DEVICES
         value: all
     ## @skip azure-aks-gpu-operator.devicePlugin.config
@@ -603,6 +629,7 @@ azure-aks-gpu-operator:
           version: v1
           sharing:
             timeSlicing:
+              renameByDefault: true
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
