@@ -1,0 +1,14 @@
+apiVersion: v2
+name: clickhouse-operator
+description: A Helm chart for installing clickhouse-operator and zookeeper
+type: application
+version: 0.1.0
+
+dependencies:
+  - name: altinity-clickhouse-operator
+    version: "0.23.3"
+    repository: https://docs.altinity.com/clickhouse-operator/
+  - name: zookeeper
+    version: "11.1.1"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
+    condition: zookeeper.enabled
