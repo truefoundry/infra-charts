@@ -33,6 +33,10 @@ aws-eks-gpu-operator:
   
   ## Operator configuration.
   operator:
+    ## @param aws-eks-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
+    upgradeCRD: true
+    ## @param aws-eks-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
+    cleanupCRD: true
     ## Resource configuration for operator requests and limits.
     ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
     ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
@@ -244,8 +248,8 @@ aws-eks-gpu-operator:
     
   ## DCGM Exporter configuration.
   dcgmExporter:
-    ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. This is turned off by default because of GSP issues with EKS AMI. If you are on tfy-karpenter-config 0.18+ then this is mostly safe to enable
-    enabled: false
+    ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
+    enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
@@ -421,10 +425,6 @@ azure-aks-gpu-operator:
     enabled: true
     ## @skip azure-aks-gpu-operator.gfd.env 
     env:
-      - name: MIG_STRATEGY
-        value: mixed
-      - name: NVIDIA_MIG_MONITOR_DEVICES
-        value: all
       - name: GFD_SLEEP_INTERVAL
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
@@ -594,6 +594,10 @@ azure-aks-gpu-operator:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
         value: 'true'
 
+  ## MIG Configuration
+  mig:
+    ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
+    strategy: mixed
   ## Device Plugin configuration.
   devicePlugin:
     ## @param azure-aks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -606,10 +610,6 @@ azure-aks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
-      - name: MIG_STRATEGY
-        value: mixed
-      - name: NVIDIA_MIG_MONITOR_DEVICES
-        value: all
     ## @skip azure-aks-gpu-operator.devicePlugin.config
     config:
       data:
