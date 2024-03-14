@@ -16,6 +16,9 @@ spec:
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
   {{- end }}
+  {{- if .Values.karpenter.controlPlaneNodeTemplate.detailedMonitoring }}
+  detailedMonitoring: true
+  {{- end }}
   amiFamily: {{ .Values.karpenter.controlPlaneNodeTemplate.amiFamily }}
   {{- if eq .Values.karpenter.controlPlaneNodeTemplate.amiFamily "Bottlerocket" }}
   blockDeviceMappings:

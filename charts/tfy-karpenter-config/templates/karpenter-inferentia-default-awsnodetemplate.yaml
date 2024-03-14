@@ -15,6 +15,9 @@ spec:
   {{- range $key, $val := .Values.karpenter.inferentiaDefaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
   {{- end }}
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.detailedMonitoring }}
+  detailedMonitoring: true
+  {{- end }}
   amiFamily: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
   {{- if eq .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily "Bottlerocket" }}
   blockDeviceMappings:

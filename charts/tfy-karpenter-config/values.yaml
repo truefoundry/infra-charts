@@ -166,6 +166,9 @@ karpenter:
     ## @skip karpenter.controlPlaneNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
+    ## @param karpenter.controlPlaneNodeTemplate.detailedMonitoring
+    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    detailedMonitoring: false
 
   ## Default Node Template Config
   defaultNodeTemplate:
@@ -178,6 +181,9 @@ karpenter:
     ## @skip karpenter.defaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
+    ## @param karpenter.defaultNodeTemplate.detailedMonitoring
+    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    detailedMonitoring: false
 
   ## Defautl GPU Node Template Config
   gpuDefaultNodeTemplate:
@@ -185,6 +191,9 @@ karpenter:
     rootVolumeSize: 100Gi
     ## @param karpenter.gpuDefaultNodeTemplate.extraTags Additional tags for the gpu node template.
     extraTags: {}
+    ## @param karpenter.gpuDefaultNodeTemplate.detailedMonitoring
+    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    detailedMonitoring: false
     ## @param karpenter.gpuDefaultNodeTemplate.amiFamily AMI family to use for node template
     amiFamily: "AL2"
     ## @skip karpenter.gpuDefaultNodeTemplate.userData
@@ -262,8 +271,12 @@ karpenter:
     rootVolumeSize: 100Gi
     ## @param karpenter.inferentiaDefaultNodeTemplate.extraTags Additional tags for the node template.
     extraTags: {}
+    ## @param karpenter.gpuDefaultNodeTemplate.detailedMonitoring
+    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    detailedMonitoring: false
     ## @param karpenter.inferentiaDefaultNodeTemplate.amiFamily AMI family to use for node template
     amiFamily: "AL2"
+    
     ## @skip karpenter.inferentiaDefaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
