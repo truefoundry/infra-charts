@@ -172,7 +172,6 @@ disable_nvidia_gsp() {
 
 add_default_runtime_name_nvidia_in_containerd_config() {
 
-    echo "CONTAINERD_VERSION is not empty and within the range [1.5.0, 2.0)."
     echo "Patching /etc/eks/containerd/containerd-config.toml"
     mkdir -p /etc/eks/containerd
 
@@ -286,6 +285,7 @@ CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
 echo "${CONTAINERD_VERSION}"
 
 if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
+    echo "CONTAINERD_VERSION is not empty and within the range [1.5.0, 2.0)."
     add_default_runtime_name_nvidia_in_containerd_config
     disable_nvidia_gsp
     setup_soci
