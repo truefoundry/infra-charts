@@ -14,7 +14,14 @@ spec:
   {{- end }}
   labels:
     {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
-    nvidia.com/gpu.deploy.operands: 'false'
+    nvidia.com/gpu.deploy.container-toolkit: 'false'
+    nvidia.com/gpu.deploy.dcgm: 'true'
+    nvidia.com/gpu.deploy.dcgm-exporter: 'true'
+    nvidia.com/gpu.deploy.device-plugin: 'false'
+    nvidia.com/gpu.deploy.driver: pre-installed
+    nvidia.com/gpu.deploy.gpu-feature-discovery: 'true'
+    nvidia.com/gpu.deploy.node-status-exporter: 'true'
+    nvidia.com/gpu.deploy.operator-validator: 'false'
     {{- else }}
     nvidia.com/gpu.deploy.operands: 'true'
     {{- end }}

@@ -31,6 +31,14 @@ spec:
         volumeSize: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
-  {{- if and (not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "")) (not (eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket")) }}
+  {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
+  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
+  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  userData: {{ .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | toYaml | indent 2 }}
+  {{- else if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "AL2" }}
+  userData: {{ .Files.Get "files/al2-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
+  {{- end }}
+  {{- else }}
   userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}
   {{- end }}
