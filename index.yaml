@@ -595,6 +595,37 @@ entries:
     version: 0.0.1
   tfy-gpu-operator:
   - apiVersion: v2
+    created: "2024-03-18T05:12:29.708038734Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.1.2
+    - alias: azure-aks-gpu-operator
+      condition: clusterType.azureAks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: civo-talos-gpu-operator
+      condition: clusterType.civoTalos
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    description: Truefoundry GPU Operator
+    digest: 3c6100fc1e12acf08d5b217aa1204d4731bd2ec616c5fea9a04dae31a7e89ffa
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.15-rc.2/tfy-gpu-operator-0.1.15-rc.2.tgz
+    version: 0.1.15-rc.2
+  - apiVersion: v2
     created: "2024-03-14T09:20:41.008443241Z"
     dependencies:
     - alias: aws-eks-gpu-operator
@@ -1877,6 +1908,15 @@ entries:
     version: 0.1.0
   tfy-karpenter-config:
   - apiVersion: v2
+    created: "2024-03-18T05:12:29.863738762Z"
+    description: ArgoCD Applications for karpenter config
+    digest: 9eedaf6c63281159c68fe1f3467cbbdeba0c12b4d6566423d91eb7e5f727b8cb
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.21-rc.1/tfy-karpenter-config-0.1.21-rc.1.tgz
+    version: 0.1.21-rc.1
+  - apiVersion: v2
     created: "2024-03-14T09:21:24.461056949Z"
     description: ArgoCD Applications for karpenter config
     digest: c3a51f3b01a788ebc9172c95e3a0f72e9cdd225763d289b81a22ccc54daf1ce2
@@ -1886,18 +1926,9 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.20/tfy-karpenter-config-0.1.20.tgz
     version: 0.1.20
   - apiVersion: v2
-    created: "2024-01-31T06:00:10.370099687Z"
+    created: "2024-02-20T14:09:26.625730958Z"
     description: ArgoCD Applications for karpenter config
-    digest: 3936812ed7b798e6e68a55769cd52bdc360fb784e69ce5aef1da7f9229e7283e
-    name: tfy-karpenter-config
-    type: application
-    urls:
-    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.19-rc.1/tfy-karpenter-config-0.1.19-rc.1.tgz
-    version: 0.1.19-rc.1
-  - apiVersion: v2
-    created: "2024-02-20T10:32:47.976140528Z"
-    description: ArgoCD Applications for karpenter config
-    digest: e45bc683c8afc1fc3408a40b729e8bf894ef21100bd1d412af804730792cbea1
+    digest: 2b5e8301466bf05df1effef6ccfed4223fbdc0e4f8fc27216045708c6ff14351
     name: tfy-karpenter-config
     type: application
     urls:
@@ -1931,9 +1962,9 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.19-rc.1/tfy-karpenter-config-0.1.19-rc.1.tgz
     version: 0.1.19-rc.1
   - apiVersion: v2
-    created: "2024-02-20T14:09:26.625730958Z"
+    created: "2024-02-20T10:32:47.976140528Z"
     description: ArgoCD Applications for karpenter config
-    digest: 2b5e8301466bf05df1effef6ccfed4223fbdc0e4f8fc27216045708c6ff14351
+    digest: e45bc683c8afc1fc3408a40b729e8bf894ef21100bd1d412af804730792cbea1
     name: tfy-karpenter-config
     type: application
     urls:
@@ -1961,6 +1992,15 @@ entries:
     created: "2024-02-26T10:05:35.396084303Z"
     description: ArgoCD Applications for karpenter config
     digest: e7910d4402a3fac0f5661f598aeb28342e6470169fccfc84e1c64b6cf0769157
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.19-rc.1/tfy-karpenter-config-0.1.19-rc.1.tgz
+    version: 0.1.19-rc.1
+  - apiVersion: v2
+    created: "2024-01-31T06:00:10.370099687Z"
+    description: ArgoCD Applications for karpenter config
+    digest: 3936812ed7b798e6e68a55769cd52bdc360fb784e69ce5aef1da7f9229e7283e
     name: tfy-karpenter-config
     type: application
     urls:
@@ -2647,4 +2687,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.1.0/tfy-notebook-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2024-03-14T09:21:24.462250368Z"
+generated: "2024-03-18T05:12:29.864657172Z"
