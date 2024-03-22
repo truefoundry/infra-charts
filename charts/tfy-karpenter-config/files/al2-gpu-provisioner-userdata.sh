@@ -12,10 +12,22 @@ version_lt() {
 
 disable_nvidia_gsp() {
 
-    rmmod nvidia_drm
-    rmmod nvidia_modeset
-    rmmod nvidia_uvm
-    rmmod nvidia
+    if lsmod | grep -P "^nvidia_drm"; then
+        rmmod nvidia_drm
+    fi
+
+    if lsmod | grep -P "^nvidia_modeset"; then
+        rmmod nvidia_modeset
+    fi
+
+    if lsmod | grep -P "^nvidia_uvm"; then
+        rmmod nvidia_uvm
+    fi
+
+    if lsmod | grep -P "^nvidia"; then
+        rmmod nvidia
+    fi
+
     echo "Writing NVreg_EnableGpuFirmware=0 to /etc/modprobe.d/nvidia.conf"
     echo "options nvidia NVreg_EnableGpuFirmware=0" | tee --append /etc/modprobe.d/nvidia.conf
     echo "Writing NVreg_EnableGpuFirmware=0 to /etc/modprobe.d/nvidia-gsp.conf"
