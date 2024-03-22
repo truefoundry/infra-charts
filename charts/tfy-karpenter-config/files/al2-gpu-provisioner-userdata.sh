@@ -34,13 +34,13 @@ disable_nvidia_gsp() {
     echo "options nvidia NVreg_EnableGpuFirmware=0" | tee --append /etc/modprobe.d/nvidia-gsp.conf
     echo "Running dracut"
     dracut -f
-
 }
 
 add_default_runtime_name_nvidia_in_containerd_config() {
 
     echo "Patching /etc/eks/containerd/containerd-config.toml"
     mkdir -p /etc/eks/containerd
+    cp /etc/eks/containerd/containerd-config.toml /etc/eks/containerd/containerd-config.toml.orig
 
     cat > /etc/eks/containerd/containerd-config.toml << EOF
 
@@ -80,8 +80,25 @@ echo "${CONTAINERD_VERSION}"
 
 if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
     echo "CONTAINERD_VERSION is not empty and within the range [1.5.0, 2.0)."
-    add_default_runtime_name_nvidia_in_containerd_config
-    disable_nvidia_gsp
+    if grep -P "^version = 2" /etc/eks/containerd/containerd-config.toml; then
+        echo "Containerd config version is 2. Skipping patching."
+    else
+        add_default_runtime_name_nvidia_in_containerd_config
+    fi
 else
     echo "CONTAINERD_VERSION is empty or not within the specified range."
+fi
+
+
+# This needs the driver to be already loaded
+# Which is not the case with new EKS AMIs that use Open Kernel Module for NVIDIA drivers
+if [ -f /proc/driver/nvidia/version ]; then
+    if grep "Open Kernel Module" /proc/driver/nvidia/version; then
+        echo "NVIDIA driver is using the open source kernel module. Skipping disabling GSP."
+    else
+        echo "NVIDIA driver is using proprietary NVIDIA kernel module. Disabling GSP."
+        disable_nvidia_gsp
+    fi
+else
+    echo "/proc/driver/nvidia/version does not exist. Skipping disabling GSP."
 fi
