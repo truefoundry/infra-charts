@@ -29,8 +29,15 @@ spec:
           securityContext:
             {{- toYaml .Values.tfyAgentProxy.securityContext | nindent 12 }}
           env:
+            {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL
               value: {{ .Values.config.controlPlaneURL | quote }}
+            {{- else }}
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.config.controlPlaneControllerClusterIP | quote }}
+            - name: CONTROL_PLANE_PATH
+              value: "/proxy/cluster/connect"
+            {{- end }}
             - name: CLUSTER_TOKEN
               valueFrom:
                 secretKeyRef:
