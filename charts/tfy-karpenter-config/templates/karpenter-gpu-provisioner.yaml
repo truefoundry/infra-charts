@@ -60,6 +60,9 @@ spec:
   taints:
     - key: "nvidia.com/gpu"
       effect: "NoSchedule"
+    - key: "karpenter.sh/legacy"
+      effect: "NoSchedule"
+      value: "true"
   providerRef:
     name: {{ .Values.karpenter.gpuProvisionerSpec.providerRefName }}
 {{- end }}

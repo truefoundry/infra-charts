@@ -17,6 +17,10 @@ karpenter:
   ##
   # default provisioner for non-GPU workloads
   defaultProvisionerSpec:
+    taints:
+      - key: "karpenter.sh/legacy"
+        effect: "NoSchedule"
+        value: "true"
     # nodes should consolidate to fit in the right instance size
     consolidation:
       ## @param karpenter.defaultProvisionerSpec.consolidation.enabled Enable consolidation for default provisioner

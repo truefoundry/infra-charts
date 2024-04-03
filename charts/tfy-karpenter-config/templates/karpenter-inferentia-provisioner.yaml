@@ -48,6 +48,9 @@ spec:
   taints:
     - key: "aws.amazon.com/neuron"
       effect: "NoSchedule"
+    - key: "karpenter.sh/legacy"
+      effect: "NoSchedule"
+      value: "true"
   providerRef:
     name: {{ .Values.karpenter.inferentiaProvisionerSpec.providerRefName }}
 {{- end }}

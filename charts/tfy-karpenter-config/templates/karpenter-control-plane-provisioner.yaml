@@ -68,5 +68,8 @@ spec:
     {{- end }}
   {{- end }}
   taints:
+  - key: "karpenter.sh/legacy"
+    effect: "NoSchedule"
+    value: "true"
   {{- include "controlPlaneProvisioner.taints" . | nindent 4 }}
 {{- end }}
