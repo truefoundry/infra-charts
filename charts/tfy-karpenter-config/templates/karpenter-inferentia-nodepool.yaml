@@ -13,11 +13,11 @@ spec:
     expireAfter: {{ .Values.karpenter.inferentiaProvisionerSpec.ttlSecondsAfterEmpty }}s
   {{- end }}
   template:
+    {{- if .Values.karpenter.inferentiaProvisionerSpec.labels }}
     metadata:
-      {{- if .Values.karpenter.inferentiaProvisionerSpec.labels }}
       labels:
         {{- .Values.karpenter.inferentiaProvisionerSpec.labels | toYaml | nindent 8 }}
-      {{- end }}
+    {{- end }}
     spec:
       requirements:
         - key: karpenter.sh/capacity-type
