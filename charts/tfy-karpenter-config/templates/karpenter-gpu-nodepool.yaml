@@ -1,0 +1,70 @@
+{{- if .Values.karpenter.gpuProvisionerSpec.enabled }}
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: gpu-nodepool
+  namespace: karpenter
+spec:
+  template:
+    metadata:
+      labels:
+        {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+        nvidia.com/gpu.deploy.container-toolkit: 'false'
+        nvidia.com/gpu.deploy.dcgm: 'true'
+        nvidia.com/gpu.deploy.dcgm-exporter: 'true'
+        nvidia.com/gpu.deploy.device-plugin: 'false'
+        nvidia.com/gpu.deploy.driver: pre-installed
+        nvidia.com/gpu.deploy.gpu-feature-discovery: 'true'
+        nvidia.com/gpu.deploy.node-status-exporter: 'true'
+        nvidia.com/gpu.deploy.operator-validator: 'false'
+        {{- else }}
+        nvidia.com/gpu.deploy.operands: 'true'
+        {{- end }}
+        {{- if .Values.karpenter.gpuProvisionerSpec.labels }}
+        {{- .Values.karpenter.gpuProvisionerSpec.labels | toYaml | nindent 8 }}
+        {{- end }}
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+          {{- range .Values.karpenter.gpuProvisionerSpec.capacityTypes }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: topology.kubernetes.io/zone
+          operator: In
+          values:
+          {{- range .Values.karpenter.gpuProvisionerSpec.zones  }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: kubernetes.io/arch
+          operator: In
+          values:
+            - amd64
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values:
+          {{- range .Values.karpenter.gpuProvisionerSpec.instanceFamilies  }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: karpenter.k8s.aws/instance-size
+          operator: NotIn
+          values:
+          {{- range .Values.karpenter.gpuProvisionerSpec.instanceSizes.notAllowed  }}
+            - {{ . | quote }}
+          {{- end }}
+      taints:
+        - key: "nvidia.com/gpu"
+          effect: "NoSchedule"
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: {{ .Values.karpenter.gpuProvisionerSpec.providerRefName }}
+  weight: 10
+  disruption:
+  {{- if .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
+    consolidationPolicy: WhenUnderutilized
+  {{- else }}
+    expiresAfter: {{ .Values.karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty }}
+  {{- end }}
+{{- end }}

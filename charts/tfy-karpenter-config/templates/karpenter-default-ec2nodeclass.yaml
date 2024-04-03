@@ -1,0 +1,38 @@
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
+metadata:
+  name: default
+  namespace: karpenter
+spec:
+  role: {{ .Values.karpenter.nodeRole }}
+  subnetSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+        subnet: private
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.cluster.name }}
+  tags:
+    karpenter.sh/discovery: {{ .Values.cluster.name }}
+  {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
+    {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.defaultNodeTemplate.detailedMonitoring }}
+  detailedMonitoring: true
+  {{- end }}
+  amiFamily: {{ .Values.karpenter.defaultNodeTemplate.amiFamily }}
+  {{- if eq .Values.karpenter.defaultNodeTemplate.amiFamily "Bottlerocket" }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvdb
+      ebs:
+  {{- else }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+  {{- end }}
+        volumeSize: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize }}
+        volumeType: gp3
+        deleteOnTermination: true
+  {{- if not (eq .Values.karpenter.defaultNodeTemplate.userData "")}}
+  userData: {{- .Values.karpenter.defaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}

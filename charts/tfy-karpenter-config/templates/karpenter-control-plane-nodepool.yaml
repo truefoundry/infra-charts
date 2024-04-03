@@ -1,0 +1,77 @@
+{{- if .Values.karpenter.controlPlaneProvisioner.enabled }}
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: control-plane-nodepool
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "controlPlaneProvisioner.labels" . | nindent 8 }}
+    spec:
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: {{ .Values.karpenter.controlPlaneProvisioner.providerRefName }}
+      requirements:
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.capacityTypes }}
+          - {{ . | quote }}
+        {{- end }}
+      - key: topology.kubernetes.io/zone
+        operator: In
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.zones }}
+          - {{ . | quote }}
+        {{- end }}
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - amd64
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+      {{- if .Values.karpenter.controlPlaneProvisioner.instanceFamilies.allowed }}
+      - key: karpenter.k8s.aws/instance-family
+        operator: In
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.instanceFamilies.allowed }}
+          - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.karpenter.controlPlaneProvisioner.instanceFamilies.notAllowed }}
+      - key: karpenter.k8s.aws/instance-family
+        operator: NotIn
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.instanceFamilies.notAllowed  }}
+          - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.karpenter.controlPlaneProvisioner.instanceSizes.allowed }}
+      - key: karpenter.k8s.aws/instance-size
+        operator: In
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.instanceSizes.allowed  }}
+          - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.karpenter.controlPlaneProvisioner.instanceSizes.notAllowed }}
+      - key: karpenter.k8s.aws/instance-size
+        operator: NotIn
+        values:
+        {{- range .Values.karpenter.controlPlaneProvisioner.instanceSizes.notAllowed  }}
+          - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+      taints:
+      {{- include "controlPlaneProvisioner.taints" . | nindent 4 }}
+  disruption:
+  {{- if .Values.karpenter.controlPlaneProvisioner.consolidation.enabled }}
+    consolidationPolicy: WhenUnderutilized
+  {{- else }}
+    expireAfter: {{ .Values.karpenter.controlPlaneProvisioner.ttlSecondsAfterEmpty }}
+  {{- end }}
+{{- end }}
