@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.gpuProvisionerSpec.enabled }}
+{{- if .Values.karpenter.gpuNodePool.enabled }}
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
@@ -20,51 +20,64 @@ spec:
         {{- else }}
         nvidia.com/gpu.deploy.operands: 'true'
         {{- end }}
-        {{- if .Values.karpenter.gpuProvisionerSpec.labels }}
-        {{- .Values.karpenter.gpuProvisionerSpec.labels | toYaml | nindent 8 }}
+        {{- if .Values.karpenter.gpuNodePool.labels }}
+        {{- .Values.karpenter.gpuNodePool.labels | toYaml | nindent 8 }}
         {{- end }}
     spec:
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: {{ .Values.karpenter.gpuNodePool.ec2NodeClassRefName }}
       requirements:
         - key: karpenter.sh/capacity-type
           operator: In
           values:
-          {{- range .Values.karpenter.gpuProvisionerSpec.capacityTypes }}
+          {{- range .Values.karpenter.gpuNodePool.capacityTypes }}
             - {{ . | quote }}
           {{- end }}
         - key: topology.kubernetes.io/zone
           operator: In
           values:
-          {{- range .Values.karpenter.gpuProvisionerSpec.zones  }}
+          {{- range .Values.karpenter.gpuNodePool.zones }}
             - {{ . | quote }}
           {{- end }}
         - key: kubernetes.io/arch
           operator: In
           values:
-            - amd64
+          {{- range .Values.karpenter.gpuNodePool.architectures }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- if .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
         - key: karpenter.k8s.aws/instance-family
           operator: In
           values:
-          {{- range .Values.karpenter.gpuProvisionerSpec.instanceFamilies  }}
+          {{- range .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
             - {{ . | quote }}
           {{- end }}
+        {{- end }}
+        {{- if .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed }}
+        - key: karpenter.k8s.aws/instance-family
+          operator: NotIn
+          values:
+          {{- range .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed  }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- end }}
         - key: karpenter.k8s.aws/instance-size
           operator: NotIn
           values:
-          {{- range .Values.karpenter.gpuProvisionerSpec.instanceSizes.notAllowed  }}
+          {{- range .Values.karpenter.gpuNodePool.instanceSizes.notAllowed }}
             - {{ . | quote }}
           {{- end }}
       taints:
         - key: "nvidia.com/gpu"
           effect: "NoSchedule"
-      nodeClassRef:
-        apiVersion: karpenter.k8s.aws/v1beta1
-        kind: EC2NodeClass
-        name: {{ .Values.karpenter.gpuProvisionerSpec.providerRefName }}
-  weight: 10
+        {{- if .Values.karpenter.gpuNodePool.taints }}
+        {{- .Values.karpenter.gpuNodePool.taints | toYaml | nindent 8 }}
+        {{- end }}
+  weight: {{- .Values.karpenter.gpuNodePool.weight }}
   disruption:
-  {{- if .Values.karpenter.gpuProvisionerSpec.consolidation.enabled }}
-    consolidationPolicy: WhenUnderutilized
-  {{- else }}
-    expireAfter: {{ .Values.karpenter.gpuProvisionerSpec.ttlSecondsAfterEmpty }}s
+  {{- if .Values.karpenter.gpuNodePool.disruption }}
+    {{- .Values.karpenter.gpuNodePool.disruption | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}
