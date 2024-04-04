@@ -77,4 +77,8 @@ spec:
   {{- if .Values.karpenter.controlPlaneNodePool.disruption }}
     {{- .Values.karpenter.controlPlaneNodePool.disruption | toYaml | nindent 4 }}
   {{- end }}
+  {{- if .Values.karpenter.gpuNodePool.limits }}
+  limits:
+  {{- .Values.karpenter.gpuNodePool.limits | toYaml | nindent 4 }}
+  {{- end }}
 {{- end }}
