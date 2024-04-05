@@ -29,30 +29,47 @@ karpenter:
     ## @param karpenter.defaultNodeTemplate.detailedMonitoring
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
+    ## @param karpenter.defaultNodeTemplate.extraSubnetTags Additional tags for the subnet.
+    extraSubnetTags: {}
+    ## @param karpenter.defaultNodeTemplate.extraSecurityGroupTags Additional tags for the security group.
+    extraSecurityGroupTags: {}
 
+  ## Default Node Pool Config
   defaultNodePool:
+    ## @param karpenter.defaultNodePool.enabled Enable the default node pool
     enabled: true
+    ## @param karpenter.defaultNodePool.weight Weight for the default node pool
     weight: 10
+    ## @param karpenter.defaultNodePool.labels Labels for the default node pool
     labels: {}
+    ## @param karpenter.defaultNodePool.taints Taints for the default node pool
     taints: []
+    ## @param karpenter.defaultNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
       consolidationPolicy: WhenUnderutilized
+    ## @param karpenter.defaultNodePool.capacityTypes Capacity types for the default node pool
     capacityTypes:
       - spot
+    ## @param karpenter.defaultNodePool.zones Zones for the default node pool
     zones: ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+    ## @param karpenter.defaultNodePool.architectures Architectures for the default node pool
     architectures:
       - amd64
+    ## @param karpenter.defaultNodePool.instanceFamilies.notAllowed Not allowed instance families for the default node pool
     instanceFamilies:
       notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+    ## @param karpenter.defaultNodePool.instanceSizes.notAllowed Not allowed instance sizes for the default node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "metal"]
+    ## @param karpenter.defaultNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the default node pool
     ec2NodeClassRefName: default
+    ## @param karpenter.defaultNodePool.limits.cpu CPU limit for the default node pool
     limits:
       cpu: 75
+      ## @param karpenter.defaultNodePool.limits.memory Memory limit for the default node pool
       memory: 300Gi
 
-
-  ## Defautl GPU Node Template Config
+  ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
     ## @param karpenter.gpuDefaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
     rootVolumeSize: 100Gi
@@ -67,21 +84,34 @@ karpenter:
     # Set this to "default" to let the chart automatically decide this
     # Set this to "" to disable this injection
     userData: "default"
+    ## @param karpenter.gpuDefaultNodeTemplate.extraSubnetTags Additional tags for the subnet.
+    extraSubnetTags: {}
+    ## @param karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags Additional tags for the security group.
+    extraSecurityGroupTags: {}
 
-  ## nodepool for GPU node pools
+  ## GPU Node Pool Config
   gpuNodePool:
+    ## @param karpenter.gpuNodePool.enabled Enable the GPU node pool
     enabled: false
+    ## @param karpenter.gpuNodePool.weight Weight for the GPU node pool
     weight: 10
+    ## @param karpenter.gpuNodePool.labels Labels for the GPU node pool
     labels: {}
+    ## @param karpenter.gpuNodePool.taints Taints for the GPU node pool
     taints: []
+    ## @param karpenter.gpuNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
       consolidationPolicy: WhenUnderutilized
+    ## @param karpenter.gpuNodePool.capacityTypes Capacity types for the GPU node pool
     capacityTypes:
       - spot
       - on-demand
+    ## @param karpenter.gpuNodePool.zones Zones for the GPU node pool
     zones: []
+    ## @param karpenter.gpuNodePool.architectures Architectures for the GPU node pool
     architectures:
       - amd64
+    ## @param karpenter.gpuNodePool.instanceFamilies.allowed Allowed instance families for the GPU node pool
     instanceFamilies:
       allowed:
         - p2
@@ -90,20 +120,18 @@ karpenter:
         - g5
         - p4d
         - p4de
+    ## @param karpenter.gpuNodePool.instanceSizes.notAllowed Not allowed instance sizes for the GPU node pool
     instanceSizes:
       notAllowed:
         - nano
         - micro
         - metal
+    ## @param karpenter.gpuNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the GPU node pool
     ec2NodeClassRefName: gpu-default
 
-    ## nodepool for GPU node pools
-
-  ## control plane node template
-  ## control plane provisioner by default will use default node template
-  ## if needed we can supply a different node template for control plane provisioner as well
+  ## Control Plane Node Template Config
   controlPlaneNodeTemplate:
-    ## @param karpenter.controlPlaneNodeTemplate.enabled Size for the root volume attached to node
+    ## @param karpenter.controlPlaneNodeTemplate.enabled Enable the control plane node template
     enabled: false
     ## @param karpenter.controlPlaneNodeTemplate.name Name of the AWS node template
     name: controlplane-node-template
@@ -119,26 +147,42 @@ karpenter:
     ## @param karpenter.controlPlaneNodeTemplate.detailedMonitoring
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
+    ## @param karpenter.controlPlaneNodeTemplate.extraSubnetTags Additional tags for the subnet.
+    extraSubnetTags: {}
+    ## @param karpenter.controlPlaneNodeTemplate.extraSecurityGroupTags Additional tags for the security group.
+    extraSecurityGroupTags: {}
 
+  ## Control Plane Node Pool Config
   controlPlaneNodePool:
+    ## @param karpenter.controlPlaneNodePool.enabled Enable the control plane node pool
     enabled: false
+    ## @param karpenter.controlPlaneNodePool.weight Weight for the control plane node pool
     weight: 10
+    ## @param karpenter.controlPlaneNodePool.labels Labels for the control plane node pool
     labels: {}
+    ## @param karpenter.controlPlaneNodePool.taints Taints for the control plane node pool
     taints: []
+    ## @param karpenter.controlPlaneNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
       consolidationPolicy: WhenUnderutilized
+    ## @param karpenter.controlPlaneNodePool.capacityTypes Capacity types for the control plane node pool
     capacityTypes:
       - spot
       - on-demand
+    ## @param karpenter.controlPlaneNodePool.zones Zones for the control plane node pool
     zones: []
+    ## @param karpenter.controlPlaneNodePool.architectures Architectures for the control plane node pool
     architectures:
       - amd64
+    ## @param karpenter.controlPlaneNodePool.instanceFamilies.allowed Allowed instance families for the control plane node pool
     instanceFamilies:
       allowed: []
       notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n", "c1", "cc1", "cc2", "cg1", "cg2", "cr1", "g1", "g2", "hi1", "hs1", "m1", "m2", "m3"]
+    ## @param karpenter.controlPlaneNodePool.instanceSizes.allowed Allowed instance sizes for the control plane node pool
     instanceSizes:
       allowed: []
       notAllowed: ["nano", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal"]
+    ## @param karpenter.controlPlaneNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the control plane node pool
     ec2NodeClassRefName: controlplane-node-template
 
   ## Default Inferentia Node Template Config
@@ -155,22 +199,38 @@ karpenter:
     ## @skip karpenter.inferentiaDefaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
+    ## @param karpenter.inferentiaDefaultNodeTemplate.extraSubnetTags Additional tags for the subnet.
+    extraSubnetTags: {}
+    ## @param karpenter.inferentiaDefaultNodeTemplate.extraSecurityGroupTags Additional tags for the security group.
+    extraSecurityGroupTags: {}
 
+  ## Inferentia Node Pool Config
   inferentiaNodePool:
+    ## @param karpenter.inferentiaNodePool.enabled Enable the Inferentia node pool
     enabled: false
+    ## @param karpenter.inferentiaNodePool.weight Weight for the Inferentia node pool
     weight: 10
+    ## @param karpenter.inferentiaNodePool.labels Labels for the Inferentia node pool
     labels: {}
+    ## @param karpenter.inferentiaNodePool.taints Taints for the Inferentia node pool
     taints: []
+    ## @param karpenter.inferentiaNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
       consolidationPolicy: WhenUnderutilized
+    ## @param karpenter.inferentiaNodePool.capacityTypes Capacity types for the Inferentia node pool
     capacityTypes:
       - spot
       - on-demand
+    ## @param karpenter.inferentiaNodePool.zones Zones for the Inferentia node pool
     zones: []
+    ## @param karpenter.inferentiaNodePool.architectures Architectures for the Inferentia node pool
     architectures:
       - amd64
+    ## @param karpenter.inferentiaNodePool.instanceFamilies.allowed Allowed instance families for the Inferentia node pool
     instanceFamilies:
       allowed: ["inf1", "inf2"]
+    ## @param karpenter.inferentiaNodePool.instanceSizes.notAllowed Not allowed instance sizes for the Inferentia node pool
     instanceSizes:
       notAllowed: ["48xlarge"]
-    ec2NodeClassRefName: inferentia-default  
+    ## @param karpenter.inferentiaNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the Inferentia node pool
+    ec2NodeClassRefName: inferentia-default

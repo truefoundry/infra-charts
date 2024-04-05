@@ -9,9 +9,15 @@ spec:
     - tags:
         kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
         subnet: private
+        {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraSubnetTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: {{ .Values.cluster.name }}
+        {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraSecurityGroupTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
