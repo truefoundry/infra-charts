@@ -5,9 +5,11 @@ metadata:
   name: default-nodepool
 spec:
   template:
+    {{- if .Values.karpenter.defaultNodePool.labels }}
     metadata:
       labels:
-        {{- include ".Values.karpenter.defaultNodePool.labels" . | nindent 8 }}
+        {{- .Values.karpenter.defaultNodePool.labels | toYaml | nindent 8 }}
+    {{- end }}
     spec:
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
@@ -68,10 +70,12 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+      {{- if .Values.karpenter.defaultNodePool.taints }}
       taints:
-      {{- include "defaultNodePool.taints" . | nindent 4 }}
+        {{- toYaml .Values.karpenter.defaultNodePool.taints | nindent 6 }}
+      {{- end }}
   {{- if .Values.karpenter.defaultNodePool.weight }}
-  weight: {{- .Values.karpenter.defaultNodePool.weight }}
+  weight: {{ .Values.karpenter.defaultNodePool.weight }}
   {{- end }}
   disruption:
   {{- if .Values.karpenter.defaultNodePool.disruption }}
