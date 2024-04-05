@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tfy-gpu-operator
-version: 0.1.15-rc.3
+version: 0.1.15-rc.4
 description: "Truefoundry GPU Operator"
 maintainers:
   - name: truefoundry
@@ -13,7 +13,7 @@ dependencies:
   - condition: clusterType.gcpGkeStandard
     name: dcgm-exporter
     repository: https://nvidia.github.io/dcgm-exporter/helm-charts
-    version: 3.1.2
+    version: 3.3.1
     alias: gcp-gke-standard-dcgm-exporter
   - condition: clusterType.azureAks
     name: gpu-operator
@@ -25,4 +25,9 @@ dependencies:
     repository: https://helm.ngc.nvidia.com/nvidia
     version: v23.9.1
     alias: civo-talos-gpu-operator
+  - condition: clusterType.generic
+    name: gpu-operator
+    repository: https://helm.ngc.nvidia.com/nvidia
+    version: v23.9.1
+    alias: generic-gpu-operator
 

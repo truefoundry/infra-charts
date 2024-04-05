@@ -10,12 +10,15 @@
 ##
 ## @param clusterType.civoTalos Flag indicating Civo Talos cluster type.
 ##
+## @param clusterType.generic Flag indicating Generic cluster type.
+##
 clusterType:
   awsEks: false
   gcpGkeStandard: false
   gcpGkeAutopilot: false
   azureAks: false
   civoTalos: false
+  generic: false
 
 
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
@@ -301,12 +304,6 @@ gcp-gke-standard-driver:
 ##
 gcp-gke-standard-dcgm-exporter:
   ## Docker image tag for the DCGM Exporter.
-  ##
-  ## @param gcp-gke-standard-dcgm-exporter.image.tag Docker image tag for the DCGM Exporter.
-  ##
-  image:
-    tag: 3.1.7-3.1.4-ubuntu20.04
-  ## Arguments to pass to the DCGM Exporter.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
   ##
@@ -876,3 +873,13 @@ civo-talos-gpu-operator:
   migManager:
     ## @skip civo-talos-gpu-operator.migManager.enabled
     enabled: false
+
+
+## @section generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
+generic-gpu-operator:
+  ## Operator configuration.
+  operator:
+    ## @param generic-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
+    upgradeCRD: true
+    ## @param generic-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
+    cleanupCRD: true

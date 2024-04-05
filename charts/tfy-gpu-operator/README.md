@@ -12,6 +12,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `clusterType.gcpGkeAutopilot` | Flag indicating GCP GKE Autopilot cluster type. | `false` |
 | `clusterType.azureAks`        | Flag indicating Azure AKS cluster type.         | `false` |
 | `clusterType.civoTalos`       | Flag indicating Civo Talos cluster type.        | `false` |
+| `clusterType.generic`         | Flag indicating Generic cluster type.           | `false` |
 
 ### aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 
@@ -64,7 +65,6 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 | Name                                                            | Description                                                          | Value                                                                                                           |
 | --------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `gcp-gke-standard-dcgm-exporter.image.tag`                      | Docker image tag for the DCGM Exporter.                              | `3.1.7-3.1.4-ubuntu20.04`                                                                                       |
 | `gcp-gke-standard-dcgm-exporter.arguments`                      | Arguments for the DCGM Exporter.                                     | `["-c","\"5000\"","-f","/etc/dcgm-exporter/dcp-metrics-included.csv","--kubernetes-gpu-id-type","device-name"]` |
 | `gcp-gke-standard-dcgm-exporter.resources.requests.cpu`         | CPU request for the DCGM Exporter.                                   | `10m`                                                                                                           |
 | `gcp-gke-standard-dcgm-exporter.resources.requests.memory`      | Memory request for the DCGM Exporter.                                | `300Mi`                                                                                                         |
@@ -163,3 +163,10 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `civo-talos-gpu-operator.dcgmExporter.resources.limits.cpu`                       | CPU limit for the DCGM Exporter.                             | `50m`           |
 | `civo-talos-gpu-operator.dcgmExporter.resources.limits.memory`                    | Memory limit for the DCGM Exporter.                          | `400Mi`         |
 | `civo-talos-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                             | `["-c","5000"]` |
+
+### generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
+
+| Name                                       | Description                    | Value  |
+| ------------------------------------------ | ------------------------------ | ------ |
+| `generic-gpu-operator.operator.upgradeCRD` | upgrade CRD on chart upgrade   | `true` |
+| `generic-gpu-operator.operator.cleanupCRD` | cleanup CRD on chart uninstall | `true` |
