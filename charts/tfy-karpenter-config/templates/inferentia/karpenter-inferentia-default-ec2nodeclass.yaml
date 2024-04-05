@@ -1,15 +1,22 @@
-apiVersion: karpenter.k8s.aws/v1alpha1
-kind: AWSNodeTemplate
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
 metadata:
-  name: inferentia-default
-  namespace: karpenter
+  name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
 spec:
   instanceProfile: {{ .Values.karpenter.instanceProfile }}
-  subnetSelector:
-    kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
-    subnet: private
-  securityGroupSelector:
-    karpenter.sh/discovery: {{ .Values.cluster.name }}
+  subnetSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+        subnet: private
+        {{- range $key, $val := .Values.karpenter.inferentiaDefaultNodeTemplate.extraSubnetTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.cluster.name }}
+        {{- range $key, $val := .Values.karpenter.inferentiaDefaultNodeTemplate.extraSecurityGroupTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.inferentiaDefaultNodeTemplate.extraTags }}

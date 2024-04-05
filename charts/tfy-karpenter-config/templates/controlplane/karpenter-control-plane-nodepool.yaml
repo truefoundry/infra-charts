@@ -1,0 +1,84 @@
+{{- if .Values.karpenter.controlPlaneNodePool.enabled }}
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: {{ .Values.karpenter.controlPlaneNodePool.name }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "controlPlaneNodePool.labels" . | nindent 8 }}
+    spec:
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: {{ .Values.karpenter.controlPlaneNodeTemplate.name }}
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.capacityTypes }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: topology.kubernetes.io/zone
+          operator: In
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.zones }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: kubernetes.io/arch
+          operator: In
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.architectures }}
+            - {{ . | quote }}
+          {{- end }}
+        - key: kubernetes.io/os
+          operator: In
+          values:
+          - linux
+        {{- if .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
+        - key: karpenter.k8s.aws/instance-family
+          operator: NotIn
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.karpenter.controlPlaneNodePool.instanceSizes.allowed }}
+        - key: karpenter.k8s.aws/instance-size
+          operator: In
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.instanceSizes.allowed  }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.karpenter.controlPlaneNodePool.instanceSizes.notAllowed }}
+        - key: karpenter.k8s.aws/instance-size
+          operator: NotIn
+          values:
+          {{- range .Values.karpenter.controlPlaneNodePool.instanceSizes.notAllowed  }}
+            - {{ . | quote }}
+          {{- end }}
+        {{- end }}
+      taints:
+      {{- include "controlPlaneNodePool.taints" . | nindent 4 }}
+  {{- if .Values.karpenter.controlPlaneNodePool.weight }}
+  weight: {{ .Values.karpenter.controlPlaneNodePool.weight }}
+  {{- end }}
+  disruption:
+  {{- if .Values.karpenter.controlPlaneNodePool.disruption }}
+    {{- .Values.karpenter.controlPlaneNodePool.disruption | toYaml | nindent 4 }}
+  {{- end }}
+  {{- if .Values.karpenter.gpuNodePool.limits }}
+  limits:
+  {{- .Values.karpenter.gpuNodePool.limits | toYaml | nindent 4 }}
+  {{- end }}
+{{- end }}
