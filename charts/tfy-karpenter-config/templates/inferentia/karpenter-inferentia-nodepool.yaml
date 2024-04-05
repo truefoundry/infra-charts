@@ -2,8 +2,7 @@
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
-  name: inferentia-nodepool
-  namespace: karpenter
+  name: {{ .Values.karpenter.inferentiaNodePool.name }}
 spec:
   template:
     {{- if .Values.karpenter.inferentiaNodePool.labels }}
@@ -71,7 +70,7 @@ spec:
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
         kind: EC2NodeClass
-        name: {{ .Values.karpenter.inferentiaNodePool.ec2NodeClassRefName }}
+        name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
   {{- if .Values.karpenter.inferentiaNodePool.weight }}
   weight: {{ .Values.karpenter.inferentiaNodePool.weight }}
   {{- end }}

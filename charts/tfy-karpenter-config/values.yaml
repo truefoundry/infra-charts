@@ -17,6 +17,8 @@ karpenter:
 
   ## Default Node Template Config
   defaultNodeTemplate:
+    ## @param karpenter.defaultNodeTemplate.name Name of the AWS node class
+    name: default
     ## @param karpenter.defaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
     rootVolumeSize: 100Gi
     ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
@@ -36,8 +38,8 @@ karpenter:
 
   ## Default Node Pool Config
   defaultNodePool:
-    ## @param karpenter.defaultNodePool.enabled Enable the default node pool
-    enabled: true
+    ## @param karpenter.defaultNodePool.name Name of the default node pool
+    name: default-nodepool
     ## @param karpenter.defaultNodePool.weight Weight for the default node pool
     weight: 10
     ## @param karpenter.defaultNodePool.labels Labels for the default node pool
@@ -61,8 +63,6 @@ karpenter:
     ## @param karpenter.defaultNodePool.instanceSizes.notAllowed Not allowed instance sizes for the default node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "metal"]
-    ## @param karpenter.defaultNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the default node pool
-    ec2NodeClassRefName: default
     ## @param karpenter.defaultNodePool.limits.cpu CPU limit for the default node pool
     limits:
       cpu: 75
@@ -71,6 +71,8 @@ karpenter:
 
   ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
+    ## @param karpenter.gpuDefaultNodeTemplate.name Name of the AWS node class
+    name: gpu-default
     ## @param karpenter.gpuDefaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
     rootVolumeSize: 100Gi
     ## @param karpenter.gpuDefaultNodeTemplate.extraTags Additional tags for the gpu node template.
@@ -93,6 +95,8 @@ karpenter:
   gpuNodePool:
     ## @param karpenter.gpuNodePool.enabled Enable the GPU node pool
     enabled: false
+    ## @param karpenter.gpuNodePool.name Name of the GPU node pool
+    name: gpu-nodepool
     ## @param karpenter.gpuNodePool.weight Weight for the GPU node pool
     weight: 10
     ## @param karpenter.gpuNodePool.labels Labels for the GPU node pool
@@ -126,8 +130,6 @@ karpenter:
         - nano
         - micro
         - metal
-    ## @param karpenter.gpuNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the GPU node pool
-    ec2NodeClassRefName: gpu-default
 
   ## Control Plane Node Template Config
   controlPlaneNodeTemplate:
@@ -156,6 +158,8 @@ karpenter:
   controlPlaneNodePool:
     ## @param karpenter.controlPlaneNodePool.enabled Enable the control plane node pool
     enabled: false
+    ## @param karpenter.controlPlaneNodePool.name Name of the control plane node pool
+    name: control-plane-nodepool
     ## @param karpenter.controlPlaneNodePool.weight Weight for the control plane node pool
     weight: 10
     ## @param karpenter.controlPlaneNodePool.labels Labels for the control plane node pool
@@ -184,11 +188,11 @@ karpenter:
       allowed: []
       ## @param karpenter.controlPlaneNodePool.instanceSizes.notAllowed Not allowed instance sizes for the control plane node pool
       notAllowed: ["nano", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal"]
-    ## @param karpenter.controlPlaneNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the control plane node pool
-    ec2NodeClassRefName: controlplane-node-template
 
   ## Default Inferentia Node Template Config
   inferentiaDefaultNodeTemplate:
+    ## @param karpenter.inferentiaDefaultNodeTemplate.name Name of the AWS node class
+    name: inferentia-default
     ## @param karpenter.inferentiaDefaultNodeTemplate.rootVolumeSize Size for the root volume attached to node
     rootVolumeSize: 100Gi
     ## @param karpenter.inferentiaDefaultNodeTemplate.extraTags Additional tags for the node template.
@@ -210,6 +214,8 @@ karpenter:
   inferentiaNodePool:
     ## @param karpenter.inferentiaNodePool.enabled Enable the Inferentia node pool
     enabled: false
+    ## @param karpenter.inferentiaNodePool.name Name of the Inferentia node pool
+    name: inferentia-nodepool
     ## @param karpenter.inferentiaNodePool.weight Weight for the Inferentia node pool
     weight: 10
     ## @param karpenter.inferentiaNodePool.labels Labels for the Inferentia node pool
@@ -234,5 +240,3 @@ karpenter:
     ## @param karpenter.inferentiaNodePool.instanceSizes.notAllowed Not allowed instance sizes for the Inferentia node pool
     instanceSizes:
       notAllowed: ["48xlarge"]
-    ## @param karpenter.inferentiaNodePool.ec2NodeClassRefName EC2 Node Class Reference Name for the Inferentia node pool
-    ec2NodeClassRefName: inferentia-default
