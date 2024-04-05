@@ -1,16 +1,23 @@
 {{- if .Values.karpenter.controlPlaneNodeTemplate.enabled }}
-apiVersion: karpenter.k8s.aws/v1alpha1
-kind: AWSNodeTemplate
+apiVersion: karpenter.k8s.aws/v1beta1
+kind: EC2NodeClass
 metadata:
   name: {{ .Values.karpenter.controlPlaneNodeTemplate.name }}
-  namespace: karpenter
 spec:
   instanceProfile: {{ .Values.karpenter.instanceProfile }}
-  subnetSelector:
-    kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
-    subnet: private
-  securityGroupSelector:
-    karpenter.sh/discovery: {{ .Values.cluster.name }}
+  subnetSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+        subnet: private
+        {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraSubnetTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.cluster.name }}
+        {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraSecurityGroupTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}

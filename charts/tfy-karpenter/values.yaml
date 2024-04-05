@@ -6,21 +6,22 @@ karpenter:
   serviceAccount:
     annotations:
       eks.amazonaws.com/role-arn: ""
-  ## @param karpenter.settings.aws.clusterName Name of the EKS cluster
-  ##
   settings:
-    aws:
-      ## @param karpenter.settings.aws.clusterName Name of the EKS cluster
-      ##
-      clusterName: ""
+    ## @param karpenter.settings.clusterName Name of the EKS cluster
+    ##
+    clusterName: ""
 
-      ## @param karpenter.settings.aws.clusterEndpoint Endpoint URL of the EKS cluster
-      ##
-      clusterEndpoint: ""
+    ## @param karpenter.settings.clusterEndpoint Endpoint URL of the EKS cluster
+    ##
+    clusterEndpoint: ""
 
-      ## @param karpenter.settings.aws.defaultInstanceProfile Instance profile of the karpenter
-      ##
-      defaultInstanceProfile: ""
+    ## @param karpenter.settings.interruptionQueue Name of the interruption queue for spot instances
+    ##
+    interruptionQueue: ""
+  webhook:
+    ## @skip karpenter.webhook.enabled Enable karpenter webhook
+    ##
+    enabled: true
   ## @param karpenter.controller.resources.requests.cpu CPU requests for karpenter container
   ## @param karpenter.controller.resources.requests.memory Memory requests for karpenter container
   ## @param karpenter.controller.resources.limits.cpu CPU limits for karpenter container
