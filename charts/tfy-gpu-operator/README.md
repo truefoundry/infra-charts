@@ -163,3 +163,10 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `civo-talos-gpu-operator.dcgmExporter.resources.limits.cpu`                       | CPU limit for the DCGM Exporter.                             | `50m`           |
 | `civo-talos-gpu-operator.dcgmExporter.resources.limits.memory`                    | Memory limit for the DCGM Exporter.                          | `400Mi`         |
 | `civo-talos-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                             | `["-c","5000"]` |
+
+### generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
+
+| Name                                       | Description                    | Value  |
+| ------------------------------------------ | ------------------------------ | ------ |
+| `generic-gpu-operator.operator.upgradeCRD` | upgrade CRD on chart upgrade   | `true` |
+| `generic-gpu-operator.operator.cleanupCRD` | cleanup CRD on chart uninstall | `true` |
