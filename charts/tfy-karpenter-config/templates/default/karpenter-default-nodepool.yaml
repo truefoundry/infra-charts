@@ -37,6 +37,10 @@ spec:
           operator: In
           values:
           - linux
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values:
+            - "3"
         {{- if .Values.karpenter.defaultNodePool.instanceFamilies.allowed }}
         - key: karpenter.k8s.aws/instance-family
           operator: In
