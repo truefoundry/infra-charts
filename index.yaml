@@ -2,6 +2,24 @@ apiVersion: v1
 entries:
   clickhouse-operator:
   - apiVersion: v2
+    created: "2024-04-16T07:49:26.689695952Z"
+    dependencies:
+    - condition: altinity-clickhouse-operator.enabled
+      name: altinity-clickhouse-operator
+      repository: https://docs.altinity.com/clickhouse-operator/
+      version: 0.23.3
+    - condition: zookeeper.enabled
+      name: zookeeper
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 11.1.1
+    description: A Helm chart for installing clickhouse-operator and zookeeper
+    digest: 2384e8b018ee6bb6e305d967563db62416ad1ae52b984e655df34c0fdfd98f7b
+    name: clickhouse-operator
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/clickhouse-operator-0.1.1/clickhouse-operator-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     created: "2024-03-19T14:18:40.903583Z"
     dependencies:
     - condition: altinity-clickhouse-operator.enabled
@@ -20,6 +38,16 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/clickhouse-operator-0.1.1-rc.1/clickhouse-operator-0.1.1-rc.1.tgz
     version: 0.1.1-rc.1
   tfy-agent:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-04-16T07:49:26.851120092Z"
+    description: Truefoundry workload agent for k8s clusters
+    digest: 22a1620c843747cdcc1cdfa99887980b15b9db4320414579e622fd663559c48b
+    name: tfy-agent
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-agent-0.2.21/tfy-agent-0.2.21.tgz
+    version: 0.2.21
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-04-12T19:45:11.425046522Z"
@@ -675,6 +703,42 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-distributor-0.0.1/tfy-distributor-0.0.1.tgz
     version: 0.0.1
   tfy-gpu-operator:
+  - apiVersion: v2
+    created: "2024-04-16T07:49:27.028059039Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 3.3.1
+    - alias: azure-aks-gpu-operator
+      condition: clusterType.azureAks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: civo-talos-gpu-operator
+      condition: clusterType.civoTalos
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    - alias: generic-gpu-operator
+      condition: clusterType.generic
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v23.9.1
+    description: Truefoundry GPU Operator
+    digest: 55ce61e773bf1d69985c649b332aa6310314195198288acbdd691d37be057d47
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.1.15/tfy-gpu-operator-0.1.15.tgz
+    version: 0.1.15
   - apiVersion: v2
     created: "2024-04-10T13:04:16.736961984Z"
     dependencies:
@@ -2881,6 +2945,25 @@ entries:
     version: 0.1.0
   tfy-loki:
   - apiVersion: v2
+    created: "2024-04-16T07:49:27.218348864Z"
+    dependencies:
+    - condition: loki.enabled
+      name: loki
+      repository: https://grafana.github.io/helm-charts
+      version: 5.47.2
+    - condition: promtail.enabled
+      name: promtail
+      repository: https://grafana.github.io/helm-charts
+      version: 6.15.5
+    description: Truefoundry Loki Provisioner
+    digest: da25af3ef3cbc30190611fc82108adafb042ac975b1bb8b8f518df46353785c7
+    maintainers:
+    - name: truefoundry
+    name: tfy-loki
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-loki-0.1.2/tfy-loki-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     created: "2024-04-10T13:10:51.039384944Z"
     dependencies:
     - condition: loki.enabled
@@ -2961,6 +3044,17 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-manifests-template-0.1.0/tfy-manifests-template-0.1.0.tgz
     version: 0.1.0
   tfy-notebook-controller:
+  - apiVersion: v2
+    created: "2024-04-16T07:49:27.376844248Z"
+    description: Notebook controller
+    digest: 87b33213edaa02cd2dba0340af6af803d9b71d3ace048b9b46efeecb58d24da5
+    maintainers:
+    - name: truefoundry
+    name: tfy-notebook-controller
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.3.6/tfy-notebook-controller-0.3.6.tgz
+    version: 0.3.6
   - apiVersion: v2
     created: "2024-04-11T15:05:50.792184103Z"
     description: Notebook controller
@@ -3247,4 +3341,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-notebook-controller-0.1.0/tfy-notebook-controller-0.1.0.tgz
     version: 0.1.0
-generated: "2024-04-12T19:45:11.425562385Z"
+generated: "2024-04-16T07:49:27.377781894Z"
