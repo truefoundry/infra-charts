@@ -1,0 +1,62 @@
+{{- if .Values.aws.awsEbsCsiDriver.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-ebs-csi-driver
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "aws-ebs-csi-driver"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-13"
+spec:
+  destination:
+    namespace: aws-ebs-csi-driver
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+    targetRevision: 2.10.1
+    chart: aws-ebs-csi-driver
+    helm:
+      values: |-
+        node:
+          tolerateAllTaints: true
+        controller:
+          serviceAccount:
+            name: ebs-csi-controller-sa
+            annotations:
+              eks.amazonaws.com/role-arn: {{ .Values.aws.awsEbsCsiDriver.roleArn }}
+          extraVolumeTags:
+            cluster-name: {{ .Values.cluster.name }}
+            volume-type: csi-ebs
+            truefoundry.com/managed: "true"
+        storageClasses:
+          - name: gp2
+            parameters:
+              type: gp2
+              fsType: ext4
+            annotations:
+              storageclass.kubernetes.io/is-default-class: "false"
+            provisioner: kubernetes.io/aws-ebs
+            reclaimPolicy: Delete
+            volumeBindingMode: WaitForFirstConsumer
+            allowVolumeExpansion: true
+          - name: gp3
+            parameters:
+              type: gp3
+              fsType: ext4
+              encrypted: "true"
+            annotations:
+              storageclass.kubernetes.io/is-default-class: "true"
+            provisioner: ebs.csi.aws.com
+            reclaimPolicy: Delete
+            volumeBindingMode: WaitForFirstConsumer
+            allowVolumeExpansion: true
+  project: tfy-apps
+  syncPolicy:
+    automated: { }
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
