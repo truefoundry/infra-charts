@@ -1,0 +1,66 @@
+clusterToken: 
+tenantName: truefoundry
+controlPlaneURL: <to_be_provided>
+createTfyAppsArgoProject: True
+cluster:
+  name: <to_be_provided>
+  endpoint: <to_be_provided>
+argocd:
+  enabled: True
+argoWorkflows:
+  enabled: True
+argoRollouts:
+  enabled: True
+notebookController:
+  enabled: True
+certManager:
+  enabled: True
+metricsServer:
+  enabled: True
+
+tfyGpuOperator:
+  enabled: True
+  clusterType: generic
+truefoundry:
+  enabled: False
+  controlPlaneURL: <to_be_provided>
+  createVs: True
+  mlfoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    enabled: True
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+  mlmonitoring:
+    enabled: True
+    envOverwrite: {}
+  servicefoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    enabled: True
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+  sfyManifestService:
+    enabled: True
+  tfyBuild:
+    enabled: True
+  nats:
+    enabled: True
+  local:
+    postgresql: {}
+  truefoundryFrontendApp:
+    enabled: True
+    envOverwrite: {}
+loki:
+  enabled: True
+istio:
+  enabled: True
+tfyInferentiaOperator:
+  enabled: False
+keda:
+  enabled: True
+kubecost:
+  enabled: False
+prometheus:
+  enabled: True
+grafana:
+  enabled: True
+tfyAgent:
+  enabled: True
+  annotations: {}

@@ -1,0 +1,93 @@
+clusterToken: <to_be_provided>
+tenantName: truefoundry
+controlPlaneURL: <to_be_provided>
+createTfyAppsArgoProject: True
+cluster:
+  name: <terragruntOutput.cluster.cluster_name.raw>
+  endpoint: <terragruntOutput.cluster.cluster_endpoint.raw>
+argocd:
+  enabled: True
+argoWorkflows:
+  enabled: True
+argoRollouts:
+  enabled: True
+notebookController:
+  enabled: True
+certManager:
+  enabled: True
+metricsServer:
+  enabled: True
+
+aws:
+  awsLoadBalancerController:
+    enabled: True
+    roleArn: <terragruntOutput.aws-load-balancer-controller.elb_iam_role_arn.raw>
+  karpenter:
+    enabled: True
+    roleArn: <terragruntOutput.karpenter.karpenter_role_arn.raw>
+    instanceProfile: <terragruntOutput.karpenter.karpenter_instance_profile_id.raw>
+    defaultZones: <terragruntOutput.network.availability_zones.json>
+    gpuProvisioner:
+      capacityTypes: ['spot', 'on-demand']
+      instanceFamilies: ['p2', 'p3', 'p4d', 'p4de', 'p5', 'g4dn', 'g5']
+      zones: <terragruntOutput.network.availability_zones.json>
+    inferentiaProvisioner:
+        capacityTypes: ['spot', 'on-demand']
+        instanceFamilies: ['inf1', 'inf2']
+        zones: <terragruntOutput.network.availability_zones.json>
+    interruptionQueueName: <terragruntOutput.karpenter.karpenter_sqs_name.raw>
+  awsEbsCsiDriver:
+    enabled: True
+    roleArn: <terragruntOutput.csi-ebs.iam_role_arn.raw>
+  awsEfsCsiDriver:
+    enabled: True
+    fileSystemId: <terragruntOutput.efs.efs_id.raw>
+    region: <terragruntOutput.network.region.raw>
+    roleArn: <terragruntOutput.efs.efs_role_arn.raw>
+
+tfyGpuOperator:
+  enabled: True
+  clusterType: awsEks
+truefoundry:
+  enabled: True
+  controlPlaneURL: <to_be_provided>
+  createVs: True
+  mlfoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    enabled: True
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+  mlmonitoring:
+    enabled: True
+    envOverwrite: {}
+  servicefoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    enabled: True
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+  sfyManifestService:
+    enabled: True
+  tfyBuild:
+    enabled: True
+  nats:
+    enabled: True
+  local:
+    postgresql: {}
+  truefoundryFrontendApp:
+    enabled: True
+    envOverwrite: {}
+loki:
+  enabled: True
+istio:
+  enabled: True
+tfyInferentiaOperator:
+  enabled: True
+keda:
+  enabled: True
+kubecost:
+  enabled: True
+prometheus:
+  enabled: True
+grafana:
+  enabled: True
+tfyAgent:
+  enabled: True
+  annotations: {}
