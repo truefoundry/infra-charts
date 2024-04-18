@@ -72,10 +72,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### Parameters for tfyGpuOperator
 
-| Name                         | Description                       | Value   |
-| ---------------------------- | --------------------------------- | ------- |
-| `tfyGpuOperator.enabled`     | Flag to enable Tfy GPU Operator   | `false` |
-| `tfyGpuOperator.clusterType` | Cluster type for Tfy GPU Operator | `""`    |
+| Name                         | Description                                                                                                  | Value   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------ | ------- |
+| `tfyGpuOperator.enabled`     | Flag to enable Tfy GPU Operator                                                                              | `false` |
+| `tfyGpuOperator.clusterType` | Cluster type for Tfy GPU Operator like awsEks, azureAks, gcpGkeAutopilot, gcpGkeStandard, generic, civoTalos | `""`    |
 
 ### Parameters for loki
 
