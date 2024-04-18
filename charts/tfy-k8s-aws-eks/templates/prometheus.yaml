@@ -1,0 +1,388 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "prometheus"
+spec:
+  project: tfy-apps
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+    - group: monitoring.coreos.com
+      jqPathExpressions:
+        - .spec.endpoints[]?.relabelings[]?.action
+      kind: ServiceMonitor
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: prometheus
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+  source:
+    repoURL: "https://prometheus-community.github.io/helm-charts"
+    targetRevision: 55.8.1
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        coreDns:
+          enabled: false
+        grafana:
+          enabled: false
+        kubelet:
+          enabled: true
+          serviceMonitor:
+            probes: false
+            metricRelabelings:
+              - regex: name
+                action: labeldrop
+              - regex: metrics_path
+                action: labeldrop
+              - regex: endpoint
+                action: labeldrop
+              - regex: instance
+                action: labeldrop
+              - regex: (container_(.+)|kubelet_volume_(.+))
+                action: keep
+                sourceLabels:
+                  - __name__
+            cAdvisorMetricRelabelings:
+              - regex: container_blkio_device_usage_total
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: container_memory_(mapped_file|swap)
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: container_(file_descriptors|tasks_state|threads_max)
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: container_spec.*
+                action: drop
+                sourceLabels:
+                  - __name__
+              - regex: .+;
+                action: drop
+                sourceLabels:
+                  - id
+                  - pod
+              - regex: id
+                action: labeldrop
+              - regex: name
+                action: labeldrop
+              - regex: metrics_path
+                action: labeldrop
+              - regex: endpoint
+                action: labeldrop
+              - regex: instance
+                action: labeldrop
+        kubeEtcd:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            resources:
+              limits:
+                cpu: 2
+                memory: 10Gi
+              requests:
+                cpu: 400m
+                memory: 2Gi
+            retention: 30d
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 20Gi
+                  accessModes:
+                    - ReadWriteOnce
+            retentionSize: 18GB
+            enableAdminAPI: true
+            
+            
+            additionalScrapeConfigs:
+              - scheme: http
+                job_name: keda
+                honor_labels: true
+                metrics_path: /metrics
+                dns_sd_configs:
+                  - port: 8080
+                    type: A
+                    names:
+                      - keda-operator.keda
+                scrape_timeout: 10s
+                scrape_interval: 10s
+                metric_relabel_configs:
+                  - regex: >-
+                      (keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))
+                    action: drop
+                    source_labels:
+                      - __name__
+                  - regex: >-
+                      (keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)
+                    action: drop
+                    source_labels:
+                      - __name__
+              - job_name: "envoy-stats"
+                kubernetes_sd_configs:
+                  - role: pod
+                metrics_path: "/stats/prometheus"
+                relabel_configs:
+                  - regex: .*-envoy-prom
+                    action: keep
+                    source_labels:
+                      - __meta_kubernetes_pod_container_port_name
+                  - source_labels: [__meta_kubernetes_pod_name]
+                    target_label: pod
+                  - source_labels: [__meta_kubernetes_pod_container_name]
+                    target_label: container
+                  - source_labels: [__meta_kubernetes_namespace]
+                    target_label: namespace
+                  - source_labels: [__meta_kubernetes_pod_node_name]
+                    action: replace
+                    target_label: node
+                metric_relabel_configs:
+                  - source_labels: [ __name__ ]
+                    action: drop
+                    regex: envoy_(.+)
+                  - source_labels: [ __name__ ]
+                    action: drop
+                    regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
+              - job_name: "kubernetes-pods"
+                kubernetes_sd_configs:
+                  - role: pod
+                relabel_configs:
+                  - action: drop
+                    source_labels: [__meta_kubernetes_namespace]
+                    regex: (istio-system|cert-manager|kube-system)
+                  - action: drop
+                    source_labels: [__meta_kubernetes_pod_container_init]
+                    regex: true
+                  - source_labels:
+                      [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                    action: keep
+                    regex: true
+                  - source_labels:
+                      [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+                    action: replace
+                    target_label: __scheme__
+                    regex: (https?)
+                  - source_labels:
+                      [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                    action: replace
+                    target_label: __metrics_path__
+                    regex: (.+)
+                  - source_labels:
+                      [
+                        __address__,
+                        __meta_kubernetes_pod_annotation_prometheus_io_port,
+                      ]
+                    action: replace
+                    target_label: __address__
+                    regex: ([^:]+)(?::\d+)?;(\d+)
+                    replacement: $1:$2
+                  - source_labels: [__meta_kubernetes_pod_name]
+                    target_label: pod
+                  - source_labels: [__meta_kubernetes_pod_container_name]
+                    target_label: container
+                  - source_labels: [__meta_kubernetes_namespace]
+                    target_label: namespace
+                  - source_labels: [__meta_kubernetes_pod_node_name]
+                    action: replace
+                    target_label: node
+                  - target_label: label_truefoundry_com_application_id
+                    source_labels:
+                      - __meta_kubernetes_pod_label_truefoundry_com_application_id
+              - job_name: argo-workflows
+                static_configs:
+                  - targets:
+                      - argo-workflows-workflow-controller.argo-workflows.svc.cluster.local:8080
+              
+              - job_name: gpu-metrics
+                scrape_interval: 15s
+                scrape_timeout: 10s
+                metrics_path: /metrics
+                scheme: http
+                kubernetes_sd_configs:
+                - role: endpoints
+                  namespaces:
+                    names:
+                    - tfy-gpu-operator
+                relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_node_name]
+                  action: replace
+                  target_label: kubernetes_node
+              
+              
+              - scheme: http
+                job_name: kubecost
+                honor_labels: true
+                metrics_path: /metrics
+                dns_sd_configs:
+                  - port: 9003
+                    type: A
+                    names:
+                      - kubecost-cost-analyzer.kubecost
+                scrape_timeout: 60s
+                scrape_interval: 1m
+          serviceMonitor:
+            selfMonitor: false
+        alertmanager:
+          enabled: false
+        nodeExporter:
+          enabled: true
+        kubeApiServer:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kube-state-metrics:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+              ephemeral-storage: 256Mi
+          
+          
+          prometheus:
+            monitor:
+              enabled: true
+              metricRelabelings:
+               - regex: ([;]*)([a-z-_A-Z]+)([;]*)
+                 action: replace
+                 separator: ;
+                 replacement: ${2}
+                 targetLabel: capacity_type
+                 sourceLabels:
+                   - label_karpenter_sh_capacity_type
+                   - label_eks_amazonaws_com_capacity_type
+                   - label_kubernetes_azure_com_scalesetpriority
+                   - label_cloud_google_com_gke_provisioning
+               - regex: (.+)
+                 action: lowercase
+                 targetLabel: capacity_type
+                 sourceLabels:
+                   - capacity_type
+               - regex: (.+)
+                 action: replace
+                 targetLabel: instance_type
+                 sourceLabels:
+                   - label_node_kubernetes_io_instance_type
+          metricLabelsAllowlist:
+            - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component]
+            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
+        prometheusOperator:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+              ephemeral-storage: 1Gi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              ephemeral-storage: 256Mi
+          
+          
+          serviceMonitor:
+            selfMonitor: false
+        kubeControllerManager:
+          enabled: false
+        prometheus-node-exporter:
+          extraArgs:
+            - --web.disable-exporter-metrics
+            - --collector.disable-defaults
+            - --collector.cpu
+            - --collector.meminfo
+            - --collector.filesystem
+            - --collector.stat
+            - --collector.time
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 30Mi
+          prometheus:
+            monitor:
+              interval: 30s
+              relabelings:
+                - regex: (.+)
+                  targetLabel: node
+                  sourceLabels:
+                    - __meta_kubernetes_endpoint_node_name
+            serviceMonitor:
+              selfMonitor: false
+        additionalPrometheusRulesMap:
+          rule-name:
+            groups:
+              - name: CPU
+                rules:
+                  - expr: sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+                    record: cluster:cpu_usage:rate5m
+                  - expr: rate(container_cpu_usage_seconds_total{container!=""}[5m])
+                    record: cluster:cpu_usage_nosum:rate5m
+                  - expr: >-
+                      avg(irate(container_cpu_usage_seconds_total{container!="POD",
+                      container!=""}[5m])) by (container,pod,namespace)
+                    record: kubecost_container_cpu_usage_irate
+                  - expr: >-
+                      sum(container_memory_working_set_bytes{container!="POD",container!=""})
+                      by (container,pod,namespace)
+                    record: kubecost_container_memory_working_set_bytes
+                  - expr: >-
+                      sum(container_memory_working_set_bytes{container!="POD",container!=""})
+                    record: kubecost_cluster_memory_working_set_bytes
+              - name: Savings
+                rules:
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind!="DaemonSet"}) by (pod) *
+                      sum(container_cpu_allocation) by (pod))
+                    labels:
+                      daemonset: 'false'
+                    record: kubecost_savings_cpu_allocation
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind="DaemonSet"}) by (pod) *
+                      sum(container_cpu_allocation) by (pod)) / sum(kube_node_info)
+                    labels:
+                      daemonset: 'true'
+                    record: kubecost_savings_cpu_allocation
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind!="DaemonSet"}) by (pod) *
+                      sum(container_memory_allocation_bytes) by (pod))
+                    labels:
+                      daemonset: 'false'
+                    record: kubecost_savings_memory_allocation_bytes
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind="DaemonSet"}) by (pod) *
+                      sum(container_memory_allocation_bytes) by (pod)) /
+                      sum(kube_node_info)
+                    labels:
+                      daemonset: 'true'
+                    record: kubecost_savings_memory_allocation_bytes
+{{- end }}
