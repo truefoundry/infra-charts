@@ -1,3 +1,4 @@
+
 {{- if .Values.truefoundry.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -13,54 +14,54 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.3.196
+    targetRevision: 0.3.188-rc.2
     repoURL: "quay.io/truefoundrycharts"
     chart: truefoundry
     helm:
       values: |
         global:
           imagePullSecretName: truefoundry-image-pull-secret
-          tenantName:{{.Values.tenantName}}
+          tenantName: {{ .Values.tenantName }}
           
-          controlPlaneURL: {{.Values.truefoundry.controlPlaneURL}}
+          controlPlaneURL: {{ .Values.controlPlaneURL }}
           
           
         mlfoundry-server:
-          enabled: {{.Values.truefoundry.mlfoundry.enabled}}
+          enabled: True
           serviceAccount:
             create: true
             
-            annotations: {{.Values.truefoundry.mlfoundry.annotations}}
+            annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
             
           
-          env: {{ .Values.truefoundry.mlfoundry.env }}
+          env: {'S3_BUCKET_NAME': '<to_be_provided>'}
           
         servicefoundry-server:
-          enabled: {{ .Values.truefoundry.servicefoundry.enabled }}
+          enabled: True
           serviceAccount:
             create: true
             
-            annotations: {{ .Values.truefoundry.servicefoundry.annotations }}
+            annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
             
           
-          env: {{ .Values.truefoundry.servicefoundry.env }}
+          env: {'S3_BUCKET_NAME': '<to_be_provided>'}
           
         ml-monitoring-server:
-          enabled:  {{ .Values.truefoundry.mlmonitoring.enabled }}
+          enabled: True
           
         truefoundry-frontend-app:
-          enabled: {{ .Values.truefoundry.truefoundryFrontendApp.enabled }}
+          enabled: True
           
           
           
           
           
         sfy-manifest-service:
-          enabled: {{ .Values.truefoundry.sfyManifestService.enabled }}
+          enabled: True
         tfy-build:
-          enabled: {{ .Values.truefoundry.tfyBuild.enabled}}
+          enabled: True
         nats:
-          enabled: {{ .Values.truefoundry.nats.enabled}}
+          enabled: True
           nats:
             advertise: false
             jetstream:

@@ -1,3 +1,4 @@
+
 {{- if .Values.metricsServer.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -6,8 +7,8 @@ metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-20"
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-18"
   labels:
     truefoundry.com/infra-component: "metrics-server"
 spec:

@@ -1,3 +1,4 @@
+
 {{- if .Values.tfyAgent.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -7,9 +8,6 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-agent"
-  annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-17"
 spec:
   destination:
     namespace: tfy-agent
@@ -23,9 +21,9 @@ spec:
       releaseName: tfy-agent
       values: |
         config:
-          clusterToken: {{ .Values.clusterToken}}
-          tenantName: {{ .Values.tenantName}}
-          controlPlaneURL: {{ .Values.controlPlaneURL}}
+          clusterToken: {{ .Values.clusterToken }}
+          tenantName: {{ .Values.tenantName }}
+          controlPlaneURL: {{ .Values.controlPlaneURL }}
         
         tfyAgent:
           tolerations:
