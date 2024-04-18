@@ -5,11 +5,11 @@ metadata:
   name: aws-ebs-csi-driver
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-13"
   labels:
     truefoundry.com/infra-component: "aws-ebs-csi-driver"
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-13"
 spec:
   destination:
     namespace: aws-ebs-csi-driver
