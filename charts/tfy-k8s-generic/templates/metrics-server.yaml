@@ -1,0 +1,47 @@
+{{- if .Values.metricsServer.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-20"
+  labels:
+    truefoundry.com/infra-component: "metrics-server"
+spec:
+  destination:
+    namespace: kube-system
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: 'https://kubernetes-sigs.github.io/metrics-server/'
+    targetRevision: 3.12.1
+    chart: metrics-server
+    helm:
+      values: |-
+        podAnnotations:
+          "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
+        replicas: 2
+        resources:
+          limits:
+            cpu: 50m
+            memory: 100Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        podDisruptionBudget:
+          enabled: true
+          minAvailable: 1
+        containerPort: 4443
+        args:
+          - '--kubelet-insecure-tls'
+        tolerations:
+          - key: "dedicated"
+            operator: "Equal"
+            value: "reserved-supercluster"
+            effect: "NoSchedule"
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+{{- end }}

@@ -1,0 +1,78 @@
+{{- if .Values.argocd.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-20"
+  labels:
+    truefoundry.com/infra-component: "argocd"
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: argo-cd
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 6.7.10
+    helm:
+      values: |
+        applicationSet:
+          enabled: false
+        notifications:
+          enabled: false
+        dex:
+          enabled: false
+        configs:
+          cm:
+            resource.customizations.ignoreDifferences.storage.k8s.io_CSIDriver: |
+              jqPathExpressions:
+              - '.spec.seLinuxMount'
+        server:
+          extraArgs:
+            - --insecure
+            - '--application-namespaces="*"'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          
+        controller:
+          extraArgs:
+            - '--application-namespaces="*"'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          
+        redis:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          
+        repoServer:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          
+  syncPolicy:
+    automated: { }
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
