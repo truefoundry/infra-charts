@@ -1,0 +1,70 @@
+{{- if .Values.aws.karpenter.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-config
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "karpenter-config"
+  annotations:
+   "helm.sh/hook": pre-install,pre-upgrade
+   "helm.sh/hook-weight": "-14"
+spec:
+  destination:
+    namespace: karpenter
+    server: "https://kubernetes.default.svc"
+  source:
+    chart: tfy-karpenter-config
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.18
+    helm:
+      values: |
+        cluster:
+          name: {{ .Values.cluster.name }}
+          endpoint: {{ .Values.cluster.endpoint }}
+        karpenter:
+          enabled: {{ .Values.aws.karpenter.enabled }}
+          instanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
+          defaultProvisionerSpec:
+            consolidation:
+              enabled: true
+            requirements:
+              - key: karpenter.sh/capacity-type
+                operator: In
+                values: ["spot", "on-demand"]
+              - key: "topology.kubernetes.io/zone"
+                operator: In
+                values: {{ .Values.aws.karpenter.defaultZones }}
+              - key: kubernetes.io/arch
+                operator: In
+                values: ["amd64"]
+              - key: kubernetes.io/os	
+                operator: In	
+                values:	["linux"]
+              - key: karpenter.k8s.aws/instance-family
+                operator: NotIn
+                values: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "g4dn", "g5", "c1", "cc1", "cc2", "cg1", "cg2", "cr1", "g1", "g2", "hi1", "hs1", "m1", "m2", "m3"]
+              - key: karpenter.k8s.aws/instance-size
+                operator: NotIn
+                values: ["nano", "micro", "24xlarge", "32xlarge", "48xlarge", "metal"]
+          
+          gpuProvisionerSpec:
+            enabled: true
+            capacityTypes: {{ .Values.aws.karpenter.gpuProvisioner.capacityTypes }}
+            zones: {{ .Values.aws.karpenter.gpuProvisioner.zones }}
+            instanceFamilies: {{ .Values.aws.karpenter.gpuProvisioner.instanceFamilies }}
+          
+          
+          inferentiaProvisionerSpec:
+            enabled: true
+            capacityTypes: {{ .Values.aws.karpenter.inferentiaProvisioner.capacityTypes }}
+            zones: {{ .Values.aws.karpenter.inferentiaProvisioner.zones }}
+            instanceFamilies: {{ .Values.aws.karpenter.inferentiaProvisioner.instanceFamilies }}
+          
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=false
+{{- end }}

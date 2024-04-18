@@ -1,0 +1,283 @@
+## @section Parameters for clusterToken
+## Token for cluster authentication
+##
+clusterToken: <to_be_provided>
+
+## @section Parameters for tenantName
+## Name of the tenant
+##
+tenantName: truefoundry
+
+## @section Parameters for controlPlaneURL
+## URL of the control plane
+##
+controlPlaneURL: <to_be_provided>
+
+## @section Parameters for createTfyAppsArgoProject
+## Flag to create TfyApps Argo project
+##
+createTfyAppsArgoProject: True
+
+## @section Parameters for cluster
+## @param cluster.name Name of the cluster
+##
+cluster:
+  name: <terragruntOutput.cluster.cluster_name.raw>
+  ## @param cluster.endpoint Endpoint of the cluster
+  ##
+  endpoint: <terragruntOutput.cluster.cluster_endpoint.raw>
+
+## @section Parameters for argocd
+## @param argocd.enabled Flag to enable ArgoCD
+##
+argocd:
+  enabled: True
+
+## @section Parameters for argoWorkflows
+## @param argoWorkflows.enabled Flag to enable Argo Workflows
+##
+argoWorkflows:
+  enabled: True
+
+## @section Parameters for argoRollouts
+## @param argoRollouts.enabled Flag to enable Argo Rollouts
+##
+argoRollouts:
+  enabled: True
+
+## @section Parameters for notebookController
+## @param notebookController.enabled Flag to enable Notebook Controller
+##
+notebookController:
+  enabled: True
+
+## @section Parameters for certManager
+## @param certManager.enabled Flag to enable Cert Manager
+##
+certManager:
+  enabled: True
+
+## @section Parameters for metricsServer
+## @param metricsServer.enabled Flag to enable Metrics Server
+##
+metricsServer:
+  enabled: True
+
+
+## @section Parameters for AWS
+## Parameters for AWS
+##
+aws:
+  ## @subsection Parameters for awsLoadBalancerController
+  ## @param aws.awsLoadBalancerController.enabled Flag to enable AWS Load Balancer Controller
+  awsLoadBalancerController:
+    enabled: True
+    ## @param aws.awsLoadBalancerController.roleArn Role ARN for AWS Load Balancer Controller
+    ##
+    roleArn: <terragruntOutput.aws-load-balancer-controller.elb_iam_role_arn.raw>
+
+  ## @subsection Parameters for karpenter
+  ## @param aws.karpenter.enabled Flag to enable Karpenter
+  ##
+  karpenter:
+    enabled: True
+    ## @param aws.karpenter.roleArn Role ARN for Karpenter
+    ##
+    roleArn: <terragruntOutput.karpenter.karpenter_role_arn.raw>
+    ## @param aws.karpenter.instanceProfile Instance profile for Karpenter
+    ##
+    instanceProfile: <terragruntOutput.karpenter.karpenter_instance_profile_id.raw>
+    ## @param aws.karpenter.defaultZones Default zones for Karpenter
+    ##
+    defaultZones: <terragruntOutput.network.availability_zones.json>
+
+    ## @subsection Parameters for gpuProvisioner
+    ## @param aws.karpenter.gpuProvisioner.capacityTypes Capacity types for GPU provisioner
+    ##
+    gpuProvisioner:
+      capacityTypes: ['spot', 'on-demand']
+      ## @param aws.karpenter.gpuProvisioner.instanceFamilies Instance families for GPU provisioner
+      ##
+      instanceFamilies: ['p2', 'p3', 'p4d', 'p4de', 'p5', 'g4dn', 'g5']
+      ## @param aws.karpenter.gpuProvisioner.zones Zones for GPU provisioner
+      ##
+      zones: <terragruntOutput.network.availability_zones.json>
+
+    ## @subsection Parameters for inferentiaProvisioner
+    ## @param aws.karpenter.inferentiaProvisioner.capacityTypes Capacity types for Inferentia provisioner
+    ##
+    inferentiaProvisioner:
+      capacityTypes: ['spot', 'on-demand']
+      ## @param aws.karpenter.inferentiaProvisioner.instanceFamilies Instance families for Inferentia provisioner
+      ##
+      instanceFamilies: ['inf1', 'inf2']
+      ## @param aws.karpenter.inferentiaProvisioner.zones Zones for Inferentia provisioner
+      ##
+      zones: <terragruntOutput.network.availability_zones.json>
+
+    ## @param aws.karpenter.interruptionQueueName Interruption queue name for Karpenter
+    ##
+    interruptionQueueName: <terragruntOutput.karpenter.karpenter_sqs_name.raw>
+
+  ## @subsection Parameters for awsEbsCsiDriver
+  ## @param aws.awsEbsCsiDriver.enabled Flag to enable AWS EBS CSI Driver
+  ##
+  awsEbsCsiDriver:
+    enabled: True
+    ## @param aws.awsEbsCsiDriver.roleArn Role ARN for AWS EBS CSI Driver
+    ##
+    roleArn: <terragruntOutput.csi-ebs.iam_role_arn.raw>
+
+  ## @subsection Parameters for awsEfsCsiDriver
+  ## @param aws.awsEfsCsiDriver.enabled Flag to enable AWS EFS CSI Driver
+  ##
+  awsEfsCsiDriver:
+    enabled: True
+    ## @param aws.awsEfsCsiDriver.fileSystemId File system ID for AWS EFS CSI Driver
+    ##
+    fileSystemId: <terragruntOutput.efs.efs_id.raw>
+    ## @param aws.awsEfsCsiDriver.region Region for AWS EFS CSI Driver
+    ##
+    region: <terragruntOutput.network.region.raw>
+    ## @param aws.awsEfsCsiDriver.roleArn Role ARN for AWS EFS CSI Driver
+    ##
+    roleArn: <terragruntOutput.efs.efs_role_arn.raw>
+
+
+## @section Parameters for tfyGpuOperator
+## @param tfyGpuOperator.enabled Flag to enable Tfy GPU Operator
+##
+tfyGpuOperator:
+  enabled: True
+  ## @param tfyGpuOperator.clusterType Cluster type for Tfy GPU Operator
+  ##
+  clusterType: awsEks
+
+## @section Parameters for truefoundry
+## @param truefoundry.enabled Flag to enable TrueFoundry
+##
+truefoundry:
+  enabled: True
+  ## @param truefoundry.controlPlaneURL Control plane URL for TrueFoundry
+  ##
+  controlPlaneURL: <to_be_provided>
+  ## @param truefoundry.createVs Flag to create VS in TrueFoundry
+  ##
+  createVs: True
+
+  ## @subsection Parameters for mlfoundry
+  ## @param truefoundry.mlfoundry.annotations Annotations for MLFoundry in TrueFoundry
+  ##
+  mlfoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    ## @param truefoundry.mlfoundry.enabled Flag to enable MLFoundry in TrueFoundry
+    ##
+    enabled: True
+    ## @param truefoundry.mlfoundry.envOverwrite Environment variables overwrite for MLFoundry in TrueFoundry
+    ##
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+
+  ## @subsection Parameters for mlmonitoring
+  ## @param truefoundry.mlmonitoring.enabled Flag to enable ML Monitoring in TrueFoundry
+  ##
+  mlmonitoring:
+    enabled: True
+    ## @param truefoundry.mlmonitoring.envOverwrite Environment variables overwrite for ML Monitoring in TrueFoundry
+    ##
+    envOverwrite: {}
+
+  ## @subsection Parameters for servicefoundry
+  ## @param truefoundry.servicefoundry.annotations Annotations for ServiceFoundry in TrueFoundry
+  ##
+  servicefoundry:
+    annotations: {'eks.amazonaws.com/role-arn': '<to_be_provided>'}
+    ## @param truefoundry.servicefoundry.enabled Flag to enable ServiceFoundry in TrueFoundry
+    ##
+    enabled: True
+    ## @param truefoundry.servicefoundry.envOverwrite Environment variables overwrite for ServiceFoundry in TrueFoundry
+    ##
+    envOverwrite: {'S3_BUCKET_NAME': '<to_be_provided>'}
+
+  ## @subsection Parameters for sfyManifestService
+  ## @param truefoundry.sfyManifestService.enabled Flag to enable SFY Manifest Service in TrueFoundry
+  ##
+  sfyManifestService:
+    enabled: True
+
+  ## @subsection Parameters for tfyBuild
+  ## @param truefoundry.tfyBuild.enabled Flag to enable Tfy Build in TrueFoundry
+  ##
+  tfyBuild:
+    enabled: True
+
+  ## @subsection Parameters for nats
+  ## @param truefoundry.nats.enabled Flag to enable NATS in TrueFoundry
+  ##
+  nats:
+    enabled: True
+
+  ## @subsection Parameters for local
+  ## @param truefoundry.local.postgresql Flag to enable local PostgreSQL in TrueFoundry
+  ##
+  local:
+    postgresql: {}
+
+  ## @subsection Parameters for truefoundryFrontendApp
+  ## @param truefoundry.truefoundryFrontendApp.enabled Flag to enable TrueFoundry Frontend App
+  ##
+  truefoundryFrontendApp:
+    enabled: True
+    ## @param truefoundry.truefoundryFrontendApp.envOverwrite Environment variables overwrite for TrueFoundry Frontend App
+    ##
+    envOverwrite: {}
+
+## @section Parameters for loki
+## @param loki.enabled Flag to enable Loki
+##
+loki:
+  enabled: True
+
+## @section Parameters for istio
+## @param istio.enabled Flag to enable Istio
+##
+istio:
+  enabled: True
+
+## @section Parameters for tfyInferentiaOperator
+## @param tfyInferentiaOperator.enabled Flag to enable Tfy Inferentia Operator
+##
+tfyInferentiaOperator:
+  enabled: True
+
+## @section Parameters for keda
+## @param keda.enabled Flag to enable Keda
+##
+keda:
+  enabled: True
+
+## @section Parameters for kubecost
+## @param kubecost.enabled Flag to enable Kubecost
+##
+kubecost:
+  enabled: True
+
+## @section Parameters for prometheus
+## @param prometheus.enabled Flag to enable Prometheus
+##
+prometheus:
+  enabled: True
+
+## @section Parameters for grafana
+## @param grafana.enabled Flag to enable Grafana
+##
+grafana:
+  enabled: True
+
+## @section Parameters for tfyAgent
+## @param tfyAgent.enabled Flag to enable Tfy Agent
+##
+tfyAgent:
+  enabled: True
+  ## @param tfyAgent.annotations Annotations for Tfy Agent
+  ##
+  annotations: {}
