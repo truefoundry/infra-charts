@@ -1,0 +1,30 @@
+{{- if .Values.truefoundry.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: truefoundry
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "truefoundry"
+spec:
+  destination:
+    namespace: truefoundry
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 0.3.196
+    repoURL: "quay.io/truefoundrycharts"
+    chart: truefoundry
+    helm:
+      values: |
+        global:
+          tenantName: {{.Values.tenantName}}
+          controlPlaneURL: {{.Values.controlPlaneURL}}
+          dev: {{.Values.truefoundry.dev}}
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
