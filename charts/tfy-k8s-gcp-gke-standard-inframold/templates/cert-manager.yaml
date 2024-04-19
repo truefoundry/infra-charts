@@ -1,0 +1,116 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "cert-manager"
+spec:
+  destination:
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.13.3
+    helm:
+      values: |-
+        installCRDs: true
+        
+        
+        tolerations:
+        - key: "cloud.google.com/gke-spot"
+          value: "true"
+          effect: NoSchedule
+          operator: Equal
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: cloud.google.com/gke-spot
+                      values:
+                        - "true"
+                      operator: In
+        
+        webhook:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+          
+          
+          tolerations:
+          - key: "cloud.google.com/gke-spot"
+            value: "true"
+            effect: NoSchedule
+            operator: Equal
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  preference:
+                    matchExpressions:
+                      - key: cloud.google.com/gke-spot
+                        values:
+                          - "true"
+                        operator: In
+          
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+        cainjector:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+          
+          
+          tolerations:
+          - key: "cloud.google.com/gke-spot"
+            value: "true"
+            effect: NoSchedule
+            operator: Equal
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  preference:
+                    matchExpressions:
+                      - key: cloud.google.com/gke-spot
+                        values:
+                          - "true"
+                        operator: In
+          
+        startupapicheck:
+        
+        
+          tolerations:
+            - key: "cloud.google.com/gke-spot"
+              value: "true"
+              effect: NoSchedule
+              operator: Equal
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  preference:
+                    matchExpressions:
+                      - key: cloud.google.com/gke-spot
+                        values:
+                          - "true"
+                        operator: In
+        
+  syncPolicy:
+    automated: {}
+    retry: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

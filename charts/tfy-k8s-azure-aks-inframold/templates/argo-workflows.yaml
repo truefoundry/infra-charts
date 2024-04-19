@@ -1,0 +1,70 @@
+{{- if .Values.argoWorkflows.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "argo-workflows"
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-19"
+spec:
+  destination:
+    namespace: argo-workflows
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: argo-workflows
+    repoURL: "https://argoproj.github.io/argo-helm"
+    targetRevision: 0.41.1
+    helm:
+      values: |
+        controller:
+          workflowDefaults:
+            spec:
+              activeDeadlineSeconds: 432000
+              ttlStrategy:
+                secondsAfterCompletion: 3600
+          metricsConfig:
+            enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          tolerations:
+          - key: kubernetes.azure.com/scalesetpriority
+            value: spot
+            effect: NoSchedule
+            operator: Equal
+          
+          
+        executor:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+        server:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+          
+          tolerations:
+          - key: kubernetes.azure.com/scalesetpriority
+            value: spot
+            effect: NoSchedule
+            operator: Equal
+          
+          
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

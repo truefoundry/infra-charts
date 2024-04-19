@@ -1,0 +1,118 @@
+## @param clusterToken Parameters for clusterToken
+## Token for cluster authentication
+##
+clusterToken: <to_be_provided>
+
+## @param tenantName Parameters for tenantName
+## Name of the tenant
+##
+tenantName: <to_be_provided>
+
+## @param controlPlaneURL Parameters for controlPlaneURL
+## URL of the control plane
+##
+controlPlaneURL: <to_be_provided>
+
+## @param createTfyAppsArgoProject Parameters for createTfyAppsArgoProject
+## Flag to create TfyApps Argo project
+##
+createTfyAppsArgoProject: True
+
+## @section Parameters for cluster
+## @param cluster.name Name of the cluster
+##
+cluster:
+  name: <terragruntOutput.cluster.cluster_name.raw>
+  ## @param cluster.endpoint Endpoint of the cluster
+  ##
+  endpoint: <terragruntOutput.cluster.cluster_endpoint.raw>
+
+
+## @section Parameters for AWS
+## Parameters for AWS
+##
+aws:
+  ## @subsection Parameters for awsLoadBalancerController
+  ## @param aws.awsLoadBalancerController.enabled Flag to enable AWS Load Balancer Controller
+  awsLoadBalancerController:
+    enabled: True
+    ## @param aws.awsLoadBalancerController.roleArn Role ARN for AWS Load Balancer Controller
+    ##
+    roleArn: <terragruntOutput.aws-load-balancer-controller.elb_iam_role_arn.raw>
+
+  ## @subsection Parameters for karpenter
+  ## @param aws.karpenter.enabled Flag to enable Karpenter
+  ##
+  karpenter:
+    enabled: True
+    ## @param aws.karpenter.roleArn Role ARN for Karpenter
+    ##
+    roleArn: <terragruntOutput.karpenter.karpenter_role_arn.raw>
+    ## @param aws.karpenter.instanceProfile Instance profile for Karpenter
+    ##
+    instanceProfile: <terragruntOutput.karpenter.karpenter_instance_profile_id.raw>
+    ## @param aws.karpenter.defaultZones Default zones for Karpenter
+    ##
+    defaultZones: <terragruntOutput.network.availability_zones.json>
+
+    ## @subsection Parameters for gpuProvisioner
+    ## @param aws.karpenter.gpuProvisioner.capacityTypes Capacity types for GPU provisioner
+    ##
+    gpuProvisioner:
+      capacityTypes: ['spot', 'on-demand']
+      ## @param aws.karpenter.gpuProvisioner.instanceFamilies Instance families for GPU provisioner
+      ##
+      instanceFamilies: ['p2', 'p3', 'p4d', 'p4de', 'p5', 'g4dn', 'g5']
+      ## @param aws.karpenter.gpuProvisioner.zones Zones for GPU provisioner
+      ##
+      zones: <terragruntOutput.network.availability_zones.json>
+
+    ## @subsection Parameters for inferentiaProvisioner
+    ## @param aws.karpenter.inferentiaProvisioner.capacityTypes Capacity types for Inferentia provisioner
+    ##
+    inferentiaProvisioner:
+      capacityTypes: ['spot', 'on-demand']
+      ## @param aws.karpenter.inferentiaProvisioner.instanceFamilies Instance families for Inferentia provisioner
+      ##
+      instanceFamilies: ['inf1', 'inf2']
+      ## @param aws.karpenter.inferentiaProvisioner.zones Zones for Inferentia provisioner
+      ##
+      zones: <terragruntOutput.network.availability_zones.json>
+
+    ## @param aws.karpenter.interruptionQueueName Interruption queue name for Karpenter
+    ##
+    interruptionQueueName: <terragruntOutput.karpenter.karpenter_sqs_name.raw>
+
+  ## @subsection Parameters for awsEbsCsiDriver
+  ## @param aws.awsEbsCsiDriver.enabled Flag to enable AWS EBS CSI Driver
+  ##
+  awsEbsCsiDriver:
+    enabled: True
+    ## @param aws.awsEbsCsiDriver.roleArn Role ARN for AWS EBS CSI Driver
+    ##
+    roleArn: <terragruntOutput.csi-ebs.iam_role_arn.raw>
+
+  ## @subsection Parameters for awsEfsCsiDriver
+  ## @param aws.awsEfsCsiDriver.enabled Flag to enable AWS EFS CSI Driver
+  ##
+  awsEfsCsiDriver:
+    enabled: True
+    ## @param aws.awsEfsCsiDriver.fileSystemId File system ID for AWS EFS CSI Driver
+    ##
+    fileSystemId: <terragruntOutput.efs.efs_id.raw>
+    ## @param aws.awsEfsCsiDriver.region Region for AWS EFS CSI Driver
+    ##
+    region: <terragruntOutput.network.region.raw>
+    ## @param aws.awsEfsCsiDriver.roleArn Role ARN for AWS EFS CSI Driver
+    ##
+    roleArn: <terragruntOutput.efs.efs_role_arn.raw>
+
+
+## @section Parameters for tfyGpuOperator
+## @param tfyGpuOperator.enabled Flag to enable Tfy GPU Operator
+##
+tfyGpuOperator:
+  enabled: True
+  ## @param tfyGpuOperator.clusterType Cluster type for Tfy GPU Operator
+  ##
+  clusterType: awsEks

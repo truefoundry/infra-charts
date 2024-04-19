@@ -1,0 +1,102 @@
+{{- if .Values.truefoundry.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: truefoundry
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "truefoundry"
+spec:
+  destination:
+    namespace: truefoundry
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 0.3.196
+    repoURL: "quay.io/truefoundrycharts"
+    chart: truefoundry
+    helm:
+      values: |
+        global:
+          imagePullSecretName: truefoundry-image-pull-secret
+          tenantName:{{.Values.tenantName}}
+          
+          controlPlaneURL: {{.Values.truefoundry.controlPlaneURL}}
+          
+          
+        mlfoundry-server:
+          enabled: {{.Values.truefoundry.mlfoundry.enabled}}
+          serviceAccount:
+            create: true
+            
+            annotations: {{.Values.truefoundry.mlfoundry.annotations}}
+            
+          
+          env: {{ .Values.truefoundry.mlfoundry.env }}
+          
+        servicefoundry-server:
+          enabled: {{ .Values.truefoundry.servicefoundry.enabled }}
+          serviceAccount:
+            create: true
+            
+            annotations: {{ .Values.truefoundry.servicefoundry.annotations }}
+            
+          
+          env: {{ .Values.truefoundry.servicefoundry.env }}
+          
+        ml-monitoring-server:
+          enabled:  {{ .Values.truefoundry.mlmonitoring.enabled }}
+          
+        truefoundry-frontend-app:
+          enabled: {{ .Values.truefoundry.truefoundryFrontendApp.enabled }}
+          
+          
+          
+          
+          
+        sfy-manifest-service:
+          enabled: {{ .Values.truefoundry.sfyManifestService.enabled }}
+        tfy-build:
+          enabled: {{ .Values.truefoundry.tfyBuild.enabled}}
+        nats:
+          enabled: {{ .Values.truefoundry.nats.enabled}}
+          nats:
+            advertise: false
+            jetstream:
+              enabled: true
+              memStorage:
+                enabled: true
+                size: 1Gi
+              fileStorage:
+                enabled: true
+                storageDirectory: /data
+                size: 10Gi
+                accessModes:
+                  - ReadWriteOnce
+            logging:
+              debug: true
+          cluster:
+            enabled: true
+            replicas: 3
+            noAdvertise: true
+          websocket:
+            enabled: true
+            port: 443
+            noTLS: true
+            sameOrigin: false
+            allowedOrigins: []
+          auth:
+            enabled: true
+            resolver:
+              type: memory
+              configMap:
+                name: nats-accounts
+                key: resolver.conf
+        
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
