@@ -1,0 +1,61 @@
+{{- if .Values.notebookController.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: notebook-controller
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "notebook-controller"
+spec:
+  ignoreDifferences:
+    - group: rbac.authorization.k8s.io
+      jqPathExpressions:
+        - .rules
+      kind: ClusterRole
+  destination:
+    namespace: nb-ctl-system
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 0.3.6-rc.5
+    repoURL: https://truefoundry.github.io/infra-charts/
+    chart: tfy-notebook-controller
+    helm:
+      values: |-
+        
+        
+        tolerations:
+          - key: "cloud.google.com/gke-spot"
+            value: "true"
+            effect: NoSchedule
+            operator: Equal
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                    - key: cloud.google.com/gke-spot
+                      values:
+                        - "true"
+                      operator: In
+        sdsServer:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  preference:
+                    matchExpressions:
+                      - key: cloud.google.com/gke-spot
+                        values:
+                          - "true"
+                        operator: In
+        
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
