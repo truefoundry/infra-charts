@@ -1,0 +1,33 @@
+{{- if .Values.tfyAgent.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-agent
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-agent"
+spec:
+  destination:
+    namespace: tfy-agent
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 0.2.21-rc.5
+    repoURL: https://truefoundry.github.io/infra-charts/
+    chart: tfy-agent
+    helm:
+      releaseName: tfy-agent
+      values: |
+        config:
+          clusterToken: {{ .Values.tfyAgent.clusterToken}}
+          tenantName: {{ .Values.tenantName}}
+          controlPlaneURL: {{ .Values.controlPlaneURL}}
+        
+        
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
