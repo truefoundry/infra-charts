@@ -1,0 +1,60 @@
+{{- if .Values.istio.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-discovery
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-15"
+  labels:
+    truefoundry.com/infra-component: "istio-discovery"
+spec:
+  ignoreDifferences:
+    - group: apps
+      jqPathExpressions:
+        - .spec.template.spec.containers[]?.env[]?.valueFrom.resourceFieldRef.divisor
+      kind: Deployment
+  destination:
+    namespace: istio-system
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: istiod
+    repoURL: https://istio-release.storage.googleapis.com/charts
+    targetRevision: 1.21.1
+    helm:
+      values: |
+        pilot:
+          image: docker.io/istio/pilot:1.21.1-distroless
+          autoscaleEnabled: true
+          autoscaleMin: 2
+          replicaCount: 2
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+        global:
+          tag: 1.21.1-distroless
+          proxy:
+            image: docker.io/istio/proxyv2:1.21.1-distroless
+          proxy_init:
+            image: docker.io/istio/proxyv2:1.21.1-distroless
+          
+          tolerations:
+            - key: CriticalAddonsOnly
+              value: "true"
+              effect: NoSchedule
+              operator: Equal
+          
+          
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

@@ -1,0 +1,76 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "cert-manager"
+spec:
+  destination:
+    namespace: cert-manager
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.13.3
+    helm:
+      values: |-
+        installCRDs: true
+        
+        tolerations:
+          - key: kubernetes.azure.com/scalesetpriority
+            value: spot
+            effect: NoSchedule
+            operator: Equal
+        
+        
+        webhook:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+          
+          tolerations:
+            - key: kubernetes.azure.com/scalesetpriority
+              value: spot
+              effect: NoSchedule
+              operator: Equal
+          
+          
+        resources:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+        cainjector:
+          requests:
+            cpu: 20m
+            memory: 64Mi
+            ephemeral-storage: 64Mi
+          
+          tolerations:
+            - key: kubernetes.azure.com/scalesetpriority
+              value: spot
+              effect: NoSchedule
+              operator: Equal
+          
+          
+        startupapicheck:
+        
+          tolerations:
+            - key: kubernetes.azure.com/scalesetpriority
+              value: spot
+              effect: NoSchedule
+              operator: Equal
+        
+        
+  syncPolicy:
+    automated: {}
+    retry: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
