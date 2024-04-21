@@ -3,6 +3,14 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 
 ## Parameters
 
+### Global Parameters
+
+| Name              | Description                    | Value |
+| ----------------- | ------------------------------ | ----- |
+| `tenantName`      | Parameters for tenantName      | `""`  |
+| `controlPlaneURL` | Parameters for controlPlaneURL | `""`  |
+| `clusterName`     | Name of the cluster            | `""`  |
+
 ### Parameters for argocd
 
 | Name             | Description           | Value  |
@@ -64,12 +72,6 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | Name            | Description          | Value  |
 | --------------- | -------------------- | ------ |
 | `istio.enabled` | Flag to enable Istio | `true` |
-
-### Parameters for tfyInferentiaOperator
-
-| Name                            | Description                            | Value   |
-| ------------------------------- | -------------------------------------- | ------- |
-| `tfyInferentiaOperator.enabled` | Flag to enable Tfy Inferentia Operator | `false` |
 
 ### Parameters for keda
 
