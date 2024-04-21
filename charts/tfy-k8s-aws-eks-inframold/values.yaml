@@ -9,14 +9,10 @@ tenantName: ""
 controlPlaneURL: ""
 
 
-## @section Parameters for cluster
-## @param cluster.name Name of the cluster
+## @param clusterName Name of the cluster
+## Name of the cluster
 ##
-cluster:
-  name: ""
-  ## @param cluster.endpoint Endpoint of the cluster
-  ##
-  endpoint: ""
+clusterName: ""
 
 ## @section Parameters for argocd
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -72,6 +68,9 @@ aws:
   ##
   karpenter:
     enabled: true
+    ## @param aws.karpenter.clusterEndpoint Cluster endpoint for Karpenter
+    ##
+    clusterEndpoint: ""
     ## @param aws.karpenter.roleArn Role ARN for Karpenter
     ##
     roleArn: ""
@@ -86,10 +85,10 @@ aws:
     ## @param aws.karpenter.gpuProvisioner.capacityTypes Capacity types for GPU provisioner
     ##
     gpuProvisioner:
-      capacityTypes: ""
+      capacityTypes:  ["spot", "on-demand"]
       ## @param aws.karpenter.gpuProvisioner.instanceFamilies Instance families for GPU provisioner
       ##
-      instanceFamilies: ""
+      instanceFamilies: ["p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5"]
       ## @param aws.karpenter.gpuProvisioner.zones Zones for GPU provisioner
       ##
       zones: ""
@@ -98,10 +97,10 @@ aws:
     ## @param aws.karpenter.inferentiaProvisioner.capacityTypes Capacity types for Inferentia provisioner
     ##
     inferentiaProvisioner:
-      capacityTypes: ""
+      capacityTypes: ["spot", "on-demand"]
       ## @param aws.karpenter.inferentiaProvisioner.instanceFamilies Instance families for Inferentia provisioner
       ##
-      instanceFamilies: ""
+      instanceFamilies: ["inf1", "inf2"]
       ## @param aws.karpenter.inferentiaProvisioner.zones Zones for Inferentia provisioner
       ##
       zones: ""
@@ -145,12 +144,13 @@ tfyGpuOperator:
   clusterType: awsEks
 
 ## @section Parameters for truefoundry
+## For details on TrueFoundry, refer to the helm chart documentation
 ## @param truefoundry.enabled Flag to enable TrueFoundry
 ##
 truefoundry:
   enabled: true
   
-  ## @param truefoundry.dev Flag to enable TrueFoundry Dev
+  ## @param truefoundry.dev Flag to enable TrueFoundry Dev mode
   ##
   dev: true
 
