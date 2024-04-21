@@ -1,22 +1,24 @@
 ## @param tenantName Parameters for tenantName
-## Name of the tenant
+## Tenant Name - This is same as the name of the organization used to sign up 
+## on Truefoundry
 ##
 tenantName: ""
 
 ## @param controlPlaneURL Parameters for controlPlaneURL
-## URL of the control plane
+## URL of the control plane - Same as the URL of the Truefoundry dashboard
 ##
 controlPlaneURL: ""
 
-
 ## @param clusterName Name of the cluster
-## Name of the cluster
+## Name of the cluster that you have created on AWS/GCP/Azure
 ##
 clusterName: ""
 
 ## @section Parameters for argocd
 ## @param argocd.enabled Flag to enable ArgoCD
-##
+## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
+## already installed in your cluster. Please make sure that the configuration of 
+## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
 
@@ -28,12 +30,14 @@ argoWorkflows:
 
 ## @section Parameters for argoRollouts
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
+## Argo Rollouts is mandatory for Truefoundry to work. 
 ##
 argoRollouts:
   enabled: true
 
 ## @section Parameters for notebookController
 ## @param notebookController.enabled Flag to enable Notebook Controller
+## Notebook Controller is required to power notebooks in Truefoundry
 ##
 notebookController:
   enabled: true
@@ -42,7 +46,7 @@ notebookController:
 ## @param certManager.enabled Flag to enable Cert Manager
 ##
 certManager:
-  enabled: true
+  enabled: false
 
 ## @section Parameters for metricsServer
 ## @param metricsServer.enabled Flag to enable Metrics Server
@@ -62,11 +66,12 @@ tfyGpuOperator:
   clusterType: civoTalos
 
 ## @section Parameters for truefoundry
-## For details on TrueFoundry, refer to the helm chart documentation
 ## @param truefoundry.enabled Flag to enable TrueFoundry
+## This installs the Truefoundry control plane helm chart. You can make it true
+## if you want to install Truefoundry control plane.
 ##
 truefoundry:
-  enabled: true
+  enabled: false
   
   ## @param truefoundry.dev Flag to enable TrueFoundry Dev mode
   ##
@@ -88,7 +93,7 @@ istio:
 ## @param tfyInferentiaOperator.enabled Flag to enable Tfy Inferentia Operator
 ##
 tfyInferentiaOperator:
-  enabled: true
+  enabled: false
 
 ## @section Parameters for keda
 ## @param keda.enabled Flag to enable Keda

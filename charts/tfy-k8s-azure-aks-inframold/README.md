@@ -29,9 +29,9 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### Parameters for certManager
 
-| Name                  | Description                 | Value  |
-| --------------------- | --------------------------- | ------ |
-| `certManager.enabled` | Flag to enable Cert Manager | `true` |
+| Name                  | Description                 | Value   |
+| --------------------- | --------------------------- | ------- |
+| `certManager.enabled` | Flag to enable Cert Manager | `false` |
 
 ### Parameters for metricsServer
 
@@ -48,10 +48,10 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### Parameters for truefoundry
 
-| Name                  | Description                         | Value  |
-| --------------------- | ----------------------------------- | ------ |
-| `truefoundry.enabled` | Flag to enable TrueFoundry          | `true` |
-| `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true` |
+| Name                  | Description                         | Value   |
+| --------------------- | ----------------------------------- | ------- |
+| `truefoundry.enabled` | Flag to enable TrueFoundry          | `false` |
+| `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true`  |
 
 ### Parameters for loki
 
@@ -67,9 +67,9 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### Parameters for tfyInferentiaOperator
 
-| Name                            | Description                            | Value  |
-| ------------------------------- | -------------------------------------- | ------ |
-| `tfyInferentiaOperator.enabled` | Flag to enable Tfy Inferentia Operator | `true` |
+| Name                            | Description                            | Value   |
+| ------------------------------- | -------------------------------------- | ------- |
+| `tfyInferentiaOperator.enabled` | Flag to enable Tfy Inferentia Operator | `false` |
 
 ### Parameters for keda
 
