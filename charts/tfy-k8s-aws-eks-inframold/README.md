@@ -3,13 +3,6 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ## Parameters
 
-### Parameters for cluster
-
-| Name               | Description             | Value |
-| ------------------ | ----------------------- | ----- |
-| `cluster.name`     | Name of the cluster     | `""`  |
-| `cluster.endpoint` | Endpoint of the cluster | `""`  |
-
 ### Parameters for argocd
 
 | Name             | Description           | Value  |
@@ -48,27 +41,28 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### Parameters for AWS
 
-| Name                                                   | Description                                  | Value  |
-| ------------------------------------------------------ | -------------------------------------------- | ------ |
-| `aws.awsLoadBalancerController.enabled`                | Flag to enable AWS Load Balancer Controller  | `true` |
-| `aws.awsLoadBalancerController.roleArn`                | Role ARN for AWS Load Balancer Controller    | `""`   |
-| `aws.karpenter.enabled`                                | Flag to enable Karpenter                     | `true` |
-| `aws.karpenter.roleArn`                                | Role ARN for Karpenter                       | `""`   |
-| `aws.karpenter.instanceProfile`                        | Instance profile for Karpenter               | `""`   |
-| `aws.karpenter.defaultZones`                           | Default zones for Karpenter                  | `""`   |
-| `aws.karpenter.gpuProvisioner.capacityTypes`           | Capacity types for GPU provisioner           | `""`   |
-| `aws.karpenter.gpuProvisioner.instanceFamilies`        | Instance families for GPU provisioner        | `""`   |
-| `aws.karpenter.gpuProvisioner.zones`                   | Zones for GPU provisioner                    | `""`   |
-| `aws.karpenter.inferentiaProvisioner.capacityTypes`    | Capacity types for Inferentia provisioner    | `""`   |
-| `aws.karpenter.inferentiaProvisioner.instanceFamilies` | Instance families for Inferentia provisioner | `""`   |
-| `aws.karpenter.inferentiaProvisioner.zones`            | Zones for Inferentia provisioner             | `""`   |
-| `aws.karpenter.interruptionQueueName`                  | Interruption queue name for Karpenter        | `""`   |
-| `aws.awsEbsCsiDriver.enabled`                          | Flag to enable AWS EBS CSI Driver            | `true` |
-| `aws.awsEbsCsiDriver.roleArn`                          | Role ARN for AWS EBS CSI Driver              | `""`   |
-| `aws.awsEfsCsiDriver.enabled`                          | Flag to enable AWS EFS CSI Driver            | `true` |
-| `aws.awsEfsCsiDriver.fileSystemId`                     | File system ID for AWS EFS CSI Driver        | `""`   |
-| `aws.awsEfsCsiDriver.region`                           | Region for AWS EFS CSI Driver                | `""`   |
-| `aws.awsEfsCsiDriver.roleArn`                          | Role ARN for AWS EFS CSI Driver              | `""`   |
+| Name                                                   | Description                                  | Value                                       |
+| ------------------------------------------------------ | -------------------------------------------- | ------------------------------------------- |
+| `aws.awsLoadBalancerController.enabled`                | Flag to enable AWS Load Balancer Controller  | `true`                                      |
+| `aws.awsLoadBalancerController.roleArn`                | Role ARN for AWS Load Balancer Controller    | `""`                                        |
+| `aws.karpenter.enabled`                                | Flag to enable Karpenter                     | `true`                                      |
+| `aws.karpenter.clusterEndpoint`                        | Cluster endpoint for Karpenter               | `""`                                        |
+| `aws.karpenter.roleArn`                                | Role ARN for Karpenter                       | `""`                                        |
+| `aws.karpenter.instanceProfile`                        | Instance profile for Karpenter               | `""`                                        |
+| `aws.karpenter.defaultZones`                           | Default zones for Karpenter                  | `""`                                        |
+| `aws.karpenter.gpuProvisioner.capacityTypes`           | Capacity types for GPU provisioner           | `["spot","on-demand"]`                      |
+| `aws.karpenter.gpuProvisioner.instanceFamilies`        | Instance families for GPU provisioner        | `["p2","p3","p4d","p4de","p5","g4dn","g5"]` |
+| `aws.karpenter.gpuProvisioner.zones`                   | Zones for GPU provisioner                    | `""`                                        |
+| `aws.karpenter.inferentiaProvisioner.capacityTypes`    | Capacity types for Inferentia provisioner    | `["spot","on-demand"]`                      |
+| `aws.karpenter.inferentiaProvisioner.instanceFamilies` | Instance families for Inferentia provisioner | `["inf1","inf2"]`                           |
+| `aws.karpenter.inferentiaProvisioner.zones`            | Zones for Inferentia provisioner             | `""`                                        |
+| `aws.karpenter.interruptionQueueName`                  | Interruption queue name for Karpenter        | `""`                                        |
+| `aws.awsEbsCsiDriver.enabled`                          | Flag to enable AWS EBS CSI Driver            | `true`                                      |
+| `aws.awsEbsCsiDriver.roleArn`                          | Role ARN for AWS EBS CSI Driver              | `""`                                        |
+| `aws.awsEfsCsiDriver.enabled`                          | Flag to enable AWS EFS CSI Driver            | `true`                                      |
+| `aws.awsEfsCsiDriver.fileSystemId`                     | File system ID for AWS EFS CSI Driver        | `""`                                        |
+| `aws.awsEfsCsiDriver.region`                           | Region for AWS EFS CSI Driver                | `""`                                        |
+| `aws.awsEfsCsiDriver.roleArn`                          | Role ARN for AWS EFS CSI Driver              | `""`                                        |
 
 ### Parameters for tfyGpuOperator
 
@@ -79,10 +73,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### Parameters for truefoundry
 
-| Name                  | Description                    | Value  |
-| --------------------- | ------------------------------ | ------ |
-| `truefoundry.enabled` | Flag to enable TrueFoundry     | `true` |
-| `truefoundry.dev`     | Flag to enable TrueFoundry Dev | `true` |
+| Name                  | Description                         | Value  |
+| --------------------- | ----------------------------------- | ------ |
+| `truefoundry.enabled` | Flag to enable TrueFoundry          | `true` |
+| `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true` |
 
 ### Parameters for loki
 

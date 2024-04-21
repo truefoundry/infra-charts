@@ -8,14 +8,10 @@ tenantName: <to_be_provided>
 ##
 controlPlaneURL: <to_be_provided>
 
-## @section Parameters for cluster
-## @param cluster.name Name of the cluster
+## @param clusterName Name of the cluster
+## Name of the cluster
 ##
-cluster:
-  name: <terragruntOutput.cluster.cluster_name.raw>
-  ## @param cluster.endpoint Endpoint of the cluster
-  ##
-  endpoint: <terragruntOutput.cluster.cluster_endpoint.raw>
+clusterName: <terragruntOutput.cluster.cluster_name.raw>
 
 
 ## @section Parameters for AWS
@@ -32,6 +28,9 @@ aws:
   ## @subsection Parameters for karpenter
   ##
   karpenter:
+    ## @param aws.karpenter.clusterEndpoint Cluster endpoint for Karpenter
+    ##
+    clusterEndpoint: <terragruntOutput.cluster.cluster_endpoint.raw>
     ## @param aws.karpenter.roleArn Role ARN for Karpenter
     ##
     roleArn: <terragruntOutput.karpenter.karpenter_role_arn.raw>

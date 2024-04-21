@@ -3,13 +3,6 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ## Parameters
 
-### Parameters for cluster
-
-| Name               | Description             | Value |
-| ------------------ | ----------------------- | ----- |
-| `cluster.name`     | Name of the cluster     | `""`  |
-| `cluster.endpoint` | Endpoint of the cluster | `""`  |
-
 ### Parameters for argocd
 
 | Name             | Description           | Value  |
@@ -55,10 +48,10 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### Parameters for truefoundry
 
-| Name                  | Description                    | Value  |
-| --------------------- | ------------------------------ | ------ |
-| `truefoundry.enabled` | Flag to enable TrueFoundry     | `true` |
-| `truefoundry.dev`     | Flag to enable TrueFoundry Dev | `true` |
+| Name                  | Description                         | Value  |
+| --------------------- | ----------------------------------- | ------ |
+| `truefoundry.enabled` | Flag to enable TrueFoundry          | `true` |
+| `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true` |
 
 ### Parameters for loki
 
