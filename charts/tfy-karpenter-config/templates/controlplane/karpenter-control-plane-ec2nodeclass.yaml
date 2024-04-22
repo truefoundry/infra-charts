@@ -4,7 +4,11 @@ kind: EC2NodeClass
 metadata:
   name: {{ .Values.karpenter.controlPlaneNodeTemplate.name }}
 spec:
+  {{- if .Values.karpenter.controlPlaneNodeTemplate.instanceProfile }}
+  instanceProfile: {{ .Values.karpenter.controlPlaneNodeTemplate.instanceProfile }}
+  {{- else }}
   instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  {{- end }}
   subnetSelectorTerms:
     - tags:
         kubernetes.io/cluster/{{ .Values.cluster.name }}: shared

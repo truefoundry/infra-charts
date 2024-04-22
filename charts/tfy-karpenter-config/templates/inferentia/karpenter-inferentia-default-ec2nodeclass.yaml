@@ -3,7 +3,11 @@ kind: EC2NodeClass
 metadata:
   name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
 spec:
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.instanceProfile }}
+  instanceProfile: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.instanceProfile }}
+  {{- else }}
   instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  {{- end }}
   subnetSelectorTerms:
     - tags:
         kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
