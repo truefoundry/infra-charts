@@ -4,7 +4,11 @@ kind: EC2NodeClass
 metadata:
   name: {{ .Values.karpenter.gpuDefaultNodeTemplate.name }}
 spec:
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.instanceProfile }}
+  instanceProfile: {{ .Values.karpenter.gpuDefaultNodeTemplate.instanceProfile }}
+  {{- else }}
   instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  {{- end }}
   subnetSelectorTerms:
     - tags:
         kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
