@@ -1,0 +1,109 @@
+name: Build Image Yourself and Deploy Image on TrueFoundry
+cicd_provider_id: github
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: deploy
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Github Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitHub Repository, navigate to **Settings > Secrets and Variables > Actions**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create GitHub Action
+    icon: null
+    usage: |
+      Add the below workflow as `tfy-deploy.yaml` in your github workflow directory (`.github/workflows/`).
+      Following GitHub Action will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        name: Deploy to TrueFoundry
+
+        on:
+          push:
+            branches:
+              - 'main'
+
+        permissions:
+          id-token: write
+          contents: read
+
+        env:
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          TFY_API_KEY: $\{{ secrets.TFY_API_KEY }}
+          WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
+
+        jobs:
+          build_deploy:
+            name: Build Image
+            runs-on: ubuntu-latest
+            timeout-minutes: 15
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v3
+
+              - name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v3
+
+              ### Image Build Section ###
+
+              # Build your image, push it and set it in environment as `IMAGE_URI`
+              # Here is a sample for ECR, you can replace this with any other registry.
+              # The registry here should be also be linked in Integrations on TrueFoundry
+
+              - name: Configure AWS ECR
+                uses: aws-actions/configure-aws-credentials@v4
+                with:
+                  role-to-assume name: $\{{ secrets.ECR_IAM_ROLE_ARN }}
+                  aws-region: us-east-1
+
+              - name: Login to ECR
+                id: login-ecr
+                uses: aws-actions/amazon-ecr-login@v2
+
+              - name: Build and push image
+                uses: docker/build-push-action@v5
+                env:
+                  REGISTRY: $\{{ steps.login-ecr.outputs.registry }}
+                  REPO_NAME: $\{{ github.event.repository.name }}
+                  IMAGE_REPO: $\{{ env.REGISTRY }}/$\{{ env.REPO_NAME }}
+                  IMAGE_TAG: $\{{ github.sha }}
+                  IMAGE_URI: $\{{ env.IMAGE_REPO }}:$\{{ env.IMAGE_TAG }}
+                with:
+                  platforms: linux/amd64
+                  context: .
+                  push: true
+                  tags: $\{{ env.IMAGE_URI }}
+                  cache-from: type=registry,ref=$\{{ env.IMAGE_REPO }}:buildcache
+                  cache-to: mode=max,image-manifest=true,type=registry,ref=$\{{ env.IMAGE_REPO }}:buildcache
+
+              ############################
+
+              - name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                  python-version: 3.11
+
+              - name: Install dependencies
+                run: |
+                  pip install truefoundry<1.0.0
+
+              - name: Deploy to workspace
+                run: |
+                  tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$\{{ env.IMAGE_URI }}"' -o truefoundry-patched.yaml
+                  tfy deploy -f truefoundry-patched.yaml -w "$\{{ env.WORKSPACE_FQN }}"
+        ```

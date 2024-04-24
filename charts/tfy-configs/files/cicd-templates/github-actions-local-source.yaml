@@ -1,0 +1,70 @@
+name: Upload Code, Build and Deploy using TrueFoundry
+cicd_provider_id: github
+enabled: true
+description: "TrueFoundry Control Plane will pull an archive of the source code from your Storage Integrations and build the image to deploy the application."
+deployment_mode: deploy
+build_source: local
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Github Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitHub Repository, navigate to **Settings > Secrets and Variables > Actions**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create GitHub Action
+    icon: null
+    usage: |
+      Add the below workflow as `tfy-deploy.yaml` in your github workflow directory (`.github/workflows/`).
+      Following GitHub Action will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        name: Deploy to TrueFoundry
+
+        on:
+          push:
+            branches:
+              - 'main'
+
+        env:
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          TFY_API_KEY: $\{{ secrets.TFY_API_KEY }}
+          WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
+
+        jobs:
+          build_deploy:
+            name: Build Image
+            runs-on: ubuntu-latest
+            timeout-minutes: 15
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v3
+
+              - name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v3
+
+              - name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                  python-version: 3.11
+
+              - name: Install dependencies
+                run: |
+                  pip install truefoundry<1.0.0
+
+              - name: Deploy to workspace
+                run: |
+                  tfy deploy -f truefoundry.yaml -w "$\{{ env.WORKSPACE_FQN }}"
+        ```
