@@ -1,0 +1,67 @@
+{{- if .Values.istio.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-istio-ingress
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-istio-ingress"
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-15"
+spec:
+  destination:
+    namespace: istio-system
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: tfy-istio-ingress
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.3
+    helm:
+      values: |
+        
+        gateway:
+          annotations:
+            "service.beta.kubernetes.io/aws-load-balancer-name": {{ quote .Values.clusterName }}
+            "service.beta.kubernetes.io/aws-load-balancer-type": "external"
+            "service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing"
+            "service.beta.kubernetes.io/aws-load-balancer-ssl-ports": "https"
+            "service.beta.kubernetes.io/aws-load-balancer-alpn-policy": "HTTP2Preferred"
+            "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "tcp"
+            "service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags":
+              cluster-name={{ quote .Values.clusterName }},  truefoundry.com/managed=true,
+              owner=Truefoundry, application=tfy-istio-ingress
+            "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true"
+        
+        
+        
+        tfyGateway:
+          name: 'tfy-wildcard'
+          spec:
+            selector:
+              istio: 'tfy-istio-ingress'
+            servers:
+              - hosts:
+                - "*"
+                port:
+                  name: http-tfy-wildcard
+                  number: 80
+                  protocol: HTTP
+                tls:
+                  
+                  httpsRedirect: true
+                  
+              - hosts: 
+                - "*"
+                port:
+                  name: https-tfy-wildcard
+                  number: 443
+                  protocol: HTTP
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

@@ -1,0 +1,54 @@
+{{- if .Values.aws.karpenter.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-14"
+  labels:
+    truefoundry.com/infra-component: "karpenter"
+spec:
+  ignoreDifferences:
+    - jsonPointers:
+        - /data
+      kind: Secret
+      name: karpenter-cert
+  destination:
+    namespace: karpenter
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.2.0
+    chart: tfy-karpenter
+    helm:
+      values: |-
+        karpenter:
+          serviceAccount:
+            annotations:
+              eks.amazonaws.com/role-arn: {{ .Values.aws.karpenter.roleArn }}
+          settings:
+            aws:
+              clusterName: {{ .Values.clusterName }}
+              clusterEndpoint: {{ .Values.aws.karpenter.clusterEndpoint }}
+              defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
+              interruptionQueueName: {{ .Values.aws.karpenter.interruptionQueueName }}
+          controller:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
