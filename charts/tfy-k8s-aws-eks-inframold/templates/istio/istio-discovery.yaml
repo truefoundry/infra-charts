@@ -27,8 +27,7 @@ spec:
     targetRevision: 1.21.1
     helm:
       values: |
-        pilot:
-          image: docker.io/istio/pilot:1.21.1-distroless
+        pilot:          
           autoscaleEnabled: true
           autoscaleMin: 2
           replicaCount: 2
@@ -38,11 +37,8 @@ spec:
               memory: 512Mi
               ephemeral-storage: 512Mi
         global:
+          hub: gcr.io/istio-release
           tag: 1.21.1-distroless
-          proxy:
-            image: docker.io/istio/proxyv2:1.21.1-distroless
-          proxy_init:
-            image: docker.io/istio/proxyv2:1.21.1-distroless
           
           
   syncPolicy:
