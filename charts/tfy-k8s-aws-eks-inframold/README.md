@@ -66,12 +66,12 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsEfsCsiDriver.region`            | Region for AWS EFS CSI Driver               | `""`   |
 | `aws.awsEfsCsiDriver.roleArn`           | Role ARN for AWS EFS CSI Driver             | `""`   |
 
-### Parameters for tfyGpuOperator
+### Parameters for gpu
 
-| Name                         | Description                       | Value    |
-| ---------------------------- | --------------------------------- | -------- |
-| `tfyGpuOperator.enabled`     | Flag to enable Tfy GPU Operator   | `true`   |
-| `tfyGpuOperator.clusterType` | Cluster type for Tfy GPU Operator | `awsEks` |
+| Name              | Description                       | Value    |
+| ----------------- | --------------------------------- | -------- |
+| `gpu.enabled`     | Flag to enable Tfy GPU Operator   | `true`   |
+| `gpu.clusterType` | Cluster type for Tfy GPU Operator | `awsEks` |
 
 ### Parameters for truefoundry
 

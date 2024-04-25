@@ -47,12 +47,12 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | ----------------------- | ----------------------------- | ------ |
 | `metricsServer.enabled` | Flag to enable Metrics Server | `true` |
 
-### Parameters for tfyGpuOperator
+### Parameters for gpu
 
-| Name                         | Description                       | Value      |
-| ---------------------------- | --------------------------------- | ---------- |
-| `tfyGpuOperator.enabled`     | Flag to enable Tfy GPU Operator   | `true`     |
-| `tfyGpuOperator.clusterType` | Cluster type for Tfy GPU Operator | `azureAks` |
+| Name              | Description                       | Value      |
+| ----------------- | --------------------------------- | ---------- |
+| `gpu.enabled`     | Flag to enable Tfy GPU Operator   | `true`     |
+| `gpu.clusterType` | Cluster type for Tfy GPU Operator | `azureAks` |
 
 ### Parameters for truefoundry
 

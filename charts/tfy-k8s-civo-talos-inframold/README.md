@@ -47,12 +47,12 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | ----------------------- | ----------------------------- | ------ |
 | `metricsServer.enabled` | Flag to enable Metrics Server | `true` |
 
-### Parameters for tfyGpuOperator
+### Parameters for gpu
 
-| Name                         | Description                       | Value       |
-| ---------------------------- | --------------------------------- | ----------- |
-| `tfyGpuOperator.enabled`     | Flag to enable Tfy GPU Operator   | `true`      |
-| `tfyGpuOperator.clusterType` | Cluster type for Tfy GPU Operator | `civoTalos` |
+| Name              | Description                       | Value       |
+| ----------------- | --------------------------------- | ----------- |
+| `gpu.enabled`     | Flag to enable Tfy GPU Operator   | `true`      |
+| `gpu.clusterType` | Cluster type for Tfy GPU Operator | `civoTalos` |
 
 ### Parameters for truefoundry
 
