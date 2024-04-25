@@ -22,7 +22,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.2.0
+    targetRevision: 0.3.0
     chart: tfy-karpenter
     helm:
       values: |-
@@ -30,12 +30,13 @@ spec:
           serviceAccount:
             annotations:
               eks.amazonaws.com/role-arn: {{ .Values.aws.karpenter.roleArn }}
+          webhook:
+            enabled: false
           settings:
-            aws:
-              clusterName: {{ .Values.clusterName }}
-              clusterEndpoint: {{ .Values.aws.karpenter.clusterEndpoint }}
-              defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
-              interruptionQueueName: {{ .Values.aws.karpenter.interruptionQueueName }}
+            clusterName: {{ .Values.clusterName }}
+            clusterEndpoint: {{ .Values.aws.karpenter.clusterEndpoint }}
+            defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
+            interruptionQueue: {{ .Values.aws.karpenter.interruptionQueue }}
           controller:
             resources:
               requests:

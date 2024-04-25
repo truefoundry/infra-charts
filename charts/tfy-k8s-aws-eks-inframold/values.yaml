@@ -86,33 +86,9 @@ aws:
     ##
     defaultZones: ""
 
-    ## @subsection Parameters for gpuProvisioner
-    ## @param aws.karpenter.gpuProvisioner.capacityTypes Capacity types for GPU provisioner
+    ## @param aws.karpenter.interruptionQueue Interruption queue name for Karpenter
     ##
-    gpuProvisioner:
-      capacityTypes:  ["spot", "on-demand"]
-      ## @param aws.karpenter.gpuProvisioner.instanceFamilies Instance families for GPU provisioner
-      ##
-      instanceFamilies: ["p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5"]
-      ## @param aws.karpenter.gpuProvisioner.zones Zones for GPU provisioner
-      ##
-      zones: ""
-
-    ## @subsection Parameters for inferentiaProvisioner
-    ## @param aws.karpenter.inferentiaProvisioner.capacityTypes Capacity types for Inferentia provisioner
-    ##
-    inferentiaProvisioner:
-      capacityTypes: ["spot", "on-demand"]
-      ## @param aws.karpenter.inferentiaProvisioner.instanceFamilies Instance families for Inferentia provisioner
-      ##
-      instanceFamilies: ["inf1", "inf2"]
-      ## @param aws.karpenter.inferentiaProvisioner.zones Zones for Inferentia provisioner
-      ##
-      zones: ""
-
-    ## @param aws.karpenter.interruptionQueueName Interruption queue name for Karpenter
-    ##
-    interruptionQueueName: ""
+    interruptionQueue: ""
 
   ## @subsection Parameters for awsEbsCsiDriver
   ## @param aws.awsEbsCsiDriver.enabled Flag to enable AWS EBS CSI Driver
@@ -137,12 +113,6 @@ aws:
     ## @param aws.awsEfsCsiDriver.roleArn Role ARN for AWS EFS CSI Driver
     ##
     roleArn: ""
-  
-  ## @subsection Parameters for tfyInferentiaOperator
-  ## @param aws.tfyInferentiaOperator.enabled Flag to enable Tfy Inferentia Operator
-  ##
-  tfyInferentiaOperator:
-    enabled: false
 
 
 ## @section Parameters for tfyGpuOperator
