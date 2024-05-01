@@ -1,0 +1,67 @@
+name: Build Image Yourself and Deploy Image on TrueFoundry
+cicd_provider_id: bit-bucket
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: deploy
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Bit Bucket Repository, navigate to **Pipelines > Workspace variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create GitHub Action
+    icon: null
+    usage: |
+      Add the below workflow as `bitbucket-pipelines.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        image: python:3.8.19
+        options:
+          max-time: 10
+
+        pipelines:
+          branches:
+            main:
+              - stage:
+                  name: deploy
+                  steps:
+                    - step:
+                        name: Deploying the application
+                        script:
+                          - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
+                          - export TFY_API_KEY=$TFY_API_KEY
+                          - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
+
+                          ### Image Build Section ###
+                          # Build your image, push it and set it in environment as `IMAGE_URI`, `DOCKER_REGISTRY_USER`, `DOCKER_REGISTRY_PASS`
+                          # Here is a sample for docker, you can replace this with any other registry.
+                          # The registry here should be also be linked in Integrations on TrueFoundry
+
+                          - export DOCKER_BUILDKIT=1
+                          - docker login --username $DOCKER_REGISTRY_USER --password $DOCKER_REGISTRY_PASS
+                          - docker build -t $IMAGE_REPO:$BITBUCKET_COMMIT .
+                          - docker push $IMAGE_REPO:$BITBUCKET_COMMIT
+                          - pip3 install -U "truefoundry"
+                          - |
+                              tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_REPO:$BITBUCKET_COMMIT"' -o truefoundry-patched.yaml
+                          - |
+                              tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
+                        services:
+                          - docker
+        ```

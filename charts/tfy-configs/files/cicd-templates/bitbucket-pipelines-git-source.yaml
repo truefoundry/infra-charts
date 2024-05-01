@@ -1,0 +1,49 @@
+name: Bit Bucket pipeline integrations to deploy new changes to TrueFoundry.
+cicd_provider_id: bit-bucket
+enabled: true
+description: "TrueFoundry Control Plane will git clone the source code and build the image to deploy the application."
+deployment_mode: deploy
+build_source: git
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Bit Bucket Repository, navigate to **Pipelines > Workspace variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Create BitBucket Pipeline
+    icon: null
+    usage: |
+      Add the below workflow as `bitbucket-pipelines.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        image: python:3.8.19
+        options:
+          max-time: 10
+
+        pipelines:
+          branches:
+            main:
+              - stage:
+                  name: deploy
+                  steps:
+                    - step:
+                        name: Deploying the application
+                        script:
+                          - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
+                          - export TFY_APPLICATION_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
+                          - export TFY_API_KEY=$TFY_API_KEY
+                          - pip3 install -U "truefoundry"
+                          - |
+                              tfy patch-application --application_fqn=tfy-ctl-euwe1-devtest:mitanshu-test-ws:emotion-class-svc --patch='{"image": {"build_source": {"ref": "'$BITBUCKET_COMMIT'"}}}'
+        ```

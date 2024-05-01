@@ -1,0 +1,90 @@
+name: Build Image Yourself and Deploy Image on TrueFoundry
+cicd_provider_id: gitlab
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: deploy
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitLab Repository, navigate to **Settings > CI/CD** then expand **Variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value and select the **Mask Variable** checkbox.
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create GitHub Action
+    icon: null
+    usage: |
+      Add the below workflow as `.gitlab-ci.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        stages:
+          - build
+          - deploy
+
+        variables:
+          IMAGE_REPO: $DOCKER_IMAGE_REPO
+
+          ### Image Build Section ###
+          # Build your image, push it and set it in environment as `IMAGE_URI`, `DOCKER_REGISTRY_USER`, `DOCKER_REGISTRY_PASS`, `IMAGE_REPO`
+          # Here is a sample for docker, you can replace this with any other registry.
+          # The registry here should be also be linked in Integrations on TrueFoundry
+
+        build-image:
+          stage: build
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
+          image: docker:24.0.5
+          services:
+            - docker:24.0.5-dind
+          variables:
+            DOCKER_HOST: tcp://docker:2376
+            DOCKER_TLS_CERTDIR: "/certs"
+          before_script:
+            - docker info
+            - echo "$DOCKER_REGISTRY_PASS" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password $DOCKER_REGISTRY_PASS
+          script:
+            # Assuming Dockerfile is present at the root of the project. If not, please pass it via --file
+            - docker build -t $IMAGE_REPO:$CI_COMMIT_SHA .
+            - docker push $IMAGE_REPO:$CI_COMMIT_SHA
+
+        deploy-job:
+          needs: ["build-image"]
+          stage: deploy
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
+          image: python:3.10-slim 
+          environment: production
+          variables:
+            PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+            TFY_HOST: https://app.devtest.truefoundry.tech/
+            WORKSPACE_FQN: tfy-ctl-euwe1-devtest:chirag-gpu-dev
+          # Change pip's cache directory to be inside the project directory since we can
+          # only cache local items.
+          # https://pip.pypa.io/en/stable/topics/caching/
+          cache:
+            paths:
+              - .cache/pip
+          before_script:
+            - python --version ; pip --version  # For debugging
+            - pip install virtualenv
+            - virtualenv venv
+            - source venv/bin/activate
+          script:
+            - pip install -U truefoundry
+            - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_REPO:$CI_COMMIT_SHA"' -o truefoundry-patched.yaml
+            - tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
+        ```
