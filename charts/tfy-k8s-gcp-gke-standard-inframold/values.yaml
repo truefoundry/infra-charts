@@ -6,7 +6,7 @@
 tenantName: ""
 
 ## @param controlPlaneURL Parameters for controlPlaneURL
-## URL of the control plane - Same as the URL of the Truefoundry dashboard
+## URL of the control plane - This is the URL that can be used by workload to access the truefoundry components
 ##
 controlPlaneURL: ""
 
@@ -73,10 +73,27 @@ gpu:
 ##
 truefoundry:
   enabled: false
-  
   ## @param truefoundry.dev Flag to enable TrueFoundry Dev mode
   ##
   dev: true
+  ## @section Parameters for truefoundryBootstrap
+  ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
+  truefoundryBootstrap:
+    enabled: false
+  ## @section Parameters for database. Can be left empty if using the dev mode
+  database:
+    ## @param truefoundry.database.host Hostname of the database
+    host: ""
+    ## @param truefoundry.database.name Name of the database
+    name: ""
+    ## @param truefoundry.database.username Username of the database
+    username: ""
+    ## @param truefoundry.database.password Password of the database
+    password: ""
+  ## @param truefoundry.tfyApiKey API Key for TrueFoundry
+  tfyApiKey: ""
+  ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
+  truefoundryImagePullConfigJSON: ""
 
 ## @section Parameters for loki
 ## @param loki.enabled Flag to enable Loki
