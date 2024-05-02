@@ -37,17 +37,22 @@ spec:
               cpu: 200m
               memory: 512Mi
               ephemeral-storage: 512Mi
-        global:
-          hub: gcr.io/istio-release
-          tag: 1.21.1-distroless
           
           tolerations:
             - key: CriticalAddonsOnly
               value: "true"
               effect: NoSchedule
               operator: Equal
+            - key: kubernetes.azure.com/scalesetpriority
+              value: "spot"
+              effect: NoSchedule
+              operator: Equal
           
           
+        global:
+          hub: gcr.io/istio-release
+          tag: 1.21.1-distroless
+
   syncPolicy:
     automated: {}
     syncOptions:
