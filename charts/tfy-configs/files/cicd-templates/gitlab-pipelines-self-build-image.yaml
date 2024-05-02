@@ -72,14 +72,8 @@ steps:
             PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
             TFY_HOST: https://app.devtest.truefoundry.tech/
             WORKSPACE_FQN: tfy-ctl-euwe1-devtest:chirag-gpu-dev
-          # Change pip's cache directory to be inside the project directory since we can
-          # only cache local items.
-          # https://pip.pypa.io/en/stable/topics/caching/
-          cache:
-            paths:
-              - .cache/pip
+          
           before_script:
-            - python --version ; pip --version  # For debugging
             - pip install virtualenv
             - virtualenv venv
             - source venv/bin/activate
