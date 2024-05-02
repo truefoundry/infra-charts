@@ -54,6 +54,7 @@ karpenter:
     ## @param karpenter.defaultNodePool.capacityTypes Capacity types for the default node pool
     capacityTypes:
       - spot
+      - on-demand
     ## @param karpenter.defaultNodePool.zones Zones for the default node pool
     zones: []
     ## @param karpenter.defaultNodePool.architectures Architectures for the default node pool
@@ -61,7 +62,7 @@ karpenter:
       - amd64
     ## @param karpenter.defaultNodePool.instanceFamilies.notAllowed Not allowed instance families for the default node pool
     instanceFamilies:
-      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
+      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "g4dn", "g5", "c1", "cc1", "cc2", "cg1", "cg2", "cr1", "g1", "g2", "hi1", "hs1", "m1", "m2", "m3", "g4ad", "inf1", "inf2", "trn1", "trn1n"]
     ## @param karpenter.defaultNodePool.instanceSizes.notAllowed Not allowed instance sizes for the default node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "metal"]
@@ -74,7 +75,7 @@ karpenter:
   ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
     ## @param karpenter.gpuDefaultNodeTemplate.enabled Enable the GPU node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.gpuDefaultNodeTemplate.name Name of the AWS node class
     name: gpu-default
     ## @param karpenter.gpuDefaultNodeTemplate.instanceProfile Instance profile override for the node template
@@ -100,7 +101,7 @@ karpenter:
   ## GPU Node Pool Config
   gpuNodePool:
     ## @param karpenter.gpuNodePool.enabled Enable the GPU node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.gpuNodePool.name Name of the GPU node pool
     name: gpu-nodepool
     ## @param karpenter.gpuNodePool.weight Weight for the GPU node pool
@@ -126,6 +127,7 @@ karpenter:
       allowed:
         - p2
         - p3
+        - p5
         - g4dn
         - g5
         - p4d
@@ -200,7 +202,7 @@ karpenter:
   ## Default Inferentia Node Template Config
   inferentiaDefaultNodeTemplate:
     ## @param karpenter.inferentiaDefaultNodeTemplate.enabled Enable the inferentia node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.inferentiaDefaultNodeTemplate.name Name of the AWS node class
     name: inferentia-default
     ## @param karpenter.inferentiaDefaultNodeTemplate.instanceProfile Instance profile override for the node template
