@@ -31,7 +31,7 @@ steps:
     args:
       content: |
         ```yaml
-        image: python:3.8.19
+        image: python:3.11.9-bullseye
         options:
           max-time: 10
 
@@ -57,7 +57,7 @@ steps:
                           - docker login --username $DOCKER_REGISTRY_USER --password $DOCKER_REGISTRY_PASS
                           - docker build -t $IMAGE_REPO:$BITBUCKET_COMMIT .
                           - docker push $IMAGE_REPO:$BITBUCKET_COMMIT
-                          - pip3 install -U "truefoundry"
+                          - pip3 install "truefoundry<1.0.0"
                           - |
                               tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_REPO:$BITBUCKET_COMMIT"' -o truefoundry-patched.yaml
                           - |

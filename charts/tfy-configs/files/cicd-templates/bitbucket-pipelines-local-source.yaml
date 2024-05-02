@@ -31,7 +31,7 @@ steps:
     args:
       content: |
         ```yaml
-        image: python:3.8.19
+        image: python:3.11.9-bullseye
         options:
           max-time: 10
 
@@ -48,7 +48,7 @@ steps:
                           - export TFY_APPLICATION_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
                           - export TFY_API_KEY=$TFY_API_KEY
                           - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
-                          - pip3 install -U "truefoundry"
+                          - pip3 install "truefoundry<1.0.0"
                           - |
                               tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN"
         ```

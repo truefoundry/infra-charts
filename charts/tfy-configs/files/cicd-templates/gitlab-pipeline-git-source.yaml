@@ -28,11 +28,11 @@ steps:
       content: |
         ```yaml
         default:
-          image: python:3.8.19
+          image: python:3.11.9-bullseye
           
         variables:
           TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
-          TFY_APPLICATION_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
+          WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
           TFY_API_KEY: $TFY_API_KEY
           
         deploy-job:
@@ -40,7 +40,9 @@ steps:
           rules:
             - if: $CI_COMMIT_BRANCH == "main"
           script: 
-            - pip3 install -U "truefoundry"
+            - pip3 install "truefoundry<1.0.0"
             - |
-              tfy patch-application --application_fqn=tfy-ctl-euwe1-devtest:mitanshu-test-ws:emotion-class-svc --patch='{"image": {"build_source": {"ref": "'$CI_COMMIT_SHA'"}}}'
+              tfy patch -f truefoundry.yaml --filter '.image.build_source.ref = "$CI_COMMIT_SHA" | .image.build_source.branch_name = "$CI_COMMIT_REF_NAME"' -o truefoundry-patched.yaml
+            - |
+              tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
         ```

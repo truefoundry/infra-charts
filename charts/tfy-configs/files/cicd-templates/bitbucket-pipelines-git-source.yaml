@@ -27,7 +27,7 @@ steps:
     args:
       content: |
         ```yaml
-        image: python:3.8.19
+        image: python:3.11.9-bullseye
         options:
           max-time: 10
 
@@ -41,9 +41,12 @@ steps:
                         name: Deploying the application
                         script:
                           - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
-                          - export TFY_APPLICATION_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
+                          - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
                           - export TFY_API_KEY=$TFY_API_KEY
-                          - pip3 install -U "truefoundry"
+                          - pip3 install "truefoundry<1.0.0"
                           - |
-                              tfy patch-application --application_fqn=tfy-ctl-euwe1-devtest:mitanshu-test-ws:emotion-class-svc --patch='{"image": {"build_source": {"ref": "'$BITBUCKET_COMMIT'"}}}'
+                              tfy patch -f truefoundry.yaml --filter '.image.build_source.ref = "$BITBUCKET_COMMIT" | .image.build_source.branch_name = "$BITBUCKET_BRANCH"' -o truefoundry-patched.yaml
+                          - |
+                              tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
+        
         ```
