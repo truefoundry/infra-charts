@@ -73,10 +73,6 @@ steps:
             TFY_HOST: https://app.devtest.truefoundry.tech/
             WORKSPACE_FQN: tfy-ctl-euwe1-devtest:chirag-gpu-dev
           
-          before_script:
-            - pip install virtualenv
-            - virtualenv venv
-            - source venv/bin/activate
           script:
             - pip3 install "truefoundry<1.0.0"
             - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_REPO:$CI_COMMIT_SHA"' -o truefoundry-patched.yaml
