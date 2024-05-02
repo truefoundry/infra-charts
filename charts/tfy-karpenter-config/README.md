@@ -328,10 +328,9 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 
 ### Cluster configurations
 
-| Name               | Description                 | Value |
-| ------------------ | --------------------------- | ----- |
-| `cluster.name`     | Name of the EKS cluster     | `""`  |
-| `cluster.endpoint` | Endpoint of the EKS cluster | `""`  |
+| Name           | Description             | Value           |
+| -------------- | ----------------------- | --------------- |
+| `cluster.name` | Name of the EKS cluster | `$CLUSTER_NAME` |
 
 ### Karpenter configurations
 
