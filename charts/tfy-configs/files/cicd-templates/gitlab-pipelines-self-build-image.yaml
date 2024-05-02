@@ -34,6 +34,10 @@ steps:
         stages:
           - build
           - deploy
+        
+        workflow:
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
 
         variables:
           IMAGE_REPO: $DOCKER_IMAGE_REPO
@@ -45,8 +49,6 @@ steps:
 
         build-image:
           stage: build
-          rules:
-            - if: $CI_COMMIT_BRANCH == "main"
           image: docker:24.0.5
           services:
             - docker:24.0.5-dind
@@ -64,8 +66,6 @@ steps:
         deploy-job:
           needs: ["build-image"]
           stage: deploy
-          rules:
-            - if: $CI_COMMIT_BRANCH == "main"
           image: python:3.11.9-bullseye
           environment: production
           variables:

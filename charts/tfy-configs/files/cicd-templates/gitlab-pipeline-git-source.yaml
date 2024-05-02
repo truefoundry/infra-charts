@@ -29,7 +29,11 @@ steps:
         ```yaml
         default:
           image: python:3.11.9-bullseye
-          
+        
+        workflow:
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
+
         variables:
           TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
           WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
@@ -37,8 +41,6 @@ steps:
           
         deploy-job:
           stage: deploy
-          rules:
-            - if: $CI_COMMIT_BRANCH == "main"
           script: 
             - pip3 install "truefoundry<1.0.0"
             - |
