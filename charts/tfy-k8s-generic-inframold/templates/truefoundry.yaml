@@ -14,15 +14,27 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.3.196
+    targetRevision: 0.3.201-rc.9
     repoURL: "quay.io/truefoundrycharts"
     chart: truefoundry
     helm:
       values: |
+        
         global:
-          tenantName: {{.Values.tenantName}}
-          controlPlaneURL: {{.Values.controlPlaneURL}}
-          dev: {{.Values.truefoundry.dev}}
+          tenantName: {{ .Values.tenantName }}
+          controlPlaneURL: {{ .Values.controlPlaneURL }}
+          dev: {{ .Values.truefoundry.dev }}
+          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
+          database:
+            host: {{ .Values.truefoundry.database.host }}
+            name: {{ .Values.truefoundry.database.name }}
+            username: {{ .Values.truefoundry.database.username }}
+            password: {{ .Values.truefoundry.database.password }}
+          tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
+
+        truefoundryBootstrap:
+          enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
+        
   syncPolicy:
     automated: {}
     syncOptions:
