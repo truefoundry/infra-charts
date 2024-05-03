@@ -1,4 +1,4 @@
-name: GitLab pipeline integrations to deploy new changes to TrueFoundry.
+name: Build and Deploy via Git Integration on TrueFoundry
 cicd_provider_id: gitlab
 enabled: true
 description: "TrueFoundry Control Plane will git clone the source code and build the image to deploy the application."
@@ -44,8 +44,6 @@ steps:
           timeout: 30 minutes
           script: 
             - pip3 install "truefoundry<1.0.0"
-            - |
-              tfy patch -f truefoundry.yaml --filter '.image.build_source.ref = "$CI_COMMIT_SHA" | .image.build_source.branch_name = "$CI_COMMIT_REF_NAME"' -o truefoundry-patched.yaml
-            - |
-              tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
+            - tfy patch -f truefoundry.yaml --filter '.image.build_source.ref = "$CI_COMMIT_SHA" | .image.build_source.branch_name = "$CI_COMMIT_REF_NAME"' -o truefoundry-patched.yaml
+            - tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
         ```
