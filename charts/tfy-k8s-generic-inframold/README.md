@@ -61,6 +61,23 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 | `truefoundry.enabled` | Flag to enable TrueFoundry          | `false` |
 | `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true`  |
 
+### Parameters for truefoundryBootstrap
+
+| Name                                       | Description                                                               | Value   |
+| ------------------------------------------ | ------------------------------------------------------------------------- | ------- |
+| `truefoundry.truefoundryBootstrap.enabled` | Flag to enable bootstrap job to prep cluster for truefoundry installation | `false` |
+
+### Parameters for database. Can be left empty if using the dev mode
+
+| Name                                         | Description                                                | Value |
+| -------------------------------------------- | ---------------------------------------------------------- | ----- |
+| `truefoundry.database.host`                  | Hostname of the database                                   | `""`  |
+| `truefoundry.database.name`                  | Name of the database                                       | `""`  |
+| `truefoundry.database.username`              | Username of the database                                   | `""`  |
+| `truefoundry.database.password`              | Password of the database                                   | `""`  |
+| `truefoundry.tfyApiKey`                      | API Key for TrueFoundry                                    | `""`  |
+| `truefoundry.truefoundryImagePullConfigJSON` | Json config for authenticating to the TrueFoundry registry | `""`  |
+
 ### Parameters for loki
 
 | Name           | Description         | Value  |
