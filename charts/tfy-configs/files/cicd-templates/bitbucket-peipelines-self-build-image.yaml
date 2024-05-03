@@ -30,6 +30,8 @@ steps:
     type: markdown-content
     args:
       content: |
+        > **Note:** Please read through the `variables` section and `build-image` Steps and update them for your registry and repo.
+
         ```yaml
         image: python:3.11.9-bullseye
         options:
@@ -43,6 +45,8 @@ steps:
                   steps:
                     - step:
                         name: Deploying the application
+                        services:
+                          - docker
                         script:
                           - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
                           - export TFY_API_KEY=$TFY_API_KEY
@@ -51,20 +55,22 @@ steps:
                           ### Image Build Section ###
                           # Here is a sample for docker, you can replace this with any other registry.
                           # The registry here should be also be linked in Integrations on TrueFoundry
-
                           - export DOCKER_BUILDKIT=1
-                          - export DOCKER_REGISTRY=<YOUR DOCKER REGISTRY HERE>
-                          - export REPO_NAME=$BITBUCKET_REPO_SLUG
-                          - export IMAGE_REPO=$DOCKER_REGISTRY/$REPO_NAME
-                          - export IMAGE_TAG=$BITBUCKET_COMMIT
-                          - export IMAGE_URI=$IMAGE_REPO:$IMAGE_TAG
-                          - docker login --username $DOCKER_REGISTRY_USER --password $DOCKER_REGISTRY_PASS
-                          - docker buildx build --cache-from type=registry,ref=$IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$IMAGE_REPO:buildcache --tag $IMAGE_URI --push .
+
+                          # Update these with your Docker Registry and Repository
+                          - export DOCKER_REGISTRY=docker.io
+                          - export DOCKER_REPO_NAME=$BITBUCKET_REPO_SLUG
+                          
+                          - export DOCKER_IMAGE_REPO=$DOCKER_REGISTRY/$DOCKER_REPO_NAME
+                          - export DOCKER_IMAGE_TAG=$BITBUCKET_COMMIT
+                          - export DOCKER_IMAGE_URI=$DOCKER_IMAGE_REPO:$DOCKER_IMAGE_TAG
+                          - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
+                          - docker buildx build --cache-from type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --push .
+
+                          ###########################
+
                           - pip3 install "truefoundry<1.0.0"
-                          - |
-                              tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_URI"' -o truefoundry-patched.yaml
-                          - |
-                              tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
-                        services:
-                          - docker
+                          - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$DOCKER_IMAGE_URI"' -o truefoundry-patched.yaml
+                          - tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
+
         ```

@@ -18,8 +18,6 @@ steps:
       content: |
         In your GitLab Repository, navigate to **Settings > CI/CD** then expand **Variables**.
         Add a new secret called `TFY_API_KEY` and set the generated api key as value and select the **Mask Variable** checkbox.
-        Please make sure to update your Docker Registry and Repository in `DOCKER_REGISTRY` and `REPO_NAME` in `variables` section
-        You might need to add your Docker Registry login credentials (`DOCKER_REGISTRY_USER` and `DOCKER_REGISTRY_PASSWORD`)  in **Settings > CI/CD > Variables**.
   - label: Download Application Spec
     icon: null
     usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
@@ -32,6 +30,8 @@ steps:
     type: markdown-content
     args:
       content: |
+        > **Note:** Please read through the `variables` section and `build-image` Steps and update them for your registry and repo.
+        
         ```yaml
         stages:
           - build
@@ -42,28 +42,33 @@ steps:
             - if: $CI_COMMIT_BRANCH == "main"
 
         variables:
-          # Please add your `DOCKER_REGISTRY` and `REPO_NAME` here to push the image to
-          DOCKER_REGISTRY: <YOUR DOCKER REGISTRY HERE>
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
 
-          ### Image Build Section ###
-          # Here is a sample job that builds and pushes image to registry configured in `variables` section.
-          # The registry here should be also be linked in Integrations on TrueFoundry
+          # Update these with your Docker Registry and Repository
+          DOCKER_REGISTRY: docker.io
+          DOCKER_REPO_NAME: $CI_PROJECT_NAME
+          
+          DOCKER_IMAGE_REPO: $DOCKER_REGISTRY/$DOCKER_REPO_NAME
+          DOCKER_IMAGE_TAG: $CI_COMMIT_SHA
+          DOCKER_IMAGE_URI: "$DOCKER_IMAGE_REPO:$DOCKER_IMAGE_TAG"
+
+        ### Image Build Section ###
+        # Build your image, push it
+        # Here is a sample, you can replace this with your registry specific steps.
+        # The registry here should be also be linked in Integrations on TrueFoundry
 
         build-image:
           stage: build
           image: docker:24.0.5
           environment: production
-          timeout: 10 minutes
+          timeout: 30 minutes
           services:
             - docker:24.0.5-dind
           variables:
             DOCKER_HOST: tcp://docker:2376
             DOCKER_TLS_CERTDIR: "/certs"
           before_script:
-            - export REPO_NAME=$CI_PROJECT_NAME
-            - export IMAGE_REPO=$DOCKER_REGISTRY/$REPO_NAME
-            - export IMAGE_TAG=$CI_COMMIT_SHA
-            - export IMAGE_URI=$IMAGE_REPO:$IMAGE_TAG
             - docker info
             - export BUILDX_VERSION=v0.6.3
             - apk add --no-cache curl
@@ -71,23 +76,23 @@ steps:
             - curl -sSLo ~/.docker/cli-plugins/docker-buildx "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64"
             - chmod a+x ~/.docker/cli-plugins/docker-buildx
             - docker buildx create --use --platform=linux/amd64,linux/arm64
-            - echo "$DOCKER_REGISTRY_PASS" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password $DOCKER_REGISTRY_PASS
           script:
+            - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
             # Assuming Dockerfile is present at the root of the project. If not, please pass it via --file
-            - docker buildx build --cache-from type=registry,ref=$IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$IMAGE_REPO:buildcache --tag $IMAGE_URI --push .
+            - docker buildx build --cache-from type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --push .
+
+        ############################
 
         deploy-job:
           needs: ["build-image"]
           stage: deploy
           image: python:3.11.9-bullseye
           environment: production
+          timeout: 30 minutes
           variables:
             PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-            TFY_HOST: https://app.devtest.truefoundry.tech/
-            WORKSPACE_FQN: tfy-ctl-euwe1-devtest:chirag-gpu-dev
-          
           script:
             - pip3 install "truefoundry<1.0.0"
-            - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$IMAGE_REPO:$CI_COMMIT_SHA"' -o truefoundry-patched.yaml
+            - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$DOCKER_IMAGE_URI"' -o truefoundry-patched.yaml
             - tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
         ```
