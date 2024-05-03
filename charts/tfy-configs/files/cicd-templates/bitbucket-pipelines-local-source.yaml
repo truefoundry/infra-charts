@@ -16,7 +16,7 @@ steps:
     type: markdown-content
     args:
       content: |
-        In your Bit Bucket Repository, navigate to **Pipelines > Workspace variables**.
+        In your Bitbucket Repository, navigate to **Pipelines > Workspace variables**.
         Add a new secret called `TFY_API_KEY` and set the generated api key as value
   - label: Download Application Spec
     icon: null
@@ -45,7 +45,6 @@ steps:
                         name: Deploying the application
                         script:
                           - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
-                          - export TFY_APPLICATION_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
                           - export TFY_API_KEY=$TFY_API_KEY
                           - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
                           - pip3 install "truefoundry<1.0.0"
