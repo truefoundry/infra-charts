@@ -1,0 +1,10 @@
+{{- if .Values.tfyAgent.enabled -}}
+{{- if .Values.tfyAgent.clusterRole.enable -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}
+rules:
+    {{- .Values.tfyAgent.clusterRole.rules | toYaml | nindent 2 }}
+{{- end }}
+{{- end }}
