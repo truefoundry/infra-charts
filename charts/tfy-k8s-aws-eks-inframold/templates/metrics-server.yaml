@@ -5,6 +5,9 @@ metadata:
   name: metrics-server
   finalizers:
   - resources-finalizer.argocd.argoproj.io
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-20"
   labels:
     truefoundry.com/infra-component: "metrics-server"
     truefoundry.com/infra-migration-tag: "1000"

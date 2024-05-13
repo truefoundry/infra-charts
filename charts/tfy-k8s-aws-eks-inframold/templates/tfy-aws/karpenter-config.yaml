@@ -8,6 +8,9 @@ metadata:
   labels:
     truefoundry.com/infra-component: "karpenter-config"
     truefoundry.com/infra-migration-tag: "1002"
+  annotations:
+   helm.sh/hook: pre-install
+   helm.sh/hook-weight: "-14"
 spec:
   destination:
     namespace: karpenter
@@ -24,19 +27,13 @@ spec:
           enabled: {{ .Values.aws.karpenter.enabled }}
           instanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
           defaultNodePool:
-            zones: {{- range .Values.aws.karpenter.defaultZones }}
-            - {{ . | quote }}
-            {{- end }}
+            zones: {{ .Values.aws.karpenter.defaultZones }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
-            zones: {{- range .Values.aws.karpenter.defaultZones }}
-            - {{ . | quote }}
-            {{- end }}
+            zones: {{ .Values.aws.karpenter.defaultZones }}
           {{- end }}
           inferentiaNodePool:
-            zones: {{- range .Values.aws.karpenter.defaultZones }}
-            - {{ . | quote }}
-            {{- end }}
+            zones: {{ .Values.aws.karpenter.defaultZones }}
   project: tfy-apps
   syncPolicy:
     automated: {}
