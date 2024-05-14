@@ -106,6 +106,8 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgentProxy.serviceAccount.create`                | Bool to enable serviceAccount creation                                                                                     | `true`                                            |
 | `tfyAgentProxy.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                                   | `{}`                                              |
 | `tfyAgentProxy.serviceAccount.name`                  | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template          | `""`                                              |
+| `tfyAgentProxy.clusterRole.enable`                   | Create cluster role.                                                                                                       | `true`                                            |
+| `tfyAgentProxy.clusterRole.rules`                    | Cluster role Authz rules.                                                                                                  | `[]`                                              |
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namspace.
 

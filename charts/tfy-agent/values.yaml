@@ -432,6 +432,70 @@ tfyAgentProxy:
     ## 
     name: ""
 
+  clusterRole:
+    ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
+    enable: true
+    ## @param tfyAgentProxy.clusterRole.rules [array] Cluster role Authz rules.
+    rules:
+      - apiGroups: [""]
+        resources: ["namespaces", "resourcequotas"]
+        verbs: ["get", "delete", "patch", "list", "create"]
+
+      - apiGroups: [""]
+        resources: ["resourcequotas/status"]
+        verbs: ["get"]
+
+      - apiGroups: [""]
+        resources: ["secrets"]
+        verbs: ["create", "patch"]
+
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["delete"]
+
+      - apiGroups: [""]
+        resources: ["pods/log", "events", "nodes", "services", "persistentvolumes"]
+        verbs: ["get", "list"]
+
+      - apiGroups: ["storage.k8s.io"]
+        resources: ["storageclasses"]
+        verbs: ["get", "list"]
+
+      - apiGroups: ["apps"]
+        resources: ["statefulsets/scale"]
+        verbs: ["patch"]
+
+      - apiGroups: ["networking.istio.io"]
+        resources: ["virtualservices"]
+        verbs: ["list"]
+
+      - apiGroups: ["apiextensions.k8s.io"]
+        resources: ["customresourcedefinitions"]
+        verbs: ["list"]
+
+      - apiGroups: ["keda.sh"]
+        resources: ["scaledobjects"]
+        verbs: ["get", "update"]
+
+      - apiGroups: ["argoproj.io"]
+        resources: ["applications"]
+        verbs: ["*"]
+
+      - apiGroups: ["argoproj.io"]
+        resources: ["rollouts/scale", "rollouts/status"]
+        verbs: ["patch"]
+
+      - apiGroups: ["argoproj.io"]
+        resources: ["rollouts", "workflowtemplates"]
+        verbs: ["get"]
+
+      - apiGroups: ["argoproj.io"]
+        resources: ["workflows"]
+        verbs: ["create", "get", "patch"]
+
+      - apiGroups: ["kubeflow.org"]
+        resources: ["notebooks"]
+        verbs: ["get", "update"]
 
 ## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
 ##
