@@ -1,0 +1,62 @@
+{{- if .Values.tfyAgentProxy.enabled -}}
+{{- if .Values.tfyAgentProxy.clusterRole.enable -}}
+{{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tfy-agent-proxy.fullname" . }}-ns
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["patch", "delete"]
+
+  - apiGroups: [""]
+    resources: ["resourcequotas"]
+    verbs: ["get", "delete", "patch", "create"]
+
+  - apiGroups: [""]
+    resources: ["resourcequotas/status"]
+    verbs: ["get"]
+
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "patch"]
+
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["delete"]
+
+  - apiGroups: [""]
+    resources: ["pods/log", "events", "services", "persistentvolumes"]
+    verbs: ["get", "list"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets/scale"]
+    verbs: ["patch"]
+
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects"]
+    verbs: ["get", "update"]
+
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications"]
+    verbs: ["*"]
+
+  - apiGroups: ["argoproj.io"]
+    resources: ["rollouts/scale", "rollouts/status"]
+    verbs: ["patch"]
+
+  - apiGroups: ["argoproj.io"]
+    resources: ["rollouts", "workflowtemplates"]
+    verbs: ["get"]
+
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflows"]
+    verbs: ["create", "get", "patch"]
+
+  - apiGroups: ["kubeflow.org"]
+    resources: ["notebooks"]
+    verbs: ["get", "update"]
+{{- end }}
+{{- end }}
+{{- end }}
