@@ -76,7 +76,7 @@ spec:
           hostPath:
             path: /etc/nvidia
       initContainers:
-        - image: "cos-nvidia-installer:fixed"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.cos.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.cos.tag }}"
           imagePullPolicy: Never
           name: nvidia-driver-installer
           resources:
@@ -123,7 +123,7 @@ spec:
                 /cos-gpu-installer install
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
-        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.tag }}"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -141,7 +141,7 @@ spec:
             - name: nvidia-config
               mountPath: /etc/nvidia
       containers:
-        - image: "gcr.io/google-containers/pause:2.0"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.tag }}"
           name: pause
 {{- if and $gkeAcceleratorsForLatestDriver ($gkeAcceleratorsForLatestDriver | empty | not) }}
 ---
@@ -204,7 +204,7 @@ spec:
           hostPath:
             path: /etc/nvidia
       initContainers:
-        - image: "cos-nvidia-installer:fixed"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.tag }}"
           imagePullPolicy: Never
           name: nvidia-driver-installer
           resources:
@@ -251,7 +251,7 @@ spec:
                 /cos-gpu-installer install --version=latest
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
-        - image: "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.tag }}"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -269,7 +269,7 @@ spec:
             - name: nvidia-config
               mountPath: /etc/nvidia
       containers:
-        - image: "gcr.io/google-containers/pause:2.0"
+        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.tag }}"
           name: pause
 {{- end }}
 ---
