@@ -59,9 +59,21 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 ### gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
 
-| Name                                             | Description                                       | Value           |
-| ------------------------------------------------ | ------------------------------------------------- | --------------- |
-| `gcp-gke-standard-driver.latest.gkeAccelerators` | Install latest driver for these GKE accelerators. | `["nvidia-l4"]` |
+| Name                                                                                 | Description                                                                      | Value                                                              |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `gcp-gke-standard-driver.latest.gkeAccelerators`                                     | Install latest driver for these GKE accelerators.                                | `["nvidia-l4"]`                                                    |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.cos.image.repository`                 | Repository for the Nvidia Driver Installer cos initContainer.                    | `cos-nvidia-installer`                                             |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.cos.image.tag`                        | Tag for the Nvidia Driver Installer cos initContainer.                           | `fixed`                                                            |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.partitionGpus.image.repository`       | Repository for the Nvidia Driver Installer partition gpus init container.        | `gcr.io/gke-release/nvidia-partition-gpu@sha256`                   |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.partitionGpus.image.tag`              | Tag for the Nvidia Driver Installer partition gpus init container.               | `e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a` |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.pause.image.repository`               | Repository for the Nvidia Driver Installer pause container.                      | `gcr.io/google-containers/pause`                                   |
+| `gcp-gke-standard-driver.nvidiaDriverInstaller.pause.image.tag`                      | Tag for the Nvidia Driver Installer pause container.                             | `2.0`                                                              |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.cos.image.repository`           | Repository for the Nvidia Latest Driver Installer cos initContainer.             | `cos-nvidia-installer`                                             |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.cos.image.tag`                  | Tag for the Nvidia Latest Driver Installer cos initContainer.                    | `fixed`                                                            |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.partitionGpus.image.repository` | Repository for the Nvidia Latest Driver Installer partition gpus init container. | `gcr.io/gke-release/nvidia-partition-gpu@sha256`                   |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.partitionGpus.image.tag`        | Tag for the Nvidia Latest Driver Installer partition gpus init container.        | `e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a` |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.pause.image.repository`         | Repository for the Nvidia Latest Driver Installer pause container.               | `gcr.io/google-containers/pause`                                   |
+| `gcp-gke-standard-driver.nvidiaLatestDriverInstaller.pause.image.tag`                | Tag for the Nvidia Latest Driver Installer pause container.                      | `2.0`                                                              |
 
 ### gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 
@@ -83,23 +95,6 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `gcp-gke-standard-dcgm-exporter.extraHostVolumes[0].hostPath`   | Host Path for the additional host volume for the DCGM Exporter.      | `/dev`                                                                                                          |
 | `gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].name`      | Name for the additional volume mounts for the DCGM Exporter.         | `dev`                                                                                                           |
 | `gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].mountPath` | Mount Path for the additional volume mounts for the DCGM Exporter.   | `/dev`                                                                                                          |
-
-### gcpGkeStandardDriver Configuration for the GCP GKE Nvidia Driver Installer. This section will only be used when clusterType.gcpGkeStandard is set to true.
-
-| Name                                                                              | Description                                                                      | Value                                                              |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.cos.image.repository`                 | Repository for the Nvidia Driver Installer cos initContainer.                    | `cos-nvidia-installer`                                             |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.cos.image.tag`                        | Tag for the Nvidia Driver Installer cos initContainer.                           | `fixed`                                                            |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.image.repository`       | Repository for the Nvidia Driver Installer partition gpus init container.        | `gcr.io/gke-release/nvidia-partition-gpu@sha256`                   |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.image.tag`              | Tag for the Nvidia Driver Installer partition gpus init container.               | `e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a` |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.repository`               | Repository for the Nvidia Driver Installer pause container.                      | `gcr.io/google-containers/pause`                                   |
-| `gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.tag`                      | Tag for the Nvidia Driver Installer pause container.                             | `2.0`                                                              |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.image.repository`           | Repository for the Nvidia Latest Driver Installer cos initContainer.             | `cos-nvidia-installer`                                             |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.image.tag`                  | Tag for the Nvidia Latest Driver Installer cos initContainer.                    | `fixed`                                                            |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.image.repository` | Repository for the Nvidia Latest Driver Installer partition gpus init container. | `gcr.io/gke-release/nvidia-partition-gpu@sha256`                   |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.image.tag`        | Tag for the Nvidia Latest Driver Installer partition gpus init container.        | `e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a` |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.repository`         | Repository for the Nvidia Latest Driver Installer pause container.               | `gcr.io/google-containers/pause`                                   |
-| `gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.tag`                | Tag for the Nvidia Latest Driver Installer pause container.                      | `2.0`                                                              |
 
 ### azure-aks-gpu-operator Configuration for the Azure AKS GPU operator. This section will only be used when clusterType.azureAks is set to true.
 
