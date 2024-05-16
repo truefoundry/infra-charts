@@ -1,5 +1,22 @@
 # Tfy-agent helm chart packaged by TrueFoundry
-Tfy-agent is an applications that gets deployed on the kubernetes cluster to connect to the TrueFoundry Control plane
+Tfy-agent is an application that gets deployed on the data plane Kubernetes cluster to connect to the TrueFoundry control plane.
+
+This application has two parts.
+1. TFY Agent
+    * This is used to stream the state of the data plane cluster to the control plane.
+2. TFY Agent Proxy
+    * This enables the control plane to access the data plane cluster's Kubernetes API server.
+
+## Data plane cluster authorization
+* By default, the control plane will have access to all the resources in the cluster.
+* If you want to give minimum authorization, please set the field `tfyAgentProxy.clusterRole.strictMode` to `true`.
+* The `config.allowedNamespaces` field allows you to limit the namespaces the control plane can access. If you use this field, we will use minimum authorization by default.
+    * Note that TFY Agent still has cluster-wide read-only access to some resources, but it filters out any namespaced resources whose namespaces are not in the list.
+
+Please check the following files for more details.
+* [TFY Agent authorization rules.](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrole.yaml)
+* [TFY Agent Proxy cluster scoped authorization rules.](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-cs.yaml)
+* [TFY Agent Proxy namespace scoped authorization rules.](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml)
 
 ## Parameters
 
@@ -20,7 +37,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `config.prometheus.endpoint`             | Endpoint to connect to prometheus                                                                                   | `http://prometheus-operated.prometheus.svc.cluster.local:9090`                   |
 | `config.alertURL`                        | Truefoundry alert URL                                                                                               | `https://auth.truefoundry.com`                                                   |
 | `config.nodeEnv`                         |                                                                                                                     | `production`                                                                     |
-| `config.allowedNamespaces`               | A list of namespaces the control plane will access for namespaced resources.                                        | `[]`                                                                             |
+| `config.allowedNamespaces`               | A list of namespaces the control plane will have access to for namespaced resources.                                | `[]`                                                                             |
 | `imagePullSecrets`                       | Secrets to pull images                                                                                              | `[]`                                                                             |
 | `nameOverride`                           | String to override partial name passed in helm install command                                                      | `""`                                                                             |
 | `fullnameOverride`                       | String to override full name passed in helm install command                                                         | `""`                                                                             |
