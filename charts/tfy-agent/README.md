@@ -3,12 +3,6 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 
 ## Parameters
 
-### Global parameters
-
-| Name                  | Description          | Value  |
-| --------------------- | -------------------- | ------ |
-| `global.rbac.enabled` | Enable RBAC globally | `true` |
-
 ### Configuration parameters
 
 | Name                                     | Description                                                                                                         | Value                                                                            |
@@ -26,6 +20,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `config.prometheus.endpoint`             | Endpoint to connect to prometheus                                                                                   | `http://prometheus-operated.prometheus.svc.cluster.local:9090`                   |
 | `config.alertURL`                        | Truefoundry alert URL                                                                                               | `https://auth.truefoundry.com`                                                   |
 | `config.nodeEnv`                         |                                                                                                                     | `production`                                                                     |
+| `config.allowedNamespaces`               | A list of namespaces the control plane will access for namespaced resources.                                        | `[]`                                                                             |
 | `imagePullSecrets`                       | Secrets to pull images                                                                                              | `[]`                                                                             |
 | `nameOverride`                           | String to override partial name passed in helm install command                                                      | `""`                                                                             |
 | `fullnameOverride`                       | String to override full name passed in helm install command                                                         | `""`                                                                             |
@@ -80,7 +75,6 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgent.affinity`                             | Affinity rules for pod scheduling on a node                                                                           | `{}`                                        |
 | `tfyAgent.priorityClassName`                    | PriorityClass name for the pod.                                                                                       | `system-cluster-critical`                   |
 | `tfyAgent.clusterRole.enable`                   | Create cluster role.                                                                                                  | `true`                                      |
-| `tfyAgent.clusterRole.rules`                    | Cluster role Authz rules.                                                                                             | `[]`                                        |
 
 ### tfyAgentProxy configuration parameters
 
@@ -107,7 +101,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgentProxy.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                                   | `{}`                                              |
 | `tfyAgentProxy.serviceAccount.name`                  | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template          | `""`                                              |
 | `tfyAgentProxy.clusterRole.enable`                   | Create cluster role.                                                                                                       | `true`                                            |
-| `tfyAgentProxy.clusterRole.rules`                    | Cluster role Authz rules.                                                                                                  | `[]`                                              |
+| `tfyAgentProxy.clusterRole.strictMode`               | Only add required authz rules.                                                                                             | `false`                                           |
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namspace.
 

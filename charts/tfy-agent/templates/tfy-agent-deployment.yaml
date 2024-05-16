@@ -59,6 +59,10 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
+            {{- if .Values.config.allowedNamespaces }}
+            - name: NAMESPACE_ALLOW_LIST
+              value: {{ .Values.config.allowedNamespaces | join "," | quote }}
+            {{- end }}
           {{- range $val := .Values.tfyAgent.extraEnvVars }}
             - name: {{ $val.name }}
               value: {{ $val.value }}
