@@ -1,5 +1,7 @@
 {{- if .Values.clusterType.gcpGkeStandard }}
 {{- $gkeAcceleratorsForLatestDriver := (index .Values "gcp-gke-standard-driver" "latest" "gkeAccelerators") }}
+{{- $driverDefault := (index .Values "gcp-gke-standard-driver" "default") }}
+{{- $driverLatest := (index .Values "gcp-gke-standard-driver" "latest") }}
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -76,7 +78,7 @@ spec:
           hostPath:
             path: /etc/nvidia
       initContainers:
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.cos.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.cos.tag }}"
+        - image: "{{ $driverDefault.cosDriverInstaller.image.repository }}:{{ $driverDefault.cosDriverInstaller.image.tag }}"
           imagePullPolicy: Never
           name: nvidia-driver-installer
           resources:
@@ -123,7 +125,7 @@ spec:
                 /cos-gpu-installer install
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.partitionGpus.tag }}"
+        - image: "{{ $driverDefault.partitionGpus.image.repository }}:{{ $driverDefault.partitionGpus.image.tag }}"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -141,7 +143,7 @@ spec:
             - name: nvidia-config
               mountPath: /etc/nvidia
       containers:
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaDriverInstaller.pause.image.tag }}"
+        - image: "{{ $driverDefault.pause.image.repository }}:{{ $driverDefault.pause.image.tag }}"
           name: pause
 {{- if and $gkeAcceleratorsForLatestDriver ($gkeAcceleratorsForLatestDriver | empty | not) }}
 ---
@@ -204,7 +206,7 @@ spec:
           hostPath:
             path: /etc/nvidia
       initContainers:
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.cos.tag }}"
+        - image: "{{ $driverLatest.cosDriverInstaller.image.repository }}:{{ $driverLatest.cosDriverInstaller.image.tag }}"
           imagePullPolicy: Never
           name: nvidia-driver-installer
           resources:
@@ -251,7 +253,7 @@ spec:
                 /cos-gpu-installer install --version=latest
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.partitionGpus.tag }}"
+        - image: "{{ $driverLatest.partitionGpus.image.repository }}:{{ $driverLatest.partitionGpus.image.tag }}"
           name: partition-gpus
           env:
             - name: LD_LIBRARY_PATH
@@ -269,7 +271,7 @@ spec:
             - name: nvidia-config
               mountPath: /etc/nvidia
       containers:
-        - image: "{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.repository }}:{{ .Values.gcpGkeStandardDriver.nvidiaLatestDriverInstaller.pause.image.tag }}"
+        - image: "{{ $driverLatest.pause.image.repository }}:{{ $driverLatest.pause.image.tag }}"
           name: pause
 {{- end }}
 ---

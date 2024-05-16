@@ -303,52 +303,50 @@ gcp-gke-standard-driver:
   latest:
     gkeAccelerators:
       - nvidia-l4
-  nvidiaDriverInstaller:
-    cos:
+    cosDriverInstaller:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.cos.image.repository Repository for the Nvidia Driver Installer cos initContainer.
+        ## @param gcp-gke-standard-driver.latest.cosDriverInstaller.image.repository Repository for the Nvidia Latest Driver Installer cos initContainer.
         ##
         repository: "cos-nvidia-installer"
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.cos.image.tag Tag for the Nvidia Driver Installer cos initContainer.
-        ##
+        ## @param gcp-gke-standard-driver.latest.cosDriverInstaller.image.tag Tag for the Nvidia Latest Driver Installer cos initContainer.
         tag: "fixed"
     partitionGpus:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.partitionGpus.image.repository Repository for the Nvidia Driver Installer partition gpus init container.
+        ## @param gcp-gke-standard-driver.latest.partitionGpus.image.repository Repository for the Nvidia Latest Driver Installer partition gpus init container.
         ##
         repository: "gcr.io/gke-release/nvidia-partition-gpu@sha256"
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.partitionGpus.image.tag Tag for the Nvidia Driver Installer partition gpus init container.
-        ##
+        ## @param gcp-gke-standard-driver.latest.partitionGpus.image.tag Tag for the Nvidia Latest Driver Installer partition gpus init container.
         tag: "e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
     pause:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.pause.image.repository Repository for the Nvidia Driver Installer pause container.
-        ##
+        ## @param gcp-gke-standard-driver.latest.pause.image.repository Repository for the Nvidia Latest Driver Installer pause container.
         repository: "gcr.io/google-containers/pause"
-        ## @param gcp-gke-standard-driver.nvidiaDriverInstaller.pause.image.tag Tag for the Nvidia Driver Installer pause container.
-        ##
+        ## @param gcp-gke-standard-driver.latest.pause.image.tag Tag for the Nvidia Latest Driver Installer pause container.
         tag: "2.0"
-  ## @subsection nvidiaLatestDriverInstaller Configuration for the Nvidia Latest Driver Installer.
-  nvidiaLatestDriverInstaller:
-    cos:
+  default:
+    cosDriverInstaller:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.cos.image.repository Repository for the Nvidia Latest Driver Installer cos initContainer.
+        ## @param gcp-gke-standard-driver.default.cosDriverInstaller.image.repository Repository for the Nvidia Driver Installer cos initContainer.
         ##
         repository: "cos-nvidia-installer"
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.cos.image.tag Tag for the Nvidia Latest Driver Installer cos initContainer.
+        ## @param gcp-gke-standard-driver.default.cosDriverInstaller.image.tag Tag for the Nvidia Driver Installer cos initContainer.
+        ##
         tag: "fixed"
     partitionGpus:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.partitionGpus.image.repository Repository for the Nvidia Latest Driver Installer partition gpus init container.
+        ## @param gcp-gke-standard-driver.default.partitionGpus.image.repository Repository for the Nvidia Driver Installer partition gpus init container.
         ##
         repository: "gcr.io/gke-release/nvidia-partition-gpu@sha256"
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.partitionGpus.image.tag Tag for the Nvidia Latest Driver Installer partition gpus init container.
+        ## @param gcp-gke-standard-driver.default.partitionGpus.image.tag Tag for the Nvidia Driver Installer partition gpus init container.
+        ##
         tag: "e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
     pause:
       image:
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.pause.image.repository Repository for the Nvidia Latest Driver Installer pause container.
+        ## @param gcp-gke-standard-driver.default.pause.image.repository Repository for the Nvidia Driver Installer pause container.
+        ##
         repository: "gcr.io/google-containers/pause"
-        ## @param gcp-gke-standard-driver.nvidiaLatestDriverInstaller.pause.image.tag Tag for the Nvidia Latest Driver Installer pause container.
+        ## @param gcp-gke-standard-driver.default.pause.image.tag Tag for the Nvidia Driver Installer pause container.
+        ##
         tag: "2.0"
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
