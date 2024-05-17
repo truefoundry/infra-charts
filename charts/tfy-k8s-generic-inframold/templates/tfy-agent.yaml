@@ -23,8 +23,24 @@ spec:
           clusterToken: {{ .Values.tfyAgent.clusterToken}}
           tenantName: {{ .Values.tenantName}}
           controlPlaneURL: {{ .Values.controlPlaneURL}}
-        
-        
+        tfyAgent:
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+        tfyAgentProxy:
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

@@ -20,15 +20,27 @@ spec:
     helm:
       values: |-
         installCRDs: true
-        
-        
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         webhook:
           requests:
             cpu: 20m
             memory: 64Mi
             ephemeral-storage: 64Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         resources:
           requests:
             cpu: 20m
@@ -39,12 +51,24 @@ spec:
             cpu: 20m
             memory: 64Mi
             ephemeral-storage: 64Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         startupapicheck:
           enabled: true
-        
-        
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     retry: {}
