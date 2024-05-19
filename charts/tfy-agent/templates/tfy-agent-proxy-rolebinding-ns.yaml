@@ -1,0 +1,22 @@
+{{- if .Values.tfyAgentProxy.enabled -}}
+{{- if .Values.tfyAgentProxy.clusterRole.enable -}}
+{{- if .Values.config.allowedNamespaces }}
+{{- range $.Values.config.allowedNamespaces }}
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "tfy-agent-proxy.fullname" $ }}-ns
+  namespace: {{ . | trim }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tfy-agent-proxy.serviceAccountName" $ }}
+    namespace: {{ $.Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "tfy-agent-proxy.fullname" $ }}-ns
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

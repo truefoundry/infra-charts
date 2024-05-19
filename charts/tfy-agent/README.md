@@ -1,13 +1,39 @@
+
 # Tfy-agent helm chart packaged by TrueFoundry
-Tfy-agent is an applications that gets deployed on the kubernetes cluster to connect to the TrueFoundry Control plane
+Tfy-agent is an application that runs on the compute plane Kubernetes cluster to connect to the TrueFoundry control plane.
+
+This application has two parts.
+1. TFY Agent
+    * This is used to stream the state of the compute plane cluster to the control plane.
+2. TFY Agent Proxy
+    * This enables the control plane to access the compute plane cluster's Kubernetes API server.
+
+## Compute plane cluster authorization
+
+### TFY Agent
+* TFY Agent runs [informers](https://macias.info/entry/202109081800_k8s_informers.md) to events to stream kubernetes resource changes and send it to the control plane.
+* To run informers, the TFY Agent needs to be able to `list` and `watch` [those resource types](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrole.yaml) across [all the namespaces](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrolebinding.yaml) in the cluster.
+   *  The `config.allowedNamespaces` field allows you to configure a list of allowed namespaces. TFY Agent will filter out any namespaced resource's update if the resource is not part of the allowed namespaces.
+
+### TFY Agent Proxy
+* By default, the TFY Agent Proxy enables the control plane to access all resources on the compute cluster.
+* If you want to give minimum authorization, please set the field `tfyAgentProxy.clusterRole.strictMode` to `true`.
+
+#### Strict Mode
+* In this mode, we set up minimum required authorization rules for the control plane to function correctly.
+* If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we will always run on strict mode, regardless of the value of the `tfyAgentProxy.clusterRole.strictMode` field.
+
+##### Cluster Scope resource access
+* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-cs.yaml) documents all the authorization rules we set for the resources for which we require cluster-scope access.
+* Note that if you have configured a list of allowed namespaces, the control plane cannot create any new namespace in the cluster.
+
+##### Namespace Scope resource access
+* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-cs.yaml) documents all the authorization rules we set for the resources the control plane can work with namespace-scope access.
+* If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we use [setup role binding](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-rolebinding-ns.yaml) to only those namespaces.
+* If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
+
 
 ## Parameters
-
-### Global parameters
-
-| Name                  | Description          | Value  |
-| --------------------- | -------------------- | ------ |
-| `global.rbac.enabled` | Enable RBAC globally | `true` |
 
 ### Configuration parameters
 
@@ -26,6 +52,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `config.prometheus.endpoint`             | Endpoint to connect to prometheus                                                                                   | `http://prometheus-operated.prometheus.svc.cluster.local:9090`                   |
 | `config.alertURL`                        | Truefoundry alert URL                                                                                               | `https://auth.truefoundry.com`                                                   |
 | `config.nodeEnv`                         |                                                                                                                     | `production`                                                                     |
+| `config.allowedNamespaces`               | A list of namespaces the control plane will have access to for namespaced resources.                                | `[]`                                                                             |
 | `imagePullSecrets`                       | Secrets to pull images                                                                                              | `[]`                                                                             |
 | `nameOverride`                           | String to override partial name passed in helm install command                                                      | `""`                                                                             |
 | `fullnameOverride`                       | String to override full name passed in helm install command                                                         | `""`                                                                             |
@@ -80,7 +107,6 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgent.affinity`                             | Affinity rules for pod scheduling on a node                                                                           | `{}`                                        |
 | `tfyAgent.priorityClassName`                    | PriorityClass name for the pod.                                                                                       | `system-cluster-critical`                   |
 | `tfyAgent.clusterRole.enable`                   | Create cluster role.                                                                                                  | `true`                                      |
-| `tfyAgent.clusterRole.rules`                    | Cluster role Authz rules.                                                                                             | `[]`                                        |
 
 ### tfyAgentProxy configuration parameters
 
@@ -90,7 +116,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgentProxy.annotations`                          | Add annotations to tfyAgentProxy pods                                                                                      | `{}`                                              |
 | `tfyAgentProxy.image.repository`                     | tfyAgentProxy repository                                                                                                   | `public.ecr.aws/truefoundrycloud/tfy-agent-proxy` |
 | `tfyAgentProxy.image.pullPolicy`                     | Pull policy for tfyAgentProxy                                                                                              | `IfNotPresent`                                    |
-| `tfyAgentProxy.image.tag`                            | Image tag whose default is the chart appVersion.                                                                           | `ed48db5daa1b95112f831740ce1bbfb18d5a3872`        |
+| `tfyAgentProxy.image.tag`                            | Image tag whose default is the chart appVersion.                                                                           | `1b1709ac56211fd021e84d78305bb94dec2a4805`        |
 | `tfyAgentProxy.extraEnvVars`                         | Additional envrionment variables for tfyAgentPRoxy                                                                         | `[]`                                              |
 | `tfyAgentProxy.resources.limits.cpu`                 | CPU resource limits for tfyAgentProxy container. Advised to only increase the limits and not decrease it                   | `500m`                                            |
 | `tfyAgentProxy.resources.limits.memory`              | Memory Resource limits for tfyAgentProxy container. Advised to only increase the limits and not decrease it                | `512Mi`                                           |
@@ -107,7 +133,7 @@ Tfy-agent is an applications that gets deployed on the kubernetes cluster to con
 | `tfyAgentProxy.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                                   | `{}`                                              |
 | `tfyAgentProxy.serviceAccount.name`                  | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template          | `""`                                              |
 | `tfyAgentProxy.clusterRole.enable`                   | Create cluster role.                                                                                                       | `true`                                            |
-| `tfyAgentProxy.clusterRole.rules`                    | Cluster role Authz rules.                                                                                                  | `[]`                                              |
+| `tfyAgentProxy.clusterRole.strictMode`               | Only add required authz rules.                                                                                             | `false`                                           |
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namspace.
 

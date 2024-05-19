@@ -5,6 +5,20 @@ kind: ClusterRole
 metadata:
   name: {{ include "tfy-agent.fullname" . }}
 rules:
-    {{- .Values.tfyAgent.clusterRole.rules | toYaml | nindent 2 }}
+  - apiGroups: [""]
+    resources: ["namespaces", "pods", "resourcequotas", "nodes"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["replicasets", "deployments"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["networking.istio.io"]
+    resources: ["gateways"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["applications", "rollouts", "workflow", "workflowtemplates"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["appprojects"]
+    verbs: ["patch", "get"]
 {{- end }}
 {{- end }}

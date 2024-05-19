@@ -208,6 +208,16 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+                      - g6.xlarge
+                      - g6.2xlarge
+                      - g6.4xlarge
+                      - g6.8xlarge
+                      - g6.16xlarge
+                      - g6.12xlarge
+                      - g6.24xlarge
+                      - g6.48xlarge
+                      - gr6.4xlarge
+                      - gr6.8xlarge
       tolerations:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.tolerations[0]
         - key: nvidia.com/gpu
@@ -254,7 +264,7 @@ aws-eks-gpu-operator:
   ## DCGM Exporter configuration.
   dcgmExporter:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
-    enabled: false
+    enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
     version: 3.3.3-3.3.1-ubuntu22.04
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
