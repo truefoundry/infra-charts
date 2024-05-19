@@ -61,7 +61,7 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 | Name                                                                  | Description                                                                      | Value                                                              |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `gcp-gke-standard-driver.latest.gkeAccelerators`                      | Install latest driver for these GKE accelerators.                                | `["nvidia-l4"]`                                                    |
+| `gcp-gke-standard-driver.latest.gkeAccelerators`                      | Install latest driver for these GKE accelerators.                                | `["nvidia-l4","nvidia-h100-80gb"]`                                 |
 | `gcp-gke-standard-driver.latest.cosDriverInstaller.image.repository`  | Repository for the Nvidia Latest Driver Installer cos initContainer.             | `cos-nvidia-installer`                                             |
 | `gcp-gke-standard-driver.latest.cosDriverInstaller.image.tag`         | Tag for the Nvidia Latest Driver Installer cos initContainer.                    | `fixed`                                                            |
 | `gcp-gke-standard-driver.latest.partitionGpus.image.repository`       | Repository for the Nvidia Latest Driver Installer partition gpus init container. | `gcr.io/gke-release/nvidia-partition-gpu@sha256`                   |
