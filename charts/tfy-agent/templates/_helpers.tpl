@@ -75,13 +75,24 @@ app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Create the name of the service account to use for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccountName" -}}
 {{- if .Values.tfyAgent.serviceAccount.create }}
 {{- default (include "tfy-agent.fullname" .) .Values.tfyAgent.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.tfyAgent.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use for tfy-agent-proxy
+*/}}
+{{- define "tfy-agent-proxy.serviceAccountName" -}}
+{{- if .Values.tfyAgentProxy.serviceAccount.create }}
+{{- default (include "tfy-agent-proxy.fullname" .) .Values.tfyAgentProxy.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.tfyAgentProxy.serviceAccount.name }}
 {{- end }}
 {{- end }}
 

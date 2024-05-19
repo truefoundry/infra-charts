@@ -11,43 +11,43 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `controlPlaneURL` | Parameters for controlPlaneURL | `""`  |
 | `clusterName`     | Name of the cluster            | `""`  |
 
-### Parameters for argocd
+### argocd parameters
 
 | Name             | Description           | Value  |
 | ---------------- | --------------------- | ------ |
 | `argocd.enabled` | Flag to enable ArgoCD | `true` |
 
-### Parameters for argoWorkflows
+### argoWorkflows parameters
 
 | Name                    | Description                   | Value  |
 | ----------------------- | ----------------------------- | ------ |
 | `argoWorkflows.enabled` | Flag to enable Argo Workflows | `true` |
 
-### Parameters for argoRollouts
+### argoRollouts parameters
 
 | Name                   | Description                  | Value  |
 | ---------------------- | ---------------------------- | ------ |
 | `argoRollouts.enabled` | Flag to enable Argo Rollouts | `true` |
 
-### Parameters for notebookController
+### notebookController parameters
 
 | Name                         | Description                        | Value  |
 | ---------------------------- | ---------------------------------- | ------ |
 | `notebookController.enabled` | Flag to enable Notebook Controller | `true` |
 
-### Parameters for certManager
+### certManager parameters
 
 | Name                  | Description                 | Value   |
 | --------------------- | --------------------------- | ------- |
 | `certManager.enabled` | Flag to enable Cert Manager | `false` |
 
-### Parameters for metricsServer
+### metricsServer parameters
 
 | Name                    | Description                   | Value  |
 | ----------------------- | ----------------------------- | ------ |
 | `metricsServer.enabled` | Flag to enable Metrics Server | `true` |
 
-### Parameters for AWS
+### AWS parameters
 
 | Name                                    | Description                                 | Value  |
 | --------------------------------------- | ------------------------------------------- | ------ |
@@ -66,14 +66,14 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsEfsCsiDriver.region`            | Region for AWS EFS CSI Driver               | `""`   |
 | `aws.awsEfsCsiDriver.roleArn`           | Role ARN for AWS EFS CSI Driver             | `""`   |
 
-### Parameters for gpu
+### gpu-operator parameters
 
 | Name              | Description                       | Value    |
 | ----------------- | --------------------------------- | -------- |
 | `gpu.enabled`     | Flag to enable Tfy GPU Operator   | `true`   |
 | `gpu.clusterType` | Cluster type for Tfy GPU Operator | `awsEks` |
 
-### Parameters for truefoundry
+### truefoundry parameters
 
 | Name                  | Description                         | Value   |
 | --------------------- | ----------------------------------- | ------- |
@@ -97,43 +97,43 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `truefoundry.tfyApiKey`                      | API Key for TrueFoundry                                    | `""`  |
 | `truefoundry.truefoundryImagePullConfigJSON` | Json config for authenticating to the TrueFoundry registry | `""`  |
 
-### Parameters for loki
+### loki parameters
 
 | Name           | Description         | Value  |
 | -------------- | ------------------- | ------ |
 | `loki.enabled` | Flag to enable Loki | `true` |
 
-### Parameters for istio
+### istio parameters
 
 | Name            | Description          | Value  |
 | --------------- | -------------------- | ------ |
 | `istio.enabled` | Flag to enable Istio | `true` |
 
-### Parameters for keda
+### keda parameters
 
 | Name           | Description         | Value  |
 | -------------- | ------------------- | ------ |
 | `keda.enabled` | Flag to enable Keda | `true` |
 
-### Parameters for kubecost
+### kubecost parameters
 
 | Name               | Description             | Value  |
 | ------------------ | ----------------------- | ------ |
 | `kubecost.enabled` | Flag to enable Kubecost | `true` |
 
-### Parameters for prometheus
+### prometheus parameters
 
 | Name                 | Description               | Value  |
 | -------------------- | ------------------------- | ------ |
 | `prometheus.enabled` | Flag to enable Prometheus | `true` |
 
-### Parameters for grafana
+### grafana parameters
 
 | Name              | Description            | Value  |
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
 
-### Parameters for tfyAgent
+### tfyAgent parameters
 
 | Name                    | Description                 | Value  |
 | ----------------------- | --------------------------- | ------ |

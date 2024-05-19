@@ -1,10 +1,3 @@
-## @section Global parameters
-## @param global.rbac.enabled Enable RBAC globally
-##
-global:
-  rbac:
-    enabled: true
-
 ## @section Configuration parameters
 ## Parameters to configure tfyAgent and tfyAgentProxy
 ##
@@ -67,6 +60,16 @@ config:
   ## @param config.nodeEnv
   nodeEnv: production
 
+  ## @param config.allowedNamespaces A list of namespaces the control plane will have access to for namespaced resources.
+  ## If this list is empty, the control plane can access namespaced resources cluster-wide.
+  ## If this list is non-empty, the control plane cannot create namespaces in the cluster.
+  ## Please check the `tfyAgentProxy.clusterRole.strictMode` field if you plan to use this.
+  allowedNamespaces: []
+  # Example:
+  # allowedNamespaces:
+  #   - default
+  #   - namespace-1
+
 ## @param imagePullSecrets Secrets to pull images
 ##
 imagePullSecrets: []
@@ -108,10 +111,6 @@ tfyAgent:
     ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
-
-    ## @param tfyAgent.serviceAccount.automountServiceAccountToken Enable automounting of service account token inside the pod
-    ## 
-    automountServiceAccountToken: true
 
   ## @param tfyAgent.extraEnvVars Additional envrionment variables for tfyAgent
   ##
@@ -168,7 +167,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "a7a0a82ea11054f5f4ff28c4b778d1464173ca66"
+    tag: "889c94ab1cb6c889efe7350783da5715b45f5ed0"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -290,6 +289,10 @@ tfyAgent:
   ## @param tfyAgent.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
 
+  clusterRole:
+    ## @param tfyAgent.clusterRole.enable Create cluster role.
+    enable: true
+
 ## @section tfyAgentProxy configuration parameters
 ##
 tfyAgentProxy:
@@ -316,7 +319,7 @@ tfyAgentProxy:
     pullPolicy: IfNotPresent
     ## @param tfyAgentProxy.image.tag Image tag whose default is the chart appVersion.
     ##
-    tag: "ed48db5daa1b95112f831740ce1bbfb18d5a3872"
+    tag: "1b1709ac56211fd021e84d78305bb94dec2a4805"
 
   ## @param tfyAgentProxy.extraEnvVars Additional envrionment variables for tfyAgentPRoxy
   ##
@@ -400,6 +403,32 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
 
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    ## @param tfyAgentProxy.serviceAccount.create Bool to enable serviceAccount creation 
+    ##
+    create: true
+
+    ## @param tfyAgentProxy.serviceAccount.annotations Annotations to add to the serviceAccount
+    ## 
+    annotations: {}
+
+    ## @param tfyAgentProxy.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+    ## 
+    name: ""
+
+  clusterRole:
+    ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
+    enable: true
+
+    ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules.
+    ## This field is ignored, if `config.allowedNamespaces` is not empty.
+    ## if `config.allowedNamespaces` is not empty, we only add required authz rules.
+    ## 
+    ## Check templates/tfy-agent-proxy-clusterrolebinding-cs.yaml and
+    ## `templates/tfy-agent-proxy-clusterrolebinding-ns.yaml` files for more details.
+    strictMode: false
 
 ## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
 ##

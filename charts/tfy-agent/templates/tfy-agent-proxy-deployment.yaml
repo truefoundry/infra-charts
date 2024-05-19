@@ -23,7 +23,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      serviceAccountName: {{ include "tfy-agent-proxy.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}-proxy
           securityContext:
