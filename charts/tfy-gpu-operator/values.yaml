@@ -313,6 +313,52 @@ gcp-gke-standard-driver:
   latest:
     gkeAccelerators:
       - nvidia-l4
+      - nvidia-h100-80gb
+    cosDriverInstaller:
+      image:
+        ## @param gcp-gke-standard-driver.latest.cosDriverInstaller.image.repository Repository for the Nvidia Latest Driver Installer cos initContainer.
+        ##
+        repository: "cos-nvidia-installer"
+        ## @param gcp-gke-standard-driver.latest.cosDriverInstaller.image.tag Tag for the Nvidia Latest Driver Installer cos initContainer.
+        tag: "fixed"
+    partitionGpus:
+      image:
+        ## @param gcp-gke-standard-driver.latest.partitionGpus.image.repository Repository for the Nvidia Latest Driver Installer partition gpus init container.
+        ##
+        repository: "gcr.io/gke-release/nvidia-partition-gpu@sha256"
+        ## @param gcp-gke-standard-driver.latest.partitionGpus.image.tag Tag for the Nvidia Latest Driver Installer partition gpus init container.
+        tag: "e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
+    pause:
+      image:
+        ## @param gcp-gke-standard-driver.latest.pause.image.repository Repository for the Nvidia Latest Driver Installer pause container.
+        repository: "gcr.io/google-containers/pause"
+        ## @param gcp-gke-standard-driver.latest.pause.image.tag Tag for the Nvidia Latest Driver Installer pause container.
+        tag: "2.0"
+  default:
+    cosDriverInstaller:
+      image:
+        ## @param gcp-gke-standard-driver.default.cosDriverInstaller.image.repository Repository for the Nvidia Driver Installer cos initContainer.
+        ##
+        repository: "cos-nvidia-installer"
+        ## @param gcp-gke-standard-driver.default.cosDriverInstaller.image.tag Tag for the Nvidia Driver Installer cos initContainer.
+        ##
+        tag: "fixed"
+    partitionGpus:
+      image:
+        ## @param gcp-gke-standard-driver.default.partitionGpus.image.repository Repository for the Nvidia Driver Installer partition gpus init container.
+        ##
+        repository: "gcr.io/gke-release/nvidia-partition-gpu@sha256"
+        ## @param gcp-gke-standard-driver.default.partitionGpus.image.tag Tag for the Nvidia Driver Installer partition gpus init container.
+        ##
+        tag: "e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
+    pause:
+      image:
+        ## @param gcp-gke-standard-driver.default.pause.image.repository Repository for the Nvidia Driver Installer pause container.
+        ##
+        repository: "gcr.io/google-containers/pause"
+        ## @param gcp-gke-standard-driver.default.pause.image.tag Tag for the Nvidia Driver Installer pause container.
+        ##
+        tag: "2.0"
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
@@ -421,7 +467,6 @@ gcp-gke-standard-dcgm-exporter:
     - name: nvidia-config
       mountPath: /etc/nvidia
 
-
 ## @section azure-aks-gpu-operator Configuration for the Azure AKS GPU operator. This section will only be used when clusterType.azureAks is set to true.
 ##
 azure-aks-gpu-operator:
@@ -434,7 +479,7 @@ azure-aks-gpu-operator:
   gfd:
     ## @param azure-aks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-    ## @skip azure-aks-gpu-operator.gfd.env 
+    ## @skip azure-aks-gpu-operator.gfd.env
     env:
       - name: GFD_SLEEP_INTERVAL
         value: 60s
