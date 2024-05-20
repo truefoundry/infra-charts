@@ -35,8 +35,14 @@ spec:
               cpu: 200m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         global:
           hub: gcr.io/istio-release
           tag: 1.21.1-distroless

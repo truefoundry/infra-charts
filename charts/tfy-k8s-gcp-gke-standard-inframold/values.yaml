@@ -15,7 +15,38 @@ controlPlaneURL: ""
 ##
 clusterName: ""
 
-## @section Parameters for argocd
+## @param tolerations Tolerations for the all chart components
+##
+tolerations:
+  - key: CriticalAddonsOnly
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: "spot"
+    effect: NoSchedule
+    operator: Equal
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+
+## @param affinity Affinity for the all chart components
+##
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+            - key: cloud.google.com/gke-spot
+              values:
+                - "true"
+              operator: In
+
+
+## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
 ## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
 ## already installed in your cluster. Please make sure that the configuration of 
@@ -23,41 +54,47 @@ clusterName: ""
 argocd:
   enabled: true
 
-## @section Parameters for argoWorkflows
+## @section argoWorkflows parameters
 ## @param argoWorkflows.enabled Flag to enable Argo Workflows
 ##
 argoWorkflows:
   enabled: true
 
-## @section Parameters for argoRollouts
+## @section argoRollouts parameters
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
 ## Argo Rollouts is mandatory for Truefoundry to work. 
 ##
 argoRollouts:
   enabled: true
 
-## @section Parameters for notebookController
-## @param notebookController.enabled Flag to enable Notebook Controller
+## @section notebookController parameters
 ## Notebook Controller is required to power notebooks in Truefoundry
 ##
 notebookController:
+  ## @param notebookController.enabled Flag to enable Notebook Controller
+  ##
   enabled: true
+  ## @param notebookController.defaultStorageClass Default storage class for Notebook Controller
+  ##
+  defaultStorageClass: ""
 
-## @section Parameters for certManager
+## @section certManager parameters
 ## @param certManager.enabled Flag to enable Cert Manager
 ##
 certManager:
   enabled: false
 
-## @section Parameters for metricsServer
+## @section metricsServer parameters
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-  enabled: true
+
+  enabled: false
 
 
 
-## @section Parameters for gpu
+
+## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
 ##
 gpu:
@@ -66,7 +103,7 @@ gpu:
   ##
   clusterType: gcpGkeStandard
 
-## @section Parameters for truefoundry
+## @section truefoundry parameters
 ## @param truefoundry.enabled Flag to enable TrueFoundry
 ## This installs the Truefoundry control plane helm chart. You can make it true
 ## if you want to install Truefoundry control plane.
@@ -76,11 +113,11 @@ truefoundry:
   ## @param truefoundry.dev Flag to enable TrueFoundry Dev mode
   ##
   dev: true
-  ## @section Parameters for truefoundryBootstrap
+  ## @section truefoundryBootstrap parameters
   ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
   truefoundryBootstrap:
     enabled: false
-  ## @section Parameters for database. Can be left empty if using the dev mode
+  ## @section database. Can be left empty if using the dev mode parameters
   database:
     ## @param truefoundry.database.host Hostname of the database
     host: ""
@@ -95,48 +132,75 @@ truefoundry:
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
 
-## @section Parameters for loki
+## @section loki parameters
 ## @param loki.enabled Flag to enable Loki
 ##
 loki:
   enabled: true
 
-## @section Parameters for istio
+## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
 ##
 istio:
   enabled: true
+  gateway:
+    
+    annotations: {}
+    
 
-## @section Parameters for keda
+  tfyGateway:
+    
+    httpsRedirect: true
+    
+
+## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
 ##
 keda:
   enabled: true
 
-## @section Parameters for kubecost
+## @section kubecost parameters
 ## @param kubecost.enabled Flag to enable Kubecost
 ##
 kubecost:
   enabled: true
 
-## @section Parameters for prometheus
+## @section prometheus parameters
 ## @param prometheus.enabled Flag to enable Prometheus
 ##
 prometheus:
   enabled: true
+  additionalScrapeConfigs: 
+  
+  - job_name: gpu-metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    kubernetes_sd_configs:
+    - role: endpoints
+      namespaces:
+        names:
+        - tfy-gpu-operator
+    relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_node_name]
+      action: replace
+      target_label: kubernetes_node
+  
 
-## @section Parameters for grafana
+
+## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana
 ##
 grafana:
   enabled: true
 
-## @section Parameters for tfyAgent
+## @section tfyAgent parameters
 ## @param tfyAgent.enabled Flag to enable Tfy Agent
 ##
 tfyAgent:
   enabled: true
-  ## @param tfyAgent.clusterToken Parameters for clusterToken
+  ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
   ##
   clusterToken: ""

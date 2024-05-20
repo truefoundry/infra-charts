@@ -39,14 +39,20 @@ spec:
             extraArgs:
               - -print-config-stderr
               - -config.expand-env=true
-            
+            {{- with .Values.tolerations }}
             tolerations:
-              - key: kubernetes.azure.com/scalesetpriority
-                value: "spot"
-                effect: NoSchedule
-                operator: Equal
-            
-            
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.affinity }}
+            affinity:
+              {{ toYaml . | nindent 14 }}
+              podAntiAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/component: single-binary
+                  topologyKey: kubernetes.io/hostname
+            {{- end }}
         promtail:
           enabled: true
   project: tfy-apps

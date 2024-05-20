@@ -9,8 +9,7 @@ metadata:
     truefoundry.com/infra-component: "tfy-istio-ingress"
     truefoundry.com/infra-migration-tag: "1000"
   annotations:
-    helm.sh/hook: pre-install
-    helm.sh/hook-weight: "-15"
+    helm.sh/hook: post-install
 spec:
   destination:
     namespace: istio-system
@@ -22,16 +21,19 @@ spec:
     targetRevision: 0.1.3
     helm:
       values: |
-        
-        
         gateway:
+          {{- with .Values.istio.gateway.annotations }}
+          annotations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: CriticalAddonsOnly
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
-        
-        
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         tfyGateway:
           name: 'tfy-wildcard'
           spec:
@@ -45,9 +47,7 @@ spec:
                   number: 80
                   protocol: HTTP
                 tls:
-                  
-                  httpsRedirect: true
-                  
+                  httpsRedirect: {{ .Values.istio.tfyGateway.httpsRedirect }}
               - hosts: 
                 - "*"
                 port:

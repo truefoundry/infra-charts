@@ -43,24 +43,14 @@ spec:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         controller:
           extraArgs:
             - '--application-namespaces="*"'
@@ -69,72 +59,42 @@ spec:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         redis:
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         repoServer:
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

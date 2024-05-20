@@ -20,47 +20,27 @@ spec:
     helm:
       values: |-
         installCRDs: true
-        
-        
-        tolerations:
-        - key: "cloud.google.com/gke-spot"
-          value: "true"
-          effect: NoSchedule
-          operator: Equal
-        affinity:
-          nodeAffinity:
-            preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 1
-                preference:
-                  matchExpressions:
-                    - key: cloud.google.com/gke-spot
-                      values:
-                        - "true"
-                      operator: In
-        
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         webhook:
           requests:
             cpu: 20m
             memory: 64Mi
             ephemeral-storage: 64Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-          - key: "cloud.google.com/gke-spot"
-            value: "true"
-            effect: NoSchedule
-            operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         resources:
           requests:
             cpu: 20m
@@ -71,44 +51,24 @@ spec:
             cpu: 20m
             memory: 64Mi
             ephemeral-storage: 64Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-          - key: "cloud.google.com/gke-spot"
-            value: "true"
-            effect: NoSchedule
-            operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         startupapicheck:
           enabled: true
-        
-        
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-        
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     retry: {}

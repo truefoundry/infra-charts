@@ -22,28 +22,18 @@ spec:
         # Host for the grafana dashboard
         host: <to_be_provided>
         grafana:
-            # Username for grafana dashboard
-            adminUser: <to_be_provided>
-            # Password for grafana dashboard
-            adminPassword: <to_be_provided>
-            
-            
-            tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
-            affinity:
-              nodeAffinity:
-                preferredDuringSchedulingIgnoredDuringExecution:
-                  - weight: 1
-                    preference:
-                      matchExpressions:
-                        - key: cloud.google.com/gke-spot
-                          values:
-                            - "true"
-                          operator: In
-            
+          # Username for grafana dashboard
+          adminUser: <to_be_provided>
+          # Password for grafana dashboard
+          adminPassword: <to_be_provided>
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

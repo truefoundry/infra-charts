@@ -38,8 +38,14 @@ spec:
         prometheus:
           operator:
             enabled: true
-      
-      
+        {{- with .Values.tolerations }}
+        tolerations:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.affinity }}
+        affinity:
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

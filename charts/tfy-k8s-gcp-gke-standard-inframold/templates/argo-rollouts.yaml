@@ -8,9 +8,6 @@ metadata:
   labels:
     truefoundry.com/infra-component: "argo-rollout"
     truefoundry.com/infra-migration-tag: "1000"
-  annotations:
-    helm.sh/hook: pre-install
-    helm.sh/hook-weight: "-18"
 spec:
   destination:
     namespace: argo-rollouts
@@ -28,24 +25,14 @@ spec:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
