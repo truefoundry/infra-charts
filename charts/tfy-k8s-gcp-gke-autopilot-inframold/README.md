@@ -11,63 +11,64 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | `controlPlaneURL` | Parameters for controlPlaneURL | `""`  |
 | `clusterName`     | Name of the cluster            | `""`  |
 
-### Parameters for argocd
+### argocd parameters
 
 | Name             | Description           | Value  |
 | ---------------- | --------------------- | ------ |
 | `argocd.enabled` | Flag to enable ArgoCD | `true` |
 
-### Parameters for argoWorkflows
+### argoWorkflows parameters
 
 | Name                    | Description                   | Value  |
 | ----------------------- | ----------------------------- | ------ |
 | `argoWorkflows.enabled` | Flag to enable Argo Workflows | `true` |
 
-### Parameters for argoRollouts
+### argoRollouts parameters
 
 | Name                   | Description                  | Value  |
 | ---------------------- | ---------------------------- | ------ |
 | `argoRollouts.enabled` | Flag to enable Argo Rollouts | `true` |
 
-### Parameters for notebookController
+### notebookController parameters
 
-| Name                         | Description                        | Value  |
-| ---------------------------- | ---------------------------------- | ------ |
-| `notebookController.enabled` | Flag to enable Notebook Controller | `true` |
+| Name                                     | Description                                   | Value  |
+| ---------------------------------------- | --------------------------------------------- | ------ |
+| `notebookController.enabled`             | Flag to enable Notebook Controller            | `true` |
+| `notebookController.defaultStorageClass` | Default storage class for Notebook Controller | `""`   |
 
-### Parameters for certManager
+### certManager parameters
 
 | Name                  | Description                 | Value   |
 | --------------------- | --------------------------- | ------- |
 | `certManager.enabled` | Flag to enable Cert Manager | `false` |
 
-### Parameters for metricsServer
+### metricsServer parameters
 
-| Name                    | Description                   | Value  |
-| ----------------------- | ----------------------------- | ------ |
-| `metricsServer.enabled` | Flag to enable Metrics Server | `true` |
+| Name                    | Description                   | Value   |
+| ----------------------- | ----------------------------- | ------- |
+| `metricsServer.enabled` | Flag to enable Metrics Server | `false` |
 
-### Parameters for gpu
+### gpu parameters
 
 | Name              | Description                       | Value             |
 | ----------------- | --------------------------------- | ----------------- |
 | `gpu.enabled`     | Flag to enable Tfy GPU Operator   | `true`            |
 | `gpu.clusterType` | Cluster type for Tfy GPU Operator | `gcpGkeAutopilot` |
 
-### Parameters for truefoundry
+### truefoundry parameters
 
 | Name                  | Description                         | Value   |
 | --------------------- | ----------------------------------- | ------- |
 | `truefoundry.enabled` | Flag to enable TrueFoundry          | `false` |
 | `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true`  |
 
-### Parameters for truefoundryBootstrap
+### truefoundryBootstrap parameters
 
 | Name                                       | Description                                                               | Value   |
 | ------------------------------------------ | ------------------------------------------------------------------------- | ------- |
 | `truefoundry.truefoundryBootstrap.enabled` | Flag to enable bootstrap job to prep cluster for truefoundry installation | `false` |
 
-### Parameters for database. Can be left empty if using the dev mode
+### database. Can be left empty if using the dev mode parameters
 
 | Name                                         | Description                                                | Value |
 | -------------------------------------------- | ---------------------------------------------------------- | ----- |
@@ -78,45 +79,46 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | `truefoundry.tfyApiKey`                      | API Key for TrueFoundry                                    | `""`  |
 | `truefoundry.truefoundryImagePullConfigJSON` | Json config for authenticating to the TrueFoundry registry | `""`  |
 
-### Parameters for loki
+### loki parameters
 
 | Name           | Description         | Value  |
 | -------------- | ------------------- | ------ |
 | `loki.enabled` | Flag to enable Loki | `true` |
 
-### Parameters for istio
+### istio parameters
 
-| Name            | Description          | Value  |
-| --------------- | -------------------- | ------ |
-| `istio.enabled` | Flag to enable Istio | `true` |
+| Name                             | Description                                     | Value  |
+| -------------------------------- | ----------------------------------------------- | ------ |
+| `istio.enabled`                  | Flag to enable Istio                            | `true` |
+| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true` |
 
-### Parameters for keda
+### keda parameters
 
 | Name           | Description         | Value  |
 | -------------- | ------------------- | ------ |
 | `keda.enabled` | Flag to enable Keda | `true` |
 
-### Parameters for kubecost
+### kubecost parameters
 
 | Name               | Description             | Value  |
 | ------------------ | ----------------------- | ------ |
 | `kubecost.enabled` | Flag to enable Kubecost | `true` |
 
-### Parameters for prometheus
+### prometheus parameters
 
 | Name                 | Description               | Value  |
 | -------------------- | ------------------------- | ------ |
 | `prometheus.enabled` | Flag to enable Prometheus | `true` |
 
-### Parameters for grafana
+### grafana parameters
 
 | Name              | Description            | Value  |
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
 
-### Parameters for tfyAgent
+### tfyAgent parameters
 
-| Name                    | Description                 | Value  |
-| ----------------------- | --------------------------- | ------ |
-| `tfyAgent.enabled`      | Flag to enable Tfy Agent    | `true` |
-| `tfyAgent.clusterToken` | Parameters for clusterToken | `""`   |
+| Name                    | Description              | Value  |
+| ----------------------- | ------------------------ | ------ |
+| `tfyAgent.enabled`      | Flag to enable Tfy Agent | `true` |
+| `tfyAgent.clusterToken` | cluster token            | `""`   |

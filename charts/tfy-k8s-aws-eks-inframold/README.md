@@ -31,9 +31,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### notebookController parameters
 
-| Name                         | Description                        | Value  |
-| ---------------------------- | ---------------------------------- | ------ |
-| `notebookController.enabled` | Flag to enable Notebook Controller | `true` |
+| Name                                     | Description                                   | Value  |
+| ---------------------------------------- | --------------------------------------------- | ------ |
+| `notebookController.enabled`             | Flag to enable Notebook Controller            | `true` |
+| `notebookController.defaultStorageClass` | Default storage class for Notebook Controller | `""`   |
 
 ### certManager parameters
 
@@ -49,24 +50,25 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### AWS parameters
 
-| Name                                    | Description                                 | Value  |
-| --------------------------------------- | ------------------------------------------- | ------ |
-| `aws.awsLoadBalancerController.enabled` | Flag to enable AWS Load Balancer Controller | `true` |
-| `aws.awsLoadBalancerController.roleArn` | Role ARN for AWS Load Balancer Controller   | `""`   |
-| `aws.karpenter.enabled`                 | Flag to enable Karpenter                    | `true` |
-| `aws.karpenter.clusterEndpoint`         | Cluster endpoint for Karpenter              | `""`   |
-| `aws.karpenter.roleArn`                 | Role ARN for Karpenter                      | `""`   |
-| `aws.karpenter.instanceProfile`         | Instance profile for Karpenter              | `""`   |
-| `aws.karpenter.defaultZones`            | Default zones for Karpenter                 | `""`   |
-| `aws.karpenter.interruptionQueue`       | Interruption queue name for Karpenter       | `""`   |
-| `aws.awsEbsCsiDriver.enabled`           | Flag to enable AWS EBS CSI Driver           | `true` |
-| `aws.awsEbsCsiDriver.roleArn`           | Role ARN for AWS EBS CSI Driver             | `""`   |
-| `aws.awsEfsCsiDriver.enabled`           | Flag to enable AWS EFS CSI Driver           | `true` |
-| `aws.awsEfsCsiDriver.fileSystemId`      | File system ID for AWS EFS CSI Driver       | `""`   |
-| `aws.awsEfsCsiDriver.region`            | Region for AWS EFS CSI Driver               | `""`   |
-| `aws.awsEfsCsiDriver.roleArn`           | Role ARN for AWS EFS CSI Driver             | `""`   |
+| Name                                    | Description                                 | Value   |
+| --------------------------------------- | ------------------------------------------- | ------- |
+| `aws.awsLoadBalancerController.enabled` | Flag to enable AWS Load Balancer Controller | `true`  |
+| `aws.awsLoadBalancerController.roleArn` | Role ARN for AWS Load Balancer Controller   | `""`    |
+| `aws.karpenter.enabled`                 | Flag to enable Karpenter                    | `true`  |
+| `aws.karpenter.clusterEndpoint`         | Cluster endpoint for Karpenter              | `""`    |
+| `aws.karpenter.roleArn`                 | Role ARN for Karpenter                      | `""`    |
+| `aws.karpenter.instanceProfile`         | Instance profile for Karpenter              | `""`    |
+| `aws.karpenter.defaultZones`            | Default zones list for Karpenter            | `[]`    |
+| `aws.karpenter.interruptionQueue`       | Interruption queue name for Karpenter       | `""`    |
+| `aws.awsEbsCsiDriver.enabled`           | Flag to enable AWS EBS CSI Driver           | `true`  |
+| `aws.awsEbsCsiDriver.roleArn`           | Role ARN for AWS EBS CSI Driver             | `""`    |
+| `aws.awsEfsCsiDriver.enabled`           | Flag to enable AWS EFS CSI Driver           | `true`  |
+| `aws.awsEfsCsiDriver.fileSystemId`      | File system ID for AWS EFS CSI Driver       | `""`    |
+| `aws.awsEfsCsiDriver.region`            | Region for AWS EFS CSI Driver               | `""`    |
+| `aws.awsEfsCsiDriver.roleArn`           | Role ARN for AWS EFS CSI Driver             | `""`    |
+| `aws.inferentia.enabled`                | Flag to enable Inferentia                   | `false` |
 
-### gpu-operator parameters
+### gpu parameters
 
 | Name              | Description                       | Value    |
 | ----------------- | --------------------------------- | -------- |
@@ -80,13 +82,13 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `truefoundry.enabled` | Flag to enable TrueFoundry          | `false` |
 | `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true`  |
 
-### Parameters for truefoundryBootstrap
+### truefoundryBootstrap parameters
 
 | Name                                       | Description                                                               | Value   |
 | ------------------------------------------ | ------------------------------------------------------------------------- | ------- |
 | `truefoundry.truefoundryBootstrap.enabled` | Flag to enable bootstrap job to prep cluster for truefoundry installation | `false` |
 
-### Parameters for database. Can be left empty if using the dev mode
+### database. Can be left empty if using the dev mode parameters
 
 | Name                                         | Description                                                | Value |
 | -------------------------------------------- | ---------------------------------------------------------- | ----- |
@@ -105,9 +107,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### istio parameters
 
-| Name            | Description          | Value  |
-| --------------- | -------------------- | ------ |
-| `istio.enabled` | Flag to enable Istio | `true` |
+| Name                             | Description                                     | Value  |
+| -------------------------------- | ----------------------------------------------- | ------ |
+| `istio.enabled`                  | Flag to enable Istio                            | `true` |
+| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true` |
 
 ### keda parameters
 
@@ -135,7 +138,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### tfyAgent parameters
 
-| Name                    | Description                 | Value  |
-| ----------------------- | --------------------------- | ------ |
-| `tfyAgent.enabled`      | Flag to enable Tfy Agent    | `true` |
-| `tfyAgent.clusterToken` | Parameters for clusterToken | `""`   |
+| Name                    | Description              | Value  |
+| ----------------------- | ------------------------ | ------ |
+| `tfyAgent.enabled`      | Flag to enable Tfy Agent | `true` |
+| `tfyAgent.clusterToken` | cluster token            | `""`   |

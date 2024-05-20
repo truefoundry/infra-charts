@@ -43,8 +43,14 @@ spec:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         controller:
           extraArgs:
             - '--application-namespaces="*"'
@@ -53,24 +59,42 @@ spec:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         redis:
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
         repoServer:
           resources:
             requests:
               cpu: 100m
               memory: 256Mi
               ephemeral-storage: 256Mi
-          
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

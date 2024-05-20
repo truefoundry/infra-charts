@@ -38,24 +38,14 @@ spec:
         prometheus:
           operator:
             enabled: true
-      
-      
+        {{- with .Values.tolerations }}
         tolerations:
-        - key: "cloud.google.com/gke-spot"
-          value: "true"
-          effect: NoSchedule
-          operator: Equal
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.affinity }}
         affinity:
-          nodeAffinity:
-            preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 1
-                preference:
-                  matchExpressions:
-                    - key: cloud.google.com/gke-spot
-                      values:
-                        - "true"
-                      operator: In
-      
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:
