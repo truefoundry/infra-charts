@@ -119,14 +119,14 @@ spec:
                     - ReadWriteOnce
             retentionSize: 18GB
             enableAdminAPI: true
-            
+            {{- with .Values.tolerations }}
             tolerations:
-              - key: kubernetes.azure.com/scalesetpriority
-                value: "spot"
-                effect: NoSchedule
-                operator: Equal
-            
-            
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.affinity }}
+            affinity:
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
             additionalScrapeConfigs:
               - scheme: http
                 job_name: keda
@@ -224,23 +224,6 @@ spec:
                 static_configs:
                   - targets:
                       - argo-workflows-workflow-controller.argo-workflows.svc.cluster.local:8080
-              
-              - job_name: gpu-metrics
-                scrape_interval: 15s
-                scrape_timeout: 10s
-                metrics_path: /metrics
-                scheme: http
-                kubernetes_sd_configs:
-                - role: endpoints
-                  namespaces:
-                    names:
-                    - tfy-gpu-operator
-                relabel_configs:
-                - source_labels: [__meta_kubernetes_pod_node_name]
-                  action: replace
-                  target_label: kubernetes_node
-              
-              
               - scheme: http
                 job_name: kubecost
                 honor_labels: true
@@ -252,6 +235,9 @@ spec:
                       - kubecost-cost-analyzer.kubecost
                 scrape_timeout: 60s
                 scrape_interval: 1m
+              {{- with .Values.prometheus.additionalScrapeConfigs }}
+              {{ toYaml . | nindent 14 }}
+              {{- end }}
           serviceMonitor:
             selfMonitor: false
         alertmanager:
@@ -272,14 +258,14 @@ spec:
               cpu: 10m
               memory: 64Mi
               ephemeral-storage: 256Mi
-          
+          {{- with .Values.tolerations }}
           tolerations:
-          - effect: NoSchedule
-            key: kubernetes.azure.com/scalesetpriority
-            operator: Equal
-            value: spot
-          
-          
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
           prometheus:
             monitor:
               enabled: true
@@ -317,21 +303,34 @@ spec:
               cpu: 100m
               memory: 100Mi
               ephemeral-storage: 256Mi
-          
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
           admissionWebhooks:
             patch:
-              tolerations:
-              - effect: NoSchedule
-                key: kubernetes.azure.com/scalesetpriority
-                operator: Equal
-                value: spot
-          tolerations:
-            - key: kubernetes.azure.com/scalesetpriority
-              value: spot
-              effect: NoSchedule
-              operator: Equal
-          
-          
+            {{- with .Values.tolerations }}
+            tolerations:
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.affinity }}
+            affinity:
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
+          admissionWebhooks:
+            patch:
+            {{- with .Values.tolerations }}
+            tolerations:
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.affinity }}
+            affinity:
+              {{ toYaml . | nindent 14 }}
+            {{- end }}
           serviceMonitor:
             selfMonitor: false
         kubeControllerManager:

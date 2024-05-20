@@ -7,8 +7,6 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
-    helm.sh/hook: pre-install
-    helm.sh/hook-weight: "-15"
   labels:
     truefoundry.com/infra-component: "istio-discovery"
     truefoundry.com/infra-migration-tag: "1000"
@@ -37,24 +35,14 @@ spec:
               cpu: 200m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          
-          
+          {{- with .Values.tolerations }}
           tolerations:
-            - key: "cloud.google.com/gke-spot"
-              value: "true"
-              effect: NoSchedule
-              operator: Equal
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-          
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
         global:
           hub: gcr.io/istio-release
           tag: 1.21.1-distroless

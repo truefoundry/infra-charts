@@ -7,7 +7,7 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "notebook-controller"
-    truefoundry.com/infra-migration-tag: "1001"
+    truefoundry.com/infra-migration-tag: "1002"
 spec:
   ignoreDifferences:
     - group: rbac.authorization.k8s.io
@@ -19,41 +19,31 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.3.6-rc.5
+    targetRevision: 0.3.7-rc.1
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-notebook-controller
     helm:
       values: |-
-        
-        
-        
+        {{- with .Values.notebookController.defaultStorageClass }}
+        defaultStorageClass: {{ . }}
+        {{- end }}
+        {{- with .Values.tolerations }}
         tolerations:
-          - key: "cloud.google.com/gke-spot"
-            value: "true"
-            effect: NoSchedule
-            operator: Equal
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.affinity }}
         affinity:
-          nodeAffinity:
-            preferredDuringSchedulingIgnoredDuringExecution:
-              - weight: 1
-                preference:
-                  matchExpressions:
-                    - key: cloud.google.com/gke-spot
-                      values:
-                        - "true"
-                      operator: In
+          {{ toYaml . | nindent 10 }}
+        {{- end }}
         sdsServer:
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
           affinity:
-            nodeAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 1
-                  preference:
-                    matchExpressions:
-                      - key: cloud.google.com/gke-spot
-                        values:
-                          - "true"
-                        operator: In
-        
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
