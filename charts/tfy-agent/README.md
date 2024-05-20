@@ -11,7 +11,7 @@ This application has two parts.
 ## Compute plane cluster authorization
 
 ### TFY Agent
-* TFY Agent runs [informers](https://macias.info/entry/202109081800_k8s_informers.md) to stream kubernetes resource changes and send it to the control plane.
+* TFY Agent runs [informers](https://macias.info/entry/202109081800_k8s_informers.md) to stream kubernetes resource updates and send it to the control plane.
 * To run informers, the TFY Agent needs to be able to `list` and `watch` [those resource types](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrole.yaml) across [all the namespaces](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrolebinding.yaml) in the cluster.
    *  The `config.allowedNamespaces` field allows you to configure a list of allowed namespaces. TFY Agent will filter out any namespaced resource's update if the resource is not part of the allowed namespaces.
 
