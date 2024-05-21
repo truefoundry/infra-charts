@@ -47,6 +47,7 @@ steps:
           stage: deploy
           timeout: 30 minutes
           script: 
+            - apt update && apt install -y jq
             - pip3 install "truefoundry<1.0.0"
             - tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN"
         ```

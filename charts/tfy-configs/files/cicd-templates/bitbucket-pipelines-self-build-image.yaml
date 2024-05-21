@@ -69,9 +69,9 @@ steps:
                           - docker buildx build --cache-from type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --push .
 
                           ###########################
-
+                          - apt update && apt install -y jq
                           - pip3 install "truefoundry<1.0.0"
-                          - tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$DOCKER_IMAGE_URI"' -o truefoundry-patched.yaml
+                          - tfy patch -f truefoundry.yaml --filter ".image.image_uri = \"$DOCKER_IMAGE_URI\"" -o truefoundry-patched.yaml
                           - tfy deploy -f truefoundry-patched.yaml -w "$WORKSPACE_FQN"
 
         ```
