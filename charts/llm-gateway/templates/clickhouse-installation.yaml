@@ -1,0 +1,111 @@
+{{- if .Values.clickhouse.enabled -}}
+apiVersion: "clickhouse.altinity.com/v1"
+kind: "ClickHouseInstallation"
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  defaults:
+    templates:
+      serviceTemplate: svc-template
+  configuration:
+    clusters:
+      - name: {{ .Release.Name }}
+        layout:
+          shardsCount: {{ .Values.clickhouse.shardsCount }}
+          replicasCount: {{ .Values.clickhouse.replicasCount }}
+        templates:
+          podTemplate: clickhouse-stable
+          dataVolumeClaimTemplate: clickhouse-data-volume
+          serviceTemplate: svc-template
+    zookeeper:
+      nodes:
+        - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
+          port: {{ tpl .Values.clickhouse.zookeeperPort . }}
+    {{- if .Values.clickhouse.user }}
+    users:
+      {{ .Values.clickhouse.user }}/password: {{ required ".Values.clickhouse.password is required" .Values.clickhouse.password }}
+      {{ .Values.clickhouse.user }}/profile: default
+      {{ .Values.clickhouse.user }}/quota: default
+      {{ .Values.clickhouse.user }}/networks/ip:
+        - 0.0.0.0/0
+        - ::/0
+    {{- end }}
+    files:
+      config.d/named-collections.xml: |
+        <clickhouse>
+            <named_collections>
+                <nats_config>
+                    {{- $natsURL := (tpl .Values.clickhouse.nats.url .) }}
+                    {{- $natsSubjects := .Values.clickhouse.nats.subjects }}
+                    {{- $natsUsername := .Values.clickhouse.nats.username }}
+                    {{- $natsPassword := .Values.clickhouse.nats.password }}
+                    <nats_url overridable="true">{{ $natsURL }}</nats_url>
+                    <nats_subjects overridable="true">{{ $natsSubjects }}</nats_subjects>
+                    <nats_username overridable="true">{{ $natsUsername }}</nats_username>
+                    <nats_password overridable="true">{{ $natsPassword }}</nats_password>
+                    <nats_format overridable="true">JSONEachRow</nats_format>
+                    <date_time_input_format overridable="true">best_effort</date_time_input_format>
+                </nats_config>
+            </named_collections>
+        </clickhouse>
+      config.d/log_rotation.xml: |-
+        <clickhouse>
+            <logger>
+                <level>information</level>
+                <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+                <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+                <size>100M</size>
+                <count>5</count>
+                <console>1</console>
+            </logger>
+        </clickhouse>
+  templates:
+    serviceTemplates:
+      - name: svc-template
+        generateName: clickhouse-{chi}
+        spec:
+          ports:
+            - name: http
+              port: 8123
+            - name: tcp
+              port: 9000
+          type: ClusterIP
+    podTemplates:
+      - name: clickhouse-stable
+        spec:
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 100
+                  podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: clickhouse.altinity.com/cluster
+                          operator: In
+                          values:
+                            - {{ .Release.Name }}
+                    topologyKey: "kubernetes.io/hostname"
+          containers:
+            - name: clickhouse
+              image: {{ .Values.clickhouse.image }}
+              resources:
+                requests:
+                  memory: {{ .Values.clickhouse.resources.requests.memory }}
+                  cpu: {{ .Values.clickhouse.resources.requests.cpu }}
+                  ephemeral-storage: {{ .Values.clickhouse.resources.requests.ephemeralStorage }}
+                limits:
+                  memory: {{ .Values.clickhouse.resources.limits.memory }}
+                  cpu: {{ .Values.clickhouse.resources.limits.cpu }}
+                  ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
+    volumeClaimTemplates:
+      - name: clickhouse-data-volume
+        spec:
+          storageClassName: {{ .Values.clickhouse.storage.storageClassName }}
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.clickhouse.storage.size }}
+{{- end }}
