@@ -1,0 +1,17 @@
+{{- if .Values.nats.natsMetricsServerHost }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "{{ .Release.Name }}-nats-metrics"
+spec:
+  hosts:
+    - {{ .Values.nats.natsMetricsServerHost | quote }}
+  gateways:
+    - {{ tpl .Values.nats.gatewayName . }}
+  http:
+    - route:
+        - destination:
+            host: {{ .Release.Name }}-nats
+            port:
+              number: 8222
+{{- end }}

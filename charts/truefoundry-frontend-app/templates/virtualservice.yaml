@@ -1,0 +1,65 @@
+{{- if .Values.istio.virtualservice.enabled -}}
+{{- $serviceName := include "app.fullname" . -}}
+{{- $servicePort := .Values.service.port -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+  {{- if .Values.istio.virtualservice.annotations }}
+    annotations:
+    {{- range $key, $value := .Values.istio.virtualservice.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+  {{- range .Values.istio.virtualservice.gateways}}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.istio.virtualservice.hosts}}
+  - {{ . }}
+  {{- end }}
+  http:
+  - match:
+      - uri:
+          prefix: "/api/svc/socket.io"
+    rewrite:
+      uri: /socket.io
+    route:
+      - destination:
+          host: {{ tpl .Values.servicefoundryServerHost . }}
+          port:
+            number: 3000
+  - match:
+      - uri:
+          prefix: "/api/llm/"
+    rewrite:
+      uri: /
+      {{- if .Values.llmGateway.external }}
+        authority: {{ tpl .Values.llmGateway.backendHost . }}
+      {{- end }}
+    route:
+      - destination:
+          host: {{ tpl .Values.llmGateway.backendHost . }}
+          port:
+            number: {{ .Values.llmGateway.backendPort }}
+  - match:
+      - uri:
+          prefix: /api/proxy-server/
+    rewrite:
+      uri: /
+    route:
+      - destination:
+          host: {{ tpl .Values.proxyServerHost . }}
+          port:
+            number: 8123
+  - route:
+    - destination:
+        host: {{ include "app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}
+{{- end }}
