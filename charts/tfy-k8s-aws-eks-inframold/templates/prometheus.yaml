@@ -313,24 +313,15 @@ spec:
           {{- end }}
           admissionWebhooks:
             patch:
-            {{- with .Values.tolerations }}
-            tolerations:
-              {{ toYaml . | nindent 14 }}
-            {{- end }}
-            {{- with .Values.affinity }}
-            affinity:
-              {{ toYaml . | nindent 14 }}
-            {{- end }}
-          admissionWebhooks:
-            patch:
-            {{- with .Values.tolerations }}
-            tolerations:
-              {{ toYaml . | nindent 14 }}
-            {{- end }}
-            {{- with .Values.affinity }}
-            affinity:
-              {{ toYaml . | nindent 14 }}
-            {{- end }}
+              enabled: true
+              {{- with .Values.tolerations }}
+              tolerations:
+                {{ toYaml . | nindent 14 }}
+              {{- end }}
+              {{- with .Values.affinity }}
+              affinity:
+                {{ toYaml . | nindent 14 }}
+              {{- end }}
           serviceMonitor:
             selfMonitor: false
         kubeControllerManager:
