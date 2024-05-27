@@ -1,0 +1,35 @@
+{{- if .Values.preemptibleDeployment.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildkit-placeholder-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buildkit-placeholder-deployment
+  template:
+    metadata:
+      labels:
+        app: buildkit-placeholder-deployment
+    spec:
+      priorityClassName: preemptible
+      containers:
+        - name: alpine
+          image: alpine:3.20.0
+          command: ["tail", "-f", "/dev/null"]
+          resources:
+            {{- toYaml .Values.truefoundryWorkflows.buildkitd.resources | nindent 12 }}
+      {{- with .Values.truefoundryWorkflows.buildkitd.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryWorkflows.buildkitd.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryWorkflows.buildkitd.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}
