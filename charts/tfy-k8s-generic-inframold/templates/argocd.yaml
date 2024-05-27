@@ -23,6 +23,22 @@ spec:
     targetRevision: 6.7.10
     helm:
       values: |
+        extraObjects: 
+        - apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          metadata:
+            name: tfy-apps
+          spec:
+            clusterResourceWhitelist:
+            - group: '*'
+              kind: '*'
+            destinations:
+            - namespace: '*'
+              server: '*'
+            sourceRepos:
+            - '*'
+            sourceNamespaces:
+            - "*"
         applicationSet:
           enabled: false
         notifications:
