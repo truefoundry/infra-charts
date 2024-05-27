@@ -1,0 +1,59 @@
+global: {}
+nameOverride: ''
+fullnameOverride: ''
+serviceAccount:
+  create: true
+  name: tfy-build
+  annotations: {}
+truefoundryWorkflows:
+  sfyBuilder:
+    version: 0.7.3
+    resources:
+      limits:
+        cpu: 1
+        ephemeral-storage: 20Gi
+        memory: 2Gi
+      requests:
+        cpu: 200m
+        ephemeral-storage: 10Gi
+        memory: 500Mi
+  buildkitd:
+    image: moby/buildkit:v0.13.2
+    metadata:
+      labels:
+        app: buildkit
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+        karpenter.sh/do-not-disrupt: 'true'
+        karpenter.sh/do-not-evict: 'true'
+    resources:
+      limits:
+        cpu: 2
+        ephemeral-storage: 70Gi
+        memory: 8Gi
+      requests:
+        cpu: 2
+        ephemeral-storage: 70Gi
+        memory: 8Gi
+    nodeSelector: {}
+    affinity: {}
+    tolerations: []
+  extraEnvs: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  affinity: {}
+  tolerations: {}
+  nodeSelector: {}
+  logMarkers:
+    error: \u001b[31m[Error]\u001b[0m
+    done: \u001b[32m[Done]\u001b[0m
+    start: \u001b[36m[Start]\u001b[0m
+    clientPrefix:
+      - TFY-CLIENT
+    supportSlack: >-
+      https://join.slack.com/t/truefoundry/shared_invite/zt-11ht512jq-nDJq~HJMqc6wBw90JVlo7g
+    serviceFoundryUiUrl: https://app.truefoundry.com/workspace
+  sociIndexBuildAndPush:
+    enabled: false
+    image: public.ecr.aws/truefoundrycloud/soci-index-builder:0.2.0-rc.1
+    imageSizeThresholdBytes: 419430400
