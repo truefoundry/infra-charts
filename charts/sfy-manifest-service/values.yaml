@@ -1,0 +1,83 @@
+global: {}
+imageRepository: truefoundrycloud/sfy-manifest-service
+replicaCount: 1
+environmentName: default
+envSecretName: sfy-manifest-service-env-secret
+imagePullPolicy: IfNotPresent
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 8080
+    path: /healthy
+  liveness:
+    port: 8080
+    path: /healthy
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 8080
+  annotations: {}
+serviceAccount:
+  create: true
+  name: sfy-manifest-service
+  annotations: {}
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  GIN_MODE: release
+  PORT: '8080'
+  SFY_SERVER_URL: >-
+    http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:3000
+  MLF_SERVER_URL: >-
+    http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:5000
+  SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  PROCESS_TICKER_PERIOD_SECONDS: '5'
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  HELM_SIZE_LIMIT_BYTES: '307200'
+  ASYNC_PROCESSOR_SIDECAR_IMAGE: >-
+    public.ecr.aws/w0y0d8g6/truefoundrycloud/async_processor:35b639ea3db5490f816379de0c92a9a933338cdf
+  TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.4
+  APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
+  AUTOPILOT_PROCESSOR_ENABLED: 'false'
+  AUTOPILOT_PROCESSOR_NATS_URL: >-
+    nats://{{ .Release.Name }}-nats.{{ .Release.Namespace
+    }}.svc.cluster.local:4222
+  AUTOPILOT_PROCESSOR_NATS_PULL_MAX_BYTES: '10485760'
+  AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: '120'
+  AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: '100'
+  AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: '2'
+imageTag: 5cd57848bb9f97f5809fea271af9dfe95480fcdf
