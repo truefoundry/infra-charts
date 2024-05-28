@@ -1,0 +1,15 @@
+{{- if .Values.llmGateway.external }}
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: llm-gateway-{{ include "truefoundry-frontend-app.fullname" . }}
+  labels:
+    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: {{ tpl .Values.llmGateway.backendHost . }}
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      sni: {{ tpl .Values.llmGateway.backendHost . }}
+{{- end }}
