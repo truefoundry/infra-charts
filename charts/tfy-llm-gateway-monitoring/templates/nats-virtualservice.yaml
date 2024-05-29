@@ -1,0 +1,17 @@
+{{- if .Values.nats.natsServerHost }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "{{ .Release.Name }}-nats"
+spec:
+  hosts:
+    - {{ .Values.nats.natsServerHost | quote }}
+  gateways:
+    - {{ tpl .Values.nats.gatewayName . }}
+  http:
+    - route:
+        - destination:
+            host: {{ .Release.Name }}-nats
+            port:
+              number: 8080
+{{- end }}
