@@ -1,0 +1,32 @@
+{{- if .Values.istio.virtualservice.enabled -}}
+{{- $serviceName := include "servicefoundry-server.fullname" . -}}
+{{- $servicePort := .Values.service.port -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}
+  labels:
+    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+  {{- if .Values.istio.virtualservice.annotations }}
+    annotations:
+    {{- range $key, $value := .Values.istio.virtualservice.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+  {{- range .Values.istio.virtualservice.gateways}}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.istio.virtualservice.hosts}}
+  - {{ . }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ include "servicefoundry-server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}
+{{- end }}
