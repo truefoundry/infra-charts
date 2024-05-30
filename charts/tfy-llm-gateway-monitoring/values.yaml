@@ -1,31 +1,62 @@
 ## @section global
 ## The global section contains configuration that is applied to all components of the chart.
+##
 global:
-  ## @param auth [object] auth config
+  ## @section global.auth [object] auth config
+  ## The auth section contains configuration for authentication.
+  ## 
   auth:
-    ## @param nats nats auth config
+    ## @section global.auth.nats [object] nats auth config
+    ## The nats section contains configuration for nats authentication.
+    ## 
     nats:
-      ## @param adminPassword [string] password for nats admin user
+      ## @param global.auth.nats.adminPassword [string] password for nats admin user
+      ## Password for nats admin user
+      ##
       adminPassword: <to_be_provided>
-      ## @param llmGatewayRequestLoggerPassword [string] password for nats llm-gateway-request-logger user
+      ## @param global.auth.nats.llmGatewayRequestLoggerPassword [string] password for nats llm-gateway-request-logger user
+      ## Password for nats llm-gateway-request-logger user
+      ##
       llmGatewayRequestLoggerPassword: <to_be_provided>
-      ## @param clickhouseRequestLogsReaderPassword [string] password for nats clickhouse-request-logs-reader user
+      ## @param global.auth.nats.clickhouseRequestLogsReaderPassword [string] password for nats clickhouse-request-logs-reader user
+      ## Password for nats clickhouse-request-logs-reader user
+      ##
       clickhouseRequestLogsReaderPassword: <to_be_provided>
-    ## @param clickhouse clickhouse auth config
+    ## @section global.auth.clickhouse [object] clickhouse auth config
+    ## The clickhouse section contains configuration for clickhouse authentication.
+    ##
     clickhouse:
-      ## @param user [string] clickhouse user
-      user: admin
-      ## @param password [string] clickhouse password
+      ## @param global.auth.clickhouse.user [string] clickhouse user
+      ## clickhouse user
+      ##
+      user: user
+      ## @param global.auth.clickhouse.password [string] clickhouse password
+      ## clickhouse password
+      ##
       password: <to_be_provided>
-  ## @param virtualService [object] virtual service config
+  ## @section global.virtualService [object] virtual service config
+  ## The virtualService section contains configuration for virtual service.
+  ##
   virtualService:
-    ## @param enabled [boolean] enable virtual service
+    ## @param global.virtualService.enabled [boolean] enable virtual service
+    ## enable virtual service
+    ##
     enabled: true
-    ## @param gateway [string] gateway name
+    ## @param global.virtualService.gatewayName [string] gateway name
+    ## istio gateway name
+    ##
     gateway: istio-system/tfy-wildcard
-    ## @param natsServerHost [string] nats server host
+    ## @param global.virtualService.natsServerHost [string] nats server host
+    ## nats server host
+    ##
     natsServerHost: <to_be_provided>
-    ## @param clickhouseServerHost [string] clickhouse server host
+    ## @param global.virtualService.natsMetricsServerHost [string] nats metrics server host
+    ## nats metrics server host
+    ##
+    natsMetricsServerHost: <to_be_provided>
+    ## @param global.virtualService.clickhouseServerHost [string] clickhouse server host
+    ## clickhouse server host
+    ##
     clickhouseServerHost: <to_be_provided>
 
 ## @param altinity-clickhouse-operator [object] altinity operator
