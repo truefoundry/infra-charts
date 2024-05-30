@@ -32,10 +32,6 @@
 | `global.virtualService.natsServerHost`        | nats server host         | `""`                        |
 | `global.virtualService.natsMetricsServerHost` | nats metrics server host | `""`                        |
 | `global.virtualService.clickhouseServerHost`  | clickhouse server host   | `""`                        |
-| `altinity-clickhouse-operator`                | altinity operator        | `{}`                        |
-| `zookeeper`                                   | zookeper config          | `{}`                        |
-| `nats`                                        | nats config              | `{}`                        |
-| `clickhouse`                                  | clickhouse config        | `{}`                        |
 
 ## Post Installtion Setup
 ### Add Logging Sink Configuration as env in TrueFoundry LLM Gateway
