@@ -164,7 +164,8 @@ clickhouse:
     storageClassName: ''
     size: 10Gi
   nats:
-    url: {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    url: >-
+      {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     subjects: tfy-model-logs.request-logs
     username: clickhouse-request-logs-reader
     password: {{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}
