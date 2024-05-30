@@ -27,7 +27,7 @@
 
 | Name                                          | Description              | Value                       |
 | --------------------------------------------- | ------------------------ | --------------------------- |
-| `global.virtualService.enabled`               | enable virtual service   | `true`                      |
+| `global.virtualService.enabled`               | enable virtual service   | `false`                     |
 | `global.virtualService.gatewayName`           | gateway name             | `istio-system/tfy-wildcard` |
 | `global.virtualService.natsServerHost`        | nats server host         | `""`                        |
 | `global.virtualService.natsMetricsServerHost` | nats metrics server host | `""`                        |
