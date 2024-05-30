@@ -1,13 +1,13 @@
-{{- if .Values.nats.natsMetricsServerHost }}
+{{- if and .Values.global.virtualService.enabled .Values.global.virtualService.natsMetricsServerHost }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: "{{ .Release.Name }}-nats-metrics"
 spec:
   hosts:
-    - {{ .Values.nats.natsMetricsServerHost | quote }}
+    - {{ .Values.global.virtualService.natsMetricsServerHost | quote }}
   gateways:
-    - {{ tpl .Values.nats.gatewayName . }}
+    - {{ tpl .Values.global.virtualService.gatewayName . }}
   http:
     - route:
         - destination:

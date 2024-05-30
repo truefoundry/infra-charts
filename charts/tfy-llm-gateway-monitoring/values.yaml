@@ -1,3 +1,33 @@
+## @section global
+## The global section contains configuration that is applied to all components of the chart.
+global:
+  ## @param auth [object] auth config
+  auth:
+    ## @param nats nats auth config
+    nats:
+      ## @param adminPassword [string] password for nats admin user
+      adminPassword: <to_be_provided>
+      ## @param llmGatewayRequestLoggerPassword [string] password for nats llm-gateway-request-logger user
+      llmGatewayRequestLoggerPassword: <to_be_provided>
+      ## @param clickhouseRequestLogsReaderPassword [string] password for nats clickhouse-request-logs-reader user
+      clickhouseRequestLogsReaderPassword: <to_be_provided>
+    ## @param clickhouse clickhouse auth config
+    clickhouse:
+      ## @param user [string] clickhouse user
+      user: admin
+      ## @param password [string] clickhouse password
+      password: <to_be_provided>
+  ## @param virtualService [object] virtual service config
+  virtualService:
+    ## @param enabled [boolean] enable virtual service
+    enabled: true
+    ## @param gateway [string] gateway name
+    gateway: istio-system/tfy-wildcard
+    ## @param natsServerHost [string] nats server host
+    natsServerHost: <to_be_provided>
+    ## @param clickhouseServerHost [string] clickhouse server host
+    clickhouseServerHost: <to_be_provided>
+
 ## @param altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
@@ -9,6 +39,106 @@ zookeeper:
 ## @param nats [object] nats config
 nats:
   enabled: true
+  config:
+    nats:
+      port: 4222
+    merge:
+      authorization:
+        users:
+          - user: admin
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.adminPassword }}'
+            permissions:
+              publish:
+                - '>'
+              subscribe:
+                - '>'
+          - user: llm-gateway-request-logger
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPassword }}'
+            permissions:
+              publish:
+                - tfy-model-logs.>
+              subscribe:
+                - '>'
+          - user: clickhouse-request-logs-reader
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'
+            permissions:
+              subscribe:
+                - tfy-model-logs.>
+        timeout: 5
+    cluster:
+      port: 6222
+      enabled: true
+      replicas: 3
+    monitor:
+      tls:
+        enabled: false
+      port: 8222
+      enabled: true
+    jetstream:
+      enabled: true
+      fileStore:
+        dir: /data
+        pvc:
+          size: 2Gi
+          enabled: true
+          storageClassName: ''
+        enabled: true
+      memoryStore:
+        enabled: true
+        maxSize: 250Mi
+    websocket:
+      port: 8080
+      enabled: true
+  natsBox:
+    enabled: false
+  service:
+    ports:
+      monitor:
+        enabled: true
+  container:
+    image:
+      tag: 2.10.7-alpine
+      pullPolicy: IfNotPresent
+      repository: nats
+    merge:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 250Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+  podTemplate:
+    merge:
+      spec:
+        tolerations:
+          - key: cloud.google.com/gke-spot
+            value: 'true'
+            effect: NoSchedule
+            operator: Equal
+          - key: kubernetes.azure.com/scalesetpriority
+            value: spot
+            effect: NoSchedule
+            operator: Equal
+      metadata:
+        annotations:
+          prometheus.io/port: '7777'
+          prometheus.io/scrape: 'true'
+    topologySpreadConstraints:
+      kubernetes.io/hostname:
+        maxSkew: 1
+        whenUnsatisfiable: DoNotSchedule
+  promExporter:
+    port: 7777
+    image:
+      tag: 0.13.0
+      pullPolicy: IfNotPresent
+      repository: natsio/prometheus-nats-exporter
+    enabled: true
+  extraResources: []
 
 ## @param clickhouse [object] clickhouse config
 clickhouse:
@@ -16,8 +146,8 @@ clickhouse:
   clusterName: clickhouse
   shardsCount: 2
   replicasCount: 2
-  user: exampleUser
-  password: examplePassword
+  user: {{ .Values.global.auth.clickhouse.user }}
+  password: {{ .Values.global.auth.clickhouse.password }}
   zookeeperHost: zookeeper-headless
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:23.4.2
@@ -34,9 +164,7 @@ clickhouse:
     storageClassName: ''
     size: 10Gi
   nats:
-    url: >-
-      http://{{ .Release.Name }}-nats.{{ .Release.Namespace
-      }}.svc.cluster.local:4222
-    subjects: tfy-model-logs.test
+    url: {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    subjects: tfy-model-logs.request-logs
     username: clickhouse-request-logs-reader
-    password: <password-to-be-provided>
+    password: {{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}

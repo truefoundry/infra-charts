@@ -1,0 +1,17 @@
+{{- if and .Values.global.virtualService.enabled .Values.global.virtualService.clickhouseServerHost }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: "{{ .Release.Name }}-clickhouse"
+spec:
+  hosts:
+    - {{ .Values.global.virtualService.clickhouseServerHost | quote }}
+  gateways:
+    - {{ tpl .Values.global.virtualService.gatewayName . }}
+  http:
+    - route:
+        - destination:
+            host: clickhouse-{{ .Release.Name }}
+            port:
+              number: 8123
+{{- end }}
