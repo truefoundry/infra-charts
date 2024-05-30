@@ -177,8 +177,8 @@ clickhouse:
   clusterName: clickhouse
   shardsCount: 2
   replicasCount: 2
-  user: {{ .Values.global.auth.clickhouse.user }}
-  password: {{ .Values.global.auth.clickhouse.password }}
+  user: '{{ .Values.global.auth.clickhouse.user }}'
+  password: '{{ .Values.global.auth.clickhouse.password }}'
   zookeeperHost: zookeeper-headless
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:23.4.2
@@ -199,4 +199,4 @@ clickhouse:
       {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     subjects: tfy-model-logs.request-logs
     username: clickhouse-request-logs-reader
-    password: {{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}
+    password: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'
