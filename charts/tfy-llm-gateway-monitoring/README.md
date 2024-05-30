@@ -2,6 +2,41 @@
 
 ## Parameters
 
+### global
+
+
+### global.auth [object] auth config
+
+
+### global.auth.nats [object] nats auth config
+
+| Name                                                   | Description                                           | Value |
+| ------------------------------------------------------ | ----------------------------------------------------- | ----- |
+| `global.auth.nats.adminPassword`                       | password for nats admin user                          | `""`  |
+| `global.auth.nats.llmGatewayRequestLoggerPassword`     | password for nats llm-gateway-request-logger user     | `""`  |
+| `global.auth.nats.clickhouseRequestLogsReaderPassword` | password for nats clickhouse-request-logs-reader user | `""`  |
+
+### global.auth.clickhouse [object] clickhouse auth config
+
+| Name                              | Description         | Value  |
+| --------------------------------- | ------------------- | ------ |
+| `global.auth.clickhouse.user`     | clickhouse user     | `user` |
+| `global.auth.clickhouse.password` | clickhouse password | `""`   |
+
+### global.virtualService [object] virtual service config
+
+| Name                                          | Description              | Value                       |
+| --------------------------------------------- | ------------------------ | --------------------------- |
+| `global.virtualService.enabled`               | enable virtual service   | `true`                      |
+| `global.virtualService.gatewayName`           | gateway name             | `istio-system/tfy-wildcard` |
+| `global.virtualService.natsServerHost`        | nats server host         | `""`                        |
+| `global.virtualService.natsMetricsServerHost` | nats metrics server host | `""`                        |
+| `global.virtualService.clickhouseServerHost`  | clickhouse server host   | `""`                        |
+| `altinity-clickhouse-operator`                | altinity operator        | `{}`                        |
+| `zookeeper`                                   | zookeper config          | `{}`                        |
+| `nats`                                        | nats config              | `{}`                        |
+| `clickhouse`                                  | clickhouse config        | `{}`                        |
+
 ## Post Installtion Setup
 ### Add Logging Sink Configuration as env in TrueFoundry LLM Gateway
 
