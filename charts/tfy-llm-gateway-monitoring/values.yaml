@@ -1,14 +1,75 @@
-## @param altinity-clickhouse-operator [object] altinity operator
+## @section global
+## The global section contains configuration that is applied to all components of the chart.
+##
+global:
+  ## @section global.auth [object] auth config
+  ## The auth section contains configuration for authentication.
+  ## 
+  auth:
+    ## @section global.auth.nats [object] nats auth config
+    ## The nats section contains configuration for nats authentication.
+    ## 
+    nats:
+      ## @param global.auth.nats.adminPassword [string] password for nats admin user
+      ## Password for nats admin user
+      ##
+      adminPassword: ""
+      ## @param global.auth.nats.llmGatewayRequestLoggerPassword [string] password for nats llm-gateway-request-logger user
+      ## Password for nats llm-gateway-request-logger user
+      ##
+      llmGatewayRequestLoggerPassword: ""
+      ## @param global.auth.nats.clickhouseRequestLogsReaderPassword [string] password for nats clickhouse-request-logs-reader user
+      ## Password for nats clickhouse-request-logs-reader user
+      ##
+      clickhouseRequestLogsReaderPassword: ""
+    ## @section global.auth.clickhouse [object] clickhouse auth config
+    ## The clickhouse section contains configuration for clickhouse authentication.
+    ##
+    clickhouse:
+      ## @param global.auth.clickhouse.user [string, default: user] clickhouse user
+      ## clickhouse user
+      ##
+      user: user
+      ## @param global.auth.clickhouse.password [string] clickhouse password
+      ## clickhouse password
+      ##
+      password: ""
+  ## @section global.virtualService [object] virtual service config
+  ## The virtualService section contains configuration for virtual service.
+  ##
+  virtualService:
+    ## @param global.virtualService.enabled [string,default: false] enable virtual service
+    ## enable virtual service
+    ##
+    enabled: false
+    ## @param global.virtualService.gatewayName [string, default: istio-system/tfy-wildcard] gateway name
+    ## istio gateway name
+    ##
+    gatewayName: istio-system/tfy-wildcard
+    ## @param global.virtualService.natsServerHost [string, nullable] nats server host
+    ## nats server host
+    ##
+    natsServerHost: ""
+    ## @param global.virtualService.natsMetricsServerHost [string, nullable] nats metrics server host
+    ## nats metrics server host
+    ##
+    natsMetricsServerHost: ""
+    ## @param global.virtualService.clickhouseServerHost [string, nullable] clickhouse server host
+    ## clickhouse server host
+    ##
+    clickhouseServerHost: ""
+
+## @skip altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
 
-## @param zookeeper [object] zookeper config
+## @skip zookeeper [object] zookeper config
 zookeeper:
   enabled: true
 
-## @param nats [object] nats config
+## @skip nats [object] nats config
 nats:
-  enabled: false
+  enabled: true
   config:
     nats:
       port: 4222
@@ -16,21 +77,24 @@ nats:
       authorization:
         users:
           - user: admin
-            password: <password-to-be-provided>
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.adminPassword }}'
             permissions:
               publish:
                 - '>'
               subscribe:
                 - '>'
           - user: llm-gateway-request-logger
-            password: <password-to-be-provided>
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPassword }}'
             permissions:
               publish:
                 - tfy-model-logs.>
               subscribe:
                 - '>'
           - user: clickhouse-request-logs-reader
-            password: <password-to-be-provided>
+            password:
+              $tplYaml: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'
             permissions:
               subscribe:
                 - tfy-model-logs.>
@@ -38,7 +102,7 @@ nats:
     cluster:
       port: 6222
       enabled: true
-      replicas: 5
+      replicas: 3
     monitor:
       tls:
         enabled: false
@@ -62,8 +126,6 @@ nats:
   natsBox:
     enabled: false
   service:
-    merge:
-      type: LoadBalancer
     ports:
       monitor:
         enabled: true
@@ -84,14 +146,14 @@ nats:
     merge:
       spec:
         tolerations:
-          - effect: NoSchedule
-            key: cloud.google.com/gke-spot
-            operator: Equal
+          - key: cloud.google.com/gke-spot
             value: 'true'
-          - effect: NoSchedule
-            key: kubernetes.azure.com/scalesetpriority
+            effect: NoSchedule
             operator: Equal
+          - key: kubernetes.azure.com/scalesetpriority
             value: spot
+            effect: NoSchedule
+            operator: Equal
       metadata:
         annotations:
           prometheus.io/port: '7777'
@@ -108,18 +170,15 @@ nats:
       repository: natsio/prometheus-nats-exporter
     enabled: true
   extraResources: []
-  gatewayName: istio-system/tfy-wildcard
-  natsServerHost: ''
-  natsMetricsServerHost: ''
 
-
-## @param clickhouse [object] clickhouse config
+## @skip clickhouse [object] clickhouse config
 clickhouse:
   enabled: false
+  clusterName: clickhouse
   shardsCount: 2
   replicasCount: 2
-  user: exampleUser
-  password: examplePassword
+  user: '{{ .Values.global.auth.clickhouse.user }}'
+  password: '{{ .Values.global.auth.clickhouse.password }}'
   zookeeperHost: zookeeper-headless
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:23.4.2
@@ -137,8 +196,7 @@ clickhouse:
     size: 10Gi
   nats:
     url: >-
-      http://{{ .Release.Name }}-nats.{{ .Release.Namespace
-      }}.svc.cluster.local:4222
-    subjects: tfy-model-logs.test
+      {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    subjects: tfy-model-logs.request-logs
     username: clickhouse-request-logs-reader
-    password: <password-to-be-provided>
+    password: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'

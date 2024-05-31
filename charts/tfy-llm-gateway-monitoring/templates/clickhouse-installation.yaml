@@ -11,7 +11,7 @@ spec:
       serviceTemplate: svc-template
   configuration:
     clusters:
-      - name: {{ .Release.Name }}
+      - name: {{ .Values.clickhouse.clusterName }}
         layout:
           shardsCount: {{ .Values.clickhouse.shardsCount }}
           replicasCount: {{ .Values.clickhouse.replicasCount }}
@@ -23,12 +23,12 @@ spec:
       nodes:
         - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
-    {{- if .Values.clickhouse.user }}
+    {{- if (tpl .Values.clickhouse.user .) }}
     users:
-      {{ .Values.clickhouse.user }}/password: {{ required ".Values.clickhouse.password is required" .Values.clickhouse.password }}
-      {{ .Values.clickhouse.user }}/profile: default
-      {{ .Values.clickhouse.user }}/quota: default
-      {{ .Values.clickhouse.user }}/networks/ip:
+      {{ tpl .Values.clickhouse.user . }}/password: {{ required ".Values.clickhouse.password is required" (tpl .Values.clickhouse.password .) }}
+      {{ tpl .Values.clickhouse.user . }}/profile: default
+      {{ tpl .Values.clickhouse.user . }}/quota: default
+      {{ tpl .Values.clickhouse.user . }}/networks/ip:
         - 0.0.0.0/0
         - ::/0
     {{- end }}
@@ -38,9 +38,9 @@ spec:
             <named_collections>
                 <nats_config>
                     {{- $natsURL := (tpl .Values.clickhouse.nats.url .) }}
-                    {{- $natsSubjects := .Values.clickhouse.nats.subjects }}
-                    {{- $natsUsername := .Values.clickhouse.nats.username }}
-                    {{- $natsPassword := .Values.clickhouse.nats.password }}
+                    {{- $natsSubjects := (tpl .Values.clickhouse.nats.subjects .) }}
+                    {{- $natsUsername := (tpl .Values.clickhouse.nats.username .) }}
+                    {{- $natsPassword := (tpl .Values.clickhouse.nats.password .) }}
                     <nats_url overridable="true">{{ $natsURL }}</nats_url>
                     <nats_subjects overridable="true">{{ $natsSubjects }}</nats_subjects>
                     <nats_username overridable="true">{{ $natsUsername }}</nats_username>
@@ -85,7 +85,7 @@ spec:
                         - key: clickhouse.altinity.com/cluster
                           operator: In
                           values:
-                            - {{ .Release.Name }}
+                            - {{ .Values.clickhouse.clusterName }}
                     topologyKey: "kubernetes.io/hostname"
           containers:
             - name: clickhouse
