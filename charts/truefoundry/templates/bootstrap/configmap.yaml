@@ -1,0 +1,150 @@
+{{- if .Values.truefoundryBootstrap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: truefoundry-bootstrap-cm
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-2"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "argocd.argoproj.io/hook": PreSync
+    "argocd.argoproj.io/sync-wave": "-2"
+    "argocd.argoproj.io/hook-delete-policy": BeforeHookCreation
+data:
+  truefoundry-bootstrap.sh: |
+    #!/bin/bash
+    # This script will output one set of creds in the current directory.
+    # The script creates a nats resolver config file called resolver.conf
+    TRUEFOUNDRY_NATS_SECRET_NAME=truefoundry-nats-secret
+    TRUEFOUNDRY_CREDS_SECRET_NAME=truefoundry-creds
+    print_green() {
+        echo "$(tput setaf 2)$1$(tput sgr0)"
+    }
+    print_yellow() {
+        echo "$(tput setaf 3)$1$(tput sgr0)"
+    }
+    print_red() {
+        echo "$(tput setaf 1)$1$(tput sgr0)"
+    }
+
+    # function to install binaries - kubectl, nsc, helm
+    install_binaries() {
+      apt update && apt install wget unzip  -y \
+        && wget https://github.com/nats-io/nsc/releases/download/v2.8.6/nsc-linux-amd64.zip \
+        && unzip nsc-linux-amd64.zip \
+        && mv nsc /usr/bin/ \
+        && wget https://storage.googleapis.com/kubernetes-release/release/v1.29.3/bin/linux/amd64/kubectl \
+            && chmod +x kubectl \
+            && mv kubectl /usr/bin/
+    }
+
+    migrate_nats_seed_to_dedicated_secret() {
+      # Get the value of NATS_CONTROLPLANE_ACCOUNT_SEED from the secret
+      NATS_SEED=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.NATS_CONTROLPLANE_ACCOUNT_SEED}' | base64 --decode)
+
+      # Check if the NATS_SEED is empty
+      if [ -z "$NATS_SEED" ]; then
+        print_red "NATS_CONTROLPLANE_ACCOUNT_SEED is not set in the secret servicefoundry-env-secret."
+        exit 1
+      fi
+
+      # Create the new secret using the NATS_SEED
+      kubectl create secret generic $TRUEFOUNDRY_NATS_SECRET_NAME --from-literal=NATS_CONTROLPLANE_ACCOUNT_SEED="$NATS_SEED" -n $TRUEFOUNDRY_NAMESPACE
+    }
+
+    migrate_truefoundry_creds_to_dedicated_secret() {
+      # Get the value of NATS_CONTROLPLANE_ACCOUNT_SEED from the secret
+      DB_HOST=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_HOST}' | base64 --decode)
+      DB_USERNAME=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_USERNAME}' | base64 --decode)
+      DB_PASSWORD=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 --decode)
+      DB_NAME=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_NAME}' | base64 --decode)
+      TFY_API_KEY=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.SVC_FOUNDRY_SERVICE_API_KEY}' | base64 --decode)
+
+      # Check if the DB creds are empty
+      if [ -z "$DB_HOST" ] || [ -z "$DB_USERNAME" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_NAME" ] || [ -z "$TFY_API_KEY" ]; then
+        print_red "DB and Tfy API creds not set in the secret servicefoundry-env-secret"
+        exit 1
+      fi
+      # Create the new secret using the DB creds
+      kubectl create secret generic $TRUEFOUNDRY_CREDS_SECRET_NAME \
+        --from-literal=DB_HOST="$DB_HOST" \
+        --from-literal=DB_USERNAME="$DB_USERNAME" \
+        --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+        --from-literal=DB_NAME="$DB_NAME" \
+        --from-literal=TFY_API_KEY="$TFY_API_KEY" \
+        -n $TRUEFOUNDRY_NAMESPACE
+    }
+
+    # check if the following variables are not set
+    if [ -z "$TRUEFOUNDRY_NAMESPACE" ]; then
+        print_red "TRUEFOUNDRY_NAMESPACE is not set."
+        exit 1
+    fi
+
+    install_binaries
+
+    kubectl -n $TRUEFOUNDRY_NAMESPACE get cm $TRUEFOUNDRY_NATS_CONFIGMAP
+    if [ $? -eq 0 ]; then
+      kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $TRUEFOUNDRY_NATS_SECRET_NAME
+      if [ $? -eq 0 ]; then
+        print_red "Secret $TRUEFOUNDRY_NATS_SECRET_NAME already exists. Exiting..."
+        exit 0
+      else
+        print_yellow "We are going to create the secret $TRUEFOUNDRY_NATS_SECRET_NAME and $TRUEFOUNDRY_CREDS_SECRET_NAME from existing seed. This is a migration scenario dated 2024-05-01"
+        migrate_nats_seed_to_dedicated_secret
+        migrate_truefoundry_creds_to_dedicated_secret
+        exit 0
+      fi
+    fi
+    print_yellow "$TRUEFOUNDRY_NATS_CONFIGMAP not found. Creating NATS account and configmap..."
+
+    # Setup NSC env
+    NSC_ROOT=$(pwd)/nsc
+    export NKEYS_PATH=$NSC_ROOT/nkeys
+    export NSC_HOME=$NSC_ROOT/accounts
+    nsc env -s "${NSC_HOME}/nats"
+    nsc env
+
+    # Create Operator
+    nsc add operator --sys --name truefoundry
+
+    # Create tfy-controlplane account. The seed for this account is provided as an environment variable
+    # to servicefoundry-server
+    nsc add account --name tfy-controlplane
+    # enable JS
+    nsc edit account --name tfy-controlplane --js-disk-storage 512M
+
+    # Create user to create a stream.
+    nsc add user --account tfy-controlplane --name js-creator
+    nsc generate creds > "${NSC_ROOT}/user.creds"
+
+    # Store account info.
+    nsc generate config --mem-resolver --config-file "${NSC_ROOT}/resolver.conf"
+
+    # Get seed of the account
+    NKEYS_EXPORT_DIR=$NSC_ROOT/exported-keys
+    nsc export keys --account tfy-controlplane --accounts --dir "${NKEYS_EXPORT_DIR}"
+    NKEYS_FILE_NAME=$(ls "${NKEYS_EXPORT_DIR}" | grep "A*.nk" | head -1)
+    NKEYS_PATH="${NKEYS_EXPORT_DIR}/${NKEYS_FILE_NAME}"
+    SEED=$(cat "${NKEYS_PATH}")
+    cat "${NKEYS_PATH}" > nsc/tfy.seed
+
+    # Create K8s config map to store the account resolver.
+    # This will be imported by the main config file.
+    kubectl create configmap $TRUEFOUNDRY_NATS_CONFIGMAP --from-file "nsc/resolver.conf" -n $TRUEFOUNDRY_NAMESPACE -o yaml --dry-run | kubectl apply -f -
+
+    # copy the nats seed to /tfy.seed
+    NATS_SEED=$(cat nsc/tfy.seed)
+
+    # creating the secret
+    kubectl create -f -<<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: $TRUEFOUNDRY_NATS_SECRET_NAME
+      namespace: $TRUEFOUNDRY_NAMESPACE
+    stringData:
+      NATS_CONTROLPLANE_ACCOUNT_SEED: $NATS_SEED
+    ---
+    EOF
+{{- end }}
