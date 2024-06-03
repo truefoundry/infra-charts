@@ -1,0 +1,89 @@
+global: {}
+imageRepository: truefoundrycloud/mlfoundry-server
+replicaCount: 1
+environmentName: default
+envSecretName: mlfoundry-server-env-secret
+imagePullPolicy: IfNotPresent
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /
+      port: 5000
+      scheme: HTTP
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /
+      port: 5000
+      scheme: HTTP
+    initialDelaySeconds: 90
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+resources:
+  limits:
+    cpu: 400m
+    memory: 2048Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 200m
+    memory: 1024Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 5000
+  annotations: {}
+serviceAccount:
+  create: true
+  name: mlfoundry-server
+  annotations: {}
+imageTag: b8c8cea80c72fe7624e5215a7dddd0caa58f5564
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
+  DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
+  DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
+  DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
+  DB_POSTGRES_SCHEMA: mlfoundry
+  DB_PORT: '5432'
+  DB_DIALECT: postgresql+psycopg2
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  ARTIFACT_ROOT: s3://{{ .Values.env.S3_BUCKET_NAME }}
+  MLFLOW_S3_ENDPOINT_URL: '{{ .Values.env.S3_ENDPOINT_URL }}'
+  prometheus_multiproc_dir: .prom_metrics
+  MULTITENANT: 'false'
+  TENANT_NAME: '{{ .Values.global.tenantName }}'
+  SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  SERVICEFOUNDRY_SERVER_URL: >-
+    http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local:3000
