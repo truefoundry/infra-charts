@@ -60,12 +60,13 @@ steps:
                           # Update these with your Docker Registry and Repository
                           - export DOCKER_REGISTRY=docker.io
                           - export DOCKER_REPO_NAME=$BITBUCKET_REPO_SLUG
-                          
                           - export DOCKER_IMAGE_REPO=$DOCKER_REGISTRY/$DOCKER_REPO_NAME
                           - export DOCKER_IMAGE_TAG=$BITBUCKET_COMMIT
                           - export DOCKER_IMAGE_URI=$DOCKER_IMAGE_REPO:$DOCKER_IMAGE_TAG
                           - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
-                          - docker buildx build --cache-from type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --push .
+                          - docker build --cache-from $DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --tag $DOCKER_IMAGE_REPO:buildcache .
+                          - docker push $DOCKER_IMAGE_URI
+                          - docker push $DOCKER_IMAGE_REPO:buildcache
 
                           ###########################
                           - apt update && apt install -y jq
