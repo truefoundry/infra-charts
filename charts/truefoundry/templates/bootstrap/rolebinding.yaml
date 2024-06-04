@@ -1,0 +1,21 @@
+{{- if .Values.truefoundryBootstrap.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: truefoundry-bootstrap-job-rolebinding
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-3"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "argocd.argoproj.io/hook": PreSync
+    "argocd.argoproj.io/sync-wave": "-3"
+    "argocd.argoproj.io/hook-delete-policy": BeforeHookCreation
+subjects:
+- kind: ServiceAccount
+  name: truefoundry-bootstrap-job-sa
+  namespace: "{{ .Release.Namespace }}"
+roleRef:
+  kind: Role
+  name: truefoundry-bootstrap-job-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
