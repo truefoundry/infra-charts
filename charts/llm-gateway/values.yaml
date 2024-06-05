@@ -1,0 +1,200 @@
+global: {}
+llmGatewayEnabled: true
+imageRepository: truefoundrycloud/llm-gateway
+replicaCount: 1
+environmentName: default
+envSecretName: llm-gateway-env-secret
+imagePullPolicy: IfNotPresent
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 8787
+    path: /
+  liveness:
+    port: 8787
+    path: /
+resources:
+  limits:
+    cpu: 400m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 8787
+  annotations: {}
+serviceAccount:
+  create: true
+  name: llm-gateway
+  annotations: {}
+extraVolumes: []
+extraVolumeMounts: []
+env:
+  TRUEFOUNDRY_PUBLIC_ENABLED: ''
+  SERVICEFOUNDRY_SERVER_URL: https://app.truefoundry.com/api/svc
+  SFY_USER_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  TOGETHER_AI_API_KEY: ''
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  LOG_LEVEL: info
+  LOGGING_SINK_CONFIGURATION: ''
+  DEPLOYED_HOSTNAME: ''
+  CONTROL_PLANE_NATS_URL: ''
+imageTag: 3870a7350078cc00004d9c2c3ee7c8eec9b67393
+nats:
+  enabled: false
+  config:
+    nats:
+      port: 4222
+    merge:
+      authorization:
+        users:
+          - user: admin
+            password: <password-to-be-provided>
+            permissions:
+              publish:
+                - '>'
+              subscribe:
+                - '>'
+          - user: llm-gateway-request-logger
+            password: <password-to-be-provided>
+            permissions:
+              publish:
+                - tfy-model-logs.>
+              subscribe:
+                - '>'
+          - user: clickhouse-request-logs-reader
+            password: <password-to-be-provided>
+            permissions:
+              subscribe:
+                - tfy-model-logs.>
+        timeout: 5
+    cluster:
+      port: 6222
+      enabled: true
+      replicas: 5
+    monitor:
+      tls:
+        enabled: false
+      port: 8222
+      enabled: true
+    jetstream:
+      enabled: true
+      fileStore:
+        dir: /data
+        pvc:
+          size: 2Gi
+          enabled: true
+          storageClassName: ''
+        enabled: true
+      memoryStore:
+        enabled: true
+        maxSize: 250Mi
+    websocket:
+      port: 8080
+      enabled: true
+  natsBox:
+    enabled: false
+  service:
+    merge:
+      type: LoadBalancer
+    ports:
+      monitor:
+        enabled: true
+  container:
+    image:
+      tag: 2.10.7-alpine
+      pullPolicy: IfNotPresent
+      repository: nats
+    merge:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 250Mi
+        requests:
+          cpu: 100m
+          memory: 250Mi
+  podTemplate:
+    merge:
+      spec:
+        tolerations:
+          - effect: NoSchedule
+            key: cloud.google.com/gke-spot
+            operator: Equal
+            value: 'true'
+          - effect: NoSchedule
+            key: kubernetes.azure.com/scalesetpriority
+            operator: Equal
+            value: spot
+      metadata:
+        annotations:
+          prometheus.io/port: '7777'
+          prometheus.io/scrape: 'true'
+    topologySpreadConstraints:
+      kubernetes.io/hostname:
+        maxSkew: 1
+        whenUnsatisfiable: DoNotSchedule
+  promExporter:
+    port: 7777
+    image:
+      tag: 0.13.0
+      pullPolicy: IfNotPresent
+      repository: natsio/prometheus-nats-exporter
+    enabled: true
+  extraResources: []
+  gatewayName: istio-system/tfy-wildcard
+  natsServerHost: ''
+  natsMetricsServerHost: ''
+clickhouse:
+  enabled: false
+  shardsCount: 2
+  replicasCount: 2
+  user: exampleUser
+  password: examplePassword
+  zookeeperHost: zookeeper-headless
+  zookeeperPort: '2181'
+  image: clickhouse/clickhouse-server:23.4.2
+  resources:
+    requests:
+      memory: 1024Mi
+      cpu: 500m
+      ephemeralStorage: 1024Mi
+    limits:
+      memory: 2048Mi
+      cpu: 1000m
+      ephemeralStorage: 2048Mi
+  storage:
+    storageClassName: ''
+    size: 10Gi
+  nats:
+    url: >-
+      http://{{ .Release.Name }}-nats.{{ .Release.Namespace
+      }}.svc.cluster.local:4222
+    subjects: tfy-model-logs.test
+    username: clickhouse-request-logs-reader
+    password: <password-to-be-provided>
