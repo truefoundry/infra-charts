@@ -1,0 +1,290 @@
+global:
+  # The below are installation secrets that will be provided as is.
+  # These are customised for your account. Please use the provided values as
+  # is.
+  # If you have an existing imagepullsecret, set this to its name
+  existingTruefoundryImagePullSecretName: ""
+  truefoundryImagePullConfigJSON: ""
+  tenantName: ""
+  controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
+  dev: false
+  # If you have an existing truefoundry-creds secret, provide the name here.
+  # This will ignore `.global.database` and `.global.tfyApiKey` values.
+  existingTruefoundryCredsSecret: ""
+  database:
+    host: ""
+    name: ""
+    username: ""
+    password: ""
+  tfyApiKey: ""
+
+##########################
+# Truefoundry bootstrap script - This script is used create nats seed and mlfoundry and servicefoundry secrets
+truefoundryBootstrap:
+  enabled: true
+  image:
+    repository: "docker.io/library/ubuntu"
+    tag: "latest"
+  natsConfigmapName: "nats-accounts"
+  extraEnvVars: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+    # truefoundry-namespace: ""
+
+##########################
+# Settings specific to dashboard app
+truefoundry-frontend-app:
+  enabled: true
+  replicaCount: 1
+  # We support both generic ingress controller as well Istio Virtual Service. You
+  # can configure either of them.
+  ingress:
+    enabled: false
+    annotations: {}
+    labels: {}
+    ingressClassName: istio
+    tls: []
+    hosts: []
+  istio:
+    virtualservice:
+      enabled: false
+      annotations: {}
+      gateways: []
+      hosts: []
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+
+#############################
+# Settings specific to mlfoundry.
+mlfoundry-server:
+  enabled: true
+  replicaCount: 1
+  serviceAccount:
+    annotations: {}
+  env: {}
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+
+#######################
+# Settings specific to servicefoundry.
+servicefoundry-server:
+  enabled: true
+  replicaCount: 1
+  serviceAccount:
+    annotations: {}
+  env: {}
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+
+#############################
+# Settings specific to sfy-manifest-service.
+sfy-manifest-service:
+  enabled: true
+  replicaCount: 1
+  env: {}
+  # SFY_API_KEY: <api_key>
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+
+#############################
+# Settings corresponding to the NATS server
+nats:
+  enabled: true
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+  nats:
+    image: nats:2.10.12-alpine3.19
+    advertise: false
+    jetstream:
+      enabled: true
+      memStorage:
+        enabled: true
+        size: 1Gi
+      fileStorage:
+        enabled: true
+        storageDirectory: /data
+        size: 10Gi
+        accessModes:
+        - ReadWriteOnce
+    logging:
+      debug: true
+  natsbox:
+    enabled: false
+  exporter:
+    enabled: true
+    image:
+      tag: "0.14.0"
+  reloader:
+    enabled: true
+    image:
+      tag: "0.14.1"
+  cluster:
+    enabled: true
+    replicas: 3
+    noAdvertise: true
+  websocket:
+    enabled: true
+    port: 443
+    noTLS: true
+    sameOrigin: false
+    allowedOrigins: []
+  auth:
+    enabled: true
+    resolver:
+      type: memory
+      configMap:
+        name: nats-accounts
+        key: resolver.conf
+
+#############################
+# Settings corresponding to the tfy-build server
+tfy-build:
+  enabled: true
+  truefoundryWorkflows:
+    tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  tfy-buildkitd-service:
+    enabled: true
+    tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+
+#############################
+# Settings corresponding to the llm-gateway
+llm-gateway:
+  enabled: false
+  replicaCount: 1
+  env: {}
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
+
+#############################
+# To further configure the local postgres installation use the following section.
+# During cleanup, make sure to remove any stray pvc that might be created.
+postgresql:
+  auth:
+    existingSecret: "truefoundry-postgresql-auth-secret"
+    database: "truefoundry"
+  primary:
+    tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+
+#############################
+# Settings specific to tfy-controller.
+tfy-controller:
+  enabled: true
+  tolerations:
+  - key: class.truefoundry.io/control-plane
+    effect: NoSchedule
+    operator: Exists
+  - key: "cloud.google.com/gke-spot"
+    value: "true"
+    effect: NoSchedule
+    operator: Equal
+  - key: kubernetes.azure.com/scalesetpriority
+    value: spot
+    effect: NoSchedule
+    operator: Equal
