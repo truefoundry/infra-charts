@@ -1,0 +1,67 @@
+{{- if .Values.truefoundryBootstrap.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: truefoundry-bootstrap-job
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "argocd.argoproj.io/hook": PreSync
+    "argocd.argoproj.io/sync-wave": "-1"
+    "argocd.argoproj.io/hook-delete-policy": BeforeHookCreation
+spec:
+  template:
+    metadata:
+      name: truefoundry-bootstrap-job
+    spec:
+      serviceAccountName: truefoundry-bootstrap-job-sa
+      containers:
+      - name: truefoundry-bootstrap-job
+        image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
+        command: ["/truefoundry/truefoundry-bootstrap.sh"]
+        env:
+        {{- if .Values.global.dev }}
+        - name: MODE
+          value: "dev"
+        {{- else }}
+        - name: MODE
+          value: "prod"
+        {{- end }}
+        - name: TRUEFOUNDRY_NATS_CONFIGMAP
+          value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
+        - name: TRUEFOUNDRY_NAMESPACE
+          value: "{{ .Release.Namespace }}"
+        {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
+        - name: {{ $val.name }}
+          value: {{ $val.value }}
+        {{- end }}
+        volumeMounts:
+        - name: truefoundry-bootstrap-script
+          mountPath: "/truefoundry"
+        {{- if gt (len .Values.truefoundryBootstrap.extraVolumeMounts) 0 }}
+        {{- toYaml .Values.truefoundryBootstrap.extraVolumeMounts | nindent 8 }}
+        {{- end }}
+      volumes:
+      - name: truefoundry-bootstrap-script
+        configMap:
+          name: truefoundry-bootstrap-cm
+          defaultMode: 0700
+      {{- if gt (len .Values.truefoundryBootstrap.extraVolumes) 0 }}
+      {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
+      {{- end }}
+      restartPolicy: Never
+      {{- with .Values.truefoundryBootstrap.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryBootstrap.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryBootstrap.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 2
+{{- end }}
