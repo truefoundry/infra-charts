@@ -63,7 +63,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.14.3-centos7
+    version: v1.14.6-centos7
     ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -237,6 +237,11 @@ aws-eks-gpu-operator:
   
   ## Validator configuration.
   validator:
+    cuda:
+      ## @skip aws-eks-gpu-operator.validator.cuda.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
     plugin:
       ## @skip aws-eks-gpu-operator.validator.plugin.env
       env:
@@ -248,7 +253,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param aws-eks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.3-1-ubuntu22.04
+    version: 3.3.5-1-ubuntu22.04
     ## @param aws-eks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
     ## @param aws-eks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
     ## @param aws-eks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
@@ -266,7 +271,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
     enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.3-3.3.1-ubuntu22.04
+    version: 3.3.5-3.4.1-ubuntu22.04
     ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
@@ -646,7 +651,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param azure-aks-gpu-operator.toolkit.version Version of the toolkit. Note for Aure Linux change `-ubuntu20.04` to `-centos7`. However at the time of writing Azure Linux only supports V100 and T4 GPUs
-    version: v1.14.5-ubuntu20.04
+    version: v1.14.6-ubuntu20.04
     ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -691,7 +696,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param azure-aks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.3-1-ubuntu22.04
+    version: 3.3.5-1-ubuntu22.04
     ## @param azure-aks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
     ## @param azure-aks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
     ## @param azure-aks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
@@ -709,7 +714,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param azure-aks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.3-3.3.1-ubuntu22.04
+    version: 3.3.5-3.4.1-ubuntu22.04
     ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
@@ -742,6 +747,18 @@ azure-aks-gpu-operator:
     ## @skip azure-aks-gpu-operator.migManager.enabled
     enabled: false
 
+  ## Validator configuration.
+  validator:
+    cuda:
+      ## @skip azure-aks-gpu-operator.validator.cuda.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
+    plugin:
+      ## @skip azure-aks-gpu-operator.validator.plugin.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
 
 ## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
 ##
@@ -890,7 +907,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.3-1-ubuntu22.04
+    version: 3.3.5-1-ubuntu22.04
     ## @param civo-talos-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
     ## @param civo-talos-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
     ## @param civo-talos-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
@@ -908,7 +925,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.3-3.3.1-ubuntu22.04
+    version: 3.3.5-3.4.1-ubuntu22.04
     ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
       enabled: false
@@ -941,6 +958,18 @@ civo-talos-gpu-operator:
     ## @skip civo-talos-gpu-operator.migManager.enabled
     enabled: false
 
+  ## Validator configuration.
+  validator:
+    cuda:
+      ## @skip civo-talos-gpu-operator.validator.cuda.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
+    plugin:
+      ## @skip civo-talos-gpu-operator.validator.plugin.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
 
 ## @section generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
 generic-gpu-operator:
@@ -950,3 +979,17 @@ generic-gpu-operator:
     upgradeCRD: true
     ## @param generic-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
+  
+  ## Validator configuration.
+  validator:
+    cuda:
+      ## @skip generic-gpu-operator.validator.cuda.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
+    plugin:
+      ## @skip generic-gpu-operator.validator.plugin.env
+      env:
+        - name: WITH_WORKLOAD
+          value: "false"
+
