@@ -1,0 +1,67 @@
+global: {}
+imageRepository: truefoundrycloud/tfy-llm-gateway
+replicaCount: 1
+environmentName: default
+envSecretName: tfy-llm-gateway-env-secret
+imagePullPolicy: IfNotPresent
+nameOverride: ''
+fullnameOverride: ''
+podAnnotations: {}
+podSecurityContext: {}
+commonLabels: {}
+securityContext: {}
+healthcheck:
+  enabled: true
+  readiness:
+    port: 8787
+    path: /
+  liveness:
+    port: 8787
+    path: /
+resources:
+  limits:
+    cpu: 400m
+    memory: 512Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+nodeSelector: {}
+tolerations: {}
+affinity: {}
+topologySpreadConstraints: {}
+ingress:
+  enabled: false
+  annotations: {}
+  labels: {}
+  ingressClassName: istio
+  tls: []
+  hosts: []
+istio:
+  virtualservice:
+    enabled: false
+    annotations: {}
+    gateways: []
+    hosts: []
+service:
+  type: ClusterIP
+  port: 8787
+  annotations: {}
+serviceAccount:
+  create: true
+  name: tfy-llm-gateway
+  annotations: {}
+extraVolumes: []
+extraVolumeMounts: []
+rbac:
+  enabled: true
+env:
+  CONTROL_PLANE_URL: ''
+  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  LOG_LEVEL: info
+  LOGGING_SINK_CONFIGURATION: ''
+  DEPLOYED_LLM_GATEWAY_URL: ''
+  CONTROL_PLANE_NATS_URL: ''
+imageTag: e9fd8f55009a3500a235199bc98ac99c97ddb06b
