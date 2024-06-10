@@ -1,61 +1,123 @@
+## @section Configuration for LLM Gateway
+
+## @param global Truefoundry global values
 global: {}
+
+## @param imageRepository The image repository to pull from
 imageRepository: truefoundrycloud/tfy-llm-gateway
+## @param replicaCount Image pull policy
 replicaCount: 1
+## @param environmentName The environment name
 environmentName: default
+## @param envSecretName The environment secret name
 envSecretName: tfy-llm-gateway-env-secret
+## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
+## @param nameOverride Name override
 nameOverride: ''
+## @param fullnameOverride Fullname override
 fullnameOverride: ''
+## @param podAnnotations Pod annotations
 podAnnotations: {}
+## @param podSecurityContext Pod security context
 podSecurityContext: {}
+## @param commonLabels Common labels
 commonLabels: {}
+## @param securityContext Security context configuration
 securityContext: {}
+## Healthcheck configuration
 healthcheck:
+  ## @param healthcheck.enabled Enable healthcheck
   enabled: true
+    ## healthcheck.readiness Readiness probe configuration
   readiness:
+    ## @param healthcheck.readiness.port Port to probe
     port: 8787
+    ## @param healthcheck.readiness.path Path to probe
     path: /
+  ## healthcheck.liveness Liveness probe configuration
   liveness:
+    ## @param healthcheck.liveness.port Port to probe
     port: 8787
+    ## @param healthcheck.liveness.path Path to probe
     path: /
+## Resource configuration
 resources:
+  ## resources.limits Resource limits
   limits:
+    ## @param resources.limits.cpu CPU limit
     cpu: 400m
+    ## @param resources.limits.memory Memory limit
     memory: 512Mi
+    ## @param resources.limits.ephemeral-storage Ephemeral storage limit
     ephemeral-storage: 256Mi
+  ## resources.requests Resource requests
   requests:
+    ## @param resources.requests.cpu CPU request
     cpu: 200m
+    ## @param resources.requests.memory Memory request
     memory: 256Mi
+    ## @param resources.requests.ephemeral-storage Ephemeral storage request
     ephemeral-storage: 128Mi
+## @param nodeSelector Node selector
 nodeSelector: {}
+## @param tolerations Tolerations
 tolerations: {}
+## @param affinity Affinity
 affinity: {}
+## @param topologySpreadConstraints Topology spread constraints
 topologySpreadConstraints: {}
+## Ingress configuration
 ingress:
+  ## @param ingress.enabled Enable ingress configuration
   enabled: false
+  ## @param ingress.annotations Ingress annotations
   annotations: {}
+  ## @param ingress.labels Ingress labels
   labels: {}
+  ## @param ingress.ingressClassName Ingress class name
   ingressClassName: istio
+  ## @param ingress.tls Ingress TLS configuration
   tls: []
+  ## @param ingress.hosts Ingress hosts
   hosts: []
+## Istio configuration
 istio:
+    ## istio.virtualservice Virtual service configuration
   virtualservice:
+    ## @param istio.virtualservice.enabled Enable virtual service
     enabled: false
+    ## @param istio.virtualservice.annotations Virtual service annotations
     annotations: {}
+    ## @param istio.virtualservice.gateways Virtual service gateways
     gateways: []
+    ## @param istio.virtualservice.hosts Virtual service hosts
     hosts: []
+## Service configuration
 service:
+  ## @param service.type Service type
   type: ClusterIP
+  ## @param service.port Service port
   port: 8787
+  ## @param service.annotations Service annotations
   annotations: {}
+## Service account configuration
 serviceAccount:
+  ## @param serviceAccount.create Create service account
   create: true
+  ## @param serviceAccount.annotations Service account annotations
   name: tfy-llm-gateway
+  ## @param serviceAccount.name Service account name
   annotations: {}
+## @param extraVolumes Extra volumes
 extraVolumes: []
+## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
+## rbac configuration
 rbac:
+  ## @param rbac.enabled Enable rbac
   enabled: true
+## @skip env
 env:
   CONTROL_PLANE_URL: ''
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
@@ -64,4 +126,6 @@ env:
   LOGGING_SINK_CONFIGURATION: ''
   DEPLOYED_LLM_GATEWAY_URL: ''
   CONTROL_PLANE_NATS_URL: ''
+
+## @param imageTag Container Image tag
 imageTag: e9fd8f55009a3500a235199bc98ac99c97ddb06b
