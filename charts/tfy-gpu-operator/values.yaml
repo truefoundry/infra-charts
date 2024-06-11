@@ -314,6 +314,8 @@ aws-eks-gpu-operator:
 ## https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#installing_drivers
 ## Note: `nvidia-l4` is kept in latest for older GKE versions running COS 105 where latest points to newer compatible driver version. We will remove it and place it back in `default` as older GKE version reaches EOL
 gcp-gke-standard-driver:
+  ## @param gcp-gke-standard-driver.enabled If to enabled driver installation via this chart. On some clusters the PSP policy might not allow priviledged context which is required for drivers installation - Fortunately, GKE offers automatic driver installation on nodepools and NAP nodes 1.29.2+. In such cases, we recommend setting this to false.
+  enabled: true
   ## @param gcp-gke-standard-driver.latest.gkeAccelerators Install latest driver for these GKE accelerators.
   latest:
     gkeAccelerators:
