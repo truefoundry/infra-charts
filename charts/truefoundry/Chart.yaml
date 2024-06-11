@@ -1,0 +1,27 @@
+apiVersion: v2
+name: truefoundry
+version: 0.4.0-rc.12
+description: "Truefoundry applications"
+maintainers:
+  - name: truefoundry
+dependencies:
+  - condition: servicefoundryServer.enabled
+    name: tfy-configs
+    repository: https://truefoundry.github.io/infra-charts
+    version: 0.1.0-rc.7
+  - condition: nats.enabled
+    name: nats
+    repository: https://nats-io.github.io/k8s/helm/charts/
+    version: 0.19.1
+  - condition: tfy-llm-gateway.enabled
+    name: tfy-llm-gateway
+    repository: oci://quay.io/truefoundrycharts
+    version: 0.2.4-rc.2
+  - condition: global.dev
+    name: postgresql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 15.2.2
+  - condition: tfy-buildkitd-service.enabled
+    name: tfy-buildkitd-service
+    repository: https://truefoundry.github.io/infra-charts/
+    version: 0.1.3

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}
+  labels: {{- include "servicefoundry-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.servicefoundryServer.service.type }}
+  ports:
+    - port: {{ .Values.servicefoundryServer.service.port }}
+      targetPort: {{ .Values.servicefoundryServer.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "servicefoundry-server.selectorLabels" . | nindent 4 }}

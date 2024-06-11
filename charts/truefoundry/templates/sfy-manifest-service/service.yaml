@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sfy-manifest-service.fullname" . }}
+  labels: {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.sfyManifestService.service.type }}
+  ports:
+    - port: {{ .Values.sfyManifestService.service.port }}
+      targetPort: {{ .Values.sfyManifestService.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "sfy-manifest-service.selectorLabels" . | nindent 4 }}

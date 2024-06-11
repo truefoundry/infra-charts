@@ -1,0 +1,32 @@
+{{- if .Values.mlfoundryServer.istio.virtualservice.enabled -}}
+{{- $serviceName := include "mlfoundry-server.fullname" . -}}
+{{- $servicePort := .Values.mlfoundryServer.service.port -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "mlfoundry-server.fullname" . }}
+  labels:
+    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+  {{- if .Values.mlfoundryServer.istio.virtualservice.annotations }}
+    annotations:
+    {{- range $key, $value := .Values.mlfoundryServer.istio.virtualservice.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+  {{- range .Values.mlfoundryServer.istio.virtualservice.gateways}}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.mlfoundryServer.istio.virtualservice.hosts}}
+  - {{ . }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ include "mlfoundry-server.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.mlfoundryServer.service.port }}
+{{- end }}

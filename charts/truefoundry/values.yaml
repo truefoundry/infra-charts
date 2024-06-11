@@ -1,0 +1,1205 @@
+## @section Parameters for Truefoundry
+
+## global Truefoundry global values
+global:
+  # The below are installation secrets that will be provided as is.
+  # These are customised for your account. Please use the provided values as is.
+  # If you have an existing imagepullsecret, set this to its name
+  ## @param global.existingTruefoundryImagePullSecretName Name of the existing image pull secret
+  existingTruefoundryImagePullSecretName: ""
+  ## @param global.truefoundryImagePullConfigJSON JSON config for image pull secret
+  truefoundryImagePullConfigJSON: ""
+  ## @param global.tenantName Name of the tenant
+  tenantName: ""
+  ## @param global.controlPlaneURL URL of the control plane
+  controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
+  ## @param global.dev Bool to enable dev mode
+  dev: false
+  # If you have an existing truefoundry-creds secret, provide the name here.
+  # This will ignore `.global.database` and `.global.tfyApiKey` values.
+  ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
+  existingTruefoundryCredsSecret: ""
+  ## global.database Database configuration
+  database:
+    ## @param global.database.host HostURL of the database
+    host: ""
+    ## @param global.database.name Hostname of the database
+    name: ""
+    ## @param global.database.username Hostname of the database
+    username: ""
+    ## @param global.database.password Hostname of the database
+    password: ""
+  ## @param global.tfyApiKey API key for truefoundry
+  tfyApiKey: ""
+
+## @param mode Mode of the deployment
+mode: ""
+
+##########################
+# Truefoundry bootstrap script - This script is used create nats seed and mlfoundry and servicefoundry secrets
+## truefoundryBootstrap Truefoundry bootstrap values
+truefoundryBootstrap:
+  ## @param truefoundryBootstrap.enabled Bool to enable truefoundry bootstrap
+  enabled: true
+  ## truefoundryBootstrap.image Truefoundry base bootstrap image
+  image:
+    ## @param truefoundryBootstrap.image.repository Truefoundry bootstrap image repository
+    repository: "docker.io/library/ubuntu"
+    ## @param truefoundryBootstrap.image.tag Truefoundry bootstrap image tag
+    tag: "latest"
+  ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
+  natsConfigmapName: "nats-accounts"
+  ## @param truefoundryBootstrap.extraEnvVars Extra environment variables for the bootstrap container
+  extraEnvVars: []
+  ## @param truefoundryBootstrap.extraVolumeMounts Extra volume mounts for the bootstrap container
+  extraVolumeMounts: []
+  ## @param truefoundryBootstrap.extraVolumes Extra volumes for the bootstrap container
+  extraVolumes: []
+  ## @param truefoundryBootstrap.affinity Affinity for the bootstrap container
+  affinity: {}
+  ## @param truefoundryBootstrap.nodeSelector Node selector for the bootstrap container
+  nodeSelector: {}
+  ## @skip truefoundryBootstrap.tolerations Tolerations for the bootstrap container
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+      # truefoundry-namespace: ""
+
+##########################
+## truefoundryFrontendApp Settings specific to dashboard app
+truefoundryFrontendApp:
+  ## @param truefoundryFrontendApp.enabled Bool to enable the frontend app
+  enabled: true
+  ## @param truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
+  replicaCount: 1
+  ## @param truefoundryFrontendApp.global Global values for the frontend app
+  global: {}
+  ## @param truefoundryFrontendApp.imageRepository Image repository for the frontend app
+  imageRepository: truefoundrycloud/truefoundry-frontend-app
+  ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
+  envSecretName: truefoundry-frontend-app-env-secret
+  ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
+  imagePullPolicy: IfNotPresent
+  ## @param truefoundryFrontendApp.nameOverride Override name for the frontend app
+  nameOverride: ''
+  ## @param truefoundryFrontendApp.fullnameOverride Full name override for the frontend app
+  fullnameOverride: ''
+  ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
+  podAnnotations: {}
+  ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
+  podSecurityContext: {}
+  ## @param truefoundryFrontendApp.commonLabels Common labels for the frontend app pods
+  commonLabels: {}
+  ## @param truefoundryFrontendApp.securityContext Security context for the frontend app
+  securityContext: {}
+  ## truefoundryFrontendApp.healthcheck Healthcheck settings for the frontend app
+  healthcheck:
+    ## @param truefoundryFrontendApp.healthcheck.enabled Enable truefoundryFrontendApp healthcheck
+    enabled: false
+  ## truefoundryFrontendApp.resources Resource requests and limits for the frontend app
+  resources:
+    ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
+    limits:
+      ## @param truefoundryFrontendApp.resources.limits.cpu CPU limit for the frontend app
+      cpu: 200m
+      ## @param truefoundryFrontendApp.resources.limits.memory Memory limit for the frontend app
+      memory: 512Mi
+      ## @param truefoundryFrontendApp.resources.limits.ephemeral-storage Ephemeral storage limit for the frontend app
+      ephemeral-storage: 256Mi
+    ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
+    requests:
+      ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
+      cpu: 100m
+      ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
+      memory: 256Mi
+      ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
+      ephemeral-storage: 128Mi
+  ## @param truefoundryFrontendApp.nodeSelector Node selector for the frontend app
+  nodeSelector: {}
+  ## @param truefoundryFrontendApp.affinity Affinity settings for the frontend app
+  affinity: {}
+  ## @param truefoundryFrontendApp.topologySpreadConstraints Topology spread constraints for the frontend app
+  topologySpreadConstraints: {}
+  ## truefoundryFrontendApp.service Service settings for the frontend app
+  service:
+    ## @param truefoundryFrontendApp.service.type Service type for the frontend app
+    type: ClusterIP
+    ## @param truefoundryFrontendApp.service.port Service port for the frontend app
+    port: 5000
+    ## @param truefoundryFrontendApp.service.annotations Annotations for the frontend app service
+    annotations: {}
+  # We support both generic ingress controller as well Istio Virtual Service. You can configure either of them.
+  ## truefoundryFrontendApp.ingress Ingress settings for the frontend app
+  ingress:
+    ## @param truefoundryFrontendApp.ingress.enabled Enable ingress for the frontend app
+    enabled: false
+    ## @param truefoundryFrontendApp.ingress.annotations Annotations for the frontend app ingress
+    annotations: {}
+    ## @param truefoundryFrontendApp.ingress.labels Labels for the frontend app ingress
+    labels: {}
+    ## @param truefoundryFrontendApp.ingress.ingressClassName Ingress class name for the frontend app
+    ingressClassName: istio
+    ## @param truefoundryFrontendApp.ingress.tls TLS settings for the frontend app
+    tls: []
+    ## @param truefoundryFrontendApp.ingress.hosts Hosts for the frontend app
+    hosts: []
+  ## truefoundryFrontendApp.istio Istio virtual service settings for the frontend app
+  istio:
+    ## truefoundryFrontendApp.istio.virtualservice Enable virtual service for the frontend app
+    virtualservice:
+      ## @param truefoundryFrontendApp.istio.virtualservice.enabled Enable virtual service for the frontend app
+      enabled: false
+      ## @param truefoundryFrontendApp.istio.virtualservice.annotations Annotations for the frontend app virtual service
+      annotations: {}
+      ## @param truefoundryFrontendApp.istio.virtualservice.gateways Gateways for the frontend app virtual service
+      gateways: []
+      ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
+      hosts: []
+  ## @skip truefoundryFrontendApp.tolerations Tolerations for the frontend app
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
+  serviceAccount:
+    ## @param truefoundryFrontendApp.serviceAccount.create Create service account for the frontend app
+    create: true
+    ## @param truefoundryFrontendApp.serviceAccount.name Service account name for the frontend app
+    name: truefoundry-frontend-app
+    ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
+    annotations: {}
+  ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
+  imageTag: cb68c5779a76006055b82495c16717b7c7d8bdc7
+  ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
+  servicefoundryServerHost: >-
+    {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
+    }}.svc.cluster.local
+  ## truefoundryFrontendApp.llmGateway LLM gateway settings for the frontend app
+  llmGateway:
+    ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
+    external: false
+    ## @param truefoundryFrontendApp.llmGateway.backendHost Backend Host for the LLM gateway
+    backendHost: '{{ .Release.Name }}-llm-gateway.{{ .Release.Namespace
+      }}.svc.cluster.local'
+    ## @param truefoundryFrontendApp.llmGateway.backendPort Backend Port for the LLM gateway
+    backendPort: 8787
+  ## @param truefoundryFrontendApp.proxyServerHost Proxy server host for the frontend app
+  proxyServerHost: '{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace
+    }}.svc.cluster.local'
+  ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
+  extraVolumes: []
+  ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
+  extraVolumeMounts: []
+  ## @skip truefoundryFrontendApp.env Environment variables for the frontend app
+  env:
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    NATS_URL: ws://{{ .Release.Name }}-nats.{{ .Release.Namespace
+      }}.svc.cluster.local:443
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:5000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
+    TFY_CONTROLLER_URL: http://{{ .Release.Name }}-tfy-controller.{{
+      .Release.Namespace }}.svc.cluster.local:8123
+    VITE_AUTHSERVER_URL: /api/auth
+    VITE_MLFOUNDRY_URL: /api/ml
+    VITE_SVCFOUNDRY_URL: /api/svc
+    VITE_MONITORINGFOUNDRY_URL: /api/monitoring
+    VITE_LLM_PLAYGROUND_API_URL: /api/llm
+    VITE_SOCKET_URL: ""
+    VITE_NATS_URL: ""
+    VITE_FUSIONAUTH_URL: https://login.truefoundry.com
+    VITE_MULTITENANT_ENABLED: "false"
+    VITE_TENANT_NAME: "{{ .Values.global.tenantName }}"
+    VITE_LOGO_URL: ""
+    VITE_EXPORT_AS_HELM_TYPES: service,volume,helm
+    VITE_ENABLE_COMPANY_REGISTRATION: "false"
+    VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
+    VITE_STRIPE_PUBLISHABLE_KEY: ""
+    VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
+    VITE_TENANT_BASE_DOMAIN: ""
+    VITE_MANAGED_CLUSTER_ONBOARDING_ENABLED: "false"
+    VITE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
+    VITE_CIVO_RESOURCES_STRING: ""
+    VITE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
+    VITE_LLM_PLAYGROUND_ENABLED: "false"
+    VITE_LLM_PLAYGROUND_ENABLE_STANDALONE: "false"
+    VITE_LLM_PLAYGROUND_ENABLE_REDIRECT: "false"
+    VITE_OLD_LLM_PLAYGROUND_PATH: llm-playground
+    VITE_LLM_PLAYGROUND_PATH: llm-gateway
+    VITE_ENABLE_SENTRY: "false"
+    VITE_SENTRY_DSN: ""
+    VITE_APEX_DOMAIN: http://truefoundry.com/
+    VITE_DATAGRID_LICENSE_KEY: 1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
+    VITE_ENABLE_GOOGLE_ANALYTICS: "false"
+    VITE_ENABLE_PAGESENSE: "false"
+    VITE_ENABLE_MIXPANEL: "false"
+    VITE_SENTRY_AUTH_TOKEN: ""
+    VITE_SENTRY_ENVIRONMENT: ""
+    VITE_MIXPANEL_TOKEN: ""
+    VITE_APP_ENVIRONMENT: ""
+    VITE_CRISP_WEBSITE_ID: ""
+    VITE_QA_FOUNDRY_URL: ""
+    VITE_QA_FOUNDRY_JOB_FQN: ""
+    VITE_QA_FOUNDRY_ML_REPO: ""
+    VITE_QA_FOUNDRY_LLM_HOST: ""
+    VITE_QA_FOUNDRY_LLM_KEY: ""
+    VITE_DOCS_QA_ENABLE_STANDALONE: "false"
+    VITE_DOCS_QA_DELETE_COLLECTIONS: "false"
+    VITE_DOCS_QA_STANDALONE_PATH: ""
+    VITE_DOCS_QA_ENABLE_REDIRECT: "false"
+    VITE_DOCS_QA_EMBEDDINGS: ""
+    VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB: "2"
+    VITE_ENABLE_SUPERFLOW: "false"
+
+#############################
+## mlfoundryServer Settings specific to mlfoundry.
+mlfoundryServer:
+  ## @param mlfoundryServer.enabled Bool to enable the mlfoundry server
+  enabled: true
+  ## @skip mlfoundryServer.tolerations Tolerations for the mlfoundry server
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## @param mlfoundryServer.imageRepository Image repository for the mlfoundry server
+  imageRepository: truefoundrycloud/mlfoundry-server
+  ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
+  replicaCount: 1
+  ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
+  environmentName: default
+  ## @param mlfoundryServer.envSecretName Secret name for the mlfoundry server environment variables
+  envSecretName: mlfoundry-server-env-secret
+  ## @param mlfoundryServer.imagePullPolicy Image pull policy for the mlfoundry server
+  imagePullPolicy: IfNotPresent
+  ## @param mlfoundryServer.nameOverride Override name for the mlfoundry server
+  nameOverride: ''
+  ## @param mlfoundryServer.fullnameOverride Full name override for the mlfoundry server
+  fullnameOverride: ''
+  ## @param mlfoundryServer.podAnnotations Annotations for the mlfoundry server pods
+  podAnnotations: {}
+  ## @param mlfoundryServer.podSecurityContext Security context for the mlfoundry server pods
+  podSecurityContext: {}
+  ## @param mlfoundryServer.commonLabels Common labels for the mlfoundry server pods
+  commonLabels: {}
+  ## @param mlfoundryServer.securityContext Security context for the mlfoundry server
+  securityContext: {}
+  ## mlfoundryServer.healthcheck Healthcheck settings for the mlfoundry server
+  healthcheck:
+    ## @param mlfoundryServer.healthcheck.enabled Enable healthcheck for the mlfoundry server
+    enabled: true
+    ## mlfoundryServer.healthcheck.readinessProbe Readiness probe settings for the mlfoundry server
+    readinessProbe:
+      ## @param mlfoundryServer.healthcheck.readinessProbe.failureThreshold Number of failures before readiness probe fails
+      failureThreshold: 3
+      ## mlfoundryServer.healthcheck.readinessProbe.httpGet HTTP GET settings for the readiness probe
+      httpGet:
+        ## @param mlfoundryServer.healthcheck.readinessProbe.httpGet.path Path for the readiness probe
+        path: /
+        ## @param mlfoundryServer.healthcheck.readinessProbe.httpGet.port Port for the readiness probe
+        port: 5000
+        ## @param mlfoundryServer.healthcheck.readinessProbe.httpGet.scheme Scheme for the readiness probe
+        scheme: HTTP
+      ## @param mlfoundryServer.healthcheck.readinessProbe.initialDelaySeconds Initial delay for the readiness probe
+      initialDelaySeconds: 90
+      ## @param mlfoundryServer.healthcheck.readinessProbe.periodSeconds Period for the readiness probe
+      periodSeconds: 10
+      ## @param mlfoundryServer.healthcheck.readinessProbe.successThreshold Number of successes before readiness probe succeeds
+      successThreshold: 1
+      ## @param mlfoundryServer.healthcheck.readinessProbe.timeoutSeconds Timeout for the readiness probe
+      timeoutSeconds: 1
+    ## mlfoundryServer.healthcheck.livenessProbe Liveness probe settings for the mlfoundry server
+    livenessProbe:
+      ## @param mlfoundryServer.healthcheck.livenessProbe.failureThreshold Number of failures before liveness probe fails
+      failureThreshold: 3
+      ## mlfoundryServer.healthcheck.livenessProbe.httpGet HTTP GET settings for the liveness probe
+      httpGet:
+        ## @param mlfoundryServer.healthcheck.livenessProbe.httpGet.path Path for the liveness probe
+        path: /
+        ## @param mlfoundryServer.healthcheck.livenessProbe.httpGet.port Port for the liveness probe
+        port: 5000
+        ## @param mlfoundryServer.healthcheck.livenessProbe.httpGet.scheme Scheme for the liveness probe
+        scheme: HTTP
+      ## @param mlfoundryServer.healthcheck.livenessProbe.initialDelaySeconds Initial delay for the liveness probe
+      initialDelaySeconds: 90
+      ## @param mlfoundryServer.healthcheck.livenessProbe.periodSeconds Period for the liveness probe
+      periodSeconds: 10
+      ## @param mlfoundryServer.healthcheck.livenessProbe.successThreshold Number of successes before liveness probe succeeds
+      successThreshold: 1
+      ## @param mlfoundryServer.healthcheck.livenessProbe.timeoutSeconds Timeout for the liveness probe
+      timeoutSeconds: 1
+  ## mlfoundryServer.resources Resource requests and limits for the mlfoundry server
+  resources:
+    ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
+    limits:
+      ## @param mlfoundryServer.resources.limits.cpu CPU limit for the mlfoundry server
+      cpu: 400m
+      ## @param mlfoundryServer.resources.limits.memory Memory limit for the mlfoundry server
+      memory: 2048Mi
+      ## @param mlfoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the mlfoundry server
+      ephemeral-storage: 256Mi
+    ## mlfoundryServer.resources.requests Resource requests for the mlfoundry server
+    requests:
+      ## @param mlfoundryServer.resources.requests.cpu CPU request for the mlfoundry server
+      cpu: 200m
+      ## @param mlfoundryServer.resources.requests.memory Memory request for the mlfoundry server
+      memory: 1024Mi
+      ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
+      ephemeral-storage: 128Mi
+  ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
+  nodeSelector: {}
+  ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
+  affinity: {}
+  ## @param mlfoundryServer.topologySpreadConstraints Topology spread constraints for the mlfoundry server
+  topologySpreadConstraints: {}
+  ## mlfoundryServer.ingress Ingress settings for the mlfoundry server
+  ingress:
+    ## @param mlfoundryServer.ingress.enabled Enable ingress for the mlfoundry server
+    enabled: false
+    ## @param mlfoundryServer.ingress.annotations Annotations for the mlfoundry server ingress
+    annotations: {}
+    ## @param mlfoundryServer.ingress.labels Labels for the mlfoundry server ingress
+    labels: {}
+    ## @param mlfoundryServer.ingress.ingressClassName Ingress class name for the mlfoundry server
+    ingressClassName: istio
+    ## @param mlfoundryServer.ingress.tls TLS settings for the mlfoundry server
+    tls: []
+    ## @param mlfoundryServer.ingress.hosts Hosts for the mlfoundry server
+    hosts: []
+  ## mlfoundryServer.istio Istio virtual service settings for the mlfoundry server
+  istio:
+    ## mlfoundryServer.istio.virtualservice Enable virtual service for the mlfoundry server
+    virtualservice:
+      ## @param mlfoundryServer.istio.virtualservice.enabled Enable virtual service for the mlfoundry server
+      enabled: false
+      ## @param mlfoundryServer.istio.virtualservice.annotations Annotations for the mlfoundry server virtual service
+      annotations: {}
+      ## @param mlfoundryServer.istio.virtualservice.gateways Gateways for the mlfoundry server virtual service
+      gateways: []
+      ## @param mlfoundryServer.istio.virtualservice.hosts Hosts for the mlfoundry server virtual service
+      hosts: []
+  ## mlfoundryServer.service Service settings for the mlfoundry server
+  service:
+    ## @param mlfoundryServer.service.type Service type for the mlfoundry server
+    type: ClusterIP
+    ## @param mlfoundryServer.service.port Service port for the mlfoundry server
+    port: 5000
+    ## @param mlfoundryServer.service.annotations Annotations for the mlfoundry server service
+    annotations: {}
+  ## mlfoundryServer.serviceAccount Service account settings for the mlfoundry server
+  serviceAccount:
+    ## @param mlfoundryServer.serviceAccount.create Create service account for the mlfoundry server
+    create: true
+    ## @param mlfoundryServer.serviceAccount.name Service account name for the mlfoundry server
+    name: mlfoundry-server
+    ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
+    annotations: {}
+  ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
+  imageTag: 6d338f752bea565c76621c6387261a06476ea573
+  ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
+  extraVolumes: []
+  ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
+  extraVolumeMounts: []
+  ## @skip mlfoundryServer.env Environment variables for the mlfoundry server
+  env:
+    DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
+    DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
+    DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
+    DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
+    DB_POSTGRES_SCHEMA: mlfoundry
+    DB_PORT: "5432"
+    DB_DIALECT: postgresql+psycopg2
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    ARTIFACT_ROOT: s3://{{ .Values.mlfoundryServer.env.S3_BUCKET_NAME }}
+    MLFLOW_S3_ENDPOINT_URL: "{{ .Values.mlfoundryServer.env.S3_ENDPOINT_URL }}"
+    S3_ENDPOINT_URL: ""
+    prometheus_multiproc_dir: .prom_metrics
+    MULTITENANT: "false"
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
+
+#######################
+## servicefoundryServer Settings specific to servicefoundry.
+servicefoundryServer:
+  ## @param servicefoundryServer.enabled Bool to enable the servicefoundry server
+  enabled: true
+  ## @param servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
+  replicaCount: 1
+  ## @skip servicefoundryServer.tolerations Tolerations for the servicefoundry server
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## @param servicefoundryServer.global Global values for the servicefoundry server
+  global: {}
+  ## @param servicefoundryServer.imageRepository Image repository for the servicefoundry server
+  imageRepository: truefoundrycloud/servicefoundry-server
+  ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
+  environmentName: default
+  ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
+  envSecretName: servicefoundry-server-env-secret
+  ## @param servicefoundryServer.imagePullPolicy Image pull policy for the servicefoundry server
+  imagePullPolicy: IfNotPresent
+  ## @param servicefoundryServer.nameOverride Override name for the servicefoundry server
+  nameOverride: ''
+  ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
+  fullnameOverride: ''
+  ## @param servicefoundryServer.podAnnotations Annotations for the servicefoundry server pods
+  podAnnotations: {}
+  ## @param servicefoundryServer.podSecurityContext Security context for the servicefoundry server pods
+  podSecurityContext: {}
+  ## @param servicefoundryServer.commonLabels Common labels for the servicefoundry server pods
+  commonLabels: {}
+  ## @param servicefoundryServer.securityContext Security context for the servicefoundry server
+  securityContext: {}
+  ## servicefoundryServer.healthcheck Healthcheck settings for the servicefoundry server
+  healthcheck:
+    ## @param servicefoundryServer.healthcheck.enabled Enable healthcheck for the servicefoundry server
+    enabled: true
+    ## servicefoundryServer.healthcheck.readinessProbe Readiness probe settings for the servicefoundry server
+    readiness:
+      ## @param servicefoundryServer.healthcheck.readiness.port Port for the readiness probe
+      port: 3000
+      ## @param servicefoundryServer.healthcheck.readiness.path Path for the readiness probe
+      path: /
+    ## servicefoundryServer.healthcheck.liveness Liveness probe settings for the servicefoundry server
+    liveness:
+      ## @param servicefoundryServer.healthcheck.liveness.port Port for the liveness probe
+      port: 3000
+      ## @param servicefoundryServer.healthcheck.liveness.path Path for the liveness probe
+      path: /
+  ## servicefoundryServer.resources Resource requests and limits for the servicefoundry server
+  resources:
+    ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
+    limits:
+      ## @param servicefoundryServer.resources.limits.cpu CPU limit for the servicefoundry server
+      cpu: 400m
+      ## @param servicefoundryServer.resources.limits.memory Memory limit for the servicefoundry server
+      memory: 512Mi
+      ## @param servicefoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the servicefoundry server
+      ephemeral-storage: 256Mi
+    ## servicefoundryServer.resources.requests Resource requests for the servicefoundry server
+    requests:
+      ## @param servicefoundryServer.resources.requests.cpu CPU request for the servicefoundry server
+      cpu: 200m
+      ## @param servicefoundryServer.resources.requests.memory Memory request for the servicefoundry server
+      memory: 256Mi
+      ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
+      ephemeral-storage: 128Mi
+  ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
+  nodeSelector: {}
+  ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
+  affinity: {}
+  ## @param servicefoundryServer.topologySpreadConstraints Topology spread constraints for the servicefoundry server
+  topologySpreadConstraints: {}
+  ## servicefoundryServer.ingress Ingress settings for the servicefoundry server
+  ingress:
+    ## @param servicefoundryServer.ingress.enabled Enable ingress for the servicefoundry server
+    enabled: false
+    ## @param servicefoundryServer.ingress.annotations Annotations for the servicefoundry server ingress
+    annotations: {}
+    ## @param servicefoundryServer.ingress.labels Labels for the servicefoundry server ingress
+    labels: {}
+    ## @param servicefoundryServer.ingress.ingressClassName Ingress class name for the servicefoundry server
+    ingressClassName: istio
+    ## @param servicefoundryServer.ingress.tls TLS settings for the servicefoundry server
+    tls: []
+    ## @param servicefoundryServer.ingress.hosts Hosts for the servicefoundry server
+    hosts: []
+  ## servicefoundryServer.istio Istio virtual service settings for the servicefoundry server
+  istio:
+    ## servicefoundryServer.istio.virtualservice Enable virtual service for the servicefoundry server
+    virtualservice:
+      ## @param servicefoundryServer.istio.virtualservice.enabled Enable virtual service for the servicefoundry server
+      enabled: false
+      ## @param servicefoundryServer.istio.virtualservice.annotations Annotations for the servicefoundry server virtual service
+      annotations: {}
+      ## @param servicefoundryServer.istio.virtualservice.gateways Gateways for the servicefoundry server virtual service
+      gateways: []
+      ## @param servicefoundryServer.istio.virtualservice.hosts Hosts for the servicefoundry server virtual service
+      hosts: []
+  ## servicefoundryServer.service Service settings for the servicefoundry server
+  service:
+    ## @param servicefoundryServer.service.type Service type for the servicefoundry server
+    type: ClusterIP
+    ## @param servicefoundryServer.service.port Service port for the servicefoundry server
+    port: 3000
+    ## @param servicefoundryServer.service.annotations Annotations for the servicefoundry server service
+    annotations: {}
+  ## servicefoundryServer.serviceAccount Service account settings for the servicefoundry server
+  serviceAccount:
+    ## @param servicefoundryServer.serviceAccount.create Create service account for the servicefoundry server
+    create: true
+    ## @param servicefoundryServer.serviceAccount.name Service account name for the servicefoundry server
+    name: servicefoundry-server
+    ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
+    annotations: {}
+  ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
+  extraVolumes: []
+  ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
+  extraVolumeMounts: []
+  ## servicefoundryServer.rbac RBAC settings for the servicefoundry server
+  rbac:
+    ## @param servicefoundryServer.rbac.enabled Enable RBAC for the servicefoundry server
+    enabled: true
+  ## @skip servicefoundryServer.env Environment variables for the servicefoundry server
+  env:
+    LOG_LEVEL: info
+    S3_BUCKET_NAME: ""
+    GS_BUCKET_NAME: ""
+    AZURE_BLOB_URI: ""
+    AZURE_BLOB_CONNECTION_STRING: ""
+    DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
+    DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
+    DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
+    DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
+    DB_PORT: "5432"
+    STRIPE_KEY: ""
+    STRIPE_WEBHOOK_SECRET: ""
+    SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    PORT: "3000"
+    SWAGGER_ENABLE: "0"
+    NODE_ENV: production
+    GITHUB_PRIVATE_KEY: ""
+    GITHUB_APP_ID: ""
+    GITHUB_PAT: ""
+    BITBUCKET_CLIENT_ID: ""
+    BITBUCKET_CLIENT_SECRET: ""
+    GITHUB_INSTALLATION_URL: ""
+    GITLAB_APP_ID: ""
+    GITLAB_APP_SECRET: ""
+    GITLAB_SCOPE: ""
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    TFY_BUILD_LOGS_URL: "{{ .Values.global.controlPlaneURL }}/api/svc"
+    TFY_BUILD_WS_URL: "{{ .Values.global.controlPlaneURL }}"
+    TFY_BUILD_WS_PATH: /api/svc/socket.io
+    LOKI_URL: http://loki.loki.svc.cluster.local:3100
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    ISTIO_INJECTION_STATE: disabled
+    WORKSPACE_PER_USER_WITHOUT_PAYMENT: "-1"
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    MULTITENANT: "false"
+    MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{
+      .Release.Namespace }}.svc.cluster.local:8080
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:5000
+    DEFAULT_CLOUD_PROVIDER: aws
+    MIN_CLI_VERSION: 0.10.9
+    OTEL_SERVICE_NAME: sfy-server
+    NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
+    NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace
+      }}.svc.cluster.local:4222
+    SECRET_STORE: aws-ssm
+    CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{
+      .Release.Namespace }}.svc.cluster.local:8123
+    ENABLE_SERVER_SIDE_APPLY: "true"
+    LLM_GATEWAY_URL: ""
+    TRUEFOUNDRY_PUBLIC_ENABLED: ""
+    LLM_GATEWAY_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/llm-gateway/devtest
+    MAX_REQUEST_SIZE: ""
+    METRICS_MAX_DATA_POINTS: "60"
+    PROMETHEUS_SCRAP_INTERVAL_SECONDS: "15"
+    CONTROL_PLANE_PROMETHEUS_URL: http://prometheus-operated.prometheus.svc.cluster.local:9090/
+    MODEL_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/models
+    APPLICATION_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/templates
+    CLICKHOUSE_HOST: ""
+    CLICKHOUSE_USER: ""
+    CLICKHOUSE_PASSWORD: ""
+    CLICKHOUSE_WAIT_TIMEOUT: 5m
+    HELM_CHART_EXPORT_DEPENDENCY_LIMIT: "100"
+    SLACK_ALERT_URL: ""
+    SLACK_BILLING_ALERT_URL: ""
+    DB_CONNECTION_POOL_MAX_COUNT: "10"
+    VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
+    BUILD_NAMESPACE: truefoundry
+    KUBE_CONTEXT: ""
+    BUILDKIT_SERVICE_URL: "{{ .Release.Name }}-tfy-buildkitd-service.{{
+      .Release.Namespace }}.svc.cluster.local:1234"
+    ACCESS_TFY_GATEWAY_MODELS_TENANT_DENY_LIST: ""
+    MIGRATION_SERVER_URL: https://migration-server.truefoundry.com
+    AUTOPILOT_ENABLED: "false"
+    AUTOPILOT_CONSUMER_BATCH_MAX_MESSAGES: "50"
+    AUTOPILOT_CONSUMER_MESSAGE_EXPIRY_MS: "10000"
+    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
+  configs:
+    ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
+    cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
+  ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
+  imageTag: 84088330dec13cb20e952970f3b0668518ce9b79
+
+#############################
+## sfyManifestService Settings specific to sfy-manifest-service.
+sfyManifestService:
+  ## @param sfyManifestService.enabled Bool to enable the sfy manifest service
+  enabled: true
+  # SFY_API_KEY: <api_key>
+  ## @skip sfyManifestService.tolerations Tolerations for the sfy manifest service
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## @param sfyManifestService.global Global values for the sfy manifest service
+  global: {}
+  ## @param sfyManifestService.imageRepository Image repository for the sfy manifest service
+  imageRepository: truefoundrycloud/sfy-manifest-service
+  ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
+  replicaCount: 1
+  ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
+  environmentName: default
+  ## @param sfyManifestService.envSecretName Secret name for the sfy manifest service environment variables
+  envSecretName: sfy-manifest-service-env-secret
+  ## @param sfyManifestService.imagePullPolicy Image pull policy for the sfy manifest service
+  imagePullPolicy: IfNotPresent
+  ## @param sfyManifestService.nameOverride Override name for the sfy manifest service
+  nameOverride: ''
+  ## @param sfyManifestService.fullnameOverride Full name override for the sfy manifest service
+  fullnameOverride: ''
+  ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
+  podAnnotations: {}
+  ## @param sfyManifestService.podSecurityContext Security context for the sfy manifest service pods
+  podSecurityContext: {}
+  ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
+  commonLabels: {}
+  ## @param sfyManifestService.securityContext Security context for the sfy manifest service
+  securityContext: {}
+  ## sfyManifestService.healthcheck Healthcheck settings for the sfy manifest service
+  healthcheck:
+    ## @param sfyManifestService.healthcheck.enabled Enable healthcheck for the sfy manifest service
+    enabled: true
+    ## sfyManifestService.healthcheck.readiness Readiness probe settings for the sfy manifest service
+    readiness:
+      ## @param sfyManifestService.healthcheck.readiness.port Port for the readiness probe
+      port: 8080
+      ## @param sfyManifestService.healthcheck.readiness.path Path for the readiness probe
+      path: /healthy
+    ## sfyManifestService.healthcheck.liveness Liveness probe settings for the sfy manifest service
+    liveness:
+      ## @param sfyManifestService.healthcheck.liveness.port Port for the liveness probe
+      port: 8080
+      ## @param sfyManifestService.healthcheck.liveness.path Path for the liveness probe
+      path: /healthy
+  ## sfyManifestService.resources Resource requests and limits for the sfy manifest service
+  resources:
+    ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
+    limits:
+      ## @param sfyManifestService.resources.limits.cpu CPU limit for the sfy manifest service
+      cpu: 200m
+      ## @param sfyManifestService.resources.limits.memory Memory limit for the sfy manifest service
+      memory: 256Mi
+      ## @param sfyManifestService.resources.limits.ephemeral-storage Ephemeral storage limit for the sfy manifest service
+      ephemeral-storage: 256Mi
+    ## sfyManifestService.resources.requests Resource requests for the sfy manifest service
+    requests:
+      ## @param sfyManifestService.resources.requests.cpu CPU request for the sfy manifest service
+      cpu: 100m
+      ## @param sfyManifestService.resources.requests.memory Memory request for the sfy manifest service
+      memory: 128Mi
+      ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
+      ephemeral-storage: 128Mi
+  ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
+  nodeSelector: {}
+  ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
+  affinity: {}
+  ## @param sfyManifestService.topologySpreadConstraints Topology spread constraints for the sfy manifest service
+  topologySpreadConstraints: {}
+  ## sfyManifestService.ingress Ingress settings for the sfy manifest service
+  ingress:
+    ## @param sfyManifestService.ingress.enabled Enable ingress for the sfy manifest service
+    enabled: false
+    ## @param sfyManifestService.ingress.annotations Annotations for the sfy manifest service ingress
+    annotations: {}
+    ## @param sfyManifestService.ingress.labels Labels for the sfy manifest service ingress
+    labels: {}
+    ## @param sfyManifestService.ingress.ingressClassName Ingress class name for the sfy manifest service
+    ingressClassName: istio
+    ## @param sfyManifestService.ingress.tls TLS settings for the sfy manifest service
+    tls: []
+    ## @param sfyManifestService.ingress.hosts Hosts for the sfy manifest service
+    hosts: []
+  ## sfyManifestService.istio Istio virtual service settings for the sfy manifest service
+  istio:
+    ## sfyManifestService.istio.virtualservice Enable virtual service for the sfy manifest service
+    virtualservice:
+      ## @param sfyManifestService.istio.virtualservice.enabled Enable virtual service for the sfy manifest service
+      enabled: false
+      ## @param sfyManifestService.istio.virtualservice.annotations Annotations for the sfy manifest service virtual service
+      annotations: {}
+      ## @param sfyManifestService.istio.virtualservice.gateways Gateways for the sfy manifest service virtual service
+      gateways: []
+      ## @param sfyManifestService.istio.virtualservice.hosts Hosts for the sfy manifest service virtual service
+      hosts: []
+  ## sfyManifestService.service Service settings for the sfy manifest service
+  service:
+    ## @param sfyManifestService.service.type Service type for the sfy manifest service
+    type: ClusterIP
+    ## @param sfyManifestService.service.port Service port for the sfy manifest service
+    port: 8080
+    ## @param sfyManifestService.service.annotations Annotations for the sfy manifest service
+    annotations: {}
+  ## sfyManifestService.serviceAccount Service account settings for the sfy manifest service
+  serviceAccount:
+    ## @param sfyManifestService.serviceAccount.create Create service account for the sfy manifest service
+    create: true
+    ## @param sfyManifestService.serviceAccount.name Service account name for the sfy manifest service
+    name: sfy-manifest-service
+    ## @param sfyManifestService.serviceAccount.annotations Annotations for the sfy manifest service service account
+    annotations: {}
+  ## @param sfyManifestService.extraVolumes Extra volumes for the sfy manifest service
+  extraVolumes: []
+  ## @param sfyManifestService.extraVolumeMounts Extra volume mounts for the sfy manifest service
+  extraVolumeMounts: []
+  ## @skip sfyManifestService.env Environment variables for the sfy manifest service
+  env:
+    GIN_MODE: release
+    PORT: "8080"
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
+    MLF_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:5000
+    SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    PROCESS_TICKER_PERIOD_SECONDS: "5"
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    HELM_SIZE_LIMIT_BYTES: "307200"
+    ASYNC_PROCESSOR_SIDECAR_IMAGE: public.ecr.aws/w0y0d8g6/truefoundrycloud/async_processor:35b639ea3db5490f816379de0c92a9a933338cdf
+    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.4
+    APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
+    AUTOPILOT_PROCESSOR_ENABLED: "false"
+    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
+      .Release.Namespace }}.svc.cluster.local:4222
+    AUTOPILOT_PROCESSOR_NATS_PULL_MAX_BYTES: "10485760"
+    AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
+    AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
+    AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
+  ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
+  imageTag: dd34628a7fea4529956360f718e4154636bb49a6
+
+#############################
+## nats Settings corresponding to the NATS server
+nats:
+  ## @param nats.enabled Bool to enable the NATS server
+  enabled: true
+  ## @skip nats.tolerations Tolerations for the NATS server
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## nats.nats NATS server configuration
+  nats:
+    ## @param nats.nats.image NATS server image
+    image: nats:2.10.12-alpine3.19
+    ## @param nats.nats.advertise Bool to enable NATS server advertise
+    advertise: false
+    ## nats.nats.jetstream Jetstream configuration for NATS server
+    jetstream:
+      ## @param nats.nats.jetstream.enabled Bool to enable Jetstream for NATS server
+      enabled: true
+      ## nats.nats.jetstream.memStorage Memory for Jetstream
+      memStorage:
+        ## @param nats.nats.jetstream.memStorage.enabled Bool to enable memory for Jetstream
+        enabled: true
+        ## @param nats.nats.jetstream.memStorage.size Memory Storage size for Jetstream
+        size: 1Gi
+      ## nats.nats.jetstream.fileStorage File storage for Jetstream
+      fileStorage:
+        ## @param nats.nats.jetstream.fileStorage.enabled Bool to enable file storage for Jetstream
+        enabled: true
+        ## @param nats.nats.jetstream.fileStorage.storageDirectory Storage directory
+        storageDirectory: /data
+        ## @param nats.nats.jetstream.fileStorage.size Size for file storage for Jetstream
+        size: 10Gi
+        ## @param nats.nats.jetstream.fileStorage.accessModes Storage directory Access Modes
+        accessModes:
+          - ReadWriteOnce
+    ## nats.nats.logging Logging configuration for NATS server
+    logging:
+      ## @param nats.nats.logging.debug Bool to enable debug logging for NATS server
+      debug: true
+  ## nats.natsbox NATSBox configuration
+  natsbox:
+    ## @param nats.natsbox.enabled Bool to enable NATSBox
+    enabled: false
+  ## nats.exporter NATS exporter configuration
+  exporter:
+    ## @param nats.exporter.enabled Bool to enable NATS exporter
+    enabled: true
+    ## nats.exporter.image NATS exporter image
+    image:
+      ## @param nats.exporter.image.tag NATS exporter image tag
+      tag: "0.14.0"
+  ## nats.reloader NATS reloader configuration
+  reloader:
+    ## @param nats.reloader.enabled Bool to enable NATS reloader
+    enabled: true
+    ## nats.reloader.image NATS reloader image
+    image:
+      ## @param nats.reloader.image.tag NATS reloader image tag
+      tag: "0.14.1"
+  ## nats.cluster NATS cluster configuration
+  cluster:
+    ## @param nats.cluster.enabled Bool to enable NATS cluster
+    enabled: true
+    ## @param nats.cluster.replicas Number of replicas for NATS cluster
+    replicas: 3
+    ## @param nats.cluster.noAdvertise Bool to enable NATS cluster
+    noAdvertise: true
+  ## nats.websocket NATS websocket configuration
+  websocket:
+    ## @param nats.websocket.enabled Bool to enable NATS websocket
+    enabled: true
+    ## @param nats.websocket.port Port for NATS websocket
+    port: 443
+    ## @param nats.websocket.noTLS Bool to enable NATS websocket without TLS
+    noTLS: true
+    ## @param nats.websocket.sameOrigin Bool to enable NATS websocket same origin
+    sameOrigin: false
+    ## @param nats.websocket.allowedOrigins Allowed origins for NATS websocket
+    allowedOrigins: []
+  ## nats.auth NATS authentication configuration
+  auth:
+    ## @param nats.auth.enabled Bool to enable NATS authentication
+    enabled: true
+    ## nats.auth.resolver NATS authentication resolver configuration
+    resolver:
+      ## @param nats.auth.resolver.type Type for NATS authentication resolver
+      type: memory
+      ## @skip nats.auth.resolver.configMap ConfigMap for NATS authentication resolver
+      configMap:
+        name: nats-accounts
+        key: resolver.conf
+
+#############################
+## tfyBuild Settings corresponding to the tfy-build server
+tfyBuild:
+  ## @param tfyBuild.enabled Bool to enable the tfyBuild server
+  enabled: true
+  ## @param tfyBuild.global Global values for the tfyBuild server
+  global: {}
+  ## @param tfyBuild.nameOverride Override name for the tfyBuild server
+  nameOverride: ''
+  ## @param tfyBuild.fullnameOverride Full name override for the tfyBuild server
+  fullnameOverride: ''
+  ## tfyBuild.serviceAccount Service account settings for the tfyBuild server
+  serviceAccount:
+    ## @param tfyBuild.serviceAccount.create Create service account for the tfyBuild server
+    create: true
+    ## @param tfyBuild.serviceAccount.name Service account name for the tfyBuild server
+    name: tfy-build
+    ## @param tfyBuild.serviceAccount.annotations Annotations for the tfyBuild server service account
+    annotations: {}
+  ## tfyBuild.preemptibleDeployment Preemptible deployment settings for the tfyBuild server
+  preemptibleDeployment:
+    ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
+    enabled: false
+  ## tfyBuild.truefoundryWorkflows Truefoundry workflows settings for the tfyBuild server
+  truefoundryWorkflows:
+    ## @skip tfyBuild.truefoundryWorkflows.tolerations Tolerations for the tfyBuild server
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: "cloud.google.com/gke-spot"
+        value: "true"
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.azure.com/scalesetpriority
+        value: spot
+        effect: NoSchedule
+        operator: Equal
+    ## tfyBuild.truefoundryWorkflows.sfyBuilder Settings for the sfyBuilder
+    sfyBuilder:
+      ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.version syftBuilder Version
+      version: 0.7.3
+      ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources Resource requests and limits for the sfyBuilder
+      resources:
+        ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources.limits Resource limits for the sfyBuilder
+        limits:
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.limits.cpu CPU limit for the sfyBuilder
+          cpu: 1
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.limits.ephemeral-storage Ephemeral storage limit for the sfyBuilder
+          ephemeral-storage: 20Gi
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.limits.memory Memory limit for the sfyBuilder
+          memory: 2Gi
+        ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources.requests Resource requests for the sfyBuilder
+        requests:
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.requests.cpu CPU request for the sfyBuilder
+          cpu: 200m
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.requests.ephemeral-storage Ephemeral storage request for the sfyBuilder
+          ephemeral-storage: 10Gi
+          ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.requests.memory Memory request for the sfyBuilder
+          memory: 500Mi
+    ## @skip tfyBuild.truefoundryWorkflows.buildkitd Settings for the buildkitd
+    buildkitd:
+      image: public.ecr.aws/truefoundrycloud/tfy-buildkit:0.1.0
+      metadata:
+        labels:
+          app: buildkit
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+          karpenter.sh/do-not-disrupt: 'true'
+          karpenter.sh/do-not-evict: 'true'
+      resources:
+        limits:
+          cpu: 2
+          ephemeral-storage: 70Gi
+          memory: 8Gi
+        requests:
+          cpu: 2
+          ephemeral-storage: 70Gi
+          memory: 8Gi
+      nodeSelector: {}
+      affinity: {}
+      tolerations: []
+    ## @param tfyBuild.truefoundryWorkflows.extraEnvs Extra environment variables for the tfyBuild server
+    extraEnvs: []
+    ## @param tfyBuild.truefoundryWorkflows.extraVolumeMounts Extra volume mounts for the tfyBuild server
+    extraVolumeMounts: []
+    ## @param tfyBuild.truefoundryWorkflows.extraVolumes Extra volumes for the tfyBuild server
+    extraVolumes: []
+    ## @param tfyBuild.truefoundryWorkflows.affinity Affinity settings for the tfyBuild server
+    affinity: {}
+    ## @param tfyBuild.truefoundryWorkflows.nodeSelector Node selector for the tfyBuild server
+    nodeSelector: {}
+    ##  tfyBuild.truefoundryWorkflows.logMarkers Log markers for the tfyBuild server
+    logMarkers:
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.error Error log marker for the tfyBuild server
+      error: \u001b[31m[Error]\u001b[0m
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.done Done log marker for the tfyBuild server
+      done: \u001b[32m[Done]\u001b[0m
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.start Start log marker for the tfyBuild server
+      start: \u001b[36m[Start]\u001b[0m
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.clientPrefix Client prefix for the tfyBuild server
+      clientPrefix:
+        - TFY-CLIENT
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.supportSlack Slack support URL for the tfyBuild server
+      supportSlack: >-
+        https://join.slack.com/t/truefoundry/shared_invite/zt-11ht512jq-nDJq~HJMqc6wBw90JVlo7g
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.serviceFoundryUiUrl Service foundry UI URL
+      serviceFoundryUiUrl: https://app.truefoundry.com/workspace
+    ## tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush SOCI index build and push settings for the tfyBuild server
+    sociIndexBuildAndPush:
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.enabled Bool to enable SOCI index build and push
+      enabled: false
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image Image for the SOCI index build and push
+      image: public.ecr.aws/truefoundrycloud/soci-index-builder:0.2.0-rc.1
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes Image size threshold for the SOCI index build and push
+      imageSizeThresholdBytes: 419430400
+
+#############################
+## tfyBuildkitdService Settings corresponding to the tfy-buildkitd service
+tfy-buildkitd-service:
+  ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
+  enabled: false
+  ## @skip tfy-buildkitd-service.tolerations Tolerations for the tfy-buildkitd service
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+
+#############################
+## llm-gateway Settings corresponding to the llm-gateway
+llm-gateway:
+  ## @param llm-gateway.enabled Bool to enable the LLM gateway
+  enabled: false
+  ## @param llm-gateway.replicaCount Number of replicas for the LLM gateway
+  replicaCount: 1
+  ## @param llm-gateway.env Environment variables for the LLM gateway
+  env: {}
+  ## @skip llm-gateway.tolerations Tolerations for the LLM gateway
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+
+#############################
+# To further configure the local postgres installation use the following section.
+# During cleanup, make sure to remove any stray pvc that might be created.
+## postgresql Settings corresponding to the postgresql database
+postgresql:
+  ## postgresql.auth PostgreSQL authentication configuration
+  auth:
+    ## @param postgresql.auth.existingSecret Name of the existing secret for PostgreSQL authentication
+    existingSecret: "truefoundry-postgresql-auth-secret"
+    ## @param postgresql.auth.database Name of the database for PostgreSQL
+    database: "truefoundry"
+  ## postgresql.primary Primary PostgreSQL settings
+  primary:
+    ## @skip postgresql.primary.tolerations Tolerations for the primary PostgreSQL pod
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: "cloud.google.com/gke-spot"
+        value: "true"
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.azure.com/scalesetpriority
+        value: spot
+        effect: NoSchedule
+        operator: Equal
+
+#############################
+## tfyController Settings specific to tfy-controller.
+tfyController:
+  ## @param tfyController.enabled Bool to enable the tfyController
+  enabled: true
+  ## @skip tfyController.tolerations Tolerations for the tfyController
+  tolerations:
+    - key: class.truefoundry.io/control-plane
+      effect: NoSchedule
+      operator: Exists
+    - key: "cloud.google.com/gke-spot"
+      value: "true"
+      effect: NoSchedule
+      operator: Equal
+    - key: kubernetes.azure.com/scalesetpriority
+      value: spot
+      effect: NoSchedule
+      operator: Equal
+  ## @param tfyController.global Global values for the tfyController
+  global: {}
+  ## @param tfyController.imageRepository Image repository for the tfyController
+  imageRepository: truefoundrycloud/tfy-controller
+  ## @param tfyController.environmentName Environment name for the tfyController
+  environmentName: default
+  ## @param tfyController.envSecretName Secret name for the tfyController environment variables
+  envSecretName: sfy-manifest-service-env-secret
+  ## @param tfyController.imagePullPolicy Image pull policy for the tfyController
+  imagePullPolicy: IfNotPresent
+  ## @param tfyController.nameOverride Override name for the tfyController
+  nameOverride: ''
+  ## @param tfyController.fullnameOverride Full name override for the tfyController
+  fullnameOverride: ''
+  ## @param tfyController.podAnnotations Annotations for the tfyController pods
+  podAnnotations: {}
+  ## @param tfyController.podSecurityContext Security context for the tfyController pods
+  podSecurityContext: {}
+  ## @param tfyController.commonLabels Common labels for the tfyController pods
+  commonLabels: {}
+  ## @param tfyController.securityContext Security context for the tfyController
+  securityContext: {}
+  ## @skip tfyController.healthcheck Healthcheck settings for the tfyController
+  healthcheck:
+    enabled: false
+    readiness: {}
+    liveness: {}
+  ## @skip tfyController.resources Resource requests and limits for the tfyController
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 128Mi
+  ## @param tfyController.nodeSelector Node selector for the tfyController
+  nodeSelector: {}
+  ## @param tfyController.affinity Affinity settings for the tfyController
+  affinity: {}
+  ## tfyController.service Service settings for the tfyController
+  service:
+    ## @param tfyController.service.type Service type for the tfyController
+    type: ClusterIP
+    ## @param tfyController.service.port Service port for the tfyController
+    port: 8123
+    ## @param tfyController.service.annotations Annotations for the tfyController service
+    annotations: {}
+  ## tfyController.serviceAccount Service account settings for the tfyController
+  serviceAccount:
+    ## @param tfyController.serviceAccount.create Create service account for the tfyController
+    create: true
+    ## @param tfyController.serviceAccount.name Service account name for the tfyController
+    name: tfy-controller
+    ## @param tfyController.serviceAccount.annotations Annotations for the tfyController service account
+    annotations: {}
+  ## @skip tfyController.env Environment variables for the tfyController
+  env:
+    GIN_MODE: release
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
+    SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    SFY_MANIFEST_SERVER_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{
+      .Release.Namespace }}.svc.cluster.local:8080
+    PROXY_SERVER_PORT: "{{ .Values.tfyController.service.port }}"
+    PROXY_SERVER_ENABLED: "true"
+    DEPLOYMENT_CONTROLLER_ENABLED: "true"
+    MIGRATION_CONTROLLER_ENABLED: "false"
+    MIGRATION_CONTROLLER_INTERVAL_MINUTES: "60"
+    MIGRATION_CONTROLLER_APPLICATION_HEALTH_CHECK_TIMEOUT_MINUTES: "5"
+    MIGRATION_CONTROLLER_APPLICATION_HEALTH_CHECK_INTERVAL_SECONDS: "20"
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
+    TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
+      .Release.Namespace }}.svc.cluster.local:4222
+  ## @param tfyController.imageTag Image tag for the tfyController
+  imageTag: ec7446ec58d34e884bd9e6d5802230c53dc60a55

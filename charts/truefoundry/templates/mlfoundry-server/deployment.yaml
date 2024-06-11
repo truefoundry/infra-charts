@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mlfoundry-server.fullname" . }}
+  labels:
+    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.mlfoundryServer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.mlfoundryServer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mlfoundry-server.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "mlfoundry-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.mlfoundryServer.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "mlfoundry-server"
+          securityContext:
+            {{- toYaml .Values.mlfoundryServer.securityContext | nindent 12 }}
+          env:
+            {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
+          image: "{{ .Values.mlfoundryServer.imageRepository }}:{{ .Values.mlfoundryServer.imageTag }}"
+          imagePullPolicy: {{ .Values.mlfoundryServer.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mlfoundryServer.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.mlfoundryServer.resources | nindent 12 }}
+          {{- if .Values.mlfoundryServer.healthcheck.enabled }}
+          livenessProbe:
+          {{- .Values.mlfoundryServer.healthcheck.livenessProbe | toYaml | nindent 12 }}
+          readinessProbe:
+          {{- .Values.mlfoundryServer.healthcheck.readinessProbe | toYaml | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          {{- toYaml .Values.mlfoundryServer.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.mlfoundryServer.extraVolumes | nindent 8 }}
+      {{- with .Values.mlfoundryServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlfoundryServer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlfoundryServer.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlfoundryServer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

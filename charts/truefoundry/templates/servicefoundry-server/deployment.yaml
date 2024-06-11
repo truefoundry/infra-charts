@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}
+  labels:
+    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.servicefoundryServer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.servicefoundryServer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "servicefoundry-server.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "servicefoundry-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.servicefoundryServer.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "servicefoundry-server"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
+          image: "{{ .Values.servicefoundryServer.imageRepository }}:{{ .Values.servicefoundryServer.imageTag }}"
+          imagePullPolicy: {{ .Values.servicefoundryServer.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.servicefoundryServer.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.servicefoundryServer.resources | nindent 12 }}
+          {{- if .Values.servicefoundryServer.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.servicefoundryServer.healthcheck.liveness.path }}
+              port: {{ .Values.servicefoundryServer.healthcheck.liveness.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.servicefoundryServer.healthcheck.readiness.path }}
+              port: {{ .Values.servicefoundryServer.healthcheck.liveness.port }}
+          {{- end }}
+          volumeMounts:
+            {{- include "servicefoundry-server.volumeMounts" . | nindent 12 }}
+      volumes:
+        {{- include "servicefoundry-server.volumes" . | nindent 8 }}
+      {{- with .Values.servicefoundryServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.servicefoundryServer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.servicefoundryServer.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.servicefoundryServer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
