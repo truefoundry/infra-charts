@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sfy-manifest-service.fullname" . }}
+  labels:
+    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.sfyManifestService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.sfyManifestService.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sfy-manifest-service.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "sfy-manifest-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.sfyManifestService.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "sfy-manifest-service"
+          securityContext:
+            {{- toYaml .Values.sfyManifestService.securityContext | nindent 12 }}
+          env:
+            {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
+          image: "{{ .Values.sfyManifestService.imageRepository }}:{{ .Values.sfyManifestService.imageTag }}"
+          imagePullPolicy: {{ .Values.sfyManifestService.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.sfyManifestService.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.sfyManifestService.resources | nindent 12 }}
+          {{- if .Values.sfyManifestService.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.sfyManifestService.healthcheck.liveness.path }}
+              port: {{ .Values.sfyManifestService.healthcheck.liveness.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.sfyManifestService.healthcheck.readiness.path }}
+              port: {{ .Values.sfyManifestService.healthcheck.liveness.port }}
+          {{- end }}
+          volumeMounts:
+          {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
+      {{- with .Values.sfyManifestService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sfyManifestService.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sfyManifestService.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sfyManifestService.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

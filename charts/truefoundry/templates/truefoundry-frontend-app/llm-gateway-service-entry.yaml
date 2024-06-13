@@ -1,0 +1,18 @@
+{{- if .Values.truefoundryFrontendApp.llmGateway.external }}
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: llm-gateway-{{ include "truefoundry-frontend-app.fullname" . }}
+  labels:
+    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  hosts:
+  - {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+  location: MESH_EXTERNAL
+  ports:
+  - number: {{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}
+    protocol: HTTPS
+    name: https-port
+  resolution: DNS
+{{- end }}

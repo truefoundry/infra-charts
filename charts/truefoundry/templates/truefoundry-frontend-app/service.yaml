@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "truefoundry-frontend-app.fullname" . }}
+  labels: {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.truefoundryFrontendApp.service.type }}
+  ports:
+    - port: {{ .Values.truefoundryFrontendApp.service.port }}
+      targetPort: {{ .Values.truefoundryFrontendApp.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "truefoundry-frontend-app.selectorLabels" . | nindent 4 }}

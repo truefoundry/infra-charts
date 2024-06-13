@@ -1,0 +1,39 @@
+{{- if .Values.truefoundryFrontendApp.ingress.enabled -}}
+{{- $serviceName := include "truefoundry-frontend-app.fullname" . -}}
+{{- $servicePort := .Values.truefoundryFrontendApp.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+{{- if .Values.truefoundryFrontendApp.ingress.annotations }}
+  annotations:
+  {{- range $key, $value := .Values.truefoundryFrontendApp.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
+  name: {{ include "truefoundry-frontend-app.fullname" . }}
+  labels:
+    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+    {{- if .Values.truefoundryFrontendApp.ingress.labels }}
+    {{- toYaml .Values.truefoundryFrontendApp.ingress.labels | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
+  rules:
+    {{- range $host := .Values.truefoundryFrontendApp.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ $serviceName }}
+              port:
+                number: {{ $servicePort }}
+
+    {{- end -}}
+  {{- if .Values.truefoundryFrontendApp.ingress.tls }}
+  tls:
+  {{- toYaml .Values.truefoundryFrontendApp.ingress.tls | nindent 4 }}
+  {{- end -}}
+{{- end -}}

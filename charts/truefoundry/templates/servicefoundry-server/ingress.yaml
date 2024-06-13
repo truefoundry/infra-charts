@@ -1,0 +1,39 @@
+{{- if .Values.servicefoundryServer.ingress.enabled -}}
+{{- $serviceName := include "servicefoundry-server.fullname" . -}}
+{{- $servicePort := .Values.servicefoundryServer.service.port -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+{{- if .Values.servicefoundryServer.ingress.annotations }}
+  annotations:
+  {{- range $key, $value := .Values.servicefoundryServer.ingress.annotations }}
+    {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}
+  name: {{ include "servicefoundry-server.fullname" . }}
+  labels:
+    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- if .Values.servicefoundryServer.ingress.labels }}
+    {{- toYaml .Values.servicefoundryServer.ingress.labels | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.servicefoundryServer.ingress.ingressClassName }}
+  rules:
+    {{- range $host := .Values.servicefoundryServer.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: {{ $serviceName }}
+              port:
+                number: {{ $servicePort }}
+
+    {{- end -}}
+  {{- if .Values.servicefoundryServer.ingress.tls }}
+  tls:
+  {{- toYaml .Values.servicefoundryServer.ingress.tls | nindent 4 }}
+  {{- end -}}
+{{- end -}}
