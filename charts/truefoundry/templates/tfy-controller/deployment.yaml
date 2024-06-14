@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-controller.fullname" . }}
+  labels:
+    {{- include "tfy-controller.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "tfy-controller.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyController.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-controller.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-controller.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.tfyController.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "tfy-controller"
+          securityContext:
+            {{- toYaml .Values.tfyController.securityContext | nindent 12 }}
+          env:
+            {{- include "tfy-controller.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyController.imageRepository }}:{{ .Values.tfyController.imageTag }}"
+          imagePullPolicy: {{ .Values.tfyController.imagePullPolicy }}
+          ports:
+            - name: port-{{ .Values.tfyController.service.port }}
+              containerPort: {{ .Values.tfyController.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.tfyController.resources | nindent 12 }}
+          {{- if .Values.tfyController.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.tfyController.healthcheck.liveness.path }}
+              port: {{ .Values.tfyController.healthcheck.liveness.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.tfyController.healthcheck.readiness.path }}
+              port: {{ .Values.tfyController.healthcheck.liveness.port }}
+          {{- end }}
+      {{- with .Values.tfyController.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyController.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyController.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
