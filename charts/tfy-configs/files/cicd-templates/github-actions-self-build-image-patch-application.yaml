@@ -1,0 +1,107 @@
+name: Build Image Yourself and Patch Image URI to deploy on TrueFoundry
+cicd_provider_id: github
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: patch-application
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Github Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitHub Repository, navigate to **Settings > Secrets and Variables > Actions**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Create GitHub Action
+    icon: null
+    usage: |
+      Add the below workflow as `tfy-deploy.yaml` in your github workflow directory (`.github/workflows/`).
+      Following GitHub Action will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        > **Note:** Please read through the `env` section and Image Build Section and update them for your registry and repo.
+       
+       
+        ```yaml
+        name: Deploy to TrueFoundry
+
+        on:
+          push:
+            branches:
+              - 'main'
+
+        permissions:
+          id-token: write
+          contents: read
+
+        env:
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          TFY_API_KEY: $\{{ secrets.TFY_API_KEY }}
+          APPLICATION_FQN: {{ TRUEFOUNDRY_APPLICATION_FQN }}
+          
+          # Update these with your Docker Registry and Repository
+          DOCKER_REGISTRY: docker.io
+          DOCKER_REPO_NAME: $\{{ github.event.repository.name }}
+          
+          DOCKER_IMAGE_REPO: $\{{ env.DOCKER_REGISTRY }}/$\{{ env.DOCKER_REPO_NAME }}
+          DOCKER_IMAGE_TAG: $\{{ github.sha }}
+          DOCKER_IMAGE_URI: "$\{{ env.DOCKER_IMAGE_REPO }}:$\{{ env.DOCKER_IMAGE_TAG }}"
+
+        jobs:
+          build_deploy:
+            name: Build Image
+            runs-on: ubuntu-latest
+            timeout-minutes: 30
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v3
+
+              - name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v3
+
+              ### Image Build Section ###
+
+              # Build your image, push it
+              # Here is a sample, you can replace this with your registry specific steps.
+              # The registry here should be also be linked in Integrations on TrueFoundry
+
+              # Please see https://github.com/docker/login-action?tab=readme-ov-file#usage for examples
+              name: Login to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                registry: $\{{ env.DOCKER_REGISTRY }}
+                username: $\{{ secrets.DOCKER_REGISTRY_USERNAME }}
+                password: $\{{ secrets.DOCKER_REGISTRY_PASSWORD }}
+                
+              - name: Build and push image
+                uses: docker/build-push-action@v5
+                with:
+                  platforms: linux/amd64
+                  context: .
+                  push: true
+                  tags: $\{{ env.DOCKER_IMAGE_URI }}
+                  cache-from: type=registry,ref=$\{{ env.DOCKER_IMAGE_REPO }}:buildcache
+                  cache-to: mode=max,image-manifest=true,type=registry,ref=$\{{ env.DOCKER_IMAGE_REPO }}:buildcache
+
+              ############################
+
+              - name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                  python-version: 3.11
+
+              - name: Install dependencies
+                run: |
+                  pip install truefoundry<1.0.0
+
+              - name: Deploy to workspace
+                run: |
+                  tfy patch-application --application-fqn "$\{{ env.APPLICATION_FQN }} --patch='{"image": {"image_uri": "$\{{ env.DOCKER_IMAGE_URI }}"}}'
+        ```
