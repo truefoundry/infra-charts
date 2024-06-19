@@ -1,0 +1,71 @@
+name: Build Image Yourself and Deploy Image on TrueFoundry
+cicd_provider_id: bitbucket
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: patch-application
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Bitbucket Repository, navigate to **Pipelines > Workspace variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value
+  - label: Create Bitbucket Pipeline
+    icon: null
+    usage: |
+      Add the below workflow as `bitbucket-pipelines.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        > **Note:** Please read through the `variables` section and `build-image` Steps and update them for your registry and repo.
+        
+
+        ```yaml
+        image: python:3.11.9-bullseye
+        options:
+          max-time: 30
+
+        pipelines:
+          branches:
+            main:
+              - stage:
+                  name: deploy
+                  steps:
+                    - step:
+                        name: Deploying the application
+                        services:
+                          - docker
+                        script:
+                          - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
+                          - export APPLICATION_FQN={{ TRUEFOUNDRY_APPLICATION_FQN }}
+
+                          ### Image Build Section ###
+                          # Here is a sample for docker, you can replace this with any other registry.
+                          # The registry here should be also be linked in Integrations on TrueFoundry
+                          - export DOCKER_BUILDKIT=1
+
+                          # Update these with your Docker Registry and Repository
+                          - export DOCKER_REGISTRY=docker.io
+                          - export DOCKER_REPO_NAME=$BITBUCKET_REPO_SLUG
+                          - export DOCKER_IMAGE_REPO=$DOCKER_REGISTRY/$DOCKER_REPO_NAME
+                          - export DOCKER_IMAGE_TAG=$BITBUCKET_COMMIT
+                          - export DOCKER_IMAGE_URI=$DOCKER_IMAGE_REPO:$DOCKER_IMAGE_TAG
+                          - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
+                          - docker build --cache-from $DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --tag $DOCKER_IMAGE_REPO:buildcache .
+                          - docker push $DOCKER_IMAGE_URI
+                          - docker push $DOCKER_IMAGE_REPO:buildcache
+
+                          ###########################
+                          - apt update && apt install -y jq
+                          - pip3 install "truefoundry<1.0.0"
+                          - tfy patch-application --application-fqn "$APPLICATION_FQN" --patch="{\"image\": {\"image_uri\": \"$DOCKER_IMAGE_URI\"}}"
+        ```
