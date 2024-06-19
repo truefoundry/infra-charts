@@ -1,9 +1,9 @@
-name: Upload Code, Build and Deploy using TrueFoundry
+name: Patch Commit SHA to Build and Deploy via Git Integration on TrueFoundry
 cicd_provider_id: bitbucket
 enabled: true
-description: "TrueFoundry Control Plane will pull an archive of the source code from your Storage Integrations and build the image to deploy the application."
-deployment_mode: deploy
-build_source: local
+description: "TrueFoundry Control Plane will git clone the source code and build the image to deploy the application."
+deployment_mode: patch-application
+build_source: git
 image_builder: truefoundry-control-plane
 steps:
   - label: Generate API Key
@@ -18,10 +18,6 @@ steps:
       content: |
         In your Bitbucket Repository, navigate to **Pipelines > Workspace variables**.
         Add a new secret called `TFY_API_KEY` and set the generated api key as value
-  - label: Download Application Spec
-    icon: null
-    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
-    type: download-truefoundry-spec
   - label: Create Bitbucket Pipeline
     icon: null
     usage: |
@@ -45,8 +41,8 @@ steps:
                         name: Deploying the application
                         script:
                           - export TFY_HOST={{ TRUEFOUNDRY_TFY_HOST }}
-                          - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
+                          - export APPLICATION_FQN={{ TRUEFOUNDRY_APPLICATION_FQN }}
                           - apt update && apt install -y jq
                           - pip3 install "truefoundry<1.0.0"
-                          - tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN"
+                          - tfy patch-application --application-fqn "$APPLICATION_FQN" --patch="{\"image\": {\"build_source\": {\"ref\": \"$BITBUCKET_COMMIT\"}}}"
         ```
