@@ -1,4 +1,4 @@
-# TrueFoundry LLM Gateway Monitoring Stack
+# TrueFoundry LLM Gateway Infra Stack
 
 ## Parameters
 
