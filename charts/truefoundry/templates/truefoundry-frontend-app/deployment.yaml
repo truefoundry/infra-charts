@@ -19,12 +19,8 @@ spec:
         {{- include "truefoundry-frontend-app.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "truefoundry-frontend-app.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.truefoundryFrontendApp.podSecurityContext | nindent 8 }}
       containers:
         - name: "truefoundry-frontend-app"
-          securityContext:
-            {{- toYaml .Values.truefoundryFrontendApp.securityContext | nindent 12 }}
           env:
             {{- include "truefoundry-frontend-app.env" . | trim | nindent 12 }}
           image: "{{ .Values.truefoundryFrontendApp.imageRepository }}:{{ .Values.truefoundryFrontendApp.imageTag }}"
@@ -35,16 +31,18 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.truefoundryFrontendApp.resources | nindent 12 }}
-          {{- if .Values.truefoundryFrontendApp.healthcheck.enabled }}
           livenessProbe:
+            failureThreshold: 3
             httpGet:
-              path: {{ .Values.truefoundryFrontendApp.healthcheck.liveness.path }}
-              port: {{ .Values.truefoundryFrontendApp.healthcheck.liveness.port }}
+              path: /livez
+              port: {{ .Values.truefoundryFrontendApp.service.port }}
+              scheme: HTTP
           readinessProbe:
+            failureThreshold: 3
             httpGet:
-              path: {{ .Values.truefoundryFrontendApp.healthcheck.readiness.path }}
-              port: {{ .Values.truefoundryFrontendApp.healthcheck.liveness.port }}
-          {{- end }}
+              path: /readyz
+              port: {{ .Values.truefoundryFrontendApp.service.port }}
+              scheme: HTTP
           volumeMounts:
           {{- toYaml .Values.truefoundryFrontendApp.extraVolumeMounts | nindent 12 }}
       volumes:
@@ -61,7 +59,8 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.truefoundryFrontendApp.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.truefoundryFrontendApp.tolerations }}
+        {{- .Values.truefoundryFrontendApp.tolerations | toYaml | nindent 8 }}
+        {{- end }}

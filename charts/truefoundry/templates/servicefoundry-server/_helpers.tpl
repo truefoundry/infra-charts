@@ -57,12 +57,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "servicefoundry-server.serviceAccountName" -}}
-{{- if .Values.servicefoundryServer.serviceAccount.create }}
-{{- default (include "servicefoundry-server.fullname" .) .Values.servicefoundryServer.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.servicefoundryServer.serviceAccount.name }}
+{{- default (include "servicefoundry-server.fullname" .) "servicefoundry-server" }}
+
 {{- end }}
-{{- end }}
+
 
 {{/*
   Parse env from template
