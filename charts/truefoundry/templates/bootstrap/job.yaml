@@ -21,13 +21,6 @@ spec:
         image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
         command: ["/truefoundry/truefoundry-bootstrap.sh"]
         env:
-        {{- if .Values.global.dev }}
-        - name: MODE
-          value: "dev"
-        {{- else }}
-        - name: MODE
-          value: "prod"
-        {{- end }}
         - name: TRUEFOUNDRY_NATS_CONFIGMAP
           value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
         - name: TRUEFOUNDRY_NAMESPACE
@@ -59,9 +52,10 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.truefoundryBootstrap.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.truefoundryBootstrap.tolerations }}
+        {{- .Values.truefoundryBootstrap.tolerations | toYaml | nindent 8  }}
+        {{- end }}
   backoffLimit: 2
 {{- end }}

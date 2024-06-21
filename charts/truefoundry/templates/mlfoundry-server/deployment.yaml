@@ -19,12 +19,8 @@ spec:
         {{- include "mlfoundry-server.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "mlfoundry-server.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.mlfoundryServer.podSecurityContext | nindent 8 }}
       containers:
         - name: "mlfoundry-server"
-          securityContext:
-            {{- toYaml .Values.mlfoundryServer.securityContext | nindent 12 }}
           env:
             {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
           image: "{{ .Values.mlfoundryServer.imageRepository }}:{{ .Values.mlfoundryServer.imageTag }}"
@@ -35,12 +31,26 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.mlfoundryServer.resources | nindent 12 }}
-          {{- if .Values.mlfoundryServer.healthcheck.enabled }}
           livenessProbe:
-          {{- .Values.mlfoundryServer.healthcheck.livenessProbe | toYaml | nindent 12 }}
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.mlfoundryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           readinessProbe:
-          {{- .Values.mlfoundryServer.healthcheck.readinessProbe | toYaml | nindent 12 }}
-          {{- end }}
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.mlfoundryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           volumeMounts:
           {{- toYaml .Values.mlfoundryServer.extraVolumeMounts | nindent 12 }}
       volumes:
@@ -57,7 +67,8 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.mlfoundryServer.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.mlfoundryServer.tolerations }}
+        {{- .Values.mlfoundryServer.tolerations | toYaml | nindent 8 }}
+        {{- end }}
