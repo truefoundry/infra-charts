@@ -143,22 +143,31 @@ nats:
         requests:
           cpu: 100m
           memory: 250Mi
-      env:
-        - name: NATS_ADMIN_PASSWORD
+    patch:
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name:
                 $tplYaml: '{{ .Values.global.auth.secretName }}'
               key:
                 $tplYaml: '{{ .Values.global.auth.nats.adminPasswordKey }}'
-        - name: NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD
           valueFrom:
             secretKeyRef:
               name:
                 $tplYaml: '{{ .Values.global.auth.secretName }}'
               key:
                 $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPasswordKey }}'
-        - name: NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD
           valueFrom:
             secretKeyRef:
               name:
