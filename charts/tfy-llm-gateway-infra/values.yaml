@@ -77,27 +77,12 @@ nats:
       authorization:
         users:
           - user: admin
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.adminPassword }}'
+            password: << $ADMIN_PASSWORD >>
             permissions:
               publish:
                 - '>'
               subscribe:
                 - '>'
-          - user: llm-gateway-request-logger
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPassword }}'
-            permissions:
-              publish:
-                - tfy-model-logs.>
-              subscribe:
-                - '>'
-          - user: clickhouse-request-logs-reader
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'
-            permissions:
-              subscribe:
-                - tfy-model-logs.>
         timeout: 5
     cluster:
       port: 6222
@@ -134,6 +119,9 @@ nats:
       tag: 2.10.7-alpine
       pullPolicy: IfNotPresent
       repository: nats
+    env:
+      - name: ADMIN_PASSWORD
+        value: password
     merge:
       resources:
         limits:
