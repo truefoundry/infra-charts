@@ -25,6 +25,7 @@ spec:
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
     {{- if (tpl .Values.clickhouse.user .) }}
     users:
+      clickhouse_operator/networks/ip: 127.0.0.1/8
       {{ tpl .Values.clickhouse.user . }}/password: {{ required ".Values.clickhouse.password is required" (tpl .Values.clickhouse.password .) }}
       {{ tpl .Values.clickhouse.user . }}/profile: default
       {{ tpl .Values.clickhouse.user . }}/quota: default
