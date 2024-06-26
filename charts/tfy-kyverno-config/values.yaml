@@ -3,7 +3,7 @@
 ## addCaCertificateVolume Configuration options for adding a CA certificate volume
 addCaCertificateVolume:
   ## @param addCaCertificateVolume.enabled Enable or disable adding the CA certificate volume
-  enabled: false
+  enabled: true
 
   ## @param addCaCertificateVolume.sourceNamespace The namespace where the source ConfigMap is located
   sourceNamespace: truefoundry
@@ -15,8 +15,9 @@ addCaCertificateVolume:
   destinationConfigMap:
     ## @param addCaCertificateVolume.destinationConfigMap.name The destination ConfigMap name where the CA certificate volume will be mounted
     name: ca-pemstore
-    ## @param addCaCertificateVolume.destinationConfigMap.mountPath The destination mount path where the CA certificate volume will be mounted
-    mountPath: /etc/ssl/certs
+  ## @param addCaCertificateVolume.destinationConfigMap.mountPath The destination mount path where the CA certificate volume will be mounted
+  mountPaths:
+    - /etc/ssl/certs
 
   ## @param addCaCertificateVolume.excludeNamespaces Namespaces to exclude from adding the CA certificate volume
   excludeNamespaces: []
@@ -32,7 +33,7 @@ replaceImageRegistry:
 ## @section replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 replaceArgoHelmRepo:
   ## @param replaceArgoHelmRepo.enabled Enable or disable replacing the Argo Helm repository
-  enabled: true
+  enabled: false
 
   ## @param replaceArgoHelmRepo.newRegistry The new Argo Helm registry URL
   newRegistry: ""

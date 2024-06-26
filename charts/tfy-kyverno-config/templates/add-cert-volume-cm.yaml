@@ -55,10 +55,12 @@ spec:
             containers:
             - name: {{`"{{element.name}}"`}}
               volumeMounts:
-              - name: etc-ssl-certs
-                mountPath: {{ .Values.addCaCertificateVolume.destinationConfigMap.mountPath }}
+              {{- range $index, $mountPath := .Values.addCaCertificateVolume.mountPaths }}
+              - name: injected-ca-cert
+                mountPath: {{$mountPath}}
+              {{- end }}
             volumes:
-            - name: etc-ssl-certs
+            - name: injected-ca-cert
               configMap:
                 name: {{ .Values.addCaCertificateVolume.destinationConfigMap.name }}
       - list: "request.object.spec.initContainers || []"
@@ -67,8 +69,10 @@ spec:
             initContainers:
             - name: {{`"{{element.name}}"`}}
               volumeMounts:
-              - name: etc-ssl-certs
-                mountPath: {{ .Values.addCaCertificateVolume.destinationConfigMap.mountPath }}
+              {{- range $index, $mountPath := .Values.addCaCertificateVolume.mountPaths }}
+              - name: injected-ca-cert
+                mountPath: {{$mountPath}}
+              {{- end }}
             volumes:
             - name: etc-ssl-certs
               configMap:
