@@ -175,8 +175,8 @@ nats:
 clickhouse:
   enabled: false
   clusterName: clickhouse
-  shardsCount: 2
-  replicasCount: 2
+  shardsCount: 1
+  replicasCount: 1
   user: '{{ .Values.global.auth.clickhouse.user }}'
   password: '{{ .Values.global.auth.clickhouse.password }}'
   zookeeperHost: zookeeper-headless
@@ -184,12 +184,12 @@ clickhouse:
   image: clickhouse/clickhouse-server:23.4.2
   resources:
     requests:
-      memory: 1024Mi
-      cpu: 500m
+      memory: 512Mi
+      cpu: 250m
       ephemeralStorage: 1024Mi
     limits:
-      memory: 2048Mi
-      cpu: 1000m
+      memory: 4096Mi
+      cpu: 500m
       ephemeralStorage: 2048Mi
   storage:
     storageClassName: ''

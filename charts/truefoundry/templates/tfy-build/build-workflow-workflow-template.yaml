@@ -229,6 +229,27 @@ spec:
 
             git clone --recurse-submodules $TRIMMED_URL source-code
             cd source-code && git reset --hard $GIT_REF
+        elif [[ $BUILD_TYPE == "azure" ]]; then
+            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+
+            git config --global url."https://dev.azure.com/".insteadOf git@ssh.dev.azure.com:v3/
+            git config --global url."https://".insteadOf git://
+
+            # Example of GIT_URL="https://x-token-auth:<token>@dev.azure.com/organization/project/_git/repo_name"
+            # Example of TRIMMED_URL="https://dev.azure.com/organization/project/_git/repo_name"
+
+            TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
+            TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
+
+            printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
+            
+            # Set auth token
+            git config --system credential.helper store
+            echo "https://x-token-auth:$TOKEN@dev.azure.com" > ~/.git-credentials
+
+            git clone --recurse-submodules $TRIMMED_URL source-code
+            cd source-code && git reset --hard $GIT_REF
         elif [[ $BUILD_TYPE == "notebook_build" ]]; then
             :
         else
