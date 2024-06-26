@@ -57,11 +57,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-controller.serviceAccountName" -}}
-{{- if .Values.tfyController.serviceAccount.create }}
-{{- default (include "tfy-controller.fullname" .) .Values.tfyController.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.tfyController.serviceAccount.name }}
-{{- end }}
+{{- default (include "tfy-controller.fullname" .) "tfy-controller" }}
+
 {{- end }}
 
 {{/*

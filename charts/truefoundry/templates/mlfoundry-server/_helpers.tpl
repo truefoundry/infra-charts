@@ -57,11 +57,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "mlfoundry-server.serviceAccountName" -}}
-{{- if .Values.mlfoundryServer.serviceAccount.create }}
-{{- default (include "mlfoundry-server.fullname" .) .Values.mlfoundryServer.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.mlfoundryServer.serviceAccount.name }}
-{{- end }}
+{{- default (include "mlfoundry-server.fullname" .) "mlfoundry-server" }}
 {{- end }}
 
 

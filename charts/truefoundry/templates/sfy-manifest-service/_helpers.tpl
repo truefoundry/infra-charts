@@ -57,11 +57,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "sfy-manifest-service.serviceAccountName" -}}
-{{- if .Values.sfyManifestService.serviceAccount.create }}
-{{- default (include "sfy-manifest-service.fullname" .) .Values.sfyManifestService.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.sfyManifestService.serviceAccount.name }}
-{{- end }}
+{{- default (include "sfy-manifest-service.fullname" .) "sfy-manifest-service"}}
+
 {{- end }}
 
 {{/*
