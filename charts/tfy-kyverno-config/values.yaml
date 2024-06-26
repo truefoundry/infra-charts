@@ -1,0 +1,17 @@
+# https://kyverno.io/docs/writing-policies/variables/#escaping-variables
+addCaCertificateVolume:
+  enabled: false
+  sourceNamespace: truefoundry
+  sourceConfigMap:
+    name: ca-pemstore
+  destinationConfigMap:
+    name: ca-pemstore
+    mountPath: /etc/ssl/certs
+  excludeNamespaces:
+  - truefoundry
+replaceImageRegistry:
+  enabled: false
+  newRegistry: ""
+replaceArgoHelmRepo:
+  enabled: true
+  newRegistry: "https://harbor.truefoundry.io"
