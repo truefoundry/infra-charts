@@ -2,38 +2,38 @@
 
 ## addCaCertificateVolume Configuration options for adding a CA certificate volume
 addCaCertificateVolume:
-  # @param addCaCertificateVolume.enabled Enable or disable adding the CA certificate volume
+  ## @param addCaCertificateVolume.enabled Enable or disable adding the CA certificate volume
   enabled: false
 
-  # @param addCaCertificateVolume.sourceNamespace The namespace where the source ConfigMap is located
+  ## @param addCaCertificateVolume.sourceNamespace The namespace where the source ConfigMap is located
   sourceNamespace: truefoundry
 
   sourceConfigMap:
-    # @param addCaCertificateVolume.sourceConfigMap.name The source ConfigMap name that contains the CA certificate
+    ## @param addCaCertificateVolume.sourceConfigMap.name The source ConfigMap name that contains the CA certificate
     name: ca-pemstore
 
   destinationConfigMap:
-    # @param addCaCertificateVolume.destinationConfigMap.name The destination ConfigMap name where the CA certificate volume will be mounted
+    ## @param addCaCertificateVolume.destinationConfigMap.name The destination ConfigMap name where the CA certificate volume will be mounted
     name: ca-pemstore
-    # @param addCaCertificateVolume.destinationConfigMap.mountPath The destination mount path where the CA certificate volume will be mounted
+    ## @param addCaCertificateVolume.destinationConfigMap.mountPath The destination mount path where the CA certificate volume will be mounted
     mountPath: /etc/ssl/certs
 
-  # @param addCaCertificateVolume.excludeNamespaces Namespaces to exclude from adding the CA certificate volume
+  ## @param addCaCertificateVolume.excludeNamespaces Namespaces to exclude from adding the CA certificate volume
   excludeNamespaces:
   - truefoundry
 
 ## @section replaceImageRegistry Configuration options for replacing the image registry
 replaceImageRegistry:
-  # @param replaceImageRegistry.enabled Enable or disable replacing the image registry
+  ## @param replaceImageRegistry.enabled Enable or disable replacing the image registry
   enabled: false
 
-  # @param replaceImageRegistry.newRegistry The new image registry to use
+  ## @param replaceImageRegistry.newRegistry The new image registry to use
   newRegistry: ""
 
 ## @section replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 replaceArgoHelmRepo:
-  # @param replaceArgoHelmRepo.enabled Enable or disable replacing the Argo Helm repository
+  ## @param replaceArgoHelmRepo.enabled Enable or disable replacing the Argo Helm repository
   enabled: true
 
-  # @param replaceArgoHelmRepo.newRegistry The new Argo Helm registry URL
+  ## @param replaceArgoHelmRepo.newRegistry The new Argo Helm registry URL
   newRegistry: "https://harbor.truefoundry.io"
