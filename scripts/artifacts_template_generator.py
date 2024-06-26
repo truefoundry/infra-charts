@@ -3,12 +3,15 @@ import sys
 import json
 import subprocess
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
-        print(f"Command failed: {command}")
-        print(result.stderr)
+        logging.error(f"Command failed: {command}\n{result.stderr}")
         sys.exit(1)
     return result.stdout
 
@@ -37,8 +40,7 @@ def extract_chart_info(manifest_file):
 def save_chart_info(chart_info_list, output_file):
     with open(output_file, 'w') as f:
         json.dump(chart_info_list, f, indent=4)
-
-    print(f"Chart information saved to {output_file}")
+    logging.info(f"Chart information saved to {output_file}")
 
 def process_chart_info(chart_info_list):
     chart_detail_list = []
@@ -49,18 +51,13 @@ def process_chart_info(chart_info_list):
         targetRevision = details["targetRevision"]
         values = details["values"]
 
-        #
-        if chart in ["keda", "cost-analyzer", "argo-cd"]:
-            print(f"Skipping chart {chart}")
-            continue
-
-        # if chart is aws-load-balancer-controller then update the values to include the clusterName
         if chart == "aws-load-balancer-controller":
             values = values.replace("clusterName: \"\"", "clusterName: \"my-cluster\"")
 
         run_command(f"helm repo add {chart} {repoURL}")
 
         values_file = f"charts/{chart}-values.yaml"
+        os.makedirs(os.path.dirname(values_file), exist_ok=True)
         with open(values_file, "w") as f:
             f.write(values)
 
@@ -70,11 +67,12 @@ def process_chart_info(chart_info_list):
             yaml_content = f.read()
             images = extract_images_from_k8s_manifests(yaml_content)
 
-            print(f"Images: {images}")
+            logging.info(f"Images extracted: {images}")
 
             chart_detail_list.append(images)
 
-    return chart_detail_list
+    flattened_list = [item for sublist in chart_detail_list for item in sublist]
+    return flattened_list
 
 def generate_manifests(chart_name, chart_repo_url, values_file):
     temp_dir = "temp"
@@ -83,18 +81,17 @@ def generate_manifests(chart_name, chart_repo_url, values_file):
     run_command("helm repo update")
     run_command(f"helm search repo temp-repo/{chart_name}")
 
-    print(f"Downloading the chart {chart_name} from the repository {chart_repo_url}")
+    logging.info(f"Downloading the chart {chart_name} from the repository {chart_repo_url}")
     run_command(f"helm pull temp-repo/{chart_name} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
-    print(f"Generating the manifests for the chart {chart_name} using the values file {values_file}")
+    logging.info(f"Generating the manifests for the chart {chart_name} using the values file {values_file}")
     run_command(f"helm template my-release -f {values_file} {chart_dir} > {manifest_file}")
 
     return manifest_file
 
 def extract_images_from_k8s_manifests(yaml_content):
-    # list of k8s resources that can have images
     resources_with_images = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Pod', 'ReplicaSet']
     try:
         manifests = yaml.safe_load_all(yaml_content)
@@ -120,9 +117,8 @@ def extract_images_from_k8s_manifests(yaml_content):
                             }
                         }
                         image_info_list.append(container_image_info)
-
     except yaml.YAMLError as e:
-        print(f"Error parsing YAML: {e}")
+        logging.error(f"Error parsing YAML: {e}")
         return None
 
     return image_info_list
