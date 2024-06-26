@@ -1,0 +1,47 @@
+{{- if .Values.replaceImageRegistry.enabled -}}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-replace-image-registry
+  namespace: {{ .Release.Namespace }}
+spec:
+  background: false
+  rules:
+  - name: redirect-docker
+    match:
+      any:
+      - resources:
+          kinds:
+            - Pod
+          operations:
+            - CREATE
+            - UPDATE
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        context:
+          - name: newRegistry
+            variable:
+              value: {{ .Values.replaceImageRegistry.newRegistry }}
+          - name: normalizedImageURL
+            variable:
+              value: {{`"{{image_normalize(element.image)}}"`}}
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: {{`"{{ element.name }}"`}}
+              image: {{`"{{ regex_replace_all_literal('^[^/]+', '{{normalizedImageURL}}', '{{newRegistry}}' )}}"`}}
+      - list: "request.object.spec.initContainers || []"
+        context:
+          - name: newRegistry
+            variable:
+              value: {{ .Values.replaceImageRegistry.newRegistry }}
+          - name: normalizedImageURL
+            variable:
+              value: {{`"{{image_normalize(element.image)}}"`}}
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: {{`"{{ element.name }}"`}}
+              image: {{`"{{ regex_replace_all_literal('^[^/]+', '{{normalizedImageURL}}', '{{newRegistry}}' )}}"`}}
+{{- end -}}
