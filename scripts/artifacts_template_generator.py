@@ -74,15 +74,15 @@ def process_chart_info(chart_info_list):
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
     return flattened_list
 
-def generate_manifests(chart_name, chart_repo_url, values_file):
+def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     temp_dir = "temp"
 
     run_command(f"helm repo add temp-repo {chart_repo_url}")
     run_command("helm repo update")
     run_command(f"helm search repo temp-repo/{chart_name}")
 
-    logging.info(f"Downloading the chart {chart_name} from the repository {chart_repo_url}")
-    run_command(f"helm pull temp-repo/{chart_name} --untar --untardir {temp_dir}")
+    logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
+    run_command(f"helm pull temp-repo/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
@@ -124,16 +124,17 @@ def extract_images_from_k8s_manifests(yaml_content):
     return image_info_list
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <values.yaml> <output.json>")
+    if len(sys.argv) != 6:
+        print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json>")
         sys.exit(1)
 
     chart_name = sys.argv[1]
     chart_repo_url = sys.argv[2]
-    values_file = sys.argv[3]
-    output_file = sys.argv[4]
+    chart_version = sys.argv[3]
+    values_file = sys.argv[4]
+    output_file = sys.argv[5]
 
-    manifest_file = generate_manifests(chart_name, chart_repo_url, values_file)
+    manifest_file = generate_manifests(chart_name, chart_repo_url, chart_version, values_file)
 
     chart_info_list = extract_chart_info(manifest_file)
     image_info_list = process_chart_info(chart_info_list)
