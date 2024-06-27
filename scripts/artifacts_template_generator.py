@@ -24,16 +24,17 @@ def extract_chart_info(manifest_file):
         for doc in manifest:
             if isinstance(doc, dict) and 'spec' in doc:
                 source = doc['spec'].get('source', {})
-                chart_info = {
-                    "type": "helm",
-                    "details": {
-                        "chart": source.get('chart', 'Not found'),
-                        "repoURL": source.get('repoURL', 'Not found'),
-                        "targetRevision": source.get('targetRevision', 'Not found'),
-                        "values": source.get('helm', {}).get('values', 'Not found')
+                if source:
+                    chart_info = {
+                        "type": "helm",
+                        "details": {
+                            "chart": source.get('chart', 'Not found'),
+                            "repoURL": source.get('repoURL', 'Not found'),
+                            "targetRevision": source.get('targetRevision', 'Not found'),
+                            "values": source.get('helm', {}).get('values', 'Not found')
+                        }
                     }
-                }
-                chart_info_list.append(chart_info)
+                    chart_info_list.append(chart_info)
 
     return chart_info_list
 

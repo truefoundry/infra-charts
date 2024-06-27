@@ -50,9 +50,9 @@ def pull_and_push_images(image_list, destination_registry, region):
             logging.error(f"Failed to pull image: {image_url}. Error: {e}")
             continue
 
-        image_name_tag = image_url.split('/')[-1]
-        image_name = image_name_tag.split(':')[0]
-        image_tag = image_name_tag.split(':')[1] if ':' in image_name_tag else 'latest'
+        image_name_tag = image_url.split('/')[1:]
+        image_name = "/".join(image_name_tag[:-1]) + "/" + image_name_tag[-1].split(':')[0]
+        image_tag = image_name_tag[-1].split(':')[1] if ':' in image_name_tag[-1] else 'latest'
 
         new_image_url = f"{destination_registry}/{image_name}:{image_tag}"
         repository_name = destination_registry.split('/')[-1]
