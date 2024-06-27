@@ -15,6 +15,13 @@ def run_command(command):
         sys.exit(1)
     return result.stdout
 
+def make_image_list_unique(image_list):
+    unique_images = []
+    for image in image_list:
+        if image not in unique_images:
+            unique_images.append(image)
+    return unique_images
+
 def extract_chart_info(manifest_file):
     chart_info_list = []
 
@@ -64,16 +71,18 @@ def process_chart_info(chart_info_list):
 
         run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > charts/{chart}.yaml")
 
-        with open(f"charts/{chart}.yaml", "r") as f:
-            yaml_content = f.read()
-            images = extract_images_from_k8s_manifests(yaml_content)
+        images = save_image_info(manifest_file)
 
-            logging.info(f"Images extracted: {images}")
-
-            chart_detail_list.append(images)
+        chart_detail_list.append(images)
 
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
     return flattened_list
+
+def save_image_info(manifest_file):
+    with open(manifest_file, "r") as f:
+        yaml_content = f.read()
+        images = extract_images_from_k8s_manifests(yaml_content)
+        return images
 
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     temp_dir = "temp"
@@ -143,7 +152,10 @@ if __name__ == "__main__":
     manifest_file = generate_manifests(chart_name, chart_repo_url, chart_version, values_file)
 
     chart_info_list = extract_chart_info(manifest_file)
-    image_info_list = process_chart_info(chart_info_list)
+    if chart_info_list:
+        image_info_list = process_chart_info(chart_info_list)
+    else:
+        image_info_list = make_image_list_unique(save_image_info(manifest_file))
 
     for chart_info in chart_info_list:
         chart_info["details"].pop("values", None)
