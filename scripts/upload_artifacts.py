@@ -10,6 +10,9 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# get AWS_PROFILE from environment variable or use default value
+AWS_PROFILE = os.getenv('AWS_PROFILE', 'default')
+
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
@@ -18,7 +21,7 @@ def run_command(command):
     return result.stdout
 
 def create_ecr_repository(repository_name, region):
-    session = boto3.Session(profile_name="devtest-admin")
+    session = boto3.Session(profile_name=AWS_PROFILE)
     client = session.client('ecr', region_name=region)
     try:
         response = client.create_repository(repositoryName=repository_name)
@@ -47,8 +50,10 @@ def pull_and_push_images(image_list, destination_registry, region):
             logging.error(f"Failed to pull image: {image_url}. Error: {e}")
             continue
 
-        image_name = image_url.split('/')[-1].split(':')[0]
-        image_tag = image_url.split('/')[-1].split(':')[1]
+        image_name_tag = image_url.split('/')[-1]
+        image_name = image_name_tag.split(':')[0]
+        image_tag = image_name_tag.split(':')[1] if ':' in image_name_tag else 'latest'
+
         new_image_url = f"{destination_registry}/{image_name}:{image_tag}"
         repository_name = destination_registry.split('/')[-1]
 

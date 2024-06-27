@@ -102,14 +102,19 @@ def extract_images_from_k8s_manifests(yaml_content):
             if 'kind' in manifest and 'spec' in manifest:
                 kind = manifest['kind']
                 if kind in resources_with_images:
+                    containers = []
+                    init_containers = []
                     if 'template' in manifest['spec']:
                         containers = manifest['spec']['template']['spec'].get('containers', [])
+                        init_containers = manifest['spec']['template']['spec'].get('initContainers', [])
                     elif kind == 'CronJob' and 'jobTemplate' in manifest['spec']:
                         containers = manifest['spec']['jobTemplate']['spec']['template']['spec'].get('containers', [])
+                        init_containers = manifest['spec']['jobTemplate']['spec']['template']['spec'].get('initContainers', [])
                     else:
                         containers = manifest['spec'].get('containers', [])
+                        init_containers = manifest['spec'].get('initContainers', [])
 
-                    for container in containers:
+                    for container in containers + init_containers:
                         container_image_info = {
                             "type": "image",
                             "details": {
