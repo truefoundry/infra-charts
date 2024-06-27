@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mlfoundry-server.fullname" . }}
+  labels:
+    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.mlfoundryServer.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.mlfoundryServer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "mlfoundry-server.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "mlfoundry-server.serviceAccountName" . }}
+      containers:
+        - name: "mlfoundry-server"
+          env:
+            {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
+          image: "{{ .Values.mlfoundryServer.imageRepository }}:{{ .Values.mlfoundryServer.imageTag }}"
+          imagePullPolicy: {{ .Values.mlfoundryServer.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mlfoundryServer.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.mlfoundryServer.resources | nindent 12 }}
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.mlfoundryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: {{ .Values.mlfoundryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+          {{- toYaml .Values.mlfoundryServer.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.mlfoundryServer.extraVolumes | nindent 8 }}
+      {{- with .Values.mlfoundryServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlfoundryServer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlfoundryServer.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.mlfoundryServer.tolerations }}
+        {{- .Values.mlfoundryServer.tolerations | toYaml | nindent 8 }}
+        {{- end }}
