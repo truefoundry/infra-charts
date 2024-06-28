@@ -8,6 +8,9 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+temp_dir = "/tmp/helm_charts"
+
+# function to run shell commands
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if result.returncode != 0:
@@ -15,6 +18,7 @@ def run_command(command):
         sys.exit(1)
     return result.stdout
 
+# function to make image list unique
 def make_image_list_unique(image_list):
     unique_images = []
     for image in image_list:
@@ -22,6 +26,7 @@ def make_image_list_unique(image_list):
             unique_images.append(image)
     return unique_images
 
+# function to extract chart information from the manifest file
 def extract_chart_info(manifest_file):
     chart_info_list = []
 
@@ -45,11 +50,13 @@ def extract_chart_info(manifest_file):
 
     return chart_info_list
 
+# function to save chart information to a file
 def save_chart_info(chart_info_list, output_file):
     with open(output_file, 'w') as f:
         json.dump(chart_info_list, f, indent=4)
     logging.info(f"Chart information saved to {output_file}")
 
+# function to process chart information
 def process_chart_info(chart_info_list):
     chart_detail_list = []
     for chart_info in chart_info_list:
@@ -64,35 +71,35 @@ def process_chart_info(chart_info_list):
 
         run_command(f"helm repo add {chart} {repoURL}")
 
-        values_file = f"charts/{chart}-values.yaml"
+        values_file = f"{temp_dir}/charts/{chart}-values.yaml"
         os.makedirs(os.path.dirname(values_file), exist_ok=True)
         with open(values_file, "w") as f:
             f.write(values)
 
-        run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > charts/{chart}.yaml")
+        run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
 
-        images = save_image_info(manifest_file)
+        images = save_image_info(f"{temp_dir}/charts/{chart}.yaml")
 
         chart_detail_list.append(images)
 
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
     return flattened_list
 
+# function to save image information to a file
 def save_image_info(manifest_file):
     with open(manifest_file, "r") as f:
         yaml_content = f.read()
         images = extract_images_from_k8s_manifests(yaml_content)
         return images
 
+# function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
-    temp_dir = "temp"
-
-    run_command(f"helm repo add temp-repo {chart_repo_url}")
+    run_command(f"helm repo add {chart_name} {chart_repo_url}")
     run_command("helm repo update")
-    run_command(f"helm search repo temp-repo/{chart_name}")
+    run_command(f"helm search repo {chart_name}/{chart_name}")
 
     logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
-    run_command(f"helm pull temp-repo/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+    run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
@@ -101,6 +108,7 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
 
     return manifest_file
 
+# function to extract images from Kubernetes manifests
 def extract_images_from_k8s_manifests(yaml_content):
     resources_with_images = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Pod', 'ReplicaSet']
     try:
@@ -138,6 +146,9 @@ def extract_images_from_k8s_manifests(yaml_content):
 
     return image_info_list
 
+def clean_up(temp_dir):
+    run_command(f"rm -rf {temp_dir}")
+
 if __name__ == "__main__":
     if len(sys.argv) != 6:
         print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json>")
@@ -163,3 +174,5 @@ if __name__ == "__main__":
     chart_info_list.extend(image_info_list)
 
     save_chart_info(chart_info_list, output_file)
+
+    clean_up(temp_dir)
