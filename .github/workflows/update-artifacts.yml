@@ -11,13 +11,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Checkout Code
-            uses: actions/checkout@v3
-            with:
+          uses: actions/checkout@v3
+          with:
             fetch-depth: 0
 
         - name: Set up Helm
-            uses: azure/setup-helm@v3.5
-            with:
+          uses: azure/setup-helm@v3.5
+          with:
             version: v3.9.2
 
         - uses: actions/setup-python@v5
@@ -29,8 +29,8 @@ jobs:
 
           # get the latest version of the chart in charts/tfy-k8s-aws-eks-inframold/Chart.yaml
         - name: Get Chart Version
-            id: get_chart_version
-            run: echo ::set-output name=chart_version::$(cat charts/tfy-k8s-aws-eks-inframold/Chart.yaml | grep version | awk '{print $2}')
+          id: get_chart_version
+          run: echo ::set-output name=chart_version::$(cat charts/tfy-k8s-aws-eks-inframold/Chart.yaml | grep version | awk '{print $2}')
 
 
         - name: Generate Artifacts Manifest
