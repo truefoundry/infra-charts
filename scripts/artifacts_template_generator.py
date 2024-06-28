@@ -78,7 +78,7 @@ def process_chart_info(chart_info_list):
 
         run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
 
-        images = save_image_info(f"{temp_dir}/charts/{chart}.yaml")
+        images = make_image_list_unique(save_image_info(f"{temp_dir}/charts/{chart}.yaml"))
 
         chart_detail_list.append(images)
 

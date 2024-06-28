@@ -4,8 +4,10 @@ import os
 import subprocess
 import yaml
 import boto3
-from botocore.exceptions import ClientError
 import logging
+
+from botocore.exceptions import ClientError
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -16,6 +18,7 @@ AWS_PROFILE = os.getenv('AWS_PROFILE', 'default')
 # get docker image architecture to use from environment variable or use default value
 DOCKER_IMAGE_ARCHITECTURE = os.getenv('CLUSTER_ARCHITECTURE', 'linux/amd64')
 
+tmp_dir = "/tmp/helm_charts"
 # function to run shell commands
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -123,18 +126,21 @@ def download_and_push_helm_charts(helm_list, destination_registry, region):
         logging.info(f"Downloading Helm chart: {chart} from {repo_url}")
         try:
             run_command(f"helm repo add {chart} {repo_url}")
-            run_command(f"helm pull {chart}/{chart} --version {target_revision}  {temp_dir}")
+            run_command(f"helm pull {chart}/{chart} --version {target_revision} ")
             logging.info(f"Successfully downloaded Helm chart: {chart}")
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to download Helm chart: {chart}. Error: {e}")
             continue
 
+        # get registry URL
+        registry_path = urlparse(repo_url).path.strip('/')
+
         chart_package = f"{chart}-{target_revision}.tgz"
-        new_chart_url = f"oci://{destination_registry}"
+        new_chart_url = f"oci://{destination_registry}/{registry_path}/"
 
         logging.info(f"Pushing Helm chart: {new_chart_url}")
         try:
-            create_ecr_repository(chart, region)
+            create_ecr_repository(f"{registry_path}/{chart}", region)
             run_command(f"helm push {chart_package} {new_chart_url}")
             logging.info(f"Successfully pushed Helm chart: {chart_package}")
         except subprocess.CalledProcessError as e:
@@ -178,4 +184,4 @@ if __name__ == "__main__":
 
     process_manifest(file_path, destination_registry, aws_region)
 
-    clean_up("/tmp/helm_charts")
+    clean_up(temp_dir)
