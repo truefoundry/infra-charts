@@ -159,7 +159,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: b6f0f93097c458521032e21cdee5c3024295ad5c
+  imageTag: cb36cdf3c3fa5d74e2ba4e291c86f6ace48f2235
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -448,7 +448,7 @@ servicefoundryServer:
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{
       .Release.Namespace }}.svc.cluster.local:5000
     DEFAULT_CLOUD_PROVIDER: aws
-    MIN_CLI_VERSION: 0.10.9
+    MIN_CLI_VERSION: 0.2.0
     OTEL_SERVICE_NAME: sfy-server
     NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
     NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace
@@ -492,7 +492,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: cb8d5aa9b3e4e23dfcaa411d863a40acf04dd847
+  imageTag: a665b802391be1a90ccb33e6ae7a7b4a8a1c4532
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -586,7 +586,7 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: 9cba08f3fcdd2b6b7c20f3236eb861bcd25f10e4
+  imageTag: ca14e961fa0f0b8fc63bd184bc73e1aa5d859460
 
 #############################
 ## nats Settings corresponding to the NATS server
