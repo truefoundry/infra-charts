@@ -21,45 +21,45 @@ spec:
   {{- end }}
   hosts:
   {{- range .Values.truefoundryFrontendApp.istio.virtualservice.hosts}}
-  - {{ . }}
+    - {{ . }}
   {{- end }}
   http:
-  - match:
-      - uri:
-          prefix: "/api/svc/socket.io"
-    rewrite:
-      uri: /socket.io
-    route:
-      - destination:
-          host: {{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}
-          port:
-            number: 3000
-  - match:
-      - uri:
-          prefix: "/api/llm/"
-    rewrite:
-      uri: /
+    - match:
+        - uri:
+            prefix: "/api/svc/socket.io"
+      rewrite:
+        uri: /socket.io
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}
+            port:
+              number: 3000
+    - match:
+        - uri:
+            prefix: "/api/llm/"
+      rewrite:
+        uri: /
       {{- if .Values.truefoundryFrontendApp.llmGateway.external }}
-      authority: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+        authority: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
       {{- end }}
-    route:
-      - destination:
-          host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
-          port:
-            number: {{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}
-  - match:
-      - uri:
-          prefix: /api/proxy-server/
-    rewrite:
-      uri: /
-    route:
-      - destination:
-          host: {{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}
-          port:
-            number: 8123
-  - route:
-    - destination:
-        host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
-        port:
-          number: {{ .Values.truefoundryFrontendApp.service.port }}
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+            port:
+              number: {{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}
+    - match:
+        - uri:
+            prefix: /api/proxy-server/
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}
+            port:
+              number: 8123
+    - route:
+        - destination:
+            host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.truefoundryFrontendApp.service.port }}
 {{- end }}

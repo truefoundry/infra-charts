@@ -57,11 +57,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "truefoundry-frontend-app.serviceAccountName" -}}
-{{- if .Values.truefoundryFrontendApp.serviceAccount.create }}
-{{- default (include "truefoundry-frontend-app.fullname" .) .Values.truefoundryFrontendApp.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.truefoundryFrontendApp.serviceAccount.name }}
-{{- end }}
+{{- default (include "truefoundry-frontend-app.fullname" .) "truefoundry-frontend-app" }}
 {{- end }}
 
 {{/*

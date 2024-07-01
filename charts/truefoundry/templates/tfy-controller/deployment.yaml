@@ -19,12 +19,8 @@ spec:
         {{- include "tfy-controller.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-controller.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.tfyController.podSecurityContext | nindent 8 }}
       containers:
         - name: "tfy-controller"
-          securityContext:
-            {{- toYaml .Values.tfyController.securityContext | nindent 12 }}
           env:
             {{- include "tfy-controller.env" . | trim | nindent 12 }}
           image: "{{ .Values.tfyController.imageRepository }}:{{ .Values.tfyController.imageTag }}"
@@ -35,16 +31,12 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.tfyController.resources | nindent 12 }}
-          {{- if .Values.tfyController.healthcheck.enabled }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.tfyController.healthcheck.liveness.path }}
-              port: {{ .Values.tfyController.healthcheck.liveness.port }}
           readinessProbe:
+            failureThreshold: 3
             httpGet:
-              path: {{ .Values.tfyController.healthcheck.readiness.path }}
-              port: {{ .Values.tfyController.healthcheck.liveness.port }}
-          {{- end }}
+              path: /healthy
+              port: {{ .Values.tfyController.service.port }}
+              scheme: HTTP
       {{- with .Values.tfyController.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -53,7 +45,8 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyController.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyController.tolerations }}
+        {{- .Values.tfyController.tolerations | toYaml | nindent 8 }}
+        {{- end }}

@@ -19,12 +19,8 @@ spec:
         {{- include "sfy-manifest-service.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "sfy-manifest-service.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.sfyManifestService.podSecurityContext | nindent 8 }}
       containers:
         - name: "sfy-manifest-service"
-          securityContext:
-            {{- toYaml .Values.sfyManifestService.securityContext | nindent 12 }}
           env:
             {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
           image: "{{ .Values.sfyManifestService.imageRepository }}:{{ .Values.sfyManifestService.imageTag }}"
@@ -35,16 +31,14 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.sfyManifestService.resources | nindent 12 }}
-          {{- if .Values.sfyManifestService.healthcheck.enabled }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.sfyManifestService.healthcheck.liveness.path }}
-              port: {{ .Values.sfyManifestService.healthcheck.liveness.port }}
+              path: /healthy
+              port: {{ .Values.sfyManifestService.service.port }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.sfyManifestService.healthcheck.readiness.path }}
-              port: {{ .Values.sfyManifestService.healthcheck.liveness.port }}
-          {{- end }}
+              path: /healthy
+              port: {{ .Values.sfyManifestService.service.port }}
           volumeMounts:
           {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
       volumes:
@@ -61,7 +55,8 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.sfyManifestService.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.sfyManifestService.tolerations }}
+        {{- .Values.sfyManifestService.tolerations | toYaml | nindent 8 }}
+        {{- end }}

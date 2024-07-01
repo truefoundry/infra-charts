@@ -34,9 +34,5 @@ Expand the name of the chart.
   Create the name of the service account to use
   */}}
 {{- define "tfy-build.serviceAccountName" -}}
-{{- if .Values.tfyBuild.serviceAccount.create }}
-{{- default (include "tfy-build.fullname" .) .Values.tfyBuild.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.tfyBuild.serviceAccount.name }}
-{{- end }}
+{{- default (include "tfy-build.fullname" .) "tfy-build" }}
 {{- end }}
