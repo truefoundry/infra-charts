@@ -23,18 +23,6 @@ spec:
       nodes:
         - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
-    {{- if (tpl .Values.clickhouse.user .) }}
-    users:
-      clickhouse_operator/networks/ip:
-        - 0.0.0.0/0
-        - ::/0
-      {{ tpl .Values.clickhouse.user . }}/password: {{ required ".Values.clickhouse.password is required" (tpl .Values.clickhouse.password .) }}
-      {{ tpl .Values.clickhouse.user . }}/profile: default
-      {{ tpl .Values.clickhouse.user . }}/quota: default
-      {{ tpl .Values.clickhouse.user . }}/networks/ip:
-        - 0.0.0.0/0
-        - ::/0
-    {{- end }}
     files:
       config.d/named-collections.xml: |
         <clickhouse>
@@ -60,6 +48,26 @@ spec:
                 <console>1</console>
             </logger>
         </clickhouse>
+      users.xml: |-
+        <users>
+            <clickhouse_operator>
+                <networks>
+                    <ip>0.0.0.0/0</ip>
+                    <ip>::/0</ip>
+                </networks>
+            </clickhouse_operator>
+            {{- if (tpl .Values.global.auth.clickhouse.user .) }}
+            <{{ tpl .Values.global.auth.clickhouse.user . }}>
+                <password from_env="{{ .Values.global.auth.clickhouse.passwordKey }}"/>
+                <profile>default</profile>
+                <quota>default</quota>
+                <networks>
+                    <ip>0.0.0.0/0</ip>
+                    <ip>::/0</ip>
+                </networks>
+            </{{ tpl .Values.global.auth.clickhouse.user . }}>
+            {{- end }}
+        </users>
   templates:
     serviceTemplates:
       - name: svc-template
