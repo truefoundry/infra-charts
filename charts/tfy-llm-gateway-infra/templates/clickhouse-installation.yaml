@@ -58,7 +58,7 @@ spec:
             </clickhouse_operator>
             {{- if (tpl .Values.global.auth.clickhouse.user .) }}
             <{{ tpl .Values.global.auth.clickhouse.user . }}>
-                <password from_env="{{ .Values.global.auth.clickhouse.passwordKey }}"/>
+                <password from_env="CLICKHOUSE_PASSWORD"/>
                 <profile>default</profile>
                 <quota>default</quota>
                 <networks>
@@ -113,6 +113,11 @@ spec:
                   value: "JSONEachRow"
                 - name: DATE_TIME_INPUT_FORMAT
                   value: "best_effort"
+                - name: CLICKHOUSE_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.global.auth.secretName }}
+                      key: {{ .Values.global.auth.clickhouse.passwordKey }}
 
               resources:
                 requests:
