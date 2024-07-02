@@ -87,14 +87,14 @@ nats:
             password: << $NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD >>
             permissions:
               publish:
-                - request_log.>
+                - request-log.>
               subscribe:
                 - '>'
           - user: clickhouse-request-logs-reader
             password: << $NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD >>
             permissions:
               subscribe:
-                - request_log.>
+                - request-log.>
         timeout: 5
     cluster:
       port: 6222
