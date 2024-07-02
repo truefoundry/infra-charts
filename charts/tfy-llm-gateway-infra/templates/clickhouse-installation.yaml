@@ -49,25 +49,27 @@ spec:
             </logger>
         </clickhouse>
       users.xml: |-
-        <users>
-            <clickhouse_operator>
-                <networks>
-                    <ip>0.0.0.0/0</ip>
-                    <ip>::/0</ip>
-                </networks>
-            </clickhouse_operator>
-            {{- if (tpl .Values.clickhouse.user .) }}
-            <{{ tpl .Values.clickhouse.user . }}>
-                <password from_env="CLICKHOUSE_PASSWORD"/>
-                <profile>default</profile>
-                <quota>default</quota>
-                <networks>
-                    <ip>0.0.0.0/0</ip>
-                    <ip>::/0</ip>
-                </networks>
-            </{{ tpl .Values.clickhouse.user . }}>
-            {{- end }}
-        </users>
+        <clickhouse>
+          <users>
+              <clickhouse_operator>
+                  <networks>
+                      <ip>0.0.0.0/0</ip>
+                      <ip>::/0</ip>
+                  </networks>
+              </clickhouse_operator>
+              {{- if (tpl .Values.clickhouse.user .) }}
+              <{{ tpl .Values.clickhouse.user . }}>
+                  <password from_env="CLICKHOUSE_PASSWORD"/>
+                  <profile>default</profile>
+                  <quota>default</quota>
+                  <networks>
+                      <ip>0.0.0.0/0</ip>
+                      <ip>::/0</ip>
+                  </networks>
+              </{{ tpl .Values.clickhouse.user . }}>
+              {{- end }}
+          </users>
+        </clickhouse>
   templates:
     serviceTemplates:
       - name: svc-template
