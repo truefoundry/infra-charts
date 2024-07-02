@@ -56,8 +56,8 @@ spec:
                     <ip>::/0</ip>
                 </networks>
             </clickhouse_operator>
-            {{- if (tpl .Values.global.auth.clickhouse.user .) }}
-            <{{ tpl .Values.global.auth.clickhouse.user . }}>
+            {{- if (tpl .Values.clickhouse.user .) }}
+            <{{ tpl .Values.clickhouse.user . }}>
                 <password from_env="CLICKHOUSE_PASSWORD"/>
                 <profile>default</profile>
                 <quota>default</quota>
@@ -65,7 +65,7 @@ spec:
                     <ip>0.0.0.0/0</ip>
                     <ip>::/0</ip>
                 </networks>
-            </{{ tpl .Values.global.auth.clickhouse.user . }}>
+            </{{ tpl .Values.clickhouse.user . }}>
             {{- end }}
         </users>
   templates:

@@ -21,10 +21,9 @@
 
 ### global.auth.clickhouse [object] clickhouse auth config
 
-| Name                                 | Description         | Value  |
-| ------------------------------------ | ------------------- | ------ |
-| `global.auth.clickhouse.user`        | clickhouse user     | `user` |
-| `global.auth.clickhouse.passwordKey` | clickhouse password | `""`   |
+| Name                                 | Description         | Value |
+| ------------------------------------ | ------------------- | ----- |
+| `global.auth.clickhouse.passwordKey` | clickhouse password | `""`  |
 
 ### global.virtualService [object] virtual service config
 
