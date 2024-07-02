@@ -21,7 +21,7 @@ spec:
           serviceTemplate: svc-template
     zookeeper:
       nodes:
-        - host: {{ .Release.Name }}-zookeeper-headless
+        - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
     files:
       config.d/named-collections.xml: |
@@ -101,7 +101,7 @@ spec:
               image: {{ .Values.clickhouse.image }}
               env:
                 - name: NATS_URL
-                  value: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
+                  value: "{{ tpl .Values.clickhouse.nats.url . }}"
                 - name: NATS_SUBJECTS
                   value: "{{ .Values.clickhouse.nats.subjects }}"
                 - name: NATS_USERNAME
