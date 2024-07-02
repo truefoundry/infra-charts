@@ -87,14 +87,14 @@ nats:
             password: << $NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD >>
             permissions:
               publish:
-                - tfy-model-logs.>
+                - request-log.>
               subscribe:
                 - '>'
           - user: clickhouse-request-logs-reader
             password: << $NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD >>
             permissions:
               subscribe:
-                - tfy-model-logs.>
+                - request-log.>
         timeout: 5
     cluster:
       port: 6222
@@ -223,5 +223,5 @@ clickhouse:
     size: 10Gi
   nats:
     url: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
-    subjects: tfy-model-logs.request-logs
+    subjects: request-log.>
     username: clickhouse-request-logs-reader
