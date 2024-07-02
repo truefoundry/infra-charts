@@ -33,7 +33,7 @@ global:
       ## @param global.auth.clickhouse.passwordKey [string] clickhouse password
       ## clickhouse password
       ##
-      passwordKey: "CLICKHOUSE_PASSWORD"
+      passwordKey: "CLICKHOUSE_USER_PASSWORD"
   ## @section global.virtualService [object] virtual service config
   ## The virtualService section contains configuration for virtual service.
   ##
@@ -206,7 +206,6 @@ clickhouse:
   user: user
   shardsCount: 1
   replicasCount: 1
-  zookeeperHost: zookeeper-headless
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:23.4.2
   resources:
@@ -222,7 +221,5 @@ clickhouse:
     storageClassName: ''
     size: 10Gi
   nats:
-    url: >-
-      {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     subjects: tfy-model-logs.request-logs
     username: clickhouse-request-logs-reader

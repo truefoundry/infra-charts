@@ -21,7 +21,7 @@ spec:
           serviceTemplate: svc-template
     zookeeper:
       nodes:
-        - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
+        - host: {{ .Release.Name }}-zookeeper-headless
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
     files:
       config.d/named-collections.xml: |
@@ -48,26 +48,28 @@ spec:
                 <console>1</console>
             </logger>
         </clickhouse>
-      users.xml: |-
-        <users>
-            <clickhouse_operator>
-                <networks>
-                    <ip>0.0.0.0/0</ip>
-                    <ip>::/0</ip>
-                </networks>
-            </clickhouse_operator>
-            {{- if (tpl .Values.clickhouse.user .) }}
-            <{{ tpl .Values.clickhouse.user . }}>
-                <password from_env="CLICKHOUSE_PASSWORD"/>
-                <profile>default</profile>
-                <quota>default</quota>
-                <networks>
-                    <ip>0.0.0.0/0</ip>
-                    <ip>::/0</ip>
-                </networks>
-            </{{ tpl .Values.clickhouse.user . }}>
-            {{- end }}
-        </users>
+      users.d/users.xml: |-
+        <clickhouse>
+          <users>
+              <clickhouse_operator>
+                  <networks>
+                      <ip>0.0.0.0/0</ip>
+                      <ip>::/0</ip>
+                  </networks>
+              </clickhouse_operator>
+              {{- if (tpl .Values.clickhouse.user .) }}
+              <{{ tpl .Values.clickhouse.user . }}>
+                  <password from_env="CLICKHOUSE_USER_PASSWORD"/>
+                  <profile>default</profile>
+                  <quota>default</quota>
+                  <networks>
+                      <ip>0.0.0.0/0</ip>
+                      <ip>::/0</ip>
+                  </networks>
+              </{{ tpl .Values.clickhouse.user . }}>
+              {{- end }}
+          </users>
+        </clickhouse>
   templates:
     serviceTemplates:
       - name: svc-template
@@ -99,7 +101,7 @@ spec:
               image: {{ .Values.clickhouse.image }}
               env:
                 - name: NATS_URL
-                  value: "{{ .Values.clickhouse.nats.url }}"
+                  value: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
                 - name: NATS_SUBJECTS
                   value: "{{ .Values.clickhouse.nats.subjects }}"
                 - name: NATS_USERNAME
@@ -113,7 +115,7 @@ spec:
                   value: "JSONEachRow"
                 - name: DATE_TIME_INPUT_FORMAT
                   value: "best_effort"
-                - name: CLICKHOUSE_PASSWORD
+                - name: CLICKHOUSE_USER_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: {{ .Values.global.auth.secretName }}
