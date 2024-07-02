@@ -23,33 +23,17 @@ spec:
       nodes:
         - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
-    {{- if (tpl .Values.clickhouse.user .) }}
-    users:
-      clickhouse_operator/networks/ip:
-        - 0.0.0.0/0
-        - ::/0
-      {{ tpl .Values.clickhouse.user . }}/password: {{ required ".Values.clickhouse.password is required" (tpl .Values.clickhouse.password .) }}
-      {{ tpl .Values.clickhouse.user . }}/profile: default
-      {{ tpl .Values.clickhouse.user . }}/quota: default
-      {{ tpl .Values.clickhouse.user . }}/networks/ip:
-        - 0.0.0.0/0
-        - ::/0
-    {{- end }}
     files:
       config.d/named-collections.xml: |
         <clickhouse>
             <named_collections>
                 <nats_config>
-                    {{- $natsURL := (tpl .Values.clickhouse.nats.url .) }}
-                    {{- $natsSubjects := (tpl .Values.clickhouse.nats.subjects .) }}
-                    {{- $natsUsername := (tpl .Values.clickhouse.nats.username .) }}
-                    {{- $natsPassword := (tpl .Values.clickhouse.nats.password .) }}
-                    <nats_url overridable="true">{{ $natsURL }}</nats_url>
-                    <nats_subjects overridable="true">{{ $natsSubjects }}</nats_subjects>
-                    <nats_username overridable="true">{{ $natsUsername }}</nats_username>
-                    <nats_password overridable="true">{{ $natsPassword }}</nats_password>
-                    <nats_format overridable="true">JSONEachRow</nats_format>
-                    <date_time_input_format overridable="true">best_effort</date_time_input_format>
+                    <nats_url from_env="NATS_URL"/>
+                    <nats_subjects from_env="NATS_SUBJECTS"/>
+                    <nats_username from_env="NATS_USERNAME"/>
+                    <nats_password from_env="NATS_PASSWORD"/>
+                    <nats_format from_env="NATS_FORMAT" default="JSONEachRow"/>
+                    <date_time_input_format from_env="DATE_TIME_INPUT_FORMAT" default="best_effort"/>
                 </nats_config>
             </named_collections>
         </clickhouse>
@@ -64,6 +48,26 @@ spec:
                 <console>1</console>
             </logger>
         </clickhouse>
+      users.xml: |-
+        <users>
+            <clickhouse_operator>
+                <networks>
+                    <ip>0.0.0.0/0</ip>
+                    <ip>::/0</ip>
+                </networks>
+            </clickhouse_operator>
+            {{- if (tpl .Values.clickhouse.user .) }}
+            <{{ tpl .Values.clickhouse.user . }}>
+                <password from_env="CLICKHOUSE_PASSWORD"/>
+                <profile>default</profile>
+                <quota>default</quota>
+                <networks>
+                    <ip>0.0.0.0/0</ip>
+                    <ip>::/0</ip>
+                </networks>
+            </{{ tpl .Values.clickhouse.user . }}>
+            {{- end }}
+        </users>
   templates:
     serviceTemplates:
       - name: svc-template
@@ -93,6 +97,28 @@ spec:
           containers:
             - name: clickhouse
               image: {{ .Values.clickhouse.image }}
+              env:
+                - name: NATS_URL
+                  value: "{{ .Values.clickhouse.nats.url }}"
+                - name: NATS_SUBJECTS
+                  value: "{{ .Values.clickhouse.nats.subjects }}"
+                - name: NATS_USERNAME
+                  value: "{{ .Values.clickhouse.nats.username }}"
+                - name: NATS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.global.auth.secretName }}
+                      key: {{ .Values.global.auth.nats.clickhouseRequestLogsReaderPasswordKey }}
+                - name: NATS_FORMAT
+                  value: "JSONEachRow"
+                - name: DATE_TIME_INPUT_FORMAT
+                  value: "best_effort"
+                - name: CLICKHOUSE_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.global.auth.secretName }}
+                      key: {{ .Values.global.auth.clickhouse.passwordKey }}
+
               resources:
                 requests:
                   memory: {{ .Values.clickhouse.resources.requests.memory }}
