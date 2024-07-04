@@ -152,8 +152,8 @@ def clean_up(temp_dir):
     run_command(f"rm -rf {temp_dir}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json>")
+    if len(sys.argv) < 6:
+        print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
         sys.exit(1)
 
     chart_name = sys.argv[1]
@@ -161,6 +161,7 @@ if __name__ == "__main__":
     chart_version = sys.argv[3]
     values_file = sys.argv[4]
     output_file = sys.argv[5]
+    extra_file = sys.argv[6]
 
     manifest_file = generate_manifests(chart_name, chart_repo_url, chart_version, values_file)
 
@@ -174,6 +175,11 @@ if __name__ == "__main__":
         chart_info["details"].pop("values", None)
 
     chart_info_list.extend(image_info_list)
+
+    if extra_file:
+        with open(extra_file, 'r') as f:
+            extra_info = json.load(f)
+            chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
 

@@ -70,9 +70,12 @@ def parse_image_url(image_url, destination_registry):
 
     ref = reference.Reference.parse(image_url)
     if not ref['tag']:
-        image_tag = 'latest'
+        image_tag = ":latest"
     else:
-        image_tag = ref['tag']
+        image_tag = f":{ref['tag']}"
+    
+    # if ref['digest']:
+    #     image_tag = f"{image_tag}@{ref['digest']}"
 
     if ref['name'] is None:
         raise ValueError(f"Invalid image URL: {image_url}")
@@ -86,7 +89,7 @@ def parse_image_url(image_url, destination_registry):
             else:
                 image_name = ref['name']
 
-    new_image_url = f"{destination_registry}/{image_name}:{image_tag}"
+    new_image_url = f"{destination_registry}/{image_name}{image_tag}"
     return image_name, new_image_url
 
 # function to pull and push images
@@ -151,13 +154,11 @@ def download_and_push_helm_charts(helm_list, destination_registry, region):
 
         logging.info(f"Pushing Helm chart: {new_chart_url}")
         try:
-            create_public_ecr_repository(f"{registry_path}/{chart}", region)
+            if registry_path.startswith("public.ecr.aws"):
+                create_public_ecr_repository(f"{registry_path}/{chart}", region)
+            else:
+                create_ecr_repository(f"{registry_path}/{chart}", region)
             try:
-                # chart_exists = run_command(f"helm search repo {chart} --version {target_revision} -o json")
-                # if chart_exists:
-                #     logging.info(f"Chart {chart} with version {target_revision} already exists in the repository. Skipping push...")
-                #     continue
-                # else:
                 logging.info(f"Chart {chart} with version {target_revision} does not exist in the repository. Pushing...")
                 run_command(f"helm push {chart_package} {new_chart_url}")
             except Exception as e:
