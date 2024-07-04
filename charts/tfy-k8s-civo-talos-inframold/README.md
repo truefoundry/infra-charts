@@ -123,6 +123,12 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
 
+### kyverno parameters
+
+| Name              | Description            | Value   |
+| ----------------- | ---------------------- | ------- |
+| `kyverno.enabled` | Flag to enable Kyverno | `false` |
+
 ### tfyAgent parameters
 
 | Name                    | Description              | Value  |
