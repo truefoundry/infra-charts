@@ -31,22 +31,19 @@ spec:
       clone:
         name: {{ .Values.addCaCertificateVolume.sourceConfigMap.name }}
         namespace: {{ .Values.addCaCertificateVolume.sourceNamespace }}
-  - name: add-ca-certs-containers
+  {{- range $index, $injectionConfig := .Values.addCaCertificateVolume.injectionConfigs }}
+  - name: add-ca-certs-containers-{{$index}}
     match:
       any:
       - resources:
           kinds:
           - Pod
-    preconditions:
-      all:
-      - key: {{`'{{request.object.metadata.annotations."truefoundry.com/inject-certs" || ""}}'`}}
-        operator: Equals
-        value: enabled
-      - key: {{`"{{request.operation || 'BACKGROUND'}}"`}}
-        operator: AnyIn
-        value:
+          operations:
           - CREATE
           - UPDATE
+          selector:
+            matchLabels:
+              {{$injectionConfig.label.key}}: {{$injectionConfig.label.value}}
     mutate:
       foreach:
       - list: "request.object.spec.containers"
@@ -55,26 +52,27 @@ spec:
             containers:
             - name: {{`"{{element.name}}"`}}
               volumeMounts:
-              {{- range $index, $mountPath := .Values.addCaCertificateVolume.mountPaths }}
+              {{- range $index, $mountPath := $injectionConfig.mountPaths }}
               - name: injected-ca-cert
                 mountPath: {{$mountPath}}
               {{- end }}
             volumes:
             - name: injected-ca-cert
               configMap:
-                name: {{ .Values.addCaCertificateVolume.destinationConfigMap.name }}
+                name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
       - list: "request.object.spec.initContainers || []"
         patchStrategicMerge:
           spec:
             initContainers:
             - name: {{`"{{element.name}}"`}}
               volumeMounts:
-              {{- range $index, $mountPath := .Values.addCaCertificateVolume.mountPaths }}
+              {{- range $index, $mountPath := $injectionConfig.mountPaths }}
               - name: injected-ca-cert
                 mountPath: {{$mountPath}}
               {{- end }}
             volumes:
             - name: etc-ssl-certs
               configMap:
-                name: {{ .Values.addCaCertificateVolume.destinationConfigMap.name }}
+                name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
+  {{- end }}
 {{- end -}}
