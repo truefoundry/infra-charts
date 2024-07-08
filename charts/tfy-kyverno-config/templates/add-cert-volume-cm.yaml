@@ -51,13 +51,21 @@ spec:
           spec:
             containers:
             - name: {{`"{{element.name}}"`}}
+              env:
+                {{- range $index, $env := $.Values.addCaCertificateVolume.envs }}
+                - name: {{$env.name}}
+                  value: {{$env.value}}
+                {{- end }}
               volumeMounts:
               {{- range $index, $mountPath := $injectionConfig.mountPaths }}
-              - name: injected-ca-cert
+              - name: ca-bundle-cert
                 mountPath: {{$mountPath}}
+                {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                subPath: {{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                {{- end }}
               {{- end }}
             volumes:
-            - name: injected-ca-cert
+            - name: ca-bundle-cert
               configMap:
                 name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
       - list: "request.object.spec.initContainers || []"
@@ -65,14 +73,23 @@ spec:
           spec:
             initContainers:
             - name: {{`"{{element.name}}"`}}
+              env:
+                {{- range $index, $env := $.Values.addCaCertificateVolume.envs }}
+                - name: {{$env.name}}
+                  value: {{$env.value}}
+                {{- end }}
               volumeMounts:
               {{- range $index, $mountPath := $injectionConfig.mountPaths }}
-              - name: injected-ca-cert
+              - name: ca-bundle-cert
                 mountPath: {{$mountPath}}
+                {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                subPath: {{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                {{- end }}
               {{- end }}
             volumes:
-            - name: etc-ssl-certs
+            - name: ca-bundle-cert
               configMap:
                 name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
+                defaultMode: 420
   {{- end }}
 {{- end -}}
