@@ -19,8 +19,16 @@ spec:
         {{- include "truefoundry-frontend-app.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "truefoundry-frontend-app.serviceAccountName" . }}
+      {{- with .Values.truefoundryFrontendApp.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "truefoundry-frontend-app"
+          {{- with .Values.truefoundryFrontendApp.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             {{- include "truefoundry-frontend-app.env" . | trim | nindent 12 }}
           image: "{{ .Values.truefoundryFrontendApp.imageRepository }}:{{ .Values.truefoundryFrontendApp.imageTag }}"

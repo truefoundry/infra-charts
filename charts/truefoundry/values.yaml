@@ -98,8 +98,12 @@ truefoundryFrontendApp:
   fullnameOverride: ''
   ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
   podAnnotations: {}
+  ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
+  podSecurityContext: {}
   ## @param truefoundryFrontendApp.commonLabels Common labels for the frontend app pods
   commonLabels: {}
+  ## @param truefoundryFrontendApp.securityContext Security context for the frontend app
+  securityContext: {}
   ## truefoundryFrontendApp.resources Resource requests and limits for the frontend app
   resources:
     ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
@@ -159,7 +163,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: cb36cdf3c3fa5d74e2ba4e291c86f6ace48f2235
+  imageTag: 376478c77456a1c3e4d3ce572c08efe5916b8cc9
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -269,8 +273,12 @@ mlfoundryServer:
   fullnameOverride: ''
   ## @param mlfoundryServer.podAnnotations Annotations for the mlfoundry server pods
   podAnnotations: {}
+  ## @param mlfoundryServer.podSecurityContext Security context for the mlfoundry server pods
+  podSecurityContext: {}
   ## @param mlfoundryServer.commonLabels Common labels for the mlfoundry server pods
   commonLabels: {}
+  ## @param mlfoundryServer.securityContext Security context for the mlfoundry server
+  securityContext: {}
   ## mlfoundryServer.resources Resource requests and limits for the mlfoundry server
   resources:
     ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
@@ -308,7 +316,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: d49ae07dc884843e270dcc526df1540b0f7523df
+  imageTag: 0ead140840fc5e02774288210acc383a7cad18e3
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
   extraVolumes: []
   ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
@@ -358,8 +366,12 @@ servicefoundryServer:
   fullnameOverride: ''
   ## @param servicefoundryServer.podAnnotations Annotations for the servicefoundry server pods
   podAnnotations: {}
+  ## @param servicefoundryServer.podSecurityContext Security context for the servicefoundry server pods
+  podSecurityContext: {}
   ## @param servicefoundryServer.commonLabels Common labels for the servicefoundry server pods
   commonLabels: {}
+  ## @param servicefoundryServer.securityContext Security context for the servicefoundry server
+  securityContext: {}
   ## servicefoundryServer.resources Resource requests and limits for the servicefoundry server
   resources:
     ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
@@ -492,7 +504,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: a665b802391be1a90ccb33e6ae7a7b4a8a1c4532
+  imageTag: d4ab53ae21091627867a1d68e9a695128a60fb21
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -520,8 +532,12 @@ sfyManifestService:
   fullnameOverride: ''
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
+  ## @param sfyManifestService.podSecurityContext Security context for the sfy manifest service pods
+  podSecurityContext: {}
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
+  ## @param sfyManifestService.securityContext Security context for the sfy manifest service
+  securityContext: {}
   ## sfyManifestService.resources Resource requests and limits for the sfy manifest service
   resources:
     ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
@@ -586,7 +602,7 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: ca14e961fa0f0b8fc63bd184bc73e1aa5d859460
+  imageTag: 45e45c8694d01b68cd13fe4f97afd8605fff85c4
 
 #############################
 ## nats Settings corresponding to the NATS server
@@ -597,7 +613,7 @@ nats:
   ## nats.nats NATS server configuration
   nats:
     ## @param nats.nats.image NATS server image
-    image: nats:2.10.12-alpine3.19
+    image: nats:2.10.17-alpine3.20
     ## @param nats.nats.advertise Bool to enable NATS server advertise
     advertise: false
     ## nats.nats.jetstream Jetstream configuration for NATS server
@@ -846,8 +862,12 @@ tfyController:
   fullnameOverride: ''
   ## @param tfyController.podAnnotations Annotations for the tfyController pods
   podAnnotations: {}
+  ## @param tfyController.podSecurityContext Security context for the tfyController pods
+  podSecurityContext: {}
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
+  ## @param tfyController.securityContext Security context for the tfyController
+  securityContext: {}
   ## @skip tfyController.resources Resource requests and limits for the tfyController
   resources:
     limits:
@@ -895,4 +915,4 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
       .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: bde6ccf4a9a8ee56013b853a383847d5cb4e0fa1
+  imageTag: 94777ca5b6130c683e14123602f8da3eef63dccd

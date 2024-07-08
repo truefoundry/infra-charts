@@ -19,8 +19,16 @@ spec:
         {{- include "tfy-controller.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-controller.serviceAccountName" . }}
+      {{- with .Values.tfyController.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-controller"
+          {{- with .Values.tfyController.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             {{- include "tfy-controller.env" . | trim | nindent 12 }}
           image: "{{ .Values.tfyController.imageRepository }}:{{ .Values.tfyController.imageTag }}"

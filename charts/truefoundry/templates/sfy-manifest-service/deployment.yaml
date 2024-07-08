@@ -19,8 +19,16 @@ spec:
         {{- include "sfy-manifest-service.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "sfy-manifest-service.serviceAccountName" . }}
+      {{- with .Values.sfyManifestService.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "sfy-manifest-service"
+          {{- with .Values.sfyManifestService.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
           image: "{{ .Values.sfyManifestService.imageRepository }}:{{ .Values.sfyManifestService.imageTag }}"

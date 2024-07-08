@@ -19,8 +19,16 @@ spec:
         {{- include "servicefoundry-server.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "servicefoundry-server.serviceAccountName" . }}
+      {{- with .Values.servicefoundryServer.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "servicefoundry-server"
+          {{- with .Values.servicefoundryServer.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
           image: "{{ .Values.servicefoundryServer.imageRepository }}:{{ .Values.servicefoundryServer.imageTag }}"
