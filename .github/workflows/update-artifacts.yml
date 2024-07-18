@@ -15,11 +15,9 @@ jobs:
           with:
             fetch-depth: 0
 
-        - name: Setup Kubectl
-          id: install-kubectl
-          uses: azure/setup-kubectl@v3
-          with:
-            version: '1.28.0'
+        - uses: marcofranssen/setup-kubectl@v0.3.0
+          id: kubectl
+            - run: echo ${{ steps.kubectl.output.kubectl-version }}
 
         - name: Setup Helm
           uses: azure/setup-helm@v3.5
