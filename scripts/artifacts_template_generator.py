@@ -101,6 +101,7 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     run_command(f"helm search repo {chart_name}/{chart_name}")
 
     logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
+    logging.info(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
@@ -153,7 +154,7 @@ def clean_up(temp_dir):
 
 if __name__ == "__main__":
     if len(sys.argv) < 6:
-        print("Usage: python extract_and_process_chart_info.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
+        print("Usage: python artifacts_template_generator.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
         sys.exit(1)
 
     chart_name = sys.argv[1]
