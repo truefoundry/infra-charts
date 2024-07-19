@@ -42,13 +42,15 @@ jobs:
         # Generate artifacts manifest for inframold charts
         - name: Generate Artifacts Manifest for Each Chart
           run: |
-            for chart in ${{ steps.get_charts_list.outputs.charts_list }};
+            charts_list="${{ steps.get_charts_list.outputs.charts_list }}"
+            for chart in $charts_list;
             do
               version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
               python scripts/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
                 $version charts/$chart/values.yaml charts/$chart/artifacts-manifest.json scripts/extra.json
             done
 
+        # Update the inframold artifacts manifest
         - name: Create Pull Request
           uses: peter-evans/create-pull-request@v6
           with:
