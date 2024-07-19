@@ -33,18 +33,13 @@ jobs:
         - name: Install python dependencies
           run: pip install -r scripts/requirements.txt
 
-        # Get the list of charts ending with inframold
-        - name: Get Charts List
-          id: get_charts_list
-          run: |
-            echo "::set-output name=charts_list::$(ls charts | grep inframold)"
-
         # Generate artifacts manifest for inframold charts
         - name: Generate Artifacts Manifest for Each Chart
           run: |
-            charts_list="${{ steps.get_charts_list.outputs.charts_list }}"
+            charts_list=$(ls charts | grep inframold)
             for chart in $charts_list;
             do
+              echo "Generating artifacts manifest for $chart"
               version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
               python scripts/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
                 $version charts/$chart/values.yaml charts/$chart/artifacts-manifest.json scripts/extra.json
