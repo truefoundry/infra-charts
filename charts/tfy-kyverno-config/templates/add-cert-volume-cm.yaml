@@ -1,0 +1,95 @@
+{{- if .Values.addCaCertificateVolume.enabled -}}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-add-ca-certificate-volume
+  namespace: {{ .Release.Namespace }}
+spec:
+  background: false
+  rules:
+  - name: clone-configmap
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+        - kube-public
+        - kube-node-lease
+        {{- range .Values.addCaCertificateVolume.excludeNamespaces }}
+        - {{.}}
+        {{- end }}
+    generate:
+      apiVersion: v1
+      kind: ConfigMap
+      name: {{ .Values.addCaCertificateVolume.destinationConfigMap.name }}
+      namespace: {{`"{{request.object.metadata.name}}"`}}
+      synchronize: true
+      clone:
+        name: {{ .Values.addCaCertificateVolume.sourceConfigMap.name }}
+        namespace: {{ .Values.addCaCertificateVolume.sourceNamespace }}
+  {{- range $index, $injectionConfig := .Values.addCaCertificateVolume.injectionConfigs }}
+  - name: add-ca-certs-containers-{{$index}}
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          operations:
+          - CREATE
+          - UPDATE
+          selector:
+            matchLabels:
+              {{$injectionConfig.label.key}}: {{$injectionConfig.label.value}}
+    mutate:
+      foreach:
+      - list: "request.object.spec.containers"
+        patchStrategicMerge:
+          spec:
+            containers:
+            - name: {{`"{{element.name}}"`}}
+              env:
+                {{- range $index, $env := $.Values.addCaCertificateVolume.envs }}
+                - name: {{$env.name}}
+                  value: {{$env.value}}
+                {{- end }}
+              volumeMounts:
+              {{- range $index, $mountPath := $injectionConfig.mountPaths }}
+              - name: ca-bundle-cert
+                mountPath: {{$mountPath}}
+                {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                subPath: {{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                {{- end }}
+              {{- end }}
+            volumes:
+            - name: ca-bundle-cert
+              configMap:
+                name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
+      - list: "request.object.spec.initContainers || []"
+        patchStrategicMerge:
+          spec:
+            initContainers:
+            - name: {{`"{{element.name}}"`}}
+              env:
+                {{- range $index, $env := $.Values.addCaCertificateVolume.envs }}
+                - name: {{$env.name}}
+                  value: {{$env.value}}
+                {{- end }}
+              volumeMounts:
+              {{- range $index, $mountPath := $injectionConfig.mountPaths }}
+              - name: ca-bundle-cert
+                mountPath: {{$mountPath}}
+                {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                subPath: {{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}
+                {{- end }}
+              {{- end }}
+            volumes:
+            - name: ca-bundle-cert
+              configMap:
+                name: {{ $.Values.addCaCertificateVolume.destinationConfigMap.name }}
+                defaultMode: 420
+  {{- end }}
+{{- end -}}

@@ -77,10 +77,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### truefoundry parameters
 
-| Name                  | Description                         | Value   |
-| --------------------- | ----------------------------------- | ------- |
-| `truefoundry.enabled` | Flag to enable TrueFoundry          | `false` |
-| `truefoundry.dev`     | Flag to enable TrueFoundry Dev mode | `true`  |
+| Name                          | Description                         | Value   |
+| ----------------------------- | ----------------------------------- | ------- |
+| `truefoundry.enabled`         | Flag to enable TrueFoundry          | `false` |
+| `truefoundry.devMode.enabled` | Flag to enable TrueFoundry Dev mode | `true`  |
 
 ### truefoundryBootstrap parameters
 
@@ -107,10 +107,17 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### istio parameters
 
-| Name                             | Description                                     | Value  |
-| -------------------------------- | ----------------------------------------------- | ------ |
-| `istio.enabled`                  | Flag to enable Istio                            | `true` |
-| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true` |
+| Name            | Description          | Value  |
+| --------------- | -------------------- | ------ |
+| `istio.enabled` | Flag to enable Istio | `true` |
+
+### istio discovery parameters
+
+| Name                             | Description                                     | Value                  |
+| -------------------------------- | ----------------------------------------------- | ---------------------- |
+| `istio.discovery.hub`            | Hub for the istio image                         | `gcr.io/istio-release` |
+| `istio.discovery.tag`            | Tag for the istio image                         | `1.21.1-distroless`    |
+| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true`                 |
 
 ### keda parameters
 
@@ -135,6 +142,12 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | Name              | Description            | Value  |
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
+
+### kyverno parameters
+
+| Name              | Description            | Value   |
+| ----------------- | ---------------------- | ------- |
+| `kyverno.enabled` | Flag to enable Kyverno | `false` |
 
 ### tfyAgent parameters
 

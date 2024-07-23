@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-controller.fullname" . }}
+  labels:
+    {{- include "tfy-controller.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "tfy-controller.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyController.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-controller.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-controller.serviceAccountName" . }}
+      containers:
+        - name: "tfy-controller"
+          env:
+            {{- include "tfy-controller.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyController.imageRepository }}:{{ .Values.tfyController.imageTag }}"
+          imagePullPolicy: {{ .Values.tfyController.imagePullPolicy }}
+          ports:
+            - name: port-{{ .Values.tfyController.service.port }}
+              containerPort: {{ .Values.tfyController.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.tfyController.resources | nindent 12 }}
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthy
+              port: {{ .Values.tfyController.service.port }}
+              scheme: HTTP
+      {{- with .Values.tfyController.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyController.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyController.tolerations }}
+        {{- .Values.tfyController.tolerations | toYaml | nindent 8 }}
+        {{- end }}

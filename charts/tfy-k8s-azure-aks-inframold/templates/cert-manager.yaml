@@ -16,18 +16,18 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: v1.13.3
+    targetRevision: v1.15.0
     helm:
       values: |-
         installCRDs: true
-          {{- with .Values.tolerations }}
-          tolerations:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.affinity }}
-          affinity:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
+        {{- with .Values.tolerations }}
+        tolerations:
+          {{ toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.affinity }}
+        affinity:
+          {{ toYaml . | nindent 12 }}
+        {{- end }}
         webhook:
           requests:
             cpu: 20m

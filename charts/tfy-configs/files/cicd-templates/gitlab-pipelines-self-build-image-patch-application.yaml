@@ -1,0 +1,95 @@
+name: Build Image Yourself and Patch Image URI to deploy on TrueFoundry
+cicd_provider_id: gitlab
+enabled: true
+description: "Build Docker Image using your own steps and deploy the image on TrueFoundry."
+deployment_mode: patch-application
+build_source: local
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitLab Repository, navigate to **Settings > CI/CD** then expand **Variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value and select the **Mask Variable** checkbox.
+  - label: Create GitLab Pipeline
+    icon: null
+    usage: |
+      Add the below workflow as `.gitlab-ci.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        > **Note:** Please read through the `variables` section and `build-image` Steps and update them for your registry and repo.
+        
+        
+        ```yaml
+        stages:
+          - build
+          - deploy
+        
+        workflow:
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
+
+        variables:
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          APPLICATION_FQN: {{ TRUEFOUNDRY_APPLICATION_FQN }}
+
+          # Update these with your Docker Registry and Repository
+          DOCKER_REGISTRY: docker.io
+          DOCKER_REPO_NAME: $CI_PROJECT_NAME
+          
+          DOCKER_IMAGE_REPO: $DOCKER_REGISTRY/$DOCKER_REPO_NAME
+          DOCKER_IMAGE_TAG: $CI_COMMIT_SHA
+          DOCKER_IMAGE_URI: "$DOCKER_IMAGE_REPO:$DOCKER_IMAGE_TAG"
+
+        ### Image Build Section ###
+        # Build your image, push it
+        # Here is a sample, you can replace this with your registry specific steps.
+        # The registry here should be also be linked in Integrations on TrueFoundry
+
+        build-image:
+          stage: build
+          image: docker:24.0.5
+          environment: production
+          timeout: 30 minutes
+          services:
+            - docker:24.0.5-dind
+          variables:
+            DOCKER_HOST: tcp://docker:2376
+            DOCKER_TLS_CERTDIR: "/certs"
+          before_script:
+            - docker info
+            - export BUILDX_VERSION=v0.6.3
+            - apk add --no-cache curl
+            - mkdir -p ~/.docker/cli-plugins
+            - curl -sSLo ~/.docker/cli-plugins/docker-buildx "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64"
+            - chmod a+x ~/.docker/cli-plugins/docker-buildx
+            - docker buildx create --use --platform=linux/amd64,linux/arm64
+          script:
+            - echo "$DOCKER_REGISTRY_PASSWORD" | docker login $DOCKER_REGISTRY --username $DOCKER_REGISTRY_USER --password-stdin
+            # Assuming Dockerfile is present at the root of the project. If not, please pass it via --file
+            - docker buildx build --cache-from type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --cache-to mode=max,image-manifest=true,type=registry,ref=$DOCKER_IMAGE_REPO:buildcache --tag $DOCKER_IMAGE_URI --push .
+
+        ############################
+
+        deploy-job:
+          needs: ["build-image"]
+          stage: deploy
+          image: python:3.11.9-bullseye
+          environment: production
+          timeout: 30 minutes
+          variables:
+            PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+          script:
+            - apt update && apt install -y jq
+            - pip3 install "truefoundry<1.0.0"
+            - tfy patch-application --application-fqn "$APPLICATION_FQN" --patch="{\"image\": {\"image_uri\": \"$DOCKER_IMAGE_URI\"}}"
+        ```

@@ -1,7 +1,4 @@
 {{- if .Values.clusterType.gcpGkeStandard }}
-{{- $gkeAcceleratorsForLatestDriver := (index .Values "gcp-gke-standard-driver" "latest" "gkeAccelerators") }}
-{{- $driverDefault := (index .Values "gcp-gke-standard-driver" "default") }}
-{{- $driverLatest := (index .Values "gcp-gke-standard-driver" "latest") }}
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -16,7 +13,11 @@ spec:
         scopeName: PriorityClass
         values:
           - system-node-critical
+{{- if (index .Values "gcp-gke-standard-driver" "enabled") }}
 ---
+{{- $gkeAcceleratorsForLatestDriver := (index .Values "gcp-gke-standard-driver" "latest" "gkeAccelerators") }}
+{{- $driverDefault := (index .Values "gcp-gke-standard-driver" "default") }}
+{{- $driverLatest := (index .Values "gcp-gke-standard-driver" "latest") }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -274,5 +275,5 @@ spec:
         - image: "{{ $driverLatest.pause.image.repository }}:{{ $driverLatest.pause.image.tag }}"
           name: pause
 {{- end }}
----
+{{- end }}
 {{- end }}

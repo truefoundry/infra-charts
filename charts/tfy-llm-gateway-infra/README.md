@@ -1,4 +1,4 @@
-# TrueFoundry LLM Gateway Monitoring Stack
+# TrueFoundry LLM Gateway Infra Stack
 
 ## Parameters
 
@@ -7,21 +7,23 @@
 
 ### global.auth [object] auth config
 
+| Name                     | Description | Value                        |
+| ------------------------ | ----------- | ---------------------------- |
+| `global.auth.secretName` | secret name | `tfy-llm-gateway-infra-auth` |
 
 ### global.auth.nats [object] nats auth config
 
-| Name                                                   | Description                                           | Value |
-| ------------------------------------------------------ | ----------------------------------------------------- | ----- |
-| `global.auth.nats.adminPassword`                       | password for nats admin user                          | `""`  |
-| `global.auth.nats.llmGatewayRequestLoggerPassword`     | password for nats llm-gateway-request-logger user     | `""`  |
-| `global.auth.nats.clickhouseRequestLogsReaderPassword` | password for nats clickhouse-request-logs-reader user | `""`  |
+| Name                                                      | Description                                           | Value                                          |
+| --------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------- |
+| `global.auth.nats.adminPasswordKey`                       | password for nats admin user                          | `NATS_ADMIN_PASSWORD`                          |
+| `global.auth.nats.llmGatewayRequestLoggerPasswordKey`     | password for nats llm-gateway-request-logger user     | `NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD`     |
+| `global.auth.nats.clickhouseRequestLogsReaderPasswordKey` | password for nats clickhouse-request-logs-reader user | `NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD` |
 
 ### global.auth.clickhouse [object] clickhouse auth config
 
-| Name                              | Description         | Value  |
-| --------------------------------- | ------------------- | ------ |
-| `global.auth.clickhouse.user`     | clickhouse user     | `user` |
-| `global.auth.clickhouse.password` | clickhouse password | `""`   |
+| Name                                 | Description         | Value |
+| ------------------------------------ | ------------------- | ----- |
+| `global.auth.clickhouse.passwordKey` | clickhouse password | `""`  |
 
 ### global.virtualService [object] virtual service config
 
