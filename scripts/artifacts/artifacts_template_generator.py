@@ -113,7 +113,7 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
 
 # function to extract images from Kubernetes manifests
 def extract_images_from_k8s_manifests(yaml_content):
-    resources_with_images = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Pod', 'ReplicaSet']
+    resources_with_containers = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Pod', 'ReplicaSet']
     try:
         manifests = yaml.safe_load_all(yaml_content)
         image_info_list = []
@@ -122,7 +122,16 @@ def extract_images_from_k8s_manifests(yaml_content):
                 continue
             if 'kind' in manifest and 'spec' in manifest:
                 kind = manifest['kind']
-                if kind in resources_with_images:
+                if kind in ['Alertmanager', 'Prometheus']:
+                    container_image_info = {
+                        "type": "image",
+                        "details": {
+                            "registryURL": manifest['spec']['image']
+                        }
+                    }
+                    image_info_list.append(container_image_info)
+
+                elif kind in resources_with_containers:
                     containers = []
                     init_containers = []
                     if 'template' in manifest['spec']:
