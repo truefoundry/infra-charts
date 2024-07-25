@@ -36,7 +36,7 @@ jobs:
         # Generate artifacts manifest for inframold charts
         - name: Generate Artifacts Manifest for Each Chart
           run: |
-            charts_list=(tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-autopilot-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-infamold)
+            charts_list=(tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-autopilot-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-inframold)
             for chart in $charts_list;
             do
               version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
@@ -49,7 +49,7 @@ jobs:
           uses: peter-evans/create-pull-request@v6
           with:
             commit-message: Update Inframold artifacts manifest
-            title: [CI] Update Inframold Artifacts-${{ github.event.pull_request.number }}
+            title: [CI] Update Inframold Artifacts-${{ github.event.commit_id }}
             body: Update Inframold artifacts manifest
-            branch: update-inframold-artifacts-manifest-${{ github.event.pull_request.number }}
+            branch: update-inframold-artifacts-manifest-${{ github.event.commit_id }}
             delete-branch: true
