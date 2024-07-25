@@ -17,17 +17,17 @@ Deploying Inframold charts from a private registry would require having the nece
    pip install -r requirements.txt
    ```
 3. The `upload_artifact.py` is a sample python scripts which handles deployment to JFrog and ECR registries, it takes in the following arguments;
-    - `artefact_type` - this takes in the artifact type which can be either `image` or `helm`
-    - `file_path `- this is the location of the artefacts-manifest.json file that contains the artefacts information.
+    - `artifact_type` - this takes in the artifact type which can be either `image` or `helm`
+    - `file_path `- this is the location of the artifacts-manifest.json file that contains the artifacts' information.
     - `destination_registry` - this is the registry you plan to use in your air-gapped environment.
     - `registry_type` the type of registry. The script currently take ecr for AWS registry and jfrog 
 4. Before uploading images or charts to your registry, make sure you're authenticated. When setting up jfrog, you have to create a token the script will use. Follow this [link](https://jfrog.com/help/r/how-to-generate-an-access-token-video/artifactory-creating-access-tokens-in-artifactory) to generate your token. Once you get the token, pass it in as an environment variable - `JFROG_TOKEN` before running the script.
    When deploying to ECR, the following are needed to be passed as environment variables - `AWS_PROFILE` and `AWS_REGION`.
    To update your registry with the required images to a jfrog registry, run the following command
    ```
-   python upload_artefacts.py image artifacts-manifest.json <jfrog-registry-tenant>.jfrog.io jfrog
+   python upload_artifacts.py image artifacts-manifest.json <jfrog-registry-tenant>.jfrog.io jfrog
    ```
 5. To update your registry with the necessary helm to an ecr registry
    ```
-   python upload_artefacts.py helm artifacts-manifest.json <aws-account>.dkr.ecr.<region>.amazonaws.com ecr
+   python upload_artifacts.py helm artifacts-manifest.json <aws-account>.dkr.ecr.<region>.amazonaws.com ecr
    ```
