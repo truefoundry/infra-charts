@@ -80,7 +80,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | Name                          | Description                         | Value   |
 | ----------------------------- | ----------------------------------- | ------- |
 | `truefoundry.enabled`         | Flag to enable TrueFoundry          | `false` |
-| `truefoundry.devMode.enabled` | Flag to enable TrueFoundry Dev mode | `true`  |
+| `truefoundry.devMode.enabled` | Flag to enable TrueFoundry Dev mode | `false` |
 
 ### truefoundryBootstrap parameters
 
