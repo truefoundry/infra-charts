@@ -40,8 +40,8 @@ jobs:
             for chart in $charts_list;
             do
               version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-              python scripts/artifacts/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-                $version charts/$chart/values.yaml charts/$chart/artifacts-manifest.json scripts/artifacts/extra.json
+              python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
+                $version charts/$chart/values.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
             done
 
         # Update the inframold artifacts manifest
