@@ -24,6 +24,14 @@ karpenter:
     extraTags: {}
     ## @param karpenter.defaultNodeTemplate.amiFamily AMI family to use for node template
     amiFamily: "AL2023"
+    ## @param karpenter.defaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
+    # amiSelectorTerms:
+    # - tags:
+    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     environment: test
+    # - name: my-ami
+    # - id: ami-123
+    amiSelectorTerms: []
     ## @skip karpenter.defaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -72,7 +80,7 @@ karpenter:
   ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
     ## @param karpenter.gpuDefaultNodeTemplate.enabled Enable the GPU node pool
-    enabled: true
+    enabled: false
     ## @param karpenter.gpuDefaultNodeTemplate.name Name of the AWS node class
     name: gpu-default
     ## @param karpenter.gpuDefaultNodeTemplate.instanceProfile Instance profile override for the node template
@@ -85,7 +93,15 @@ karpenter:
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
     ## @param karpenter.gpuDefaultNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2023"
+    amiFamily: "AL2"
+    ## @param karpenter.gpuDefaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
+    # amiSelectorTerms:
+    # - tags:
+    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     environment: test
+    # - name: my-ami
+    # - id: ami-123
+    amiSelectorTerms: []
     ## @skip karpenter.gpuDefaultNodeTemplate.userData
     # Set this to "default" to let the chart automatically decide this
     # Set this to "" to disable this injection
@@ -98,7 +114,7 @@ karpenter:
   ## GPU Node Pool Config
   gpuNodePool:
     ## @param karpenter.gpuNodePool.enabled Enable the GPU node pool
-    enabled: true
+    enabled: false
     ## @param karpenter.gpuNodePool.name Name of the GPU node pool
     name: gpu-nodepool
     ## @param karpenter.gpuNodePool.weight Weight for the GPU node pool
@@ -140,7 +156,7 @@ karpenter:
   ## Control Plane Node Template Config
   controlPlaneNodeTemplate:
     ## @param karpenter.controlPlaneNodeTemplate.enabled Enable the control plane node template
-    enabled: false
+    enabled: true
     ## @param karpenter.controlPlaneNodeTemplate.name Name of the AWS node template
     name: controlplane-node-template
     ## @param karpenter.controlPlaneNodeTemplate.instanceProfile Instance profile override for the node template
@@ -151,6 +167,14 @@ karpenter:
     extraTags: {}
     ## @param karpenter.controlPlaneNodeTemplate.amiFamily AMI family to use for node template
     amiFamily: "AL2023"
+    ## @param karpenter.controlPlaneNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
+    # amiSelectorTerms:
+    # - tags:
+    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     environment: test
+    # - name: my-ami
+    # - id: ami-123
+    amiSelectorTerms: []
     ## @skip karpenter.controlPlaneNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -200,7 +224,7 @@ karpenter:
   ## Default Inferentia Node Template Config
   inferentiaDefaultNodeTemplate:
     ## @param karpenter.inferentiaDefaultNodeTemplate.enabled Enable the inferentia node pool
-    enabled: true
+    enabled: false
     ## @param karpenter.inferentiaDefaultNodeTemplate.name Name of the AWS node class
     name: inferentia-default
     ## @param karpenter.inferentiaDefaultNodeTemplate.instanceProfile Instance profile override for the node template
@@ -213,7 +237,15 @@ karpenter:
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
     ## @param karpenter.inferentiaDefaultNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2023"
+    amiFamily: "AL2"
+    ## @param karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
+    # amiSelectorTerms:
+    # - tags:
+    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     environment: test
+    # - name: my-ami
+    # - id: ami-123
+    amiSelectorTerms: []
     ## @skip karpenter.inferentiaDefaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -225,7 +257,7 @@ karpenter:
   ## Inferentia Node Pool Config
   inferentiaNodePool:
     ## @param karpenter.inferentiaNodePool.enabled Enable the Inferentia node pool
-    enabled: true
+    enabled: false
     ## @param karpenter.inferentiaNodePool.name Name of the Inferentia node pool
     name: inferentia-nodepool
     ## @param karpenter.inferentiaNodePool.weight Weight for the Inferentia node pool
