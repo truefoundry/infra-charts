@@ -25,7 +25,7 @@ spec:
               value: {{ .Values.replaceImageRegistry.newRegistry }}
           - name: normalizedImageURL
             variable:
-              value: {{`"{{image_normalize(element.image)}}"`}}
+              value: {{`"{{image_normalize('{{ regex_replace_all_literal('@.*$', '{{element.image}}', '')}}')}}"`}}
         patchStrategicMerge:
           spec:
             containers:
@@ -38,7 +38,7 @@ spec:
               value: {{ .Values.replaceImageRegistry.newRegistry }}
           - name: normalizedImageURL
             variable:
-              value: {{`"{{image_normalize(element.image)}}"`}}
+              value: {{`"{{image_normalize('{{ regex_replace_all_literal('@.*$', '{{element.image}}', '')}}')}}"`}}
         patchStrategicMerge:
           spec:
             initContainers:

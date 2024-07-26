@@ -103,10 +103,10 @@ steps:
 
               - name: Install dependencies
                 run: |
-                  pip install truefoundry<1.0.0
+                  pip install "truefoundry<1.0.0"
 
               - name: Deploy to workspace
                 run: |
                   tfy patch -f truefoundry.yaml --filter '.image.image_uri = "$\{{ env.DOCKER_IMAGE_URI }}"' -o truefoundry-patched.yaml
-                  tfy deploy -f truefoundry-patched.yaml -w "$\{{ env.WORKSPACE_FQN }}"
+                  tfy deploy -f truefoundry-patched.yaml -w "$\{{ env.WORKSPACE_FQN }}" --no-wait
         ```

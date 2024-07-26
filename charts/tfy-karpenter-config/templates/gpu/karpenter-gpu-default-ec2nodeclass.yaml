@@ -32,6 +32,10 @@ spec:
   detailedMonitoring: true
   {{- end }}
   amiFamily: {{ .Values.karpenter.gpuDefaultNodeTemplate.amiFamily }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms }}
+  amiSelectorTerms:
+  {{- .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
+  {{- end }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb

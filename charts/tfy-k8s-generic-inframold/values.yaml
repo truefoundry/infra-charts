@@ -101,9 +101,10 @@ gpu:
 ##
 truefoundry:
   enabled: false
-  ## @param truefoundry.dev Flag to enable TrueFoundry Dev mode
+  ## @param truefoundry.devMode.enabled Flag to enable TrueFoundry Dev mode
   ##
-  dev: true
+  devMode:
+    enabled: false
   ## @section truefoundryBootstrap parameters
   ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
   truefoundryBootstrap:
@@ -139,7 +140,12 @@ istio:
     
     annotations: {}
     
-
+  ## @section istio discovery parameters
+  discovery:
+    ## @param istio.discovery.hub Hub for the istio image
+    hub: gcr.io/istio-release
+    ## @param istio.discovery.tag Tag for the istio image
+    tag: 1.21.1-distroless
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
     
@@ -189,6 +195,12 @@ prometheus:
 ##
 grafana:
   enabled: true
+
+## @section kyverno parameters
+## @param kyverno.enabled Flag to enable Kyverno
+##
+kyverno:
+  enabled: false
 
 ## @section tfyAgent parameters
 ## @param tfyAgent.enabled Flag to enable Tfy Agent

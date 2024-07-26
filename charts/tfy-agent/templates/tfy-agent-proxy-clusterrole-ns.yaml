@@ -12,7 +12,7 @@ rules:
 
   - apiGroups: [""]
     resources: ["resourcequotas", "serviceaccounts"]
-    verbs: ["get", "delete", "patch", "create"]
+    verbs: ["list", "get", "delete", "patch", "create"]
 
   - apiGroups: [""]
     resources: ["resourcequotas/status"]
@@ -61,6 +61,10 @@ rules:
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
     verbs: ["create", "patch", "delete"]
+  
+  - apiGroups: ["flyte.lyft.com"]
+    resources: ["flyteworkflows"]
+    verbs: ["create", "patch", "get", "delete"]
 {{- end }}
 {{- end }}
 {{- end }}

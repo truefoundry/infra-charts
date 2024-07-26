@@ -54,9 +54,9 @@ steps:
 
               - name: Install dependencies
                 run: |
-                  pip install truefoundry<1.0.0
+                  pip install "truefoundry<1.0.0"
 
               - name: Patch the commit sha
                 run: |
-                  tfy patch-application --application-fqn $\{{ env.APPLICATION_FQN }} --patch='{"image": {"build_source": {"ref": "$\{{ env.GITHUB_SHA }}"}}}'
+                  tfy patch-application --application-fqn $\{{ env.APPLICATION_FQN }} --patch='{"image": {"build_source": {"ref": "$\{{ github.sha }}"}}}'
         ```

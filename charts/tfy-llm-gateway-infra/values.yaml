@@ -6,34 +6,34 @@ global:
   ## The auth section contains configuration for authentication.
   ## 
   auth:
+    ## @param global.auth.secretName [string, default: tfy-llm-gateway-infra-auth] secret name
+    ## k8s secret containing auth credentials
+    ##
+    secretName: tfy-llm-gateway-infra-auth
     ## @section global.auth.nats [object] nats auth config
     ## The nats section contains configuration for nats authentication.
     ## 
     nats:
-      ## @param global.auth.nats.adminPassword [string] password for nats admin user
+      ## @param global.auth.nats.adminPasswordKey [string, default: NATS_ADMIN_PASSWORD] password for nats admin user
       ## Password for nats admin user
       ##
-      adminPassword: ""
-      ## @param global.auth.nats.llmGatewayRequestLoggerPassword [string] password for nats llm-gateway-request-logger user
+      adminPasswordKey: "NATS_ADMIN_PASSWORD"
+      ## @param global.auth.nats.llmGatewayRequestLoggerPasswordKey [string, default: NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD] password for nats llm-gateway-request-logger user
       ## Password for nats llm-gateway-request-logger user
       ##
-      llmGatewayRequestLoggerPassword: ""
-      ## @param global.auth.nats.clickhouseRequestLogsReaderPassword [string] password for nats clickhouse-request-logs-reader user
+      llmGatewayRequestLoggerPasswordKey: "NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD"
+      ## @param global.auth.nats.clickhouseRequestLogsReaderPasswordKey [string, default: NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD] password for nats clickhouse-request-logs-reader user
       ## Password for nats clickhouse-request-logs-reader user
       ##
-      clickhouseRequestLogsReaderPassword: ""
+      clickhouseRequestLogsReaderPasswordKey: "NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD"
     ## @section global.auth.clickhouse [object] clickhouse auth config
     ## The clickhouse section contains configuration for clickhouse authentication.
     ##
     clickhouse:
-      ## @param global.auth.clickhouse.user [string, default: user] clickhouse user
-      ## clickhouse user
-      ##
-      user: user
-      ## @param global.auth.clickhouse.password [string] clickhouse password
+      ## @param global.auth.clickhouse.passwordKey [string] clickhouse password
       ## clickhouse password
       ##
-      password: ""
+      passwordKey: "CLICKHOUSE_USER_PASSWORD"
   ## @section global.virtualService [object] virtual service config
   ## The virtualService section contains configuration for virtual service.
   ##
@@ -77,27 +77,24 @@ nats:
       authorization:
         users:
           - user: admin
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.adminPassword }}'
+            password: << $NATS_ADMIN_PASSWORD >>
             permissions:
               publish:
                 - '>'
               subscribe:
                 - '>'
           - user: llm-gateway-request-logger
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPassword }}'
+            password: << $NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD >>
             permissions:
               publish:
-                - tfy-model-logs.>
+                - request-log.>
               subscribe:
                 - '>'
           - user: clickhouse-request-logs-reader
-            password:
-              $tplYaml: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'
+            password: << $NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD >>
             permissions:
               subscribe:
-                - tfy-model-logs.>
+                - request-log.>
         timeout: 5
     cluster:
       port: 6222
@@ -142,6 +139,37 @@ nats:
         requests:
           cpu: 100m
           memory: 250Mi
+    patch:
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name:
+                $tplYaml: '{{ .Values.global.auth.secretName }}'
+              key:
+                $tplYaml: '{{ .Values.global.auth.nats.adminPasswordKey }}'
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_LLM_GATEWAY_REQUEST_LOGGER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name:
+                $tplYaml: '{{ .Values.global.auth.secretName }}'
+              key:
+                $tplYaml: '{{ .Values.global.auth.nats.llmGatewayRequestLoggerPasswordKey }}'
+      - op: add
+        path: /env/-
+        value:
+          name: NATS_CLICKHOUSE_REQUEST_LOGS_READER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name:
+                $tplYaml: '{{ .Values.global.auth.secretName }}'
+              key:
+                $tplYaml: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPasswordKey }}'
   podTemplate:
     merge:
       spec:
@@ -175,18 +203,17 @@ nats:
 clickhouse:
   enabled: false
   clusterName: clickhouse
+  user: user
   shardsCount: 1
   replicasCount: 1
-  user: '{{ .Values.global.auth.clickhouse.user }}'
-  password: '{{ .Values.global.auth.clickhouse.password }}'
-  zookeeperHost: zookeeper-headless
+  zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:23.4.2
   resources:
     requests:
-      memory: 512Mi
-      cpu: 250m
-      ephemeralStorage: 1024Mi
+      memory: 4096Mi
+      cpu: 500m
+      ephemeralStorage: 2048Mi
     limits:
       memory: 4096Mi
       cpu: 500m
@@ -195,8 +222,6 @@ clickhouse:
     storageClassName: ''
     size: 10Gi
   nats:
-    url: >-
-      {{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
-    subjects: tfy-model-logs.request-logs
+    url: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
+    subjects: request-log.>
     username: clickhouse-request-logs-reader
-    password: '{{ .Values.global.auth.nats.clickhouseRequestLogsReaderPassword }}'

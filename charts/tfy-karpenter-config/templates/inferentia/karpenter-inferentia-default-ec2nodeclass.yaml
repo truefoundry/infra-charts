@@ -31,6 +31,10 @@ spec:
   detailedMonitoring: true
   {{- end }}
   amiFamily: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms }}
+  amiSelectorTerms:
+  {{- .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
+  {{- end }}
   {{- if eq .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily "Bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb

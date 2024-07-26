@@ -82,6 +82,21 @@ spec:
                 configMapKeyRef:
                   key: OAUTH_JWKS_URI
                   name: notebook-controller-config-map
+            - name: IS_EXT_AUTHZ_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: IS_EXT_AUTHZ_ENABLED
+                  name: notebook-controller-config-map
+            - name: EXT_AUTHZ_CONTROL_PLANE_URL
+              valueFrom:
+                configMapKeyRef:
+                  key: EXT_AUTHZ_CONTROL_PLANE_URL
+                  name: notebook-controller-config-map
+            - name: EXT_AUTHZ_SERVER_IMAGE
+              valueFrom:
+                configMapKeyRef:
+                  key: EXT_AUTHZ_SERVER_IMAGE
+                  name: notebook-controller-config-map
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
