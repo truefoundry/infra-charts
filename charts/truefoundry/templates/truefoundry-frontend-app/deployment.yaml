@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "truefoundry-frontend-app.fullname" . }}
+  labels:
+    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.truefoundryFrontendApp.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry-frontend-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.truefoundryFrontendApp.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "truefoundry-frontend-app.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "truefoundry-frontend-app.serviceAccountName" . }}
+      containers:
+        - name: "truefoundry-frontend-app"
+          env:
+            {{- include "truefoundry-frontend-app.env" . | trim | nindent 12 }}
+          image: "{{ .Values.truefoundryFrontendApp.imageRepository }}:{{ .Values.truefoundryFrontendApp.imageTag }}"
+          imagePullPolicy: {{ .Values.truefoundryFrontendApp.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.truefoundryFrontendApp.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.truefoundryFrontendApp.resources | nindent 12 }}
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /livez
+              port: {{ .Values.truefoundryFrontendApp.service.port }}
+              scheme: HTTP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: {{ .Values.truefoundryFrontendApp.service.port }}
+              scheme: HTTP
+          volumeMounts:
+          {{- toYaml .Values.truefoundryFrontendApp.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.truefoundryFrontendApp.extraVolumes | nindent 8 }}
+      {{- with .Values.truefoundryFrontendApp.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryFrontendApp.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.truefoundryFrontendApp.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.truefoundryFrontendApp.tolerations }}
+        {{- .Values.truefoundryFrontendApp.tolerations | toYaml | nindent 8 }}
+        {{- end }}

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sfy-manifest-service.fullname" . }}
+  labels:
+    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.sfyManifestService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.sfyManifestService.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sfy-manifest-service.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "sfy-manifest-service.serviceAccountName" . }}
+      containers:
+        - name: "sfy-manifest-service"
+          env:
+            {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
+          image: "{{ .Values.sfyManifestService.imageRepository }}:{{ .Values.sfyManifestService.imageTag }}"
+          imagePullPolicy: {{ .Values.sfyManifestService.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.sfyManifestService.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.sfyManifestService.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: {{ .Values.sfyManifestService.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /healthy
+              port: {{ .Values.sfyManifestService.service.port }}
+          volumeMounts:
+          {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
+      volumes:
+      {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
+      {{- with .Values.sfyManifestService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sfyManifestService.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.sfyManifestService.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.sfyManifestService.tolerations }}
+        {{- .Values.sfyManifestService.tolerations | toYaml | nindent 8 }}
+        {{- end }}

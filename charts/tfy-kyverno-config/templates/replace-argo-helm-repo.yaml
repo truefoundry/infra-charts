@@ -1,0 +1,33 @@
+{{- if .Values.replaceArgoHelmRepo.enabled -}}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-replace-argo-helm-repo
+  namespace: {{ .Release.Namespace }}
+spec:
+  background: false
+  rules:
+  - name: replace-argo-helm-repo
+    context:
+      - name: newRegistry
+        variable:
+          value: {{ .Values.replaceArgoHelmRepo.newRegistry }}
+    match:
+      any:
+      - resources:
+          kinds:
+            - argoproj.io/v1alpha1/Application
+          operations:
+            - CREATE
+            - UPDATE
+    preconditions:
+      all:
+        - key: "{{`'{{request.object.spec.source.helm}}'`}}"
+          operator: NotEquals
+          value: ""
+    mutate:
+      patchStrategicMerge:
+        spec:
+          source:
+            repoURL: {{`"{{ regex_replace_all_literal('^(https?://)?[^/]+', '{{request.object.spec.source.repoURL}}', '{{newRegistry}}' )}}"`}}
+{{- end -}}

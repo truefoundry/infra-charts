@@ -1,4 +1,4 @@
-name: Build and Deploy using TrueFoundry
+name: Upload Code, Build and Deploy using TrueFoundry
 cicd_provider_id: bitbucket
 enabled: true
 description: "TrueFoundry Control Plane will pull an archive of the source code from your Storage Integrations and build the image to deploy the application."
@@ -48,5 +48,5 @@ steps:
                           - export WORKSPACE_FQN={{ TRUEFOUNDRY_WORKSPACE_FQN }}
                           - apt update && apt install -y jq
                           - pip3 install "truefoundry<1.0.0"
-                          - tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN"
+                          - tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN" --no-wait
         ```
