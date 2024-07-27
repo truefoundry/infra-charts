@@ -10,15 +10,6 @@ metadata:
     truefoundry.com/infra-migration-tag: "1000"
 spec:
   project: tfy-apps
-  ignoreDifferences:
-    - group: admissionregistration.k8s.io
-      kind: ValidatingWebhookConfiguration
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-    - group: monitoring.coreos.com
-      jqPathExpressions:
-        - .spec.endpoints[]?.relabelings[]?.action
-      kind: ServiceMonitor
   destination:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
