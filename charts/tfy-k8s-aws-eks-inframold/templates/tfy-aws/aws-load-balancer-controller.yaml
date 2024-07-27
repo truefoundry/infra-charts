@@ -9,19 +9,6 @@ metadata:
     truefoundry.com/infra-component: "aws-load-balancer-controller"
     truefoundry.com/infra-migration-tag: "1000"
 spec:
-  ignoreDifferences:
-    - jqPathExpressions:
-        - .data
-      kind: Secret
-      name: aws-load-balancer-tls
-    - jqPathExpressions:
-        - .webhooks[]?.clientConfig?.caBundle
-      kind: MutatingWebhookConfiguration
-      group: admissionregistration.k8s.io
-    - jqPathExpressions:
-        - .webhooks[]?.clientConfig?.caBundle
-      kind: ValidatingWebhookConfiguration
-      group: admissionregistration.k8s.io
   destination:
     namespace: aws-load-balancer-controller
     server: 'https://kubernetes.default.svc'
