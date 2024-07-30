@@ -135,3 +135,9 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | ----------------------- | ------------------------ | ------ |
 | `tfyAgent.enabled`      | Flag to enable Tfy Agent | `true` |
 | `tfyAgent.clusterToken` | cluster token            | `""`   |
+
+### elasti parameters
+
+| Name             | Description           | Value   |
+| ---------------- | --------------------- | ------- |
+| `elasti.enabled` | Flag to enable Elasti | `false` |
