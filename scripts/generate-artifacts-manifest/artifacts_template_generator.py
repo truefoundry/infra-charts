@@ -10,6 +10,15 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 temp_dir = "/tmp/helm_charts"
 
+# Mode as environment variable
+mode = os.getenv("MODE", "remote")  # Default to "remote" if MODE is not set
+
+logging.info(f"Mode: {mode}")
+
+# Validate the mode
+if mode not in ["local", "remote"]:
+    raise ValueError(f"Invalid MODE: {mode}. Must be 'local' or 'remote'.")
+
 # function to run shell commands
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -111,6 +120,15 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
 
     return manifest_file
 
+# function to generate manifest from local chart
+def generate_manifests_local(chart_name, values_file):
+    chart_dir = os.path.join(temp_dir, chart_name)
+    manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
+    logging.info(f"Generating the manifests for the chart {chart_name} using the values file {values_file}")
+    run_command(f"helm template {chart_name} -f {values_file} {chart_dir} > {manifest_file}")
+
+    return manifest_file
+
 # function to extract images from Kubernetes manifests
 def extract_images_from_k8s_manifests(yaml_content):
     resources_with_containers = ['Deployment', 'StatefulSet', 'DaemonSet', 'Job', 'CronJob', 'Pod', 'ReplicaSet']
@@ -173,7 +191,11 @@ if __name__ == "__main__":
     output_file = sys.argv[5]
     extra_file = sys.argv[6]
 
-    manifest_file = generate_manifests(chart_name, chart_repo_url, chart_version, values_file)
+    # Generate manifests based on the mode
+    if mode == "local":
+        manifest_file = generate_manifests_local(chart_name, values_file)
+    else:
+        manifest_file = generate_manifests(chart_name, chart_repo_url, chart_version, values_file)
 
     chart_info_list = extract_chart_info(manifest_file)
     if chart_info_list:

@@ -42,6 +42,8 @@ jobs:
               python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
                 $version charts/$chart/values.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
             done
+          env:
+            MODE: "local"
 
         # Update the inframold artifacts manifest
         - name: Create Pull Request
