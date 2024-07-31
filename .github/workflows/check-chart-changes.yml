@@ -1,0 +1,24 @@
+name: Check Chart Version Upgrade
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  get-chart:
+    runs-on: ubuntu-latest
+    name: Get Chart Changes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: get-chart
+        name: Get Chart Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: truefoundry/check-chart-version-upgrade@v0.0.8
+        with:
+          prNumber: ${{ github.event.number }}
+          repoName: ${{ github.repository }}
