@@ -122,7 +122,7 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
 
 # function to generate manifest from local chart
 def generate_manifests_local(chart_name, values_file):
-    chart_dir = os.path.join(temp_dir, chart_name)
+    chart_dir = os.path.join("charts", chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
     logging.info(f"Generating the manifests for the chart {chart_name} using the values file {values_file}")
     run_command(f"helm template {chart_name} -f {values_file} {chart_dir} > {manifest_file}")
@@ -176,8 +176,13 @@ def extract_images_from_k8s_manifests(yaml_content):
 
     return image_info_list
 
+# function to clean up the temporary directory
 def clean_up(temp_dir):
     run_command(f"rm -rf {temp_dir}")
+
+# function to create a temporary directory
+def create_tmp_dir():
+    os.makedirs(temp_dir, exist_ok=True)
 
 if __name__ == "__main__":
     if len(sys.argv) < 6:
@@ -190,6 +195,9 @@ if __name__ == "__main__":
     values_file = sys.argv[4]
     output_file = sys.argv[5]
     extra_file = sys.argv[6]
+
+    # Create a temporary directory to store the chart and generated manifests
+    create_tmp_dir()
 
     # Generate manifests based on the mode
     if mode == "local":
