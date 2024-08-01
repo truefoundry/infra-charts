@@ -1,3 +1,4 @@
+{{- if .Values.mlfoundryServer.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,8 +20,16 @@ spec:
         {{- include "mlfoundry-server.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "mlfoundry-server.serviceAccountName" . }}
+      {{- with .Values.mlfoundryServer.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "mlfoundry-server"
+          {{- with .Values.mlfoundryServer.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
           image: "{{ .Values.mlfoundryServer.imageRepository }}:{{ .Values.mlfoundryServer.imageTag }}"
@@ -72,3 +81,4 @@ spec:
         {{- if .Values.mlfoundryServer.tolerations }}
         {{- .Values.mlfoundryServer.tolerations | toYaml | nindent 8 }}
         {{- end }}
+  {{- end }}

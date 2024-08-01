@@ -1,0 +1,16 @@
+{{- if .Values.tfyK8sController.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-k8s-controller.fullname" . }}
+  labels: {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.tfyK8sController.service.type }}
+  ports:
+    - port: {{ .Values.tfyK8sController.service.port }}
+      targetPort: {{ .Values.tfyK8sController.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "tfy-k8s-controller.selectorLabels" . | nindent 4 }}
+{{- end }}
