@@ -1,4 +1,4 @@
-{{- if .Values.truefoundryFrontendApp.istio.virtualservice.enabled -}}
+{{- if and .Values.truefoundryFrontendApp.enabled .Values.truefoundryFrontendApp.istio.virtualservice.enabled -}}
 {{- $serviceName := include "truefoundry-frontend-app.fullname" . -}}
 {{- $servicePort := .Values.truefoundryFrontendApp.service.port -}}
 apiVersion: networking.istio.io/v1beta1

@@ -1,4 +1,4 @@
-{{- if .Values.truefoundryFrontendApp.ingress.enabled -}}
+{{- if and .Values.truefoundryFrontendApp.enabled .Values.truefoundryFrontendApp.ingress.enabled -}}
 {{- $serviceName := include "truefoundry-frontend-app.fullname" . -}}
 {{- $servicePort := .Values.truefoundryFrontendApp.service.port -}}
 apiVersion: networking.k8s.io/v1

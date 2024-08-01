@@ -77,6 +77,7 @@ truefoundryBootstrap:
   tolerations: {}
     ##########################
     ## truefoundryFrontendApp Settings specific to dashboard app
+
 truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.enabled Bool to enable the frontend app
   enabled: true
@@ -98,8 +99,12 @@ truefoundryFrontendApp:
   fullnameOverride: ''
   ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
   podAnnotations: {}
+  ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
+  podSecurityContext: {}
   ## @param truefoundryFrontendApp.commonLabels Common labels for the frontend app pods
   commonLabels: {}
+  ## @param truefoundryFrontendApp.securityContext Security context for the frontend app
+  securityContext: {}
   ## truefoundryFrontendApp.resources Resource requests and limits for the frontend app
   resources:
     ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
@@ -159,7 +164,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: cb36cdf3c3fa5d74e2ba4e291c86f6ace48f2235
+  imageTag: 99fb9c63ee9637c1f6395429c9371281e8e36531
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -209,6 +214,7 @@ truefoundryFrontendApp:
     VITE_EXPORT_AS_HELM_TYPES: service,volume,helm
     VITE_ENABLE_COMPANY_REGISTRATION: "false"
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
+    VITE_ENABLE_WORKFLOWS: "false"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
@@ -269,8 +275,12 @@ mlfoundryServer:
   fullnameOverride: ''
   ## @param mlfoundryServer.podAnnotations Annotations for the mlfoundry server pods
   podAnnotations: {}
+  ## @param mlfoundryServer.podSecurityContext Security context for the mlfoundry server pods
+  podSecurityContext: {}
   ## @param mlfoundryServer.commonLabels Common labels for the mlfoundry server pods
   commonLabels: {}
+  ## @param mlfoundryServer.securityContext Security context for the mlfoundry server
+  securityContext: {}
   ## mlfoundryServer.resources Resource requests and limits for the mlfoundry server
   resources:
     ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
@@ -308,7 +318,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: d49ae07dc884843e270dcc526df1540b0f7523df
+  imageTag: 97f9b1815b70359343f54d0370624b10b65452d8
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
   extraVolumes: []
   ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
@@ -332,6 +342,7 @@ mlfoundryServer:
     SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
       .Release.Namespace }}.svc.cluster.local:3000
+    ENVIRONMENT: production
 
 #######################
 ## servicefoundryServer Settings specific to servicefoundry.
@@ -358,8 +369,12 @@ servicefoundryServer:
   fullnameOverride: ''
   ## @param servicefoundryServer.podAnnotations Annotations for the servicefoundry server pods
   podAnnotations: {}
+  ## @param servicefoundryServer.podSecurityContext Security context for the servicefoundry server pods
+  podSecurityContext: {}
   ## @param servicefoundryServer.commonLabels Common labels for the servicefoundry server pods
   commonLabels: {}
+  ## @param servicefoundryServer.securityContext Security context for the servicefoundry server
+  securityContext: {}
   ## servicefoundryServer.resources Resource requests and limits for the servicefoundry server
   resources:
     ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
@@ -406,7 +421,6 @@ servicefoundryServer:
     enabled: true
   ## @skip servicefoundryServer.env Environment variables for the servicefoundry server
   env:
-    LOG_LEVEL: info
     S3_BUCKET_NAME: ""
     GS_BUCKET_NAME: ""
     AZURE_BLOB_URI: ""
@@ -416,12 +430,11 @@ servicefoundryServer:
     DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
     DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
     DB_PORT: "5432"
-    STRIPE_KEY: ""
-    STRIPE_WEBHOOK_SECRET: ""
-    SVC_FOUNDRY_SERVICE_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    PORT: "3000"
-    SWAGGER_ENABLE: "0"
-    NODE_ENV: production
+    DB_SSL_CA_PATH: ""
+    DB_SSL_CERT_PATH: ""
+    DB_SSL_KEY_PATH: ""
+    DB_SSL_MODE: ""
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     GITHUB_PRIVATE_KEY: ""
     GITHUB_APP_ID: ""
     GITHUB_PAT: ""
@@ -436,63 +449,129 @@ servicefoundryServer:
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     TFY_BUILD_LOGS_URL: "{{ .Values.global.controlPlaneURL }}/api/svc"
     TFY_BUILD_WS_URL: "{{ .Values.global.controlPlaneURL }}"
-    TFY_BUILD_WS_PATH: /api/svc/socket.io
-    LOKI_URL: http://loki.loki.svc.cluster.local:3100
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    ISTIO_INJECTION_STATE: disabled
-    WORKSPACE_PER_USER_WITHOUT_PAYMENT: "-1"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    MULTITENANT: "false"
+    KUBE_CONTEXT: ""
+    BUILDKIT_SERVICE_URL: ""
+    DEPOT_PROJECT_ID: ""
+    DEPOT_TOKEN: ""
     MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{
       .Release.Namespace }}.svc.cluster.local:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{
       .Release.Namespace }}.svc.cluster.local:5000
     DEFAULT_CLOUD_PROVIDER: aws
-    MIN_CLI_VERSION: 0.2.0
-    OTEL_SERVICE_NAME: sfy-server
     NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
     NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace
       }}.svc.cluster.local:4222
-    SECRET_STORE: aws-ssm
+    NATS_QGROUP_NAME: ""
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{
       .Release.Namespace }}.svc.cluster.local:8123
-    ENABLE_SERVER_SIDE_APPLY: "true"
-    LLM_GATEWAY_URL: ""
-    TRUEFOUNDRY_PUBLIC_ENABLED: ""
-    LLM_GATEWAY_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/llm-gateway/devtest
-    MAX_REQUEST_SIZE: ""
-    METRICS_MAX_DATA_POINTS: "60"
-    PROMETHEUS_SCRAP_INTERVAL_SECONDS: "15"
-    CONTROL_PLANE_PROMETHEUS_URL: http://prometheus-operated.prometheus.svc.cluster.local:9090/
-    MODEL_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/models
-    APPLICATION_CATALOGUE_BASE_URL: https://catalogue.truefoundry.com/templates
+    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
     CLICKHOUSE_HOST: ""
     CLICKHOUSE_USER: ""
     CLICKHOUSE_PASSWORD: ""
     CLICKHOUSE_WAIT_TIMEOUT: 5m
-    HELM_CHART_EXPORT_DEPENDENCY_LIMIT: "100"
-    SLACK_ALERT_URL: ""
-    SLACK_BILLING_ALERT_URL: ""
-    DB_CONNECTION_POOL_MAX_COUNT: "10"
-    DB_IDLE_IN_TRANSACTION_SESSION_TIMEOUT_MS: "60000"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
-    BUILD_NAMESPACE: truefoundry
-    KUBE_CONTEXT: ""
-    BUILDKIT_SERVICE_URL: "{{ .Release.Name }}-tfy-buildkitd-service.{{
-      .Release.Namespace }}.svc.cluster.local:1234"
-    ACCESS_TFY_GATEWAY_MODELS_TENANT_DENY_LIST: ""
-    MIGRATION_SERVER_URL: https://migration-server.truefoundry.com
-    AUTOPILOT_ENABLED: "false"
-    AUTOPILOT_CONSUMER_BATCH_MAX_MESSAGES: "50"
-    AUTOPILOT_CONSUMER_MESSAGE_EXPIRY_MS: "10000"
-    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
-      .Release.Namespace }}.svc.cluster.local:3000
     STORAGE_CLASS_ACCESS_MODES: ""
+    STRIPE_KEY: ""
+    STRIPE_WEBHOOK_SECRET: ""
+    BITBUCKET_APP_PASSWORD: ""
+    LLM_GATEWAY_URL: ""
+    TRUEFOUNDRY_PUBLIC_ENABLED: ""
+    ACCESS_TFY_GATEWAY_MODELS_TENANT_DENY_LIST: ""
+    SLACK_BILLING_ALERT_URL: ""
+    SLACK_ALERT_URL: ""
+    AWS_REGION: ""
+    FLYTE_ADMIN_URL: ""
+    EXTERNAL_OAUTH_ISSUER: ""
+    EXTERNAL_OAUTH_CLIENT_ID: ""
+    EXTERNAL_OAUTH_CLIENT_SECRET: ""
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: a665b802391be1a90ccb33e6ae7a7b4a8a1c4532
+  imageTag: f408c7b286eaf5bdc8103dcbb69ceac7a9657140
+
+#######################
+## tfyK8sController Settings specific to tfyK8sController.
+tfyK8sController:
+  ## @param tfyK8sController.enabled Bool to enable the tfyK8sController
+  enabled: true
+  ## @param tfyK8sController.tolerations Tolerations specific to the tfyK8sController
+  tolerations: {}
+  ## @param tfyK8sController.replicaCount Number of replicas for the tfyK8sController
+  replicaCount: 1
+  ## @param tfyK8sController.global Global values for the tfyK8sController
+  global: {}
+  ## @param tfyK8sController.imageRepository Image repository for the tfyK8sController
+  imageRepository: truefoundrycloud/tfy-k8s-controller
+  ## @param tfyK8sController.environmentName Environment name for tfyK8sController
+  environmentName: default
+  ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
+  envSecretName: 'tfy-k8s-controller-env-secret'
+  ## @param tfyK8sController.imagePullPolicy Image pull policy for the tfyK8sController
+  imagePullPolicy: IfNotPresent
+  ## @param tfyK8sController.nameOverride Override name for the tfyK8sController
+  nameOverride: ''
+  ## @param tfyK8sController.fullnameOverride Full name override for the tfyK8sController
+  fullnameOverride: ''
+  ## @param tfyK8sController.podAnnotations Annotations for the tfyK8sController pods
+  podAnnotations: {}
+  ## @param tfyK8sController.podSecurityContext Security context for the tfyK8sController pods
+  podSecurityContext: {}
+  ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
+  commonLabels: {}
+  ## @param tfyK8sController.securityContext Security context for the tfyK8sController
+  securityContext: {}
+  ## tfyK8sController.resources Resource requests and limits for the tfyK8sController
+  resources:
+    ## tfyK8sController.resources.limits Resource limits for the tfyK8sController
+    limits:
+      ## @param tfyK8sController.resources.limits.cpu CPU limit for the tfyK8sController
+      cpu: 400m
+      ## @param tfyK8sController.resources.limits.memory Memory limit for the tfyK8sController
+      memory: 512Mi
+      ## @param tfyK8sController.resources.limits.ephemeral-storage Ephemeral storage limit for the tfyK8sController
+      ephemeral-storage: 256Mi
+    ## tfyK8sController.resources.requests Resource requests for the tfyK8sController
+    requests:
+      ## @param tfyK8sController.resources.requests.cpu CPU request for the tfyK8sController
+      cpu: 200m
+      ## @param tfyK8sController.resources.requests.memory Memory request for the tfyK8sController
+      memory: 256Mi
+      ## @param tfyK8sController.resources.requests.ephemeral-storage Ephemeral storage request for the tfyK8sController
+      ephemeral-storage: 128Mi
+  ## @param tfyK8sController.nodeSelector Node selector for the tfyK8sController
+  nodeSelector: {}
+  ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
+  affinity: {}
+  ## @param tfyK8sController.topologySpreadConstraints Topology spread constraints for the tfyK8sController
+  topologySpreadConstraints: {}
+  ## tfyK8sController.service Service settings for the tfyK8sController
+  service:
+    ## @param tfyK8sController.service.type Service type for the tfyK8sController
+    type: ClusterIP
+    ## @param tfyK8sController.service.port Service port for the tfyK8sController
+    port: 3002
+    ## @param tfyK8sController.service.annotations Annotations for the tfyK8sController service
+    annotations: {}
+    ## tfyK8sController.serviceAccount Service account settings for the tfyK8sController
+  serviceAccount:
+    ## @param tfyK8sController.serviceAccount.annotations Annotations for the tfyK8sController service account
+    annotations: {}
+  ## @param tfyK8sController.extraVolumes Extra volumes for the tfyK8sController
+  extraVolumes: []
+  ## @param tfyK8sController.extraVolumeMounts Extra volume mounts for the tfyK8sController
+  extraVolumeMounts: []
+  ## @skip tfyK8sController.env Environment variables for the tfyK8sController
+  env:
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace
+      }}.svc.cluster.local:4222
+    SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  ## @param tfyK8sController.imageTag Image Tag for tfyK8sController
+  imageTag: 41896cb8d1b489de9e0b8b48c7d2f1180993d393
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -520,8 +599,12 @@ sfyManifestService:
   fullnameOverride: ''
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
+  ## @param sfyManifestService.podSecurityContext Security context for the sfy manifest service pods
+  podSecurityContext: {}
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
+  ## @param sfyManifestService.securityContext Security context for the sfy manifest service
+  securityContext: {}
   ## sfyManifestService.resources Resource requests and limits for the sfy manifest service
   resources:
     ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
@@ -576,7 +659,7 @@ sfyManifestService:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     HELM_SIZE_LIMIT_BYTES: "307200"
     ASYNC_PROCESSOR_SIDECAR_IMAGE: public.ecr.aws/w0y0d8g6/truefoundrycloud/async_processor:35b639ea3db5490f816379de0c92a9a933338cdf
-    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.4
+    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.5
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
     AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
@@ -586,7 +669,7 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: ca14e961fa0f0b8fc63bd184bc73e1aa5d859460
+  imageTag: cdd980eaac6da502f8e134f55bc10ce72227ebb6
 
 #############################
 ## nats Settings corresponding to the NATS server
@@ -597,7 +680,7 @@ nats:
   ## nats.nats NATS server configuration
   nats:
     ## @param nats.nats.image NATS server image
-    image: nats:2.10.12-alpine3.19
+    image: nats:2.10.18-alpine3.20
     ## @param nats.nats.advertise Bool to enable NATS server advertise
     advertise: false
     ## nats.nats.jetstream Jetstream configuration for NATS server
@@ -715,7 +798,7 @@ tfyBuild:
     ## tfyBuild.truefoundryWorkflows.sfyBuilder Settings for the sfyBuilder
     sfyBuilder:
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.version syftBuilder Version
-      version: 0.7.3
+      version: 0.8.0rc2
       ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources Resource requests and limits for the sfyBuilder
       resources:
         ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources.limits Resource limits for the sfyBuilder
@@ -846,8 +929,12 @@ tfyController:
   fullnameOverride: ''
   ## @param tfyController.podAnnotations Annotations for the tfyController pods
   podAnnotations: {}
+  ## @param tfyController.podSecurityContext Security context for the tfyController pods
+  podSecurityContext: {}
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
+  ## @param tfyController.securityContext Security context for the tfyController
+  securityContext: {}
   ## @skip tfyController.resources Resource requests and limits for the tfyController
   resources:
     limits:
@@ -895,4 +982,4 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
       .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: bde6ccf4a9a8ee56013b853a383847d5cb4e0fa1
+  imageTag: f8e4a69a6513adb5ab6d7fcf3d30276724efbbf1

@@ -1,3 +1,4 @@
+{{- if .Values.tfyBuild.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
@@ -9,6 +10,7 @@ spec:
       "truefoundry.com/buildName":
         expression: workflow.name
   entrypoint: build
+  activeDeadlineSeconds: 14400
   onExit: exit-handler
   arguments:
     parameters:
@@ -104,18 +106,16 @@ spec:
             - debug
             - workers
   - name: build-and-push
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+    activeDeadlineSeconds: 5400
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
         karpenter.sh/do-not-disrupt: 'true'
         karpenter.sh/do-not-evict: 'true'
     retryStrategy:
-      limit: 5
+      limit: 1
       expression: "asInt(lastRetry.exitCode) == 210"
-      backoff:
-        duration: "30"
-        factor: 2
-        maxDuration: "1h"
     inputs:
       parameters:
         - name: buildSource
@@ -157,104 +157,104 @@ spec:
         rm -f -R ./source-code
 
         if [[ $BUILD_TYPE == "remote" ]]; then
-            REMOTE_URL=$(echo $BUILD_SOURCE | jq -r '.remote_uri')
-            printf "\033[36m[Start]\033[0m Downloading source code from remote source\n"
-            mkdir -p source-code
-            curl -s -o project-files.tar.gz $REMOTE_URL
-            tar -xf project-files.tar.gz -C source-code
-            cd source-code
+          REMOTE_URL=$(echo $BUILD_SOURCE | jq -r '.remote_uri')
+          printf "\033[36m[Start]\033[0m Downloading source code from remote source\n"
+          mkdir -p source-code
+          curl -s -o project-files.tar.gz $REMOTE_URL
+          tar -xf project-files.tar.gz -C source-code
+          cd source-code
         elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "github" ]]; then
-            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
 
-            git config --global url."https://github.com/".insteadOf git@github.com:
-            git config --global url."https://".insteadOf git://
+          git config --global url."https://github.com/".insteadOf git@github.com:
+          git config --global url."https://".insteadOf git://
 
-            # Example of GIT_URL="https://x-access-token:<token>@github.com/user_name/repo_name"
-            # Example of TRIMMED_URL="https://github.com/user_name/repo_name"
+          # Example of GIT_URL="https://x-access-token:<token>@github.com/user_name/repo_name"
+          # Example of TRIMMED_URL="https://github.com/user_name/repo_name"
 
-            TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-access-token:\([^@]*\).*/\1/p')
-            TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-access-token:[^@]*@~~')
+          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-access-token:\([^@]*\).*/\1/p')
+          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-access-token:[^@]*@~~')
 
-            printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-            
-            # Set auth token
+          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
+          
+          # Set auth token
 
-            git config --system credential.helper store
-            echo "https://x-access-token:$TOKEN@github.com" > ~/.git-credentials
+          git config --system credential.helper store
+          echo "https://x-access-token:$TOKEN@github.com" > ~/.git-credentials
 
-            git clone --recursive $TRIMMED_URL source-code
-            cd source-code && git reset --hard $GIT_REF
+          git clone --recursive $TRIMMED_URL source-code
+          cd source-code && git reset --hard $GIT_REF
         elif [[ $BUILD_TYPE == "bitbucket" ]]; then
-            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
 
-            git config --global url."https://bitbucket.org/".insteadOf git@bitbucket.org:
-            git config --global url."https://".insteadOf git://
+          git config --global url."https://bitbucket.org/".insteadOf git@bitbucket.org:
+          git config --global url."https://".insteadOf git://
 
-            # Example of GIT_URL="https://x-token-auth:<token>@bitbucket.org/user_name/repo_name"
-            # Example of TRIMMED_URL="https://bitbucket.org/user_name/repo_name"
+          # Example of GIT_URL="https://x-token-auth:<token>@bitbucket.org/user_name/repo_name"
+          # Example of TRIMMED_URL="https://bitbucket.org/user_name/repo_name"
 
-            TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
-            TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
+          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
+          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
 
-            printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-            
-            # Set auth token
+          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
+          
+          # Set auth token
 
-            git config --system credential.helper store
-            echo "https://x-token-auth:$TOKEN@bitbucket.org" > ~/.git-credentials
+          git config --system credential.helper store
+          echo "https://x-token-auth:$TOKEN@bitbucket.org" > ~/.git-credentials
 
-            git clone --recurse-submodules $TRIMMED_URL source-code
-            cd source-code && git reset --hard $GIT_REF
+          git clone --recurse-submodules $TRIMMED_URL source-code
+          cd source-code && git reset --hard $GIT_REF
         elif [[ $BUILD_TYPE == "gitlab" ]]; then
-            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
 
-            git config --global url."https://gitlab.com/".insteadOf git@gitlab.com:
-            git config --global url."https://".insteadOf git://
+          git config --global url."https://gitlab.com/".insteadOf git@gitlab.com:
+          git config --global url."https://".insteadOf git://
 
-            # Example of GIT_URL="https://oauth2:<token>@gitlab.com/user_name/repo_name"
-            # Example of TRIMMED_URL="https://gitlab.com/user_name/repo_name"
+          # Example of GIT_URL="https://oauth2:<token>@gitlab.com/user_name/repo_name"
+          # Example of TRIMMED_URL="https://gitlab.com/user_name/repo_name"
 
-            TOKEN=$(echo "$GIT_URL" | sed -n 's/.*oauth2:\([^@]*\).*/\1/p')
-            TRIMMED_URL=$(echo "$GIT_URL" | sed 's~oauth2:[^@]*@~~')
+          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*oauth2:\([^@]*\).*/\1/p')
+          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~oauth2:[^@]*@~~')
 
-            printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-            
-            # Set auth token
+          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
+          
+          # Set auth token
 
-            git config --system credential.helper store
-            echo "https://oauth2:$TOKEN@gitlab.com" > ~/.git-credentials
+          git config --system credential.helper store
+          echo "https://oauth2:$TOKEN@gitlab.com" > ~/.git-credentials
 
-            git clone --recurse-submodules $TRIMMED_URL source-code
-            cd source-code && git reset --hard $GIT_REF
+          git clone --recurse-submodules $TRIMMED_URL source-code
+          cd source-code && git reset --hard $GIT_REF
         elif [[ $BUILD_TYPE == "azure" ]]; then
-            GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-            GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
+          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
+          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
 
-            git config --global url."https://dev.azure.com/".insteadOf git@ssh.dev.azure.com:v3/
-            git config --global url."https://".insteadOf git://
+          git config --global url."https://dev.azure.com/".insteadOf git@ssh.dev.azure.com:v3/
+          git config --global url."https://".insteadOf git://
 
-            # Example of GIT_URL="https://x-token-auth:<token>@dev.azure.com/organization/project/_git/repo_name"
-            # Example of TRIMMED_URL="https://dev.azure.com/organization/project/_git/repo_name"
+          # Example of GIT_URL="https://x-token-auth:<token>@dev.azure.com/organization/project/_git/repo_name"
+          # Example of TRIMMED_URL="https://dev.azure.com/organization/project/_git/repo_name"
 
-            TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
-            TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
+          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
+          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
 
-            printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-            
-            # Set auth token
-            git config --system credential.helper store
-            echo "https://x-token-auth:$TOKEN@dev.azure.com" > ~/.git-credentials
+          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
+          
+          # Set auth token
+          git config --system credential.helper store
+          echo "https://x-token-auth:$TOKEN@dev.azure.com" > ~/.git-credentials
 
-            git clone --recurse-submodules $TRIMMED_URL source-code
-            cd source-code && git reset --hard $GIT_REF
+          git clone --recurse-submodules $TRIMMED_URL source-code
+          cd source-code && git reset --hard $GIT_REF
         elif [[ $BUILD_TYPE == "notebook_build" ]]; then
-            :
+          :
         else
-            printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Source type '$BUILD_TYPE' not supported.\n"
-            exit 1
+          printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Source type '$BUILD_TYPE' not supported.\n"
+          exit 1
         fi
         printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Download code completed\n"
         printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please find the logs below\n"
@@ -264,13 +264,24 @@ spec:
         docker login -u "{{`{{inputs.parameters.dockerRegistryUsername}}`}}" -p $DOCKER_PASSWORD "{{`{{inputs.parameters.dockerRegistryURL}}`}}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
         
         IMAGE="{{`{{inputs.parameters.dockerRegistryURL}}`}}"/"{{`{{inputs.parameters.dockerRepo}}`}}"
+
+        # Split buildkitServiceURL into host and port
+        IFS=':' read -r -a BUILDKIT_SERVICE_URL_PARTS <<< "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+        BUILDKIT_HOST="${BUILDKIT_SERVICE_URL_PARTS[0]}"
+        BUILDKIT_PORT="${BUILDKIT_SERVICE_URL_PARTS[1]}"
+
+        # Test connectivity using nc (netcat) with a timeout of 2 minutes
+        if ! nc -z -w 120 "$BUILDKIT_HOST" "$BUILDKIT_PORT"; then
+          echo "Error: Unable to connect to buildkit service at $BUILDKIT_HOST:$BUILDKIT_PORT"
+          exit 1
+        fi
         
         printf "\033[36m[==== Docker logs start ====]\033[0m\n"
         docker buildx create --name remote-kubernetes --driver remote tcp://{{`{{inputs.parameters.buildkitServiceURL}}`}}
         # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
         set +e
         set +o pipefail
-        sfy build --build-config={{`{{inputs.parameters.buildConfig}}`}} --name=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:latest --cache-to=type=registry,ref=$IMAGE:cache-latest,image-manifest=true,mode=max --cache-from=type=registry,ref=$IMAGE:cache-latest --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
+        tfy build --build-config={{`{{inputs.parameters.buildConfig}}`}} --name=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:latest --cache-to=type=registry,ref=$IMAGE:cache-latest,image-manifest=true,mode=max --cache-from=type=registry,ref=$IMAGE:cache-latest --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
         set -o pipefail
         set -e
         printf "\033[36m[==== Docker logs end ====]\033[0m\n"
@@ -360,23 +371,21 @@ spec:
             - name: dockerTag
               value: "{{`{{inputs.parameters.dockerTag}}`}}"
   - name: end-marker
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+    activeDeadlineSeconds: 300
     retryStrategy:
-      limit: 5
+      limit: 2
       retryPolicy: "Always"
-      backoff:
-        duration: "30"
-        factor: 2
-        maxDuration: "2m"
     script:
       resources:
         limits:
-          cpu: 200m
+          cpu: 20m
           ephemeral-storage: 256Mi
-          memory: 256Mi
+          memory: 100Mi
         requests:
-          cpu: 100m
+          cpu: 10m
           ephemeral-storage: 128Mi
-          memory: 128Mi
+          memory: 50Mi
       image: ubuntu
       command: [bash]
       source: |
@@ -391,13 +400,17 @@ spec:
         fi
         echo "PIPELINE_RUN_{{`{{workflow.name}}`}}_ENDED"
   - name: send-api-request
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+    activeDeadlineSeconds: 300
     retryStrategy:
-      limit: 20
+      limit: 4
       retryPolicy: "Always"
       backoff:
-        duration: "30"
+        duration: 1s
         factor: 2
-        maxDuration: "2m"
+        # maxDuration is for the whole node and not for every retry
+        # maxDuration will only be considered if there was atleast one retry
+        maxDuration: 30m
     inputs:
       parameters:
         - name: url
@@ -411,14 +424,14 @@ spec:
     script:
       resources:
         limits:
-          cpu: 200m
+          cpu: 20m
           ephemeral-storage: 256Mi
-          memory: 256Mi
+          memory: 100Mi
         requests:
-          cpu: 100m
+          cpu: 10m
           ephemeral-storage: 128Mi
-          memory: 128Mi
-      image: nyurik/alpine-python3-requests
+          memory: 50Mi
+      image: nyurik/alpine-python3-requests@sha256:e0553236e3ebaa240752b41b8475afb454c5ab4c17eb023a2a904637eda16cf6
       command: [python3]
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
       env:
@@ -439,7 +452,7 @@ spec:
                 token= "{{`{{inputs.parameters.token}}`}}"
                 msg = "\033[36m[Start]\033[0m Sending request to url: {} with json {}".format(url, payload)
                 print(msg)
-                r = requests.request(method, url=url, json=json.loads(payload), headers={"authorization": "Bearer "+ token})
+                r = requests.request(method, url=url, json=json.loads(payload), headers={"authorization": "Bearer "+ token}, timeout=10)
                 r.raise_for_status()
             except Exception as e:
                 print("{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Error occured while notifying server")
@@ -452,7 +465,8 @@ spec:
       {{- toYaml . | nindent 6 }}
       {{- end }}
   - name: should-build-soci-index
-    activeDeadlineSeconds: 1800
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+    activeDeadlineSeconds: 600
     metrics:
       prometheus:
         - name: tfy_build_soci_index_status
@@ -484,10 +498,12 @@ spec:
         - name: dockerTag
     retryStrategy:
       backoff:
-        duration: '1'
+        duration: 1s
         factor: 2
-        maxDuration: 1m
-      limit: 5
+        # maxDuration is for the whole node and not for every retry
+        # maxDuration will only be considered if there was atleast one retry
+        maxDuration: 1h
+      limit: 3
       retryPolicy: Always
     outputs:
       parameters:
@@ -544,6 +560,7 @@ spec:
         echo SOCI index will be built and pushed.
         echo -n "true" > /tmp/result
   - name: build-and-push-soci-index
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
     activeDeadlineSeconds: 3600
     metrics:
       prometheus:
@@ -575,11 +592,7 @@ spec:
         - name: dockerRepo
         - name: dockerTag
     retryStrategy:
-      backoff:
-        duration: '1'
-        factor: 2
-        maxDuration: 1m
-      limit: 2
+      limit: 1
       retryPolicy: Always
     script:
       command: [bash]
@@ -642,3 +655,4 @@ spec:
   tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+{{- end }}
