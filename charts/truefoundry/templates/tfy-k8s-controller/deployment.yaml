@@ -1,0 +1,72 @@
+{{- if .Values.tfyK8sController.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-k8s-controller.fullname" . }}
+  labels:
+    {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.tfyK8sController.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyK8sController.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-k8s-controller.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-k8s-controller.serviceAccountName" . }}
+      {{- with .Values.tfyK8sController.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-k8s-controller"
+          {{- with .Values.tfyK8sController.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-k8s-controller.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyK8sController.imageRepository }}:{{ .Values.tfyK8sController.imageTag }}"
+          imagePullPolicy: {{ .Values.tfyK8sController.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyK8sController.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.tfyK8sController.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.tfyK8sController.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.tfyK8sController.service.port }}
+          volumeMounts:
+            {{- include "tfy-k8s-controller.volumeMounts" . | nindent 12 }}
+      volumes:
+        {{- include "tfy-k8s-controller.volumes" . | nindent 8 }}
+      {{- with .Values.tfyK8sController.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyK8sController.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyK8sController.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyK8sController.tolerations }}
+        {{- .Values.tfyK8sController.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}
