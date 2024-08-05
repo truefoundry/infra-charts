@@ -25,6 +25,10 @@ spec:
         {{- end }}
         app: tfy-sds-server
     spec:
+      {{- with .Values.sdsServer.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       affinity:
         {{- with .Values.sdsServer.affinity }}
         {{- toYaml . | nindent 8 }}
