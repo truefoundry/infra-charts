@@ -21,6 +21,10 @@ spec:
       annotations:
         truefoundry.com/configChecksum: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum | trunc 63 | quote }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       containers:
         - command:
             - /manager

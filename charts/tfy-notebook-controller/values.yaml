@@ -14,6 +14,11 @@ labels:
 ##
 namespaceOverride: ""
 
+## Image pull secrets for the notebook controller.
+## @param imagePullSecrets Image pull secrets for the notebook controller.
+##
+imagePullSecrets: []
+
 ## Istio Gateway for the notebook controller.
 ## @param istioGateway Istio Gateway for the notebook controller.
 ##
@@ -28,7 +33,7 @@ istioGateway: istio-system/tfy-wildcard
 image:
   pullPolicy: IfNotPresent
   repository: "public.ecr.aws/truefoundrycloud/tfy-notebook-controller"
-  tag: "f7bec5785a18a7d22fed3a1e5fe4d25c9e9a0063" 
+  tag: "26355af4127e692053bbeb96a7d9773de75e6c65" 
 ## Resource limits and requests for the notebook controller.
 ## @param resources.limits.cpu CPU limit for the notebook controller.
 ## @param resources.limits.memory Memory limit for the notebook controller.
@@ -103,6 +108,8 @@ sdsServer:
   image: "public.ecr.aws/truefoundrycloud/sds-server:7221b24abf2ce9b5104fae6bcb9115ba8416de58"
   ## @param sdsServer.affinity [object] Node affinity for sds-server
   affinity: {}
+  ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sds-server
+  imagePullSecrets: []
   ## @param sdsServer.command Command and arguments to start the sds-server application.
   command:
   - /app/sds-server
