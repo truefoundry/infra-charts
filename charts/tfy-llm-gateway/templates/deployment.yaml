@@ -50,19 +50,23 @@ spec:
               port: {{ .Values.healthcheck.liveness.port }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.rateLimit.enabled }}
+          {{- if .Values.rateLimit.enabled }}
             - name: rate-limit-config-volume
               mountPath: /etc/rate_limit_config.yaml
               subPath: rate_limit_config.yaml
-            {{- end }}
+          {{- end }}
+          {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
       volumes:
-        {{- if .Values.rateLimit.enabled }}
+      {{- if .Values.rateLimit.enabled }}
         - name: rate-limit-config-volume
           configMap:
             name: {{ include "tfy-llm-gateway.fullname" . }}-rate-limit-config
-        {{- end }}
+      {{- end }}
+      {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
