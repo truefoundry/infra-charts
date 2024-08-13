@@ -12,4 +12,7 @@ spec:
     tls:
       mode: SIMPLE
       sni: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+  workloadSelector:
+    matchLabels:
+      app: {{ include "truefoundry-frontend-app.fullname" . }}
 {{- end }}
