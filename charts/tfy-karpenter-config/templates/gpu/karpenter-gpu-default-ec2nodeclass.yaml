@@ -19,12 +19,12 @@ spec:
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: {{ .Values.cluster.name }}
-        cluster-name: {{ .Values.cluster.name }}
         {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
+    cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
   {{- end }}
