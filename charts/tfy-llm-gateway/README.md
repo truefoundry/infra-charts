@@ -53,4 +53,4 @@ LLM-Gateway Helm Chart
 | `extraVolumes`                         | Extra volumes                     | `[]`                                       |
 | `extraVolumeMounts`                    | Extra volume mounts               | `[]`                                       |
 | `rbac.enabled`                         | Enable rbac                       | `true`                                     |
-| `imageTag`                             | Container Image tag               | `dc715d7a6dfdc8f303df04b4c9eedd9a8ffe7987` |
+| `imageTag`                             | Container Image tag               | `4901a93fbcdb6530a7e2e0ed608cf800867a4661` |
