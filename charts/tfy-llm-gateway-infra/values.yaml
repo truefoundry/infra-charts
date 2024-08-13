@@ -62,6 +62,12 @@ global:
 ## @skip altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
+  metrics:
+    image:
+      tag: 0.23.7
+  operator:
+    image:
+      tag: 0.23.7
 
 ## @skip zookeeper [object] zookeper config
 zookeeper:
@@ -128,7 +134,7 @@ nats:
         enabled: true
   container:
     image:
-      tag: 2.10.7-alpine
+      tag: 2.10.18-alpine3.20
       pullPolicy: IfNotPresent
       repository: nats
     merge:
@@ -193,7 +199,7 @@ nats:
   promExporter:
     port: 7777
     image:
-      tag: 0.13.0
+      tag: 0.14.0
       pullPolicy: IfNotPresent
       repository: natsio/prometheus-nats-exporter
     enabled: true
@@ -208,7 +214,7 @@ clickhouse:
   replicasCount: 1
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
-  image: clickhouse/clickhouse-server:23.4.2
+  image: clickhouse/clickhouse-server:24.7.3.42-alpine
   resources:
     requests:
       memory: 4096Mi
