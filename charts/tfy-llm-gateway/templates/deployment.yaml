@@ -27,6 +27,10 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
+            {{- if .Values.rateLimit.enabled }}
+            - name: RATE_LIMIT_CONFIG_PATH
+              value: "/etc/rate_limit_config.yaml"
+            {{- end }}
           image: "{{ .Values.imageRepository }}:{{ .Values.imageTag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
@@ -46,8 +50,18 @@ spec:
               port: {{ .Values.healthcheck.liveness.port }}
           {{- end }}
           volumeMounts:
+            {{- if .Values.rateLimit.enabled }}
+            - name: rate-limit-config-volume
+              mountPath: /etc/rate_limit_config.yaml
+              subPath: rate_limit_config.yaml
+            {{- end }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
       volumes:
+        {{- if .Values.rateLimit.enabled }}
+        - name: rate-limit-config-volume
+          configMap:
+            name: {{ include "tfy-llm-gateway.fullname" . }}-rate-limit-config
+        {{- end }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
