@@ -1,0 +1,42 @@
+name: Close stale PRs
+
+permissions:
+  contents: write # only for delete-branch option
+  issues: write
+  pull-requests: write
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight
+  workflow_dispatch:
+    inputs:
+      stale-duration:
+        description: 'Number of days after which a PR is considered stale'
+        required: true
+        default: 4
+      close-duration:
+        description: 'Number of days after which a PR is considered stale'
+        required: true
+        default: 7
+      stale-label:
+        description: 'Label to identify stale PRs'
+        required: true
+        default: 'stale'
+      exempt-label:
+        description: 'Label to exempt PRs from being closed'
+        required: true
+        default: 'do-not-close'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: 'This PR will be automatically closed as it has been stale for ${{ github.event.inputs.stale-duration }}. Please comment if you feel this is still relevant.'
+          close-pr-message: 'This PR has been closed as it has been stale for ${{ github.event.inputs.stale-duration }}. Please reopen if you feel this is still relevant.'
+          days-before-pr-stale: ${{ github.event.inputs.stale-duration }}
+          days-before-pr-close: ${{ github.event.inputs.close-duration }}
+          stale-pr-label: ${{ github.event.inputs.stale-label }}
+          exempt-pr-labels: ${{ github.event.inputs.exempt-label }}
