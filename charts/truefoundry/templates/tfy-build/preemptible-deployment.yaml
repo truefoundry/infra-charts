@@ -17,10 +17,22 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: preemptible
+      {{- with .Values.tfyBuild.preemptibleDeployment.extraVolumes }}
+      volumes:
+          {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: alpine
           image: alpine:3.20.0
           command: ["tail", "-f", "/dev/null"]
+          {{- with .Values.tfyBuild.preemptibleDeployment.extraEnvs }}
+          env:
+              {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tfyBuild.preemptibleDeployment.extraVolumeMounts }}
+          volumeMounts:
+              {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 12 }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector }}

@@ -81,10 +81,22 @@ spec:
     tolerations:
       {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumes }}
+    volumes:
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
     container:
       image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image }}
       command:
         - /usr/local/bin/entrypoint.sh
+      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
+      env:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       resources:
         {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 8 }}
       securityContext:
@@ -388,6 +400,14 @@ spec:
           memory: 50Mi
       image: ubuntu
       command: [bash]
+      {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
+      env:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       source: |
         #!/bin/bash
         set -e
@@ -399,6 +419,10 @@ spec:
           echo -e "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Build Image Failed."
         fi
         echo "PIPELINE_RUN_{{`{{workflow.name}}`}}_ENDED"
+    {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
+    volumes:
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   - name: send-api-request
     # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
     activeDeadlineSeconds: 300
@@ -460,6 +484,7 @@ spec:
                 time.sleep(60)
                 sys.exit(1)
         api_call()
+
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
       volumeMounts:
       {{- toYaml . | nindent 6 }}
@@ -505,6 +530,10 @@ spec:
         maxDuration: 1h
       limit: 3
       retryPolicy: Always
+    {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
+    volumes:
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
     outputs:
       parameters:
       - name: result
@@ -513,6 +542,10 @@ spec:
     script:
       command: [bash]
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
+      env:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       resources:
         requests:
           cpu: 50m
@@ -522,6 +555,10 @@ spec:
           cpu: 50m
           ephemeral-storage: 10Mi
           memory: 50Mi
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       source: |
         #!/bin/bash
 
@@ -594,9 +631,17 @@ spec:
     retryStrategy:
       limit: 1
       retryPolicy: Always
+    {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
+    volumes:
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
     script:
       command: [bash]
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
+      env:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       resources:
         requests:
           cpu: 500m
@@ -608,6 +653,10 @@ spec:
           memory: 1024Mi
       securityContext:
         privileged: true
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
       source: |
         #!/bin/bash
 
