@@ -118,7 +118,7 @@ truefoundryFrontendApp:
     ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
     requests:
       ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
-      cpu: 100m
+      cpu: 25m
       ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
       memory: 256Mi
       ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
@@ -164,7 +164,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: 99fb9c63ee9637c1f6395429c9371281e8e36531
+  imageTag: v0.3.150-rc.1
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -228,6 +228,7 @@ truefoundryFrontendApp:
     VITE_OLD_LLM_PLAYGROUND_PATH: llm-playground
     VITE_LLM_PLAYGROUND_PATH: llm-gateway
     VITE_ENABLE_SENTRY: "false"
+    VITE_ENABLE_PROMPTS: "false"
     VITE_SENTRY_DSN: ""
     VITE_APEX_DOMAIN: http://truefoundry.com/
     VITE_DATAGRID_LICENSE_KEY: 1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
@@ -288,15 +289,15 @@ mlfoundryServer:
       ## @param mlfoundryServer.resources.limits.cpu CPU limit for the mlfoundry server
       cpu: 400m
       ## @param mlfoundryServer.resources.limits.memory Memory limit for the mlfoundry server
-      memory: 2048Mi
+      memory: 1024Mi
       ## @param mlfoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the mlfoundry server
       ephemeral-storage: 256Mi
     ## mlfoundryServer.resources.requests Resource requests for the mlfoundry server
     requests:
       ## @param mlfoundryServer.resources.requests.cpu CPU request for the mlfoundry server
-      cpu: 200m
+      cpu: 100m
       ## @param mlfoundryServer.resources.requests.memory Memory request for the mlfoundry server
-      memory: 1024Mi
+      memory: 640Mi
       ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
       ephemeral-storage: 128Mi
   ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
@@ -318,7 +319,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: 97f9b1815b70359343f54d0370624b10b65452d8
+  imageTag: v0.2.117-rc.1
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
   extraVolumes: []
   ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
@@ -380,17 +381,17 @@ servicefoundryServer:
     ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
     limits:
       ## @param servicefoundryServer.resources.limits.cpu CPU limit for the servicefoundry server
-      cpu: 400m
+      cpu: 600m
       ## @param servicefoundryServer.resources.limits.memory Memory limit for the servicefoundry server
-      memory: 512Mi
+      memory: 1024Mi
       ## @param servicefoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the servicefoundry server
       ephemeral-storage: 256Mi
     ## servicefoundryServer.resources.requests Resource requests for the servicefoundry server
     requests:
       ## @param servicefoundryServer.resources.requests.cpu CPU request for the servicefoundry server
-      cpu: 200m
+      cpu: 400m
       ## @param servicefoundryServer.resources.requests.memory Memory request for the servicefoundry server
-      memory: 256Mi
+      memory: 512Mi
       ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
       ephemeral-storage: 128Mi
   ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
@@ -491,7 +492,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: f408c7b286eaf5bdc8103dcbb69ceac7a9657140
+  imageTag: v0.3.155-rc.2
 
 #######################
 ## tfyK8sController Settings specific to tfyK8sController.
@@ -566,12 +567,13 @@ tfyK8sController:
   extraVolumeMounts: []
   ## @skip tfyK8sController.env Environment variables for the tfyK8sController
   env:
-    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{
+      .Release.Namespace }}.svc.cluster.local:3000
     CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace
       }}.svc.cluster.local:4222
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   ## @param tfyK8sController.imageTag Image Tag for tfyK8sController
-  imageTag: 41896cb8d1b489de9e0b8b48c7d2f1180993d393
+  imageTag: v0.1.2-rc.1
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -612,7 +614,7 @@ sfyManifestService:
       ## @param sfyManifestService.resources.limits.cpu CPU limit for the sfy manifest service
       cpu: 200m
       ## @param sfyManifestService.resources.limits.memory Memory limit for the sfy manifest service
-      memory: 256Mi
+      memory: 512Mi
       ## @param sfyManifestService.resources.limits.ephemeral-storage Ephemeral storage limit for the sfy manifest service
       ephemeral-storage: 256Mi
     ## sfyManifestService.resources.requests Resource requests for the sfy manifest service
@@ -620,7 +622,7 @@ sfyManifestService:
       ## @param sfyManifestService.resources.requests.cpu CPU request for the sfy manifest service
       cpu: 100m
       ## @param sfyManifestService.resources.requests.memory Memory request for the sfy manifest service
-      memory: 128Mi
+      memory: 256Mi
       ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
       ephemeral-storage: 128Mi
   ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
@@ -668,8 +670,11 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
+    TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL":
+      "https://truefoundry.github.io/infra-charts/", "chart":
+      "tfy-manifests-template", "targetRevision": "0.2.0" }'
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: cdd980eaac6da502f8e134f55bc10ce72227ebb6
+  imageTag: 0.1.131-rc.1
 
 #############################
 ## nats Settings corresponding to the NATS server
@@ -708,10 +713,24 @@ nats:
     logging:
       ## @param nats.nats.logging.debug Bool to enable debug logging for NATS server
       debug: true
+    resources:
+      limits:
+        cpu: 50m
+        memory: 512Mi
+      requests:
+        cpu: 25m
+        memory: 256Mi
   ## nats.natsbox NATSBox configuration
   natsbox:
     ## @param nats.natsbox.enabled Bool to enable NATSBox
     enabled: false
+    resources:
+      limits:
+        cpu: 50m
+        memory: 512Ki
+      requests:
+        cpu: 25m
+        memory: 256Ki
   ## nats.exporter NATS exporter configuration
   exporter:
     ## @param nats.exporter.enabled Bool to enable NATS exporter
@@ -780,6 +799,12 @@ tfyBuild:
   preemptibleDeployment:
     ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
     enabled: false
+    ## @param tfyBuild.preemptibleDeployment.extraEnvs Extra environment variables for the tfyBuild server
+    extraEnvs: []
+    ## @param tfyBuild.preemptibleDeployment.extraVolumeMounts Extra volume mounts for the tfyBuild server
+    extraVolumeMounts: []
+    ## @param tfyBuild.preemptibleDeployment.extraVolumes Extra volumes for the tfyBuild server
+    extraVolumes: []
   ## tfyBuild.truefoundryWorkflows Truefoundry workflows settings for the tfyBuild server
   truefoundryWorkflows:
     ## @skip tfyBuild.truefoundryWorkflows.tolerations Tolerations for the tfyBuild server
@@ -837,6 +862,9 @@ tfyBuild:
           ephemeral-storage: 70Gi
           memory: 8Gi
       nodeSelector: {}
+      extraVolumes: []
+      extraVolumeMounts: []
+      extraEnvs: []
       affinity: {}
       tolerations: []
     ## @param tfyBuild.truefoundryWorkflows.extraEnvs Extra environment variables for the tfyBuild server
@@ -873,6 +901,12 @@ tfyBuild:
       image: public.ecr.aws/truefoundrycloud/soci-index-builder:0.2.0-rc.1
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes Image size threshold for the SOCI index build and push
       imageSizeThresholdBytes: 419430400
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs Extra environment variables for the SOCI index build and push
+      extraEnvs: []
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts Extra volume mounts for the SOCI index build and push
+      extraVolumeMounts: []
+      ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolume
+      extraVolume: []
 
 #############################
 ## tfyBuildkitdService Settings corresponding to the tfy-buildkitd service
@@ -938,12 +972,12 @@ tfyController:
   ## @skip tfyController.resources Resource requests and limits for the tfyController
   resources:
     limits:
-      cpu: 200m
+      cpu: 100m
       memory: 256Mi
       ephemeral-storage: 256Mi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 50m
+      memory: 256Mi
       ephemeral-storage: 128Mi
   ## @param tfyController.nodeSelector Node selector for the tfyController
   nodeSelector: {}
@@ -982,4 +1016,4 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
       .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: f8e4a69a6513adb5ab6d7fcf3d30276724efbbf1
+  imageTag: v0.0.26-rc.1
