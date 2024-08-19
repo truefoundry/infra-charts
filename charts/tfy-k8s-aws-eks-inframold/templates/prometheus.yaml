@@ -232,7 +232,20 @@ spec:
           serviceMonitor:
             selfMonitor: false
         alertmanager:
-          enabled: false
+          config:
+            route:
+              routes:
+                - continue: true
+                  matchers:
+                    - severity =~ "warning|critical"
+                  receiver: tfy-agent
+                  repeat_interval: 1h
+            receivers:
+              - name: tfy-agent
+                webhook_configs:
+                  - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+                    send_resolved: true
+          enabled: true
         nodeExporter:
           enabled: true
         kubeApiServer:
@@ -392,4 +405,159 @@ spec:
                     labels:
                       daemonset: 'true'
                     record: kubecost_savings_memory_allocation_bytes
+              - name: GoogleCadvisor
+                rules:
+                  - for: 2m
+                    expr: >-
+                      (sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+                      by (pod, container) /
+                      sum(container_spec_cpu_quota{container!=""}/container_spec_cpu_period{container!=""})
+                      by (pod, container) * 100) > 80
+                    alert: ContainerHighCpuUtilization
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container CPU utilization is above 80%
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 2m
+                    expr: >-
+                      (sum(container_memory_working_set_bytes{name!=""}) BY (instance,
+                      name) / sum(container_spec_memory_limit_bytes > 0) BY (instance,
+                      name) * 100) > 80
+                    alert: ContainerHighMemoryUsage
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container Memory usage is above 80%
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 2m
+                    expr: >-
+                      (1 - (sum(container_fs_inodes_free{name!=""}) BY (instance) /
+                      sum(container_fs_inodes_total) BY (instance))) * 100 > 80
+                    alert: ContainerVolumeUsage
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: Container Volume usage (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container Volume usage is above 80%
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 5m
+                    expr: >-
+                      sum(increase(container_cpu_cfs_throttled_periods_total{container!=""}[5m]))
+                      by (container, pod, namespace) /
+                      sum(increase(container_cpu_cfs_periods_total[5m])) by
+                      (container, pod, namespace) > ( 25 / 100 )
+                    alert: ContainerHighThrottleRate
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container is being throttled
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+              - name: KubestateExporter
+                rules:
+                  - for: 2m
+                    expr: >-
+                      (kube_horizontalpodautoscaler_spec_max_replicas -
+                      kube_horizontalpodautoscaler_status_desired_replicas) * on
+                      (horizontalpodautoscaler,namespace, pod)
+                      (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited",
+                      status="true"} == 1) == 0
+                    alert: KubernetesHpaScaleInability
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Kubernetes HPA scale inability (instance {{ `{{ $labels.instance }}` }})
+                      description: >-
+                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} is unable to scale
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 0m
+                    expr: >-
+                      kube_horizontalpodautoscaler_status_condition{status="false",
+                      condition="ScalingActive"} == 1
+                    alert: KubernetesHpaMetricsUnavailability
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Kubernetes HPA metrics unavailability (instance {{ `{{ $labels.instance }}` }})
+                      description: >-
+                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}}
+                        is unable to collect metrics
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 15m
+                    expr: >-
+                      sum by (namespace, pod)
+                      (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
+                    alert: KubernetesPodNotHealthy
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Kubernetes Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+                      description: >-
+                        Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
+                        non-running state for longer than 15 minutes.
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 2m
+                    expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
+                    alert: KubernetesPodCrashLooping
+                    labels:
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Kubernetes pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+                      description: |-
+                        Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 2m
+                    expr: >-
+                      (kube_horizontalpodautoscaler_status_desired_replicas >=
+                      kube_horizontalpodautoscaler_spec_max_replicas) and
+                      (kube_horizontalpodautoscaler_spec_max_replicas > 1) and
+                      (kube_horizontalpodautoscaler_spec_min_replicas !=
+                      kube_horizontalpodautoscaler_spec_max_replicas)
+                    alert: KubernetesHpaScaleMaximum
+                    labels:
+                      severity: info
+                    annotations:
+                      summary: Kubernetes HPA scale maximum (instance {{ `{{ $labels.instance }}` }})
+                      description: >-
+                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} 
+                        has hit maximum number of desired pods
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
+                  - for: 0m
+                    expr: >-
+                      max(quantile_over_time(0.5,
+                      kube_horizontalpodautoscaler_status_desired_replicas[1d]) ==
+                      kube_horizontalpodautoscaler_spec_min_replicas) by
+                      (horizontalpodautoscaler) > 3
+                    alert: KubernetesHpaUnderutilized
+                    labels:
+                      severity: info
+                    annotations:
+                      summary: Kubernetes HPA underutilized (instance {{ `{{ $labels.instance }}` }})
+                      description: >-
+                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}}
+                        is constantly at minimum replicas for 50% of the time.
+                        Potential cost saving here.
+                          VALUE = {{`{{ $value }}`}}
+                          LABELS = {{`{{ $labels }}`}}
 {{- end }}
