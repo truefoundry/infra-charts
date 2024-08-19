@@ -7,14 +7,14 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "aws-load-balancer-controller"
-    truefoundry.com/infra-migration-tag: "1000"
+    truefoundry.com/infra-migration-tag: "1001"
 spec:
   destination:
     namespace: aws-load-balancer-controller
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: "https://aws.github.io/eks-charts"
-    targetRevision: 1.7.1
+    targetRevision: 1.8.2
     chart: aws-load-balancer-controller
     helm:
       values: |-
@@ -22,6 +22,8 @@ spec:
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}
+        vpcId: {{ .Values.aws.awsLoadBalancerController.vpcId | quote }}
+        region: {{ .Values.aws.awsLoadBalancerController.region | quote }}
   project: tfy-apps
   syncPolicy:
     automated: { }
