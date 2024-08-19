@@ -54,6 +54,8 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | --------------------------------------- | ------------------------------------------- | ------- |
 | `aws.awsLoadBalancerController.enabled` | Flag to enable AWS Load Balancer Controller | `true`  |
 | `aws.awsLoadBalancerController.roleArn` | Role ARN for AWS Load Balancer Controller   | `""`    |
+| `aws.awsLoadBalancerController.vpcId`   | VPC ID of AWS EKS cluster                   | `""`    |
+| `aws.awsLoadBalancerController.region`  | region of AWS EKS cluster                   | `""`    |
 | `aws.karpenter.enabled`                 | Flag to enable Karpenter                    | `true`  |
 | `aws.karpenter.clusterEndpoint`         | Cluster endpoint for Karpenter              | `""`    |
 | `aws.karpenter.roleArn`                 | Role ARN for Karpenter                      | `""`    |
