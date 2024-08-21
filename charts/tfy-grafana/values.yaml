@@ -14,13 +14,18 @@ gateway: "istio-system/tfy-wildcard"
 grafana:
   grafana.ini:
     server:
+      ## @param grafana.ini.server.domain Domain for Grafana.
       domain: "$__file{/etc/server-configs/domain}"
+      ## @param grafana.ini.server.protocol protocol for root url Grafana.
       protocol: http
+      ## @param grafana.ini.server.root_url Root URL for Grafana.
       root_url: "$__file{/etc/server-configs/root_url}"
+  ## @param grafana.extraConfigmapMounts Extra ConfigMap mounts for Grafana.
   extraConfigmapMounts:
+    ## @skip grafana.extraConfigmapMounts[0]
     - name: server-config
       mountPath: /etc/server-configs
-      configMap: {{ .Release.Name }}-server-config
+      configMap: tfy-grafana-server-config
   
   ## @param grafana.replicas StatefulSet configuration for Grafana.
   ## @param grafana.useStatefulSet Replicas configuration for Grafana.
