@@ -5,13 +5,21 @@ metadata:
   name: grafana-vs
 spec:
   gateways:
-  - {{ .Values.gateway }}
+    - {{ .Values.gateway }}
   hosts:
-  - {{ .Values.host }}
+    - {{ .Values.host }}
   http:
-  - route:
-    - destination:
-        host: grafana.{{ .Release.Namespace }}.svc.cluster.local
-        port:
-          number: 80
+  - 
+    {{- if .Values.path }}
+    match:
+      - uri:
+          prefix: /{{ .Values.path | trim "/" }}/
+    rewrite:
+        uri: /
+    {{- end }}
+    route:
+      - destination:
+          host: grafana.{{ .Release.Namespace }}.svc.cluster.local
+          port:
+            number: 80
 {{- end }}

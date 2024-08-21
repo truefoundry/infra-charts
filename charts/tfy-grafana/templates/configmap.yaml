@@ -1,3 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-server-config
+data:
+  domain: {{ .Values.host }}
+  root_url: {{- if .Values.path }} "%(protocol)s://%(domain)s/{{ .Values.path }}/" {{- else }} "%(protocol)s://%(domain)s/" {{- end }}
 {{- if .Values.grafana.sidecar.dashboards.enabled }}
 {{- range $path, $name := .Files.Glob "dashboards/*" }}
 ---

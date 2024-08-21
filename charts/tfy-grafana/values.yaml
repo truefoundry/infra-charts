@@ -1,12 +1,27 @@
 ## @param host Host name for Grafana.
 ##
 host: ""
+
+## @param path for Grafana.
+##
+path: ""
+
 ## @param gateway Gateway for Grafana.
 ##
 gateway: "istio-system/tfy-wildcard"
 
 ## @section grafana Configuration for Grafana deployment.
 grafana:
+  grafana.ini:
+    server:
+      domain: "$__file{/etc/server-configs/domain}"
+      protocol: http
+      root_url: "$__file{/etc/server-configs/root_url}"
+  extraConfigmapMounts:
+    - name: server-config
+      mountPath: /etc/server-configs
+      configMap: {{ .Release.Name }}-server-config
+  
   ## @param grafana.replicas StatefulSet configuration for Grafana.
   ## @param grafana.useStatefulSet Replicas configuration for Grafana.
   #
