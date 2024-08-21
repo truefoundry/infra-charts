@@ -1,0 +1,254 @@
+# cluster_region is based on topology.kubernetes.io/region
+# image section can also contain `build_script` and `docker_registry`
+images:
+  - name: Jupyter Lab Minimal Image
+    type: notebook
+    enabled: true
+    description: Minimal image with Python 3.11 environment. Starts quickly
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:0.2.20-sudo'
+      - match: []
+        spec:
+          image_uri: 'docker.io/truefoundrycloud/jupyter:0.2.20-sudo'
+
+  - name: Jupyter Lab Full Image
+    type: notebook
+    enabled: true
+    description: Python 3.11 environment with common ML Libraries and cuda toolkit 12.1
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter-full:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter-full:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter-full:0.2.20-sudo'
+      - match: []
+        spec:
+          image_uri: 'docker.io/truefoundrycloud/jupyter-full:0.2.20-sudo'
+
+  - name: Jupyter Lab Cuda 12.1 Image
+    type: notebook
+    enabled: true
+    description: Python 3.11 environment with cuda toolkit 12.1
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:cuda12.1.1-devel-0.1.2'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:cuda12.1.1-devel-0.1.2'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:cuda12.1.1-devel-0.1.2'
+      - match: []
+        spec:
+          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:cuda12.1.1-devel-0.1.2'
+
+  - name: Jupyter Lab Cuda 11.8 Image
+    type: notebook
+    enabled: true
+    description: Python 3.11 environment with cuda toolkit 11.8
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:cuda11.8.0-devel-0.1.2'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:cuda11.8.0-devel-0.1.2'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:cuda11.8.0-devel-0.1.2'
+      - match: []
+        spec:
+          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:cuda11.8.0-devel-0.1.2'
+
+  - name: CodeServer (VS Code) Base Image
+    type: codeserver
+    enabled: true
+    description: CodeServer (VS Code) image with Python 3.11 environment
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/codeserver-python:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/codeserver-python:0.2.20-sudo'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/codeserver-python:0.2.20-sudo'
+      - match: []
+        spec:
+          image_uri: 'docker.io/truefoundrycloud/codeserver-python:0.2.20-sudo'
+
+  - name: SSH Server Base Image
+    type: ssh-server
+    enabled: true
+    description: SSH Server image with Python 3.11 environment
+    image:
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'us-'
+        spec:
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/ssh-server:0.2.20'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'europe-'
+        spec:
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/ssh-server:0.2.20'
+      - match:
+          - key: cluster_type
+            operator: In
+            values:
+              - 'gcp-gke-standard'
+          - key: cluster_region
+            operator: StartsWith
+            values:
+              - 'asia-'
+        spec:
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/ssh-server:0.2.20'
+      - match: []
+        spec:
+          image_uri: 'docker.io/truefoundrycloud/ssh-server:0.2.20'

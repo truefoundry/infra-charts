@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-workbench-images-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  workbench-images.yaml: |-
+    {{- if eq .Values.configs.workbenchImages "default" }}
+    {{ .Files.Get "files/workbench-images.yaml" | nindent 4 }}
+    {{- else }}
+    {{ .Values.configs.workbenchImages | nindent 4 }}
+    {{- end }}
