@@ -13,9 +13,9 @@ spec:
     {{- if .Values.path }}
     match:
       - uri:
-          prefix: /{{ .Values.path | trim "/" }}/
+          prefix: /{{ .Values.path | trimPrefix "/" | trimSuffix "/" }}/
     rewrite:
-        uri: /
+        uri: "/"
     {{- end }}
     route:
       - destination:
