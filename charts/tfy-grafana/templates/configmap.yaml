@@ -4,7 +4,7 @@ metadata:
   name: tfy-grafana-server-config
 data:
   domain: {{ .Values.host }}
-  root_url: {{- if .Values.path }} "%(protocol)s://%(domain)s/{{ .Values.path }}/" {{- else }} "%(protocol)s://%(domain)s/" {{- end }}
+  root_url: {{- if .Values.path }} "%(protocol)s://%(domain)s/{{ .Values.path | trim '/' }}/" {{- else }} "%(protocol)s://%(domain)s/" {{- end }}
 {{- if .Values.grafana.sidecar.dashboards.enabled }}
 {{- range $path, $name := .Files.Glob "dashboards/*" }}
 ---
