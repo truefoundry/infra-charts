@@ -2,52 +2,53 @@
 
 ##
 flyte-core:
-  ## @param common parameters for flyte-core
+  ## @param flyte-core.common parameters for flyte-core
   common:
-    ## @param to set the ingress config
+    ## @param flyte-core.common.ingress to set the ingress config
     ingress:
-      ## @param to enable the ingress
+      ## @param flyte-core.common.ingress.enabled to enable the ingress
       enabled: false
   secrets:
   ## @param to configure oAuth client credentials
     adminOauthClientCredentials:
-      ## @param to enable Oauth client credentials
+      ## @param flyte-core.secrets.adminOauthClientCredentials.enabled to enable Oauth client credentials
       enabled: true
   ## @param to define the storage for storing the inpute and outputs
   storage:
-    ## @param to define the storage type
+    ## @param flyte-core.storage.type to define the storage type
     type: <to_be_provided>
     ## @param to define the storage limits
     limits:
-      ## @param to define the max download size
+      ## @param flyte-core.storage.limits.maxDownloadMBs to define the max download size
       maxDownloadMBs: 10
-    ## @param to define the storage bucket name
+    ## @param flyte-core.storage.bucketName to define the storage bucket name
     bucketName: <to_be_provided>
     ## @param to define the storage connection
     connection:
-      ## @param to define the storage connection region
+      ## @param flyte-core.storage.connection.region to define the storage connection region
       region: <to_be_provided>
-      ## @param to define the storage connection auth type
+      ## @param flyte-core.storage.connection.auth-type to define the storage connection auth type
       auth-type: <to_be_provided>
+    ## @param flyte-core.storage.enable-multicontainer to enable the multicontainer
     enable-multicontainer: true
   ## @param to configure the webhook
   webhook:
-  ## @param to enable the webhook
+  ## @param flyte-core.webhook.enabled to enable the webhook
     enabled: true
   ## @param to configure the configmap
   configmap:
     core:
     ## @param to configure the propeller
       propeller:
-        ## @param to set the storage uri path to set store the metadata, its values should be bucketName/metadata
-        metadata-prefix: <to_be_provided>
-        ## @param to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
-        rawoutput-prefix: <to_be_provided>
-        ## @param to publish kube events
+        ## @param flyte-core.configmap.core.propeller.metadata-prefix to set the storage uri path to set store the metadata, its values should be bucketName/metadata
+        metadata-prefix: <to_be_provided>\workflows\metadata
+        ## @param  flyte-core.configmap.core.propeller.rawoutput-prefix to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
+        rawoutput-prefix: <to_be_provided>\workflows\raw_data
+        ## @param flyte-core.configmap.core.propeller.publish-k8s-events to publish kube events
         publish-k8s-events: true
     ## @param to configure the logger
     logger:
-      ## @param to set the log level
+      ## @param flyte-core.configmap.logger.level to set the log level
       level: 5
       ## @param to set the log format
       show-source: true
