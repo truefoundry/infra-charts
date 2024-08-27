@@ -38,6 +38,21 @@ flyte-core:
         rawoutput-prefix: <to_be_provided>\workflows\raw_data
         ## @param flyte-core.configmap.core.propeller.publish-k8s-events to publish kube events
         publish-k8s-events: true
+    admin:
+      admin:
+        ## @param flyte-core.configmap.admin.admin.externalCommand to set the external command
+        Command:
+          - echo
+          - <to_be_provided>
+        ## @param flyte-core.configmap.admin.admin.externalCommand to set the auth typeg  
+        AuthType: ExternalCommand
+        endpoint: <to_be_provided>
+        insecure: false
+        AuthorizationHeader: authorization
+      event:
+        rate: 500
+        type: admin
+        capacity: 100
     logger:
       ## @param flyte-core.configmap.logger.level to set the log level
       level: 5
