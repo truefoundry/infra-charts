@@ -125,6 +125,7 @@ def generate_manifests_local(chart_name, values_file):
     chart_dir = os.path.join("charts", chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
     logging.info(f"Generating the manifests for the chart {chart_name} using the values file {values_file}")
+    run_command(f"helm dependency update {chart_dir}")
     run_command(f"helm template {chart_name} -f {values_file} {chart_dir} > {manifest_file}")
 
     return manifest_file
