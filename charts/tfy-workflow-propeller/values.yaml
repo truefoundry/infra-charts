@@ -1,30 +1,43 @@
+## @section Configuration for workflow-propeller
+
+##
 flyte-core:
+  ## @param common parameters for flyte-core to enable ingress
   common:
     ingress:
       enabled: false
   secrets:
+  ## @param to enable oAuth client credentials
     adminOauthClientCredentials:
       enabled: true
+  ## @param to define the storage for storing the inpute and outputs
   storage:
+    ## @param to define the storage type
     type: <to_be_provided>
     limits:
       maxDownloadMBs: 10
+    ## @param to define the storage bucket name
     bucketName: <to_be_provided>
+    ## @param to define the storage connection
     connection:
       region: <to_be_provided>
       auth-type: <to_be_provided>
     enable-multicontainer: true
+  ## @param to enable the webhook
   webhook:
     enabled: true
   configmap:
     core:
       propeller:
+        ## @param to set the storage uri path to set store the metadata
         metadata-prefix: <to_be_provided>
+        ## @param to set the storage uri path to set store the raw output
         rawoutput-prefix: <to_be_provided>
         publish-k8s-events: true
     logger:
       level: 5
       show-source: true
+  ## @param to enable the flyteadmin
   flyteadmin:
     enabled: false
     serviceAccount:
@@ -33,15 +46,22 @@ flyte-core:
     enabled: false
   flyteconsole:
     enabled: false
+  ## @param to configure the flytepropeller
   flytepropeller:
+    ## @param to enable the flytepropeller
     enabled: true
+    ## @param to set the service account information
     serviceAccount:
       create: true
       annotations:
+        ## @param to set the role arn to access service account
         eks.amazonaws.com/role-arn: <to_be_provided>
+  ## @param to enable workflow scheduler
   workflow_scheduler:
     enabled: false
+  ## @param to enable the workflow notifications
   workflow_notifications:
     enabled: false
+  ## @param to enable the cluster resource manager
   cluster_resource_manager:
     enabled: false
