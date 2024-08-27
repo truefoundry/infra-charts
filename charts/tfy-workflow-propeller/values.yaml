@@ -2,28 +2,23 @@
 
 ##
 flyte-core:
-  ## @param parameters for flyte-core
+  ## @param for flyte-core
   common:
-    ## @param to set the ingress config
     ingress:
       ## @param flyte-core.common.ingress.enabled to enable the ingress
       enabled: false
   secrets:
-  ## @param to configure oAuth client credentials
     adminOauthClientCredentials:
       ## @param flyte-core.secrets.adminOauthClientCredentials.enabled to enable Oauth client credentials
       enabled: true
-  ## @param to define the storage for storing the inpute and outputs
   storage:
     ## @param flyte-core.storage.type to define the storage type
     type: <to_be_provided>
-    ## @param to define the storage limits
     limits:
       ## @param flyte-core.storage.limits.maxDownloadMBs to define the max download size
       maxDownloadMBs: 10
     ## @param flyte-core.storage.bucketName to define the storage bucket name
     bucketName: <to_be_provided>
-    ## @param to define the storage connection
     connection:
       ## @param flyte-core.storage.connection.region to define the storage connection region
       region: <to_be_provided>
@@ -31,14 +26,11 @@ flyte-core:
       auth-type: <to_be_provided>
     ## @param flyte-core.storage.enable-multicontainer to enable the multicontainer
     enable-multicontainer: true
-  ## @param to configure the webhook
   webhook:
   ## @param flyte-core.webhook.enabled to enable the webhook
     enabled: true
-  ## @param to configure the configmap
   configmap:
     core:
-    ## @param to configure the propeller
       propeller:
         ## @param flyte-core.configmap.core.propeller.metadata-prefix to set the storage uri path to set store the metadata, its values should be bucketName/metadata
         metadata-prefix: <to_be_provided>\workflows\metadata
@@ -46,29 +38,23 @@ flyte-core:
         rawoutput-prefix: <to_be_provided>\workflows\raw_data
         ## @param flyte-core.configmap.core.propeller.publish-k8s-events to publish kube events
         publish-k8s-events: true
-    ## @param to configure the logger
     logger:
       ## @param flyte-core.configmap.logger.level to set the log level
       level: 5
       ## @param  flyte-core.configmap.logger.show-source to set the log format
       show-source: true
-  ## @param to configure the flyteadmin
   flyteadmin:
     ## @param flyte-core.flyteadmin.enabled to enable the flyteadmin
     enabled: false
-  ## @param to configure the datacatalog
   datacatalog:
     ## @param flyte-core.datacatalog.enabled to enable the datacatalog
     enabled: false
-  ## @param to configure the flyteconsole
   flyteconsole:
     ## @param flyte-core.flyteconsole.enabled to enable the flyteconsole
     enabled: false
-  ## @param to configure the flytepropeller
   flytepropeller:
     ## @param flyte-core.flytepropeller.enabled to enable the flytepropeller
     enabled: true
-    ## @param to set the service account information
     serviceAccount:
       ## @param flyte-core.flytepropeller.serviceAccount.create to configure whether to create the service account or not
       create: true
