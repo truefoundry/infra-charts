@@ -100,6 +100,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: CICD_TEMPLATES_DIRECTORY
   value: /opt/truefoundry/configs/cicd-templates
 {{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+- name: WORKBENCH_IMAGES_CONFIG_PATH
+  value: /opt/truefoundry/configs/workbench-images/workbench-images.yaml
+{{- end }}
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
@@ -112,6 +116,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
   {{- $volumes = append $volumes (dict "name" "configs-cicd-templates" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.cicdTemplates .))) }}
 {{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-workbench-images" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.workbenchImages .))) }}
+{{- end }}
+
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -125,6 +133,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-cicd-templates" "mountPath" "/opt/truefoundry/configs/cicd-templates") }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-workbench-images" "mountPath" "/opt/truefoundry/configs/workbench-images") }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}

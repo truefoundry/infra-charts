@@ -50,6 +50,10 @@ spec:
               port: {{ .Values.sfyManifestService.service.port }}
           volumeMounts:
           {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
+      {{- with .Values.sfyManifestService.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       volumes:
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
       {{- with .Values.sfyManifestService.nodeSelector }}
