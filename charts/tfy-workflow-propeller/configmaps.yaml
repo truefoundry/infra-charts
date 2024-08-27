@@ -1,0 +1,90 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "tfy-workflow-propeller.labels" . | nindent 4 }}
+  name: {{ include "tfy-workflow-propeller.fullname" . }}-config
+data:
+  admin.yaml: |
+    event:
+      type: admin
+      rate: 500
+      capacity: 1000
+    admin:
+      endpoint: flyteadmin:81
+      insecure: true
+  catalog.yaml: | 
+    catalog-cache:
+      endpoint: datacatalog:89
+      type: datacatalog
+      insecure: true
+  copilot.yaml: | 
+    plugins:
+      k8s:
+        # -- Structure documented [here](https://pkg.go.dev/github.com/lyft/flyteplugins@v0.5.28/go/tasks/pluginmachinery/flytek8s/config#FlyteCoPilotConfig)
+        co-pilot:
+          name: flyte-copilot-
+          image: cr.flyte.org/flyteorg/flytecopilot:v1.13.1  # FLYTECOPILOT_IMAGE
+          start-timeout: 30s
+  core.yaml: | 
+    # -- follows the structure specified [here](https://pkg.go.dev/github.com/flyteorg/flytepropeller/manager/config#Config).
+    manager:
+      pod-application: "flytepropeller"
+      pod-template-container-name: "flytepropeller"
+      pod-template-name: "flytepropeller-template"
+    # -- follows the structure specified [here](https://pkg.go.dev/github.com/flyteorg/flytepropeller/pkg/controller/config).
+    propeller:
+      rawoutput-prefix: "{{ .Values.storageUri }}/prop"
+      metadata-prefix: "{{ .Values.storageUri }}/metadata"
+      workers: 4
+      max-workflow-retries: 30
+      workflow-reeval-duration: 30s
+      downstream-eval-duration: 30s
+      limit-namespace: "all"
+      prof-port: 10254
+      metrics-prefix: flyte
+      enable-admin-launcher: true
+      leader-election:
+        lock-config-map:
+          name: propeller-leader
+          namespace: flyte
+        enabled: true
+        lease-duration: 15s
+        renew-deadline: 10s
+        retry-period: 2s
+      queue:
+        type: batch
+        batching-interval: 2s
+        batch-size: -1
+        queue:
+          type: maxof
+          rate: 100
+          capacity: 1000
+          base-delay: 5s
+          max-delay: 120s
+        sub-queue:
+          type: bucket
+          rate: 10
+          capacity: 100
+    webhook:
+      certDir: /etc/webhook/certs
+      serviceName: flyte-pod-webhook
+  k8s.yaml: |
+    plugins:
+      # -- Configuration section for all K8s specific plugins [Configuration structure](https://pkg.go.dev/github.com/lyft/flyteplugins/go/tasks/pluginmachinery/flytek8s/config)
+      k8s:
+        default-env-vars: []
+        #  DEFAULT_ENV_VAR: VALUE
+        default-cpus: 100m
+        default-memory: 100Mi
+  cache.yaml: |
+    cache:
+      max_size_mbs: {{ .Values.flytepropeller.cacheSizeMbs }}
+      target_gc_percent: 70
+  task_logs.yaml: |
+    plugins:
+      logs:
+        kubernetes-enabled: false
+        # -- One option is to enable cloudwatch logging for EKS, update the region and log group accordingly
+        cloudwatch-enabled: false

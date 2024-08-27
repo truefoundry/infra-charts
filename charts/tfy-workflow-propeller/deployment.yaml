@@ -1,0 +1,92 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-workflow-propeller.fullname" . }}-server
+  labels:
+    {{- include "tfy-workflow-propeller.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-workflow-propeller.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/workflow-component: propeller
+  template:
+    metadata:
+      annotations:
+        configChecksum: {{ include (print .Template.BasePath "/propeller/configmap.yaml") . | sha256sum | trunc 63 | quote }}
+        {{- with .Values.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "tfy-workflow-propeller.labels" . | nindent 8 }}
+        app.kubernetes.io/workflow-component: propeller
+    spec:
+      serviceAccountName: {{ include "tfy-workflow-propeller.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - command:
+        {{- if .Values.manager }}
+        - flytepropeller-manager
+        - --manager.pod-template-namespace
+        - {{ template "flyte.namespace" . }}
+        {{- else }}
+        - flytepropeller
+        {{- end }}
+        - --config
+        - {{ .Values.configPath }}
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        name: flytepropeller
+        ports:
+          - name: http
+            containerPort: {{ .Values.service.port }}
+            protocol: TCP
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+          - mountPath: /etc/config/flytepropeller-config.yaml
+            name: {{ include "tfy-workflow-propeller.fullname" . }}-config
+            subPath: flytepropeller-config.yaml
+          - mountPath: /etc/secrets/admin_api_key
+            name: {{ include "tfy-workflow-propeller.fullname" . }}-tfy-api-key
+            subPath: TFY_API_KEY
+        {{- if .Values.terminationMessagePolicy }}
+        terminationMessagePolicy: "{{ .Values.terminationMessagePolicy }}"
+        {{- end }}
+      {{- with .Values.additionalContainers -}}
+      {{- tpl (toYaml .) $ | nindent 6}}
+      {{- end }}
+      volumes:
+        - configMap:
+            name: {{ include "tfy-workflow-propeller.fullname" . }}-config
+          name: {{ include "tfy-workflow-propeller.fullname" . }}-config
+        - name: {{ include "tfy-workflow-propeller.fullname" . }}-tfy-api-key
+          secret:
+            secretName: truefoundry-creds
+      {{- end }}
+      {{- with .Values.additionalVolumes -}}
+      {{ tpl (toYaml .) $ | nindent 6 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{ tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+{{- end }}

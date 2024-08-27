@@ -1,0 +1,51 @@
+## @param tfyWorkflowPropeller.enabled Bool to enable the tfyWorkflowPropeller
+enabled: true
+## @param tfyWorkflowPropeller.podAnnotations Annotations for the tfyWorkflowPropeller pods
+podAnnotations: {}
+
+service:
+  enabled: true
+  port: 10254
+  additionalPorts: []
+## @param tfyWorkflowPropeller.replicaCount Number of replicas for the propeller
+replicaCount: 1
+
+configPath: /etc/config/*.yaml
+
+image:
+  repository: cr.flyte.org/flyteorg/flytepropeller-release
+  tag: v1.13.0
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+    ephemeral-storage: 256Mi
+  requests:
+    cpu: 50m
+    memory: 256Mi
+    ephemeral-storage: 128Mi
+
+terminationMessagePolicy: FallbackToLogsOnError
+
+## @param tfyWorkflowPropeller.additionalContainers Appends additional containers to the deployment spec. May include template values.
+additionalContainers: []
+## @param tfyWorkflowPropeller.additionalVolumes Appends additional volumes to the deployment spec. May include template values.
+additionalVolumes: []
+## @param tfyWorkflowPropeller.nodeSelector Node selector for the tfyWorkflowAdmin
+nodeSelector: {}
+## @param tfyWorkflowPropeller.affinity Affinity settings for the tfyWorkflowAdmin
+affinity: {}
+  ## @skip tfyWorkflowPropeller.tolerations Tolerations specific to the tfyWorkflowAdmin
+tolerations: {}
+
+propeller:
+  prof-port: 10254
+
+serviceAccount:
+  create: true
+  annotations: 
+    eks.amazonaws.com/role-arn: <to_be_provided>
+
+storageUri: <to_be_provided>
