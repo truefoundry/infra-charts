@@ -2,49 +2,66 @@
 
 ##
 flyte-core:
-  ## @param common parameters for flyte-core to enable ingress
+  ## @param common parameters for flyte-core
   common:
+    ## @param to set the ingress config
     ingress:
+      ## @param to enable the ingress
       enabled: false
   secrets:
-  ## @param to enable oAuth client credentials
+  ## @param to configure oAuth client credentials
     adminOauthClientCredentials:
+      ## @param to enable Oauth client credentials
       enabled: true
   ## @param to define the storage for storing the inpute and outputs
   storage:
     ## @param to define the storage type
     type: <to_be_provided>
+    ## @param to define the storage limits
     limits:
+      ## @param to define the max download size
       maxDownloadMBs: 10
     ## @param to define the storage bucket name
     bucketName: <to_be_provided>
     ## @param to define the storage connection
     connection:
+      ## @param to define the storage connection region
       region: <to_be_provided>
+      ## @param to define the storage connection auth type
       auth-type: <to_be_provided>
     enable-multicontainer: true
-  ## @param to enable the webhook
+  ## @param to configure the webhook
   webhook:
+  ## @param to enable the webhook
     enabled: true
+  ## @param to configure the configmap
   configmap:
     core:
+    ## @param to configure the propeller
       propeller:
-        ## @param to set the storage uri path to set store the metadata
+        ## @param to set the storage uri path to set store the metadata, its values should be bucketName/metadata
         metadata-prefix: <to_be_provided>
-        ## @param to set the storage uri path to set store the raw output
+        ## @param to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
         rawoutput-prefix: <to_be_provided>
+        ## @param to publish kube events
         publish-k8s-events: true
+    ## @param to configure the logger
     logger:
+      ## @param to set the log level
       level: 5
+      ## @param to set the log format
       show-source: true
-  ## @param to enable the flyteadmin
+  ## @param to configure the flyteadmin
   flyteadmin:
+    ## @param to enable the flyteadmin
     enabled: false
-    serviceAccount:
-      alwaysCreate: true
+  ## @param to configure the datacatalog
   datacatalog:
+    ## @param to enable the datacatalog
     enabled: false
+  ## @param to configure the flyteconsole
   flyteconsole:
+    ## @param to enable the flyteconsole
     enabled: false
   ## @param to configure the flytepropeller
   flytepropeller:
@@ -52,6 +69,7 @@ flyte-core:
     enabled: true
     ## @param to set the service account information
     serviceAccount:
+      ## @param to configure whether to create the service account or not
       create: true
       annotations:
         ## @param to set the role arn to access service account

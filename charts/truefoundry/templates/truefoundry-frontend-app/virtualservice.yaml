@@ -62,15 +62,4 @@ spec:
             host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: {{ .Values.truefoundryFrontendApp.service.port }}
-    - match:
-        - uri:
-            prefix: "/flyte/"
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.flyteServerHost . }}
-            port:
-              number: 8089
-          weight: 100
 {{- end }}
