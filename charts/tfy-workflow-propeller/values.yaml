@@ -1,51 +1,113 @@
-## @param tfyWorkflowPropeller.enabled Bool to enable the tfyWorkflowPropeller
-enabled: true
-## @param tfyWorkflowPropeller.podAnnotations Annotations for the tfyWorkflowPropeller pods
-podAnnotations: {}
+# ## @param tfyWorkflowPropeller.enabled Bool to enable the tfyWorkflowPropeller
+# enabled: true
+# ## @param tfyWorkflowPropeller.podAnnotations Annotations for the tfyWorkflowPropeller pods
+# podAnnotations: {}
 
-service:
-  enabled: true
-  port: 10254
-  additionalPorts: []
-## @param tfyWorkflowPropeller.replicaCount Number of replicas for the propeller
-replicaCount: 1
+# service:
+#   enabled: true
+#   port: 10254
+#   additionalPorts: []
+# ## @param tfyWorkflowPropeller.replicaCount Number of replicas for the propeller
+# replicaCount: 1
 
-configPath: /etc/config/*.yaml
+# configPath: /etc/config/*.yaml
 
-image:
-  repository: cr.flyte.org/flyteorg/flytepropeller-release
-  tag: v1.13.0
-  pullPolicy: IfNotPresent
+# image:
+#   repository: cr.flyte.org/flyteorg/flytepropeller-release
+#   tag: v1.13.0
+#   pullPolicy: IfNotPresent
 
-resources:
-  limits:
-    cpu: 100m
-    memory: 256Mi
-    ephemeral-storage: 256Mi
-  requests:
-    cpu: 50m
-    memory: 256Mi
-    ephemeral-storage: 128Mi
+# resources:
+#   limits:
+#     cpu: 100m
+#     memory: 256Mi
+#     ephemeral-storage: 256Mi
+#   requests:
+#     cpu: 50m
+#     memory: 256Mi
+#     ephemeral-storage: 128Mi
 
-terminationMessagePolicy: FallbackToLogsOnError
+# terminationMessagePolicy: FallbackToLogsOnError
 
-## @param tfyWorkflowPropeller.additionalContainers Appends additional containers to the deployment spec. May include template values.
-additionalContainers: []
-## @param tfyWorkflowPropeller.additionalVolumes Appends additional volumes to the deployment spec. May include template values.
-additionalVolumes: []
-## @param tfyWorkflowPropeller.nodeSelector Node selector for the tfyWorkflowAdmin
-nodeSelector: {}
-## @param tfyWorkflowPropeller.affinity Affinity settings for the tfyWorkflowAdmin
-affinity: {}
-  ## @skip tfyWorkflowPropeller.tolerations Tolerations specific to the tfyWorkflowAdmin
-tolerations: {}
+# ## @param tfyWorkflowPropeller.additionalContainers Appends additional containers to the deployment spec. May include template values.
+# additionalContainers: []
+# ## @param tfyWorkflowPropeller.additionalVolumes Appends additional volumes to the deployment spec. May include template values.
+# additionalVolumes: []
+# ## @param tfyWorkflowPropeller.nodeSelector Node selector for the tfyWorkflowAdmin
+# nodeSelector: {}
+# ## @param tfyWorkflowPropeller.affinity Affinity settings for the tfyWorkflowAdmin
+# affinity: {}
+#   ## @skip tfyWorkflowPropeller.tolerations Tolerations specific to the tfyWorkflowAdmin
+# tolerations: {}
 
-propeller:
-  prof-port: 10254
+# propeller:
+#   prof-port: 10254
 
-serviceAccount:
-  create: true
-  annotations: 
-    eks.amazonaws.com/role-arn: <to_be_provided>
+# serviceAccount:
+#   create: true
+#   annotations: 
+#     eks.amazonaws.com/role-arn: <to_be_provided>
 
-storageUri: <to_be_provided>
+# storageUri: <to_be_provided>
+
+
+flyte:
+  common:
+    ingress:
+      enabled: false
+  secrets:
+    adminOauthClientCredentials:
+      enabled: true
+  storage:
+    type: <to_be_provided>
+    limits:
+      maxDownloadMBs: 10
+    bucketName: <to_be_provided>
+    connection:
+      region: <to_be_provided>
+      auth-type: <to_be_provided>
+    enable-multicontainer: true
+  webhook:
+    enabled: true
+  configmap:
+    core:
+      propeller:
+        metadata-prefix: <to_be_provided>/metatdata
+        rawoutput-prefix: s3://tfy-flyte-dataplane-devtest-876524349/prop
+        publish-k8s-events: true
+    admin:
+      admin:
+        Command:
+          - echo
+          - <to_be_provided>
+        AuthType: ExternalCommand
+        endpoint: tfy-flyte-admin-truefoundry-8089.devtest.truefoundry.tech:443
+        insecure: false
+        AuthorizationHeader: authorization
+      event:
+        rate: 500
+        type: admin
+        capacity: 100
+    logger:
+      level: 5
+      show-source: true
+  flyteadmin:
+    enabled: false
+    serviceAccount:
+      alwaysCreate: true
+  datacatalog:
+    enabled: false
+  flyteconsole:
+    enabled: false
+  flytepropeller:
+    enabled: true
+    serviceAccount:
+      create: true
+      annotations:
+        eks.amazonaws.com/role-arn: <to_be_provided>
+  workflow_scheduler:
+    enabled: false
+  workflow_notifications:
+    enabled: false
+  cluster_resource_manager:
+    enabled: false
