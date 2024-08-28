@@ -38,6 +38,14 @@ flyte-core:
         rawoutput-prefix: <to_be_provided>/workflows/raw_data
         ## @param flyte-core.configmap.core.propeller.publish-k8s-events to publish kube events
         publish-k8s-events: true
+        leader-election:
+          lock-config-map:
+            name: propeller-leader
+            namespace: <to_be_provided>
+          enabled: true
+          lease-duration: 15s
+          renew-deadline: 10s
+          retry-period: 2s
     admin:
       admin:
         ## @param flyte-core.configmap.admin.admin.Command to set the external command
