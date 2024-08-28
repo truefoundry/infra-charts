@@ -1,0 +1,89 @@
+{{- if .Values.tfyWorkflowAdmin.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: PruneLast=true
+  labels:
+    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+  name: {{ include "tfy-workflow-admin.fullname" . }}-config
+data:
+  flyteadmin-config.yaml: |
+    server:
+      grpc:
+        port: {{ .Values.tfyWorkflowAdmin.service.port }}
+      grpcServerReflection: true
+      security:
+        secure: false
+        useAuth: false
+        allowCors: true
+        allowedOrigins:
+          - "*"
+        allowedHeaders:
+          - "Content-Type"
+          - "*"
+    flyteadmin:
+      runScheduler: false
+      metricsScope: "flyte:"
+      profilerPort: 10254
+      testing:
+        host: "http://localhost:8088"
+      metadataStoragePrefix:
+        - "metadata"
+        - "admin"
+      useOffloadedWorkflowClosure: false
+      k8sServiceAccount: {{ include "tfy-workflow-admin.serviceAccountName" . }}
+    database:
+      postgres:
+        port: ""
+        username: ""
+        password: ""
+        host: ""
+        dbname: ""
+        options: "sslmode=disable"
+    Logger:
+      show-source: true
+      level: 5
+    storage:
+      type: s3
+      limits:
+        maxDownloadMBs: 10
+      bucketName: {{ .Values.tfyWorkflowAdmin.s3BucketName }}
+      container: {{ .Values.tfyWorkflowAdmin.s3BucketName }}/tfy-workflow-admin
+      connection:
+        region: {{ .Values.tfyWorkflowAdmin.awsRegion }}
+        auth-type: iam
+      enable-multicontainer: true
+    domains:
+      - id: default
+        name: default
+    namespace_mapping:
+      template: "default" # Default namespace mapping template.
+  flytescheduler-config.yaml: |
+    admin:
+      Command:
+        - cat
+        - /etc/secrets/admin_api_key
+      AuthType: ExternalCommand
+      endpoint: '{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.tfyWorkflowAdmin.service.port }}'
+      insecure: true
+      AuthorizationHeader: authorization
+    event:
+      capacity: 1000
+      rate: 500
+      type: admin
+    scheduler:
+      metricsScope: 'flyte:'
+      profilerPort: 10254
+    database:
+      postgres:
+        port: ''
+        username: ''
+        password: ''
+        host: ''
+        dbname: ''
+        options: "sslmode=disable"
+    Logger:
+      show-source: true
+      level: 5
+{{- end }}

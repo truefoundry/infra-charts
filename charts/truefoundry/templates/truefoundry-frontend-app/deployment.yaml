@@ -54,6 +54,10 @@ spec:
               scheme: HTTP
           volumeMounts:
           {{- toYaml .Values.truefoundryFrontendApp.extraVolumeMounts | nindent 12 }}
+      {{- with .Values.truefoundryFrontendApp.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       volumes:
       {{- toYaml .Values.truefoundryFrontendApp.extraVolumes | nindent 8 }}
       {{- with .Values.truefoundryFrontendApp.nodeSelector }}

@@ -86,7 +86,7 @@ spec:
     {{- toYaml . | nindent 6 }}
     {{- end }}
     container:
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image }}
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
       command:
         - /usr/local/bin/entrypoint.sh
       {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
@@ -149,7 +149,7 @@ spec:
     {{- toYaml . | nindent 4 }}
     {{- end }}
     script:
-      image: truefoundrycloud/sfy-builder:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.version }}
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
       command: [bash]
       workingDir: /mnt/vol
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
@@ -541,7 +541,7 @@ spec:
           path: /tmp/result
     script:
       command: [bash]
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image }}
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
       env:
       {{- toYaml . | nindent 6 }}
@@ -637,7 +637,7 @@ spec:
     {{- end }}
     script:
       command: [bash]
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image }}
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
       env:
       {{- toYaml . | nindent 6 }}

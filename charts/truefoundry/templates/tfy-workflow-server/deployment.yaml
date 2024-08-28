@@ -1,0 +1,176 @@
+{{- if .Values.tfyWorkflowAdmin.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-workflow-admin.fullname" . }}-server
+  labels:
+    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.tfyWorkflowAdmin.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-workflow-admin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/workflow-component: server
+  template:
+    metadata:
+      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-workflow-admin.labels" . | nindent 8 }}
+        app.kubernetes.io/workflow-component: server
+    spec:
+      serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
+      {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-workflow-admin-server"
+          command:
+          - sh
+          - '-c'
+          - >-
+            flyteadmin migrate run --config ${ADMIN_CONFIG_FILE_PATH} &&
+            flyteadmin serve --config ${ADMIN_CONFIG_FILE_PATH}
+          {{- with .Values.tfyWorkflowAdmin.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyWorkflowAdmin.imageRepository }}:{{ .Values.tfyWorkflowAdmin.imageTag }}"
+          imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyWorkflowAdmin.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/grpc_health_probe
+                - '-addr=:{{ .Values.tfyWorkflowAdmin.service.port }}'
+          livenessProbe:
+            exec:
+              command:
+                - /bin/grpc_health_probe
+                - '-addr=:{{ .Values.tfyWorkflowAdmin.service.port }}'
+          volumeMounts:
+          - mountPath: /etc/config/flyteadmin-config.yaml
+            name: {{ include "tfy-workflow-admin.fullname" . }}-config
+            subPath: flyteadmin-config.yaml
+          - mountPath: /etc/secrets/admin_api_key
+            name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
+            subPath: TFY_API_KEY
+      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      volumes:
+        - configMap:
+            name: {{ include "tfy-workflow-admin.fullname" . }}-config
+          name: {{ include "tfy-workflow-admin.fullname" . }}-config
+        - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
+          secret:
+            secretName: truefoundry-creds
+      {{- with .Values.tfyWorkflowAdmin.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyWorkflowAdmin.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyWorkflowAdmin.tolerations }}
+        {{- .Values.tfyWorkflowAdmin.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-workflow-admin.fullname" . }}-scheduler
+  labels:
+    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "tfy-workflow-admin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/workflow-component: scheduler
+  template:
+    metadata:
+      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-workflow-admin.labels" . | nindent 8 }}
+        app.kubernetes.io/workflow-component: scheduler
+    spec:
+      serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
+      {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-workflow-admin-scheduler"
+          command:
+            - flytescheduler
+            - run
+            - '--config'
+            - $(SCHEDULER_CONFIG_FILE_PATH)
+          {{- with .Values.tfyWorkflowAdmin.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyWorkflowAdmin.imageRepository }}:{{ .Values.tfyWorkflowAdmin.imageTag }}"
+          imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
+          resources:
+            {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}
+          volumeMounts:
+          - mountPath: /etc/config/flytescheduler-config.yaml
+            name: {{ include "tfy-workflow-admin.fullname" . }}-config
+            subPath: flytescheduler-config.yaml
+          - mountPath: /etc/secrets/admin_api_key
+            name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
+            subPath: TFY_API_KEY
+      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      volumes:
+        - configMap:
+            name: {{ include "tfy-workflow-admin.fullname" . }}-config
+          name: {{ include "tfy-workflow-admin.fullname" . }}-config
+        - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
+          secret:
+            secretName: truefoundry-creds
+      {{- with .Values.tfyWorkflowAdmin.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyWorkflowAdmin.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyWorkflowAdmin.tolerations }}
+        {{- .Values.tfyWorkflowAdmin.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}
