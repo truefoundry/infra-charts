@@ -33,8 +33,9 @@ tolerations:
 
 ## @skip affinity Affinity for the all chart components
 ##
+  
 affinity: {}
-
+  
 
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -78,7 +79,11 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-  enabled: false
+  
+enabled: false
+  
+  
+  
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -87,7 +92,7 @@ gpu:
   enabled: true
   ## @param gpu.clusterType Cluster type for Tfy GPU Operator
   ##
-  clusterType: gcpGkeAutopilot
+  clusterType: civoTalos
 
 ## @section truefoundry parameters
 ## @param truefoundry.enabled Flag to enable TrueFoundry
@@ -132,6 +137,7 @@ istio:
   enabled: true
   ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
+    
     annotations: {}
     
   ## @section istio discovery parameters
@@ -141,8 +147,10 @@ istio:
     ## @param istio.discovery.tag Tag for the istio image
     tag: 1.21.1-distroless
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
-  tfyGateway:    
+  tfyGateway:
+    
     httpsRedirect: true
+    
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -164,24 +172,23 @@ prometheus:
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs:
-
+  
   - job_name: gpu-metrics
     scrape_interval: 15s
     scrape_timeout: 10s
     metrics_path: /metrics
     scheme: http
     kubernetes_sd_configs:
-      - role: pod
+      - role: endpoints
         namespaces:
           names:
-            - kube-system
-        selectors:
-          - role: pod
-            label: "k8s-app=nvidia-gpu-device-plugin"
+            - tfy-gpu-operator
     relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_container_port_name]
-        action: keep
-        regex: metrics
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        target_label: kubernetes_node
+  
+
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana

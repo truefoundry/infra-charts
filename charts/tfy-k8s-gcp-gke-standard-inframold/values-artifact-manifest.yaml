@@ -33,7 +33,6 @@ tolerations:
 
 ## @skip affinity Affinity for the all chart components
 ##
-
 affinity:
   nodeAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -44,7 +43,6 @@ affinity:
               values:
                 - "true"
               operator: In
-
 
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -88,11 +86,7 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-
   enabled: false
-
-
-
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -113,7 +107,7 @@ truefoundry:
   ## @param truefoundry.devMode.enabled Flag to enable TrueFoundry Dev mode
   ##
   devMode:
-    enabled: true
+    enabled: false
   ## @section truefoundryBootstrap parameters
   ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
   truefoundryBootstrap:
@@ -146,7 +140,6 @@ istio:
   enabled: true
   ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
-
     annotations: {}
 
   ## @section istio discovery parameters
@@ -157,9 +150,7 @@ istio:
     tag: 1.21.1-distroless
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
-
     httpsRedirect: true
-
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -181,23 +172,21 @@ prometheus:
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs:
-
-    - job_name: gpu-metrics
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      scheme: http
-      kubernetes_sd_configs:
-        - role: endpoints
-          namespaces:
-            names:
-              - tfy-gpu-operator
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_node_name]
-          action: replace
-          target_label: kubernetes_node
-
-
+  - job_name: gpu-metrics
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - tfy-gpu-operator
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        target_label: kubernetes_node
+  
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana

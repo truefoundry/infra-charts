@@ -1,0 +1,93 @@
+## @section Configuration for tfy-workflow-propeller
+##
+
+## @section flyte-core configurations
+flyte-core:
+  common:
+    ingress:
+      ## @param flyte-core.common.ingress.enabled to enable the ingress
+      enabled: false
+  secrets:
+    adminOauthClientCredentials:
+      ## @param flyte-core.secrets.adminOauthClientCredentials.enabled to enable Oauth client credentials
+      enabled: true
+  storage:
+    ## @param flyte-core.storage.type to define the storage type
+    type: <to_be_provided>
+    limits:
+      ## @param flyte-core.storage.limits.maxDownloadMBs to define the max download size
+      maxDownloadMBs: 10
+    ## @param flyte-core.storage.bucketName to define the storage bucket name
+    bucketName: <to_be_provided>
+    connection:
+      ## @param flyte-core.storage.connection.region to define the storage connection region
+      region: <to_be_provided>
+      ## @param flyte-core.storage.connection.auth-type to define the storage connection auth type
+      auth-type: <to_be_provided>
+    ## @param flyte-core.storage.enable-multicontainer to enable the multicontainer
+    enable-multicontainer: true
+  webhook:
+  ## @param flyte-core.webhook.enabled to enable the webhook
+    enabled: true
+  configmap:
+    core:
+      propeller:
+        ## @param flyte-core.configmap.core.propeller.metadata-prefix to set the storage uri path to set store the metadata, its values should be bucketName/metadata
+        metadata-prefix: <to_be_provided>/workflows/metadata
+        ## @param  flyte-core.configmap.core.propeller.rawoutput-prefix to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
+        rawoutput-prefix: <to_be_provided>/workflows/raw_data
+        ## @param flyte-core.configmap.core.propeller.publish-k8s-events to publish kube events
+        publish-k8s-events: true
+    admin:
+      admin:
+        ## @param flyte-core.configmap.admin.admin.Command to set the external command
+        Command:
+          - echo
+          - <to_be_provided>
+        ## @param flyte-core.configmap.admin.admin.AuthType to set the auth type
+        AuthType: ExternalCommand
+        ## @param flyte-core.configmap.admin.admin.endpoint to set the endpoint
+        endpoint: <to_be_provided>
+        ## @param flyte-core.configmap.admin.admin.insecure to set the insecure flag
+        insecure: false
+        ## @param flyte-core.configmap.admin.admin.AuthorizationHeader to set the authorization header type
+        AuthorizationHeader: authorization
+      event:
+        ## @param flyte-core.configmap.admin.event.rate to set the rate
+        rate: 500
+        ## @param flyte-core.configmap.admin.event.type to set the type
+        type: admin
+        ## @param flyte-core.configmap.admin.event.capacity to set the capacity
+        capacity: 100
+    logger:
+      ## @param flyte-core.configmap.logger.level to set the log level
+      level: 5
+      ## @param  flyte-core.configmap.logger.show-source to set the log format
+      show-source: true
+  flyteadmin:
+    ## @param flyte-core.flyteadmin.enabled to enable the flyteadmin
+    enabled: false
+  datacatalog:
+    ## @param flyte-core.datacatalog.enabled to enable the datacatalog
+    enabled: false
+  flyteconsole:
+    ## @param flyte-core.flyteconsole.enabled to enable the flyteconsole
+    enabled: false
+  flytepropeller:
+    ## @param flyte-core.flytepropeller.enabled to enable the flytepropeller
+    enabled: true
+    serviceAccount:
+      ## @param flyte-core.flytepropeller.serviceAccount.create to configure whether to create the service account or not
+      create: true
+      annotations:
+        ## @param flyte-core.flytepropeller.serviceAccount.annotations.eks.amazonaws.com/role-arn to set the role arn to access service account
+        eks.amazonaws.com/role-arn: <to_be_provided>
+  ## @param flyte-core.workflow_scheduler.enabled to enable workflow scheduler
+  workflow_scheduler:
+    enabled: false
+  ## @param flyte-core.workflow_notifications.enabled to enable the workflow notifications
+  workflow_notifications:
+    enabled: false
+  ## @param flyte-core.cluster_resource_manager.enabled to enable the cluster resource manager
+  cluster_resource_manager:
+    enabled: false
