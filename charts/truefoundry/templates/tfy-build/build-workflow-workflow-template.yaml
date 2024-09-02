@@ -36,8 +36,6 @@ spec:
         - name: dockerTag
         - name: buildkitServiceURL
     steps:
-    - - name: buildkitd
-        template: buildkitd
     - - name: build-and-push
         template: build-and-push
         arguments:
@@ -57,66 +55,7 @@ spec:
           - name: dockerTag
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
           - name: buildkitServiceURL
-            value: "{{`{{steps.buildkitd.ip}}:1234`}}"
-  - name: buildkitd
-    daemon: true
-    metadata:
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.metadata.annotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.metadata.labels }}
-      labels:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-    {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector }}
-    nodeSelector:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.affinity }}
-    affinity:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.tolerations }}
-    tolerations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumes }}
-    volumes:
-    {{- toYaml . | nindent 6 }}
-    {{- end }}
-    container:
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
-      command:
-        - /usr/local/bin/entrypoint.sh
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumeMounts }}
-      volumeMounts:
-      {{- toYaml . | nindent 8 }}
-      {{- end }}
-      resources:
-        {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 8 }}
-      securityContext:
-        privileged: true
-      ports:
-        - name: grpc-buidkitd
-          containerPort: 1234
-          protocol: TCP
-      readinessProbe:
-        exec:
-          command:
-            - buildctl
-            - debug
-            - workers
-      livenessProbe:
-        exec:
-          command:
-            - buildctl
-            - debug
-            - workers
+            value: "127.0.0.1:1234"
   - name: build-and-push
     # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
     activeDeadlineSeconds: 5400
@@ -126,8 +65,8 @@ spec:
         karpenter.sh/do-not-disrupt: 'true'
         karpenter.sh/do-not-evict: 'true'
     retryStrategy:
-      limit: 1
-      expression: "asInt(lastRetry.exitCode) == 210"
+      limit: 2
+      retryPolicy: "Always"
     inputs:
       parameters:
         - name: buildSource
@@ -282,12 +221,27 @@ spec:
         BUILDKIT_HOST="${BUILDKIT_SERVICE_URL_PARTS[0]}"
         BUILDKIT_PORT="${BUILDKIT_SERVICE_URL_PARTS[1]}"
 
+        ######################################################################################
         # Test connectivity using nc (netcat) with a timeout of 2 minutes
-        if ! nc -z -w 120 "$BUILDKIT_HOST" "$BUILDKIT_PORT"; then
-          echo "Error: Unable to connect to buildkit service at $BUILDKIT_HOST:$BUILDKIT_PORT"
-          exit 1
+        end=$((SECONDS+120))
+        # Loop until the timeout is reached
+        while [ $SECONDS -lt $end ]; do
+            # Check if the port is open
+            if nc -z "$BUILDKIT_HOST" "$BUILDKIT_PORT"; then
+                # If successful, continue with the script
+                echo "Port is open. Continuing with the script..."
+                break
+            fi
+            # Wait for 1 second before trying again
+            sleep 1
+        done
+        # port is not open after 120 seconds
+        if [ $SECONDS -ge $end ]; then
+            echo echo "Error: Unable to connect to buildkit service at $BUILDKIT_HOST:$BUILDKIT_PORT"
+            exit 1
         fi
-        
+        ######################################################################################
+
         printf "\033[36m[==== Docker logs start ====]\033[0m\n"
         docker buildx create --name remote-kubernetes --driver remote tcp://{{`{{inputs.parameters.buildkitServiceURL}}`}}
         # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
@@ -308,6 +262,39 @@ spec:
       {{- end }}
       resources:
         {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 8 }}
+    sidecars:
+    - name: buildkitd
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
+      command:
+        - /usr/local/bin/entrypoint.sh
+      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
+      env:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      resources:
+        {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 8 }}
+      securityContext:
+        privileged: true
+      ports:
+        - name: grpc-buidkitd
+          containerPort: 1234
+          protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+            - buildctl
+            - debug
+            - workers
+      livenessProbe:
+        exec:
+          command:
+            - buildctl
+            - debug
+            - workers
   - name: exit-handler
     inputs:
       parameters:
