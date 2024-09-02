@@ -57,6 +57,15 @@ spec:
             host: {{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}
             port:
               number: 8123
+    - match:
+        - uri:
+            prefix: "/flyteidl.service.AdminService/"
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}
+            port:
+              number: 8089
+          weight: 100
     - route:
         - destination:
             host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
