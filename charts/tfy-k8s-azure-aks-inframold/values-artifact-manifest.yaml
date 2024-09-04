@@ -33,7 +33,7 @@ tolerations:
 
 ## @skip affinity Affinity for the all chart components
 ##
-
+  
 affinity:
   nodeAffinity:
     preferredDuringSchedulingIgnoredDuringExecution:
@@ -44,6 +44,7 @@ affinity:
               values:
                 - spot
               operator: In
+  
 
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -87,7 +88,11 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-  enabled: false
+  
+enabled: false
+  
+  
+  
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -141,7 +146,9 @@ istio:
   enabled: true
   ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
+    
     annotations: {}
+    
   ## @section istio discovery parameters
   discovery:
     ## @param istio.discovery.hub Hub for the istio image
@@ -150,7 +157,9 @@ istio:
     tag: 1.21.1-distroless
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
+    
     httpsRedirect: true
+    
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -172,6 +181,7 @@ prometheus:
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs:
+  
   - job_name: gpu-metrics
     scrape_interval: 15s
     scrape_timeout: 10s
@@ -186,6 +196,8 @@ prometheus:
       - source_labels: [__meta_kubernetes_pod_node_name]
         action: replace
         target_label: kubernetes_node
+  
+
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana

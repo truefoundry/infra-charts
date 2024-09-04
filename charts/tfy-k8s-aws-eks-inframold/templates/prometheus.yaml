@@ -226,6 +226,24 @@ spec:
                       - kubecost-cost-analyzer.kubecost
                 scrape_timeout: 60s
                 scrape_interval: 1m
+              - scheme: http
+                job_name: loki
+                honor_labels: true
+                metrics_path: /metrics
+                dns_sd_configs:
+                  - port: 3100
+                    type: A
+                    names:
+                      - loki.loki
+              - scheme: http
+                job_name: loki-promtail
+                honor_labels: true
+                metrics_path: /metrics
+                dns_sd_configs:
+                  - port: 3101
+                    type: A
+                    names:
+                      - loki-promtail-metrics.loki
               {{- with .Values.prometheus.additionalScrapeConfigs }}
               {{ toYaml . | nindent 14 }}
               {{- end }}
