@@ -8,12 +8,24 @@ rules:
   {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
   {{- if not .Values.config.allowedNamespaces }}
   - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["create"]
+    resources: ["namespaces", "pods"]
+    verbs: ["create", "get"]
   {{- end }}
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list"]
+
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["patch"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["delete"]
+
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["prometheuses"]
+    verbs: ["patch"]
 
   - apiGroups: ["networking.istio.io"]
     resources: ["virtualservices"]
