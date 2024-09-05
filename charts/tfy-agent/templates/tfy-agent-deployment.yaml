@@ -81,9 +81,11 @@ spec:
             {{- toYaml .Values.tfyAgent.resources | nindent 12 }}
           volumeMounts:
             {{- toYaml .Values.tfyAgent.extraVolumeMounts | nindent 12 }}
-      {{- with .Values.tfyAgent.nodeSelector }}
       nodeSelector:
+        kubernetes.io/arch: amd64
+        {{- with .Values.tfyAgent.nodeSelector }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- end }}
       volumes:
         {{- toYaml .Values.tfyAgent.extraVolumes | nindent 8 }}

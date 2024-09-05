@@ -128,4 +128,9 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      nodeSelector:
+        kubernetes.io/arch: amd64
+        {{- with .Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
         

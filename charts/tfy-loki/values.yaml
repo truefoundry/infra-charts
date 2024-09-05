@@ -63,6 +63,9 @@ loki:
     persistence:
       enableStatefulSetAutoDeletePVC: false
       size: 50Gi
+    ## @param loki.singleBinary.nodeSelector Node labels for pod assignment
+    nodeSelector:
+      kubernetes.io/arch: amd64
 
 promtail:
   ## @param promtail.enabled Enable promtail
@@ -87,6 +90,9 @@ promtail:
       cpu: 40m
       memory: 100Mi
       ephemeral-storage: 256Mi
+  ## @param promtail.nodeSelector Node labels for pod assignment
+  nodeSelector:
+    kubernetes.io/arch: amd64
   tolerations:
     ## @skip promtail.tolerations[0]
     - key: node-role.kubernetes.io/master

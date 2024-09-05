@@ -67,10 +67,11 @@ spec:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
-      {{- with .Values.nodeSelector }}
       nodeSelector:
+        kubernetes.io/arch: amd64
+        {{- with .Values.nodeSelector }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
