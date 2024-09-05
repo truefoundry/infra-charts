@@ -8,8 +8,8 @@ rules:
   {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
   {{- if not .Values.config.allowedNamespaces }}
   - apiGroups: [""]
-    resources: ["namespaces", "pods"]
-    verbs: ["create", "get"]
+    resources: ["namespaces"]
+    verbs: ["create"]
   {{- end }}
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
@@ -32,8 +32,8 @@ rules:
     verbs: ["list"]
 
   - apiGroups: [""]
-    resources: ["nodes", "namespaces"]
-    verbs: ["list"]
+    resources: ["nodes", "namespaces", "pods"]
+    verbs: ["list", "get"]
 
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
