@@ -139,3 +139,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
+
+{{/*
+  Merge default nodeSelector with nodeSelector specified in servicefoundry-server nodeSelector
+  */}}
+{{- define "servicefoundry-server.nodeSelector" -}}
+{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.servicefoundryServer.nodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}

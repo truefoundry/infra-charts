@@ -36,6 +36,26 @@ spec:
         - name: dockerTag
         - name: buildkitServiceURL
     steps:
+    {{- if .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
+    - - name: pre-build-script
+        template: pre-build-script
+        arguments:
+          parameters:
+          - name: buildSource
+            value: "{{`{{inputs.parameters.buildSource}}`}}"
+          - name: buildConfig
+            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: dockerRegistryURL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: dockerRegistryUsername
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: dockerRegistryPassword
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: dockerRepo
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: dockerTag
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+    {{- end }}
     - - name: build-and-push
         template: build-and-push
         arguments:
@@ -56,6 +76,57 @@ spec:
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
           - name: buildkitServiceURL
             value: "127.0.0.1:1234"
+    {{- if .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}
+    - - name: post-build-script
+        template: post-build-script
+        arguments:
+          parameters:
+          - name: buildSource
+            value: "{{`{{inputs.parameters.buildSource}}`}}"
+          - name: buildConfig
+            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: dockerRegistryURL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: dockerRegistryUsername
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: dockerRegistryPassword
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: dockerRepo
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: dockerTag
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+    {{- end }}
+  {{- if .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
+  - name: pre-build-script
+    inputs:
+      parameters:
+        - name: buildSource
+        - name: buildConfig
+        - name: dockerRegistryURL
+        - name: dockerRegistryUsername
+        - name: dockerRegistryPassword
+        - name: dockerRepo
+        - name: dockerTag
+    when: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
+    activeDeadlineSeconds: 5400
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+        karpenter.sh/do-not-disrupt: 'true'
+        karpenter.sh/do-not-evict: 'true'
+    {{- with .Values.tfyBuild.truefoundryWorkflows.preBuild.resources }}
+    podSpecPatch: |
+      containers:
+        - name: main
+          resources:
+            {{- toYaml . | nindent 12 }}
+    {{- end }}
+    script:
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.tag }}
+      command: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.command }}
+      source: |
+        {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.script | nindent 8 }} 
+    {{- end }}
   - name: build-and-push
     # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
     activeDeadlineSeconds: 5400
@@ -295,6 +366,41 @@ spec:
             - buildctl
             - debug
             - workers
+  {{- if .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}
+  - name: post-build-script
+    inputs:
+      parameters:
+        - name: buildSource
+        - name: buildConfig
+        - name: dockerRegistryURL
+        - name: dockerRegistryUsername
+        - name: dockerRegistryPassword
+        - name: dockerRepo
+        - name: dockerTag
+    when: >-
+      '{{ .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}' == 'true' 
+      &&
+      {{`{{steps.build-and-push.status}}`}} == Succeeded
+    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+    activeDeadlineSeconds: 5400
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+        karpenter.sh/do-not-disrupt: 'true'
+        karpenter.sh/do-not-evict: 'true'
+    {{- with .Values.tfyBuild.truefoundryWorkflows.postBuild.resources }}
+    podSpecPatch: |
+      containers:
+        - name: main
+          resources:
+            {{- toYaml . | nindent 12 }}
+    {{- end }}
+    script:
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.tag }}
+      command: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.command }}
+      source: |
+        {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.script | nindent 8 }}
+  {{- end }}
   - name: exit-handler
     inputs:
       parameters:
@@ -558,9 +664,17 @@ spec:
         REPOSITORY="{{`{{inputs.parameters.dockerRepo}}`}}"
         TAG="{{`{{inputs.parameters.dockerTag}}`}}"
         IMAGE=$REGISTRY/$REPOSITORY:$TAG
-        IMAGE_SIZE_THRESHOLD=$(printf '%.0f' {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | quote }})
+        IMAGE_SIZE_THRESHOLD=$(printf '%.0f' {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }})
 
-        docker login -u $USERNAME -p $PASSWORD $REGISTRY 2> /dev/null
+        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
+        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # This is a short term fix till we decouple registry url and login url
+        _REGISTRY=$(echo $REGISTRY | sed -e 's~http[s]*://~~g')
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+          docker login -u $USERNAME -p $PASSWORD 2> /dev/null
+        else
+          docker login -u $USERNAME -p $PASSWORD $REGISTRY 2> /dev/null
+        fi
 
         echo Registry is $REGISTRY
 
@@ -679,13 +793,12 @@ spec:
         time soci push --platform=linux/amd64 $IMAGE
 
         echo Done!
-  {{- with .Values.tfyBuild.truefoundryWorkflows.nodeSelector }}
   nodeSelector:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.tfyBuild.truefoundryWorkflows.affinity }}
+  {{- include "tfy-build.nodeSelector" . | nindent 8 }}
+  {{- $mergedAffinity := dict | merge .Values.tfyBuild.truefoundryWorkflows.affinity .Values.global.affinity }}
+  {{- if $mergedAffinity }}
   affinity:
-    {{- toYaml . | nindent 4 }}
+  {{- toYaml $mergedAffinity | nindent 8 }}
   {{- end }}
   {{- with .Values.tfyBuild.truefoundryWorkflows.tolerations }}
   tolerations:

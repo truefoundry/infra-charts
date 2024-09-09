@@ -36,3 +36,21 @@ Expand the name of the chart.
 {{- define "tfy-build.serviceAccountName" -}}
 {{- default (include "tfy-build.fullname" .) "tfy-build" }}
 {{- end }}
+
+{{/*
+  Merge default nodeSelector with nodeSelector specified in tfy-build.nodeSelector
+*/}}
+{{- define "tfy-build.nodeSelector" -}}
+{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyBuild.truefoundryWorkflows.nodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}
+
+{{/*
+  Merge default nodeSelector with nodeSelector specified in tfy-buildkitd.nodeSelector
+*/}}
+{{- define "tfy-buildkitd.nodeSelector" -}}
+{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}

@@ -35,13 +35,12 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 12 }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.affinity }}
+        {{- include "tfy-buildkitd.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.tolerations }}
       tolerations:
