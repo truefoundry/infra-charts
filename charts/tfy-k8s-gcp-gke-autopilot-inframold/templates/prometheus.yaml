@@ -67,7 +67,7 @@ spec:
                 action: drop
                 sourceLabels:
                   - __name__
-              - regex: container_spec_(cpu_shares|memory_reservation_limit_bytes|memory_swap_limit_bytes)
+              - regex: container_spec.*
                 action: drop
                 sourceLabels:
                   - __name__
@@ -443,9 +443,9 @@ spec:
                           LABELS = {{`{{ $labels }}`}}
                   - for: 2m
                     expr: >-
-                      (sum(container_memory_working_set_bytes{container!=""}) BY (instance,
-                      container) / sum(container_spec_memory_limit_bytes > 0) BY (instance,
-                      container) * 100) > 80
+                      (sum(container_memory_working_set_bytes{name!=""}) BY (instance,
+                      name) / sum(container_spec_memory_limit_bytes > 0) BY (instance,
+                      name) * 100) > 80
                     alert: ContainerHighMemoryUsage
                     labels:
                       severity: warning
