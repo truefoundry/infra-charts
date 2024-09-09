@@ -24,7 +24,7 @@ rules:
 
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["delete"]
+    verbs: ["delete", "get"]
 
   - apiGroups: [""]
     resources: ["pods/log", "events", "services", "persistentvolumes"]
@@ -65,6 +65,18 @@ rules:
   - apiGroups: ["flyte.lyft.com"]
     resources: ["flyteworkflows"]
     verbs: ["create", "patch", "get", "delete"]
+
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["prometheuses"]
+    verbs: ["patch"]
+
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["patch"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["delete"]
 {{- end }}
 {{- end }}
 {{- end }}
