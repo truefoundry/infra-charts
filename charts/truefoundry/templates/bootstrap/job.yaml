@@ -48,13 +48,12 @@ spec:
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}
       restartPolicy: Never
-      {{- with .Values.truefoundryBootstrap.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.truefoundryBootstrap.affinity }}
+        {{- include "truefoundry-bootstrap.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.truefoundryBootstrap.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

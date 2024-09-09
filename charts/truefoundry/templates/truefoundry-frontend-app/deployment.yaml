@@ -60,13 +60,12 @@ spec:
       {{- end }}
       volumes:
       {{- toYaml .Values.truefoundryFrontendApp.extraVolumes | nindent 8 }}
-      {{- with .Values.truefoundryFrontendApp.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.truefoundryFrontendApp.affinity }}
+        {{- include "truefoundry-frontend-app.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.truefoundryFrontendApp.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       {{- with .Values.truefoundryFrontendApp.topologySpreadConstraints }}
       topologySpreadConstraints:

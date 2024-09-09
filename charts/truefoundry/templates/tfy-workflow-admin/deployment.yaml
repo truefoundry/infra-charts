@@ -80,10 +80,11 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyWorkflowAdmin.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.affinity | toYaml | nindent 8 }}
+        {{- if .Values.tfyWorkflowAdmin.affinity }}
+        {{- .Values.tfyWorkflowAdmin.affinity | toYaml | nindent 8 }}
+        {{- end }}
       {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
@@ -156,13 +157,12 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
-      {{- with .Values.tfyWorkflowAdmin.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyWorkflowAdmin.affinity }}
+        {{- include "tfy-workflow-admin.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
       topologySpreadConstraints:
