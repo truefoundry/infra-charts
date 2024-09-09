@@ -90,7 +90,7 @@ def process_chart_info(chart_info_list):
 
         images = make_image_list_unique(save_image_info(f"{temp_dir}/charts/{chart}.yaml"))
         logging.info(f"Images for {chart}: {images}")
-
+        chart_info["details"]["images"] = [image["details"]["registryURL"] for image in images]
         chart_detail_list.append(images)
 
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
@@ -184,6 +184,23 @@ def clean_up(temp_dir):
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
 
+"""
+This function is used to generate the summary of the components along with the versions in the inframold
+charts.
+"""
+def get_inframold_summary(parent_chart_name, parent_chart_version, chart_info_list):
+    inframold_summary = []
+    for chart_info in chart_info_list:
+        if chart_info["type"] == "helm":
+            inframold_summary.append({
+                "inframoldChartName": parent_chart_name,
+                "inframoldChartVersion": parent_chart_version,
+                "chartName": chart_info["details"]["chart"],
+                "repoUrl": chart_info["details"]["repoURL"],
+                "minChartVersion": chart_info["details"]["targetRevision"],
+                "maxChartVersion": chart_info["details"]["targetRevision"]
+            })
+
 if __name__ == "__main__":
     if len(sys.argv) < 6:
         print("Usage: python artifacts_template_generator.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
@@ -222,5 +239,7 @@ if __name__ == "__main__":
             chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
+
+    get_inframold_summary(chart_name, chart_version, chart_info_list)
 
     clean_up(temp_dir)
