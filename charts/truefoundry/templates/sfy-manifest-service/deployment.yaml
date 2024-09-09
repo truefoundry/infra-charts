@@ -56,13 +56,12 @@ spec:
       {{- end }}
       volumes:
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
-      {{- with .Values.sfyManifestService.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.sfyManifestService.affinity }}
+        {{- include "servicefoundry-server.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       {{- with .Values.sfyManifestService.topologySpreadConstraints }}
       topologySpreadConstraints:
