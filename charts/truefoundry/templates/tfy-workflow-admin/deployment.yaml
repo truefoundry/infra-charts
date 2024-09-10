@@ -80,11 +80,11 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- .Values.global.affinity | toYaml | nindent 8 }}
-        {{- if .Values.tfyWorkflowAdmin.affinity }}
-        {{- .Values.tfyWorkflowAdmin.affinity | toYaml | nindent 8 }}
-        {{- end }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
       {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
