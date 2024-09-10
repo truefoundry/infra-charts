@@ -8,6 +8,15 @@ spec:
   background: false
   rules:
   - name: redirect-docker
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+        - kube-public
+        - kube-node-lease
+        {{- range .Values.replaceImageRegistry.excludeNamespaces }}
+        - {{.}}
+        {{- end }}
     match:
       any:
       - resources:
