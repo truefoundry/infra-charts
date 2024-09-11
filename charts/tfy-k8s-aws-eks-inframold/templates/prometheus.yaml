@@ -67,7 +67,7 @@ spec:
                 action: drop
                 sourceLabels:
                   - __name__
-              - regex: container_spec.*
+              - regex: container_spec_(cpu_shares|memory_reservation_limit_bytes|memory_swap_limit_bytes)
                 action: drop
                 sourceLabels:
                   - __name__
@@ -313,7 +313,7 @@ spec:
                  sourceLabels:
                    - label_node_kubernetes_io_instance_type
           metricLabelsAllowlist:
-            - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component]
+            - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component,truefoundry.com/application-id]
             - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
         prometheusOperator:
           resources:
@@ -428,9 +428,9 @@ spec:
                   - for: 2m
                     expr: >-
                       (sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
-                      by (pod, container) /
+                      by (pod, container, namespace) /
                       sum(container_spec_cpu_quota{container!=""}/container_spec_cpu_period{container!=""})
-                      by (pod, container) * 100) > 80
+                      by (pod, container, namespace) * 100) > 80
                     alert: ContainerHighCpuUtilization
                     labels:
                       severity: warning
@@ -440,12 +440,11 @@ spec:
                       description: |-
                         Container CPU utilization is above 80%
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 2m
                     expr: >-
-                      (sum(container_memory_working_set_bytes{name!=""}) BY (instance,
-                      name) / sum(container_spec_memory_limit_bytes > 0) BY (instance,
-                      name) * 100) > 80
+                      (sum(container_memory_working_set_bytes{container!=""}) BY (pod,
+                      container, namespace) / sum(container_spec_memory_limit_bytes > 0) BY (pod,
+                      container, namespace) * 100) > 80
                     alert: ContainerHighMemoryUsage
                     labels:
                       severity: warning
@@ -454,20 +453,6 @@ spec:
                       description: |-
                         Container Memory usage is above 80%
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
-                  - for: 2m
-                    expr: >-
-                      (1 - (sum(container_fs_inodes_free{name!=""}) BY (instance) /
-                      sum(container_fs_inodes_total) BY (instance))) * 100 > 80
-                    alert: ContainerVolumeUsage
-                    labels:
-                      severity: warning
-                    annotations:
-                      summary: Container Volume usage (instance {{ `{{ $labels.instance }}` }})
-                      description: |-
-                        Container Volume usage is above 80%
-                          VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 5m
                     expr: >-
                       sum(increase(container_cpu_cfs_throttled_periods_total{container!=""}[5m]))
@@ -482,7 +467,6 @@ spec:
                       description: |-
                         Container is being throttled
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
               - name: KubestateExporter
                 rules:
                   - for: 2m
@@ -501,7 +485,6 @@ spec:
                       description: >-
                         HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} is unable to scale
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 0m
                     expr: >-
                       kube_horizontalpodautoscaler_status_condition{status="false",
@@ -516,7 +499,6 @@ spec:
                         HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}}
                         is unable to collect metrics
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 15m
                     expr: >-
                       sum by (namespace, pod)
@@ -531,7 +513,6 @@ spec:
                         Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
                         non-running state for longer than 15 minutes.
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 2m
                     expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
                     alert: KubernetesPodCrashLooping
@@ -543,7 +524,6 @@ spec:
                       description: |-
                         Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 2m
                     expr: >-
                       (kube_horizontalpodautoscaler_status_desired_replicas >=
@@ -560,7 +540,6 @@ spec:
                         HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} 
                         has hit maximum number of desired pods
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
                   - for: 0m
                     expr: >-
                       max(quantile_over_time(0.5,
@@ -577,5 +556,4 @@ spec:
                         is constantly at minimum replicas for 50% of the time.
                         Potential cost saving here.
                           VALUE = {{`{{ $value }}`}}
-                          LABELS = {{`{{ $labels }}`}}
 {{- end }}
