@@ -280,12 +280,23 @@ spec:
         fi
         printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Download code completed\n"
         printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please find the logs below\n"
-
+      
+        DOCKER_USERNAME="{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
         DOCKER_PASSWORD=$(echo '{{`{{inputs.parameters.dockerRegistryPassword}}`}}' | base64 -d)
-        
-        docker login -u "{{`{{inputs.parameters.dockerRegistryUsername}}`}}" -p $DOCKER_PASSWORD "{{`{{inputs.parameters.dockerRegistryURL}}`}}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        
-        IMAGE="{{`{{inputs.parameters.dockerRegistryURL}}`}}"/"{{`{{inputs.parameters.dockerRepo}}`}}"
+        REGISTRY="{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+        REPOSITORY="{{`{{inputs.parameters.dockerRepo}}`}}"
+        IMAGE="${REGISTRY}/${REPOSITORY}"
+        TAG="{{`{{inputs.parameters.dockerTag}}`}}"
+
+        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
+        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # This is a short term fix till we decouple registry url and login url
+        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+          docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
+        else
+          docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
+        fi
 
         # Split buildkitServiceURL into host and port
         IFS=':' read -r -a BUILDKIT_SERVICE_URL_PARTS <<< "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
@@ -315,10 +326,11 @@ spec:
 
         printf "\033[36m[==== Docker logs start ====]\033[0m\n"
         docker buildx create --name remote-kubernetes --driver remote tcp://{{`{{inputs.parameters.buildkitServiceURL}}`}}
+                
         # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
         set +e
         set +o pipefail
-        tfy build --build-config={{`{{inputs.parameters.buildConfig}}`}} --name=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:"{{`{{inputs.parameters.dockerTag}}`}}" --tag=$IMAGE:latest --cache-to=type=registry,ref=$IMAGE:cache-latest,image-manifest=true,mode=max --cache-from=type=registry,ref=$IMAGE:cache-latest --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
+        tfy build --build-config={{`{{inputs.parameters.buildConfig}}`}} --name="${IMAGE}:${TAG}" --tag="${IMAGE}:${TAG}" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max" --cache-from=type=registry,ref="${IMAGE}:cache-latest" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
         set -o pipefail
         set -e
         printf "\033[36m[==== Docker logs end ====]\033[0m\n"
@@ -666,22 +678,21 @@ spec:
         IMAGE=$REGISTRY/$REPOSITORY:$TAG
         IMAGE_SIZE_THRESHOLD=$(printf '%.0f' {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }})
 
-        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
-        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
-        # This is a short term fix till we decouple registry url and login url
-        _REGISTRY=$(echo $REGISTRY | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
-          docker login -u $USERNAME -p $PASSWORD 2> /dev/null
-        else
-          docker login -u $USERNAME -p $PASSWORD $REGISTRY 2> /dev/null
-        fi
-
         echo Registry is $REGISTRY
-
         if [[ $REGISTRY != *"amazonaws.com"* ]]; then
           echo Registry is not from ECR. Skipping SOCI index creation.
           echo -n "false" > /tmp/result
           exit 0
+        fi
+
+        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
+        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # This is a short term fix till we decouple registry url and login url
+        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+          docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
+        else
+          docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
         fi
 
         MANFEST=$(docker manifest inspect --verbose $IMAGE)
@@ -771,7 +782,15 @@ spec:
         TAG="{{`{{inputs.parameters.dockerTag}}`}}"
         IMAGE=$REGISTRY/$REPOSITORY:$TAG
 
-        docker login -u $USERNAME -p $PASSWORD $REGISTRY 2> /dev/null
+        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
+        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # This is a short term fix till we decouple registry url and login url
+        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+          docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
+        else
+          docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
+        fi
 
         echo Starting Containerd
         containerd > /dev/null 2>&1 &
