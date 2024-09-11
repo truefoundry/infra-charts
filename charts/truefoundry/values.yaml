@@ -170,7 +170,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: v0.3.152
+  imageTag: v0.3.154
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -335,7 +335,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: v0.2.119
+  imageTag: v0.2.120
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -515,7 +515,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for servicefoundry server
     workbenchImages: '{{ .Release.Name }}-workbench-images-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: v0.4.2
+  imageTag: v0.4.4
 
 #######################
 ## tfyK8sController Settings specific to tfyK8sController.
@@ -599,7 +599,7 @@ tfyK8sController:
       }}.svc.cluster.local:4222
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   ## @param tfyK8sController.imageTag Image Tag for tfyK8sController
-  imageTag: v0.1.4
+  imageTag: v0.1.6
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -689,7 +689,7 @@ sfyManifestService:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     HELM_SIZE_LIMIT_BYTES: "307200"
     ASYNC_PROCESSOR_SIDECAR_IMAGE: public.ecr.aws/w0y0d8g6/truefoundrycloud/async_processor:35b639ea3db5490f816379de0c92a9a933338cdf
-    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.6
+    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.7
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
     AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
@@ -698,12 +698,12 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
-    ADDITIONAL_KUSTOMIZE_PATCH: ""
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL":
       "https://truefoundry.github.io/infra-charts/", "chart":
       "tfy-manifests-template", "targetRevision": "0.2.0" }'
+    ADDITIONAL_KUSTOMIZE_PATCHES: ""
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: 0.1.133
+  imageTag: 0.1.134
 
 #############################
 ## nats Settings corresponding to the NATS server
@@ -1122,7 +1122,7 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
       .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: v0.0.27
+  imageTag: v0.0.28
 
 #############################
 ## tfyWorkflowAdmin Settings specific to tfy-workflow.
