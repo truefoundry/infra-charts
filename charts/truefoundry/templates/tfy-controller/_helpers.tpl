@@ -95,3 +95,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+  Merge default nodeSelector with nodeSelector specified in tfyController nodeSelector
+  */}}
+{{- define "tfy-controller.nodeSelector" -}}
+{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyController.nodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}

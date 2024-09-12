@@ -56,13 +56,12 @@ spec:
       {{- end }}
       volumes:
         {{- include "tfy-k8s-controller.volumes" . | nindent 8 }}
-      {{- with .Values.tfyK8sController.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyK8sController.affinity }}
+        {{- include "tfy-k8s-controller.nodeSelector" . | nindent 8 }}
+      {{- $mergedAffinity := dict | merge .Values.tfyK8sController.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       {{- with .Values.tfyK8sController.topologySpreadConstraints }}
       topologySpreadConstraints:

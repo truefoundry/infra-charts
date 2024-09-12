@@ -30,6 +30,8 @@ global:
     password: ""
   ## @param global.tfyApiKey API key for truefoundry
   tfyApiKey: ""
+  ## @param global.affinity Affinity for all services
+  affinity: {}
   ## @skip global.tolerations
   tolerations:
     - key: class.truefoundry.io/control-plane
@@ -168,7 +170,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: v0.3.152-rc.1
+  imageTag: v0.3.154
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace
@@ -226,6 +228,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_COMPANY_REGISTRATION: "false"
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
     VITE_ENABLE_WORKFLOWS: "false"
+    VITE_ENABLE_EVENTS_GRAPHS: "false"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
@@ -239,7 +242,7 @@ truefoundryFrontendApp:
     VITE_OLD_LLM_PLAYGROUND_PATH: llm-playground
     VITE_LLM_PLAYGROUND_PATH: llm-gateway
     VITE_ENABLE_SENTRY: "false"
-    VITE_ENABLE_PROMPTS: "false"
+    VITE_ENABLE_PROMPT_TEMPLATES: "false"
     VITE_ENABLE_TOOLS_AGENTS: "false"
     VITE_SENTRY_DSN: ""
     VITE_APEX_DOMAIN: http://truefoundry.com/
@@ -332,7 +335,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: v0.2.119-rc.1
+  imageTag: v0.2.120
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -509,10 +512,10 @@ servicefoundryServer:
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
-    ## @param servicefoundryServer.configs.workbenchImgaes Workbench Images for servicefoundry server
+    ## @param servicefoundryServer.configs.workbenchImages Workbench Images for servicefoundry server
     workbenchImages: '{{ .Release.Name }}-workbench-images-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: v0.4.2-rc.1
+  imageTag: v0.4.4
 
 #######################
 ## tfyK8sController Settings specific to tfyK8sController.
@@ -596,7 +599,7 @@ tfyK8sController:
       }}.svc.cluster.local:4222
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   ## @param tfyK8sController.imageTag Image Tag for tfyK8sController
-  imageTag: v0.1.4-rc.1
+  imageTag: v0.1.6
 
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
@@ -686,7 +689,7 @@ sfyManifestService:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     HELM_SIZE_LIMIT_BYTES: "307200"
     ASYNC_PROCESSOR_SIDECAR_IMAGE: public.ecr.aws/w0y0d8g6/truefoundrycloud/async_processor:35b639ea3db5490f816379de0c92a9a933338cdf
-    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.6
+    TFY_MODEL_DOWNLOADER_IMAGE: public.ecr.aws/truefoundrycloud/tfy-model-downloader:0.1.7
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
     AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
@@ -695,12 +698,12 @@ sfyManifestService:
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
     AUTOPILOT_PROCESSOR_NUMBER_OF_WORKERS: "2"
-    ADDITIONAL_KUSTOMIZE_PATCH: ""
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL":
       "https://truefoundry.github.io/infra-charts/", "chart":
       "tfy-manifests-template", "targetRevision": "0.2.0" }'
+    ADDITIONAL_KUSTOMIZE_PATCHES: ""
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: 0.1.133
+  imageTag: 0.1.134
 
 #############################
 ## nats Settings corresponding to the NATS server
@@ -745,13 +748,15 @@ nats:
     logging:
       ## @param nats.nats.logging.debug Bool to enable debug logging for NATS server
       debug: true
-    ## @skip nats.nats.resources Resource requests and limits for NATS server
+    ## nats.nats.resources Resource requests and limits for NATS server
     resources:
+      ## nats.nats.resources.limits Resource limits for NATS server
       limits:
         ## @param nats.nats.resources.limits.cpu CPU limit for NATS server
         cpu: 50m
         ## @param nats.nats.resources.limits.memory Memory limit for NATS server
         memory: 512Mi
+      ## nats.nats.resources.requests Resource requests for NATS server
       requests:
         ## @param nats.nats.resources.requests.cpu CPU request for NATS server
         cpu: 25m
@@ -769,13 +774,15 @@ nats:
       tag: 0.13.2
     ## @param nats.natsbox.imagePullSecrets Image pull credentials for NATSBox
     imagePullSecrets: []
-    ## @skip nats.natsbox.resources Resource requests and limits for NATSBox
+    ## nats.natsbox.resources Resource requests and limits for NATSBox
     resources:
+      ## nats.natsbox.resources.limits Resource limits for NATSBox
       limits:
         ## @param nats.natsbox.resources.limits.cpu CPU limit for NATSBox
         cpu: 50m
         ## @param nats.natsbox.resources.limits.memory Memory limit for NATSBox
         memory: 512Ki
+      ## nats.natsbox.resources.requests Resource requests for NATSBox
       requests:
         ## @param nats.natsbox.resources.requests.cpu CPU request for NATSBox
         cpu: 25m
@@ -790,7 +797,7 @@ nats:
       ## @param nats.exporter.image.repository NATS exporter image repository
       repository: natsio/prometheus-nats-exporter
       ## @param nats.exporter.image.tag NATS exporter image tag
-      tag: "0.14.0"
+      tag: "0.15.0"
   ## nats.reloader NATS reloader configuration
   reloader:
     ## @param nats.reloader.enabled Bool to enable NATS reloader
@@ -800,7 +807,7 @@ nats:
       ## @param nats.reloader.image.repository NATS reloader image repository
       repository: natsio/nats-server-config-reloader
       ## @param nats.reloader.image.tag NATS reloader image tag
-      tag: "0.14.1"
+      tag: "0.14.3"
   ## nats.cluster NATS cluster configuration
   cluster:
     ## @param nats.cluster.enabled Bool to enable NATS cluster
@@ -876,9 +883,11 @@ tfyBuild:
         operator: Equal
     ## tfyBuild.truefoundryWorkflows.sfyBuilder Settings for the sfyBuilder
     sfyBuilder:
-      ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.version syftBuilder Version
+      ## tfyBuild.truefoundryWorkflows.sfyBuilder.image syftBuilder Image
       image:
+        ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository Repository for the sfyBuilder
         repository: public.ecr.aws/truefoundrycloud/sfy-builder
+        ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag Tag for the sfyBuilder
         tag: v0.8.0
       ## tfyBuild.truefoundryWorkflows.sfyBuilder.resources Resource requests and limits for the sfyBuilder
       resources:
@@ -969,6 +978,38 @@ tfyBuild:
       extraVolumeMounts: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolume
       extraVolume: []
+    ## Pre-build
+    ## This step will be executed after each build. In this build step a separate container will be created to run your post build script. This container will have the same environment variables as the main build container.
+    preBuild:
+      ## @param tfyBuild.truefoundryWorkflows.preBuild.enabled Enable pre-build step for the tfyBuild server
+      enabled: false
+      image:
+        ## @param tfyBuild.truefoundryWorkflows.preBuild.image.repository Image repository for the pre-build step
+        repository: ""
+        ## @param tfyBuild.truefoundryWorkflows.preBuild.image.tag Image tag for the pre-build step
+        tag: ""
+      ## @param tfyBuild.truefoundryWorkflows.preBuild.command Command for the pre-build step
+      command: []
+      ## @param tfyBuild.truefoundryWorkflows.preBuild.script Script for the pre-build step
+      script: ""
+      ## @param tfyBuild.truefoundryWorkflows.preBuild.resources Resource requests and limits for the pre-build step
+      resources: {}
+    ## Post build
+    ## This step will be executed after each build. In this build step a separate container will be created to run your post build script. This container will have the same environment variables as the main build container.
+    postBuild:
+      ## @param tfyBuild.truefoundryWorkflows.postBuild.enabled Enable post-build step for the tfyBuild server
+      enabled: false
+      image:
+        ## @param tfyBuild.truefoundryWorkflows.postBuild.image.repository Image repository for the post-build step
+        repository: ""
+        ## @param tfyBuild.truefoundryWorkflows.postBuild.image.tag Image tag for the post-build step
+        tag: ""
+      ## @param tfyBuild.truefoundryWorkflows.postBuild.command Command for the post-build step
+      command: []
+      ## @param tfyBuild.truefoundryWorkflows.postBuild.script Script for the post-build step
+      script: ""
+      ## @param tfyBuild.truefoundryWorkflows.postBuild.resources Resource requests and limits for the post-build step
+      resources: {}
 
 #############################
 ## tfyBuildkitdService Settings corresponding to the tfy-buildkitd service
@@ -1081,7 +1122,7 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{
       .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: v0.0.27
+  imageTag: v0.0.28
 
 #############################
 ## tfyWorkflowAdmin Settings specific to tfy-workflow.
@@ -1112,7 +1153,7 @@ tfyWorkflowAdmin:
   commonLabels: {}
   ## @param tfyWorkflowAdmin.securityContext Security context for the tfyWorkflowAdmin
   securityContext: {}
-  ## @param tfyWorklfowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
+  ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
   ## @skip tfyWorkflowAdmin.resources Resource requests and limits for the tfyWorkflowAdmin
@@ -1141,7 +1182,7 @@ tfyWorkflowAdmin:
   serviceAccount:
     ## @param tfyWorkflowAdmin.serviceAccount.annotations Annotations for the tfyWorkflowAdmin service account
     annotations: {}
-  ## @param tfyworkflowadmin.s3BucketName S3 bucket name for the tfyWorkflowAdmin
+  ## @param tfyWorkflowAdmin.s3BucketName S3 bucket name for the tfyWorkflowAdmin
   s3BucketName: ''
   ## @param tfyWorkflowAdmin.awsRegion AWS region for the tfyWorkflowAdmin
   awsRegion: ''
@@ -1158,5 +1199,5 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-  ## @param tfyController.imageTag Image tag for the tfyController
+  ## @param tfyWorkflowAdmin.imageTag Image tag for the tfyController
   imageTag: v0.1.3-rc.1

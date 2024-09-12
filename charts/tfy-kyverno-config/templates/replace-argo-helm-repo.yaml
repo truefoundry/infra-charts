@@ -8,6 +8,15 @@ spec:
   background: false
   rules:
   - name: replace-argo-helm-repo
+    exclude:
+      resources:
+        namespaces:
+        - kube-system
+        - kube-public
+        - kube-node-lease
+        {{- range .Values.replaceArgoHelmRepo.excludeNamespaces }}
+        - {{.}}
+        {{- end }}
     context:
       - name: newRegistry
         variable:
