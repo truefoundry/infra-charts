@@ -5,11 +5,13 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 
 ### Global Parameters
 
-| Name              | Description                    | Value |
-| ----------------- | ------------------------------ | ----- |
-| `tenantName`      | Parameters for tenantName      | `""`  |
-| `controlPlaneURL` | Parameters for controlPlaneURL | `""`  |
-| `clusterName`     | Name of the cluster            | `""`  |
+| Name              | Description                              | Value |
+| ----------------- | ---------------------------------------- | ----- |
+| `tenantName`      | Parameters for tenantName                | `""`  |
+| `controlPlaneURL` | Parameters for controlPlaneURL           | `""`  |
+| `clusterName`     | Name of the cluster                      | `""`  |
+| `tolerations`     | Tolerations for the all chart components | `[]`  |
+| `affinity`        | Affinity for the all chart components    | `{}`  |
 
 ### argocd parameters
 
