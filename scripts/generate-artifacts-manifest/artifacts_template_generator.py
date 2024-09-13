@@ -4,6 +4,10 @@ import json
 import subprocess
 import os
 import logging
+import time
+import requests
+from requests.exceptions import ConnectionError
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -34,6 +38,24 @@ def make_image_list_unique(image_list):
         if image not in unique_images:
             unique_images.append(image)
     return unique_images
+
+def post_payload(url, payload, retries=3, delay=10):
+    headers = {
+        "accept": "*/*",
+        "Content-Type": "application/json"
+    }
+    for i in range(retries):
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(payload))
+            response.raise_for_status() # If response was successful, no Exception will be raised
+            return response
+        except ConnectionError as e:
+            print(f'Connection error: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
+            time.sleep(delay)
+        except Exception as e:
+            print(f'An error occurred: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
+            time.sleep(delay)
+    return None
 
 # function to extract chart information from the manifest file
 def extract_chart_info(manifest_file):
@@ -90,7 +112,7 @@ def process_chart_info(chart_info_list):
 
         images = make_image_list_unique(save_image_info(f"{temp_dir}/charts/{chart}.yaml"))
         logging.info(f"Images for {chart}: {images}")
-
+        chart_info["details"]["images"] = [image["details"]["registryURL"] for image in images]
         chart_detail_list.append(images)
 
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
@@ -184,6 +206,30 @@ def clean_up(temp_dir):
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
 
+"""
+This function is used to generate the summary of the components along with the versions in the inframold
+charts.
+"""
+def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_list):
+    inframold_summary = {
+        "inframoldChartName": parent_chart_name,
+        "inframoldChartVersion": parent_chart_version,
+        "componentCharts": []
+    }
+    for chart_info in chart_info_list:
+        if chart_info["type"] == "helm":
+            inframold_summary["componentCharts"].append({
+                "chartName": chart_info["details"]["chart"],
+                "repoUrl": chart_info["details"]["repoURL"],
+                "minChartVersion": chart_info["details"]["targetRevision"],
+                "maxChartVersion": chart_info["details"]["targetRevision"]
+            })
+
+    print("Saving the inframold summary to migration-server: ", inframold_summary)
+    post_payload("https://migration-server.truefoundry.com/v1/inframold", inframold_summary)
+
+    
+
 if __name__ == "__main__":
     if len(sys.argv) < 6:
         print("Usage: python artifacts_template_generator.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
@@ -222,5 +268,7 @@ if __name__ == "__main__":
             chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
+
+    save_inframold_summary(chart_name, chart_version, chart_info_list)
 
     clean_up(temp_dir)
