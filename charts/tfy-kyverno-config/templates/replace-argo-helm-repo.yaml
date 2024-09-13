@@ -29,6 +29,12 @@ spec:
           operations:
             - CREATE
             - UPDATE
+          {{- if .Values.replaceArgoHelmRepo.includeNamespaces }}
+          namespaces:
+          {{- range .Values.replaceArgoHelmRepo.includeNamespaces }}
+            - {{.}}
+          {{- end }}
+          {{- end }}
     preconditions:
       all:
         - key: "{{`'{{request.object.spec.source.helm}}'`}}"
