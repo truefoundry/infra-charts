@@ -25,6 +25,12 @@ spec:
           operations:
             - CREATE
             - UPDATE
+          {{- if .Values.replaceImageRegistry.includeNamespaces }}
+          namespaces:
+          {{- range .Values.replaceImageRegistry.includeNamespaces }}
+          - {{.}}
+          {{- end }}
+          {{- end }}
     mutate:
       foreach:
       - list: "request.object.spec.containers"
