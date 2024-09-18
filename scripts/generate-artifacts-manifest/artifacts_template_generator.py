@@ -71,10 +71,10 @@ def extract_chart_info(manifest_file):
                     chart_info = {
                         "type": "helm",
                         "details": {
-                            "chart": source.get('chart', 'Not found'),
-                            "repoURL": source.get('repoURL', 'Not found'),
-                            "targetRevision": source.get('targetRevision', 'Not found'),
-                            "values": source.get('helm', {}).get('values', 'Not found')
+                            "chart": source.get('chart', ''),
+                            "repoURL": source.get('repoURL', ''),
+                            "targetRevision": source.get('targetRevision', ''),
+                            "values": source.get('helm', {}).get('values', '')
                         }
                     }
                     chart_info_list.append(chart_info)
