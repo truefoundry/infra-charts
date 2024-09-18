@@ -1,0 +1,80 @@
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: tfy-replace-image-registry.truefoundry.com
+  namespace: jspolicy
+spec:
+  type: Mutating
+  operations: ["CREATE", "UPDATE"]
+  resources: ["pods"]
+  javascript: |
+    const excludedNamespaces = ["kube-system", "kube-public", "kube-node-lease"]
+    excludedNamespaces.push([])
+    const includedNamespaces = ["jspolicy-test"]
+    if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace)) {
+      return
+    }
+    registryReplacementMap = {
+      "docker.io" : "mydocker.io",
+      "*" : "myjrog.io"
+    }
+    /**
+    * Return the canonical image uri -> so its a fully qualified image_uri
+    * image_normalize('nginx') -> docker.io/nginx:latest
+    * image_normalize('myregistry.com/myrepo/myimage')) -> myregistry.com/myrepo/myimage:latest
+    * image_normalize('myimage:1.2.3')) -> docker.io/myimage:1.2.3
+    * image_normalize('myregistry.com/myrepo/myimage:1.2.3')) -> myregistry.com/myrepo/myimage:1.2.3
+    */
+    function image_normalize(image) {
+      const defaultRegistry = 'docker.io';
+      const defaultTag = 'latest';
+      let registry = defaultRegistry;
+      let repository = '';
+      let tag = defaultTag;
+
+      // Check if there's a registry specified
+      const slashIndex = image.indexOf('/');
+      if (slashIndex > -1) {
+        const maybeRegistry = image.substring(0, slashIndex);
+        // A registry should contain a dot or a colon
+        if (maybeRegistry.includes('.') || maybeRegistry.includes(':')) {
+          registry = maybeRegistry;
+          image = image.substring(slashIndex + 1);
+        }
+      }
+
+      // Check if there's a tag specified
+      const colonIndex = image.lastIndexOf(':');
+      if (colonIndex > -1) {
+        tag = image.substring(colonIndex + 1);
+        image = image.substring(0, colonIndex);
+      }
+      repository = image;
+      return [registry, `${registry}/${repository}:${tag}`];
+    }
+    
+    function get_new_image_uri(initialImageUri, registryReplacementMap) {
+      const result = image_normalize(initialImageUri)
+      const registry = result[0]
+      const imageUri = result[1]
+      print (initialImageUri, registry, imageUri)
+      let newImageUri = imageUri;
+      
+      for (const [key, value] of Object.entries(registryReplacementMap)) {
+        if (key === '*' || new RegExp(key).test(registry)) {
+          newImageUri = imageUri.replace(new RegExp(`^${registry}`), value);
+          break;
+        }
+      }
+      return newImageUri
+    }
+    for (var container of (request.object.spec.containers || [])) {
+      container.image = get_new_image_uri(container.image, registryReplacementMap)
+    }
+
+    for (var container of (request.object.spec.initContainers || [])) {
+      container.image = get_new_image_uri(container.image, registryReplacementMap)
+    }
+    
+    mutate(request.object);
+    
