@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import yaml
 import sys
 import json
@@ -71,10 +72,10 @@ def extract_chart_info(manifest_file):
                     chart_info = {
                         "type": "helm",
                         "details": {
-                            "chart": source.get('chart', 'Not found'),
-                            "repoURL": source.get('repoURL', 'Not found'),
-                            "targetRevision": source.get('targetRevision', 'Not found'),
-                            "values": source.get('helm', {}).get('values', 'Not found')
+                            "chart": source.get('chart', ''),
+                            "repoURL": source.get('repoURL', ''),
+                            "targetRevision": source.get('targetRevision', ''),
+                            "values": source.get('helm', {}).get('values', '')
                         }
                     }
                     chart_info_list.append(chart_info)
@@ -100,15 +101,17 @@ def process_chart_info(chart_info_list):
         if chart == "aws-load-balancer-controller":
             values = values.replace("clusterName: \"\"", "clusterName: \"my-cluster\"")
 
-        run_command(f"helm repo add {chart} {repoURL}")
-
         values_file = f"{temp_dir}/charts/{chart}-values.yaml"
         os.makedirs(os.path.dirname(values_file), exist_ok=True)
         with open(values_file, "w") as f:
             f.write(values)
-
-        logging.info(f"Generating manifests for {chart}/{chart}...")
-        run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
+        if not urlparse(repoURL).scheme:
+            logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
+            run_command(f"helm template oci://{repoURL}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
+        else:
+            run_command(f"helm repo add --force-update {chart} {repoURL}")
+            logging.info(f"Generating manifests for {chart}/{chart}...")
+            run_command(f"helm template {chart}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
 
         images = make_image_list_unique(save_image_info(f"{temp_dir}/charts/{chart}.yaml"))
         logging.info(f"Images for {chart}: {images}")
@@ -127,13 +130,17 @@ def save_image_info(manifest_file):
 
 # function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
-    run_command(f"helm repo add {chart_name} {chart_repo_url}")
-    run_command("helm repo update")
-    run_command(f"helm search repo {chart_name}/{chart_name}")
-
-    logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
-    logging.info(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
-    run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+    parsed_url = urlparse(chart_repo_url)
+    print("Chart Repo URL: ", chart_repo_url, "Parsed URL: ", parsed_url)
+    if not parsed_url.scheme:
+        logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
+        run_command(f"helm pull oci://{chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+    else:
+        run_command(f"helm repo add --force-update {chart_name} {chart_repo_url}")
+        run_command("helm repo update")
+        run_command(f"helm search repo {chart_name}/{chart_name}")
+        logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
+        run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
