@@ -1,83 +1,18 @@
-## @section Global Parameters
-## @param tenantName Parameters for tenantName
-## Tenant Name - This is same as the name of the organization used to sign up
-## on Truefoundry
-##
 tenantName: ""
-
-## @param controlPlaneURL Parameters for controlPlaneURL
-## URL of the control plane - This is the URL that can be used by workload to access the truefoundry components
-##
 controlPlaneURL: ""
-
-## @param clusterName Name of the cluster
-## Name of the cluster that you have created on AWS/GCP/Azure
-##
 clusterName: ""
 
-## @skip tolerations Tolerations for the all chart components
-##
-tolerations:
-  - key: CriticalAddonsOnly
-    value: "true"
-    effect: NoSchedule
-    operator: Equal
-  - key: kubernetes.azure.com/scalesetpriority
-    value: "spot"
-    effect: NoSchedule
-    operator: Equal
-  - key: "cloud.google.com/gke-spot"
-    value: "true"
-    effect: NoSchedule
-    operator: Equal
-
-## @skip affinity Affinity for the all chart components
-##
-  
-affinity: {}
-  
-
-## @section argocd parameters
-## @param argocd.enabled Flag to enable ArgoCD
-## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
-## already installed in your cluster. Please make sure that the configuration of
-## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
-
-## @section argoWorkflows parameters
-## @param argoWorkflows.enabled Flag to enable Argo Workflows
-##
 argoWorkflows:
   enabled: true
-
-## @section argoRollouts parameters
-## @param argoRollouts.enabled Flag to enable Argo Rollouts
-## Argo Rollouts is mandatory for Truefoundry to work.
-##
 argoRollouts:
   enabled: true
-
-## @section notebookController parameters
-## Notebook Controller is required to power notebooks in Truefoundry
-##
 notebookController:
-  ## @param notebookController.enabled Flag to enable Notebook Controller
-  ##
   enabled: true
-  ## @param notebookController.defaultStorageClass Default storage class for Notebook Controller
-  ##
   defaultStorageClass: ""
-
-## @section certManager parameters
-## @param certManager.enabled Flag to enable Cert Manager
-##
 certManager:
-  enabled: false
-
-## @section metricsServer parameters
-## @param metricsServer.enabled Flag to enable Metrics Server
-##
+  enabled: true
 metricsServer:
 
   enabled: false
@@ -86,138 +21,63 @@ metricsServer:
 
   
 
-## @section gpu parameters
-## @param gpu.enabled Flag to enable Tfy GPU Operator
-##
 gpu:
   enabled: true
-  ## @param gpu.clusterType Cluster type for Tfy GPU Operator
-  ##
   clusterType: gcpGkeAutopilot
-
-## @section truefoundry parameters
-## @param truefoundry.enabled Flag to enable TrueFoundry
-## This installs the Truefoundry control plane helm chart. You can make it true
-## if you want to install Truefoundry control plane.
-##
 truefoundry:
   enabled: true
-  ## @param truefoundry.devMode.enabled Flag to enable TrueFoundry Dev mode
-  ##
+  tfyWorkflowAdmin:
+    enabled: true
   devMode:
-    enabled: false
-  ## @section truefoundryBootstrap parameters
-  ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
+    enabled: true
   truefoundryBootstrap:
     enabled: true
-  ## @section database. Can be left empty if using the dev mode parameters
   database:
-    ## @param truefoundry.database.host Hostname of the database
     host: ""
-    ## @param truefoundry.database.name Name of the database
     name: ""
-    ## @param truefoundry.database.username Username of the database
     username: ""
-    ## @param truefoundry.database.password Password of the database
     password: ""
-  ## @param truefoundry.tfyApiKey API Key for TrueFoundry
   tfyApiKey: ""
-  ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
 
-## @section loki parameters
-## @param loki.enabled Flag to enable Loki
-##
 loki:
   enabled: true
 
-## @section istio parameters
-## @param istio.enabled Flag to enable Istio
-##
 istio:
   enabled: true
-  ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
     
     annotations: {}
     
-  ## @section istio discovery parameters
   discovery:
-    ## @param istio.discovery.hub Hub for the istio image
     hub: gcr.io/istio-release
-    ## @param istio.discovery.tag Tag for the istio image
     tag: 1.21.1-distroless
-  ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
     
     httpsRedirect: true
     
 
-## @section keda parameters
-## @param keda.enabled Flag to enable Keda
-##
 keda:
   enabled: true
 
-## @section kubecost parameters
-## @param kubecost.enabled Flag to enable Kubecost
-##
 kubecost:
   enabled: true
 
-## @section prometheus parameters
-## @param prometheus.enabled Flag to enable Prometheus
-##
 prometheus:
   enabled: true
-  ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
-  ##
-  additionalScrapeConfigs:
-  
-  - job_name: gpu-metrics
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    metrics_path: /metrics
-    scheme: http
-    kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-            - kube-system
-        selectors:
-          - role: pod
-            label: "k8s-app=nvidia-gpu-device-plugin"
-    relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_container_port_name]
-        action: keep
-        regex: metrics
-  
 
-
-## @section grafana parameters
-## @param grafana.enabled Flag to enable Grafana
-##
 grafana:
   enabled: true
 
-## @section kyverno parameters
-## @param kyverno.enabled Flag to enable Kyverno
-##
 kyverno:
-  enabled: false
+  enabled: true
 
-## @section tfyAgent parameters
-## @param tfyAgent.enabled Flag to enable Tfy Agent
-##
 tfyAgent:
   enabled: true
-  ## @param tfyAgent.clusterToken cluster token
-  ## Token for cluster authentication
-  ##
   clusterToken: ""
 
-## @section elasti parameters
-## @param elasti.enabled Flag to enable Elasti
-##
 elasti:
-  enabled: false
+  enabled: true
+
+grafana:
+  enabled: true
