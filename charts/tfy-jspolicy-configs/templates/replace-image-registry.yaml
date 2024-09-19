@@ -14,7 +14,7 @@ spec:
 
     const excludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml }}`)
     const includedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml }}`)
-    registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacement  | toYaml }}`)
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml }}`)
     if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace)) {
       return
     }
