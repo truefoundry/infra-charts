@@ -2,14 +2,13 @@ apiVersion: policy.jspolicy.com/v1beta1
 kind: JsPolicy
 metadata:
   name: tfy-replace-image-registry.truefoundry.com
-  namespace: jspolicy
+  namespace: jspolicy-test
 spec:
   type: Mutating
   operations: ["CREATE", "UPDATE"]
   resources: ["pods"]
   javascript: |
     const excludedNamespaces = ["kube-system", "kube-public", "kube-node-lease"]
-    excludedNamespaces.push([])
     const includedNamespaces = ["jspolicy-test"]
     if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace)) {
       return
@@ -18,19 +17,30 @@ spec:
       "docker.io" : "mydocker.io",
       "*" : "myjrog.io"
     }
-    /**
-    * Return the canonical image uri -> so its a fully qualified image_uri
-    * image_normalize('nginx') -> docker.io/nginx:latest
-    * image_normalize('myregistry.com/myrepo/myimage')) -> myregistry.com/myrepo/myimage:latest
-    * image_normalize('myimage:1.2.3')) -> docker.io/myimage:1.2.3
-    * image_normalize('myregistry.com/myrepo/myimage:1.2.3')) -> myregistry.com/myrepo/myimage:1.2.3
+    /*
+    * Normalize the image name to a standard format
+    * image_normalize("nginx") docker.io/library/nginx:latest
+    * image_normalize("nginx:1.1") docker.io/library/nginx:1.1
+    * image_normalize("nginx:latest") docker.io/library/nginx:latest
+    * image_normalize("nginx:1.1@sha256:asdasdasdsadsad") docker.io/library/nginx:1.1
+    * image_normalize("docker.io/truefoundrycloud/nginx:1.1@sha256:asdasdasdsadsad") docker.io/truefoundrycloud/nginx:1.1
+    * image_normalize("docker.io/nginx") docker.io/library/nginx:latest
     */
     function image_normalize(image) {
       const defaultRegistry = 'docker.io';
+      const defaultNamespace = 'library';
       const defaultTag = 'latest';
       let registry = defaultRegistry;
+      let namespace = defaultNamespace;
       let repository = '';
       let tag = defaultTag;
+
+      // Check if sha256 is specified
+      const atSignIndex = image.lastIndexOf('@');
+      if (atSignIndex > -1) {
+        tag = tag.substring(atSignIndex + 1);
+        image = image.substring(0, atSignIndex);
+      }
 
       // Check if there's a registry specified
       const slashIndex = image.indexOf('/');
@@ -43,14 +53,25 @@ spec:
         }
       }
 
+      // Check if there's a namespace specified
+      const namespaceIndex = image.indexOf('/');
+      if (namespaceIndex > -1) {
+        namespace = image.substring(0, namespaceIndex);
+        image = image.substring(namespaceIndex + 1);
+      }
+
       // Check if there's a tag specified
       const colonIndex = image.lastIndexOf(':');
       if (colonIndex > -1) {
         tag = image.substring(colonIndex + 1);
         image = image.substring(0, colonIndex);
       }
+
+      
+
+      // The remaining part is the repository
       repository = image;
-      return [registry, `${registry}/${repository}:${tag}`];
+      return [registry, `${registry}/${namespace}/${repository}:${tag}`];
     }
     
     function get_new_image_uri(initialImageUri, registryReplacementMap) {
@@ -60,11 +81,10 @@ spec:
       print (initialImageUri, registry, imageUri)
       let newImageUri = imageUri;
       
-      for (const [key, value] of Object.entries(registryReplacementMap)) {
-        if (key === '*' || new RegExp(key).test(registry)) {
-          newImageUri = imageUri.replace(new RegExp(`^${registry}`), value);
-          break;
-        }
+      if (registryReplacementMap[registry]) {
+        newImageUri = imageUri.replace(registry, registryReplacementMap[registry]);
+      } else if (registryReplacementMap['*']) {
+        newImageUri = imageUri.replace(registry, registryReplacementMap['*']);
       }
       return newImageUri
     }
@@ -77,4 +97,3 @@ spec:
     }
     
     mutate(request.object);
-    

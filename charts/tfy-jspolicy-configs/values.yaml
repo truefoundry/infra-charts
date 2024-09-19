@@ -32,13 +32,15 @@ replaceImageRegistry:
   ## @param replaceImageRegistry.enabled Enable or disable replacing the image registry
   enabled: false
   ## @param replaceImageRegistry.excludeNamespaces Namespaces to exclude from replacing the image registry
-  excludeNamespaces: []
+  excludeNamespaces: ["truefoundry"]
 
   ## @param replaceImageRegistry.includeNamespaces Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included
   includeNamespaces: ["jspolicy-test"]
 
   ## @param replaceImageRegistry.newRegistry The new image registry to use
-  newRegistry: "random.example.com"
+  registryReplacement:
+    "docker.io": "mydocker.io"
+    "*": "myjrog.io"
 
 ## @section replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 replaceArgoHelmRepo:
