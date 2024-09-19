@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 import yaml
 import sys
 import json
@@ -127,7 +128,8 @@ def save_image_info(manifest_file):
 
 # function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
-    if not chart_repo_url.startswith("http"):
+    parsed_url = urlparse(chart_repo_url)
+    if not parsed_url.scheme:
         logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
         run_command(f"helm pull oci://{chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     else:
