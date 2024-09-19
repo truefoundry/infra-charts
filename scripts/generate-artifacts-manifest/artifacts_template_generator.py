@@ -127,13 +127,15 @@ def save_image_info(manifest_file):
 
 # function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
-    run_command(f"helm repo add {chart_name} {chart_repo_url}")
-    run_command("helm repo update")
-    run_command(f"helm search repo {chart_name}/{chart_name}")
-
-    logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
-    logging.info(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
-    run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+    if not chart_repo_url.startswith("http"):
+        logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
+        run_command(f"helm pull oci://{chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+    else:
+        run_command(f"helm repo add {chart_name} {chart_repo_url}")
+        run_command("helm repo update")
+        run_command(f"helm search repo {chart_name}/{chart_name}")
+        logging.info(f"Downloading the chart {chart_name} version {chart_version} from the repository {chart_repo_url}")
+        run_command(f"helm pull {chart_name}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
 
     chart_dir = os.path.join(temp_dir, chart_name)
     manifest_file = os.path.join(temp_dir, 'generated-manifest.yaml')
