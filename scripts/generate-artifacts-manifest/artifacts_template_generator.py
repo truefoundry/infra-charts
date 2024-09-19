@@ -95,7 +95,7 @@ def process_chart_info(chart_info_list):
         chart = details["chart"]
         repoURL = details["repoURL"]
         targetRevision = details["targetRevision"]
-        values = details["values"] if details["values"] else "{}"
+        values = details["values"]
 
         if chart == "aws-load-balancer-controller":
             values = values.replace("clusterName: \"\"", "clusterName: \"my-cluster\"")
