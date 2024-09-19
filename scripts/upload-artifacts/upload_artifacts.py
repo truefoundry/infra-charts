@@ -50,7 +50,7 @@ def create_repository(registry_type, destination_registry, repo_name, package_ty
 # function to create a jfrog artifact repository
 def create_jfrog_repository(jfrog_destination_registry, package_type, repo_name):
     # get jfrog token
-    jfrog_token = os.getenv('JFRGO_TOKEN')
+    jfrog_token = os.getenv('JFROG_TOKEN')
 
     # jfrog doesn't allow multiple layers of repo name
     if package_type == "helm":
