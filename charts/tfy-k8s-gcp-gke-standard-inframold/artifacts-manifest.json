@@ -25,6 +25,32 @@
     {
         "type": "helm",
         "details": {
+            "chart": "cert-manager",
+            "repoURL": "https://charts.jetstack.io",
+            "targetRevision": "v1.15.0",
+            "images": [
+                "quay.io/jetstack/cert-manager-cainjector:v1.15.0",
+                "quay.io/jetstack/cert-manager-controller:v1.15.0",
+                "quay.io/jetstack/cert-manager-webhook:v1.15.0",
+                "quay.io/jetstack/cert-manager-startupapicheck:v1.15.0"
+            ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
+            "chart": "elasti",
+            "repoURL": "quay.io/truefoundrycharts",
+            "targetRevision": "0.1.1",
+            "images": [
+                "public.ecr.aws/truefoundrycloud/elasti-operator:d849aede280112dea35ffcb2efab6f65608b1396",
+                "public.ecr.aws/truefoundrycloud/elasti-resolver:d849aede280112dea35ffcb2efab6f65608b1396"
+            ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
             "chart": "tfy-grafana",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
             "targetRevision": "0.1.4",
@@ -78,6 +104,24 @@
                 "gcr.io/kubecost1/cost-model:prod-2.1.0",
                 "gcr.io/kubecost1/frontend:prod-2.1.0",
                 "alpine/k8s:1.26.9"
+            ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
+            "chart": "kyverno",
+            "repoURL": "https://kyverno.github.io/kyverno",
+            "targetRevision": "3.2.5",
+            "images": [
+                "ghcr.io/kyverno/kyverno:v1.12.4",
+                "ghcr.io/kyverno/kyvernopre:v1.12.4",
+                "ghcr.io/kyverno/background-controller:v1.12.4",
+                "ghcr.io/kyverno/cleanup-controller:v1.12.4",
+                "ghcr.io/kyverno/reports-controller:v1.12.4",
+                "bitnami/kubectl:1.28.5",
+                "busybox:1.35",
+                "ghcr.io/kyverno/kyverno-cli:v1.12.4"
             ]
         }
     },
@@ -162,6 +206,7 @@
                 "nats:2.10.18-alpine3.20",
                 "natsio/nats-server-config-reloader:0.14.3",
                 "natsio/prometheus-nats-exporter:0.15.0",
+                "docker.io/bitnami/postgresql:16.2.0-debian-12-r12",
                 "synadia/nats-box",
                 "docker.io/library/ubuntu:latest"
             ]
@@ -206,6 +251,42 @@
         "type": "image",
         "details": {
             "registryURL": "quay.io/argoproj/argocli:v3.5.10"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "quay.io/jetstack/cert-manager-cainjector:v1.15.0"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "quay.io/jetstack/cert-manager-controller:v1.15.0"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "quay.io/jetstack/cert-manager-webhook:v1.15.0"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "quay.io/jetstack/cert-manager-startupapicheck:v1.15.0"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "public.ecr.aws/truefoundrycloud/elasti-operator:d849aede280112dea35ffcb2efab6f65608b1396"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "public.ecr.aws/truefoundrycloud/elasti-resolver:d849aede280112dea35ffcb2efab6f65608b1396"
         }
     },
     {
@@ -266,6 +347,54 @@
         "type": "image",
         "details": {
             "registryURL": "alpine/k8s:1.26.9"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/kyverno:v1.12.4"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/kyvernopre:v1.12.4"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/background-controller:v1.12.4"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/cleanup-controller:v1.12.4"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/reports-controller:v1.12.4"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "bitnami/kubectl:1.28.5"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "busybox:1.35"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/kyverno/kyverno-cli:v1.12.4"
         }
     },
     {
@@ -410,6 +539,12 @@
         "type": "image",
         "details": {
             "registryURL": "natsio/prometheus-nats-exporter:0.15.0"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "docker.io/bitnami/postgresql:16.2.0-debian-12-r12"
         }
     },
     {
