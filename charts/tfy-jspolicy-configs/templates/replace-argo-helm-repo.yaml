@@ -1,0 +1,66 @@
+{{- if .Values.replaceArgoHelmRepo.enabled -}}
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: {{ .Release.Name }}-replace-argo-helm-repo.truefoundry.com
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: Mutating
+  operations: ["CREATE", "UPDATE"]
+  resources: ["applications"]
+  apiGroups: ["argoproj.io"]
+  apiVersions: ["v1alpha1"]
+  failurePolicy: Ignore
+  dependencies:
+    "js-yaml": "^4.1.0"
+  javascript: |
+    import { load } from 'js-yaml';
+
+    const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml }}`)
+    const includedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml }}`)
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml }}`)
+    if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+      exit()
+    }
+
+    function parseYamlString(yamlString) {
+      try {
+        return load(yamlString);
+      } catch (e) {
+        console.log("Error parsing YAML string:", e);
+        return null;
+      }
+    }
+
+    function getNewRegistry(protocol, hostname) {
+      const completeHostname = protocol + '//' + hostname;
+      let newRegistry = registryReplacementMap[completeHostname] || registryReplacementMap['*'] || null;
+      if (!newRegistry) {
+        return
+      }
+      if (newRegistry.startsWith("oci://")) {
+        newRegistry = newRegistry.replace("oci://", "");
+      }
+      return newRegistry;
+    }
+
+    if (!request.object.spec.source.helm) {
+      exit()
+    }
+    let repoURLString = request.object.spec.source.repoURL;
+    if (!repoURLString.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:/)) {
+      repoURLString = "oci://" + repoURLString;
+    }
+    const urlParts = repoURLString.split('/');
+    const protocol = urlParts[0];
+    const hostname = urlParts[2];
+    
+    const newRegistry = getNewRegistry(protocol, hostname);
+    if (!newRegistry) {
+      exit()
+    }
+
+    request.object.spec.source.repoURL = repoURLString.replace(`${protocol}//${hostname}`, newRegistry);
+    
+    mutate(request.object);
+{{- end -}}

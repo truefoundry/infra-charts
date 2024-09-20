@@ -1,12 +1,14 @@
+{{- if .Values.replaceImageRegistry.enabled -}}
 apiVersion: policy.jspolicy.com/v1beta1
 kind: JsPolicy
 metadata:
-  name: {{ .Release.Name }}-replace-image-registry
+  name: {{ .Release.Name }}-replace-image-registry.truefoundry.com
   namespace: {{ .Release.Namespace }}
 spec:
   type: Mutating
   operations: ["CREATE", "UPDATE"]
   resources: ["pods"]
+  failurePolicy: Ignore
   dependencies:
     "js-yaml": "^4.1.0"
   javascript: |
@@ -15,8 +17,8 @@ spec:
     const excludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml }}`)
     const includedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml }}`)
     const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml }}`)
-    if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace)) {
-      return
+    if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+      exit()
     }
 
     function parseYamlString(yamlString) {
@@ -108,3 +110,4 @@ spec:
     }
     
     mutate(request.object);
+{{- end -}}
