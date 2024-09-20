@@ -125,12 +125,6 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
 
-### kyverno parameters
-
-| Name              | Description            | Value   |
-| ----------------- | ---------------------- | ------- |
-| `kyverno.enabled` | Flag to enable Kyverno | `false` |
-
 ### tfyAgent parameters
 
 | Name                    | Description              | Value  |
@@ -143,3 +137,9 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name             | Description           | Value   |
 | ---------------- | --------------------- | ------- |
 | `elasti.enabled` | Flag to enable Elasti | `false` |
+
+### jspolicy parameters
+
+| Name               | Description                                              | Value   |
+| ------------------ | -------------------------------------------------------- | ------- |
+| `jspolicy.enabled` | Flag to enable jspolicy. No policy is applied by default | `false` |

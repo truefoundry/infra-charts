@@ -84,6 +84,17 @@
     {
         "type": "helm",
         "details": {
+            "chart": "jspolicy",
+            "repoURL": "https://charts.loft.sh",
+            "targetRevision": "0.2.2",
+            "images": [
+                "loftsh/jspolicy:0.2.2"
+            ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
             "chart": "keda",
             "repoURL": "https://kedacore.github.io/charts",
             "targetRevision": "2.15.1",
@@ -104,24 +115,6 @@
                 "gcr.io/kubecost1/cost-model:prod-2.1.0",
                 "gcr.io/kubecost1/frontend:prod-2.1.0",
                 "alpine/k8s:1.26.9"
-            ]
-        }
-    },
-    {
-        "type": "helm",
-        "details": {
-            "chart": "kyverno",
-            "repoURL": "https://kyverno.github.io/kyverno",
-            "targetRevision": "3.2.5",
-            "images": [
-                "ghcr.io/kyverno/kyverno:v1.12.4",
-                "ghcr.io/kyverno/kyvernopre:v1.12.4",
-                "ghcr.io/kyverno/background-controller:v1.12.4",
-                "ghcr.io/kyverno/cleanup-controller:v1.12.4",
-                "ghcr.io/kyverno/reports-controller:v1.12.4",
-                "bitnami/kubectl:1.28.5",
-                "busybox:1.35",
-                "ghcr.io/kyverno/kyverno-cli:v1.12.4"
             ]
         }
     },
@@ -181,13 +174,22 @@
         "details": {
             "chart": "tfy-gpu-operator",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.16",
+            "targetRevision": "0.1.17",
             "images": [
-                "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04",
+                "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04",
                 "gcr.io/google-containers/pause:2.0",
                 "cos-nvidia-installer:fixed",
                 "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
             ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
+            "chart": "tfy-jspolicy-config",
+            "repoURL": "https://truefoundry.github.io/infra-charts/",
+            "targetRevision": "0.1.1",
+            "images": []
         }
     },
     {
@@ -316,6 +318,12 @@
     {
         "type": "image",
         "details": {
+            "registryURL": "loftsh/jspolicy:0.2.2"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
             "registryURL": "ghcr.io/kedacore/keda:2.15.1"
         }
     },
@@ -347,54 +355,6 @@
         "type": "image",
         "details": {
             "registryURL": "alpine/k8s:1.26.9"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/kyverno:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/kyvernopre:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/background-controller:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/cleanup-controller:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/reports-controller:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "bitnami/kubectl:1.28.5"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "busybox:1.35"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/kyverno-cli:v1.12.4"
         }
     },
     {
@@ -466,7 +426,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04"
+            "registryURL": "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04"
         }
     },
     {
@@ -587,36 +547,6 @@
         "type": "image",
         "details": {
             "registryURL": "quay.io/argoproj/argocd:v2.11.3"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/kyverno:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/kyvernopre:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/background-controller:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/cleanup-controller:v1.12.4"
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "ghcr.io/kyverno/reports-controller:v1.12.4"
         }
     },
     {
