@@ -1,0 +1,26 @@
+{{- if .Values.jspolicy.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jspolicy-config
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-jspolicy-config"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: jspolicy
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: tfy-jspolicy-config
+    repoURL: "https://truefoundry.github.io/infra-charts/"
+    targetRevision: 0.1.1
+  syncPolicy:
+    automated: { }
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
