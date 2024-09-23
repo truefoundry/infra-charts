@@ -5,7 +5,6 @@ Deploying Inframold charts from a private registry would require having the nece
 - [AWS EKS (tfy-k8s-aws-eks-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-aws-eks-inframold)
 - [Azure AKS (tfy-k8s-azure-aks-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-azure-aks-inframold)
 - [Civo Talos (tfy-k8s-civo-talos-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-civo-talos-inframold)
-- [GCP GKE Autopilot (tfy-k8s-gcp-gke-autopilot-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-gcp-gke-autopilot-inframold)
 - [GCP GKE Standard (tfy-k8s-gcp-gke-standard-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-gcp-gke-standard-inframold)
 - [Generis Kubernetes Cluster (tfy-k8s-generic-inframold)](https://github.com/truefoundry/infra-charts/tree/main/charts/tfy-k8s-generic-inframold)
 
