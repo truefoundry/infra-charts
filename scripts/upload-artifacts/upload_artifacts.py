@@ -77,7 +77,7 @@ def pull_and_push_images(image_list, destination_registry):
             logging.error(f"Failed to push image: {new_image_url}. Error: {e}")
 
 # function to download and push Helm charts
-def download_and_push_helm_charts(helm_list, destination_registry, artifact_type):
+def download_and_push_helm_charts(helm_list, destination_registry):
     for helm in helm_list:
         chart = helm["details"]["chart"]
         repo_url = helm["details"]["repoURL"]
@@ -124,18 +124,6 @@ def download_and_push_helm_charts(helm_list, destination_registry, artifact_type
         break
 
 
-# function to process the manifest
-def process_manifest(manifest, artifact_type, destination_registry):
-    if artifact_type == "image":
-        image_list = [item for item in manifest if item["type"] == "image"]
-        if image_list:
-            pull_and_push_images(image_list, destination_registry)
-    elif artifact_type == "helm":
-        helm_list = [item for item in manifest if item["type"] == "helm"]
-        if helm_list:
-            download_and_push_helm_charts(helm_list, destination_registry, artifact_type)
-
-
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python upload_artifacts.py <artifact_type> <file_path> <destination_registry>")
@@ -160,4 +148,11 @@ if __name__ == "__main__":
         logging.error("Manifest processing aborted due to errors")
         exit()
 
-    process_manifest(manifest, artifact_type, destination_registry)
+    if artifact_type == "image":
+        image_list = [item for item in manifest if item["type"] == "image"]
+        if image_list:
+            pull_and_push_images(image_list, destination_registry)
+    elif artifact_type == "helm":
+        helm_list = [item for item in manifest if item["type"] == "helm"]
+        if helm_list:
+            download_and_push_helm_charts(helm_list, destination_registry)
