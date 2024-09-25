@@ -50,10 +50,16 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
         # Skip if image URL is in excluded registries
+        image_exclude = False
         for registry in excluded_registries:
             if image_url.startswith(registry):
-                logging.info(f"Skipping image: {image_url}")
-                continue
+                logging.info(f"Skipping image: {image_url} as it is in excluded registries")
+                image_exclude = True
+                break
+        if image_exclude:
+            continue
+
+        # Skip if image URL is empty
         if not image_url:
             continue
         # These images can only be pulled within an EC2 machine - hence skipping it
@@ -79,6 +85,7 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
         try:
             run_command(f"docker push {new_image_url}")
             logging.info(f"Successfully pushed image: {new_image_url}")
+            run_command(f"docker rmi {image_url}")
         except Exception as e:
             logging.error(f"Failed to push image: {new_image_url}. Error: {e}")
 
@@ -141,6 +148,7 @@ if __name__ == "__main__":
     file_path = args.file_path
     destination_registry = args.destination_registry
     excluded_registries = args.exclude_registries
+    logging.info(f"Artifact type: {artifact_type}, File path: {file_path}, Destination registry: {destination_registry}, Excluded registries: {excluded_registries}")
 
     # Remove trailing slash from destination_registry if present
     destination_registry = destination_registry.rstrip('/')
