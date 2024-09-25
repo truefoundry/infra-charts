@@ -123,7 +123,7 @@ spec:
                 exit 0
               else
                 echo "No GPU driver module detected, installing default driver now"
-                /cos-gpu-installer install
+                /cos-gpu-installer install || exit 1
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
         - image: "{{ $driverDefault.partitionGpus.image.repository }}:{{ $driverDefault.partitionGpus.image.tag }}"
@@ -251,7 +251,7 @@ spec:
                 exit 0
               else
                 echo "No GPU driver module detected, installing latest driver now"
-                /cos-gpu-installer install --version=latest
+                /cos-gpu-installer install --version=latest || exit 1
                 chmod 755 /root/home/kubernetes/bin/nvidia
               fi
         - image: "{{ $driverLatest.partitionGpus.image.repository }}:{{ $driverLatest.partitionGpus.image.tag }}"
