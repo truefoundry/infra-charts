@@ -1,3 +1,4 @@
+import argparse
 import sys
 import os
 import subprocess
@@ -45,9 +46,14 @@ def parse_image_url(image_url, destination_registry):
 
 
 # function to pull and push images
-def pull_and_push_images(image_list, destination_registry):
+def pull_and_push_images(image_list, destination_registry, excluded_registries=[]):
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
+        # Skip if image URL is in excluded registries
+        for registry in excluded_registries:
+            if image_url.startswith(registry):
+                logging.info(f"Skipping image: {image_url}")
+                continue
         if not image_url:
             continue
         # These images can only be pulled within an EC2 machine - hence skipping it
@@ -123,13 +129,18 @@ def download_and_push_helm_charts(helm_list, destination_registry):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python upload_artifacts.py <artifact_type> <file_path> <destination_registry>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Upload artifacts to a destination registry.')
+    parser.add_argument('artifact_type', choices=['image', 'helm'], help='Type of artifact to upload (image or helm)')
+    parser.add_argument('file_path', help='Path to the manifest file')
+    parser.add_argument('destination_registry', help='Destination registry URL')
+    parser.add_argument('--exclude-registries', nargs='*', default=[], help='List of registries to exclude from pushing')
 
-    artifact_type = sys.argv[1]
-    file_path = sys.argv[2]
-    destination_registry = sys.argv[3]
+    args = parser.parse_args()
+
+    artifact_type = args.artifact_type
+    file_path = args.file_path
+    destination_registry = args.destination_registry
+    excluded_registries = args.exclude_registries
 
     # Remove trailing slash from destination_registry if present
     destination_registry = destination_registry.rstrip('/')
@@ -149,7 +160,7 @@ if __name__ == "__main__":
     if artifact_type == "image":
         image_list = [item for item in manifest if item["type"] == "image"]
         if image_list:
-            pull_and_push_images(image_list, destination_registry)
+            pull_and_push_images(image_list, destination_registry, excluded_registries)
     elif artifact_type == "helm":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:

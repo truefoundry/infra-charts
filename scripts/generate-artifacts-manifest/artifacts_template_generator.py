@@ -8,6 +8,7 @@ import logging
 import time
 import requests
 from requests.exceptions import ConnectionError
+import argparse
 
 
 # Configure logging
@@ -89,7 +90,7 @@ def save_chart_info(chart_info_list, output_file):
     logging.info(f"Chart information saved to {output_file}")
 
 # function to process chart information
-def process_chart_info(chart_info_list):
+def process_and_generate_chart_manifests(chart_info_list):
     chart_detail_list = []
     for chart_info in chart_info_list:
         details = chart_info["details"]
@@ -238,16 +239,22 @@ def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_l
     
 
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
-        print("Usage: python artifacts_template_generator.py <chart-name> <chart-repo-url> <chart-version> <values.yaml> <output.json> <extra.json>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Generate artifacts manifest from Helm charts.")
+    parser.add_argument("chart_name", help="Name of the Helm chart")
+    parser.add_argument("chart_repo_url", help="Repository URL of the Helm chart")
+    parser.add_argument("chart_version", help="Version of the Helm chart")
+    parser.add_argument("values_file", help="Path to the values.yaml file")
+    parser.add_argument("output_file", help="Path to the output JSON file")
+    parser.add_argument("extra_file", help="Path to the extra JSON file", nargs='?', default=None)
 
-    chart_name = sys.argv[1]
-    chart_repo_url = sys.argv[2]
-    chart_version = sys.argv[3]
-    values_file = sys.argv[4]
-    output_file = sys.argv[5]
-    extra_file = sys.argv[6]
+    args = parser.parse_args()
+
+    chart_name = args.chart_name
+    chart_repo_url = args.chart_repo_url
+    chart_version = args.chart_version
+    values_file = args.values_file
+    output_file = args.output_file
+    extra_file = args.extra_file
 
     # Create a temporary directory to store the chart and generated manifests
     create_tmp_dir()
@@ -260,7 +267,7 @@ if __name__ == "__main__":
 
     chart_info_list = extract_chart_info(manifest_file)
     if chart_info_list:
-        image_info_list = process_chart_info(chart_info_list)
+        image_info_list = process_and_generate_chart_manifests(chart_info_list)
     else:
         image_info_list = make_image_list_unique(save_image_info(manifest_file))
 
