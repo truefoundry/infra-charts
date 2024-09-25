@@ -94,13 +94,17 @@ jobs:
 
         - name: Upload Artifacts
           run: |
-            python scripts/upload-artifacts/upload_artifacts.py \
-              helm \
-              charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
-              tfy.jfrog.io/tfy-helm
-            
-            python scripts/upload-artifacts/upload_artifacts.py \
-              image \
-              charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
-              tfy.jfrog.io/tfy-images \
-              --exclude-registries truefoundrycloud
+            charts_list=("tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-inframold")
+            for chart in $charts_list;
+            do
+              python scripts/upload-artifacts/upload_artifacts.py \
+                helm \
+                charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+                tfy.jfrog.io/tfy-helm
+              
+              python scripts/upload-artifacts/upload_artifacts.py \
+                image \
+                charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+                tfy.jfrog.io/tfy-images \
+                --exclude-registries truefoundrycloud
+            done
