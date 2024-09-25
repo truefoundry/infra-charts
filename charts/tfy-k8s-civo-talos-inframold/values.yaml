@@ -68,6 +68,9 @@ notebookController:
   ## @param notebookController.defaultStorageClass Default storage class for Notebook Controller
   ##
   defaultStorageClass: ""
+  ## @param notebookController.notebookBaseDomainUrl Base domain URL for Notebook Controller
+  ##
+  notebookBaseDomainUrl: <to_be_provided>
 
 ## @section certManager parameters
 ## @param certManager.enabled Flag to enable Cert Manager
@@ -172,7 +175,6 @@ prometheus:
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs: 
-  
   - job_name: gpu-metrics
     scrape_interval: 15s
     scrape_timeout: 10s
@@ -187,7 +189,6 @@ prometheus:
     - source_labels: [__meta_kubernetes_pod_node_name]
       action: replace
       target_label: kubernetes_node
-  
 
 
 ## @section grafana parameters
@@ -195,12 +196,6 @@ prometheus:
 ##
 grafana:
   enabled: true
-
-## @section kyverno parameters
-## @param kyverno.enabled Flag to enable Kyverno
-##
-kyverno:
-  enabled: false
 
 ## @section tfyAgent parameters
 ## @param tfyAgent.enabled Flag to enable Tfy Agent
@@ -216,4 +211,10 @@ tfyAgent:
 ## @param elasti.enabled Flag to enable Elasti
 ##
 elasti:
+  enabled: false
+
+## @section jspolicy parameters
+## @param jspolicy.enabled Flag to enable jspolicy. No policy is applied by default
+##
+jspolicy:
   enabled: false

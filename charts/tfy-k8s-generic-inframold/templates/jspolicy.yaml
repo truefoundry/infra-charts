@@ -1,0 +1,31 @@
+{{- if .Values.jspolicy.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jspolicy
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "jspolicy"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: jspolicy
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: jspolicy
+    repoURL: "https://charts.loft.sh"
+    targetRevision: 0.2.2
+    helm:
+      values: |
+        replicaCount: 2
+        env:
+          npm_config_registry: "https://tfy.jfrog.io/artifactory/api/npm/tfy-npm-registry-local"
+  syncPolicy:
+    automated: { }
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

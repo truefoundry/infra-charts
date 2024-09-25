@@ -33,10 +33,11 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### notebookController parameters
 
-| Name                                     | Description                                   | Value  |
-| ---------------------------------------- | --------------------------------------------- | ------ |
-| `notebookController.enabled`             | Flag to enable Notebook Controller            | `true` |
-| `notebookController.defaultStorageClass` | Default storage class for Notebook Controller | `""`   |
+| Name                                       | Description                                   | Value              |
+| ------------------------------------------ | --------------------------------------------- | ------------------ |
+| `notebookController.enabled`               | Flag to enable Notebook Controller            | `true`             |
+| `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
+| `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
 
 ### certManager parameters
 
@@ -125,12 +126,6 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | ----------------- | ---------------------- | ------ |
 | `grafana.enabled` | Flag to enable Grafana | `true` |
 
-### kyverno parameters
-
-| Name              | Description            | Value   |
-| ----------------- | ---------------------- | ------- |
-| `kyverno.enabled` | Flag to enable Kyverno | `false` |
-
 ### tfyAgent parameters
 
 | Name                    | Description              | Value  |
@@ -143,3 +138,9 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | Name             | Description           | Value   |
 | ---------------- | --------------------- | ------- |
 | `elasti.enabled` | Flag to enable Elasti | `false` |
+
+### jspolicy parameters
+
+| Name               | Description                                              | Value   |
+| ------------------ | -------------------------------------------------------- | ------- |
+| `jspolicy.enabled` | Flag to enable jspolicy. No policy is applied by default | `false` |
