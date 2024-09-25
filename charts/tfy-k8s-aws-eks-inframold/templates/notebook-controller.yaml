@@ -19,6 +19,9 @@ spec:
     chart: tfy-notebook-controller
     helm:
       values: |-
+        {{- with .Values.notebookController.notebookBaseDomainUrl }}
+        notebookBaseDomainUrl: {{ . }}
+        {{- end }}
         {{- with .Values.notebookController.defaultStorageClass }}
         defaultStorageClass: {{ . }}
         {{- end }}

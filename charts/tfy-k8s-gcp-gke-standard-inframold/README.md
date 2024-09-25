@@ -33,10 +33,11 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### notebookController parameters
 
-| Name                                     | Description                                   | Value  |
-| ---------------------------------------- | --------------------------------------------- | ------ |
-| `notebookController.enabled`             | Flag to enable Notebook Controller            | `true` |
-| `notebookController.defaultStorageClass` | Default storage class for Notebook Controller | `""`   |
+| Name                                       | Description                                   | Value              |
+| ------------------------------------------ | --------------------------------------------- | ------------------ |
+| `notebookController.enabled`               | Flag to enable Notebook Controller            | `true`             |
+| `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
+| `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
 
 ### certManager parameters
 
