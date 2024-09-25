@@ -111,17 +111,10 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         # Push chart to destination repo
         logging.info(f"Pushing Helm chart: {new_chart_url}")
         try:
-            try:
-                logging.info(
-                    f"Chart {chart} with version {target_revision} does not exist in the repository. Pushing...")
-                run_command(f"helm push {chart_package} {new_chart_url}")
-            except Exception as e:
-                logging.error(f"Failed to check if chart {chart} with version {target_revision} exists. Error: {e}")
-                continue
-        except subprocess.CalledProcessError as e:
+            run_command(f"helm push {chart_package} {new_chart_url}")
+        except Exception as e:
             logging.error(f"Failed to push Helm chart: {chart_package}. Error: {e}")
             exit("Cannot push helm chart to destination repo")
-        break
 
 
 if __name__ == "__main__":
