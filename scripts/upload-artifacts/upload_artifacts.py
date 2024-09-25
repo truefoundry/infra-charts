@@ -100,6 +100,7 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         # Download chart from source repo
         logging.info(f"Downloading Helm chart: {chart} from source repo: {repo_url}")
         try:
+            # Absence of scheme indicates OCI registry https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#declarative
             if not urlparse(repo_url).scheme:
                 logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
                 run_command(f"helm pull oci://{repo_url}/{chart} --version {target_revision}")
