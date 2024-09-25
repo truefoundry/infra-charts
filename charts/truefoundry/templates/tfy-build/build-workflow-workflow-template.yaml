@@ -288,11 +288,11 @@ spec:
         IMAGE="${REGISTRY}/${REPOSITORY}"
         TAG="{{`{{inputs.parameters.dockerTag}}`}}"
 
-        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
-        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # if $REGISTRY starts with "index.docker.io" or "docker.io"
+        # then skip mentioning url in docker login, because these do not follow distribution v2
         # This is a short term fix till we decouple registry url and login url
         _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
           docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
         else
           docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
@@ -685,11 +685,11 @@ spec:
           exit 0
         fi
 
-        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
-        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # if $REGISTRY starts with "index.docker.io" or "docker.io"
+        # then skip mentioning url in docker login, because these do not follow distribution v2
         # This is a short term fix till we decouple registry url and login url
         _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
           docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
         else
           docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
@@ -782,11 +782,11 @@ spec:
         TAG="{{`{{inputs.parameters.dockerTag}}`}}"
         IMAGE=$REGISTRY/$REPOSITORY:$TAG
 
-        # if $REGISTRY starts with "index.docker.io" or "registry-1.docker.io" or "registry.hub.docker.com" or "docker.io"
-        # then skip mentioning url in docker login, because dockerhub has non standard behaviors
+        # if $REGISTRY starts with "index.docker.io" or "docker.io"
+        # then skip mentioning url in docker login, because these do not follow distribution v2
         # This is a short term fix till we decouple registry url and login url
         _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == registry-1.docker.io* ]] || [[ $_REGISTRY == registry.hub.docker.com* ]] || [[ $_REGISTRY == docker.io* ]]; then
+        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
           docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
         else
           docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
