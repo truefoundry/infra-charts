@@ -100,9 +100,14 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         # Download chart from source repo
         logging.info(f"Downloading Helm chart: {chart} from source repo: {repo_url}")
         try:
-            run_command(f"helm repo add {chart} {repo_url}")
-            run_command(f"helm repo update")
-            run_command(f"helm pull {chart}/{chart} --version {target_revision}")
+            # Absence of scheme indicates OCI registry https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#declarative
+            if not urlparse(repo_url).scheme:
+                logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
+                run_command(f"helm pull oci://{repo_url}/{chart} --version {target_revision}")
+            else:
+                run_command(f"helm repo add {chart} {repo_url}")
+                run_command(f"helm repo update")
+                run_command(f"helm pull {chart}/{chart} --version {target_revision}")
             logging.info(f"Successfully downloaded Helm chart: {chart}")
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to download Helm chart: {chart}. Error: {e}")
