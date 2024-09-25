@@ -14,11 +14,14 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.3.9
+    targetRevision: 0.3.10
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-notebook-controller
     helm:
       values: |-
+        {{- with .Values.notebookController.notebookBaseDomainUrl }}
+        notebookBaseDomainUrl: {{ . }}
+        {{- end }}
         {{- with .Values.notebookController.defaultStorageClass }}
         defaultStorageClass: {{ . }}
         {{- end }}
