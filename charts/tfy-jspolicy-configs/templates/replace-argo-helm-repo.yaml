@@ -19,7 +19,7 @@ spec:
     const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
     const includedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
     const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
-    if (!includedNamespaces.includes(request.namespace) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
       exit()
     }
 
