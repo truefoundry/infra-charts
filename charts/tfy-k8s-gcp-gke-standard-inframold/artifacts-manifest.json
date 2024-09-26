@@ -53,8 +53,9 @@
         "details": {
             "chart": "tfy-grafana",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.4",
+            "targetRevision": "0.1.6",
             "images": [
+                "quay.io/kiwigrid/k8s-sidecar:1.24.6",
                 "docker.io/grafana/grafana:10.0.3",
                 "docker.io/library/busybox:1.31.1",
                 "docker.io/bats/bats:v1.4.1"
@@ -174,10 +175,10 @@
         "details": {
             "chart": "tfy-gpu-operator",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.18",
+            "targetRevision": "0.1.19",
             "images": [
                 "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04",
-                "gcr.io/google-containers/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830",
+                "gke.gcr.io/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830",
                 "cos-nvidia-installer:fixed",
                 "gcr.io/gke-release/nvidia-partition-gpu@sha256:e226275da6c45816959fe43cde907ee9a85c6a2aa8a429418a4cadef8ecdb86a"
             ]
@@ -219,9 +220,9 @@
         "details": {
             "chart": "argo-cd",
             "repoURL": "https://argoproj.github.io/argo-helm",
-            "targetRevision": "6.7.10",
+            "targetRevision": "7.4.4",
             "images": [
-                "quay.io/argoproj/argocd:v2.10.6",
+                "quay.io/argoproj/argocd:v2.12.1",
                 "public.ecr.aws/docker/library/redis:7.2.4-alpine"
             ]
         }
@@ -289,6 +290,12 @@
         "type": "image",
         "details": {
             "registryURL": "public.ecr.aws/truefoundrycloud/elasti-resolver:d849aede280112dea35ffcb2efab6f65608b1396"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "quay.io/kiwigrid/k8s-sidecar:1.24.6"
         }
     },
     {
@@ -432,7 +439,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "gcr.io/google-containers/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
+            "registryURL": "gke.gcr.io/pause:3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
         }
     },
     {
@@ -522,7 +529,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/argoproj/argocd:v2.10.6"
+            "registryURL": "quay.io/argoproj/argocd:v2.12.1"
         }
     },
     {
