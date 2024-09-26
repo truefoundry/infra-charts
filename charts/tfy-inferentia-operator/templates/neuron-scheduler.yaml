@@ -129,6 +129,8 @@ spec:
       {{- else }}
         []
       {{- end }}
+      affinity:
+        {{- toYaml (index .Values "scheduler" "affinity") | nindent 8 }}
       containers:
       - image: {{ .Values.scheduler.image }}
         args:
