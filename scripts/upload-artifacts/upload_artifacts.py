@@ -79,15 +79,15 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
             # Image does not exist, proceed with pushing
             pass
 
-        run_command(f"docker pull {image_url} --platform {DOCKER_IMAGE_ARCHITECTURE}")
-        run_command(f"docker tag {image_url} {new_image_url}")
-        logging.info(f"Pushing image: {new_image_url}")
         try:
+            run_command(f"docker pull {image_url} --platform {DOCKER_IMAGE_ARCHITECTURE}")
+            run_command(f"docker tag {image_url} {new_image_url}")
+            logging.info(f"Pushing image: {new_image_url}")
             run_command(f"docker push {new_image_url}")
             logging.info(f"Successfully pushed image: {new_image_url}")
             run_command(f"docker rmi {image_url}")
         except Exception as e:
-            logging.error(f"Failed to push image: {new_image_url}. Error: {e}")
+            logging.error(f"Failed to pull and push image: {new_image_url}. Error: {e}")
 
 # function to download and push Helm charts
 def download_and_push_helm_charts(helm_list, destination_registry):
