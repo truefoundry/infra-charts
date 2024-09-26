@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -42,3 +42,22 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}"
           CR_SKIP_EXISTING: true
+
+      - name: Checkout to gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.17
+
+      - name: Generate index.html
+        run: |
+          go install github.com/halkeye/helm-repo-html@v0.2.0
+          /home/runner/go/bin/helm-repo-html
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update index.html"
