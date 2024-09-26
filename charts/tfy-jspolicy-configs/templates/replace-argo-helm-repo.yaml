@@ -38,29 +38,38 @@ spec:
       if (!newRegistry) {
         return
       }
-      if (newRegistry.startsWith("oci://")) {
-        newRegistry = newRegistry.replace("oci://", "");
-      }
       return newRegistry;
     }
 
     if (!request.object.spec.source.helm) {
       exit()
     }
-    let repoURLString = request.object.spec.source.repoURL;
+    const repoURLString = request.object.spec.source.repoURL;
+    let normalizedRepoURL = repoURLString;
     if (!repoURLString.match(/^[a-zA-Z][a-zA-Z\d+\-.]*:/)) {
-      repoURLString = "oci://" + repoURLString;
+      normalizedRepoURL = "oci://" + repoURLString;
     }
-    const urlParts = repoURLString.split('/');
+    const urlParts = normalizedRepoURL.split('/');
     const protocol = urlParts[0];
     const hostname = urlParts[2];
-    
-    const newRegistry = getNewRegistry(protocol, hostname);
+
+    let newRegistry = getNewRegistry(protocol, hostname);
     if (!newRegistry) {
       exit()
     }
+    // oci registry url should not have protocol
+    if (newRegistry.startsWith('oci://')) {
+      newRegistry = newRegistry.replace('oci://', '');
+    }
+    if (repoURLString.startsWith(newRegistry)) {
+      console.log('Repo URL already has the new registry');
+      exit()
+    }
 
-    request.object.spec.source.repoURL = repoURLString.replace(`${protocol}//${hostname}`, newRegistry);
-    
+    let newRepoURL = normalizedRepoURL.replace(`${protocol}//${hostname}`, newRegistry);
+    if (newRepoURL.endsWith('/')) {
+      newRepoURL = newRepoURL.slice(0, -1);
+    }
+    request.object.spec.source.repoURL = newRepoURL;
     mutate(request.object);
 {{- end -}}
