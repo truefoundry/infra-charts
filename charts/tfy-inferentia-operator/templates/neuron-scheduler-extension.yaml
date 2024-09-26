@@ -96,11 +96,13 @@ spec:
       {{- else }}
         []
       {{- end }}
+      affinity:
+        {{- toYaml (index .Values "scheduler" "extension" "affinity") | nindent 8 }}
       containers:
         - name: scheduler-exp
           image: {{ .Values.scheduler.extension.image }}
           resources:
-            {{- toYaml (index .Values "scheduler" "extension.resources") | nindent 12 }}
+            {{- toYaml (index .Values "scheduler" "extension" "resources") | nindent 12 }}
           env:
           - name: PORT
             value: "12345"
