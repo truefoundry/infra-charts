@@ -14,7 +14,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.4.30
+  controlPlaneChartVersion: 0.4.32
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -168,7 +168,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: v0.3.157
+  imageTag: v0.3.159
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -218,6 +218,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_COMPANY_REGISTRATION: "false"
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
     VITE_ENABLE_WORKFLOWS: "false"
+    VITE_ENABLE_RECOMMENDATION_INFOBAR: "false"
     VITE_ENABLE_EVENTS_GRAPHS: "false"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
@@ -324,7 +325,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
   ## @param mlfoundryServer.imageTag Image tag for the mlfoundry server
-  imageTag: v0.2.122
+  imageTag: v0.2.123
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -429,7 +430,9 @@ servicefoundryServer:
     enabled: true
   ## @skip servicefoundryServer.env Environment variables for the servicefoundry server
   env:
+    DEFAULT_CLOUD_PROVIDER: ""
     S3_BUCKET_NAME: ""
+    AWS_REGION: ""
     AWS_ASSUME_ROLE_ARN: ""
     GS_BUCKET_NAME: ""
     AZURE_BLOB_URI: ""
@@ -444,60 +447,59 @@ servicefoundryServer:
     DB_SSL_KEY_PATH: ""
     DB_SSL_MODE: ""
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    GITHUB_PRIVATE_KEY: ""
-    GITHUB_APP_ID: ""
-    GITHUB_PAT: ""
-    BITBUCKET_CLIENT_ID: ""
-    BITBUCKET_CLIENT_SECRET: ""
-    GITHUB_INSTALLATION_URL: ""
-    GITLAB_APP_ID: ""
-    GITLAB_APP_SECRET: ""
-    GITLAB_SCOPE: ""
-    AZURE_CLIENT_ID: ""
-    AZURE_CLIENT_SECRET: ""
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     TFY_BUILD_LOGS_URL: "{{ .Values.global.controlPlaneURL }}/api/svc"
     TFY_BUILD_WS_URL: "{{ .Values.global.controlPlaneURL }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    KUBE_CONTEXT: ""
-    BUILDKIT_SERVICE_URL: ""
-    DEPOT_PROJECT_ID: ""
-    DEPOT_TOKEN: ""
     MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace }}.svc.cluster.local:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
-    DEFAULT_CLOUD_PROVIDER: aws
     NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
     NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     NATS_QGROUP_NAME: ""
-    FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local:8089
+    FLYTE_ADMIN_URL: ""
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
     BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    LLM_GATEWAY_URL: ""
+    VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
+    GITHUB_INSTALLATION_URL: ""
+    GITHUB_PRIVATE_KEY: ""
+    GITHUB_APP_ID: ""
+    GITHUB_PAT: ""
+    BITBUCKET_CLIENT_ID: ""
+    BITBUCKET_CLIENT_SECRET: ""
+    BITBUCKET_APP_PASSWORD: ""
+    GITLAB_APP_ID: ""
+    GITLAB_APP_SECRET: ""
+    GITLAB_SCOPE: ""
+    AZURE_CLIENT_ID: ""
+    AZURE_CLIENT_SECRET: ""
     CLICKHOUSE_HOST: ""
     CLICKHOUSE_USER: ""
     CLICKHOUSE_PASSWORD: ""
     CLICKHOUSE_WAIT_TIMEOUT: 5m
-    VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
     STORAGE_CLASS_ACCESS_MODES: ""
-    STRIPE_KEY: ""
-    STRIPE_WEBHOOK_SECRET: ""
-    BITBUCKET_APP_PASSWORD: ""
-    LLM_GATEWAY_URL: ""
     TRUEFOUNDRY_PUBLIC_ENABLED: ""
-    ACCESS_TFY_GATEWAY_MODELS_TENANT_DENY_LIST: ""
-    SLACK_BILLING_ALERT_URL: ""
-    SLACK_ALERT_URL: ""
-    AWS_REGION: ""
+    OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
     EXTERNAL_OAUTH_CLIENT_SECRET: ""
+    EXTERNAL_OAUTH_USER_INFO_EMAIL_KEY_NAME: ""
+    EXTERNAL_OAUTH_TOKEN_EMAIL_CLAIM_KEY_NAME: ""
+    EXTERNAL_OAUTH_TOKEN_USERNAME_CLAIM_KEY_NAME: ""
+    EXTERNAL_OAUTH_USER_INFO_USERNAME_KEY_NAME: ""
+    USE_ID_TOKEN_AS_ACCESS_TOKEN: ""
+    INCLUDE_TRUEFOUNDRY_MANAGED_JWKS: ""
+    INTERNAL_JWT_SERVICE_ENABLED: ""
+    INTERNAL_JWT_JWKS: ""
+    INTERNAL_JWT_ISSUER_DOMAIN_NAME: ""
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for servicefoundry server
     workbenchImages: '{{ .Release.Name }}-workbench-images-cm'
   ## @param servicefoundryServer.imageTag Image Tag for servicefoundry server
-  imageTag: v0.4.10
+  imageTag: v0.4.11
 #######################
 ## tfyK8sController Settings specific to tfyK8sController.
 tfyK8sController:
@@ -578,8 +580,9 @@ tfyK8sController:
     CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
+    CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
   ## @param tfyK8sController.imageTag Image Tag for tfyK8sController
-  imageTag: v0.1.7
+  imageTag: v0.1.8
 #############################
 ## sfyManifestService Settings specific to sfy-manifest-service.
 sfyManifestService:
@@ -678,7 +681,7 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
   ## @param sfyManifestService.imageTag Image tag for the sfy manifest service
-  imageTag: 0.1.137
+  imageTag: 0.1.138
 #############################
 ## nats Settings corresponding to the NATS server
 nats:
@@ -1088,7 +1091,7 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
   ## @param tfyController.imageTag Image tag for the tfyController
-  imageTag: v0.0.28
+  imageTag: v0.0.30
 #############################
 ## tfyWorkflowAdmin Settings specific to tfy-workflow.
 tfyWorkflowAdmin:
