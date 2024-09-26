@@ -93,11 +93,14 @@ spec:
       const imageUri = result[1]
       print (initialImageUri, registry, imageUri)
       let newImageUri = imageUri;
-      
-      if (registryReplacementMap[registry]) {
-        newImageUri = imageUri.replace(registry, registryReplacementMap[registry]);
-      } else if (registryReplacementMap['*']) {
-        newImageUri = imageUri.replace(registry, registryReplacementMap['*']);
+      let registryReplacement = registryReplacementMap[registry];
+      if (!registryReplacement) {
+        registryReplacement = registryReplacementMap['*'];
+      }
+      if (imageUri.startsWith(registryReplacement)) {
+        return imageUri
+      } else {
+        newImageUri = imageUri.replace(registry, registryReplacement);
       }
       return newImageUri
     }
