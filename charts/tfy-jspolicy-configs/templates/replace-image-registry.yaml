@@ -73,6 +73,10 @@ spec:
         image = image.substring(namespaceIndex + 1);
       }
 
+      // Don't use defaultNamespace for non docker.io registry
+      if (registry !== "docker.io" && namespace = defaultNamespace) {
+        namespace = '';
+      }
       // Check if there's a tag specified
       const colonIndex = image.lastIndexOf(':');
       if (colonIndex > -1) {
