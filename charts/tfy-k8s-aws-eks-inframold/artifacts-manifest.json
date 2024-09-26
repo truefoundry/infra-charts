@@ -53,8 +53,9 @@
         "details": {
             "chart": "tfy-grafana",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.4",
+            "targetRevision": "0.1.6",
             "images": [
+                "quay.io/kiwigrid/k8s-sidecar:1.24.6",
                 "docker.io/grafana/grafana:10.0.3",
                 "docker.io/library/busybox:1.31.1",
                 "docker.io/bats/bats:v1.4.1"
@@ -146,9 +147,9 @@
         "details": {
             "chart": "tfy-notebook-controller",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.3.9",
+            "targetRevision": "0.3.10",
             "images": [
-                "public.ecr.aws/truefoundrycloud/tfy-notebook-controller:26355af4127e692053bbeb96a7d9773de75e6c65"
+                "public.ecr.aws/truefoundrycloud/tfy-notebook-controller:46d7c0c2175dfe483b53ee4299eb7a4bd724457e"
             ]
         }
     },
@@ -173,9 +174,9 @@
         "details": {
             "chart": "tfy-agent",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.2.32",
+            "targetRevision": "0.2.33",
             "images": [
-                "public.ecr.aws/truefoundrycloud/tfy-agent:f843f941264ca6e1b93b89e704a0010f48222eb7",
+                "public.ecr.aws/truefoundrycloud/tfy-agent:d95ee758c4a87885ce5c2353167c7ac692f734be",
                 "public.ecr.aws/truefoundrycloud/tfy-agent-proxy:69d69111acf1363505441a7cb02abaea28353044"
             ]
         }
@@ -219,7 +220,7 @@
         "details": {
             "chart": "tfy-karpenter",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.3.0",
+            "targetRevision": "0.3.1",
             "images": [
                 "public.ecr.aws/karpenter/controller:0.35.4@sha256:27a73db80b78e523370bcca77418f6d2136eea10a99fc87d02d2df059fcf5fb7"
             ]
@@ -243,7 +244,7 @@
         "details": {
             "chart": "tfy-gpu-operator",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.17",
+            "targetRevision": "0.1.19",
             "images": [
                 "registry.k8s.io/nfd/node-feature-discovery:v0.16.3",
                 "alpine:3.20",
@@ -265,14 +266,14 @@
         "details": {
             "chart": "truefoundry",
             "repoURL": "https://truefoundry.github.io/infra-charts",
-            "targetRevision": "0.4.21",
+            "targetRevision": "0.4.30",
             "images": [
-                "truefoundrycloud/mlfoundry-server:v0.2.120",
-                "truefoundrycloud/servicefoundry-server:v0.4.4",
-                "truefoundrycloud/sfy-manifest-service:0.1.134",
+                "truefoundrycloud/mlfoundry-server:v0.2.122",
+                "truefoundrycloud/servicefoundry-server:v0.4.10",
+                "truefoundrycloud/sfy-manifest-service:0.1.137",
                 "truefoundrycloud/tfy-controller:v0.0.28",
-                "truefoundrycloud/tfy-k8s-controller:v0.1.6",
-                "truefoundrycloud/truefoundry-frontend-app:v0.3.154",
+                "truefoundrycloud/tfy-k8s-controller:v0.1.7",
+                "truefoundrycloud/truefoundry-frontend-app:v0.3.157",
                 "nats:2.10.18-alpine3.20",
                 "natsio/nats-server-config-reloader:0.14.3",
                 "natsio/prometheus-nats-exporter:0.15.0",
@@ -287,9 +288,9 @@
         "details": {
             "chart": "argo-cd",
             "repoURL": "https://argoproj.github.io/argo-helm",
-            "targetRevision": "6.7.10",
+            "targetRevision": "7.4.4",
             "images": [
-                "quay.io/argoproj/argocd:v2.10.6",
+                "quay.io/argoproj/argocd:v2.12.1",
                 "public.ecr.aws/docker/library/redis:7.2.4-alpine"
             ]
         }
@@ -379,6 +380,12 @@
     {
         "type": "image",
         "details": {
+            "registryURL": "quay.io/kiwigrid/k8s-sidecar:1.24.6"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
             "registryURL": "docker.io/grafana/grafana:10.0.3"
         }
     },
@@ -463,7 +470,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-notebook-controller:26355af4127e692053bbeb96a7d9773de75e6c65"
+            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-notebook-controller:46d7c0c2175dfe483b53ee4299eb7a4bd724457e"
         }
     },
     {
@@ -505,7 +512,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-agent:f843f941264ca6e1b93b89e704a0010f48222eb7"
+            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-agent:d95ee758c4a87885ce5c2353167c7ac692f734be"
         }
     },
     {
@@ -589,19 +596,19 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "truefoundrycloud/mlfoundry-server:v0.2.120"
+            "registryURL": "truefoundrycloud/mlfoundry-server:v0.2.122"
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "truefoundrycloud/servicefoundry-server:v0.4.4"
+            "registryURL": "truefoundrycloud/servicefoundry-server:v0.4.10"
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "truefoundrycloud/sfy-manifest-service:0.1.134"
+            "registryURL": "truefoundrycloud/sfy-manifest-service:0.1.137"
         }
     },
     {
@@ -613,13 +620,13 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "truefoundrycloud/tfy-k8s-controller:v0.1.6"
+            "registryURL": "truefoundrycloud/tfy-k8s-controller:v0.1.7"
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "truefoundrycloud/truefoundry-frontend-app:v0.3.154"
+            "registryURL": "truefoundrycloud/truefoundry-frontend-app:v0.3.157"
         }
     },
     {
@@ -661,7 +668,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/argoproj/argocd:v2.10.6"
+            "registryURL": "quay.io/argoproj/argocd:v2.12.1"
         }
     },
     {
