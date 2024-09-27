@@ -107,6 +107,11 @@ spec:
         }
         registryReplacement = registryReplacementMap['*'];
       }
+
+      // This is to avoid replacing the registry if it's already replaced
+      if (imageUri.startsWith(registryReplacement)) {
+        return imageUri;
+      }
       newImageUri = imageUri.replace(registry, registryReplacement);
       return newImageUri
     }
