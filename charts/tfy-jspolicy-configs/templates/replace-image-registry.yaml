@@ -74,17 +74,16 @@ spec:
       }
 
       // Don't use defaultNamespace for non docker.io registry
-      if (registry !== "docker.io" && namespace = defaultNamespace) {
+      if (registry !== defaultRegistry && namespace === defaultNamespace) {
         namespace = '';
       }
+
       // Check if there's a tag specified
       const colonIndex = image.lastIndexOf(':');
       if (colonIndex > -1) {
         tag = image.substring(colonIndex + 1);
         image = image.substring(0, colonIndex);
       }
-
-      
 
       // The remaining part is the repository
       repository = image;
@@ -99,13 +98,14 @@ spec:
       let newImageUri = imageUri;
       let registryReplacement = registryReplacementMap[registry];
       if (!registryReplacement) {
+        if (!registryReplacementMap['*']) {
+          return imageUri;
+        }
         registryReplacement = registryReplacementMap['*'];
-      }
-      if (imageUri.startsWith(registryReplacement)) {
-        return imageUri
       } else {
-        newImageUri = imageUri.replace(registry, registryReplacement);
+        registryReplacement = registryReplacementMap[registry];
       }
+      newImageUri = imageUri.replace(registry, registryReplacement);
       return newImageUri
     }
     for (var container of (request.object.spec.containers || [])) {
