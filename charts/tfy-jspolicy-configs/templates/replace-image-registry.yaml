@@ -87,7 +87,11 @@ spec:
 
       // The remaining part is the repository
       repository = image;
+      if (namespace === '') {
+        return [registry, `${registry}/${repository}:${tag}`];
+      } else {
       return [registry, `${registry}/${namespace}/${repository}:${tag}`];
+      }
     }
     
     function get_new_image_uri(initialImageUri, registryReplacementMap) {
