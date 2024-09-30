@@ -14,7 +14,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.4.31
+  controlPlaneChartVersion: 0.4.32
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -168,7 +168,7 @@ truefoundryFrontendApp:
       ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
       hosts: []
   ## @param truefoundryFrontendApp.imageTag Image tag for the frontend app
-  imageTag: v0.3.158
+  imageTag: v0.3.159
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -218,6 +218,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_COMPANY_REGISTRATION: "false"
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
     VITE_ENABLE_WORKFLOWS: "false"
+    VITE_ENABLE_RECOMMENDATION_INFOBAR: "false"
     VITE_ENABLE_EVENTS_GRAPHS: "false"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
