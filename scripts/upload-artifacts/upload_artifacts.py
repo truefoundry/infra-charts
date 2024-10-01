@@ -1,5 +1,4 @@
 import argparse
-import sys
 import os
 import subprocess
 import yaml
@@ -101,7 +100,6 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         new_chart_url = f"oci://{destination_registry}"
         if registry_path:
             new_chart_url = f"oci://{destination_registry}/{registry_path}"
-
         # Check if chart exists in destination repo
         try:
             run_command(f"helm show chart {new_chart_url}/{chart} --version {target_revision}")
@@ -114,9 +112,9 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         logging.info(f"Downloading Helm chart: {chart} from source repo: {repo_url}")
         try:
             # Absence of scheme indicates OCI registry https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#declarative
-            if not urlparse(repo_url).scheme:
+            if  urlparse(repo_url).scheme == 'oci':
                 logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
-                run_command(f"helm pull oci://{repo_url}/{chart} --version {target_revision}")
+                run_command(f"helm pull {repo_url}/{chart} --version {target_revision}")
             else:
                 run_command(f"helm repo add {chart} {repo_url}")
                 run_command(f"helm repo update")
