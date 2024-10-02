@@ -10,6 +10,12 @@ import requests
 from requests.exceptions import ConnectionError
 import argparse
 
+def normalize_repo_url(repo_url):
+    parsed_url = urlparse(repo_url)
+    if not parsed_url.scheme:
+        return f"oci://{repo_url}"
+    return repo_url
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -74,7 +80,7 @@ def extract_chart_info(manifest_file):
                         "type": "helm",
                         "details": {
                             "chart": source.get('chart', ''),
-                            "repoURL": source.get('repoURL', ''),
+                            "repoURL": normalize_repo_url(source.get('repoURL', '')),
                             "targetRevision": source.get('targetRevision', ''),
                             "values": source.get('helm', {}).get('values', '')
                         }
@@ -106,9 +112,9 @@ def process_and_generate_chart_manifests(chart_info_list):
         os.makedirs(os.path.dirname(values_file), exist_ok=True)
         with open(values_file, "w") as f:
             f.write(values)
-        if not urlparse(repoURL).scheme:
+        if urlparse(repoURL).scheme == "oci":
             logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
-            run_command(f"helm template oci://{repoURL}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
+            run_command(f"helm template {repoURL}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
         else:
             run_command(f"helm repo add --force-update {chart} {repoURL}")
             logging.info(f"Generating manifests for {chart}/{chart}...")
@@ -133,9 +139,9 @@ def save_image_info(manifest_file):
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     parsed_url = urlparse(chart_repo_url)
     print("Chart Repo URL: ", chart_repo_url, "Parsed URL: ", parsed_url)
-    if not parsed_url.scheme:
+    if  parsed_url.scheme == "oci":
         logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
-        run_command(f"helm pull oci://{chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+        run_command(f"helm pull {chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     else:
         run_command(f"helm repo add --force-update {chart_name} {chart_repo_url}")
         run_command("helm repo update")

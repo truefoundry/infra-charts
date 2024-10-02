@@ -16,7 +16,7 @@ images:
             values:
               - 'us-'
         spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:0.3.0-sudo'
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:0.3.2-py3.11.10-sudo'
       - match:
           - key: cluster_type
             operator: In
@@ -27,7 +27,7 @@ images:
             values:
               - 'europe-'
         spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:0.3.0-sudo'
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:0.3.2-py3.11.10-sudo'
       - match:
           - key: cluster_type
             operator: In
@@ -38,10 +38,10 @@ images:
             values:
               - 'asia-'
         spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:0.3.0-sudo'
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:0.3.2-py3.11.10-sudo'
       - match: []
         spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:0.3.0-sudo'
+          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:0.3.2-py3.11.10-sudo'
 
   - name: Jupyter Lab Cuda 12.1 Image
     type: notebook
@@ -58,7 +58,7 @@ images:
             values:
               - 'us-'
         spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:0.3.0-cu121-sudo'
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter:0.3.2-cu121-py3.11.10-sudo'
       - match:
           - key: cluster_type
             operator: In
@@ -69,7 +69,7 @@ images:
             values:
               - 'europe-'
         spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:0.3.0-cu121-sudo'
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter:0.3.2-cu121-py3.11.10-sudo'
       - match:
           - key: cluster_type
             operator: In
@@ -80,53 +80,10 @@ images:
             values:
               - 'asia-'
         spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:0.3.0-cu121-sudo'
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter:0.3.2-cu121-py3.11.10-sudo'
       - match: []
         spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:0.3.0-cu121-sudo'
-
-  - name: Jupyter Lab Full Image
-    type: notebook
-    enabled: true
-    description: Python 3.11 environment with common ML Libraries and cuda toolkit 12.1
-    image:
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'us-'
-        spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/jupyter-full:0.3.0-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'europe-'
-        spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/jupyter-full:0.3.0-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'asia-'
-        spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/jupyter-full:0.3.0-sudo'
-      - match: []
-        spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter-full:0.3.0-sudo'
-
+          image_uri: 'public.ecr.aws/truefoundrycloud/jupyter:0.3.2-cu121-py3.11.10-sudo'
   - name: SSH Server Minimal Image
     type: ssh-server
     enabled: true
@@ -142,7 +99,7 @@ images:
             values:
               - 'us-'
         spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/ssh-server:0.3.0'
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/ssh-server:0.3.2-py3.11.10'
       - match:
           - key: cluster_type
             operator: In
@@ -153,7 +110,7 @@ images:
             values:
               - 'europe-'
         spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/ssh-server:0.3.0'
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/ssh-server:0.3.2-py3.11.10'
       - match:
           - key: cluster_type
             operator: In
@@ -164,10 +121,10 @@ images:
             values:
               - 'asia-'
         spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/ssh-server:0.3.0'
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/ssh-server:0.3.2-py3.11.10'
       - match: []
         spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/ssh-server:0.3.0'
+          image_uri: 'public.ecr.aws/truefoundrycloud/ssh-server:0.3.2-py3.11.10'
 
   - name: SSH Server Cuda 12.1 Image
     type: ssh-server
@@ -184,7 +141,7 @@ images:
             values:
               - 'us-'
         spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/ssh-server:0.3.0-cu121'
+          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/ssh-server:0.3.2-cu121-py3.11.10'
       - match:
           - key: cluster_type
             operator: In
@@ -195,7 +152,7 @@ images:
             values:
               - 'europe-'
         spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/ssh-server:0.3.0-cu121'
+          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/ssh-server:0.3.2-cu121-py3.11.10'
       - match:
           - key: cluster_type
             operator: In
@@ -206,91 +163,7 @@ images:
             values:
               - 'asia-'
         spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/ssh-server:0.3.0-cu121'
+          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/ssh-server:0.3.2-cu121-py3.11.10'
       - match: []
         spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/ssh-server:0.3.0-cu121'
-
-  - name: CodeServer (VS Code) Minimal Image
-    type: codeserver
-    enabled: true
-    description: CodeServer (VS Code) image with Python 3.11 environment
-    image:
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'us-'
-        spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/codeserver-python:0.3.0-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'europe-'
-        spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/codeserver-python:0.3.0-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'asia-'
-        spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/codeserver-python:0.3.0-sudo'
-      - match: []
-        spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/codeserver-python:0.3.0-sudo'
-
-  - name: CodeServer (VS Code) Cuda 12.1 Image
-    type: codeserver
-    enabled: true
-    description: CodeServer (VS Code) image with Python 3.11 environment and cuda toolkit 12.1
-    image:
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'us-'
-        spec:
-          image_uri: 'us-docker.pkg.dev/production-01-407505/tfy-docker-us/codeserver-python:0.3.0-cu121-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'europe-'
-        spec:
-          image_uri: 'europe-docker.pkg.dev/production-01-407505/tfy-docker-eu/codeserver-python:0.3.0-cu121-sudo'
-      - match:
-          - key: cluster_type
-            operator: In
-            values:
-              - 'gcp-gke-standard'
-          - key: cluster_region
-            operator: StartsWith
-            values:
-              - 'asia-'
-        spec:
-          image_uri: 'asia-docker.pkg.dev/production-01-407505/tfy-docker-as/codeserver-python:0.3.0-cu121-sudo'
-      - match: []
-        spec:
-          image_uri: 'public.ecr.aws/truefoundrycloud/codeserver-python:0.3.0-cu121-sudo'
+          image_uri: 'public.ecr.aws/truefoundrycloud/ssh-server:0.3.2-cu121-py3.11.10'

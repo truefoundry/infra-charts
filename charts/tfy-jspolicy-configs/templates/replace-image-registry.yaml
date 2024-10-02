@@ -73,6 +73,11 @@ spec:
         image = image.substring(namespaceIndex + 1);
       }
 
+      // Don't use defaultNamespace for non docker.io registry
+      if (registry !== defaultRegistry && namespace === defaultNamespace) {
+        namespace = '';
+      }
+
       // Check if there's a tag specified
       const colonIndex = image.lastIndexOf(':');
       if (colonIndex > -1) {
@@ -80,11 +85,13 @@ spec:
         image = image.substring(0, colonIndex);
       }
 
-      
-
       // The remaining part is the repository
       repository = image;
+      if (namespace === '') {
+        return [registry, `${registry}/${repository}:${tag}`];
+      } else {
       return [registry, `${registry}/${namespace}/${repository}:${tag}`];
+      }
     }
     
     function get_new_image_uri(initialImageUri, registryReplacementMap) {
@@ -95,13 +102,17 @@ spec:
       let newImageUri = imageUri;
       let registryReplacement = registryReplacementMap[registry];
       if (!registryReplacement) {
+        if (!registryReplacementMap['*']) {
+          return imageUri;
+        }
         registryReplacement = registryReplacementMap['*'];
       }
+
+      // This is to avoid replacing the registry if it's already replaced
       if (imageUri.startsWith(registryReplacement)) {
-        return imageUri
-      } else {
-        newImageUri = imageUri.replace(registry, registryReplacement);
+        return imageUri;
       }
+      newImageUri = imageUri.replace(registry, registryReplacement);
       return newImageUri
     }
     for (var container of (request.object.spec.containers || [])) {
