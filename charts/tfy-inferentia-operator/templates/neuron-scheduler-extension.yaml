@@ -87,6 +87,10 @@ spec:
         app: {{ .Release.Name }}-scheduler
         component: scheduler-extension
     spec:
+      {{- with .Values.scheduler.extension.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       priorityClassName: system-cluster-critical
       serviceAccountName: {{ .Release.Name }}-scheduler-extension
       schedulerName: {{ .Values.scheduler.schedulerName }} 
