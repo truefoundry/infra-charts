@@ -18,6 +18,7 @@ Refer to,
 | `devicePlugin.resources.requests.cpu`    | CPU request for device plugin Daemonset.    | `100m`                                                 |
 | `devicePlugin.resources.requests.memory` | Memory request for device plugin Daemonset. | `128Mi`                                                |
 | `devicePlugin.image`                     | Image to use for device plugin Daemonset.   | `public.ecr.aws/neuron/neuron-device-plugin:2.16.18.0` |
+| `imagePullSecrets`                       | List of image pull secrets                  | `[]`                                                   |
 
 ### Configuration for the scheduler responsible for scheduling neuron pods
 
