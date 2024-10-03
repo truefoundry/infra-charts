@@ -3,6 +3,8 @@
 ## @param devicePlugin.resources.requests.cpu CPU request for device plugin Daemonset.
 ## @param devicePlugin.resources.requests.memory Memory request for device plugin Daemonset.
 ## @param devicePlugin.image Image to use for device plugin Daemonset.
+imagePullSecrets: []
+## @param imagePullsecrets List of image pull secrets
 devicePlugin:
   enabled: true
   resources:
@@ -72,7 +74,7 @@ scheduler:
     image: public.ecr.aws/neuron/neuron-scheduler:2.18.3.0
     resources:
       requests:
-        cpu: '0.1'
+        cpu: "0.1"
         memory: 50Mi
     tolerations:
       ## @skip scheduler.extension.tolerations[0]
