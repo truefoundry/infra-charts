@@ -53,10 +53,6 @@ kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
-{{- if .Values.imagePullSecrets }}
-imagePullSecrets:
-{{- toYaml .Values.imagePullSecrets | nindent 2 }}
-{{- end }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -91,7 +87,7 @@ spec:
         app: {{ .Release.Name }}-scheduler
         component: scheduler-extension
     spec:
-      {{- with .Values.scheduler.extension.imagePullSecrets }}
+      {{- with .Values.scheduler.extension.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}

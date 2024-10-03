@@ -42,10 +42,6 @@ kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-neuron-device-plugin
   namespace: {{ .Release.Namespace }}
-{{- if .Values.imagePullSecrets }}
-imagePullSecrets:
-{{- toYaml .Values.imagePullSecrets | nindent 2 }}
-{{- end }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -78,7 +74,7 @@ spec:
         name: {{ .Release.Name }}-neuron-device-plugin-ds
     spec:
       serviceAccount: {{ .Release.Name }}-neuron-device-plugin
-      {{- with .Values.devicePlugin.imagePullSecrets }}
+      {{- with .Values.devicePlugin.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
