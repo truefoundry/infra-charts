@@ -122,6 +122,10 @@ spec:
         version: second
     spec:
       priorityClassName: system-cluster-critical
+      {{- with .Values.scheduler.imagePullSecrets | default .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ .Release.Name }}-neuron-scheduler
       tolerations:
       {{- range .Values.scheduler.tolerations }}

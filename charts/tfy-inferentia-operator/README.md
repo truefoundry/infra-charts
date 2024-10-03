@@ -12,12 +12,15 @@ Refer to,
 
 ### Configuration for the device plugin responsible for node feature discovery
 
-| Name                                     | Description                                 | Value                                                  |
-| ---------------------------------------- | ------------------------------------------- | ------------------------------------------------------ |
-| `devicePlugin.enabled`                   | Enable device plugin Daemonset.             | `true`                                                 |
-| `devicePlugin.resources.requests.cpu`    | CPU request for device plugin Daemonset.    | `100m`                                                 |
-| `devicePlugin.resources.requests.memory` | Memory request for device plugin Daemonset. | `128Mi`                                                |
-| `devicePlugin.image`                     | Image to use for device plugin Daemonset.   | `public.ecr.aws/neuron/neuron-device-plugin:2.16.18.0` |
+| Name                                     | Description                                    | Value                                                  |
+| ---------------------------------------- | ---------------------------------------------- | ------------------------------------------------------ |
+| `devicePlugin.enabled`                   | Enable device plugin Daemonset.                | `true`                                                 |
+| `devicePlugin.resources.requests.cpu`    | CPU request for device plugin Daemonset.       | `100m`                                                 |
+| `devicePlugin.resources.requests.memory` | Memory request for device plugin Daemonset.    | `128Mi`                                                |
+| `devicePlugin.image`                     | Image to use for device plugin Daemonset.      | `public.ecr.aws/neuron/neuron-device-plugin:2.16.18.0` |
+| `imagePullSecrets`                       | (global) List of image pull secrets            | `[]`                                                   |
+| `devicePlugin.imagePullSecrets`          | List of image pull secrets                     | `[]`                                                   |
+| `devicePlugin.affinity`                  | Affinity settings for device plugin Daemonset. | `{}`                                                   |
 
 ### Configuration for the scheduler responsible for scheduling neuron pods
 
@@ -31,3 +34,7 @@ Refer to,
 | `scheduler.extension.image`                     | Neuron scheduler extension image.              | `public.ecr.aws/neuron/neuron-scheduler:2.18.3.0` |
 | `scheduler.extension.resources.requests.cpu`    | CPU request for Neuron scheduler extension.    | `0.1`                                             |
 | `scheduler.extension.resources.requests.memory` | Memory request for Neuron scheduler extension. | `50Mi`                                            |
+| `scheduler.imagePullSecrets`                    | List of image pull secrets                     | `[]`                                              |
+| `scheduler.extension.imagePullSecrets`          | List of image pull secrets                     | `[]`                                              |
+| `scheduler.affinity`                            | Affinity settings for scheduler.               | `{}`                                              |
+| `scheduler.extension.affinity`                  | Affinity settings for scheduler extension.     | `{}`                                              |
