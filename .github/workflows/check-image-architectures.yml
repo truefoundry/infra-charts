@@ -1,0 +1,35 @@
+name: Check Image Architectures
+
+on:
+  push:
+    paths:
+      - 'charts/**/artifacts-manifest.json'
+  pull_request:
+    paths:
+      - 'charts/**/artifacts-manifest.json'
+
+jobs:
+  check-architectures:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    - name: Check image architectures
+      run: |
+        python .github/scripts/check_image_architectures.py
+
+    - name: Report results
+      if: failure()
+      run: |
+        echo "Some images do not have both AMD64 and ARM64 architectures. Check the logs for details."
