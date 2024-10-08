@@ -123,6 +123,10 @@ spec:
     {{- end }}
     script:
       image: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.preBuild.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.command }}
       source: |
         {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.script | nindent 8 }} 
@@ -160,6 +164,10 @@ spec:
     {{- end }}
     script:
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command: [bash]
       workingDir: /mnt/vol
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
@@ -348,6 +356,10 @@ spec:
     sidecars:
     - name: buildkitd
       image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command:
         - /usr/local/bin/entrypoint.sh
       {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
@@ -409,6 +421,10 @@ spec:
     {{- end }}
     script:
       image: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.postBuild.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.command }}
       source: |
         {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.script | nindent 8 }}
@@ -503,7 +519,11 @@ spec:
           cpu: 10m
           ephemeral-storage: 128Mi
           memory: 50Mi
-      image: ubuntu
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.endMarker.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.endMarker.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.endMarker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command: [bash]
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
       env:
@@ -560,7 +580,11 @@ spec:
           cpu: 10m
           ephemeral-storage: 128Mi
           memory: 50Mi
-      image: nyurik/alpine-python3-requests@sha256:e0553236e3ebaa240752b41b8475afb454c5ab4c17eb023a2a904637eda16cf6
+      image: {{ .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       command: [python3]
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
       env:
@@ -647,6 +671,10 @@ spec:
     script:
       command: [bash]
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
       env:
       {{- toYaml . | nindent 6 }}
@@ -750,6 +778,10 @@ spec:
     script:
       command: [bash]
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
       env:
       {{- toYaml . | nindent 6 }}
@@ -819,8 +851,9 @@ spec:
   affinity:
   {{- toYaml $mergedAffinity | nindent 8 }}
   {{- end }}
-  {{- with .Values.tfyBuild.truefoundryWorkflows.tolerations }}
   tolerations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- .Values.global.tolerations | toYaml | nindent 4 }}
+    {{- if .Values.tfyBuild.tolerations }}
+    {{- .Values.tfyBuild.tolerations | toYaml | nindent 4 }}
+    {{- end }}
 {{- end }}
