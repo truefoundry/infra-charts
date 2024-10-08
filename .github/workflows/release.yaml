@@ -20,10 +20,10 @@ jobs:
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"  
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Set up Helm
-        uses: azure/setup-helm@v3.5
+        uses: azure/setup-helm@v4.2.0
         with:
           version: v3.9.2
 
@@ -40,7 +40,7 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
         env:
-          CR_TOKEN: "${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}"
+          CR_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
           CR_SKIP_EXISTING: true
 
       - name: Checkout to gh-pages
@@ -60,4 +60,4 @@ jobs:
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Update index.html"
+          commit_message: 'Update index.html'
