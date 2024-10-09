@@ -39,8 +39,8 @@ helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
 {{ $name }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{ include "tfy-llm-gateway.selectorLabels" . }}
-{{- if .Values.imageTag }}
-app.kubernetes.io/version: {{ .Values.imageTag | quote }}
+{{- if .Values.image.tag }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
