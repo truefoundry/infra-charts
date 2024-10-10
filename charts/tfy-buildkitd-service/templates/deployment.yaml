@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "buildkitd-service.fullname" . }}
   labels:
     {{- include "buildkitd-service.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "buildkitd-service.serviceAccountName" . }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -61,8 +62,16 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+            - name: buildkit-storage
+              mountPath: /var/lib/buildkit
+            - name: buildkit-config
+              mountPath: /etc/buildkit/buildkitd.toml
+              subPath: buildkitd.toml
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
       volumes:
+        - name: buildkit-config
+          configMap:
+            name: buildkit-config
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -76,3 +85,13 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: buildkit-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 100Gi
+        storageClassName: {{ .Values.storage.storageClassName }}
+  {{- if .Values.autoscaling.enabled }} 
