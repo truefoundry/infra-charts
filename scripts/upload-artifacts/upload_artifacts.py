@@ -48,8 +48,9 @@ def parse_image_url(image_url, destination_registry):
 # Helper function to check if image exists and has both arm64 and amd64 architectures
 def check_image_exists_and_architectures(image_url):
     try:
-        manifest_output = run_command(f"docker manifest inspect {image_url}")
-        manifest_data = yaml.safe_load(manifest_output)
+        manifest_data = yaml.safe_load(
+            run_command(f"docker manifest inspect {image_url}")
+        )
 
         architectures = [
             layer["platform"]["architecture"] for layer in manifest_data["manifests"]
