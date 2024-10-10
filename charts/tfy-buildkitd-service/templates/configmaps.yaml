@@ -6,23 +6,4 @@ metadata:
     {{- include "buildkitd-service.labels" . | nindent 4 }}
 data:
   buildkitd.toml: |
-    debug = true
-
-    [grpc]
-    address = [ "tcp://0.0.0.0:1234" ]
-
-    [worker.containerd]
-    enabled = false
-
-    [worker.oci]
-    enabled = true
-    gc = true
-    gckeepstorage = "20401094656"
-
-    [[worker.oci.gcpolicy]]
-    keepBytes = "0"
-    filters = ["type==source.local","type==exec.cachemount","type==source.git.checkout"]
-
-    [[worker.oci.gcpolicy]]
-    keepBytes = "20401094656"
-    all = true
+    {{- .Values.buildkitConfig | nindent 4 }}
