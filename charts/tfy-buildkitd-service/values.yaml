@@ -30,27 +30,24 @@ buildkitConfig: |
   [worker.oci]
   enabled = true
   gc = true
-  gckeepstorage = "20401094656"
+  gckeepstorage = "161000000000"
 
   [[worker.oci.gcpolicy]]
   keepBytes = "0"
   filters = ["type==source.local","type==exec.cachemount","type==source.git.checkout"]
 
   [[worker.oci.gcpolicy]]
-  keepBytes = "20401094656"
+  keepBytes = "161000000000"
   all = true
 
 ## Storage configuration for tfyBuildkitdService
 ##
 storage:
-
   ## @param storage.accessModes Access mode for tfyBuildkitdService
   accessModes: 
     - ReadWriteOnce
-
   ## @param storage.storageClassName Storage class name for tfyBuildkitdService
   storageClassName: ""
-
   ## @param storage.size Size of the storage for tfyBuildkitdService
   size: 200Gi
 
