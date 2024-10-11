@@ -76,7 +76,7 @@ spec:
       volumes:
         - name: buildkit-config
           configMap:
-            name: buildkit-config
+            name: {{ include "buildkitd-service.fullname" . }}-config
       {{- with .Values.extraVolumes }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
