@@ -37,10 +37,8 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
           args:
-            - --addr
-            - unix:///run/buildkit/buildkitd.sock
-            - --addr
-            - tcp://0.0.0.0:1234
+            - --config
+            - /etc/buildkit/buildkitd.toml
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -59,18 +57,23 @@ spec:
                 - workers
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+            
           volumeMounts:
             - name: buildkit-storage
               mountPath: /var/lib/buildkit
             - name: buildkit-config
               mountPath: /etc/buildkit/buildkitd.toml
               subPath: buildkitd.toml
+          {{- with .Values.extraVolumeMounts }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
       volumes:
         - name: buildkit-config
           configMap:
             name: buildkit-config
+      {{- with .Values.extraVolumes }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
