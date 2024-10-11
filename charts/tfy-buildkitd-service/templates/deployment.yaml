@@ -6,9 +6,7 @@ metadata:
     {{- include "buildkitd-service.labels" . | nindent 4 }}
 spec:
   serviceName: {{ include "buildkitd-service.serviceAccountName" . }}
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "buildkitd-service.selectorLabels" . | nindent 6 }}
