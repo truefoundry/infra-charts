@@ -37,6 +37,8 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
           args:
+            - --addr
+            - tcp://0.0.0.0:{{ .Values.service.port }}
             - --config
             - /etc/buildkit/buildkitd.toml
           ports:
