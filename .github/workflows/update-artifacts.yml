@@ -25,27 +25,21 @@ on:
       - 'scripts/upload-artifacts/**'
 
 jobs:
-  update-artifacts:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-      ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
-      ARTIFACTORY_REPOSITORY_URL: ${{ env.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
-      ARTIFACTORY_HELM_REGISTRY_URL: ${{ env.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: Setup Kubectl
-        id: install-kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'v1.28.0'
+    update-artifacts:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        env:
+          ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
+          ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
+          ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+        steps:
+        - name: Checkout Code
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            ref: ${{ github.head_ref }}
 
       - name: Setup Helm
         uses: azure/setup-helm@v4.2.0
