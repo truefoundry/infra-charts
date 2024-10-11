@@ -89,9 +89,11 @@ spec:
     - metadata:
         name: buildkit-storage
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes:
+        {{- range .Values.storage.accessModes }}
+          - {{ . }}
+        {{- end }}
         resources:
           requests:
             storage: {{ .Values.storage.size }}
         storageClassName: {{ .Values.storage.storageClassName }}
-  {{- if .Values.autoscaling.enabled }} 
