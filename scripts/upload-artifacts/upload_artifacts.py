@@ -1,8 +1,10 @@
 import argparse
-import subprocess
-import yaml
+import json
 import logging
+import subprocess
 from urllib.parse import urlparse
+
+import yaml
 
 # Configure logging
 logging.basicConfig(
@@ -48,9 +50,7 @@ def parse_image_url(image_url, destination_registry):
 # Helper function to check if image exists and has both arm64 and amd64 architectures
 def check_image_exists_and_architectures(image_url):
     try:
-        manifest_data = yaml.safe_load(
-            run_command(f"docker manifest inspect {image_url}")
-        )
+        manifest_data = json.loads(run_command(f"docker manifest inspect {image_url}"))
 
         architectures = [
             layer["platform"]["architecture"] for layer in manifest_data["manifests"]
@@ -69,7 +69,7 @@ def check_image_exists_and_architectures(image_url):
                     f"Image {image_url} exists but does not have arm64 architecture."
                 )
             return True, False
-    except Exception as e:
+    except Exception:
         logging.info(f"Image {image_url} does not exist or cannot be inspected.")
         return False, False
 
@@ -100,7 +100,7 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
             logging.info(f"Skipping system EKS image: {image_url}")
             continue
         elif image_url == "auto":
-            logging.info(f"Skipping auto")
+            logging.info("Skipping auto")
             continue
 
         new_image_url = parse_image_url(image_url, destination_registry)
@@ -163,7 +163,7 @@ def download_and_push_helm_charts(helm_list, destination_registry):
                 run_command(f"helm pull {repo_url}/{chart} --version {target_revision}")
             else:
                 run_command(f"helm repo add {chart} {repo_url}")
-                run_command(f"helm repo update")
+                run_command("helm repo update")
                 run_command(f"helm pull {chart}/{chart} --version {target_revision}")
             logging.info(f"Successfully downloaded Helm chart: {chart}")
         except subprocess.CalledProcessError as e:
