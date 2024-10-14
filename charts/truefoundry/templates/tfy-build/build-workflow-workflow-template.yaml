@@ -162,6 +162,14 @@ spec:
     {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
+    {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
+    - name: {{ $value.id | replace "." "-" }}
+      secret:
+        items:
+        - key: {{ $value.valueFrom.secretKey }}
+          path: {{ $value.id }}
+        secretName: {{ $value.valueFrom.secretName }}
+    {{- end }}
     script:
       image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
       {{- with .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets }}
@@ -338,7 +346,7 @@ spec:
         # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
         set +e
         set +o pipefail
-        tfy build --build-config={{`{{inputs.parameters.buildConfig}}`}} --name="${IMAGE}:${TAG}" --tag="${IMAGE}:${TAG}" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max" --cache-from=type=registry,ref="${IMAGE}:cache-latest" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
+        tfy build {{ range  $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }} --secret id={{ $value.id }},src=/truefoundry-build-secrets/{{ $value.id }}{{ end }} --build-config={{`{{inputs.parameters.buildConfig}}`}} --name="${IMAGE}:${TAG}" --tag="${IMAGE}:${TAG}" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max" --cache-from=type=registry,ref="${IMAGE}:cache-latest" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
         set -o pipefail
         set -e
         printf "\033[36m[==== Docker logs end ====]\033[0m\n"
@@ -350,6 +358,10 @@ spec:
         mountPath: /root/.truefoundry/.docker/
       {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
       {{- toYaml . | nindent 6 }} 
+      {{- end }}
+      {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
+      - name: {{ $value.id | replace "." "-" }}
+        mountPath: "/truefoundry-build-secrets/"
       {{- end }}
       resources:
         {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 8 }}

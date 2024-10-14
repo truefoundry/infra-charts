@@ -864,7 +864,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository Repository for the sfyBuilder
         repository: public.ecr.aws/truefoundrycloud/sfy-builder
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag Tag for the sfyBuilder
-        tag: v0.8.0
+        tag: v0.8.1
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets Image pull secrets for the sfyBuilder
       ##
       imagePullSecrets: []
@@ -886,6 +886,12 @@ tfyBuild:
           ephemeral-storage: 10Gi
           ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.resources.requests.memory Memory request for the sfyBuilder
           memory: 500Mi
+      ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets [array] Build secrets for the sfyBuilder
+      buildSecrets: []
+      # - id: pip.conf
+      #   valueFrom:
+      #     secretName: artifactory-pypi-creds
+      #     secretKey: artifactory.conf
     ## tfyBuild.truefoundryWorkflows.endMarker Settings for the endMarker
     endMarker:
       ## tfyBuild.truefoundryWorkflows.endMarker.image endMarker Image
