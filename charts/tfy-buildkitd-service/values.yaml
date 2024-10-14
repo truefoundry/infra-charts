@@ -15,7 +15,38 @@ image:
   pullPolicy: IfNotPresent
   ## @param image.tag Image tag whose default is the chart appVersion.
   ##
-  tag: "v0.13.1"
+  tag: "v0.16.0"
+
+## @param buildkitConfig buildkit configuration for tfyBuildkitdService
+buildkitConfig: |
+  debug = true
+
+  [worker.containerd]
+  enabled = false
+
+  [worker.oci]
+  enabled = true
+  gc = true
+  gckeepstorage = "161000000000"
+
+  [[worker.oci.gcpolicy]]
+  keepBytes = "0"
+  filters = ["type==source.local","type==exec.cachemount","type==source.git.checkout"]
+
+  [[worker.oci.gcpolicy]]
+  keepBytes = "161000000000"
+  all = true
+
+## Storage configuration for tfyBuildkitdService
+##
+storage:
+  ## @param storage.accessModes Access mode for tfyBuildkitdService
+  accessModes: 
+    - ReadWriteOnce
+  ## @param storage.storageClassName Storage class name for tfyBuildkitdService
+  storageClassName: ""
+  ## @param storage.size Size of the storage for tfyBuildkitdService
+  size: 200Gi
 
 ## @param imagePullSecrets Secrets to pull images
 ##
@@ -86,13 +117,13 @@ service:
 ##
 resources:
   limits:
-    cpu: 2
-    memory: 8Gi
-    ephemeral-storage: 70Gi
+    cpu: 3500m
+    memory: 13.2Gi
+    ephemeral-storage: 100Mi
   requests:
-    cpu: 2
-    memory: 8Gi
-    ephemeral-storage: 70Gi
+    cpu: 3500m
+    memory: 13.2Gi
+    ephemeral-storage: 100Mi
 
 ## @param extraVolumes List of Volumes to attach to tfyBuildkitdService container
 ## @param extraVolumeMounts List of Volume Mounts to attach to tfyBuildkitdService container
@@ -100,25 +131,6 @@ resources:
 extraVolumes: []
 extraVolumeMounts: []
 extraEnvs: []
-
-## Autoscaling configuration
-##
-## @param autoscaling.enabled Enable or disable autoscaling for the deployment.
-##
-## @param autoscaling.minReplicas Minimum number of replicas for autoscaling.
-##
-## @param autoscaling.maxReplicas Maximum number of replicas for autoscaling.
-##
-## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage for autoscaling.
-##
-# @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage for autoscaling.
-##
-autoscaling:
-  enabled: true
-  minReplicas: 1
-  maxReplicas: 4
-  targetCPUUtilizationPercentage: 70
-  # targetMemoryUtilizationPercentage: 80
 
 ## Define which Nodes the Pods are scheduled on.
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/
