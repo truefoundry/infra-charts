@@ -1,0 +1,73 @@
+{{- if .Values.syncSecrets.enabled -}}
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: "{{ .Release.Name }}-sync-secrets.truefoundry.com"
+spec:
+  operations: ["CREATE","UPDATE"]
+  resources: ["secrets"]
+  dependencies:
+    "js-yaml": "^4.1.0"
+  type: Controller
+  javascript: |
+    // this policy will sync changes to a secret to all other secrets in the cluster
+    // that have labels in syncSecrets.labelSelector
+    import { load } from 'js-yaml';
+
+    const excludedNamespaces = parseYamlString(`{{ .Values.syncSecrets.excludeNamespaces | toYaml | nindent 4 }}`);
+    let includedNamespaces = undefined;
+    if (parseYamlString(`{{ .Values.syncSecrets.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
+      includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    } else {
+      includedNamespaces = parseYamlString(`{{ .Values.syncSecrets.includeNamespaces | toYaml | nindent 4 }}`);
+    }
+    const secretNames = parseYamlString(`{{ .Values.syncSecrets.secretNames | toYaml | nindent 4 }}`);
+
+    if (includedNamespaces.length < 0 || secretNames.length < 0) {
+      exit();
+    } 
+
+    // sync a secret to all namespaces in includedNamespaces
+    function syncSecretToAllNamespaces(parentSecretObject) {
+      includedNamespaces.forEach(namespace => {
+        if (excludedNamespaces.includes(namespace)){
+          return;
+        }
+
+        // skip if the current namespace is the same as the parentSecret's namespace
+        if (parentSecretObject.metadata.namespace === namespace) {
+          return;
+        }
+
+        const secret = get("Secret", "v1", namespace + "/" + parentSecretObject.metadata.name);
+        if (secret === undefined) {
+          secret = create("Secret", "v1", {
+            metadata: {
+              name: parentSecretObject.metadata.name,
+              namespace: namespace,
+              labels: parentSecretObject.metadata.labels
+            },
+            data: parentSecretObject.data
+          });
+        } elseif (secret.data === parentSecretObject.data) {
+          return;
+        } else {
+          secret.data = parentSecretObject.data;
+          const updateResult = update(secret);
+          if (!updateResult.ok) {
+            // just requeue if we encounter an error
+            requeue(updateResult.message);
+          } else {
+            print(`Successfully synced secret ${secret.metadata.namespace}/${secret.metadata.name}`);
+          }
+          return;
+        }        
+      })
+    }
+
+
+    secretNames.forEach(secretName => {
+      parentSecret = get("Secret", "v1", secretName);
+      syncSecretToAllNamespaces(parentSecret);
+    });
+{{- end -}}
