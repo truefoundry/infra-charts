@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.5.4`                                                                          |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.5.5`                                                                          |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -26,7 +26,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | Name                                     | Description                                             | Value                                    |
 | ---------------------------------------- | ------------------------------------------------------- | ---------------------------------------- |
 | `truefoundryBootstrap.enabled`           | Bool to enable truefoundry bootstrap                    | `true`                                   |
-| `truefoundryBootstrap.image.repository`  | Truefoundry bootstrap image repository                  | `tfy.jfrog.io/tfy-images/library/ubuntu` |
+| `truefoundryBootstrap.image.repository`  | Truefoundry bootstrap image repository                  | `tfy.jfrog.io/tfy-mirror/library/ubuntu` |
 | `truefoundryBootstrap.image.tag`         | Truefoundry bootstrap image tag                         | `latest`                                 |
 | `truefoundryBootstrap.natsConfigmapName` | Truefoundry nats configmap name                         | `nats-accounts`                          |
 | `truefoundryBootstrap.extraEnvVars`      | Extra environment variables for the bootstrap container | `[]`                                     |
@@ -132,7 +132,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.replicaCount`                         | Number of replicas for the servicefoundry server                | `1`                                                     |
 | `servicefoundryServer.global`                               | Global values for the servicefoundry server                     | `{}`                                                    |
 | `servicefoundryServer.image.repository`                     | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.5.4`                                                |
+| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.5.5`                                                |
 | `servicefoundryServer.environmentName`                      | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                        | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                      | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -206,7 +206,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.tolerations`                          | Tolerations specific to the sfy manifest service               | `{}`                                                   |
 | `sfyManifestService.global`                               | Global values for the sfy manifest service                     | `{}`                                                   |
 | `sfyManifestService.image.repository`                     | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                            | Image tag for the sfy manifest service                         | `v0.2.0`                                               |
+| `sfyManifestService.image.tag`                            | Image tag for the sfy manifest service                         | `v0.2.1`                                               |
 | `sfyManifestService.replicaCount`                         | Number of replicas for the sfy manifest service                | `1`                                                    |
 | `sfyManifestService.environmentName`                      | Environment name for the sfy manifest service                  | `default`                                              |
 | `sfyManifestService.envSecretName`                        | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
@@ -290,7 +290,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyBuild.fullnameOverride`                                                     | Full name override for the tfyBuild server                    | `""`                                                                                     |
 | `tfyBuild.serviceAccount.annotations`                                           | Annotations for the tfyBuild server service account           | `{}`                                                                                     |
 | `tfyBuild.preemptibleDeployment.enabled`                                        | Bool to enable preemptible deployment for the tfyBuild server | `false`                                                                                  |
-| `tfyBuild.preemptibleDeployment.image.repository`                               | Repository for the preemptible deployment                     | `tfy.jfrog.io/tfy-images/alpine`                                                         |
+| `tfyBuild.preemptibleDeployment.image.repository`                               | Repository for the preemptible deployment                     | `tfy.jfrog.io/tfy-mirror/alpine`                                                         |
 | `tfyBuild.preemptibleDeployment.image.tag`                                      | Tag for the preemptible deployment                            | `3.20`                                                                                   |
 | `tfyBuild.preemptibleDeployment.imagePullSecrets`                               | Image pull secrets for the preemptible deployment             | `[]`                                                                                     |
 | `tfyBuild.preemptibleDeployment.affinity`                                       | Affinity settings for the preemptible deployment              | `{}`                                                                                     |
@@ -312,7 +312,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyBuild.truefoundryWorkflows.endMarker.image.repository`                      | Repository for the endMarker                                  | `ubuntu`                                                                                 |
 | `tfyBuild.truefoundryWorkflows.endMarker.image.tag`                             | Tag for the endMarker                                         | `latest`                                                                                 |
 | `tfyBuild.truefoundryWorkflows.endMarker.imagePullSecrets`                      | Image pull secrets for the endMarker                          | `[]`                                                                                     |
-| `tfyBuild.truefoundryWorkflows.sendApiRequest.image.repository`                 | Repository for the sendApiRequest                             | `nyurik/alpine-python3-requests@sha256`                                                  |
+| `tfyBuild.truefoundryWorkflows.sendApiRequest.image.repository`                 | Repository for the sendApiRequest                             | `tfy.jfrog.io/tfy-mirror/nyurik/alpine-python3-requests@sha256`                          |
 | `tfyBuild.truefoundryWorkflows.sendApiRequest.image.tag`                        | Tag for the sendApiRequest                                    | `e0553236e3ebaa240752b41b8475afb454c5ab4c17eb023a2a904637eda16cf6`                       |
 | `tfyBuild.truefoundryWorkflows.sendApiRequest.imagePullSecrets`                 | Image pull secrets for the sendApiRequest                     | `[]`                                                                                     |
 | `tfyBuild.truefoundryWorkflows.extraEnvs`                                       | Extra environment variables for the tfyBuild server           | `[]`                                                                                     |
