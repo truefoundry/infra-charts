@@ -346,6 +346,7 @@ spec:
         # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
         set +e
         set +o pipefail
+
         tfy build {{ range  $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }} --secret id={{ $value.id }},src=/truefoundry-build-secrets/{{ $value.id }}{{ end }} --build-config={{`{{inputs.parameters.buildConfig}}`}} --name="${IMAGE}:${TAG}" --tag="${IMAGE}:${TAG}" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max" --cache-from=type=registry,ref="${IMAGE}:cache-latest" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
         set -o pipefail
         set -e

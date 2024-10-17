@@ -23,7 +23,7 @@ spec:
       {{- end }}
       containers:
         - name: alpine
-          image: alpine:3.20.0
+          image: {{ .Values.tfyBuild.preemptibleDeployment.image.repository }}:{{ .Values.tfyBuild.preemptibleDeployment.image.tag }}
           command: ["tail", "-f", "/dev/null"]
           {{- with .Values.tfyBuild.preemptibleDeployment.extraEnvs }}
           env:
@@ -42,8 +42,9 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyBuild.preemptibleDeployment.tolerations }}
+        {{- .Values.tfyBuild.preemptibleDeployment.tolerations | toYaml | nindent 8 }}
+        {{- end }}
 {{- end -}}

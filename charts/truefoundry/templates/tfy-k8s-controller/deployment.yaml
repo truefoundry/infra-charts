@@ -32,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-k8s-controller.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyK8sController.imageRepository }}:{{ .Values.tfyK8sController.imageTag }}"
+          image: "{{ .Values.tfyK8sController.image.repository }}:{{ .Values.tfyK8sController.image.tag }}"
           imagePullPolicy: {{ .Values.tfyK8sController.imagePullPolicy }}
           ports:
             - name: http
@@ -63,10 +63,17 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyK8sController.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.tfyK8sController.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyK8sController.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "tfy-k8s-controller.name" . }}
+        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
         {{- if .Values.tfyK8sController.tolerations }}
