@@ -15,14 +15,14 @@ jobs:
       - name: Install readme-generator-for-helm
         run: npm install -g @bitnami/readme-generator-for-helm
       - name: Checkout charts
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{github.event.pull_request.head.ref}}
           repository: ${{github.event.pull_request.head.repo.full_name}}
       - name: Execute readme-generator-for-helm
         env:
-          DIFF_URL: "${{github.event.pull_request.diff_url}}"
-          TEMP_FILE: "${{runner.temp}}/pr-${{github.event.number}}.diff"
+          DIFF_URL: '${{github.event.pull_request.diff_url}}'
+          TEMP_FILE: '${{runner.temp}}/pr-${{github.event.number}}.diff'
         run: |
           # This request doesn't consume API calls.
           curl -Lkso $TEMP_FILE $DIFF_URL
@@ -39,8 +39,8 @@ jobs:
           done
       - name: Configure Git and push changes
         run: |
-            if git status -s | grep charts; then
-                git config user.name "$GITHUB_ACTOR"
-                git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-                git add . && git commit -am "Update README.md with readme-generator-for-helm" --signoff && git push
-            fi
+          if git status -s | grep charts; then
+              git config user.name "$GITHUB_ACTOR"
+              git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+              git add . && git commit -am "Update README.md with readme-generator-for-helm" --signoff && git push
+          fi
