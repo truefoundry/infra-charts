@@ -26,6 +26,13 @@ spec:
       serviceAccountName: {{ include "buildkitd-service.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "kubernetes.io/hostname"
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              {{- include "buildkitd-service.selectorLabels" . | nindent 14 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
