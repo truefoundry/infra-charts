@@ -71,7 +71,7 @@ jobs:
           git add .
           git diff --cached --quiet || git commit -am "[CI] Update charts artifacts manifest files" --signoff
           if git log -1 --pretty=%B | grep -q "[CI]"; then
-            git push origin HEAD:${{ github.head_ref }}
+            git push origin HEAD:${{ github.ref_name }}
           else
             echo "No changes to commit"
           fi
