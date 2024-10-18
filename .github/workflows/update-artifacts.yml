@@ -1,17 +1,6 @@
 name: Generate Inframold Charts Artifacts Manifest
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
   push:
     branches:
       - main
@@ -82,12 +71,14 @@ jobs:
           git add .
           git diff --cached --quiet || git commit -am "[CI] Update charts artifacts manifest files" --signoff
           if git log -1 --pretty=%B | grep -q "[CI]"; then
-            git push origin HEAD:${{ github.head_ref }}
+            git push origin HEAD:${{ github.ref_name }}
           else
             echo "No changes to commit"
           fi
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
