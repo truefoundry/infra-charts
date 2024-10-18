@@ -198,6 +198,10 @@ def extract_images_from_k8s_manifests(yaml_content):
                         containers = manifest['spec'].get('containers', [])
                         init_containers = manifest['spec'].get('initContainers', [])
 
+                    if init_containers is None or containers is None:
+                        init_containers = init_containers or []
+                        containers = containers or []
+
                     for container in containers + init_containers:
                         container_image_info = {
                             "type": "image",
