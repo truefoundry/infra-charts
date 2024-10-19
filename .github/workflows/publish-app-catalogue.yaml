@@ -11,8 +11,10 @@ on:
       - 'charts/tfy-k8s-generic-inframold/**'
 env:
   AWS_S3_BUCKET: 'tfy-argo-application-catalogue'
+  RELEASES_SERVER_URL: ${{ secrets.RELEASES_SERVER_URL }}
+  RELEASES_SERVER_API_KEY: ${{ secrets.RELEASES_SERVER_API_KEY }}
 jobs:
-  sync-catalogue-s3:
+  publish_release_and_sync_to_s3:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
@@ -21,6 +23,20 @@ jobs:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/release-updater/requirements.txt
+
+      - name: Run release-updater script
+        run: |
+          python scripts/release-updater/release-updater.py --url ${{ env.RELEASES_SERVER_URL }} --api-key ${{ env.RELEASES_SERVER_API_KEY }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
