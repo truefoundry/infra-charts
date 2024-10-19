@@ -29,28 +29,6 @@ def post_payload(url, api_key, payload, retries=3, delay=10):
             time.sleep(delay)
     return None
 
-"""
-This function is used to generate the summary of the components along with the versions in the inframold
-charts.
-"""
-def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_list, url):
-    inframold_summary = {
-        "inframoldChartName": parent_chart_name,
-        "inframoldChartVersion": parent_chart_version,
-        "componentCharts": []
-    }
-    for chart_info in chart_info_list:
-        if chart_info["type"] == "helm":
-            inframold_summary["componentCharts"].append({
-                "chartName": chart_info["details"]["chart"],
-                "repoUrl": chart_info["details"]["repoURL"],
-                "minChartVersion": chart_info["details"]["targetRevision"],
-                "maxChartVersion": chart_info["details"]["targetRevision"]
-            })
-
-    print("Saving the inframold summary to migration-server: ", inframold_summary)
-    post_payload(url, inframold_summary)
-
 def get_chart_version(chart):
     chart_yaml_path = f"charts/{chart}/Chart.yaml"
     if os.path.exists(chart_yaml_path):
@@ -69,7 +47,7 @@ def get_chart_version(chart):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update and save inframold chart information.")
     parser.add_argument("--url", required=True, help="URL to post the payload to")
-    parser.add_argument("--api_key", required=True, help="API Key to contact releases server")
+    parser.add_argument("--api-key", required=True, help="API Key to contact releases server")
     args = parser.parse_args()
 
     if not args.url:
