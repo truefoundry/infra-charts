@@ -1,9 +1,9 @@
 name: Generate Inframold Charts Artifacts Manifest
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
+      - 'main'
     paths:
       - '.github/workflows/update-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
@@ -92,8 +92,8 @@ jobs:
 
       - name: Upload Artifacts
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-inframold")
-          for chart in $charts_list;
+          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
+          for chart in "${charts_list[@]}";
           do
             python scripts/upload-artifacts/upload_artifacts.py \
               helm \
