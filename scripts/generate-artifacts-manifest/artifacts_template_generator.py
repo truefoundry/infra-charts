@@ -47,24 +47,6 @@ def make_image_list_unique(image_list):
             unique_images.append(image)
     return unique_images
 
-def post_payload(url, payload, retries=3, delay=10):
-    headers = {
-        "accept": "*/*",
-        "Content-Type": "application/json"
-    }
-    for i in range(retries):
-        try:
-            response = requests.post(url, headers=headers, data=json.dumps(payload))
-            response.raise_for_status() # If response was successful, no Exception will be raised
-            return response
-        except ConnectionError as e:
-            print(f'Connection error: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
-            time.sleep(delay)
-        except Exception as e:
-            print(f'An error occurred: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
-            time.sleep(delay)
-    return None
-
 # function to extract chart information from the manifest file
 def extract_chart_info(manifest_file):
     chart_info_list = []
