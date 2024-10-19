@@ -44,10 +44,20 @@ spec:
             httpGet:
               path: /
               port: {{ .Values.tfyK8sController.service.port }}
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 10
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: {{ .Values.tfyK8sController.service.port }}
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 15
           volumeMounts:
             {{- include "tfy-k8s-controller.volumeMounts" . | nindent 12 }}
       {{- with .Values.tfyK8sController.imagePullSecrets }}
