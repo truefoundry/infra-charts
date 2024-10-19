@@ -223,29 +223,6 @@ def clean_up(temp_dir):
 # function to create a temporary directory
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
-
-"""
-This function is used to generate the summary of the components along with the versions in the inframold
-charts.
-"""
-def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_list):
-    inframold_summary = {
-        "inframoldChartName": parent_chart_name,
-        "inframoldChartVersion": parent_chart_version,
-        "componentCharts": []
-    }
-    for chart_info in chart_info_list:
-        if chart_info["type"] == "helm":
-            inframold_summary["componentCharts"].append({
-                "chartName": chart_info["details"]["chart"],
-                "repoUrl": chart_info["details"]["repoURL"],
-                "minChartVersion": chart_info["details"]["targetRevision"],
-                "maxChartVersion": chart_info["details"]["targetRevision"]
-            })
-
-    print("Saving the inframold summary to migration-server: ", inframold_summary)
-    post_payload("https://analytics.truefoundry.com/v1/inframold", inframold_summary)
-
     
 
 if __name__ == "__main__":
@@ -292,7 +269,5 @@ if __name__ == "__main__":
             chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
-
-    save_inframold_summary(chart_name, chart_version, chart_info_list)
 
     clean_up(temp_dir)
