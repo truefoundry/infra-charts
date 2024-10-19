@@ -244,7 +244,7 @@ def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_l
             })
 
     print("Saving the inframold summary to migration-server: ", inframold_summary)
-    post_payload("https://migration-server.truefoundry.com/v1/inframold", inframold_summary)
+    post_payload("https://analytics.truefoundry.com/v1/inframold", inframold_summary)
 
     
 
