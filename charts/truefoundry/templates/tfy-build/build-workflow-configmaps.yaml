@@ -1,0 +1,10 @@
+{{- if .Values.tfyBuild.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-build.fullname" . }}-scripts
+data:
+{{ (.Files.Glob "tfy-build-scripts/*").AsConfig | indent 2 }}
+
+{{- end}}
