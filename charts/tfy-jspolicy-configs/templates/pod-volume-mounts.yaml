@@ -5,9 +5,10 @@ metadata:
   name: {{ .Release.Name }}-pod-volume-mounts.truefoundry.com
   namespace: {{ .Release.Namespace }}
 spec:
-  operations: ["CREATE"]
   type: Mutating
+  operations: ["CREATE", "UPDATE"]
   resources: ["pods"]
+  failurePolicy: Ignore
   dependencies:
     "js-yaml": "^4.1.0"
   javascript: |
