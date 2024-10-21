@@ -1,0 +1,81 @@
+{{- if .Values.podVolumeMounts.enabled }}
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: {{ .Release.Name }}-pod-volume-mounts.truefoundry.com
+  namespace: {{ .Release.Namespace }}
+spec:
+  operations: ["CREATE"]
+  resources: ["pods"]
+  dependencies:
+    "js-yaml": "^4.1.0"
+  javascript: |
+    // this policy will add volume mounts to the pod if the pod has a volume mount with the same name as the secret
+    import { load } from 'js-yaml';
+    
+    function parseYamlString(yamlString) {
+      try {
+        return load(yamlString);
+      } catch (e) {
+        console.log("Error parsing YAML string:", e);
+        return null;
+      }
+    }
+    const excludedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.excludeNamespaces | toYaml | nindent 4 }}`);
+    let includedNamespaces = undefined;
+    if (parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
+      includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    } else {
+      includedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`);
+    }
+    const mountDetails = parseYamlString(`{{ .Values.podVolumeMounts.mountDetails | toYaml | nindent 4 }}`);
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || mountDetails.length < 0) {
+      exit()
+    }
+
+    // add the volumes to the pod
+    const podVolumes = request.object.spec.volumes || [];
+    mountDetails.forEach(mountDetails => {
+      // skip if the volume already exists, volume name is same as secret name
+      if (podVolumes.find(volume => volume.name === mountDetails.secretName)) {
+        return;
+      }
+      if (mountDetails.type === "secret") {
+        request.object.spec.volumes = request.object.spec.volumes.concat({
+          name: mountDetails.secretName,
+        secret: {
+          secretName: mountDetails.secretName
+          }
+        });
+      } else if (mountDetails.type === "configMap") {
+        request.object.spec.volumes = request.object.spec.volumes.concat({
+          name: mountDetails.configMapName,
+          configMap: {
+            name: mountDetails.configMapName
+          }
+        });
+      }
+      request.object.spec.containers.forEach(container => {
+        // skip if the volume mount already exists
+        if (container.volumeMounts.find(volumeMount => volumeMount.name === mountDetails.secretName)) {
+          return;
+        }
+        if (mountDetails.type === "secret") {
+          container.volumeMounts = container.volumeMounts.concat({
+            name: mountDetails.secretName,
+            mountPath: mountDetails.mountPath,
+            subPath: mountDetails.subPath || "",
+            readOnly: true
+          });
+        } else if (mountDetails.type === "configMap") {
+          container.volumeMounts = container.volumeMounts.concat({
+            name: mountDetails.configMapName,
+            mountPath: mountDetails.mountPath,
+            subPath: mountDetails.subPath || "",
+            readOnly: true
+          });
+        }
+      });
+    });
+
+{{- end }}

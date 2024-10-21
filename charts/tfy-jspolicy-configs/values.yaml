@@ -44,3 +44,25 @@ syncSecrets:
   ## example
   ## secretNames: ["namespace/secretName", "namespace2/secretName2"]
   secretNames: [""]
+
+## @section podVolumeMounts Configuration options for adding volume mounts to pods
+podVolumeMounts:
+  ## @param podVolumeMounts.enabled Enable or disable adding volume mounts to pods
+  enabled: false
+  ## @param podVolumeMounts.excludeNamespaces [array] Namespaces to exclude from adding volume mounts to pods
+  excludeNamespaces: []
+
+  ## @param podVolumeMounts.includeNamespaces [array] Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+
+  ## @param podVolumeMounts.mountDetailsMap [array] The details of the volume mount to add
+  mountDetails: []
+    ## example
+    ## - type: secret
+    ##   secretName: my-secret
+    ##   mountPath: /var/run/secrets/my-secret
+    ##   subPath: my-subPath
+    ## - type: configMap
+    ##   configMapName: my-configmap
+    ##   mountPath: /my/configmap/path
+    ##   subPath: my-subPath
