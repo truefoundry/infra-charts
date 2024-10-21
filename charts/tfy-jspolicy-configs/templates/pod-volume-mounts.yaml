@@ -74,8 +74,11 @@ spec:
         if (mountDetails.type === "configMap") {
           volumeName = mountDetails.configMapName;
         }
+        if (volumeName === "") {
+          print("Invalid volume mount details: " + JSON.stringify(mountDetails));
+          exit();
+        }
         print("Mount details: " + JSON.stringify(mountDetails));
-        print("Volume name: " + volumeName);
         container.volumeMounts = container.volumeMounts.concat({
           name: volumeName,
           mountPath: mountDetails.mountPath,
