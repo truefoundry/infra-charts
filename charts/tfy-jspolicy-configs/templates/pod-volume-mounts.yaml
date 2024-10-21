@@ -51,7 +51,8 @@ spec:
           secretName: mountDetails.secretName
           }
         });
-      } else if (mountDetails.type === "configMap") {
+      }
+      if (mountDetails.type === "configMap") {
         request.object.spec.volumes = request.object.spec.volumes.concat({
           name: mountDetails.configMapName,
           configMap: {
@@ -66,21 +67,19 @@ spec:
           return;
         }
         print("Adding volume mount " + mountDetails.secretName + " to the container " + container.name + " in the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+        let volumeName = "";
         if (mountDetails.type === "secret") {
-          container.volumeMounts = container.volumeMounts.concat({
-            name: mountDetails.secretName,
-            mountPath: mountDetails.mountPath,
-            subPath: mountDetails.subPath || "",
-            readOnly: true
-          });
-        } else if (mountDetails.type === "configMap") {
-          container.volumeMounts = container.volumeMounts.concat({
-            name: mountDetails.configMapName,
-            mountPath: mountDetails.mountPath,
-            subPath: mountDetails.subPath || "",
-            readOnly: true
-          });
+          volumeName = mountDetails.secretName;
         }
+        if (mountDetails.type === "configMap") {
+          volumeName = mountDetails.configMapName;
+        }
+        container.volumeMounts = container.volumeMounts.concat({
+          name: volumeName,
+          mountPath: mountDetails.mountPath,
+          subPath: mountDetails.subPath || "",
+          readOnly: true
+          });
       });
     });
     mutate(request.object);
