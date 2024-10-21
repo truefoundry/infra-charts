@@ -1,0 +1,86 @@
+{{- if .Values.syncConfigMaps.enabled -}}
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: "{{ .Release.Name }}-sync-secrets.truefoundry.com"
+spec:
+  operations: ["CREATE"]
+  resources: ["configMaps"]
+  dependencies:
+    "js-yaml": "^4.1.0"
+  type: Controller
+  javascript: |
+    // this policy will sync changes to a secret to all other secrets in the cluster
+    // that have labels in syncConfigMaps.labelSelector
+    import { load } from 'js-yaml';
+
+    function parseYamlString(yamlString) {
+      try {
+        return load(yamlString);
+      } catch (e) {
+        console.log("Error parsing YAML string:", e);
+        return null;
+      }
+    }
+
+    const excludedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.excludeNamespaces | toYaml | nindent 4 }}`);
+    let includedNamespaces = undefined;
+    if (parseYamlString(`{{ .Values.syncConfigMaps.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
+      includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    } else {
+      includedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.includeNamespaces | toYaml | nindent 4 }}`);
+    }
+    const configMapNames = parseYamlString(`{{ .Values.syncConfigMaps.configMapNames | toYaml | nindent 4 }}`);
+
+    if (includedNamespaces.length < 0 || configMapNames.length < 0) {
+      exit();
+    } 
+
+    // sync a configmaps to all namespaces in includedNamespaces
+    function syncConfigMapToAllIncludedNamespaces(parentConfigMapObject) {
+      includedNamespaces.forEach(namespace => {
+        if (excludedNamespaces.includes(namespace)){
+          return;
+        }
+
+        // skip if the current namespace is the same as the parentSecret's namespace
+        if (parentConfigMapObject.metadata.namespace === namespace) {
+          return;
+        }
+        print("Syncing configmaps " + parentConfigMapObject.metadata.name + " to namespace: " + namespace);
+        const configmap = get("ConfigMap", "v1", namespace + "/" + parentConfigMapObject.metadata.name);
+        if (configmap === undefined) {
+          print("configmap not found, creating configmap " + parentConfigMapObject.metadata.name + " in namespace: " + namespace);
+          configmap = create({
+            "kind": "ConfigMap",
+            "apiVersion": "v1",
+            "metadata": {
+              "name": parentConfigMapObject.metadata.name,
+              "namespace": namespace
+            },
+            "data": parentConfigMapObject.data
+          });
+          print("Successfully created configmap " + configmap.metadata.namespace + "/" + configmap.metadata.name);
+        } else if (JSON.stringify(configmap.data) === JSON.stringify(parentConfigMapObject.data)) {
+          print("ConfigMap " + parentConfigMapObject.metadata.name + " already exists in the namespace " + namespace + " and is the same, skipping");
+        } else {
+          print("ConfigMap " + parentConfigMapObject.metadata.name + " already exists in the namespace " + namespace + " and is different, updating");
+          configmap.data = parentConfigMapObject.data;
+          const updateResult = update(configmap);
+          if (!updateResult.ok) {
+            // just requeue if we encounter an error
+            requeue(updateResult.message);
+          } else {
+            print(`Successfully synced configmap ${configmap.metadata.namespace}/${configmap.metadata.name}`);
+          }
+        }
+        return;       
+      })
+    }
+
+
+    configMapNames.forEach(secretName => {
+      let parentSecret = get("Secret", "v1", secretName);
+      syncConfigMapToAllIncludedNamespaces(parentSecret);
+    });
+{{- end -}}
