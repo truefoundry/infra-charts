@@ -81,6 +81,10 @@ spec:
 
     configMapNames.forEach(configMapName => {
       let parentConfigMap = get("ConfigMap", "v1", configMapName);
+      if (!parentConfigMap) {
+        print("configmap" + configMapName + "is not found");
+        exit();
+      }
       print("Syncing configmap "+ configMapName + "in namespaces...")
       syncConfigMapToAllIncludedNamespaces(parentConfigMap);
     });
