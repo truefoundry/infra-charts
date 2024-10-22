@@ -327,7 +327,9 @@ spec:
           set -e
           export PATH=$PATH:/scripts
           mkdir -p /opt/truefoundry/output
+          (
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+          )
       sidecars:
       - name: buildkitd
         image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
@@ -470,7 +472,9 @@ spec:
           echo "Using external buildkit service"
           export PATH=$PATH:/scripts
           mkdir -p /opt/truefoundry/output
+          (
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+          )
     - name: update-status
       activeDeadlineSeconds: 5400
       retryStrategy:

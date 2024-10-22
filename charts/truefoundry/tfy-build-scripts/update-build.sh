@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -e
 
 # Function to display help message
 function display_help {
