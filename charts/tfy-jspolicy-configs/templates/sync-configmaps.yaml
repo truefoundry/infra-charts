@@ -10,7 +10,7 @@ spec:
     "js-yaml": "^4.1.0"
   type: Controller
   javascript: |
-    // this policy will sync changes to a secret to all other secrets in the cluster
+    // this policy will sync changes to a configmap to all other configmaps in the cluster
     // that have labels in syncConfigMaps.labelSelector
     import { load } from 'js-yaml';
 
@@ -43,7 +43,7 @@ spec:
           return;
         }
 
-        // skip if the current namespace is the same as the parentSecret's namespace
+        // skip if the current namespace is the same as the parentConfigMap's namespace
         if (parentConfigMapObject.metadata.namespace === namespace) {
           return;
         }
@@ -82,8 +82,8 @@ spec:
     configMapNames.forEach(configMapName => {
       let parentConfigMap = get("ConfigMap", "v1", configMapName);
       if (!parentConfigMap) {
-        print("configmap" + configMapName + "is not found");
-        exit();
+        print("configmap '" + configMapName + "'' is not found");
+        return;
       }
       print("Syncing configmap "+ configMapName + "in namespaces...")
       syncConfigMapToAllIncludedNamespaces(parentConfigMap);
