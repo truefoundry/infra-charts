@@ -32,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "truefoundry-frontend-app.env" . | trim | nindent 12 }}
-          image: "{{ .Values.truefoundryFrontendApp.imageRepository }}:{{ .Values.truefoundryFrontendApp.imageTag }}"
+          image: "{{ .Values.truefoundryFrontendApp.image.repository }}:{{ .Values.truefoundryFrontendApp.image.tag }}"
           imagePullPolicy: {{ .Values.truefoundryFrontendApp.imagePullPolicy }}
           ports:
             - name: http
@@ -67,10 +67,17 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.truefoundryFrontendApp.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.truefoundryFrontendApp.topologySpreadConstraints }}
+        {{- toYaml .Values.truefoundryFrontendApp.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "truefoundry-frontend-app.name" . }}
+        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
         {{- if .Values.truefoundryFrontendApp.tolerations }}

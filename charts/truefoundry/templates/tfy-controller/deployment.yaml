@@ -32,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-controller.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyController.imageRepository }}:{{ .Values.tfyController.imageTag }}"
+          image: "{{ .Values.tfyController.image.repository }}:{{ .Values.tfyController.image.tag }}"
           imagePullPolicy: {{ .Values.tfyController.imagePullPolicy }}
           ports:
             - name: port-{{ .Values.tfyController.service.port }}
@@ -50,6 +50,17 @@ spec:
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.tfyController.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyController.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "tfy-controller.name" . }}
+        {{- end }}
       nodeSelector:
         {{- include "tfy-controller.nodeSelector" . | nindent 8 }}
       {{- $mergedAffinity := dict | merge .Values.tfyController.affinity .Values.global.affinity }}

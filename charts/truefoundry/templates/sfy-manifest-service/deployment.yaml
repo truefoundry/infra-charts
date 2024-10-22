@@ -32,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
-          image: "{{ .Values.sfyManifestService.imageRepository }}:{{ .Values.sfyManifestService.imageTag }}"
+          image: "{{ .Values.sfyManifestService.image.repository }}:{{ .Values.sfyManifestService.image.tag }}"
           imagePullPolicy: {{ .Values.sfyManifestService.imagePullPolicy }}
           ports:
             - name: http
@@ -63,10 +63,17 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.sfyManifestService.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.sfyManifestService.topologySpreadConstraints }}
+        {{- toYaml .Values.sfyManifestService.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "sfy-manifest-service.name" . }}
+        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
         {{- if .Values.sfyManifestService.tolerations }}

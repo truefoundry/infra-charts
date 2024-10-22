@@ -24,838 +24,716 @@ spec:
       - name: dockerTag
       - name: buildkitServiceURL
   templates:
-  - name: build
-    inputs:
-      parameters:
-        - name: buildSource
-        - name: buildConfig
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-        - name: buildkitServiceURL
-    steps:
-    {{- if .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
-    - - name: pre-build-script
-        template: pre-build-script
-        arguments:
-          parameters:
+    - name: build
+      inputs:
+        parameters:
           - name: buildSource
-            value: "{{`{{inputs.parameters.buildSource}}`}}"
           - name: buildConfig
-            value: "{{`{{inputs.parameters.buildConfig}}`}}"
           - name: dockerRegistryURL
-            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
           - name: dockerRegistryUsername
-            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
           - name: dockerRegistryPassword
-            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
           - name: dockerRepo
-            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
           - name: dockerTag
-            value: "{{`{{inputs.parameters.dockerTag}}`}}"
-    {{- end }}
-    - - name: build-and-push
-        template: build-and-push
-        arguments:
-          parameters:
-          - name: buildSource
-            value: "{{`{{inputs.parameters.buildSource}}`}}"
-          - name: buildConfig
-            value: "{{`{{inputs.parameters.buildConfig}}`}}"
-          - name: dockerRegistryURL
-            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-          - name: dockerRegistryUsername
-            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-          - name: dockerRegistryPassword
-            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
-          - name: dockerRepo
-            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
-          - name: dockerTag
-            value: "{{`{{inputs.parameters.dockerTag}}`}}"
           - name: buildkitServiceURL
-            value: "127.0.0.1:1234"
-    {{- if .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}
-    - - name: post-build-script
-        template: post-build-script
-        arguments:
-          parameters:
-          - name: buildSource
-            value: "{{`{{inputs.parameters.buildSource}}`}}"
-          - name: buildConfig
-            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: callbackURL
+      steps:
+      - - name: should-use-external-buildkit
+          template: should-use-external-buildkit
+          arguments:
+            parameters:
+              - name: buildkitServiceURL
+                value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+      - - name: build-and-push-with-buildkit-sidecar
+          template: build-and-push-with-buildkit-sidecar
+          when: >-
+            '{{`{{steps.should-use-external-buildkit.outputs.parameters.shouldUse}}`}}' != 'true'
+          arguments:
+            parameters:
+            - name: buildSource
+              value: "{{`{{inputs.parameters.buildSource}}`}}"
+            - name: buildConfig
+              value: "{{`{{inputs.parameters.buildConfig}}`}}"
+            - name: dockerRegistryURL
+              value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+            - name: dockerRegistryUsername
+              value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+            - name: dockerRegistryPassword
+              value:  "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+            - name: dockerRepo
+              value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+            - name: dockerTag
+              value: "{{`{{inputs.parameters.dockerTag}}`}}"
+            - name: buildkitServiceURL
+              value: "127.0.0.1:1234"
+            - name: callbackURL
+              value: "{{`{{inputs.parameters.callbackURL}}`}}"
+      - - name: build-and-push-with-external-buildkit
+          template: build-and-push-with-external-buildkit
+          when: >-
+            '{{`{{steps.should-use-external-buildkit.outputs.parameters.shouldUse}}`}}' == 'true'
+          arguments:
+            parameters:
+            - name: buildSource
+              value: "{{`{{inputs.parameters.buildSource}}`}}"
+            - name: buildConfig
+              value: "{{`{{inputs.parameters.buildConfig}}`}}"
+            - name: dockerRegistryURL
+              value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+            - name: dockerRegistryUsername
+              value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+            - name: dockerRegistryPassword
+              value:  "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+            - name: dockerRepo
+              value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+            - name: dockerTag
+              value: "{{`{{inputs.parameters.dockerTag}}`}}"
+            - name: buildkitServiceURL
+              value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+            - name: callbackURL
+              value: "{{`{{inputs.parameters.callbackURL}}`}}"
+
+    - name: exit-handler
+      inputs:
+        parameters:
+          - name: callbackURL
           - name: dockerRegistryURL
-            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-          - name: dockerRegistryUsername
-            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-          - name: dockerRegistryPassword
-            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
           - name: dockerRepo
-            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
           - name: dockerTag
-            value: "{{`{{inputs.parameters.dockerTag}}`}}"
-    {{- end }}
-  {{- if .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
-  - name: pre-build-script
-    inputs:
-      parameters:
-        - name: buildSource
-        - name: buildConfig
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-    when: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.enabled }}
-    activeDeadlineSeconds: 5400
-    metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
-        karpenter.sh/do-not-disrupt: 'true'
-        karpenter.sh/do-not-evict: 'true'
-    {{- with .Values.tfyBuild.truefoundryWorkflows.preBuild.resources }}
-    podSpecPatch: |
-      containers:
-        - name: main
-          resources:
-            {{- toYaml . | nindent 12 }}
-    {{- end }}
-    script:
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.preBuild.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.preBuild.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      command: {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.command }}
-      source: |
-        {{ .Values.tfyBuild.truefoundryWorkflows.preBuild.script | nindent 8 }} 
-    {{- end }}
-  - name: build-and-push
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 5400
-    metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
-        karpenter.sh/do-not-disrupt: 'true'
-        karpenter.sh/do-not-evict: 'true'
-    retryStrategy:
-      limit: 2
-      retryPolicy: "Always"
-    inputs:
-      parameters:
-        - name: buildSource
-        - name: buildConfig
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-        - name: buildkitServiceURL
-    volumes:
-    - name: truefoundry-docker-config
-      secret:
-        items:
-        - key: .dockerconfigjson
-          path: base_config.json
-        secretName: truefoundry-image-pull-secret
-    {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
-    - name: {{ $value.id | replace "." "-" }}
-      secret:
-        items:
-        - key: {{ $value.valueFrom.secretKey }}
-          path: {{ $value.id }}
-        secretName: {{ $value.valueFrom.secretName }}
-    {{- end }}
-    script:
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      command: [bash]
-      workingDir: /mnt/vol
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      source: |
-        #!/bin/bash
-        set -e -o pipefail
+          - name: dockerRegistryUsername
+          - name: dockerRegistryPassword
+      steps:
+      - - name: success-callback
+          when: "{{`{{workflow.status}}`}} == Succeeded"
+          template: update-status
+          arguments:
+            parameters:
+            - name: url
+              value: "{{`{{inputs.parameters.callbackURL}}`}}"
+            - name: payload
+              value: '{"status":"SUCCEEDED"}'
+            - name: tfyBuildStatus
+              value: "{{`{{workflow.outputs.parameters.tfyBuildStatus}}`}}"
+            - name: tfyTimeTakenToBuildImageSeconds
+              value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
+            - name: tfyIsGlobalBuilderUsed
+              value: "{{`{{workflow.outputs.parameters.tfyShouldUseGlobalBuilder}}`}}"
+        - name: failure-callback
+          when: "{{`{{workflow.status}}`}} != Succeeded"
+          template: update-status
+          arguments:
+            parameters:
+            - name: url
+              value: "{{`{{inputs.parameters.callbackURL}}`}}"
+            - name: payload
+              value: '{"status":"FAILED"}'
+            - name: tfyBuildStatus
+              value: "{{`{{workflow.outputs.parameters.tfyBuildStatus}}`}}"
+            - name: tfyTimeTakenToBuildImageSeconds
+              value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
+            - name: tfyIsGlobalBuilderUsed
+              value: "{{`{{workflow.outputs.parameters.tfyShouldUseGlobalBuilder}}`}}"
+      - - name: should-build-soci-index
+          template: should-build-soci-index
+          when: >-
+            '{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.enabled }}' == 'true'
+              &&
+            {{`{{workflow.status}}`}} == Succeeded
+          arguments:
+            parameters:
+              - name: dockerRegistryURL
+                value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+              - name: dockerRegistryUsername
+                value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+              - name: dockerRegistryPassword
+                value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+              - name: dockerRepo
+                value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+              - name: dockerTag
+                value: "{{`{{inputs.parameters.dockerTag}}`}}"
+      - - name: build-and-push-soci-index
+          template: build-and-push-soci-index
+          when: >-
+            {{`{{steps.should-build-soci-index.status}}`}} == Succeeded
+              && 
+            '{{`{{steps.should-build-soci-index.outputs.parameters.result}}`}}' == 'true'
+          arguments:
+            parameters:
+              - name: dockerRegistryURL
+                value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+              - name: dockerRegistryUsername
+                value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+              - name: dockerRegistryPassword
+                value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+              - name: dockerRepo
+                value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+              - name: dockerTag
+                value: "{{`{{inputs.parameters.dockerTag}}`}}"
 
-        mkdir -p /root/.docker/
-        cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json
-
-        BUILD_SOURCE='{{`{{inputs.parameters.buildSource}}`}}'
-        BUILD_TYPE=$(echo $BUILD_SOURCE | jq -r '.type')
-        
-        rm -f -R ./source-code
-
-        if [[ $BUILD_TYPE == "remote" ]]; then
-          REMOTE_URL=$(echo $BUILD_SOURCE | jq -r '.remote_uri')
-          printf "\033[36m[Start]\033[0m Downloading source code from remote source\n"
-          mkdir -p source-code
-          curl -s -o project-files.tar.gz $REMOTE_URL
-          tar -xf project-files.tar.gz -C source-code
-          cd source-code
-        elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "github" ]]; then
-          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
-
-          git config --global url."https://github.com/".insteadOf git@github.com:
-          git config --global url."https://".insteadOf git://
-
-          # Example of GIT_URL="https://x-access-token:<token>@github.com/user_name/repo_name"
-          # Example of TRIMMED_URL="https://github.com/user_name/repo_name"
-
-          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-access-token:\([^@]*\).*/\1/p')
-          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-access-token:[^@]*@~~')
-
-          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-          
-          # Set auth token
-
-          git config --system credential.helper store
-          echo "https://x-access-token:$TOKEN@github.com" > ~/.git-credentials
-
-          git clone --recursive $TRIMMED_URL source-code
-          cd source-code && git reset --hard $GIT_REF
-        elif [[ $BUILD_TYPE == "bitbucket" ]]; then
-          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
-
-          git config --global url."https://bitbucket.org/".insteadOf git@bitbucket.org:
-          git config --global url."https://".insteadOf git://
-
-          # Example of GIT_URL="https://x-token-auth:<token>@bitbucket.org/user_name/repo_name"
-          # Example of TRIMMED_URL="https://bitbucket.org/user_name/repo_name"
-
-          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
-          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
-
-          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-          
-          # Set auth token
-
-          git config --system credential.helper store
-          echo "https://x-token-auth:$TOKEN@bitbucket.org" > ~/.git-credentials
-
-          git clone --recurse-submodules $TRIMMED_URL source-code
-          cd source-code && git reset --hard $GIT_REF
-        elif [[ $BUILD_TYPE == "gitlab" ]]; then
-          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
-
-          git config --global url."https://gitlab.com/".insteadOf git@gitlab.com:
-          git config --global url."https://".insteadOf git://
-
-          # Example of GIT_URL="https://oauth2:<token>@gitlab.com/user_name/repo_name"
-          # Example of TRIMMED_URL="https://gitlab.com/user_name/repo_name"
-
-          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*oauth2:\([^@]*\).*/\1/p')
-          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~oauth2:[^@]*@~~')
-
-          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-          
-          # Set auth token
-
-          git config --system credential.helper store
-          echo "https://oauth2:$TOKEN@gitlab.com" > ~/.git-credentials
-
-          git clone --recurse-submodules $TRIMMED_URL source-code
-          cd source-code && git reset --hard $GIT_REF
-        elif [[ $BUILD_TYPE == "azure" ]]; then
-          GIT_URL=$(echo $BUILD_SOURCE | jq -r '.repo_url')
-          GIT_REF=$(echo $BUILD_SOURCE | jq -r '.ref')
-
-          git config --global url."https://dev.azure.com/".insteadOf git@ssh.dev.azure.com:v3/
-          git config --global url."https://".insteadOf git://
-
-          # Example of GIT_URL="https://x-token-auth:<token>@dev.azure.com/organization/project/_git/repo_name"
-          # Example of TRIMMED_URL="https://dev.azure.com/organization/project/_git/repo_name"
-
-          TOKEN=$(echo "$GIT_URL" | sed -n 's/.*x-token-auth:\([^@]*\).*/\1/p')
-          TRIMMED_URL=$(echo "$GIT_URL" | sed 's~x-token-auth:[^@]*@~~')
-
-          printf "\033[36m[Start]\033[0m Downloading source code from $TRIMMED_URL\n"
-          
-          # Set auth token
-          git config --system credential.helper store
-          echo "https://x-token-auth:$TOKEN@dev.azure.com" > ~/.git-credentials
-
-          git clone --recurse-submodules $TRIMMED_URL source-code
-          cd source-code && git reset --hard $GIT_REF
-        elif [[ $BUILD_TYPE == "notebook_build" ]]; then
-          :
-        else
-          printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Source type '$BUILD_TYPE' not supported.\n"
-          exit 1
-        fi
-        printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Download code completed\n"
-        printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please find the logs below\n"
-      
-        DOCKER_USERNAME="{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-        DOCKER_PASSWORD=$(echo '{{`{{inputs.parameters.dockerRegistryPassword}}`}}' | base64 -d)
-        REGISTRY="{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-        REPOSITORY="{{`{{inputs.parameters.dockerRepo}}`}}"
-        IMAGE="${REGISTRY}/${REPOSITORY}"
-        TAG="{{`{{inputs.parameters.dockerTag}}`}}"
-
-        # if $REGISTRY starts with "index.docker.io" or "docker.io"
-        # then skip mentioning url in docker login, because these do not follow distribution v2
-        # This is a short term fix till we decouple registry url and login url
-        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
-          docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        else
-          docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        fi
-
-        # Split buildkitServiceURL into host and port
-        IFS=':' read -r -a BUILDKIT_SERVICE_URL_PARTS <<< "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
-        BUILDKIT_HOST="${BUILDKIT_SERVICE_URL_PARTS[0]}"
-        BUILDKIT_PORT="${BUILDKIT_SERVICE_URL_PARTS[1]}"
-
-        ######################################################################################
-        # Test connectivity using nc (netcat) with a timeout of 2 minutes
-        end=$((SECONDS+120))
-        # Loop until the timeout is reached
-        while [ $SECONDS -lt $end ]; do
-            # Check if the port is open
-            if nc -z "$BUILDKIT_HOST" "$BUILDKIT_PORT"; then
-                # If successful, continue with the script
-                echo "Port is open. Continuing with the script..."
-                break
-            fi
-            # Wait for 1 second before trying again
-            sleep 1
-        done
-        # port is not open after 120 seconds
-        if [ $SECONDS -ge $end ]; then
-            echo echo "Error: Unable to connect to buildkit service at $BUILDKIT_HOST:$BUILDKIT_PORT"
-            exit 1
-        fi
-        ######################################################################################
-
-        printf "\033[36m[==== Docker logs start ====]\033[0m\n"
-        docker buildx create --name remote-kubernetes --driver remote tcp://{{`{{inputs.parameters.buildkitServiceURL}}`}}
-                
-        # image-manifest=true is needed for ecr and works for others - https://github.com/aws/containers-roadmap/issues/876#issuecomment-1665121877
-        set +e
-        set +o pipefail
-        tfy build {{ range  $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }} --secret id={{ $value.id }},src=/truefoundry-build-secrets/{{ $value.id }}{{ end }} --build-config={{`{{inputs.parameters.buildConfig}}`}} --name="${IMAGE}:${TAG}" --tag="${IMAGE}:${TAG}" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max" --cache-from=type=registry,ref="${IMAGE}:cache-latest" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true || exit 210
-        set -o pipefail
-        set -e
-        printf "\033[36m[==== Docker logs end ====]\033[0m\n"
-        printf "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Docker image built and pushed\n"
-      volumeMounts:
-      - name: workdir
-        mountPath: /mnt/vol
-      - name: truefoundry-docker-config
-        mountPath: /root/.truefoundry/.docker/
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
-      {{- toYaml . | nindent 6 }} 
+    - name: should-use-external-buildkit
+      activeDeadlineSeconds: 300
+      retryStrategy:
+        limit: 0
+      inputs:
+        parameters:
+          - name: buildkitServiceURL
+      outputs:
+        parameters:
+        - name: shouldUse
+          valueFrom:
+            path: /opt/truefoundry/output/shouldUse
+          globalName: tfyShouldUseGlobalBuilder
+      volumes:
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      script:
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        command: [bash]
+        source: |
+          #!/bin/bash
+          export PATH=$PATH:/scripts
+          mkdir -p /opt/truefoundry/output
+          if [ -z "$BUILDKIT_SERVICE_URL" ] || [ "$BUILDKIT_SERVICE_URL" = "\"\"" ]; then
+            echo -n "false" > /opt/truefoundry/output/shouldUse
+            exit 0
+          fi
+          wait-for-builder.sh 10 >/dev/null 2>&1
+          if [ $? -eq 1 ]; then
+            echo -n "false" > /opt/truefoundry/output/shouldUse
+          else
+            echo -n "true" > /opt/truefoundry/output/shouldUse
+          fi
+        env:
+          - name: BUILDKIT_SERVICE_URL
+            value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+        resources: 
+          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+    - name: build-and-push-with-buildkit-sidecar
+      activeDeadlineSeconds: 5400
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+          karpenter.sh/do-not-disrupt: 'true'
+          karpenter.sh/do-not-evict: 'true'
+      retryStrategy:
+        limit: 2
+        retryPolicy: "Always"
+      inputs:
+        parameters:
+          - name: buildSource
+          - name: buildConfig
+          - name: dockerRegistryURL
+          - name: dockerRegistryUsername
+          - name: dockerRegistryPassword
+          - name: dockerRepo
+          - name: dockerTag
+          - name: buildkitServiceURL
+          - name: callbackURL
+      outputs:
+        parameters:
+        - name: tfyBuildStatus
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/buildStatus
+          globalName: tfyBuildStatus
+        - name: tfyTimeTakenToBuildImageSeconds
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
+          globalName: tfyTimeTakenToBuildImageSeconds
+      volumes:
+        - name: truefoundry-docker-config
+          secret:
+            items:
+            - key: .dockerconfigjson
+              path: base_config.json
+            secretName: truefoundry-image-pull-secret
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
-      - name: {{ $value.id | replace "." "-" }}
-        mountPath: "/truefoundry-build-secrets/"
+        - name: {{ $value.id | replace "." "-" }}
+          secret:
+            items:
+            - key: {{ $value.valueFrom.secretKey }}
+              path: {{ $value.id }}
+            secretName: {{ $value.valueFrom.secretName }}
       {{- end }}
-      resources:
-        {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 8 }}
-    sidecars:
-    - name: buildkitd
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      command:
-        - /usr/local/bin/entrypoint.sh
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
-      env:
+      script:
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        command: [bash]
+        env: 
+          - name: BUILD_SOURCE
+            value: "{{`{{inputs.parameters.buildSource}}`}}"
+          - name: BUILD_CONFIG
+            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: DOCKER_REGISTRY_URL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: DOCKER_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: DOCKER_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: DOCKER_REPO
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: DOCKER_TAG
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+          - name: BUILDKIT_SERVICE_URL
+            value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+          - name: CALLBACK_URL
+            value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: DONE_MARKER
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
+          - name: FAILED_MARKER
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed }}
+          - name: TFY_BUILD_SECRETS
+            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
+          - name: SOURCE_CODE_DOWNLOAD_PATH
+            value: /mnt/tfy/source-code
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+          - name: truefoundry-docker-config
+            mountPath: /root/.truefoundry/.docker/
+        {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
+          - name: {{ $value.id | replace "." "-" }}
+            mountPath: "/truefoundry-build-secrets/"
+        {{- end }}
+        resources: 
+          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
+        source: |
+          #!/bin/bash
+          set -e
+          export PATH=$PATH:/scripts
+          mkdir -p /opt/truefoundry/output
+          {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+      sidecars:
+      - name: buildkitd
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
+        command:
+          - /usr/local/bin/entrypoint.sh
+        {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
+        env:
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumeMounts }}
+        volumeMounts:
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        resources:
+          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 10 }}
+        securityContext:
+          privileged: true
+        ports:
+          - name: grpc-buidkitd
+            containerPort: 1234
+            protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+              - buildctl
+              - debug
+              - workers
+        livenessProbe:
+          exec:
+            command:
+              - buildctl
+              - debug
+              - workers
+    - name: build-and-push-with-external-buildkit
+      activeDeadlineSeconds: 5400
+      metadata:
+        annotations:
+          cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+          karpenter.sh/do-not-disrupt: 'true'
+          karpenter.sh/do-not-evict: 'true'
+      retryStrategy:
+        limit: 2
+        retryPolicy: "Always"
+      inputs:
+        parameters:
+          - name: buildSource
+          - name: buildConfig
+          - name: dockerRegistryURL
+          - name: dockerRegistryUsername
+          - name: dockerRegistryPassword
+          - name: dockerRepo
+          - name: dockerTag
+          - name: buildkitServiceURL
+          - name: callbackURL
+      outputs:
+        parameters:
+        - name: tfyBuildStatus
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/buildStatus
+          globalName: tfyBuildStatus
+        - name: tfyTimeTakenToBuildImageSeconds
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
+          globalName: tfyTimeTakenToBuildImageSeconds
+      volumes:
+        - name: truefoundry-docker-config
+          secret:
+            items:
+            - key: .dockerconfigjson
+              path: base_config.json
+            secretName: truefoundry-image-pull-secret
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraVolumeMounts }}
-      volumeMounts:
+      {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
+        - name: {{ $value.id | replace "." "-" }}
+          secret:
+            items:
+            - key: {{ $value.valueFrom.secretKey }}
+              path: {{ $value.id }}
+            secretName: {{ $value.valueFrom.secretName }}
+      {{- end }}
+      script:
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        command: [bash]
+        env: 
+          - name: BUILD_SOURCE
+            value: "{{`{{inputs.parameters.buildSource}}`}}"
+          - name: BUILD_CONFIG
+            value: "{{`{{inputs.parameters.buildConfig}}`}}"
+          - name: DOCKER_REGISTRY_URL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: DOCKER_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: DOCKER_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: DOCKER_REPO
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: DOCKER_TAG
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+          - name: BUILDKIT_SERVICE_URL
+            value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
+          - name: CALLBACK_URL
+            value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: DONE_MARKER
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
+          - name: FAILED_MARKER
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed }}
+          - name: TFY_BUILD_SECRETS
+            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
+          - name: SOURCE_CODE_DOWNLOAD_PATH
+            value: /mnt/tfy/source-code
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+          - name: truefoundry-docker-config
+            mountPath: /root/.truefoundry/.docker/
+        {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
+          - name: {{ $value.id | replace "." "-" }}
+            mountPath: "/truefoundry-build-secrets/"
+        {{- end }}
+        resources: 
+          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
+        source: |
+          #!/bin/bash
+          set -e
+          echo "Using external buildkit service"
+          export PATH=$PATH:/scripts
+          mkdir -p /opt/truefoundry/output
+          {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+    - name: update-status
+      activeDeadlineSeconds: 5400
+      retryStrategy:
+        limit: 4
+        retryPolicy: "Always"
+        backoff:
+          duration: 1s
+          factor: 2
+          # maxDuration is for the whole node and not for every retry
+          # maxDuration will only be considered if there was atleast one retry
+          maxDuration: 30m
+      inputs:
+        parameters:
+          - name: url
+          - name: payload
+          - name: tfyBuildStatus
+          - name: tfyTimeTakenToBuildImageSeconds
+          - name: tfyIsGlobalBuilderUsed
+      volumes:
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      script:
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        command: [bash]
+        env:
+          - name: CALLBACK_URL
+            value: "{{`{{inputs.parameters.url}}`}}"
+          - name: PAYLOAD
+            value: "{{`{{inputs.parameters.payload}}`}}"
+          - name: tfyBuildStatus
+            value: "{{`{{inputs.parameters.tfyBuildStatus}}`}}"
+          - name: TFY_METADATA_TIME_TAKEN_TO_BUILD_IMAGE_SECONDS
+            value: "{{`{{inputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
+          - name: IS_GLOBAL_BUILDER_USED
+            value: "{{`{{inputs.parameters.tfyIsGlobalBuilderUsed}}`}}"
+        resources:
+          limits:
+            cpu: 20m
+            ephemeral-storage: 256Mi
+            memory: 100Mi
+          requests:
+            cpu: 10m
+            ephemeral-storage: 128Mi
+            memory: 50Mi
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+        source: |
+          #!/bin/bash
+          set -eu
+          export PATH=$PATH:/scripts
+          mkdir -p /opt/truefoundry/output
+
+          FINAL_PAYLOAD=$(echo "$PAYLOAD")
+          if [[ -n "$tfyBuildStatus" ]]; then
+            echo "The build status has already been updated to $tfyBuildStatus"
+            FINAL_PAYLOAD=$(echo "$FINAL_PAYLOAD" | jq 'del(.status)')
+          fi
+
+          update-build.sh "$FINAL_PAYLOAD"
+
+    - name: should-build-soci-index
+      # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+      activeDeadlineSeconds: 600
+      metrics:
+        prometheus:
+          - name: tfy_build_soci_index_status
+            help: "SOCI index build and push status"
+            labels:
+              - key: name
+                value: "{{`{{steps.name}}`}}"
+              - key: status
+                value: "{{`{{status}}`}}"
+            when: "{{`{{status}}`}} != Skipped"
+            counter:
+              value: "1"
+          - name: tfy_build_soci_index_duration_sec
+            help: "SOCI index build and push duration"
+            labels:
+              - key: name
+                value: "{{`{{steps.name}}`}}"
+              - key: status
+                value: "{{`{{status}}`}}"
+            when: "{{`{{status}}`}} != Skipped"
+            gauge: 
+              value: "{{`{{duration}}`}}"
+      inputs:
+        parameters:
+          - name: dockerRegistryURL
+          - name: dockerRegistryUsername
+          - name: dockerRegistryPassword
+          - name: dockerRepo
+          - name: dockerTag
+      retryStrategy:
+        backoff:
+          duration: 1s
+          factor: 2
+          # maxDuration is for the whole node and not for every retry
+          # maxDuration will only be considered if there was atleast one retry
+          maxDuration: 1h
+        limit: 3
+        retryPolicy: Always
+      volumes:
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      resources:
-        {{- toYaml .Values.tfyBuild.truefoundryWorkflows.buildkitd.resources | nindent 8 }}
-      securityContext:
-        privileged: true
-      ports:
-        - name: grpc-buidkitd
-          containerPort: 1234
-          protocol: TCP
-      readinessProbe:
-        exec:
-          command:
-            - buildctl
-            - debug
-            - workers
-      livenessProbe:
-        exec:
-          command:
-            - buildctl
-            - debug
-            - workers
-  {{- if .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}
-  - name: post-build-script
-    inputs:
-      parameters:
-        - name: buildSource
-        - name: buildConfig
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-    when: >-
-      '{{ .Values.tfyBuild.truefoundryWorkflows.postBuild.enabled }}' == 'true' 
-      &&
-      {{`{{steps.build-and-push.status}}`}} == Succeeded
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 5400
-    metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
-        karpenter.sh/do-not-disrupt: 'true'
-        karpenter.sh/do-not-evict: 'true'
-    {{- with .Values.tfyBuild.truefoundryWorkflows.postBuild.resources }}
-    podSpecPatch: |
-      containers:
-        - name: main
-          resources:
-            {{- toYaml . | nindent 12 }}
-    {{- end }}
-    script:
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.postBuild.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.postBuild.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
+      outputs:
+        parameters:
+        - name: result
+          valueFrom:
+            path: /tmp/result
+      script:
+        command: [bash]
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+        env:
+          - name: DOCKER_REGISTRY_URL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: DOCKER_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: DOCKER_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: DOCKER_REPO
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: DOCKER_TAG
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+          - name: SIZE_THRESHOLD
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        resources:
+          requests:
+            cpu: 50m
+            ephemeral-storage: 10Mi
+            memory: 50Mi
+          limits:
+            cpu: 50m
+            ephemeral-storage: 10Mi
+            memory: 50Mi
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+        {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        source: |
+          #!/bin/bash
+
+          set -e
+          export PATH=$PATH:/scripts
+          registry-login.sh
+          should-build-soci-index.sh
+          
+    - name: build-and-push-soci-index
+      # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
+      activeDeadlineSeconds: 3600
+      metrics:
+        prometheus:
+          - name: tfy_build_soci_index_status
+            help: "SOCI index build and push status"
+            labels:
+              - key: name
+                value: "{{`{{steps.name}}`}}"
+              - key: status
+                value: "{{`{{status}}`}}"
+            when: "{{`{{status}}`}} != Skipped"
+            counter:
+              value: "1"
+          - name: tfy_build_soci_index_duration_sec
+            help: "SOCI index build and push duration"
+            labels:
+              - key: name
+                value: "{{`{{steps.name}}`}}"
+              - key: status
+                value: "{{`{{status}}`}}"
+            when: "{{`{{status}}`}} != Skipped"
+            gauge: 
+              value: "{{`{{duration}}`}}"
+      inputs:
+        parameters:
+          - name: dockerRegistryURL
+          - name: dockerRegistryUsername
+          - name: dockerRegistryPassword
+          - name: dockerRepo
+          - name: dockerTag
+      retryStrategy:
+        limit: 1
+        retryPolicy: Always
+      volumes:
+        - name: scripts
+          projected:
+            defaultMode: 0755
+            sources:
+              - configMap:
+                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  items:
+            {{- range $path, $name := .Files.Glob "tfy-build-scripts/*"}}
+                    - key: {{ $path | replace "tfy-build-scripts/" "" }}
+                      path: {{ $path | replace "tfy-build-scripts/" "" }}
+            {{- end}}
+      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
-      command: {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.command }}
-      source: |
-        {{ .Values.tfyBuild.truefoundryWorkflows.postBuild.script | nindent 8 }}
-  {{- end }}
-  - name: exit-handler
-    inputs:
-      parameters:
-        - name: callbackURL
-        - name: dockerRegistryURL
-        - name: dockerRepo
-        - name: dockerTag
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-    steps:
-    - - name: success-callback
-        when: "{{`{{workflow.status}}`}} == Succeeded"
-        template: send-api-request
-        arguments:
-          parameters:
-          - name: url
-            value: "{{`{{inputs.parameters.callbackURL}}`}}"
-          - name: method
-            value: "PATCH"
-          - name: payload
-            value: '{"status": "SUCCEEDED", "imageUri": "{{`{{inputs.parameters.dockerRegistryURL}}`}}/{{`{{inputs.parameters.dockerRepo}}`}}:{{`{{inputs.parameters.dockerTag}}`}}"}'
-          - name: token
-            value: ""
-      - name: failure-callback
-        when: "{{`{{workflow.status}}`}} != Succeeded"
-        template: send-api-request
-        arguments:
-          parameters:
-          - name: url
-            value: "{{`{{inputs.parameters.callbackURL}}`}}"
-          - name: method
-            value: "PATCH"
-          - name: payload
-            value: '{"status": "FAILED"}'
-          - name: token
-            value: ""
-    - - name: end-marker
-        template: end-marker
-    - - name: should-build-soci-index
-        template: should-build-soci-index
-        when: >-
-          '{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.enabled }}' == 'true'
-            &&
-          {{`{{workflow.status}}`}} == Succeeded
-        arguments:
-          parameters:
-            - name: dockerRegistryURL
-              value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-            - name: dockerRegistryUsername
-              value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-            - name: dockerRegistryPassword
-              value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
-            - name: dockerRepo
-              value: "{{`{{inputs.parameters.dockerRepo}}`}}"
-            - name: dockerTag
-              value: "{{`{{inputs.parameters.dockerTag}}`}}"
-    - - name: build-and-push-soci-index
-        template: build-and-push-soci-index
-        when: >-
-          {{`{{steps.should-build-soci-index.status}}`}} == Succeeded
-            && 
-          '{{`{{steps.should-build-soci-index.outputs.parameters.result}}`}}' == 'true'
-        arguments:
-          parameters:
-            - name: dockerRegistryURL
-              value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-            - name: dockerRegistryUsername
-              value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-            - name: dockerRegistryPassword
-              value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
-            - name: dockerRepo
-              value: "{{`{{inputs.parameters.dockerRepo}}`}}"
-            - name: dockerTag
-              value: "{{`{{inputs.parameters.dockerTag}}`}}"
-  - name: end-marker
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 300
-    retryStrategy:
-      limit: 2
-      retryPolicy: "Always"
-    script:
-      resources:
-        limits:
-          cpu: 20m
-          ephemeral-storage: 256Mi
-          memory: 100Mi
-        requests:
-          cpu: 10m
-          ephemeral-storage: 128Mi
-          memory: 50Mi
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.endMarker.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.endMarker.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.endMarker.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      command: [bash]
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
-      volumeMounts:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      source: |
-        #!/bin/bash
-        set -e
-        if [[ "{{`{{workflow.status}}`}}" == "Succeeded" ]]; then
-          echo -e "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Image Built Successfully."
-          echo -e "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }} Kubernetes deployment triggered. It may take 5-10s for the application to be live."
-        else
-          echo -e "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Error occured while building and pushing docker image."
-          echo -e "{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Build Image Failed."
-        fi
-        echo "PIPELINE_RUN_{{`{{workflow.name}}`}}_ENDED"
-    {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
-    volumes:
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  - name: send-api-request
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 300
-    retryStrategy:
-      limit: 4
-      retryPolicy: "Always"
-      backoff:
-        duration: 1s
-        factor: 2
-        # maxDuration is for the whole node and not for every retry
-        # maxDuration will only be considered if there was atleast one retry
-        maxDuration: 30m
-    inputs:
-      parameters:
-        - name: url
-        - name: method
-        - name: payload
-        - name: token
-    {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumes }}
-    volumes:
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    script:
-      resources:
-        limits:
-          cpu: 20m
-          ephemeral-storage: 256Mi
-          memory: 100Mi
-        requests:
-          cpu: 10m
-          ephemeral-storage: 128Mi
-          memory: 50Mi
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sendApiRequest.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      command: [python3]
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      source: |
-        import logging
-        import requests
-        import sys
-        import time
-        import json
-
-        def api_call():
-            try:
-                payload = '{{`{{inputs.parameters.payload}}`}}'
-                url= "{{`{{inputs.parameters.url}}`}}"
-                method= "{{`{{inputs.parameters.method}}`}}"
-                token= "{{`{{inputs.parameters.token}}`}}"
-                msg = "\033[36m[Start]\033[0m Sending request to url: {} with json {}".format(url, payload)
-                print(msg)
-                r = requests.request(method, url=url, json=json.loads(payload), headers={"authorization": "Bearer "+ token}, timeout=10)
-                r.raise_for_status()
-            except Exception as e:
-                print("{{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.error }} Error occured while notifying server")
-                print("Error occured", e)
-                time.sleep(60)
-                sys.exit(1)
-        api_call()
-
-      {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
-      volumeMounts:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-  - name: should-build-soci-index
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 600
-    metrics:
-      prometheus:
-        - name: tfy_build_soci_index_status
-          help: "SOCI index build and push status"
-          labels:
-            - key: name
-              value: "{{`{{steps.name}}`}}"
-            - key: status
-              value: "{{`{{status}}`}}"
-          when: "{{`{{status}}`}} != Skipped"
-          counter:
-            value: "1"
-        - name: tfy_build_soci_index_duration_sec
-          help: "SOCI index build and push duration"
-          labels:
-            - key: name
-              value: "{{`{{steps.name}}`}}"
-            - key: status
-              value: "{{`{{status}}`}}"
-          when: "{{`{{status}}`}} != Skipped"
-          gauge: 
-            value: "{{`{{duration}}`}}"
-    inputs:
-      parameters:
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-    retryStrategy:
-      backoff:
-        duration: 1s
-        factor: 2
-        # maxDuration is for the whole node and not for every retry
-        # maxDuration will only be considered if there was atleast one retry
-        maxDuration: 1h
-      limit: 3
-      retryPolicy: Always
-    {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
-    volumes:
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    outputs:
-      parameters:
-      - name: result
-        valueFrom:
-          path: /tmp/result
-    script:
-      command: [bash]
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      resources:
-        requests:
-          cpu: 50m
-          ephemeral-storage: 10Mi
-          memory: 50Mi
-        limits:
-          cpu: 50m
-          ephemeral-storage: 10Mi
-          memory: 50Mi
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
-      volumeMounts:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      source: |
-        #!/bin/bash
-
-        set -eu -o pipefail
-
-        ENCODED_PASSWORD="{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
-        PASSWORD=$(echo $ENCODED_PASSWORD | base64 -d)
-        USERNAME="{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-        REGISTRY="{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-        REPOSITORY="{{`{{inputs.parameters.dockerRepo}}`}}"
-        TAG="{{`{{inputs.parameters.dockerTag}}`}}"
-        IMAGE=$REGISTRY/$REPOSITORY:$TAG
-        IMAGE_SIZE_THRESHOLD=$(printf '%.0f' {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }})
-
-        echo Registry is $REGISTRY
-        if [[ $REGISTRY != *"amazonaws.com"* ]]; then
-          echo Registry is not from ECR. Skipping SOCI index creation.
-          echo -n "false" > /tmp/result
-          exit 0
-        fi
-
-        # if $REGISTRY starts with "index.docker.io" or "docker.io"
-        # then skip mentioning url in docker login, because these do not follow distribution v2
-        # This is a short term fix till we decouple registry url and login url
-        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
-          docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        else
-          docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        fi
-
-        MANFEST=$(docker manifest inspect --verbose $IMAGE)
-        IMAGE_SIZE=$(echo $MANFEST | jq '.[] | .OCIManifest.layers | .[] | select(.mediaType | contains("oci.image.layer.v1.tar+gzip")) | .size' | awk '{sum+=$0} END{print sum}')
-        echo Image Size: $IMAGE_SIZE
-        echo Threshold: $IMAGE_SIZE_THRESHOLD
-
-        if [[ "$IMAGE_SIZE" -lt "$IMAGE_SIZE_THRESHOLD" ]]; then
-            echo Image size is less than $IMAGE_SIZE_THRESHOLD. Skipping SOCI index creation.
-            echo -n "false" > /tmp/result
-            exit 0
-        fi
-
-        echo SOCI index will be built and pushed.
-        echo -n "true" > /tmp/result
-  - name: build-and-push-soci-index
-    # activeDeadlineSeconds is the maximum time the step will run(It will be restarted after every retry)
-    activeDeadlineSeconds: 3600
-    metrics:
-      prometheus:
-        - name: tfy_build_soci_index_status
-          help: "SOCI index build and push status"
-          labels:
-            - key: name
-              value: "{{`{{steps.name}}`}}"
-            - key: status
-              value: "{{`{{status}}`}}"
-          when: "{{`{{status}}`}} != Skipped"
-          counter:
-            value: "1"
-        - name: tfy_build_soci_index_duration_sec
-          help: "SOCI index build and push duration"
-          labels:
-            - key: name
-              value: "{{`{{steps.name}}`}}"
-            - key: status
-              value: "{{`{{status}}`}}"
-          when: "{{`{{status}}`}} != Skipped"
-          gauge: 
-            value: "{{`{{duration}}`}}"
-    inputs:
-      parameters:
-        - name: dockerRegistryURL
-        - name: dockerRegistryUsername
-        - name: dockerRegistryPassword
-        - name: dockerRepo
-        - name: dockerTag
-    retryStrategy:
-      limit: 1
-      retryPolicy: Always
-    {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes }}
-    volumes:
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    script:
-      command: [bash]
-      image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
-      env:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      resources:
-        requests:
-          cpu: 500m
-          ephemeral-storage: 10Gi
-          memory: 700Mi
-        limits:
-          cpu: 1000m
-          ephemeral-storage: 30Gi
-          memory: 1024Mi
-      securityContext:
-        privileged: true
-      {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
-      volumeMounts:
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      source: |
-        #!/bin/bash
-
-        set -eu -o pipefail
-
-        ENCODED_PASSWORD="{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
-        PASSWORD=$(echo $ENCODED_PASSWORD | base64 -d)
-        USERNAME="{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
-        REGISTRY="{{`{{inputs.parameters.dockerRegistryURL}}`}}"
-        REPOSITORY="{{`{{inputs.parameters.dockerRepo}}`}}"
-        TAG="{{`{{inputs.parameters.dockerTag}}`}}"
-        IMAGE=$REGISTRY/$REPOSITORY:$TAG
-
-        # if $REGISTRY starts with "index.docker.io" or "docker.io"
-        # then skip mentioning url in docker login, because these do not follow distribution v2
-        # This is a short term fix till we decouple registry url and login url
-        _REGISTRY=$(echo "${REGISTRY}" | sed -e 's~http[s]*://~~g')
-        if [[ $_REGISTRY == index.docker.io* ]] || [[ $_REGISTRY == docker.io* ]]; then
-          docker login -u "${USERNAME}" -p "${PASSWORD}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        else
-          docker login -u "${USERNAME}" -p "${PASSWORD}" "${REGISTRY}" 2>&1 || { echo "Error: Docker login failed, make sure your authentication credentials are correct in registry!" >&2; exit 1; }
-        fi
-
-        echo Starting Containerd
-        containerd > /dev/null 2>&1 &
-        sleep 3
-        ctr version > /dev/null
-
-        echo Pulling Container Image $IMAGE
-
-        time ctr content fetch -u "$USERNAME:$PASSWORD" \
-          --platform=linux/amd64 \
-          $IMAGE > /dev/null
-
-
-        echo Creating Soci Index
-
-        time soci create --platform=linux/amd64 $IMAGE
-
-        echo Pushing Soci Index
-        time soci push --platform=linux/amd64 $IMAGE
-
-        echo Done!
+      script:
+        command: [bash]
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+        env:
+          - name: DOCKER_REGISTRY_URL
+            value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
+          - name: DOCKER_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.dockerRegistryUsername}}`}}"
+          - name: DOCKER_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.dockerRegistryPassword}}`}}"
+          - name: DOCKER_REPO
+            value: "{{`{{inputs.parameters.dockerRepo}}`}}"
+          - name: DOCKER_TAG
+            value: "{{`{{inputs.parameters.dockerTag}}`}}"
+        {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        resources:
+          requests:
+            cpu: 500m
+            ephemeral-storage: 10Gi
+            memory: 700Mi
+          limits:
+            cpu: 1000m
+            ephemeral-storage: 30Gi
+            memory: 1024Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: scripts
+            mountPath: /scripts
+        {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts }}
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
+        source: |
+          #!/bin/bash
+          set -e
+          export PATH=$PATH:/scripts
+          registry-login.sh
+          build-soci-index.sh
   nodeSelector:
   {{- include "tfy-build.nodeSelector" . | nindent 8 }}
   {{- $mergedAffinity := dict | merge .Values.tfyBuild.truefoundryWorkflows.affinity .Values.global.affinity }}
