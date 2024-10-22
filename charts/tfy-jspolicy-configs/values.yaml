@@ -2,13 +2,13 @@
 replaceImageRegistry:
   ## @param replaceImageRegistry.enabled Enable or disable replacing the image registry
   enabled: false
-  ## @param replaceImageRegistry.excludeNamespaces Namespaces to exclude from replacing the image registry
+  ## @param replaceImageRegistry.excludeNamespaces [array] Namespaces to exclude from replacing the image registry
   excludeNamespaces: []
 
-  ## @param replaceImageRegistry.includeNamespaces Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included
+  ## @param replaceImageRegistry.includeNamespaces [array] Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included
   includeNamespaces: []
 
-  ## @param replaceImageRegistry.registryReplacementMap The image registry replacement map
+  ## @param replaceImageRegistry.registryReplacementMap [object] The image registry replacement map
   ## registryReplacementMap:
   ##   "docker.io": "mydocker.io"
   ##   "*": "myjrog.io"
@@ -18,15 +18,66 @@ replaceImageRegistry:
 replaceArgoHelmRepo:
   ## @param replaceArgoHelmRepo.enabled Enable or disable replacing the Argo Helm repository
   enabled: false
-  ## @param replaceArgoHelmRepo.excludeNamespaces Namespaces to exclude from replacing the argo helm repo
+  ## @param replaceArgoHelmRepo.excludeNamespaces [array] Namespaces to exclude from replacing the argo helm repo
   excludeNamespaces: []
 
-  ## @param replaceArgoHelmRepo.includeNamespaces Namespaces to include for replacing the argo helm repo. When non-empty, only these namespaces will be included
+  ## @param replaceArgoHelmRepo.includeNamespaces [array] Namespaces to include for replacing the argo helm repo. When non-empty, only these namespaces will be included
   includeNamespaces: []
 
-  ## @param replaceArgoHelmRepo.registryReplacementMap The argo helm repository replacement map
+  ## @param replaceArgoHelmRepo.registryReplacementMap [object] The argo helm repository replacement map
   ## registryReplacementMap:
   ##   oci://myargohelm.io: "oci://tfyargohelm.io"
   ##   http://myargohelm.io: "http://tfyargohelm.io"
   registryReplacementMap: {}
 
+## @section syncSecrets Configuration options for syncing secrets
+syncSecrets:
+  ## @param syncSecrets.enabled Enable or disable syncing secrets
+  enabled: false
+  ## @param syncSecrets.excludeNamespaces [array] Namespaces to exclude from syncing secrets
+  excludeNamespaces: []
+
+  ## @param syncSecrets.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+
+  ## @param syncSecrets.secretNames [array] Label selector to filter secrets to sync
+  ## example
+  ## secretNames: ["namespace/secretName", "namespace2/secretName2"]
+  secretNames: [""]
+
+## @section syncConfigMaps Configuration options for syncing secrets
+syncConfigMaps:
+  ## @param syncConfigMaps.enabled Enable or disable syncing secrets
+  enabled: false
+  ## @param syncConfigMaps.excludeNamespaces [array] Namespaces to exclude from syncing secrets
+  excludeNamespaces: []
+
+  ## @param syncConfigMaps.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+
+  ## @param syncConfigMaps.configMapNames [array] Label selector to filter secrets to sync
+  ## example
+  ## configMapNames: ["namespace/configMapName", "namespace2/configMapName2"]
+  configMapNames: [""]
+
+## @section podVolumeMounts Configuration options for adding volume mounts to pods
+podVolumeMounts:
+  ## @param podVolumeMounts.enabled Enable or disable adding volume mounts to pods
+  enabled: false
+  ## @param podVolumeMounts.excludeNamespaces [array] Namespaces to exclude from adding volume mounts to pods
+  excludeNamespaces: []
+
+  ## @param podVolumeMounts.includeNamespaces [array] Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+
+  ## @param podVolumeMounts.mountDetails [array] The details of the volume mount to add
+  mountDetails: []
+    ## example
+    ## - type: secret
+    ##   secretName: my-secret
+    ##   mountPath: /var/run/secrets/my-secret
+    ##   subPath: my-subPath
+    ## - type: configMap
+    ##   configMapName: my-configmap
+    ##   mountPath: /my/configmap/path
+    ##   subPath: my-subPath
