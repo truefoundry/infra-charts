@@ -79,8 +79,8 @@ spec:
     }
 
 
-    configMapNames.forEach(secretName => {
-      let parentSecret = get("Secret", "v1", secretName);
-      syncConfigMapToAllIncludedNamespaces(parentSecret);
+    configMapNames.forEach(configMapName => {
+      let parentConfigMap = get("ConfigMap", "v1", configMapName);
+      syncConfigMapToAllIncludedNamespaces(parentConfigMap);
     });
 {{- end -}}
