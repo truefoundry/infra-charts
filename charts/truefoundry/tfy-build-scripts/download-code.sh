@@ -3,12 +3,13 @@ set -e -o pipefail
 
 echo "Downloading source code"
 mkdir -p /root/.docker/
-cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json 
+cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json
 
 BUILD_TYPE=$(echo "$BUILD_SOURCE" | jq -r '.type')
 
 rm -f -R "$SOURCE_CODE_DOWNLOAD_PATH"
 
+start_time=$(date +%s)
 if [[ $BUILD_TYPE == "remote" ]]; then
     REMOTE_URL=$(echo "$BUILD_SOURCE" | jq -r '.remote_uri')
     printf "\033[36m[Start]\033[0m Downloading source code from remote source\n"
@@ -113,4 +114,9 @@ else
     printf "%s Source type '%s' not supported.\n" "$FAILED_MARKER" "$BUILD_TYPE"
     exit 1
 fi
+
+end_time=$(date +%s)
+source_code_download_time=$((end_time - start_time))
+echo "Time taken to download the source code: $source_code_download_time seconds"
+echo -n "$source_code_download_time" > /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
 printf "%s Download code completed\n" "$DONE_MARKER"

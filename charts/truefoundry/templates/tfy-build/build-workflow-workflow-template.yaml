@@ -117,6 +117,8 @@ spec:
               value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
             - name: tfyIsGlobalBuilderUsed
               value: "{{`{{workflow.outputs.parameters.tfyShouldUseGlobalBuilder}}`}}"
+            - name: tfyTimeTakenToDownloadSourceCodeSeconds
+              value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToDownloadSourceCodeSeconds}}`}}"
         - name: failure-callback
           when: "{{`{{workflow.status}}`}} != Succeeded"
           template: update-status
@@ -132,6 +134,8 @@ spec:
               value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
             - name: tfyIsGlobalBuilderUsed
               value: "{{`{{workflow.outputs.parameters.tfyShouldUseGlobalBuilder}}`}}"
+            - name: tfyTimeTakenToDownloadSourceCodeSeconds
+              value: "{{`{{workflow.outputs.parameters.tfyTimeTakenToDownloadSourceCodeSeconds}}`}}"
       - - name: should-build-soci-index
           template: should-build-soci-index
           when: >-
@@ -252,6 +256,11 @@ spec:
             default: ""
             path: /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
           globalName: tfyTimeTakenToBuildImageSeconds
+        - name: tfyTimeTakenToDownloadSourceCodeSeconds
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
+          globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
         - name: truefoundry-docker-config
           secret:
@@ -327,7 +336,9 @@ spec:
           set -e
           export PATH=$PATH:/scripts
           mkdir -p /opt/truefoundry/output
+          (
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+          )
       sidecars:
       - name: buildkitd
         image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
@@ -394,6 +405,11 @@ spec:
             default: ""
             path: /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
           globalName: tfyTimeTakenToBuildImageSeconds
+        - name: tfyTimeTakenToDownloadSourceCodeSeconds
+          valueFrom:
+            default: ""
+            path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
+          globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
         - name: truefoundry-docker-config
           secret:
@@ -470,7 +486,9 @@ spec:
           echo "Using external buildkit service"
           export PATH=$PATH:/scripts
           mkdir -p /opt/truefoundry/output
+          (
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
+          )
     - name: update-status
       activeDeadlineSeconds: 5400
       retryStrategy:
@@ -489,6 +507,7 @@ spec:
           - name: tfyBuildStatus
           - name: tfyTimeTakenToBuildImageSeconds
           - name: tfyIsGlobalBuilderUsed
+          - name: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
         - name: scripts
           projected:
@@ -515,6 +534,8 @@ spec:
             value: "{{`{{inputs.parameters.tfyTimeTakenToBuildImageSeconds}}`}}"
           - name: IS_GLOBAL_BUILDER_USED
             value: "{{`{{inputs.parameters.tfyIsGlobalBuilderUsed}}`}}"
+          - name: TFY_TIME_TAKEN_TO_DOWNLOAD_SOURCE_CODE_SECONDS
+            value: "{{`{{inputs.parameters.tfyTimeTakenToDownloadSourceCodeSeconds}}`}}"
         resources:
           limits:
             cpu: 20m
@@ -532,9 +553,11 @@ spec:
           set -eu
           export PATH=$PATH:/scripts
           mkdir -p /opt/truefoundry/output
-
           FINAL_PAYLOAD=$(echo "$PAYLOAD")
-          if [[ -n "$tfyBuildStatus" ]]; then
+
+          # If the build step did not happen due to a pod spec error, the exit handler will be called without resolving \{\{\}\} Argo Variables.
+          # So if a variable value is starting with \{\{ it means that the value was not set or resolved, and we can ignore it.
+          if [[ -n "$tfyBuildStatus" && "$tfyBuildStatus" != \{\{* ]]; then
             echo "The build status has already been updated to $tfyBuildStatus"
             FINAL_PAYLOAD=$(echo "$FINAL_PAYLOAD" | jq 'del(.status)')
           fi
