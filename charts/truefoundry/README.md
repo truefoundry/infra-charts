@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.7.0`                                                                          |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.7.1`                                                                          |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -171,7 +171,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.replicaCount`                         | Number of replicas for the tfyK8sController                | `1`                                                  |
 | `tfyK8sController.global`                               | Global values for the tfyK8sController                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                     | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.4.1`                                             |
+| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.4.2`                                             |
 | `tfyK8sController.environmentName`                      | Environment name for tfyK8sController                      | `default`                                            |
 | `tfyK8sController.envSecretName`                        | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                      | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
