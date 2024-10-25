@@ -87,6 +87,8 @@ spec:
               subPath: buildkitd.toml
             - name: buildkit-daemon-cert
               mountPath: /etc/buildkit/certs/
+            - name: buildkit-client-cert
+              mountPath: /etc/buildkit/client/certs/
           {{- with .Values.extraVolumeMounts }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
@@ -96,7 +98,10 @@ spec:
             name: {{ include "buildkitd-service.fullname" . }}-config
         - name: buildkit-daemon-cert
           secret:
-            secretName: tfy-buildkit-daemon-certs
+            secretName: {{ .Values.buildkitDaemonCertsSecretName }}
+        - name: buildkit-client-cert
+          secret:
+            secretName: {{ .Values.buildkitClientCertsSecretName }}
       {{- with .Values.extraVolumes }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
