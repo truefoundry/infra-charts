@@ -46,6 +46,14 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ./cache/image_details_cache.json
+          key: ${{ runner.os }}-image-cache-${{ hashFiles('charts/tfy-k8s*/Chart.yaml) }}
+          restore-keys: |
+            ${{ runner.os }}-image-cache-
+
       - name: Install python dependencies
         run: |
           pip install -r scripts/upload-artifacts/requirements.txt
@@ -63,6 +71,13 @@ jobs:
           done
         env:
           MODE: 'local'
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache@v3
+        with:
+          path: ./cache/image_details_cache.json
+          key: ${{ runner.os }}-image-cache-${{ hashFiles('charts/tfy-k8s*/Chart.yaml') }}
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest

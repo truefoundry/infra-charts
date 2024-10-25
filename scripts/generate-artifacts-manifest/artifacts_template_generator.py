@@ -5,10 +5,13 @@ import json
 import subprocess
 import os
 import logging
-import time
-import requests
-from requests.exceptions import ConnectionError
 import argparse
+import threading
+
+# Constants for cache file
+# set file path for cache file ./cache/image_details_cache.json
+CACHE_FILE = './cache/image_details_cache.json'
+CACHE_LOCK = threading.Lock()
 
 def normalize_repo_url(repo_url):
     parsed_url = urlparse(repo_url)
@@ -31,6 +34,25 @@ logging.info(f"Mode: {mode}")
 if mode not in ["local", "remote"]:
     raise ValueError(f"Invalid MODE: {mode}. Must be 'local' or 'remote'.")
 
+
+def load_cache():
+    global image_details_cache
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, 'r') as f:
+            image_details_cache = json.load(f)
+        logging.info(f"Cache loaded from {CACHE_FILE}")
+    else:
+        image_details_cache = {}
+        logging.info("No cache file found. Starting with an empty cache.")
+
+
+def save_cache():
+    with CACHE_LOCK:
+        with open(CACHE_FILE, 'w') as f:
+            json.dump(image_details_cache, f)
+        logging.info(f"Cache saved to {CACHE_FILE}")
+
+
 # function to run shell commands
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -38,6 +60,7 @@ def run_command(command):
         logging.error(f"Command failed: {command}\n{result.stderr}")
         sys.exit(1)
     return result.stdout
+
 
 # function to make image list unique
 def make_image_list_unique(image_list):
@@ -110,6 +133,7 @@ def process_and_generate_chart_manifests(chart_info_list):
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
     return flattened_list
 
+
 # function to save image information to a file
 def save_image_info(manifest_file):
     with open(manifest_file, "r") as f:
@@ -117,11 +141,51 @@ def save_image_info(manifest_file):
         images = extract_images_from_k8s_manifests(yaml_content)
         return images
 
+
+# function to inspect image to get supported architectures and os
+# returns a dictionary with image information e.g. {"architecture": "amd64", "os": "linux"}
+def get_image_details(image_name):
+    # Check if the result is already in the cache
+    with CACHE_LOCK:
+        if image_name in image_details_cache:
+            return image_details_cache[image_name]
+    try:
+        # Run 'docker manifest inspect' command
+        if image_name.startswith('public.ecr.aws') or image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto'):
+            return []
+        result = run_command(f'docker manifest inspect {image_name}')
+        manifest = json.loads(result)
+        platforms = []
+
+        if 'manifests' in manifest:
+            for manifest_entry in manifest['manifests']:
+                platform = manifest_entry.get('platform', {})
+                os = platform.get('os')
+                architecture = platform.get('architecture')
+                # Skip if os or architecture is unknown
+                if os and architecture and os != 'unknown' and architecture != 'unknown':
+                    platforms.append({"os": os, "architecture": architecture})
+        else:
+            os = manifest.get('os')
+            architecture = manifest.get('architecture')
+            if os and architecture:
+                platforms.append({"os": os, "architecture": architecture})
+
+        # Store the result in the cache
+        with CACHE_LOCK:
+            image_details_cache[image_name] = platforms
+
+        return platforms
+    except Exception as e:
+        logging.error(f"Failed to get image details for {image_name}: {e}")
+        return []
+
+
 # function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     parsed_url = urlparse(chart_repo_url)
     print("Chart Repo URL: ", chart_repo_url, "Parsed URL: ", parsed_url)
-    if  parsed_url.scheme == "oci":
+    if parsed_url.scheme == "oci":
         logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
         run_command(f"helm pull {chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     else:
@@ -188,7 +252,8 @@ def extract_images_from_k8s_manifests(yaml_content):
                         container_image_info = {
                             "type": "image",
                             "details": {
-                                "registryURL": container.get('image', '')
+                                "registryURL": container.get('image', ''),
+                                "platforms": get_image_details(container.get('image', ''))
                             }
                         }
                         image_info_list.append(container_image_info)
@@ -205,7 +270,7 @@ def clean_up(temp_dir):
 # function to create a temporary directory
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate artifacts manifest from Helm charts.")
@@ -224,6 +289,9 @@ if __name__ == "__main__":
     values_file = args.values_file
     output_file = args.output_file
     extra_file = args.extra_file
+
+    # Load cache from file
+    load_cache()
 
     # Create a temporary directory to store the chart and generated manifests
     create_tmp_dir()
