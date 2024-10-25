@@ -46,7 +46,7 @@ def upload_chart(chart_dir):
             cwd=chart_dir
         )
         print(f"Pushed helm chart {package_file} to the OCI repository oci://{ARTIFACTORY_REPOSITORY_URL}")
-    except subprocess.CalledProcessErro as e:
+    except subprocess.CalledProcessError as e:
         print(f"Failed to push helm chart {chart_name}: {e}")
         exit(1)
 
