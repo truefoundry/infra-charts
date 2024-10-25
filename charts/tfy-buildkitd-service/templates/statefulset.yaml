@@ -64,7 +64,12 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
-                - --driver-opt "key=/etc/buildkit/client/certs/key.pem,cert=/etc/buildkit/client/certs/cert.pem,cacert=/etc/buildkit/client/certs/ca.pem"
+                - --tlscacert
+                - /etc/buildkit/client/certs/ca.pem
+                - --tlscert
+                - /etc/buildkit/client/certs/cert.pem
+                - --tlskey
+                - /etc/buildkit/client/certs/key.pem
                 - debug
                 - workers
           readinessProbe:
@@ -73,7 +78,12 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
-                - --driver-opt "key=/etc/buildkit/client/certs/key.pem,cert=/etc/buildkit/client/certs/cert.pem,cacert=/etc/buildkit/client/certs/ca.pem"
+                - --tlscacert
+                - /etc/buildkit/client/certs/ca.pem
+                - --tlscert
+                - /etc/buildkit/client/certs/cert.pem
+                - --tlskey
+                - /etc/buildkit/client/certs/key.pem
                 - debug
                 - workers
           resources:
