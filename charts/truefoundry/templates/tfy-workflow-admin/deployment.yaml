@@ -40,7 +40,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.imageRepository }}:{{ .Values.tfyWorkflowAdmin.imageTag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           ports:
             - name: http
@@ -85,10 +85,17 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.tfyWorkflowAdmin.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyWorkflowAdmin.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "tfy-workflow-admin.name" . }}
+        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
         {{- if .Values.tfyWorkflowAdmin.tolerations }}
@@ -135,7 +142,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.imageRepository }}:{{ .Values.tfyWorkflowAdmin.imageTag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           resources:
             {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}

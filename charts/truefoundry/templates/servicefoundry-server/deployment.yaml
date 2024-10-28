@@ -32,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.servicefoundryServer.imageRepository }}:{{ .Values.servicefoundryServer.imageTag }}"
+          image: "{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.servicefoundryServer.imagePullPolicy }}
           ports:
             - name: http
@@ -75,10 +75,17 @@ spec:
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
-      {{- with .Values.servicefoundryServer.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.servicefoundryServer.topologySpreadConstraints }}
+        {{- toYaml .Values.servicefoundryServer.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "servicefoundry-server.name" . }}
+        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
         {{- if .Values.servicefoundryServer.tolerations }}

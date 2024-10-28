@@ -10,6 +10,12 @@ import requests
 from requests.exceptions import ConnectionError
 import argparse
 
+def normalize_repo_url(repo_url):
+    parsed_url = urlparse(repo_url)
+    if not parsed_url.scheme:
+        return f"oci://{repo_url}"
+    return repo_url
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,24 +47,6 @@ def make_image_list_unique(image_list):
             unique_images.append(image)
     return unique_images
 
-def post_payload(url, payload, retries=3, delay=10):
-    headers = {
-        "accept": "*/*",
-        "Content-Type": "application/json"
-    }
-    for i in range(retries):
-        try:
-            response = requests.post(url, headers=headers, data=json.dumps(payload))
-            response.raise_for_status() # If response was successful, no Exception will be raised
-            return response
-        except ConnectionError as e:
-            print(f'Connection error: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
-            time.sleep(delay)
-        except Exception as e:
-            print(f'An error occurred: {e}. Attempt {i+1} of {retries}. Retrying in {delay} seconds...')
-            time.sleep(delay)
-    return None
-
 # function to extract chart information from the manifest file
 def extract_chart_info(manifest_file):
     chart_info_list = []
@@ -74,7 +62,7 @@ def extract_chart_info(manifest_file):
                         "type": "helm",
                         "details": {
                             "chart": source.get('chart', ''),
-                            "repoURL": source.get('repoURL', ''),
+                            "repoURL": normalize_repo_url(source.get('repoURL', '')),
                             "targetRevision": source.get('targetRevision', ''),
                             "values": source.get('helm', {}).get('values', '')
                         }
@@ -106,9 +94,9 @@ def process_and_generate_chart_manifests(chart_info_list):
         os.makedirs(os.path.dirname(values_file), exist_ok=True)
         with open(values_file, "w") as f:
             f.write(values)
-        if not urlparse(repoURL).scheme:
+        if urlparse(repoURL).scheme == "oci":
             logging.info(f"OCI registry detected for {chart}. Skipping helm repo add and update.")
-            run_command(f"helm template oci://{repoURL}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
+            run_command(f"helm template {repoURL}/{chart} --version {targetRevision} -f {values_file} > {temp_dir}/charts/{chart}.yaml")
         else:
             run_command(f"helm repo add --force-update {chart} {repoURL}")
             logging.info(f"Generating manifests for {chart}/{chart}...")
@@ -133,9 +121,9 @@ def save_image_info(manifest_file):
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     parsed_url = urlparse(chart_repo_url)
     print("Chart Repo URL: ", chart_repo_url, "Parsed URL: ", parsed_url)
-    if not parsed_url.scheme:
+    if  parsed_url.scheme == "oci":
         logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
-        run_command(f"helm pull oci://{chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
+        run_command(f"helm pull {chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     else:
         run_command(f"helm repo add --force-update {chart_name} {chart_repo_url}")
         run_command("helm repo update")
@@ -192,6 +180,10 @@ def extract_images_from_k8s_manifests(yaml_content):
                         containers = manifest['spec'].get('containers', [])
                         init_containers = manifest['spec'].get('initContainers', [])
 
+                    if init_containers is None or containers is None:
+                        init_containers = init_containers or []
+                        containers = containers or []
+
                     for container in containers + init_containers:
                         container_image_info = {
                             "type": "image",
@@ -213,29 +205,6 @@ def clean_up(temp_dir):
 # function to create a temporary directory
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
-
-"""
-This function is used to generate the summary of the components along with the versions in the inframold
-charts.
-"""
-def save_inframold_summary(parent_chart_name, parent_chart_version, chart_info_list):
-    inframold_summary = {
-        "inframoldChartName": parent_chart_name,
-        "inframoldChartVersion": parent_chart_version,
-        "componentCharts": []
-    }
-    for chart_info in chart_info_list:
-        if chart_info["type"] == "helm":
-            inframold_summary["componentCharts"].append({
-                "chartName": chart_info["details"]["chart"],
-                "repoUrl": chart_info["details"]["repoURL"],
-                "minChartVersion": chart_info["details"]["targetRevision"],
-                "maxChartVersion": chart_info["details"]["targetRevision"]
-            })
-
-    print("Saving the inframold summary to migration-server: ", inframold_summary)
-    post_payload("https://migration-server.truefoundry.com/v1/inframold", inframold_summary)
-
     
 
 if __name__ == "__main__":
@@ -282,7 +251,5 @@ if __name__ == "__main__":
             chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
-
-    save_inframold_summary(chart_name, chart_version, chart_info_list)
 
     clean_up(temp_dir)

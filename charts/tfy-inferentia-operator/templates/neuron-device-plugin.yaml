@@ -74,6 +74,10 @@ spec:
         name: {{ .Release.Name }}-neuron-device-plugin-ds
     spec:
       serviceAccount: {{ .Release.Name }}-neuron-device-plugin
+      {{- with .Values.devicePlugin.imagePullSecrets | default .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
       tolerations:
       {{- range .Values.devicePlugin.tolerations }}
         - {{ . | toYaml | nindent 10 | trim }}

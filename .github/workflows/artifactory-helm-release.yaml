@@ -1,0 +1,56 @@
+name: Release Charts to public artifactory
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ARTIFACTORY_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
+  ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
+  ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
+  ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+
+jobs:
+  release:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.2.0
+      with:
+        version: v3.14.0
+
+    - name: Add helm dependencies and update
+      run: |
+        helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add clickhouse-operator https://docs.altinity.com/clickhouse-operator
+        helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
+        helm repo add dcgm-exporter https://nvidia.github.io/dcgm-exporter/helm-charts
+        helm repo add truefoundry https://truefoundry.github.io/infra-charts
+        helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+
+    - name: Helm registry login
+      run: |
+        helm registry login ${{ env.ARTIFACTORY_REGISTRY }} -u ${{ env.ARTIFACTORY_USERNAME }} -p ${{ env.ARTIFACTORY_PASSWORD }}
+    
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install python dependencies
+      run: |
+        pip install -r scripts/artifactory-chart-releaser/requirements.txt
+
+    - name: Publish helm charts
+      run: |
+        python scripts/artifactory-chart-releaser/main.py
+        
+      

@@ -1,21 +1,11 @@
-name:  Generate Inframold Charts Artifacts Manifest
+name: Generate Inframold Charts Artifacts Manifest
 
 on:
   pull_request:
     branches:
-      - main
+      - 'main'
     paths:
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
-  push:
-    branches:
-      - main
-    paths:
+      - '.github/workflows/update-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
       - 'charts/tfy-k8s-azure-aks-inframold/**'
       - 'charts/tfy-k8s-civo-talos-inframold/**'
@@ -25,86 +15,65 @@ on:
       - 'scripts/upload-artifacts/**'
 
 jobs:
-    update-artifacts:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-        - name: Checkout Code
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-            ref: ${{ github.head_ref }}
+  update-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
+      ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
+      ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
+      ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
-        - name: Setup Kubectl
-          id: install-kubectl
-          uses: azure/setup-kubectl@v3
-          with:
-            version: 'v1.28.0'
+      - name: Setup Kubectl
+        id: install-kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
 
-        - name: Setup Helm
-          uses: azure/setup-helm@v4.2.0
-          with:
-            version: v3.15.1
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.15.1
 
-        - uses: actions/setup-python@v5
-          with:
-            python-version: '3.10'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-        - name: Install python dependencies
-          run: |
-            pip install -r scripts/upload-artifacts/requirements.txt
-            pip install -r scripts/generate-artifacts-manifest/requirements.txt
+      - name: Install python dependencies
+        run: |
+          pip install -r scripts/upload-artifacts/requirements.txt
+          pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
-        # Generate artifacts manifest for inframold charts
-        - name: Generate Artifacts Manifest for Each Chart
-          run: |
-            charts_list=("tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-inframold")
-            for chart in $charts_list;
-            do
-              version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-                $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
-            done
-          env:
-            MODE: "local"
+      # Generate artifacts manifest for inframold charts
+      - name: Generate Artifacts Manifest for Each Chart
+        run: |
+          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
+          for chart in "${charts_list[@]}";
+          do
+            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+            python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
+              $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
+          done
+        env:
+          MODE: 'local'
 
-        # Update the inframold artifacts manifest
-        - name: Update Artifacts Manifest
-          run: |
-            git config user.name "$GITHUB_ACTOR"
-            git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-            git add .
-            git diff --cached --quiet || git commit -am "[CI] Update charts artifacts manifest files" --signoff
-            if git log -1 --pretty=%B | grep -q "[CI]"; then
-              git push origin HEAD:${{ github.head_ref }}
-            else
-              echo "No changes to commit"
-            fi
-        
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-
-        - name: Log in to JFrog Artifactory private
-          uses: docker/login-action@v2
-          with:
-            username: github-ci
-            password: ${{ secrets.JFROG_REGISTRY_PASSWORD }}
-            registry: tfy.jfrog.io
-
-        - name: Upload Artifacts
-          run: |
-            charts_list=("tfy-k8s-aws-eks-inframold tfy-k8s-azure-aks-inframold tfy-k8s-gcp-gke-standard-inframold tfy-k8s-generic-inframold")
-            for chart in $charts_list;
-            do
-              python scripts/upload-artifacts/upload_artifacts.py \
-                helm \
-                charts/$chart/artifacts-manifest.json \
-                tfy.jfrog.io/tfy-helm
-              
-              python scripts/upload-artifacts/upload_artifacts.py \
-                image \
-                charts/$chart/artifacts-manifest.json \
-                tfy.jfrog.io/tfy-images \
-                --exclude-registries truefoundrycloud
-            done
+      # Update the inframold artifacts manifest
+      - name: Update Artifacts Manifest
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add .
+          git commit -am "[CI] Update charts artifacts manifest files" --signoff
+          git pull origin --rebase
+          if git log -1 --pretty=%B | grep -q "[CI]"; then
+            git push
+          else
+            echo "No changes to commit"
+          fi

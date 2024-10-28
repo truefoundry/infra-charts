@@ -2,10 +2,14 @@
 
 ## @param global Truefoundry global values
 global: {}
+## Image configuration for llm-gateway
+image:
+  ## @param image.repository Image repository for tfyLLMGateway
+  repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
+  ## @param image.tag Image tag for the tfyLLMGateway
+  tag: be235b3aea5e5e9a651882250a488f91f32bef50
 
-## @param imageRepository The image repository to pull from
-imageRepository: truefoundrycloud/tfy-llm-gateway
-## @param replicaCount Image pull policy
+## @param replicaCount Number of replicas
 replicaCount: 1
 ## @param environmentName The environment name
 environmentName: default
@@ -126,9 +130,6 @@ env:
   DEPLOYED_LLM_GATEWAY_URL: ""
   CONTROL_PLANE_NATS_URL: ""
   ENABLE_EXTERNAL_OAUTH: "false"
-
-## @param imageTag Container Image tag
-imageTag: 03222f562deb35b93794edd289c8be7b977ffe21
 
 ## rate limit config
 rateLimit:
