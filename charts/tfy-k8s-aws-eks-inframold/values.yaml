@@ -1,39 +1,37 @@
 ## @section Global Parameters
 ## @param tenantName Parameters for tenantName
-## Tenant Name - This is same as the name of the organization used to sign up 
+## Tenant Name - This is same as the name of the organization used to sign up
 ## on Truefoundry
 ##
-tenantName: ""
+tenantName: ''
 
 ## @param controlPlaneURL Parameters for controlPlaneURL
 ## URL of the control plane - This is the URL that can be used by workload to access the truefoundry components
 ##
-controlPlaneURL: ""
+controlPlaneURL: ''
 
 ## @param clusterName Name of the cluster
 ## Name of the cluster that you have created on AWS/GCP/Azure
 ##
-clusterName: ""
+clusterName: ''
 
 ## @param tolerations [array] Tolerations for the all chart components
 ##
 tolerations:
   - key: CriticalAddonsOnly
-    value: "true"
+    value: 'true'
     effect: NoSchedule
     operator: Equal
-
 
 ## @param affinity [object] Affinity for the all chart components
 ##
 
 affinity: {}
 
-
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
 ## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
-## already installed in your cluster. Please make sure that the configuration of 
+## already installed in your cluster. Please make sure that the configuration of
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
@@ -46,7 +44,7 @@ argoWorkflows:
 
 ## @section argoRollouts parameters
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
-## Argo Rollouts is mandatory for Truefoundry to work. 
+## Argo Rollouts is mandatory for Truefoundry to work.
 ##
 argoRollouts:
   enabled: true
@@ -57,10 +55,10 @@ argoRollouts:
 notebookController:
   ## @param notebookController.enabled Flag to enable Notebook Controller
   ##
-  enabled: true
+  enabled: false
   ## @param notebookController.defaultStorageClass Default storage class for Notebook Controller
   ##
-  defaultStorageClass: ""
+  defaultStorageClass: ''
   ## @param notebookController.notebookBaseDomainUrl Base domain URL for Notebook Controller
   ##
   notebookBaseDomainUrl: <to_be_provided>
@@ -75,10 +73,7 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-
   enabled: true
-
-
 
 ## @section AWS parameters
 ## AWS parameters
@@ -90,14 +85,13 @@ aws:
     enabled: true
     ## @param aws.awsLoadBalancerController.roleArn Role ARN for AWS Load Balancer Controller
     ##
-    roleArn: ""
+    roleArn: ''
     ## @param aws.awsLoadBalancerController.vpcId VPC ID of AWS EKS cluster
     ##
-    vpcId: ""
+    vpcId: ''
     ## @param aws.awsLoadBalancerController.region region of AWS EKS cluster
     ##
-    region: ""
-
+    region: ''
 
   ## @subsection karpenter parameters
   ## @param aws.karpenter.enabled Flag to enable Karpenter
@@ -106,20 +100,20 @@ aws:
     enabled: true
     ## @param aws.karpenter.clusterEndpoint Cluster endpoint for Karpenter
     ##
-    clusterEndpoint: ""
+    clusterEndpoint: ''
     ## @param aws.karpenter.roleArn Role ARN for Karpenter
     ##
-    roleArn: ""
+    roleArn: ''
     ## @param aws.karpenter.instanceProfile Instance profile for Karpenter
     ##
-    instanceProfile: ""
+    instanceProfile: ''
     ## @param aws.karpenter.defaultZones Default zones list for Karpenter
     ##
     defaultZones: []
 
     ## @param aws.karpenter.interruptionQueue Interruption queue name for Karpenter
     ##
-    interruptionQueue: ""
+    interruptionQueue: ''
 
   ## @subsection awsEbsCsiDriver parameters
   ## @param aws.awsEbsCsiDriver.enabled Flag to enable AWS EBS CSI Driver
@@ -128,7 +122,7 @@ aws:
     enabled: true
     ## @param aws.awsEbsCsiDriver.roleArn Role ARN for AWS EBS CSI Driver
     ##
-    roleArn: ""
+    roleArn: ''
 
   ## @subsection awsEfsCsiDriver parameters
   ## @param aws.awsEfsCsiDriver.enabled Flag to enable AWS EFS CSI Driver
@@ -137,18 +131,17 @@ aws:
     enabled: true
     ## @param aws.awsEfsCsiDriver.fileSystemId File system ID for AWS EFS CSI Driver
     ##
-    fileSystemId: ""
+    fileSystemId: ''
     ## @param aws.awsEfsCsiDriver.region Region for AWS EFS CSI Driver
     ##
-    region: ""
+    region: ''
     ## @param aws.awsEfsCsiDriver.roleArn Role ARN for AWS EFS CSI Driver
     ##
-    roleArn: ""
-  
-  ## @param aws.inferentia.enabled Flag to enable Inferentia 
+    roleArn: ''
+
+  ## @param aws.inferentia.enabled Flag to enable Inferentia
   inferentia:
     enabled: false
-
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -177,17 +170,17 @@ truefoundry:
   ## @section database. Can be left empty if using the dev mode parameters
   database:
     ## @param truefoundry.database.host Hostname of the database
-    host: ""
+    host: ''
     ## @param truefoundry.database.name Name of the database
-    name: ""
+    name: ''
     ## @param truefoundry.database.username Username of the database
-    username: ""
+    username: ''
     ## @param truefoundry.database.password Password of the database
-    password: ""
+    password: ''
   ## @param truefoundry.tfyApiKey API Key for TrueFoundry
-  tfyApiKey: ""
+  tfyApiKey: ''
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
-  truefoundryImagePullConfigJSON: ""
+  truefoundryImagePullConfigJSON: ''
 
 ## @section loki parameters
 ## @param loki.enabled Flag to enable Loki
@@ -202,19 +195,18 @@ istio:
   enabled: true
   ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
-    
     annotations:
-      "service.beta.kubernetes.io/aws-load-balancer-name": "<terragruntOutput.cluster.cluster_name.raw>"
-      "service.beta.kubernetes.io/aws-load-balancer-type": "external"
-      "service.beta.kubernetes.io/aws-load-balancer-scheme": "internet-facing"
-      "service.beta.kubernetes.io/aws-load-balancer-ssl-ports": "https"
-      "service.beta.kubernetes.io/aws-load-balancer-alpn-policy": "HTTP2Preferred"
-      "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "tcp"
-      "service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags":
+      'service.beta.kubernetes.io/aws-load-balancer-name': '<terragruntOutput.cluster.cluster_name.raw>'
+      'service.beta.kubernetes.io/aws-load-balancer-type': 'external'
+      'service.beta.kubernetes.io/aws-load-balancer-scheme': 'internet-facing'
+      'service.beta.kubernetes.io/aws-load-balancer-ssl-ports': 'https'
+      'service.beta.kubernetes.io/aws-load-balancer-alpn-policy': 'HTTP2Preferred'
+      'service.beta.kubernetes.io/aws-load-balancer-backend-protocol': 'tcp'
+      'service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags':
         cluster-name=<terragruntOutput.cluster.cluster_name.raw>,  truefoundry.com/managed=true,
         owner=Truefoundry, application=tfy-istio-ingress
-      "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true"
-    
+      'service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled': 'true'
+
   ## @section istio discovery parameters
   discovery:
     ## @param istio.discovery.hub Hub for the istio image
@@ -223,9 +215,7 @@ istio:
     tag: 1.21.1-distroless
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
-    
     httpsRedirect: true
-    
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -246,22 +236,21 @@ prometheus:
   enabled: true
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
-  additionalScrapeConfigs: 
-  - job_name: gpu-metrics
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    metrics_path: /metrics
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - tfy-gpu-operator
-    relabel_configs:
-    - source_labels: [__meta_kubernetes_pod_node_name]
-      action: replace
-      target_label: kubernetes_node
-
+  additionalScrapeConfigs:
+    - job_name: gpu-metrics
+      scrape_interval: 15s
+      scrape_timeout: 10s
+      metrics_path: /metrics
+      scheme: http
+      kubernetes_sd_configs:
+        - role: endpoints
+          namespaces:
+            names:
+              - tfy-gpu-operator
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          target_label: kubernetes_node
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana
@@ -277,7 +266,7 @@ tfyAgent:
   ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
   ##
-  clusterToken: ""
+  clusterToken: ''
 
 ## @section elasti parameters
 ## @param elasti.enabled Flag to enable Elasti
