@@ -49,12 +49,11 @@ jobs:
 #          registry: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
 
       - name: Restore cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v4
+        id: restore-cache
         with:
           path: ./cache/image_details_cache.json
           key: ${{ runner.os }}-image-cache-${{ hashFiles('charts/tfy-k8s*/Chart.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-image-cache-
 
       - name: Install python dependencies
         run: |
@@ -75,11 +74,10 @@ jobs:
           MODE: 'local'
 
       - name: Save cache
-        if: always()
-        uses: actions/cache@v3
+        uses: actions/cache/save@v4
         with:
           path: ./cache/image_details_cache.json
-          key: ${{ runner.os }}-image-cache-${{ hashFiles('charts/tfy-k8s*/Chart.yaml') }}
+          key: ${{ steps.restore-cache.outputs.cache-key }}
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
