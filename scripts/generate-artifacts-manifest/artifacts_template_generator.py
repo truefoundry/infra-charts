@@ -151,7 +151,7 @@ def get_image_details(image_name):
             return image_details_cache[image_name]
     try:
         # Run 'docker manifest inspect' command
-        if image_name.startswith('public.ecr.aws') or image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto') or image_name.startswith('tfy.jfrog.io'):
+        if image_name.startswith('public.ecr.aws') or image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto') or image_name.startswith('tfy.jfrog.io') or image_name.startswith('cos-nvidia-installer'):
             return []
         result = run_command(f'docker manifest inspect {image_name}')
         manifest = json.loads(result)
