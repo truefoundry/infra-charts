@@ -1,0 +1,92 @@
+{{- if .Values.podVolumeMounts.enabled }}
+apiVersion: policy.jspolicy.com/v1beta1
+kind: JsPolicy
+metadata:
+  name: {{ .Release.Name }}-pod-volume-mounts.truefoundry.com
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: Mutating
+  operations: ["CREATE", "UPDATE"]
+  resources: ["pods"]
+  failurePolicy: Ignore
+  dependencies:
+    "js-yaml": "^4.1.0"
+  javascript: |
+    // this policy will add volume mounts to the pod if the pod has a volume mount with the same name as the secret
+    import { load } from 'js-yaml';
+    
+    function parseYamlString(yamlString) {
+      try {
+        return load(yamlString);
+      } catch (e) {
+        console.log("Error parsing YAML string:", e);
+        return null;
+      }
+    }
+    const excludedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.excludeNamespaces | toYaml | nindent 4 }}`);
+    let includedNamespaces = undefined;
+    if (parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
+      includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    } else {
+      includedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`);
+    }
+    const mountDetails = parseYamlString(`{{ .Values.podVolumeMounts.mountDetails | toYaml | nindent 4 }}`);
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || mountDetails.length < 0) {
+      exit()
+    }
+    print("Adding volume mounts to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+    // add the volumes to the pod
+    const podVolumes = request.object.spec.volumes || [];
+    mountDetails.forEach(mountDetails => {
+      // skip if the volume already exists, volume name is same as secret name
+      if (podVolumes.find(volume => volume.name === mountDetails.secretName)) {
+        print("Volume " + mountDetails.secretName + " already exists in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
+        return;
+      }
+      print("Adding volume " + mountDetails.secretName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+      if (mountDetails.type === "secret") {
+        request.object.spec.volumes = request.object.spec.volumes.concat({
+          name: mountDetails.secretName,
+        secret: {
+          secretName: mountDetails.secretName
+          }
+        });
+      }
+      if (mountDetails.type === "configMap") {
+        request.object.spec.volumes = request.object.spec.volumes.concat({
+          name: mountDetails.configMapName,
+          configMap: {
+            name: mountDetails.configMapName
+          }
+        });
+      }
+      request.object.spec.containers.forEach(container => {
+        // skip if the volume mount already exists
+        if (container.volumeMounts.find(volumeMount => volumeMount.name === mountDetails.secretName)) {
+          print("Volume mount " + mountDetails.secretName + " already exists in the container " + container.name + " in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
+          return;
+        }
+        print("Adding volume mount " + mountDetails.secretName + " to the container " + container.name + " in the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+        let volumeName = "";
+        if (mountDetails.type === "secret") {
+          volumeName = mountDetails.secretName;
+        }
+        if (mountDetails.type === "configMap") {
+          volumeName = mountDetails.configMapName;
+        }
+        if (volumeName === "") {
+          print("Invalid volume mount details: " + JSON.stringify(mountDetails));
+          exit();
+        }
+        print("Mount details: " + JSON.stringify(mountDetails));
+        container.volumeMounts = container.volumeMounts.concat({
+          name: volumeName,
+          mountPath: mountDetails.mountPath,
+          subPath: mountDetails.subPath || "",
+          readOnly: true
+          });
+      });
+    });
+    mutate(request.object);
+    print("Done adding volume mounts to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+{{- end }}

@@ -1,19 +1,21 @@
-import yaml
-import sys
-import json
-import subprocess
-import os
-import logging
-import time
-import requests
-from requests.exceptions import ConnectionError
 import argparse
+import json
+import logging
+import os
+import subprocess
+import sys
+import time
+
+import requests
+import yaml
+from requests.exceptions import ConnectionError
+
 
 def post_payload(url, api_key, payload, retries=3, delay=10):
     headers = {
         "accept": "*/*",
         "Content-Type": "application/json",
-        "Authentication": "Apikey " + api_key
+        "x-api-key": api_key,
     }
     for i in range(retries):
         try:

@@ -15,10 +15,10 @@
         "details": {
             "chart": "argo-workflows",
             "repoURL": "https://argoproj.github.io/argo-helm",
-            "targetRevision": "0.41.14",
+            "targetRevision": "0.42.5",
             "images": [
-                "quay.io/argoproj/workflow-controller:v3.5.10",
-                "quay.io/argoproj/argocli:v3.5.10"
+                "quay.io/argoproj/workflow-controller:v3.5.11",
+                "quay.io/argoproj/argocli:v3.5.11"
             ]
         }
     },
@@ -163,10 +163,10 @@
         "details": {
             "chart": "tfy-agent",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.2.33",
+            "targetRevision": "0.2.34",
             "images": [
-                "public.ecr.aws/truefoundrycloud/tfy-agent:d95ee758c4a87885ce5c2353167c7ac692f734be",
-                "public.ecr.aws/truefoundrycloud/tfy-agent-proxy:69d69111acf1363505441a7cb02abaea28353044"
+                "tfy.jfrog.io/tfy-images/tfy-agent:66dce198cbc8fac01828496b0a296e8d7c90dab2",
+                "tfy.jfrog.io/tfy-images/tfy-agent-proxy:e27a7dd39f1aca30ed3be3a8012bb6595e065c27"
             ]
         }
     },
@@ -196,14 +196,14 @@
         "details": {
             "chart": "truefoundry",
             "repoURL": "https://truefoundry.github.io/infra-charts",
-            "targetRevision": "0.6.4",
+            "targetRevision": "0.7.1",
             "images": [
-                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.4.0",
-                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.6.1",
-                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.3.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.2.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.3.0",
-                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.5.1",
+                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.5.0",
+                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.7.0",
+                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.4.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.3.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.4.2",
+                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.6.0",
                 "tfy.jfrog.io/tfy-mirror/nats:2.10.21-alpine3.20",
                 "tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader:0.14.3",
                 "tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter:0.15.0",
@@ -255,7 +255,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/argoproj/workflow-controller:v3.5.10",
+            "registryURL": "quay.io/argoproj/workflow-controller:v3.5.11",
             "platforms": [
                 {
                     "os": "linux",
@@ -271,7 +271,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/argoproj/argocli:v3.5.10",
+            "registryURL": "quay.io/argoproj/argocli:v3.5.11",
             "platforms": [
                 {
                     "os": "linux",
@@ -400,14 +400,32 @@
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-images/elasti-operator:8ea1d02cc57fe9b187b4c86ff619ffe932e8f6c8",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-images/elasti-resolver:8ea1d02cc57fe9b187b4c86ff619ffe932e8f6c8",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
@@ -706,7 +724,12 @@
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-images/tfy-notebook-controller:fe49172698a259121f241519635b82ec30beb0c6",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                }
+            ]
         }
     },
     {
@@ -832,15 +855,33 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-agent:d95ee758c4a87885ce5c2353167c7ac692f734be",
-            "platforms": []
+            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent:66dce198cbc8fac01828496b0a296e8d7c90dab2",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "public.ecr.aws/truefoundrycloud/tfy-agent-proxy:69d69111acf1363505441a7cb02abaea28353044",
-            "platforms": []
+            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent-proxy:e27a7dd39f1aca30ed3be3a8012bb6595e065c27",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
@@ -878,42 +919,42 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.4.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.5.0",
             "platforms": []
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.6.1",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.7.0",
             "platforms": []
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.3.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.4.0",
             "platforms": []
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.2.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.3.0",
             "platforms": []
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.3.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.4.2",
             "platforms": []
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.5.1",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.6.0",
             "platforms": []
         }
     },
@@ -921,21 +962,80 @@
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-mirror/nats:2.10.21-alpine3.20",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader:0.14.3",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter:0.15.0",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
         }
     },
     {
@@ -965,7 +1065,32 @@
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-mirror/library/ubuntu:latest",
-            "platforms": []
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "riscv64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
         }
     },
     {
@@ -1181,6 +1306,12 @@
         "type": "image",
         "details": {
             "registryURL": "tfy.jfrog.io/tfy-images/ext-authz-server:db39594f6dab3215021b291dcd2d596fc5101a9a"
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "filebrowser/filebrowser:v2.23.0"
         }
     }
 ]
