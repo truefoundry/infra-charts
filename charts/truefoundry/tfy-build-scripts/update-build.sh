@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -e
 
 # Function to display help message
 function display_help {
@@ -28,9 +28,16 @@ if ! echo "$1" | jq empty 2>/dev/null; then
 fi
 
 FINAL_PAYLOAD=$(echo "$1" | jq 'del(.tfyBuildMetadata)')
-if [[ -n "$TFY_METADATA_TIME_TAKEN_TO_BUILD_IMAGE_SECONDS" ]]; then
+# If the build step did not happen due to a pod spec error, the exit handler will be called without resolving {{}} Argo Variables.
+# So if a variable value is starting with {{ it means that the value was not set or resolved, and we can ignore it.
+if [[ -n "$TFY_METADATA_TIME_TAKEN_TO_BUILD_IMAGE_SECONDS" && "$TFY_METADATA_TIME_TAKEN_TO_BUILD_IMAGE_SECONDS" != \{\{* ]]; then
     BUILD_TIME_TAKEN_IN_INT=$((TFY_METADATA_TIME_TAKEN_TO_BUILD_IMAGE_SECONDS + 0))
     FINAL_PAYLOAD=$(echo "$FINAL_PAYLOAD" | jq ".tfyBuildMetadata.timeTakenToBuildImageSeconds = $BUILD_TIME_TAKEN_IN_INT")
+fi
+
+if [[ -n "$TFY_TIME_TAKEN_TO_DOWNLOAD_SOURCE_CODE_SECONDS" && "$TFY_TIME_TAKEN_TO_DOWNLOAD_SOURCE_CODE_SECONDS" != \{\{* ]]; then
+    SOURCE_CODE_DOWNLOAD_TIME_TAKEN=$((TFY_TIME_TAKEN_TO_DOWNLOAD_SOURCE_CODE_SECONDS + 0))
+    FINAL_PAYLOAD=$(echo "$FINAL_PAYLOAD" | jq ".tfyBuildMetadata.timeTakenToDownloadSourceCodeSeconds = $SOURCE_CODE_DOWNLOAD_TIME_TAKEN")
 fi
 
 if [[ -n "$IS_GLOBAL_BUILDER_USED" ]]; then
@@ -42,7 +49,7 @@ if [[ -n "$IS_GLOBAL_BUILDER_USED" ]]; then
 fi
 
 status=$(echo "$1" | jq -r '.status')
-if [[ -n "$status" ]]; then
+if [[ "$status" != "null" ]]; then
     echo "Updating build status to $status"
 fi
 
