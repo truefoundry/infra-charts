@@ -122,9 +122,9 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 
 ### grafana parameters
 
-| Name              | Description            | Value  |
-| ----------------- | ---------------------- | ------ |
-| `grafana.enabled` | Flag to enable Grafana | `true` |
+| Name              | Description            | Value   |
+| ----------------- | ---------------------- | ------- |
+| `grafana.enabled` | Flag to enable Grafana | `false` |
 
 ### tfyAgent parameters
 
