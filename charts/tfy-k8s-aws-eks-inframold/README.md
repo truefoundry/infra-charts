@@ -35,7 +35,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 | Name                                       | Description                                   | Value              |
 | ------------------------------------------ | --------------------------------------------- | ------------------ |
-| `notebookController.enabled`               | Flag to enable Notebook Controller            | `true`             |
+| `notebookController.enabled`               | Flag to enable Notebook Controller            | `false`            |
 | `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
 | `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
 
@@ -144,9 +144,9 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### grafana parameters
 
-| Name              | Description            | Value  |
-| ----------------- | ---------------------- | ------ |
-| `grafana.enabled` | Flag to enable Grafana | `true` |
+| Name              | Description            | Value   |
+| ----------------- | ---------------------- | ------- |
+| `grafana.enabled` | Flag to enable Grafana | `false` |
 
 ### tfyAgent parameters
 
