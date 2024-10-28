@@ -48,10 +48,11 @@ def load_cache():
 
 
 def save_cache():
-    with CACHE_LOCK:
-        with open(CACHE_FILE, 'w') as f:
-            json.dump(image_details_cache, f)
-        logging.info(f"Cache saved to {CACHE_FILE}")
+    # save the cache to the file create the cache directory if it does not exist
+    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
+    with open(CACHE_FILE, 'w') as f:
+        json.dump(image_details_cache, f)
+    logging.info(f"Cache saved to {CACHE_FILE}")
 
 
 # function to run shell commands
@@ -320,5 +321,8 @@ if __name__ == "__main__":
             chart_info_list.extend(extra_info)
 
     save_chart_info(chart_info_list, output_file)
+
+    # Save cache to file
+    save_cache()
 
     clean_up(temp_dir)
