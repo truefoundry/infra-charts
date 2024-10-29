@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "tfy-signed-url-server.name" -}}
-{{- default "tfy-signed-url-server" .Values.tfySignedUrlServer.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default "tfy-signed-url-server" .Values.tfySignedURLServer.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -11,10 +11,10 @@ Expand the name of the chart.
   If release name contains chart name it will be used as a full name.
   */}}
 {{- define "tfy-signed-url-server.fullname" -}}
-{{- if .Values.tfySignedUrlServer.fullnameOverride }}
-{{- .Values.tfySignedUrlServer.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- if .Values.tfySignedURLServer.fullnameOverride }}
+{{- .Values.tfySignedURLServer.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default "tfy-signed-url-server" .Values.tfySignedUrlServer.nameOverride }}
+{{- $name := default "tfy-signed-url-server" .Values.tfySignedURLServer.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -35,12 +35,12 @@ Expand the name of the chart.
   */}}
 {{- define "tfy-signed-url-server.labels" -}}
 helm.sh/chart: {{ include "tfy-signed-url-server.chart" . }}
-{{- range $name, $value := .Values.tfySignedUrlServer.commonLabels }}
+{{- range $name, $value := .Values.tfySignedURLServer.commonLabels }}
 {{ $name }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{ include "tfy-signed-url-server.selectorLabels" . }}
-{{- if .Values.tfySignedUrlServer.imageTag }}
-app.kubernetes.io/version: {{ .Values.tfySignedUrlServer.imageTag | quote }}
+{{- if .Values.tfySignedURLServer.imageTag }}
+app.kubernetes.io/version: {{ .Values.tfySignedURLServer.imageTag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
@@ -65,7 +65,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Parse env from template
   */}}
 {{- define "tfy-signed-url-server.parseEnv" -}}
-{{ tpl (.Values.tfySignedUrlServer.env | toYaml) . }}
+{{ tpl (.Values.tfySignedURLServer.env | toYaml) . }}
 {{- end }}
 
 {{/*
@@ -78,7 +78,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
-      name: {{ $.Values.tfySignedUrlServer.envSecretName }}
+      name: {{ $.Values.tfySignedURLServer.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
@@ -101,6 +101,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "tfy-signed-url-server.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfySignedUrlServer.nodeSelector }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfySignedURLServer.nodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}

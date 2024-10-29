@@ -1,4 +1,4 @@
-{{- if .Values.tfySignedUrlServer.enabled }}
+{{- if .Values.tfySignedURLServer.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,42 +6,42 @@ metadata:
   labels:
     {{- include "tfy-signed-url-server.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.tfySignedUrlServer.replicaCount }}
+  replicas: {{ .Values.tfySignedURLServer.replicaCount }}
   selector:
     matchLabels:
       {{- include "tfy-signed-url-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfySignedUrlServer.podAnnotations }}
+      {{- with .Values.tfySignedURLServer.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "tfy-signed-url-server.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.tfySignedUrlServer.serviceAccountName }}
-      serviceAccountName: {{ .Values.tfySignedUrlServer.serviceAccountName }}
+      {{- if .Values.tfySignedURLServer.serviceAccountName }}
+      serviceAccountName: {{ .Values.tfySignedURLServer.serviceAccountName }}
       {{- end }}
-      {{- with .Values.tfySignedUrlServer.podSecurityContext }}
+      {{- with .Values.tfySignedURLServer.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: "tfy-signed-url-server"
-          {{- with .Values.tfySignedUrlServer.securityContext }}
+          {{- with .Values.tfySignedURLServer.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
             {{- include "tfy-signed-url-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfySignedUrlServer.image.repository }}:{{ .Values.tfySignedUrlServer.image.tag }}"
-          imagePullPolicy: {{ .Values.tfySignedUrlServer.imagePullPolicy }}
+          image: "{{ .Values.tfySignedURLServer.image.repository }}:{{ .Values.tfySignedURLServer.image.tag }}"
+          imagePullPolicy: {{ .Values.tfySignedURLServer.imagePullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.tfySignedUrlServer.service.port }}
+              containerPort: {{ .Values.tfySignedURLServer.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfySignedUrlServer.resources | nindent 12 }}
+            {{- toYaml .Values.tfySignedURLServer.resources | nindent 12 }}
           livenessProbe:
             failureThreshold: 3
             initialDelaySeconds: 60
@@ -50,7 +50,7 @@ spec:
             timeoutSeconds: 1
             httpGet:
               path: /v1/health
-              port: {{ .Values.tfySignedUrlServer.service.port }}
+              port: {{ .Values.tfySignedURLServer.service.port }}
               scheme: HTTP
           readinessProbe:
             failureThreshold: 3
@@ -60,26 +60,26 @@ spec:
             timeoutSeconds: 1
             httpGet:
               path: /v1/health
-              port: {{ .Values.tfySignedUrlServer.service.port }}
+              port: {{ .Values.tfySignedURLServer.service.port }}
               scheme: HTTP
           volumeMounts:
-          {{- toYaml .Values.tfySignedUrlServer.extraVolumeMounts | nindent 12 }}
-      {{- with .Values.tfySignedUrlServer.imagePullSecrets }}
+          {{- toYaml .Values.tfySignedURLServer.extraVolumeMounts | nindent 12 }}
+      {{- with .Values.tfySignedURLServer.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       volumes:
-      {{- toYaml .Values.tfySignedUrlServer.extraVolumes | nindent 8 }}
+      {{- toYaml .Values.tfySignedURLServer.extraVolumes | nindent 8 }}
       nodeSelector:
         {{- include "tfy-signed-url-server.nodeSelector" . | nindent 8 }}
-      {{- $mergedAffinity := dict | merge .Values.tfySignedUrlServer.affinity }}
+      {{- $mergedAffinity := dict | merge .Values.tfySignedURLServer.affinity }}
       {{- if $mergedAffinity }}
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       topologySpreadConstraints:
-       {{- if .Values.tfySignedUrlServer.topologySpreadConstraints }}
-       {{- toYaml .Values.tfySignedUrlServer.topologySpreadConstraints | nindent 8 }}
+       {{- if .Values.tfySignedURLServer.topologySpreadConstraints }}
+       {{- toYaml .Values.tfySignedURLServer.topologySpreadConstraints | nindent 8 }}
        {{- else }}
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
@@ -89,7 +89,7 @@ spec:
               app.kubernetes.io/name: {{ include "tfy-signed-url-server.name" . }}
        {{- end }}
       tolerations:
-        {{- if .Values.tfySignedUrlServer.tolerations }}
-        {{- .Values.tfySignedUrlServer.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfySignedURLServer.tolerations }}
+        {{- .Values.tfySignedURLServer.tolerations | toYaml | nindent 8 }}
         {{- end }}
   {{- end }}
