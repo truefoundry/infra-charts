@@ -33,6 +33,10 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
+            - name: TENANT_NAME
+              value: {{ .Values.tfySignedUrlServer.tenantName }}
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.tfySignedUrlServer.controlPlaneUrl }}
             {{- include "tfy-signed-url-server.env" . | trim | nindent 12 }}
           image: "{{ .Values.tfySignedUrlServer.image.repository }}:{{ .Values.tfySignedUrlServer.image.tag }}"
           imagePullPolicy: {{ .Values.tfySignedUrlServer.imagePullPolicy }}

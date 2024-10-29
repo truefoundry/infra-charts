@@ -99,6 +99,10 @@ tfySignedUrlServer:
   serviceAccountName: flytepropeller
   ## @param tfySignedUrlServer.tolerations to set the tolerations
   tolerations: {}
+  ## @param tfySignedUrlServer.tenantName to set the tenant name
+  tenantName: <to_be_provided>
+  ## @param tfySignedUrlServer.controlPlaneUrl to set the control plane url
+  controlPlaneUrl: <to_be_provided>
   ## @param tfySignedUrlServer.image to set the image
   image:
     ## @param tfySignedUrlServer.image.repository to set the image repository
@@ -113,6 +117,8 @@ tfySignedUrlServer:
   nameOverride: ''
   ## @param tfySignedUrlServer.fullnameOverride Full name override for the tfySignedUrlServer
   fullnameOverride: ''
+  ## @param tfySignedUrlServer.envSecretName to set the environment secret name
+  envSecretName: tfy-signed-url-server-env
   ## @param tfySignedUrlServer.podAnnotations to set the pod annotations
   podAnnotations: {}
   ## @param tfySignedUrlServer.podSecurityContext to set the pod security context
@@ -160,8 +166,4 @@ tfySignedUrlServer:
   ## @param tfySignedUrlServer.extraVolumeMounts to set the extra volume mounts
   extraVolumeMounts: []
   ## @skip tfySignedUrlServer.env to set the environment variables
-  env:
-    TENANT_NAME: <to_be_provided>
-    ENVIRONMENT: production
-    CONTROL_PLANE_URL: <to_be_provided>
-    SWAGGER_ENABLE: "0"
+  env: {}
