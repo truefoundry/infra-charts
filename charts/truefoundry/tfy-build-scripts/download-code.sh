@@ -3,7 +3,10 @@ set -e -o pipefail
 
 echo "Downloading source code"
 mkdir -p /root/.docker/
-cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json
+
+if [[ -f /root/.truefoundry/.docker/base_config.json ]]; then
+    cp /root/.truefoundry/.docker/base_config.json /root/.docker/config.json 
+fi
 
 BUILD_TYPE=$(echo "$BUILD_SOURCE" | jq -r '.type')
 

@@ -262,12 +262,14 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
+      {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
             items:
             - key: .dockerconfigjson
               path: base_config.json
-            secretName: truefoundry-image-pull-secret
+            secretName: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret }}
+      {{- end }}
         - name: scripts
           projected:
             defaultMode: 0755
@@ -323,8 +325,10 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
+          {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
+          {{- end }}
         {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
           - name: {{ $value.id | replace "." "-" }}
             mountPath: "/truefoundry-build-secrets/"
@@ -411,12 +415,14 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
+      {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
             items:
             - key: .dockerconfigjson
               path: base_config.json
-            secretName: truefoundry-image-pull-secret
+            secretName: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret }}
+      {{- end }}
         - name: scripts
           projected:
             defaultMode: 0755
@@ -472,8 +478,10 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
+          {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
+          {{- end }}
         {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
           - name: {{ $value.id | replace "." "-" }}
             mountPath: "/truefoundry-build-secrets/"
