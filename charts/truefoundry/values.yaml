@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.7.1
+  controlPlaneChartVersion: 0.8.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -101,7 +101,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.6.0"
+    tag: "v0.7.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -282,7 +282,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.5.0"
+    tag: "v0.6.0"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -382,7 +382,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.7.0"
+    tag: "v0.8.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -512,6 +512,7 @@ servicefoundryServer:
     INTERNAL_JWT_SERVICE_ENABLED: ""
     INTERNAL_JWT_JWKS: ""
     INTERNAL_JWT_ISSUER_DOMAIN_NAME: ""
+    GLOBAL_BUILDERS_BUILD_PER_URL: "0"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
@@ -535,7 +536,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.4.2"
+    tag: "v0.5.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -609,6 +610,7 @@ tfyK8sController:
     ANALYTICS_SERVER_URL: https://analytics.truefoundry.com
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TENANT_NAME: "{{ .Values.global.tenantName }}"
+    NODE_ENV: production
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -626,7 +628,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.4.0"
+    tag: "v0.5.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -908,6 +910,8 @@ tfyBuild:
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets Image pull secrets for the sfyBuilder
       ##
       imagePullSecrets: []
+      ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret baseImagePullSecret for the docker config
+      baseImagePullSecret: ""
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.script script for the sfyBuilder to be executed
       script: |
         download-code.sh
@@ -1023,6 +1027,11 @@ tfyBuild:
 tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: false
+  service:
+    ## @param tfy-buildkitd-service.port port number for the tfy-buildkitd service
+    port: 1234
+  ## @param tfy-buildkitd-service.replicaCount Number of replicas Value kept for future use, kept 1
+  replicaCount: 1
 # To further configure the local postgres installation use the following section.
 # During cleanup, make sure to remove any stray pvc that might be created.
 ## postgresql Settings corresponding to the postgresql database
@@ -1151,7 +1160,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.4.0
+    tag: v0.5.0
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables
