@@ -1,5 +1,10 @@
 ## @section Configuration for tfy-workflow-propeller
 ##
+global:
+  ## @param global.tenantName to set the tenant name
+  tenantName: <to_be_provided>
+  ## @param global.controlPlaneUrl to set the control plane url
+  controlPlaneUrl: <to_be_provided>
 
 ## @section flyte-core configurations
 flyte-core:
@@ -99,10 +104,6 @@ tfySignedUrlServer:
   serviceAccountName: flytepropeller
   ## @param tfySignedUrlServer.tolerations to set the tolerations
   tolerations: {}
-  ## @param tfySignedUrlServer.tenantName to set the tenant name
-  tenantName: <to_be_provided>
-  ## @param tfySignedUrlServer.controlPlaneUrl to set the control plane url
-  controlPlaneUrl: <to_be_provided>
   ## @param tfySignedUrlServer.image to set the image
   image:
     ## @param tfySignedUrlServer.image.repository to set the image repository
@@ -166,4 +167,6 @@ tfySignedUrlServer:
   ## @param tfySignedUrlServer.extraVolumeMounts to set the extra volume mounts
   extraVolumeMounts: []
   ## @skip tfySignedUrlServer.env to set the environment variables
-  env: {}
+  env:
+    TENANT_NAME: {{ .Values.global.tenantName }}
+    CONTROL_PLANE_URL: {{ .Values.global.controlPlaneUrl }}
