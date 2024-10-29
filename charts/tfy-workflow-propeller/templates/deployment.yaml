@@ -20,7 +20,7 @@ spec:
         {{- include "tfy-signed-url-server.labels" . | nindent 8 }}
     spec:
       {{- if .Values.tfySignedUrlServer.serviceAccountName }}
-      serviceAccountName: {{ include "tfy-signed-url-server.serviceAccountName" . }}
+      serviceAccountName: {{ .Values.tfySignedUrlServer.serviceAccountName }}
       {{- end }}
       {{- with .Values.tfySignedUrlServer.podSecurityContext }}
       securityContext:
