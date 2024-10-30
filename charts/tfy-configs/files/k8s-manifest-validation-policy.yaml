@@ -1,0 +1,46 @@
+# clusterScopedResourcePolicy is used to define the validation rules for cluster level resources
+# these are checked ignoring the namespace
+clusterScopedResourcePolicy:
+  - match:
+      - key: kind
+        operator: In
+        values:
+          - ClusterRole
+          - ClusterRoleBinding
+      - key: apiVersion
+        operator: In
+        values:
+          - rbac.authorization.k8s.io/v1
+    errorMessage: "ClusterRole and ClusterRoleBinding are not allowed"
+    action: deny
+# crossNamespaceResourcePolicy is used to define the validation rules for resources that are not allowed
+# to be created in other namespaces
+crossNamespaceResourcePolicy:
+  - match:
+      - key: kind
+        operator: In
+        values:
+          - EnvoyFilter
+      - key: apiVersion
+        operator: In
+        values:
+          - networking.istio.io/v1alpha3
+      - key: namespace
+        operator: In
+        values:
+          - istio-system
+    action: allow
+  - match:
+      - key: kind
+        operator: In
+        values:
+          - WasmPlugin
+      - key: apiVersion
+        operator: In
+        values:
+          - extensions.istio.io/v1alpha1
+      - key: namespace
+        operator: In
+        values:
+          - istio-system
+    action: allow
