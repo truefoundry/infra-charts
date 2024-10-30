@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-mutation-config-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  image-mutation-config.yaml: |-
+    {{- if eq .Values.configs.imageMutationConfig "default" }}
+    {{ .Files.Get "files/image-mutation-config.yaml" | nindent 4 }}
+    {{- else }}
+    {{ .Values.configs.imageMutationConfig | nindent 4 }}
+    {{- end }}

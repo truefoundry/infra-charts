@@ -1,0 +1,49 @@
+rules:
+  not_allowed:
+    - match:
+        - key: kind
+          operator: In
+          values:
+            - ClusterRole
+            - ClusterRoleBinding
+        - key: apiVersion
+          operator: In
+          values:
+            - rbac.authorization.k8s.io/v1
+      errorMessage: 'ClusterRole and ClusterRoleBinding are not allowed'
+  allowed:
+    - match:
+        - key: kind
+          operator: In
+          values:
+            - EnvoyFilter
+        - key: apiVersion
+          operator: In
+          values:
+            - networking.istio.io/v1alpha3
+        - key: application_type
+          operator: In
+          values:
+            - ssh-server
+        - key: namespace
+          operator: In
+          values:
+            - istio-system
+    - match:
+        - key: kind
+          operator: In
+          values:
+            - WasmPlugin
+        - key: apiVersion
+          operator: In
+          values:
+            - extensions.istio.io/v1alpha1
+        - key: application_type
+          operator: In
+          values:
+            - service
+            - async-service
+        - key: namespace
+          operator: In
+          values:
+            - istio-system
