@@ -1,3 +1,5 @@
+# clusterScopedResourcePolicy is used to define the validation rules for cluster level resources
+# these are checked ignoring the namespace
 clusterScopedResourcePolicy:
   - match:
       - key: kind
@@ -11,6 +13,8 @@ clusterScopedResourcePolicy:
           - rbac.authorization.k8s.io/v1
     errorMessage: "ClusterRole and ClusterRoleBinding are not allowed"
     action: deny
+# crossNamespaceResourcePolicy is used to define the validation rules for resources that are not allowed
+# to be created in other namespaces
 crossNamespaceResourcePolicy:
   - match:
       - key: kind
