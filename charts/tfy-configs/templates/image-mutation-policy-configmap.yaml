@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-mutation-policy-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  image-mutation-policy.yaml: |-
+    {{- if not .Values.configs.imageMutationPolicyOverride }}
+    {{ .Files.Get "files/image-mutation-policy.yaml" | nindent 4 }}
+    {{- else }}
+    {{ toYaml .Values.configs.imageMutationPolicyOverride | nindent 4 }}
+    {{- end }}

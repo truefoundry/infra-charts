@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-k8s-manifest-validation-policy-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  k8s-manifest-validation-policy.yaml: |-
+    {{- if not .Values.configs.k8sManifestValidationPolicyOverride }}
+    {{ .Files.Get "files/k8s-manifest-validation-policy.yaml" | nindent 4 }}
+    {{- else }}
+    {{ toYaml .Values.configs.k8sManifestValidationPolicyOverride | nindent 4 }}
+    {{- end }}
