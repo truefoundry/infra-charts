@@ -13,17 +13,14 @@ spec:
     {{- toYaml .Values.sdsServer.deploymentStrategy | nindent 4 }}
   selector:
     matchLabels:
-      {{- with .Values.labels }}
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
-      app: tfy-sds-server
+      {{- include "sds-server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
+        {{- include "sds-server.selectorLabels" . | nindent 8 }}
         {{- with .Values.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app: tfy-sds-server
     spec:
       {{- with .Values.sdsServer.imagePullSecrets }}
       imagePullSecrets:
