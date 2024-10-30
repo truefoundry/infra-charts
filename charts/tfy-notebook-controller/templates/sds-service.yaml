@@ -14,8 +14,5 @@ spec:
       protocol: TCP
       targetPort: {{ (index .Values.sdsServer.ports 0).containerPort }}
   selector:
-    {{- with .Values.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-    app: tfy-sds-server
+    {{- include "sds-server.selectorLabels" . | nindent 4 }}
 {{- end }}
