@@ -134,7 +134,10 @@ def get_image_details(image_name):
     Returns:
         dict: A JSON-formatted dictionary containing the image type, details, and supported platforms.
     """
-
+    # skip if image registry starts with 'ecr.public'
+    if image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto'):
+        print(f"Skipping image {image_name} as it is an Auth image")
+        return []
     # Run 'docker manifest inspect' command
     try:
         result = run_command(f'docker manifest inspect {image_name}')
