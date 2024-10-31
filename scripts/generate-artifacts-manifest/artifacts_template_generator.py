@@ -5,10 +5,8 @@ import json
 import subprocess
 import os
 import logging
-import time
-import requests
-from requests.exceptions import ConnectionError
 import argparse
+
 
 def normalize_repo_url(repo_url):
     parsed_url = urlparse(repo_url)
@@ -31,6 +29,7 @@ logging.info(f"Mode: {mode}")
 if mode not in ["local", "remote"]:
     raise ValueError(f"Invalid MODE: {mode}. Must be 'local' or 'remote'.")
 
+
 # function to run shell commands
 def run_command(command):
     result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -39,6 +38,7 @@ def run_command(command):
         sys.exit(1)
     return result.stdout
 
+
 # function to make image list unique
 def make_image_list_unique(image_list):
     unique_images = []
@@ -46,6 +46,7 @@ def make_image_list_unique(image_list):
         if image not in unique_images:
             unique_images.append(image)
     return unique_images
+
 
 # function to extract chart information from the manifest file
 def extract_chart_info(manifest_file):
@@ -71,11 +72,13 @@ def extract_chart_info(manifest_file):
 
     return chart_info_list
 
+
 # function to save chart information to a file
 def save_chart_info(chart_info_list, output_file):
     with open(output_file, 'w') as f:
         json.dump(chart_info_list, f, indent=4)
     logging.info(f"Chart information saved to {output_file}")
+
 
 # function to process chart information
 def process_and_generate_chart_manifests(chart_info_list):
@@ -110,6 +113,7 @@ def process_and_generate_chart_manifests(chart_info_list):
     flattened_list = [item for sublist in chart_detail_list for item in sublist]
     return flattened_list
 
+
 # function to save image information to a file
 def save_image_info(manifest_file):
     with open(manifest_file, "r") as f:
@@ -117,11 +121,51 @@ def save_image_info(manifest_file):
         images = extract_images_from_k8s_manifests(yaml_content)
         return images
 
+
+# function to inspect image to get supported architectures and os
+# returns a dictionary with image information e.g. {"architecture": "amd64", "os": "linux"}
+def get_image_details(image_name):
+    """
+    Retrieves the supported platforms of a Docker image and formats the output into a JSON object.
+
+    Args:
+        image_name (str): The name of the Docker image (e.g., 'quay.io/prometheus-operator/prometheus-operator:v0.70.0').
+
+    Returns:
+        dict: A JSON-formatted dictionary containing the image type, details, and supported platforms.
+    """
+
+    # Run 'docker manifest inspect' command
+    try:
+        result = run_command(f'docker manifest inspect {image_name}')
+    except Exception as e:
+        logging.error(f"Error inspecting image {image_name}: {e}")
+        return []
+    manifest = json.loads(result)
+    platforms = []
+
+    if 'manifests' in manifest:
+        for manifest_entry in manifest['manifests']:
+            platform = manifest_entry.get('platform', {})
+            os = platform.get('os')
+            architecture = platform.get('architecture')
+            # if os or architecture is unknown, skip
+            if os and architecture and os != 'unknown' and architecture != 'unknown':
+                platforms.append({"os": os, "architecture": architecture})
+    else:
+        os = manifest.get('os')
+        architecture = manifest.get('architecture')
+        if os and architecture:
+            platforms.append({"os": os, "architecture": architecture})
+
+    return platforms
+
+
 # function to generate manifests for the chart
 def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
     parsed_url = urlparse(chart_repo_url)
     print("Chart Repo URL: ", chart_repo_url, "Parsed URL: ", parsed_url)
-    if  parsed_url.scheme == "oci":
+    if parsed_url.scheme == "oci":
         logging.info(f"OCI registry detected for {chart_name}. Skipping helm repo add and update.")
         run_command(f"helm pull {chart_repo_url}/{chart_name} --version {chart_version} --untar --untardir {temp_dir}")
     else:
@@ -138,6 +182,7 @@ def generate_manifests(chart_name, chart_repo_url, chart_version, values_file):
 
     return manifest_file
 
+
 # function to generate manifest from local chart
 def generate_manifests_local(chart_name, values_file):
     chart_dir = os.path.join("charts", chart_name)
@@ -146,6 +191,7 @@ def generate_manifests_local(chart_name, values_file):
     run_command(f"helm template {chart_name} -f {values_file} {chart_dir} > {manifest_file}")
 
     return manifest_file
+
 
 # function to extract images from Kubernetes manifests
 def extract_images_from_k8s_manifests(yaml_content):
@@ -188,7 +234,8 @@ def extract_images_from_k8s_manifests(yaml_content):
                         container_image_info = {
                             "type": "image",
                             "details": {
-                                "registryURL": container.get('image', '')
+                                "registryURL": container.get('image', ''),
+                                "platforms": get_image_details(container.get('image', ''))
                             }
                         }
                         image_info_list.append(container_image_info)
@@ -198,14 +245,16 @@ def extract_images_from_k8s_manifests(yaml_content):
 
     return image_info_list
 
+
 # function to clean up the temporary directory
 def clean_up(temp_dir):
     run_command(f"rm -rf {temp_dir}")
 
+
 # function to create a temporary directory
 def create_tmp_dir():
     os.makedirs(temp_dir, exist_ok=True)
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate artifacts manifest from Helm charts.")
