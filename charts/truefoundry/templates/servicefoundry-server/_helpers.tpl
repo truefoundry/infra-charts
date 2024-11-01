@@ -144,6 +144,14 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: WORKBENCH_IMAGES_CONFIG_PATH
   value: /opt/truefoundry/configs/workbench-images/workbench-images.yaml
 {{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+- name: IMAGE_MUTATION_POLICY_CONFIG_PATH
+  value: /opt/truefoundry/configs/image-mutation-policy/image-mutation-policy.yaml
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+- name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
+  value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
+{{- end }}
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
@@ -158,6 +166,12 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumes = append $volumes (dict "name" "configs-workbench-images" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.workbenchImages .))) }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-image-mutation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .))) }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
 {{- end }}
 
 {{- $volumes | toYaml -}}
@@ -176,6 +190,12 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-workbench-images" "mountPath" "/opt/truefoundry/configs/workbench-images") }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-image-mutation-policy" "mountPath" "/opt/truefoundry/configs/image-mutation-policy") }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
