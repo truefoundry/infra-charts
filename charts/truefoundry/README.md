@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.8.4`                                                                          |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.8.5`                                                                          |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -132,7 +132,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.replicaCount`                         | Number of replicas for the servicefoundry server                | `1`                                                     |
 | `servicefoundryServer.global`                               | Global values for the servicefoundry server                     | `{}`                                                    |
 | `servicefoundryServer.image.repository`                     | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.8.2`                                                |
+| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.8.4`                                                |
 | `servicefoundryServer.environmentName`                      | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                        | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                      | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -160,7 +160,9 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.imagePullSecrets`                     | Image pull credentials for servicefoundry server                | `[]`                                                    |
 | `servicefoundryServer.rbac.enabled`                         | Enable RBAC for the servicefoundry server                       | `true`                                                  |
 | `servicefoundryServer.configs.cicdTemplates`                | CICD Template for servicefoundry server                         | `{{ .Release.Name }}-cicd-templates-cm`                 |
-| `servicefoundryServer.configs.workbenchImages`              | Workbench Images for servicefoundry server                      | `{{ .Release.Name }}-workbench-images-cm`               |
+| `servicefoundryServer.configs.workbenchImages`              | Workbench Images for workbench deployments                      | `{{ .Release.Name }}-workbench-images-cm`               |
+| `servicefoundryServer.configs.imageMutationPolicy`          | Image Mutations policy for workloads                            | `{{ .Release.Name }}-image-mutation-policy-cm`          |
+| `servicefoundryServer.configs.k8sManifestValidationPolicy`  | K8s Manifest Validation policy for workloads                    | `{{ .Release.Name }}-k8s-manifest-validation-policy-cm` |
 
 ### tfyK8sController Truefoundry tfy k8s controller values
 
