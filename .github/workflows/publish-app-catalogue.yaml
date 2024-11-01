@@ -4,6 +4,7 @@ on:
     branches:
       - main
     paths:
+      - '.github/workflows/publish-app-catalogue.yaml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
       - 'charts/tfy-k8s-azure-aks-inframold/**'
       - 'charts/tfy-k8s-civo-talos-inframold/**'
@@ -62,9 +63,9 @@ jobs:
           cookiecutter --version
       - run: |
           echo "Render AWS-EKS manifests"
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' charts/tfy-k8s-aws-eks-inframold/templates/truefoundry.yaml)
           helm template inframold -n argocd -f ./charts/tfy-k8s-aws-eks-inframold/values-helm.yaml -f ./charts/tfy-k8s-aws-eks-inframold/values-ocli.yaml ./charts/tfy-k8s-aws-eks-inframold --set aws.karpenter.defaultZones={""} --output-dir catalogues
+          # Get the version of the truefoundry helm chart
+          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-aws-eks-inframold/templates/truefoundry.yaml)
           # Sync to S3
           aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold s3://tfy-argo-application-catalogue/aws-eks --delete
           # Sync to S3 chart version folder
@@ -72,9 +73,9 @@ jobs:
           echo "Synced catalogue for aws-eks successfully"
       - run: |
           echo "Render GCP standard k8s manifests"
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' charts/tfy-k8s-gcp-gke-standard-inframold/templates/truefoundry.yaml)
           helm template inframold -n argocd -f ./charts/tfy-k8s-gcp-gke-standard-inframold/values-helm.yaml -f ./charts/tfy-k8s-gcp-gke-standard-inframold/values-ocli.yaml ./charts/tfy-k8s-gcp-gke-standard-inframold --output-dir catalogues
+          # Get the version of the truefoundry helm chart
+          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates/truefoundry.yaml)
           # Sync to S3
           aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold s3://tfy-argo-application-catalogue/gcp-gke-standard --delete
           # Sync to S3 chart version folder
@@ -82,9 +83,9 @@ jobs:
           echo "Synced catalogue for gcp-standard successfully"
       - run: |
           echo "Render Azure-AKS manifests"
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' charts/tfy-k8s-azure-aks-inframold/templates/truefoundry.yaml)
           helm template inframold -n argocd -f ./charts/tfy-k8s-azure-aks-inframold/values-helm.yaml -f ./charts/tfy-k8s-azure-aks-inframold/values-ocli.yaml ./charts/tfy-k8s-azure-aks-inframold --output-dir catalogues
+          # Get the version of the truefoundry helm chart
+          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-azure-aks-inframold/templates/truefoundry.yaml)
           # Sync to S3
           aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold s3://tfy-argo-application-catalogue/azure-aks --delete
           # Sync to S3 chart version folder
@@ -92,9 +93,9 @@ jobs:
           echo "Synced catalogue for azure-aks successfully"
       - run: |
           echo "Render Generic k8s manifests"
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' charts/tfy-k8s-generic-inframold/templates/truefoundry.yaml)
           helm template inframold -n argocd -f ./charts/tfy-k8s-generic-inframold/values-helm.yaml -f ./charts/tfy-k8s-generic-inframold/values-ocli.yaml ./charts/tfy-k8s-generic-inframold --output-dir catalogues
+          # Get the version of the truefoundry helm chart
+          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-generic-inframold/templates/truefoundry.yaml)
           # Sync to S3
           aws s3 sync ./catalogues/tfy-k8s-generic-inframold s3://tfy-argo-application-catalogue/generic --delete
           # Sync to S3 chart version folder
@@ -102,9 +103,9 @@ jobs:
           echo "Synced catalogue for generic k8s successfully"
       - run: |
           echo "Render Civo-Talos k8s manifests"
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' charts/tfy-k8s-civo-talos-inframold/templates/truefoundry.yaml)
           helm template inframold -n argocd -f ./charts/tfy-k8s-civo-talos-inframold/values-helm.yaml -f ./charts/tfy-k8s-civo-talos-inframold/values-ocli.yaml ./charts/tfy-k8s-civo-talos-inframold --output-dir catalogues
+          # Get the version of the truefoundry helm chart
+          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-civo-talos-inframold/templates/truefoundry.yaml)
           # Sync to S3
           aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold s3://tfy-argo-application-catalogue/civo-talos --delete
           # Sync to S3 chart version folder
