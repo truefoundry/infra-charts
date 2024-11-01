@@ -35,7 +35,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 | Name                                       | Description                                   | Value              |
 | ------------------------------------------ | --------------------------------------------- | ------------------ |
-| `notebookController.enabled`               | Flag to enable Notebook Controller            | `true`             |
+| `notebookController.enabled`               | Flag to enable Notebook Controller            | `false`            |
 | `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
 | `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
 
@@ -69,7 +69,6 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsEbsCsiDriver.roleArn`           | Role ARN for AWS EBS CSI Driver             | `""`    |
 | `aws.awsEfsCsiDriver.enabled`           | Flag to enable AWS EFS CSI Driver           | `true`  |
 | `aws.awsEfsCsiDriver.fileSystemId`      | File system ID for AWS EFS CSI Driver       | `""`    |
-| `aws.awsEfsCsiDriver.region`            | Region for AWS EFS CSI Driver               | `""`    |
 | `aws.awsEfsCsiDriver.roleArn`           | Role ARN for AWS EFS CSI Driver             | `""`    |
 | `aws.inferentia.enabled`                | Flag to enable Inferentia                   | `false` |
 
@@ -144,9 +143,9 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### grafana parameters
 
-| Name              | Description            | Value  |
-| ----------------- | ---------------------- | ------ |
-| `grafana.enabled` | Flag to enable Grafana | `true` |
+| Name              | Description            | Value   |
+| ----------------- | ---------------------- | ------- |
+| `grafana.enabled` | Flag to enable Grafana | `false` |
 
 ### tfyAgent parameters
 
