@@ -48,12 +48,14 @@ spec:
             - tcp://0.0.0.0:{{ .Values.service.port }}
             - --config
             - /etc/buildkit/buildkitd.toml
+          {{- if .Values.buildkitDaemonCertsSecretName }}
             - --tlscacert
             - /etc/buildkit/certs/ca.pem
             - --tlscert
             - /etc/buildkit/certs/cert.pem
             - --tlskey
             - /etc/buildkit/certs/key.pem
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -64,6 +66,7 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
+              {{- if .Values.buildkitDaemonCertsSecretName }}
                 - --tlscacert
                 - /etc/buildkit/client/certs/ca.pem
                 - --tlscert
@@ -72,6 +75,7 @@ spec:
                 - /etc/buildkit/client/certs/key.pem
                 - --tlsservername
                 - 0.0.0.0
+              {{- end }}
                 - debug
                 - workers
           readinessProbe:
@@ -80,6 +84,7 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
+              {{- if .Values.buildkitDaemonCertsSecretName }}
                 - --tlscacert
                 - /etc/buildkit/client/certs/ca.pem
                 - --tlscert
@@ -88,6 +93,7 @@ spec:
                 - /etc/buildkit/client/certs/key.pem
                 - --tlsservername
                 - 0.0.0.0
+              {{- end }}
                 - debug
                 - workers
           resources:
@@ -99,10 +105,12 @@ spec:
             - name: buildkit-config
               mountPath: /etc/buildkit/buildkitd.toml
               subPath: buildkitd.toml
+          {{- if .Values.buildkitDaemonCertsSecretName }}   
             - name: buildkit-daemon-cert
               mountPath: /etc/buildkit/certs/
             - name: buildkit-client-cert
               mountPath: /etc/buildkit/client/certs/
+          {{- end }}
           {{- with .Values.extraVolumeMounts }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
@@ -110,12 +118,14 @@ spec:
         - name: buildkit-config
           configMap:
             name: {{ include "buildkitd-service.fullname" . }}-config
+      {{- if .Values.buildkitDaemonCertsSecretName }}
         - name: buildkit-daemon-cert
           secret:
             secretName: {{ .Values.buildkitDaemonCertsSecretName }}
         - name: buildkit-client-cert
           secret:
             secretName: {{ .Values.buildkitClientCertsSecretName }}
+      {{- end }}
       {{- with .Values.extraVolumes }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
