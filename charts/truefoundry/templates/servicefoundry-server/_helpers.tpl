@@ -63,12 +63,52 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 
 {{/*
+Here we are trying to get the full name of buildkitd service and statefulset
+*/}}
+{{- define "tfy-buildkitd.buildkitdServiceName"  }}
+{{- if index .Values "tfy-buildkitd-service" "fullnameOverride" }}
+{{- index .Values "tfy-buildkitd-service" "fullnameOverride"}}
+{{- else }}
+{{- $name := "tfy-buildkitd-service" }}
+{{- if index .Values "tfy-buildkitd-service" "nameOverride"}}
+{{- $name := index .Values "tfy-buildkitd-service" "nameOverride" }}
+{{- end}}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/*
+Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if tfy-buildkitd-service is enabled
+*/}}
+{{- define "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" }}
+{{- if index .Values "tfy-buildkitd-service" "enabled" }}
+{{ $urls := "" }}
+{{ $replicas := index .Values "tfy-buildkitd-service" "replicaCount" | int}}
+{{ $namespace := .Release.Namespace }}
+{{ $portNumber := index .Values "tfy-buildkitd-service" "service" "port" | int }}
+{{ $buildkitdServiceName := (include "tfy-buildkitd.buildkitdServiceName" .) }}
+{{- range $i := until $replicas}}
+  {{- $url := printf "%s-%d.%s.%s.svc.cluster.local:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
+  {{- $urls = printf "%s,%s" $urls $url }}
+{{- end }}
+GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
+{{- end }}
+{{- end }}
+
+
+{{/*
   Parse env from template
   */}}
 {{- define "servicefoundry-server.parseEnv" -}}
+{{- include "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" . }}
 {{ tpl (.Values.servicefoundryServer.env | toYaml) . }}
-
 {{- end }}
+
 
 {{/*
   Create the env file
@@ -104,6 +144,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: WORKBENCH_IMAGES_CONFIG_PATH
   value: /opt/truefoundry/configs/workbench-images/workbench-images.yaml
 {{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+- name: IMAGE_MUTATION_POLICY_CONFIG_PATH
+  value: /opt/truefoundry/configs/image-mutation-policy/image-mutation-policy.yaml
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+- name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
+  value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
+{{- end }}
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
@@ -118,6 +166,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumes = append $volumes (dict "name" "configs-workbench-images" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.workbenchImages .))) }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-image-mutation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .))) }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
 {{- end }}
 
 {{- $volumes | toYaml -}}
@@ -136,6 +190,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-workbench-images" "mountPath" "/opt/truefoundry/configs/workbench-images") }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-image-mutation-policy" "mountPath" "/opt/truefoundry/configs/image-mutation-policy") }}
+{{- end }}
+{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
