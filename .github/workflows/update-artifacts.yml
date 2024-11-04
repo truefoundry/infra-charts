@@ -65,14 +65,14 @@ jobs:
           python-version: '3.10'
 
       - name: Install python dependencies
-        if: needs.path-filter.outputs.pathsrc_output == 'true'
+        if: needs.path-filter.outputs.pathsrc_output
         run: |
           pip install -r scripts/upload-artifacts/requirements.txt
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
-        if: needs.path-filter.outputs.pathsrc_output == 'true'
+        if: needs.path-filter.outputs.pathsrc_output
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}";
@@ -86,7 +86,7 @@ jobs:
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
-        if: needs.path-filter.outputs.pathsrc_output == 'true'
+        if: needs.path-filter.outputs.pathsrc_output
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
