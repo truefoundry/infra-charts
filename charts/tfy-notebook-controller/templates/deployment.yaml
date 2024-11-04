@@ -9,12 +9,11 @@ metadata:
 spec:
   selector:
     matchLabels:
-    {{- with .Values.labels }}
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
+      {{- include "notebook-controller.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
+        {{- include "notebook-controller.selectorLabels" . | nindent 8 }}
         {{- with .Values.labels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
