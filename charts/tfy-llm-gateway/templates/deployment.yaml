@@ -47,7 +47,12 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
-              port: {{ .Values.healthcheck.liveness.port }}
+              port: {{ .Values.healthcheck.readiness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 5 }}
+            successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
           {{- end }}
           volumeMounts:
           {{- if .Values.rateLimit.enabled }}

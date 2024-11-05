@@ -56,3 +56,12 @@ LLM-Gateway Helm Chart
 | `rbac.enabled`                         | Enable rbac                        | `true`                                            |
 | `rateLimit.enabled`                    | Enable flag                        | `false`                                           |
 | `rateLimit.config`                     | RL config                          | `{}`                                              |
+| `autoscaling.enabled`                              | Enable autoscaling                           | `false` |
+| `autoscaling.minReplicas`                          | Minimum number of replicas                   | `1`     |
+| `autoscaling.maxReplicas`                          | Maximum number of replicas                   | `10`    |
+| `autoscaling.targetCPUUtilizationPercentage`       | Target CPU utilization percentage            | `80`    |
+| `healthcheck.readiness.initialDelaySeconds` | Initial delay before first probe | `10` |
+| `healthcheck.readiness.periodSeconds` | How often to perform the probe | `10` |
+| `healthcheck.readiness.timeoutSeconds` | When the probe times out | `5` |
+| `healthcheck.readiness.successThreshold` | Minimum consecutive successes | `1` |
+| `healthcheck.readiness.failureThreshold` | When to declare the pod unhealthy | `3` |
