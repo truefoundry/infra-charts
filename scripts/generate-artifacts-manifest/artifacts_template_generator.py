@@ -135,7 +135,7 @@ def get_image_details(image_name):
         dict: A JSON-formatted dictionary containing the image type, details, and supported platforms.
     """
     # skip if image registry starts with 'ecr.public'
-    if image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto'):
+    if image_name.startswith('602401143452.dkr.ecr') or image_name.startswith('auto') or image_name.startswith('cos-nvidia-installer'):
         print(f"Skipping image {image_name} as it is an Auth image")
         return []
     # Run 'docker manifest inspect' command
