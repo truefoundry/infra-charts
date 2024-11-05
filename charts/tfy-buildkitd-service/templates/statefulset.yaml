@@ -105,7 +105,7 @@ spec:
             - name: buildkit-config
               mountPath: /etc/buildkit/buildkitd.toml
               subPath: buildkitd.toml
-          {{- if .Values.enableTLS }}   
+          {{- if .Values.tls.enable }}   
             - name: buildkit-daemon-cert
               mountPath: /etc/buildkit/certs/
             - name: buildkit-client-cert
@@ -118,13 +118,13 @@ spec:
         - name: buildkit-config
           configMap:
             name: {{ include "buildkitd-service.fullname" . }}-config
-      {{- if .Values.enableTLS }}
+      {{- if .Values.tls.enable }}
         - name: buildkit-daemon-cert
           secret:
-            secretName: {{ .Values.buildkitDaemonCertsSecretName }}
+            secretName: {{ .Values.tls.buildkitDaemonCertsSecretName }}
         - name: buildkit-client-cert
           secret:
-            secretName: {{ .Values.buildkitClientCertsSecretName }}
+            secretName: {{ .Values.tls.buildkitClientCertsSecretName }}
       {{- end }}
       {{- with .Values.extraVolumes }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
