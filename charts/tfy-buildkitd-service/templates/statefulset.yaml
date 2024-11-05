@@ -48,7 +48,7 @@ spec:
             - tcp://0.0.0.0:{{ .Values.service.port }}
             - --config
             - /etc/buildkit/buildkitd.toml
-          {{- if .Values.buildkitDaemonCertsSecretName }}
+          {{- if .Values.enableTLS }}
             - --tlscacert
             - /etc/buildkit/certs/ca.pem
             - --tlscert
@@ -66,7 +66,7 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
-              {{- if .Values.buildkitDaemonCertsSecretName }}
+              {{- if .Values.enableTLS }}
                 - --tlscacert
                 - /etc/buildkit/client/certs/ca.pem
                 - --tlscert
@@ -84,7 +84,7 @@ spec:
                 - buildctl
                 - --addr
                 - tcp://0.0.0.0:{{ .Values.service.port }}
-              {{- if .Values.buildkitDaemonCertsSecretName }}
+              {{- if .Values.enableTLS }}
                 - --tlscacert
                 - /etc/buildkit/client/certs/ca.pem
                 - --tlscert
@@ -105,7 +105,7 @@ spec:
             - name: buildkit-config
               mountPath: /etc/buildkit/buildkitd.toml
               subPath: buildkitd.toml
-          {{- if .Values.buildkitDaemonCertsSecretName }}   
+          {{- if .Values.enableTLS }}   
             - name: buildkit-daemon-cert
               mountPath: /etc/buildkit/certs/
             - name: buildkit-client-cert
@@ -118,7 +118,7 @@ spec:
         - name: buildkit-config
           configMap:
             name: {{ include "buildkitd-service.fullname" . }}-config
-      {{- if .Values.buildkitDaemonCertsSecretName }}
+      {{- if .Values.enableTLS }}
         - name: buildkit-daemon-cert
           secret:
             secretName: {{ .Values.buildkitDaemonCertsSecretName }}
