@@ -32,12 +32,23 @@ securityContext: {}
 ## Healthcheck configuration
 healthcheck:
   ## @param healthcheck.enabled Enable healthcheck
-  enabled: true ## healthcheck.readiness Readiness probe configuration
+  enabled: true
+  ## healthcheck.readiness Readiness probe configuration
   readiness:
     ## @param healthcheck.readiness.port Port to probe
     port: 8787
     ## @param healthcheck.readiness.path Path to probe
     path: /
+    ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 10
+    ## @param healthcheck.readiness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 5
+    ## @param healthcheck.readiness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.readiness.failureThreshold Failure threshold
+    failureThreshold: 3
   ## healthcheck.liveness Liveness probe configuration
   liveness:
     ## @param healthcheck.liveness.port Port to probe
@@ -137,3 +148,14 @@ rateLimit:
   enabled: false
   ## @param rateLimit.config RL config
   config: {}
+
+## Autoscaling configuration
+autoscaling:
+  ## @param autoscaling.enabled Enable autoscaling  
+  enabled: false
+  ## @param autoscaling.minReplicas Minimum number of replicas
+  minReplicas: 1
+  ## @param autoscaling.maxReplicas Maximum number of replicas
+  maxReplicas: 10 
+  ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
