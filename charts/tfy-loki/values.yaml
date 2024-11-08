@@ -24,11 +24,15 @@ loki:
     ## @param loki.loki.limits_config.max_query_lookback Limit how far back in time series data and metadata can be queried, up until lookback duration ago.
     ## @param loki.loki.limits_config.split_queries_by_interval Split queries by a time interval and execute in parallel.
     ## @param loki.loki.limits_config.max_entries_limit_per_query Maximum number of log entries that will be returned for a query.
+    ## @param loki.loki.limits_config.max_line_size Max line size of a log. If log exceeds this length, it will either be skipped or truncated depeneding on max_line_size_truncate
+    ## @param loki.loki.limits_config.max_line_size_truncate If a log exceeds max_line_size, log will be truncated if set to true else skipped
     limits_config:
       retention_period: 168h
       max_query_lookback: 168h
       split_queries_by_interval: 10h
       max_entries_limit_per_query: 30000
+      max_line_size: 20000
+      max_line_size_truncate: true
   ## @skip loki.test.enabled
   test:
     enabled: false
