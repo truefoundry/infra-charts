@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "tfy-controller.podLabels" -}}
+{{ include "tfy-controller.selectorLabels" . }}
+{{- if .Values.tfyController.image.tag }}
+app.kubernetes.io/version: {{ .Values.tfyController.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.tfyController.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "tfy-controller.labels" -}}
 helm.sh/chart: {{ include "tfy-controller.chart" . }}
-{{- range $name, $value := .Values.tfyController.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-controller.selectorLabels" . }}
-{{- if .Values.tfyController.imageTag }}
-app.kubernetes.io/version: {{ .Values.tfyController.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "tfy-controller.podLabels" . }}
 {{- end }}
 
 {{/*
