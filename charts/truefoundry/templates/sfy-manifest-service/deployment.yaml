@@ -17,7 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "sfy-manifest-service.labels" . | nindent 8 }}
+        {{- include "sfy-manifest-service.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "sfy-manifest-service.serviceAccountName" . }}
       {{- with .Values.sfyManifestService.podSecurityContext }}

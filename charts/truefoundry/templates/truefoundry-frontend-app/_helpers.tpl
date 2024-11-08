@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "truefoundry-frontend-app.podLabels" -}}
+{{ include "truefoundry-frontend-app.selectorLabels" . }}
+{{- if .Values.truefoundryFrontendApp.image.tag }}
+app.kubernetes.io/version: {{ .Values.truefoundryFrontendApp.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.truefoundryFrontendApp.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "truefoundry-frontend-app.labels" -}}
 helm.sh/chart: {{ include "truefoundry-frontend-app.chart" . }}
-{{- range $name, $value := .Values.truefoundryFrontendApp.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "truefoundry-frontend-app.selectorLabels" . }}
-{{- if .Values.truefoundryFrontendApp.imageTag }}
-app.kubernetes.io/version: {{ .Values.truefoundryFrontendApp.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "truefoundry-frontend-app.podLabels" . }}
 {{- end }}
 
 {{/*

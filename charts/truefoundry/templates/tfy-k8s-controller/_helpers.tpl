@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "tfy-k8s-controller.podLabels" -}}
+{{ include "tfy-k8s-controller.selectorLabels" . }}
+{{- if .Values.tfyK8sController.image.tag }}
+app.kubernetes.io/version: {{ .Values.tfyK8sController.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.tfyK8sController.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "tfy-k8s-controller.labels" -}}
 helm.sh/chart: {{ include "tfy-k8s-controller.chart" . }}
-{{- range $name, $value := .Values.tfyK8sController.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-k8s-controller.selectorLabels" . }}
-{{- if .Values.tfyK8sController.imageTag }}
-app.kubernetes.io/version: {{ .Values.tfyK8sController.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "tfy-k8s-controller.podLabels" . }}
 {{- end }}
 
 {{/*

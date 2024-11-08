@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "mlfoundry-server.podLabels" -}}
+{{ include "mlfoundry-server.selectorLabels" . }}
+{{- if .Values.mlfoundryServer.image.tag }}
+app.kubernetes.io/version: {{ .Values.mlfoundryServer.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.mlfoundryServer.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "mlfoundry-server.labels" -}}
 helm.sh/chart: {{ include "mlfoundry-server.chart" . }}
-{{- range $name, $value := .Values.mlfoundryServer.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "mlfoundry-server.selectorLabels" . }}
-{{- if .Values.mlfoundryServer.imageTag }}
-app.kubernetes.io/version: {{ .Values.mlfoundryServer.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "mlfoundry-server.podLabels" . }}
 {{- end }}
 
 {{/*
