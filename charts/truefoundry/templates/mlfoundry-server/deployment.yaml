@@ -17,7 +17,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "mlfoundry-server.labels" . | nindent 8 }}
+        {{- include "mlfoundry-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "mlfoundry-server.serviceAccountName" . }}
       {{- with .Values.mlfoundryServer.podSecurityContext }}

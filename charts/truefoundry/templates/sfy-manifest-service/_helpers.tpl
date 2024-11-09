@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "sfy-manifest-service.podLabels" -}}
+{{ include "sfy-manifest-service.selectorLabels" . }}
+{{- if .Values.sfyManifestService.image.tag }}
+app.kubernetes.io/version: {{ .Values.sfyManifestService.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.sfyManifestService.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "sfy-manifest-service.labels" -}}
 helm.sh/chart: {{ include "sfy-manifest-service.chart" . }}
-{{- range $name, $value := .Values.sfyManifestService.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "sfy-manifest-service.selectorLabels" . }}
-{{- if .Values.sfyManifestService.imageTag }}
-app.kubernetes.io/version: {{ .Values.sfyManifestService.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "sfy-manifest-service.podLabels" . }}
 {{- end }}
 
 {{/*
