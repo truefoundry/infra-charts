@@ -31,18 +31,25 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "tfy-workflow-admin.podLabels" -}}
+{{ include "tfy-workflow-admin.selectorLabels" . }}
+{{- if .Values.tfyWorkflowAdmin.image.tag }}
+app.kubernetes.io/version: {{ .Values.tfyWorkflowAdmin.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+{{- range $name, $value := .Values.tfyWorkflowAdmin.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "tfy-workflow-admin.labels" -}}
 helm.sh/chart: {{ include "tfy-workflow-admin.chart" . }}
-{{- range $name, $value := .Values.tfyWorkflowAdmin.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-workflow-admin.selectorLabels" . }}
-{{- if .Values.tfyWorkflowAdmin.imageTag }}
-app.kubernetes.io/version: {{ .Values.tfyWorkflowAdmin.imageTag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ include "tfy-workflow-admin.podLabels" . }}
 {{- end }}
 
 {{/*
