@@ -11,10 +11,17 @@ printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please
 
 IMAGE="$DOCKER_REGISTRY_URL/$DOCKER_REPO"
 TAG=$DOCKER_TAG
+BUILDKIT_CERTS_PATH="/etc/buildkit/certs"
 
 printf "\033[36m[==== Docker logs start ====]\033[0m\n"
 
-docker buildx create --name remote-kubernetes --driver remote tcp://"$BUILDKIT_SERVICE_URL"
+BUILDX_CREATE_ARGS="--name remote-kubernetes --driver remote tcp://${BUILDKIT_SERVICE_URL}"
+
+if [[ -d "$BUILDKIT_CERTS_PATH" ]]; then
+    BUILDX_CREATE_ARGS="${BUILDX_CREATE_ARGS} --driver-opt key=${BUILDKIT_CERTS_PATH}/key.pem,cert=${BUILDKIT_CERTS_PATH}/cert.pem,cacert=${BUILDKIT_CERTS_PATH}/ca.pem"
+fi
+
+docker buildx create ${BUILDX_CREATE_ARGS}
 
 if [ -d "$SOURCE_CODE_DOWNLOAD_PATH" ]; then
     cd "$SOURCE_CODE_DOWNLOAD_PATH"

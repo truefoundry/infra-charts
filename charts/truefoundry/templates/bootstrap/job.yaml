@@ -25,6 +25,8 @@ spec:
           value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
         - name: TRUEFOUNDRY_NAMESPACE
           value: "{{ .Release.Namespace }}"
+        - name: INSTALL_TLS_CERTIFICATES
+          value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
         {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
         - name: {{ $val.name }}
           value: {{ $val.value }}
