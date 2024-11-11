@@ -88,9 +88,17 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### truefoundryBootstrap parameters
 
-| Name                                       | Description                                                               | Value   |
-| ------------------------------------------ | ------------------------------------------------------------------------- | ------- |
-| `truefoundry.truefoundryBootstrap.enabled` | Flag to enable bootstrap job to prep cluster for truefoundry installation | `false` |
+| Name                                       | Description                                                               | Value  |
+| ------------------------------------------ | ------------------------------------------------------------------------- | ------ |
+| `truefoundry.truefoundryBootstrap.enabled` | Flag to enable bootstrap job to prep cluster for truefoundry installation | `true` |
+
+### Truefoundry virtual service parameters
+
+| Name                                  | Description                                        | Value   |
+| ------------------------------------- | -------------------------------------------------- | ------- |
+| `truefoundry.virtualservice.enabled`  | Flag to enable virtualservice                      | `false` |
+| `truefoundry.virtualservice.hosts`    | Hosts for truefoundry virtualservice               | `[]`    |
+| `truefoundry.virtualservice.gateways` | Istio gateways to be configured for virtualservice | `[]`    |
 
 ### database. Can be left empty if using the dev mode parameters
 
