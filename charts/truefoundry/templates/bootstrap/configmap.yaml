@@ -38,6 +38,75 @@ data:
             && mv kubectl /usr/bin/
     }
 
+    create_tfy_buildkit_tls_certificates_and_secrets(){
+      (
+        set -eu
+        if [[ "$INSTALL_TLS_CERTIFICATES" != "true" ]]; then
+            print_yellow "Skipping TLS certificate generation"
+            return 0
+        fi
+        PRODUCT=tfy-buildkit
+        DIR=./.certs
+        EXPIRATION_DAYS=36500  # 100 years expiration
+        if kubectl get secret ${PRODUCT}-daemon-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null && kubectl get secret ${PRODUCT}-client-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null; then
+            print_green "Secrets already exist. Exiting..."
+            return 0
+        fi
+
+        if [[ "$#" -lt 1 ]]; then
+            echo "Usage: $0 SAN [SAN...]"
+            echo
+            echo "Example: $0 buildkitd.default.svc "
+            echo
+            echo "The following files will be created under ${DIR}"
+            echo "- daemon/{ca.pem,cert.pem,key.pem}"
+            echo "- client/{ca.pem,cert.pem,key.pem}"
+            echo "- ${PRODUCT}-daemon-certs.yaml"
+            echo "- ${PRODUCT}-client-certs.yaml"
+            echo "- SAN"
+            exit 1
+        fi
+
+        if ! command -v openssl >/dev/null; then
+            echo "Missing OpenSSL"
+            exit 1
+        fi
+
+        SAN1=$1
+        SAN2=$2
+        SAN_CLIENT=client
+
+        mkdir -p $DIR ${DIR}/daemon ${DIR}/client
+
+        openssl genrsa -out ${DIR}/key.pem 4096
+        openssl req -x509 -nodes -new -sha256 -days $EXPIRATION_DAYS -keyout ${DIR}/key.pem -out ${DIR}/rootCA.pem -subj "/C=US/ST=CA/L=San-Francisco/O=TrueFoundry/CN=Root CA"
+
+
+        # Generate a server private key and certificate using the root CA
+        openssl genrsa -out ${DIR}/daemon/key.pem 4096
+        openssl req -new -key ${DIR}/daemon/key.pem -out ${DIR}/daemon/csr.pem -subj "/C=US/ST=CA/L=San-Francisco/O=TrueFoundry/CN=server"
+        openssl x509 -req -in ${DIR}/daemon/csr.pem -CA ${DIR}/rootCA.pem -CAkey ${DIR}/key.pem -CAcreateserial -out ${DIR}/daemon/cert.pem -days $EXPIRATION_DAYS -extfile <(printf "subjectAltName=DNS:%s, DNS:%s,IP:0.0.0.0" "$SAN1" "$SAN2")
+
+        # Generate a client private key and certificate using the root CA
+        openssl genrsa -out ${DIR}/client/key.pem 4096
+        openssl req -new -key ${DIR}/client/key.pem -out ${DIR}/client/csr.pem -subj "/C=US/ST=CA/L=San-Francisco/O=TrueFoundry/CN=$SAN_CLIENT"
+        openssl x509 -req -in ${DIR}/client/csr.pem -CA ${DIR}/rootCA.pem -CAkey ${DIR}/key.pem -CAcreateserial -out ${DIR}/client/cert.pem -days $EXPIRATION_DAYS
+
+        # Copy the root CA certificates
+        cp -f ${DIR}/rootCA.pem ${DIR}/daemon/ca.pem
+        cp -f ${DIR}/rootCA.pem ${DIR}/client/ca.pem
+        rm -f ${DIR}/daemon/csr.pem ${DIR}/client/csr.pem
+        rm -f ${DIR}/rootCA.pem ${DIR}/key.pem
+
+        # Create Kubernetes secrets
+        kubectl create secret generic ${PRODUCT}-daemon-certs -n truefoundry --dry-run=client -o yaml --from-file=${DIR}/daemon > $DIR/${PRODUCT}-daemon-certs.yaml
+        kubectl create secret generic ${PRODUCT}-client-certs -n truefoundry --dry-run=client -o yaml --from-file=${DIR}/client > $DIR/${PRODUCT}-client-certs.yaml
+
+        kubectl apply -f $DIR/${PRODUCT}-daemon-certs.yaml
+        kubectl apply -f $DIR/${PRODUCT}-client-certs.yaml
+      )
+    }
+
     migrate_nats_seed_to_dedicated_secret() {
       # Get the value of NATS_CONTROLPLANE_ACCOUNT_SEED from the secret
       NATS_SEED=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.NATS_CONTROLPLANE_ACCOUNT_SEED}' | base64 --decode)
@@ -82,6 +151,7 @@ data:
     fi
 
     install_binaries
+    create_tfy_buildkit_tls_certificates_and_secrets  *.{{ include "tfy-buildkitd.buildkitdServiceName" . }}.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local *.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local
 
     kubectl -n $TRUEFOUNDRY_NAMESPACE get cm $TRUEFOUNDRY_NATS_CONFIGMAP
     if [ $? -eq 0 ]; then
