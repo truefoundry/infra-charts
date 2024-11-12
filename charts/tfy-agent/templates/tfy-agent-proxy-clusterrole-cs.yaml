@@ -35,5 +35,10 @@ rules:
     resources: ["*"]
     verbs: ["*"]
   {{- end }}
+  {{- range $rule := .Values.tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules }}
+  - apiGroups: {{ $rule.apiGroups | toJson }}
+    resources: {{ $rule.resources | toJson }}
+    verbs: {{ $rule.verbs | toJson }}
+  {{- end }}
 {{- end }}
 {{- end }}
