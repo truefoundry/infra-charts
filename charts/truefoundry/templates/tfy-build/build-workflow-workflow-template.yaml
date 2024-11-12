@@ -423,6 +423,11 @@ spec:
               path: base_config.json
             secretName: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret }}
       {{- end }}
+      {{- if index .Values "tfy-buildkitd-service" "tls" "enabled" }}
+        - name: buildkit-client-cert
+          secret:
+            secretName: {{ index .Values "tfy-buildkitd-service" "tls" "buildkitClientCertsSecretName" }}
+      {{- end }}
         - name: scripts
           projected:
             defaultMode: 0755
@@ -482,6 +487,10 @@ spec:
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
           {{- end }}
+        {{- if index .Values "tfy-buildkitd-service" "tls" "enabled" }}
+          - name: buildkit-client-cert
+            mountPath: "/etc/buildkit/certs/"
+        {{- end }}
         {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
           - name: {{ $value.id | replace "." "-" }}
             mountPath: "/truefoundry-build-secrets/"
@@ -655,11 +664,11 @@ spec:
         resources:
           requests:
             cpu: 50m
-            ephemeral-storage: 10Mi
+            ephemeral-storage: 20Mi
             memory: 50Mi
           limits:
             cpu: 50m
-            ephemeral-storage: 10Mi
+            ephemeral-storage: 20Mi
             memory: 50Mi
         volumeMounts:
           - name: scripts

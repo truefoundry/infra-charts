@@ -53,6 +53,7 @@ if [[ "$status" != "null" ]]; then
     echo "Updating build status to $status"
 fi
 
+echo "Final payload: $FINAL_PAYLOAD"
 curl --no-progress-meter --show-error -X "PATCH" \
     -H "Content-Type: application/json" \
     -d "$FINAL_PAYLOAD" \

@@ -41,6 +41,24 @@ spec:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
+       {{- if .Values.truefoundry.virtualservice.enabled }}
+        truefoundryFrontendApp:
+          istio:
+            virtualservice:
+              enabled: true
+              {{- if .Values.truefoundry.virtualservice.hosts }}
+              hosts:
+              {{- range $v := .Values.truefoundry.virtualservice.hosts }} 
+              - {{ $v | quote }}
+              {{- end }}
+              {{- end }}
+              {{- if .Values.truefoundry.virtualservice.gateways }}
+              gateways:
+              {{- range $v := .Values.truefoundry.virtualservice.gateways }}
+              - {{ $v | quote }}
+              {{- end }}
+              {{- end }}
+        {{- end }} 
         nats:
           {{- with .Values.tolerations }}
           tolerations:
