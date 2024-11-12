@@ -46,13 +46,17 @@ spec:
           istio:
             virtualservice:
               enabled: true
-              {{- range $v := .Values.truefoundry.virtualservice.hosts }}
-              hosts: 
+              {{- if .Values.truefoundry.virtualservice.hosts }}
+              hosts:
+              {{- range $v := .Values.truefoundry.virtualservice.hosts }} 
               - {{ $v | quote }}
               {{- end }}
-              {{- range $v := .Values.truefoundry.virtualservice.gateways }}
+              {{- end }}
+              {{- if .Values.truefoundry.virtualservice.gateways }}
               gateways:
+              {{- range $v := .Values.truefoundry.virtualservice.gateways }}
               - {{ $v | quote }}
+              {{- end }}
               {{- end }}
         {{- end }} 
         nats:
