@@ -32,10 +32,10 @@ LLM-Gateway Helm Chart
 | `healthcheck.liveness.path`                  | Path to probe                      | `/`                                               |
 | `resources.limits.cpu`                       | CPU limit                          | `2`                                               |
 | `resources.limits.memory`                    | Memory limit                       | `1024Mi`                                          |
-| `resources.limits.ephemeral-storage`         | Ephemeral storage limit            | `256Mi`                                           |
+| `resources.limits.ephemeral-storage`         | Ephemeral storage limit            | `512Mi`                                           |
 | `resources.requests.cpu`                     | CPU request                        | `1`                                               |
 | `resources.requests.memory`                  | Memory request                     | `512Mi`                                           |
-| `resources.requests.ephemeral-storage`       | Ephemeral storage request          | `128Mi`                                           |
+| `resources.requests.ephemeral-storage`       | Ephemeral storage request          | `256Mi`                                           |
 | `nodeSelector`                               | Node selector                      | `{}`                                              |
 | `tolerations`                                | Tolerations                        | `{}`                                              |
 | `affinity`                                   | Affinity                           | `{}`                                              |
@@ -60,6 +60,6 @@ LLM-Gateway Helm Chart
 | `extraVolumeMounts`                          | Extra volume mounts                | `[]`                                              |
 | `rbac.enabled`                               | Enable rbac                        | `true`                                            |
 | `autoscaling.enabled`                        | Enable autoscaling                 | `false`                                           |
-| `autoscaling.minReplicas`                    | Minimum number of replicas         | `1`                                               |
+| `autoscaling.minReplicas`                    | Minimum number of replicas         | `3`                                               |
 | `autoscaling.maxReplicas`                    | Maximum number of replicas         | `10`                                              |
 | `autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization percentage  | `60`                                              |
