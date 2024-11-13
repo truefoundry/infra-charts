@@ -60,17 +60,17 @@ resources:
   ## resources.limits Resource limits
   limits:
     ## @param resources.limits.cpu CPU limit
-    cpu: 400m
+    cpu: 2
     ## @param resources.limits.memory Memory limit
-    memory: 512Mi
+    memory: 1024Mi
     ## @param resources.limits.ephemeral-storage Ephemeral storage limit
     ephemeral-storage: 256Mi
   ## resources.requests Resource requests
   requests:
     ## @param resources.requests.cpu CPU request
-    cpu: 200m
+    cpu: 1
     ## @param resources.requests.memory Memory request
-    memory: 256Mi
+    memory: 512Mi
     ## @param resources.requests.ephemeral-storage Ephemeral storage request
     ephemeral-storage: 128Mi
 ## @param nodeSelector Node selector
@@ -142,13 +142,6 @@ env:
   CONTROL_PLANE_NATS_URL: ""
   ENABLE_EXTERNAL_OAUTH: "false"
 
-## rate limit config
-rateLimit:
-  ## @param rateLimit.enabled Enable flag
-  enabled: false
-  ## @param rateLimit.config RL config
-  config: {}
-
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling  
@@ -158,4 +151,4 @@ autoscaling:
   ## @param autoscaling.maxReplicas Maximum number of replicas
   maxReplicas: 10
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
-  targetCPUUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 60

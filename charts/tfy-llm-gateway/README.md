@@ -59,8 +59,6 @@ LLM-Gateway Helm Chart
 | `extraVolumes`                               | Extra volumes                      | `[]`                                              |
 | `extraVolumeMounts`                          | Extra volume mounts                | `[]`                                              |
 | `rbac.enabled`                               | Enable rbac                        | `true`                                            |
-| `rateLimit.enabled`                          | Enable flag                        | `false`                                           |
-| `rateLimit.config`                           | RL config                          | `{}`                                              |
 | `autoscaling.enabled`                        | Enable autoscaling                 | `false`                                           |
 | `autoscaling.minReplicas`                    | Minimum number of replicas         | `1`                                               |
 | `autoscaling.maxReplicas`                    | Maximum number of replicas         | `10`                                              |
