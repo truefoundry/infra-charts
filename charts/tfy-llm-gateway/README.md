@@ -61,5 +61,5 @@ LLM-Gateway Helm Chart
 | `rbac.enabled`                               | Enable rbac                        | `true`                                            |
 | `autoscaling.enabled`                        | Enable autoscaling                 | `false`                                           |
 | `autoscaling.minReplicas`                    | Minimum number of replicas         | `3`                                               |
-| `autoscaling.maxReplicas`                    | Maximum number of replicas         | `10`                                              |
+| `autoscaling.maxReplicas`                    | Maximum number of replicas         | `100`                                             |
 | `autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization percentage  | `60`                                              |
