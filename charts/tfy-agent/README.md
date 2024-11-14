@@ -77,7 +77,7 @@ This application has two parts.
 | `tfyAgent.service.type`                         | Type for tfyAgent Service                                                                                             | `ClusterIP`                                |
 | `tfyAgent.image.repository`                     | tfyAgent repository                                                                                                   | `tfy.jfrog.io/tfy-images/tfy-agent`        |
 | `tfyAgent.image.pullPolicy`                     | Pull policy for tfyAgent                                                                                              | `IfNotPresent`                             |
-| `tfyAgent.image.tag`                            | Overrides the image tag whose default is the chart appVersion.                                                        | `c610a56137336ab818510cb42680add0ae3db54e` |
+| `tfyAgent.image.tag`                            | Overrides the image tag whose default is the chart appVersion.                                                        | `29b288e0b59ba09cdd4bf51ef97c86bfdcf1e626` |
 | `tfyAgent.resources.limits.cpu`                 | CPU resource limits for tfyAgent container. Advised to only increase the limits and not decrease it                   | `500m`                                     |
 | `tfyAgent.resources.limits.memory`              | Memory Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it                | `512Mi`                                    |
 | `tfyAgent.resources.limits.ephemeral-storage`   | Ephemeral storage Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it     | `256Mi`                                    |
