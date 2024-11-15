@@ -9,7 +9,7 @@ LLM-Gateway Helm Chart
 | -------------------------------------------- | ---------------------------------- | ------------------------------------------------- |
 | `global`                                     | Truefoundry global values          | `{}`                                              |
 | `image.repository`                           | Image repository for tfyLLMGateway | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                  | Image tag for the tfyLLMGateway    | `05f395008bcd848a1179c5a7084a4f60c36b7c09`        |
+| `image.tag`                                  | Image tag for the tfyLLMGateway    | `510cb55e8ff708cbc0b0fbdf02ea9b104bbdc846`        |
 | `replicaCount`                               | Number of replicas                 | `1`                                               |
 | `environmentName`                            | The environment name               | `default`                                         |
 | `envSecretName`                              | The environment secret name        | `tfy-llm-gateway-env-secret`                      |
