@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.11.0
+  controlPlaneChartVersion: 0.12.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -103,7 +103,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.10.0"
+    tag: "v0.11.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -208,7 +208,7 @@ truefoundryFrontendApp:
   ## @skip truefoundryFrontendApp.env Environment variables for the frontend app
   env:
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    NATS_URL: ws://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:443
+    NATS_URL: ws://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_CONTROLLER_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
@@ -232,6 +232,8 @@ truefoundryFrontendApp:
     VITE_ENABLE_RECOMMENDATION_INFOBAR: "false"
     VITE_ENABLE_AUTOPILOT: "false"
     VITE_AUTOPILOT_ENABLED_TENANTS: ""
+    VITE_ENABLE_PROMPT_MANAGEMENT: "false"
+    VITE_PROMPT_MANAGEMENT_ENABLED_TENANTS: ""
     VITE_ENABLE_EVENTS_GRAPHS: "true"
     VITE_ENABLE_CLUSTER_METRICS: "false"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
@@ -246,14 +248,15 @@ truefoundryFrontendApp:
     VITE_LLM_PLAYGROUND_ENABLE_REDIRECT: "false"
     VITE_OLD_LLM_PLAYGROUND_PATH: llm-playground
     VITE_LLM_PLAYGROUND_PATH: llm-gateway
-    VITE_ENABLE_LLM_CONFIG: "false"
     VITE_ENABLE_SENTRY: "false"
     VITE_ENABLE_PROMPT_TEMPLATES: "false"
     VITE_ENABLE_TOOLS_AGENTS: "false"
     VITE_AGENT_ENABLED_TENANTS: truefoundry,internal
+    VITE_BRAINFISH_WIDGET_ENABLED_TENANTS: brainfish
     VITE_SENTRY_DSN: ""
     VITE_APEX_DOMAIN: http://truefoundry.com/
     VITE_ITERATE_AI_KEY: ""
+    VITE_BRAINFISH_WIDGET_KEY: ""
     VITE_DATAGRID_LICENSE_KEY: 1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
     VITE_ENABLE_GOOGLE_ANALYTICS: "false"
     VITE_ENABLE_PAGESENSE: "false"
@@ -290,7 +293,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.8.1"
+    tag: "v0.9.0"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -390,7 +393,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.11.0"
+    tag: "v0.12.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -541,7 +544,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.8.0"
+    tag: "v0.9.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -633,7 +636,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.8.0"
+    tag: "v0.9.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -842,7 +845,7 @@ nats:
     ## @param nats.websocket.enabled Bool to enable NATS websocket
     enabled: true
     ## @param nats.websocket.port Port for NATS websocket
-    port: 443
+    port: 8080
     ## @param nats.websocket.noTLS Bool to enable NATS websocket without TLS
     noTLS: true
     ## @param nats.websocket.sameOrigin Bool to enable NATS websocket same origin
@@ -1084,7 +1087,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController
     repository: tfy.jfrog.io/tfy-private-images/tfy-controller
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.6.0
+    tag: v0.7.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1171,7 +1174,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.5.0
+    tag: v0.7.1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables
