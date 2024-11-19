@@ -24,7 +24,7 @@ rules:
 
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["delete"]
+    verbs: ["delete", "get"]
 
   - apiGroups: [""]
     resources: ["pods/log", "events", "services", "persistentvolumes"]
@@ -33,6 +33,18 @@ rules:
   - apiGroups: ["apps"]
     resources: ["statefulsets/scale", "deployments/scale"]
     verbs: ["patch"]
+
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["prometheuses"]
+    verbs: ["patch"]
+
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["patch", "get"]
+
+  - apiGroups: ["apps"]
+    resources: ["statefulsets"]
+    verbs: ["get", "create", "delete", "patch"]
 
   - apiGroups: ["keda.sh"]
     resources: ["scaledobjects"]
@@ -61,7 +73,7 @@ rules:
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
     verbs: ["create", "patch", "delete"]
-  
+
   - apiGroups: ["flyte.lyft.com"]
     resources: ["flyteworkflows"]
     verbs: ["create", "patch", "get", "delete"]
