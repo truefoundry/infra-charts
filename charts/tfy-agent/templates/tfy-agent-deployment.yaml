@@ -67,7 +67,7 @@ spec:
             {{- end }}
           {{- range $val := .Values.tfyAgent.extraEnvVars }}
             - name: {{ $val.name }}
-              value: {{ $val.value }}
+              value: {{ $val.value | quote }}
           {{- end }}
           image: "{{ .Values.tfyAgent.image.repository }}:{{ .Values.tfyAgent.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.tfyAgent.image.pullPolicy }}
