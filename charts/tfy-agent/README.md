@@ -33,6 +33,56 @@ This application has two parts.
 * If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
 
 
+## Trobleshoot
+
+### Using self-signed certificate in control plane URL
+If your control plane URL is using self-signed CA certificate, follow these steps:
+1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways:
+    1. using volume mounts
+        - create a config map using your `ca-certificate.crt` file
+            
+            `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
+
+        - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
+            ```
+            tfyAgent:
+                extraVolumes:
+                - name: ca-certificates-volume
+                  configMap:
+                    name: tfy-ca-cert 
+                    items:
+                    - key: ca-certificates.crt
+                      path: ca-certificates.crt
+                extraVolumeMounts:
+                    - name: ca-certificates-volume
+                      mountPath: /etc/ssl/certs/ca-certificates.crt
+                      subPath: ca-certificates.crt
+                      readOnly: true
+            tfyAgentProxy:
+                extraVolumes:
+                - name: ca-certificates-volume
+                  configMap:
+                    name: tfy-ca-cert 
+                    items:
+                    - key: ca-certificates.crt
+                      path: ca-certificates.crt
+                extraVolumeMounts:
+                    - name: ca-certificates-volume
+                      mountPath: /etc/ssl/certs/ca-certificates.crt
+                      subPath: ca-certificates.crt
+                      readOnly: true
+            ```
+    2. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
+
+2. Add extraEnv in tfyAgent to allow insecure connection
+    ```
+    tfyAgent:
+        extraEnvVars:
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: '0'
+    ```
+
+
 ## Parameters
 
 ### Configuration parameters
@@ -133,6 +183,8 @@ This application has two parts.
 | `tfyAgentProxy.serviceAccount.create`                               | Bool to enable serviceAccount creation                                                                                     | `true`                                     |
 | `tfyAgentProxy.serviceAccount.annotations`                          | Annotations to add to the serviceAccount                                                                                   | `{}`                                       |
 | `tfyAgentProxy.serviceAccount.name`                                 | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template          | `""`                                       |
+| `tfyAgentProxy.extraVolumes`                                        | Extra volume for tfyAgentProxy container                                                                                   | `[]`                                       |
+| `tfyAgentProxy.extraVolumeMounts`                                   | Extra volume mount for tfyAgentProxy container                                                                             | `[]`                                       |
 | `tfyAgentProxy.clusterRole.enable`                                  | Create cluster role.                                                                                                       | `true`                                     |
 | `tfyAgentProxy.clusterRole.strictMode`                              | Only add required authz rules.                                                                                             | `false`                                    |
 | `tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules` | Additional rules to add to the cluster role for cluster-scoped resources.                                                  | `[]`                                       |

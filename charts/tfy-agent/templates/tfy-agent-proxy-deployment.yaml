@@ -51,6 +51,8 @@ spec:
           imagePullPolicy: {{ .Values.tfyAgentProxy.image.pullPolicy }}
           resources:
             {{- toYaml .Values.tfyAgentProxy.resources | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.tfyAgentProxy.extraVolumeMounts | nindent 12 }}
       {{- with .Values.tfyAgentProxy.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -66,4 +68,6 @@ spec:
       {{- with .Values.tfyAgentProxy.priorityClassName }}
       priorityClassName: {{ . | quote }}
       {{- end }}
+      volumes:
+        {{- toYaml .Values.tfyAgentProxy.extraVolumes | nindent 8 }}
 {{- end }}       
