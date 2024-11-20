@@ -33,6 +33,34 @@ This application has two parts.
 * If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
 
 
+## Trobleshoot
+
+### Using self-signed certificate in control plane URL
+If your control plane URL is using self-signed CA certificate, follow these steps:
+1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways
+    a. using volume mounts
+        - create a config map using your `ca-certificate.crt` file
+            `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
+        - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
+            ```
+            tfyAgent:
+                ...
+                extraVolumes:
+                    - name
+                extraVolumeMounts:
+                    - name
+            ```
+    b. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
+
+2. Add extraEnv in tfyAgent to allow insecure connection
+    ```
+    tfyAgent:
+        extraEnvVars:
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: '0'
+    ```
+
+
 ## Parameters
 
 ### Configuration parameters
