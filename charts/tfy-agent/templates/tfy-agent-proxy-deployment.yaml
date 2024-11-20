@@ -45,7 +45,7 @@ spec:
                   name: {{ include "tfy-agent.secretName" .}}
           {{- range $val := .Values.tfyAgentProxy.extraEnvVars }}
             - name: {{ $val.name }}
-              value: {{ $val.value }}
+              value: {{ $val.value | quote }}
           {{- end }}
           image: "{{ .Values.tfyAgentProxy.image.repository }}:{{ .Values.tfyAgentProxy.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.tfyAgentProxy.image.pullPolicy }}
