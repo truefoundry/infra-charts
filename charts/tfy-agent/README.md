@@ -40,15 +40,37 @@ If your control plane URL is using self-signed CA certificate, follow these step
 1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways:
     1. using volume mounts
         - create a config map using your `ca-certificate.crt` file
+            
             `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
+
         - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
             ```
             tfyAgent:
-                ...
                 extraVolumes:
-                    - name
+                - name: ca-certificates-volume
+                  configMap:
+                    name: tfy-ca-cert 
+                    items:
+                    - key: ca-certificates.crt
+                      path: ca-certificates.crt
                 extraVolumeMounts:
-                    - name
+                    - name: ca-certificates-volume
+                      mountPath: /etc/ssl/certs/ca-certificates.crt
+                      subPath: ca-certificates.crt
+                      readOnly: true
+            tfyAgentProxy:
+                extraVolumes:
+                - name: ca-certificates-volume
+                  configMap:
+                    name: tfy-ca-cert 
+                    items:
+                    - key: ca-certificates.crt
+                      path: ca-certificates.crt
+                extraVolumeMounts:
+                    - name: ca-certificates-volume
+                      mountPath: /etc/ssl/certs/ca-certificates.crt
+                      subPath: ca-certificates.crt
+                      readOnly: true
             ```
     2. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
 
