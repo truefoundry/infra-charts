@@ -37,8 +37,8 @@ This application has two parts.
 
 ### Using self-signed certificate in control plane URL
 If your control plane URL is using self-signed CA certificate, follow these steps:
-1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways
-    a. using volume mounts
+1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways:
+    1. using volume mounts
         - create a config map using your `ca-certificate.crt` file
             `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
         - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
@@ -50,7 +50,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
                 extraVolumeMounts:
                     - name
             ```
-    b. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
+    2. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
 
 2. Add extraEnv in tfyAgent to allow insecure connection
     ```
