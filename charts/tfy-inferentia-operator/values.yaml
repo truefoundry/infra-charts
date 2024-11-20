@@ -2,7 +2,8 @@
 ## @param devicePlugin.enabled Enable device plugin Daemonset.
 ## @param devicePlugin.resources.requests.cpu CPU request for device plugin Daemonset.
 ## @param devicePlugin.resources.requests.memory Memory request for device plugin Daemonset.
-## @param devicePlugin.image Image to use for device plugin Daemonset.
+## @param devicePlugin.image.repository Image repository to use for device plugin Daemonset.
+## @param devicePlugin.image.tag Image tag to use for device plugin Daemonset.
 ## @param imagePullSecrets (global) List of image pull secrets
 ## @param devicePlugin.imagePullSecrets List of image pull secrets
 ## @param devicePlugin.affinity [object] Affinity settings for device plugin Daemonset.
@@ -13,7 +14,9 @@ devicePlugin:
     requests:
       cpu: 100m
       memory: 128Mi
-  image: public.ecr.aws/neuron/neuron-device-plugin:2.16.18.0
+  image:
+    repository: public.ecr.aws/neuron/neuron-device-plugin
+    tag: 2.16.18.0
   imagePullSecrets: []
   tolerations:
     ## @skip devicePlugin.tolerations[0]
