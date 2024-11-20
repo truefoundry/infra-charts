@@ -25,6 +25,8 @@ spec:
     chart: kube-prometheus-stack
     helm:
       values: |
+        defaultRules:
+          enabled: false
         coreDns:
           enabled: false
         grafana:
@@ -423,42 +425,41 @@ spec:
                     labels:
                       daemonset: 'true'
                     record: kubecost_savings_memory_allocation_bytes
-              - name: GoogleCadvisor
+              - name: Alerting
                 rules:
                   - for: 2m
                     expr: >-
-                      (sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
                       by (pod, container, namespace) /
-                      sum(container_spec_cpu_quota{container!=""}/container_spec_cpu_period{container!=""})
-                      by (pod, container, namespace) * 100) > 80
-                    alert: ContainerHighCpuUtilization
+                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="cpu"})
+                      by (pod, container, namespace) * 100 > 80
+                    alert: CPUHighUtilizationForRequested
                     labels:
                       severity: warning
                     annotations:
                       summary: >-
                         Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
                       description: |-
-                        Container CPU utilization is above 80%
+                        Container CPU utilization is above 80% of requested CPU
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
                     expr: >-
-                      (sum(container_memory_working_set_bytes{container!=""}) BY (pod,
-                      container, namespace) / sum(container_spec_memory_limit_bytes > 0) BY (pod,
-                      container, namespace) * 100) > 80
-                    alert: ContainerHighMemoryUsage
+                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
+                    alert: MemoryHighUtilizationForRequested
                     labels:
                       severity: warning
                     annotations:
                       summary: Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
                       description: |-
-                        Container Memory usage is above 80%
+                        Container Memory usage is above 80% of requested memory
                           VALUE = {{`{{ $value }}`}}
                   - for: 5m
                     expr: >-
-                      sum(increase(container_cpu_cfs_throttled_periods_total{container!=""}[5m]))
-                      by (container, pod, namespace) /
-                      sum(increase(container_cpu_cfs_periods_total[5m])) by
-                      (container, pod, namespace) > ( 25 / 100 )
+                      sum(increase(container_cpu_cfs_throttled_periods_total{job="kubelet", container!=""}[5m]))
+                      by (pod, container, namespace) /
+                      sum(increase(container_cpu_cfs_periods_total{job="kubelet"}[5m])) by
+                      (pod, container, namespace) > ( 25 / 100 )
                     alert: ContainerHighThrottleRate
                     labels:
                       severity: warning
@@ -467,42 +468,38 @@ spec:
                       description: |-
                         Container is being throttled
                           VALUE = {{`{{ $value }}`}}
-              - name: KubestateExporter
-                rules:
                   - for: 2m
                     expr: >-
-                      (kube_horizontalpodautoscaler_spec_max_replicas -
-                      kube_horizontalpodautoscaler_status_desired_replicas) * on
-                      (horizontalpodautoscaler,namespace, pod)
-                      (kube_horizontalpodautoscaler_status_condition{condition="ScalingLimited",
-                      status="true"} == 1) == 0
-                    alert: KubernetesHpaScaleInability
+                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
+                      by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="cpu"})
+                      by (pod, container, namespace) * 100 > 70
+                    alert: CPUHighUtilizationForLimit
                     labels:
-                      severity: warning
+                      severity: critical
                     annotations:
                       summary: >-
-                        Kubernetes HPA scale inability (instance {{ `{{ $labels.instance }}` }})
-                      description: >-
-                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} is unable to scale
+                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container CPU utilization is above 70% of CPU limit
                           VALUE = {{`{{ $value }}`}}
-                  - for: 0m
+                  - for: 2m
                     expr: >-
-                      kube_horizontalpodautoscaler_status_condition{status="false",
-                      condition="ScalingActive"} == 1
-                    alert: KubernetesHpaMetricsUnavailability
+                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 70
+                    alert: MemoryHighUtilizationForLimit
                     labels:
-                      severity: warning
+                      severity: critical
                     annotations:
                       summary: >-
-                        Kubernetes HPA metrics unavailability (instance {{ `{{ $labels.instance }}` }})
-                      description: >-
-                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}}
-                        is unable to collect metrics
+                        Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container Memory usage is above 70% of memory limit
                           VALUE = {{`{{ $value }}`}}
                   - for: 15m
                     expr: >-
                       sum by (namespace, pod)
-                      (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"}) > 0
+                      (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
                     alert: KubernetesPodNotHealthy
                     labels:
                       severity: critical
@@ -514,7 +511,7 @@ spec:
                         non-running state for longer than 15 minutes.
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
-                    expr: increase(kube_pod_container_status_restarts_total[1m]) > 3
+                    expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
                     alert: KubernetesPodCrashLooping
                     labels:
                       severity: warning
@@ -526,34 +523,86 @@ spec:
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
                     expr: >-
-                      (kube_horizontalpodautoscaler_status_desired_replicas >=
-                      kube_horizontalpodautoscaler_spec_max_replicas) and
-                      (kube_horizontalpodautoscaler_spec_max_replicas > 1) and
-                      (kube_horizontalpodautoscaler_spec_min_replicas !=
-                      kube_horizontalpodautoscaler_spec_max_replicas)
-                    alert: KubernetesHpaScaleMaximum
+                      sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m])) 
+                      by (container, pod, namespace) > 0
+                    alert: ContainerOOMKilled
                     labels:
-                      severity: info
+                      severity: critical
                     annotations:
-                      summary: Kubernetes HPA scale maximum (instance {{ `{{ $labels.instance }}` }})
-                      description: >-
-                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}} 
-                        has hit maximum number of desired pods
-                          VALUE = {{`{{ $value }}`}}
-                  - for: 0m
+                      summary: >-
+                        Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
+                      description: |-
+                        Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} 
+                        has been OOM killed in the last 5 minutes
+                          VALUE = {{`{{ $value }}`}} times
+                  - for: 10m
                     expr: >-
-                      max(quantile_over_time(0.5,
-                      kube_horizontalpodautoscaler_status_desired_replicas[1d]) ==
-                      kube_horizontalpodautoscaler_spec_min_replicas) by
-                      (horizontalpodautoscaler) > 3
-                    alert: KubernetesHpaUnderutilized
+                      (sum(kubelet_volume_stats_used_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace) /
+                      sum(kubelet_volume_stats_capacity_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace)) * 100 > 90
+                    alert: PersistentVolumeUsageHigh
                     labels:
-                      severity: info
+                      severity: critical
                     annotations:
-                      summary: Kubernetes HPA underutilized (instance {{ `{{ $labels.instance }}` }})
-                      description: >-
-                        HPA {{`{{ $labels.namespace }}`}}/{{`{{ $labels.horizontalpodautoscaler }}`}}
-                        is constantly at minimum replicas for 50% of the time.
-                        Potential cost saving here.
+                      summary: >-
+                        Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
+                      description: |-
+                        Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}} 
+                        is using more than 90% of its capacity.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: (1 - (node_filesystem_avail_bytes{job="node-exporter"} / node_filesystem_size_bytes{job="node-exporter"})) > 0.9
+                    alert: NodeDiskPressure
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node disk usage is above 90% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing disk pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} < 0.1
+                    alert: NodeMemoryPressure
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node memory available is below 10% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing memory pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: rate(node_cpu_seconds_total{job="node-exporter", mode="idle"}[5m]) < 0.1
+                    alert: NodeCPUPressure
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node CPU usage is above 90% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing CPU pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: kube_node_status_condition{job="kube-state-metrics", condition="Ready", status="true"} == 0
+                    alert: NodeNotReady
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node is not ready ({{`{{ $labels.node }}`}})
+                      description: |-
+                        Node {{`{{ $labels.node }}`}} is not in a ready state.
                           VALUE = {{`{{ $value }}`}}
+                  - for: 5m
+                    expr: kube_node_status_condition{job="kube-state-metrics", condition="NetworkUnavailable", status="true"} == 1
+                    alert: NodeNetworkUnavailable
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node network is unavailable ({{`{{ $labels.node }}`}})
+                      description: |-
+                        Node {{`{{ $labels.node }}`}} network is unavailable.
+                          VALUE = {{`{{ $value }}`}}
+
 {{- end }}
