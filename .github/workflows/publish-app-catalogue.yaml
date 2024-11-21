@@ -67,9 +67,9 @@ jobs:
           # Get the version of the truefoundry helm chart
           cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-aws-eks-inframold/templates/truefoundry.yaml)
           # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold s3://tfy-argo-application-catalogue/aws-eks --delete
+          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold/templates s3://tfy-argo-application-catalogue/aws-eks/templates --delete
           # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold s3://tfy-argo-application-catalogue/aws-eks/$cp_chart_version --delete
+          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold/templates s3://tfy-argo-application-catalogue/aws-eks/$cp_chart_version/templates --delete
           echo "Synced catalogue for aws-eks successfully"
       - run: |
           echo "Render GCP standard k8s manifests"
@@ -77,9 +77,9 @@ jobs:
           # Get the version of the truefoundry helm chart
           cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates/truefoundry.yaml)
           # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold s3://tfy-argo-application-catalogue/gcp-gke-standard --delete
+          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates s3://tfy-argo-application-catalogue/gcp-gke-standard/templates --delete
           # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold s3://tfy-argo-application-catalogue/gcp-gke-standard/$cp_chart_version --delete
+          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates s3://tfy-argo-application-catalogue/gcp-gke-standard/$cp_chart_version/templates --delete
           echo "Synced catalogue for gcp-standard successfully"
       - run: |
           echo "Render Azure-AKS manifests"
@@ -87,9 +87,9 @@ jobs:
           # Get the version of the truefoundry helm chart
           cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-azure-aks-inframold/templates/truefoundry.yaml)
           # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold s3://tfy-argo-application-catalogue/azure-aks --delete
+          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold/templates s3://tfy-argo-application-catalogue/azure-aks/templates --delete
           # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold s3://tfy-argo-application-catalogue/azure-aks/$cp_chart_version --delete
+          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold/templates s3://tfy-argo-application-catalogue/azure-aks/$cp_chart_version/templates --delete
           echo "Synced catalogue for azure-aks successfully"
       - run: |
           echo "Render Generic k8s manifests"
@@ -97,9 +97,9 @@ jobs:
           # Get the version of the truefoundry helm chart
           cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-generic-inframold/templates/truefoundry.yaml)
           # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-generic-inframold s3://tfy-argo-application-catalogue/generic --delete
+          aws s3 sync ./catalogues/tfy-k8s-generic-inframold/templates s3://tfy-argo-application-catalogue/generic/templates --delete
           # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-generic-inframold s3://tfy-argo-application-catalogue/generic/$cp_chart_version --delete
+          aws s3 sync ./catalogues/tfy-k8s-generic-inframold/templates s3://tfy-argo-application-catalogue/generic/$cp_chart_version/templates --delete
           echo "Synced catalogue for generic k8s successfully"
       - run: |
           echo "Render Civo-Talos k8s manifests"
@@ -107,9 +107,9 @@ jobs:
           # Get the version of the truefoundry helm chart
           cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-civo-talos-inframold/templates/truefoundry.yaml)
           # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold s3://tfy-argo-application-catalogue/civo-talos --delete
+          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold/templates s3://tfy-argo-application-catalogue/civo-talos/templates --delete
           # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold s3://tfy-argo-application-catalogue/civo-talos/$cp_chart_version --delete
+          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold/templates s3://tfy-argo-application-catalogue/civo-talos/$cp_chart_version/templates --delete
           echo "Synced catalogue for civo-talos k8s successfully"
       - run: |
           # Invalidate cloudfront

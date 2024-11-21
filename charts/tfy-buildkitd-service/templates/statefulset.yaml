@@ -112,7 +112,7 @@ spec:
               mountPath: /etc/buildkit/client/certs/
           {{- end }}
           {{- with .Values.extraVolumeMounts }}
-          {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: buildkit-config
@@ -127,7 +127,7 @@ spec:
             secretName: {{ .Values.tls.buildkitClientCertsSecretName }}
       {{- end }}
       {{- with .Values.extraVolumes }}
-      {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
