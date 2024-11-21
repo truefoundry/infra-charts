@@ -1,13 +1,43 @@
 ## @section Configuration for LLM Gateway
 
 ## @param global Truefoundry global values
-global: {}
+global:
+  ## @param global.controlPlaneURL Control plane URL
+  controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
+  ## @param global.truefoundryReleaseName Truefoundry release name
+  truefoundryReleaseName: "truefoundry"
+  ## @param global.llmGatewayInfra LLM Gateway Infra configuration
+  llmGatewayInfra:
+    ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
+    enabled: false
+    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
+    releaseName: "tfy-llm-gateway-infra"
+    ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
+    natsAdminPassword: ""
+    ## llmGatewayInfra.clickhouse Clickhouse configuration
+    clickhouse:
+      ## @param global.llmGatewayInfra.clickhouse.userPassword Clickhouse user password    
+      userPassword: ""
+
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
   tag: 05f395008bcd848a1179c5a7084a4f60c36b7c09
+  
+## @param fullnameOverride Full name override for the tfy-llm-gateway
+fullnameOverride: tfy-llm-gateway
+## @skip env Environment variables for the tfy-llm-gateway
+env:
+  CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
+  CONTROL_PLANE_NATS_URL: nats://{{ .Values.global.truefoundryReleaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  GATEWAY_NATS_CONFIGURATION: '{"type": "nats", "url": "ws://{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080", "username": "admin", "password": "{{ .Values.global.llmGatewayInfra.natsAdminPassword }}"}'
+  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  LOG_LEVEL: info
+  ENABLE_EXTERNAL_OAUTH: "false"
 
 ## @param replicaCount Number of replicas
 replicaCount: 1
@@ -19,8 +49,6 @@ envSecretName: tfy-llm-gateway-env-secret
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
 nameOverride: ''
-## @param fullnameOverride Fullname override
-fullnameOverride: ''
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param podSecurityContext Pod security context
@@ -131,21 +159,11 @@ extraVolumeMounts: []
 rbac:
   ## @param rbac.enabled Enable rbac
   enabled: true
-## @skip env
-env:
-  CONTROL_PLANE_URL: ""
-  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-  AUTH_SERVER_URL: https://auth.truefoundry.com
-  LOG_LEVEL: info
-  GATEWAY_NATS_CONFIGURATION: ""
-  DEPLOYED_LLM_GATEWAY_URL: ""
-  CONTROL_PLANE_NATS_URL: ""
-  ENABLE_EXTERNAL_OAUTH: "false"
 
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling  
-  enabled: false
+  enabled: true
   ## @param autoscaling.minReplicas Minimum number of replicas
   minReplicas: 3
   ## @param autoscaling.maxReplicas Maximum number of replicas
