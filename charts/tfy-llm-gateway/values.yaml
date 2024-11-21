@@ -14,10 +14,6 @@ global:
     releaseName: "tfy-llm-gateway-infra"
     ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
     natsAdminPassword: ""
-    ## llmGatewayInfra.clickhouse Clickhouse configuration
-    clickhouse:
-      ## @param global.llmGatewayInfra.clickhouse.userPassword Clickhouse user password    
-      userPassword: ""
 
 ## Image configuration for llm-gateway
 image:
@@ -27,17 +23,7 @@ image:
   tag: 510cb55e8ff708cbc0b0fbdf02ea9b104bbdc846
   
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
-fullnameOverride: tfy-llm-gateway
-## @skip env Environment variables for the tfy-llm-gateway
-env:
-  CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-  DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-  CONTROL_PLANE_NATS_URL: nats://{{ .Values.global.truefoundryReleaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
-  GATEWAY_NATS_CONFIGURATION: '{"type": "nats", "url": "ws://{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080", "username": "admin", "password": "{{ .Values.global.llmGatewayInfra.natsAdminPassword }}"}'
-  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-  AUTH_SERVER_URL: https://auth.truefoundry.com
-  LOG_LEVEL: info
-  ENABLE_EXTERNAL_OAUTH: "false"
+fullnameOverride: {{ .Release.Name }}
 
 ## @param replicaCount Number of replicas
 replicaCount: 1
