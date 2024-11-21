@@ -1,13 +1,27 @@
 ## @section Configuration for LLM Gateway
 
-## @param global Truefoundry global values
-global: {}
+global:
+  ## @param global.controlPlaneURL Control plane URL
+  controlPlaneURL: ""
+  ## @param global.truefoundryReleaseName Truefoundry release name
+  truefoundryReleaseName: "truefoundry"
+  llmGatewayInfra:
+    ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
+    enabled: false
+    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
+    releaseName: "tfy-llm-gateway-infra"
+    ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
+    natsAdminPassword: ""
+
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
   tag: 510cb55e8ff708cbc0b0fbdf02ea9b104bbdc846
+  
+## @param fullnameOverride Full name override for the tfy-llm-gateway
+fullnameOverride: ""
 
 ## @param replicaCount Number of replicas
 replicaCount: 1
@@ -19,8 +33,6 @@ envSecretName: tfy-llm-gateway-env-secret
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
 nameOverride: ''
-## @param fullnameOverride Fullname override
-fullnameOverride: ''
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param podSecurityContext Pod security context
@@ -120,9 +132,9 @@ serviceAccount:
   ## @param serviceAccount.create Create service account
   create: true
   ## @param serviceAccount.annotations Service account annotations
-  name: tfy-llm-gateway
-  ## @param serviceAccount.name Service account name
   annotations: {}
+  ## @param serviceAccount.name Service account name
+  name: tfy-llm-gateway
 ## @param extraVolumes Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
@@ -131,21 +143,11 @@ extraVolumeMounts: []
 rbac:
   ## @param rbac.enabled Enable rbac
   enabled: true
-## @skip env
-env:
-  CONTROL_PLANE_URL: ""
-  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-  AUTH_SERVER_URL: https://auth.truefoundry.com
-  LOG_LEVEL: info
-  GATEWAY_NATS_CONFIGURATION: ""
-  DEPLOYED_LLM_GATEWAY_URL: ""
-  CONTROL_PLANE_NATS_URL: ""
-  ENABLE_EXTERNAL_OAUTH: "false"
 
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling  
-  enabled: false
+  enabled: true
   ## @param autoscaling.minReplicas Minimum number of replicas
   minReplicas: 3
   ## @param autoscaling.maxReplicas Maximum number of replicas
