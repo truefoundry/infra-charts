@@ -40,4 +40,4 @@ echo "Time taken to build the image: $build_time seconds"
 echo -n "$build_time" > /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
 
 printf "\033[36m[==== Docker logs end ====]\033[0m\n"
-printf "%s Docker image built and pushed\n" "$DONE_MARKER"
+printf "$DONE_MARKER Docker image built and pushed\n"
