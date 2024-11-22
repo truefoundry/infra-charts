@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.13.2
+  controlPlaneChartVersion: 0.13.4
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -47,6 +47,16 @@ global:
       value: spot
       effect: NoSchedule
       operator: Equal
+  ## global.llmGatewayInfra LLM Gateway Infra configuration
+  llmGatewayInfra:
+    ## @param global.llmGatewayInfra.enabled Bool to enable LLM Gateway Infra
+    enabled: false
+    ## @param global.llmGatewayInfra.releaseName Release name for LLM Gateway Infra
+    releaseName: "tfy-llm-gateway-infra"
+    ## @param global.llmGatewayInfra.natsAdminPassword Password for nats admin
+    natsAdminPassword: ""
+    ## @param global.llmGatewayInfra.clickhousePassword Password for clickhouse user
+    clickhousePassword: ""
 ## devMode  When enabled creates a dev installation of the control plane for testing purposes
 devMode:
   ## @param devMode.enabled Bool to enable dev mode
@@ -84,7 +94,7 @@ truefoundryBootstrap:
   ##
   imagePullSecrets: []
   ## @param truefoundryBootstrap.createdBuildkitServiceTlsCerts Bool to install TLS certificates
-  createdBuildkitServiceTlsCerts: "false"
+  createdBuildkitServiceTlsCerts: true
 ###################################################################################################################
 ####################################### Truefoundry Frontend App ##################################################
 ###################################################################################################################
@@ -103,7 +113,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.12.0"
+    tag: "v0.12.2"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -189,7 +199,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
     external: false
     ## @param truefoundryFrontendApp.llmGateway.backendHost Backend Host for the LLM gateway
-    backendHost: '{{ .Release.Name }}-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local'
+    backendHost: 'tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local'
     ## @param truefoundryFrontendApp.llmGateway.backendPort Backend Port for the LLM gateway
     backendPort: 8787
   ## @param truefoundryFrontendApp.proxyServerHost Proxy server host for the frontend app
@@ -224,13 +234,13 @@ truefoundryFrontendApp:
     VITE_MULTITENANT_ENABLED: "false"
     VITE_TENANT_NAME: "{{ .Values.global.tenantName }}"
     VITE_LOGO_URL: ""
-    VITE_EXPORT_AS_HELM_TYPES: service,volume,helm
+    VITE_EXPORT_AS_HELM_TYPES: service,volume,helm,job
     VITE_CREATE_AS_APPLICATION_SET: service,helm,job
     VITE_ENABLE_COMPANY_REGISTRATION: "false"
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
     VITE_COST_ENABLED_TENANTS: ""
-    VITE_ENABLE_WORKFLOWS: "false"
-    VITE_ENABLE_RECOMMENDATION_INFOBAR: "false"
+    VITE_ENABLE_WORKFLOWS: "true"
+    VITE_ENABLE_RECOMMENDATION_INFOBAR: "true"
     VITE_ENABLE_AUTOPILOT: "false"
     VITE_AUTOPILOT_ENABLED_TENANTS: ""
     VITE_ENABLE_TROUBLESHOOT: "false"
@@ -238,7 +248,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_PROMPT_MANAGEMENT: "false"
     VITE_PROMPT_MANAGEMENT_ENABLED_TENANTS: ""
     VITE_ENABLE_EVENTS_GRAPHS: "true"
-    VITE_ENABLE_CLUSTER_METRICS: "false"
+    VITE_ENABLE_CLUSTER_METRICS: "true"
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
@@ -246,16 +256,16 @@ truefoundryFrontendApp:
     VITE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
     VITE_CIVO_RESOURCES_STRING: ""
     VITE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
-    VITE_LLM_PLAYGROUND_ENABLED: "false"
+    VITE_LLM_PLAYGROUND_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
     VITE_LLM_PLAYGROUND_ENABLE_STANDALONE: "false"
     VITE_LLM_PLAYGROUND_ENABLE_REDIRECT: "false"
     VITE_OLD_LLM_PLAYGROUND_PATH: llm-playground
     VITE_LLM_PLAYGROUND_PATH: llm-gateway
-    VITE_ENABLE_SENTRY: "false"
+    VITE_ENABLE_SENTRY: "true"
     VITE_ENABLE_PROMPT_TEMPLATES: "false"
     VITE_ENABLE_TOOLS_AGENTS: "false"
     VITE_AGENT_ENABLED_TENANTS: truefoundry,internal
-    VITE_BRAINFISH_WIDGET_ENABLED_TENANTS: brainfish
+    VITE_BRAINFISH_WIDGET_ENABLED_TENANTS: ""
     VITE_SENTRY_DSN: ""
     VITE_APEX_DOMAIN: http://truefoundry.com/
     VITE_ITERATE_AI_KEY: ""
@@ -266,7 +276,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_MIXPANEL: "false"
     VITE_ENABLE_SCHEMA_VISUALISER: "false"
     VITE_SENTRY_AUTH_TOKEN: ""
-    VITE_SENTRY_ENVIRONMENT: ""
+    VITE_SENTRY_ENVIRONMENT: production
     VITE_MIXPANEL_TOKEN: ""
     VITE_APP_ENVIRONMENT: ""
     VITE_CRISP_WEBSITE_ID: ""
@@ -396,7 +406,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.13.2"
+    tag: "v0.13.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -494,12 +504,11 @@ servicefoundryServer:
     FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local:8089
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
     BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-    LLM_GATEWAY_URL: ""
+    LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
     GITHUB_INSTALLATION_URL: ""
     GITHUB_PRIVATE_KEY: ""
     GITHUB_APP_ID: ""
-    GITHUB_PAT: ""
     BITBUCKET_CLIENT_ID: ""
     BITBUCKET_CLIENT_SECRET: ""
     BITBUCKET_APP_PASSWORD: ""
@@ -508,18 +517,14 @@ servicefoundryServer:
     GITLAB_SCOPE: ""
     AZURE_CLIENT_ID: ""
     AZURE_CLIENT_SECRET: ""
-    CLICKHOUSE_HOST: ""
-    CLICKHOUSE_USER: ""
-    CLICKHOUSE_PASSWORD: ""
-    CLICKHOUSE_WAIT_TIMEOUT: 5m
-    STORAGE_CLASS_ACCESS_MODES: ""
-    TRUEFOUNDRY_PUBLIC_ENABLED: ""
+    CLICKHOUSE_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
+    CLICKHOUSE_HOST: http://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:8123
+    CLICKHOUSE_USER: user
+    CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
     OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
     EXTERNAL_OAUTH_CLIENT_SECRET: ""
-    GLOBAL_BUILDERS_BUILD_PER_URL: "0"
-    APPLICATION_TYPES_ENABLED_FOR_SFY_SERVER_VALIDATION: service,async-service,job,volume,notebook,codeserver,ssh-server,helm,application-set
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
@@ -547,7 +552,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.10.0"
+    tag: "v0.10.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -621,6 +626,8 @@ tfyK8sController:
     ANALYTICS_SERVER_URL: https://analytics.truefoundry.com
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TENANT_NAME: "{{ .Values.global.tenantName }}"
+    ENABLE_GATEWAY_CONSUMER: "{{ .Values.global.llmGatewayInfra.enabled }}"
+    GATEWAY_NATS_URL: http://admin:{{ .Values.global.llmGatewayInfra.natsAdminPassword }}@{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     NODE_ENV: production
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
@@ -745,7 +752,7 @@ nats:
       ## @param nats.nats.image.repository NATS server image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
       ## @param nats.nats.image.tag NATS server image tag
-      tag: 2.10.21-alpine3.20
+      tag: 2.10.22-alpine3.20
     ## @param nats.nats.advertise Bool to enable NATS server advertise
     advertise: false
     ## @param nats.nats.imagePullSecrets Image pull credentials for NATS server
@@ -888,12 +895,6 @@ tfyBuild:
   preemptibleDeployment:
     ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
     enabled: false
-    ## tfyBuild.preemptibleDeployment.image
-    image:
-      ## @param tfyBuild.preemptibleDeployment.image.repository Repository for the preemptible deployment
-      repository: tfy.jfrog.io/tfy-mirror/alpine
-      ## @param tfyBuild.preemptibleDeployment.image.tag Tag for the preemptible deployment
-      tag: "3.20"
     ## @param tfyBuild.preemptibleDeployment.imagePullSecrets Image pull secrets for the preemptible deployment
     imagePullSecrets: []
     ## @param tfyBuild.preemptibleDeployment.affinity Affinity settings for the preemptible deployment
@@ -922,7 +923,7 @@ tfyBuild:
       ##
       imagePullSecrets: []
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret baseImagePullSecret for the docker config
-      baseImagePullSecret: ""
+      baseImagePullSecret: "truefoundry-image-pull-secret"
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.script script for the sfyBuilder to be executed
       script: |
         download-code.sh
@@ -997,11 +998,11 @@ tfyBuild:
     ##  tfyBuild.truefoundryWorkflows.logMarkers Log markers for the tfyBuild server
     logMarkers:
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.error Error log marker for the tfyBuild server
-      error: \u001b[31m[Error]\u001b[0m
+      error: \033[31m[Error]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.done Done log marker for the tfyBuild server
-      done: \u001b[32m[Done]\u001b[0m
+      done: \033[32m[Done]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.start Start log marker for the tfyBuild server
-      start: \u001b[36m[Start]\u001b[0m
+      start: \033[36m[Start]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.clientPrefix Client prefix for the tfyBuild server
       clientPrefix:
         - TFY-CLIENT
@@ -1037,16 +1038,22 @@ tfyBuild:
 ## tfy-buildkitd-service Settings corresponding to the tfy-buildkitd service
 tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
-  enabled: false
+  enabled: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
   service:
     ## @param tfy-buildkitd-service.service.port port number for the tfy-buildkitd service
     port: 1234
   ## @param tfy-buildkitd-service.replicaCount Number of replicas Value kept for future use, kept 1
   replicaCount: 1
+  ## @param tfy-buildkitd-service.podAnnotations Annotations for the tfy-buildkitd service pods
+  podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    karpenter.sh/do-not-disrupt: 'true'
+    karpenter.sh/do-not-evict: 'true'
+  ## tfy-buildkitd-service.tls TLS settings for the tfy-buildkitd service
   tls:
     ## @param tfy-buildkitd-service.tls.enabled Enable TLS for the tfy-buildkitd service
-    enabled: false
+    enabled: true
     ## @param tfy-buildkitd-service.tls.buildkitClientCertsSecretName Name of the secret containing the TLS certificate
     buildkitClientCertsSecretName: "tfy-buildkit-client-certs"
 # To further configure the local postgres installation use the following section.

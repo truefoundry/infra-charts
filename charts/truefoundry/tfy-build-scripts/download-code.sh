@@ -114,7 +114,7 @@ elif [[ $BUILD_TYPE == "azure" ]]; then
 elif [[ $BUILD_TYPE == "notebook_build" ]]; then
     :
 else
-    printf "%s Source type '%s' not supported.\n" "$FAILED_MARKER" "$BUILD_TYPE"
+    printf "$FAILED_MARKER Source type '%s' not supported.\n" "$BUILD_TYPE"
     exit 1
 fi
 
@@ -122,4 +122,4 @@ end_time=$(date +%s)
 source_code_download_time=$((end_time - start_time))
 echo "Time taken to download the source code: $source_code_download_time seconds"
 echo -n "$source_code_download_time" > /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
-printf "%s Download code completed\n" "$DONE_MARKER"
+printf "$DONE_MARKER Download code completed\n"
