@@ -18,7 +18,10 @@ spec:
     repoURL: https://truefoundry.github.io/infra-charts/
     targetRevision: 0.1.6
     helm:
-      values: |
+      values: |-
+        {{- if .Values.grafana.valuesOverride }}
+        {{ .Values.grafana.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         # Host for the grafana dashboard
         host: <to_be_provided>
         grafana:
@@ -34,6 +37,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

@@ -24,7 +24,10 @@ spec:
     targetRevision: 55.8.1
     chart: kube-prometheus-stack
     helm:
-      values: |
+      values: |-
+        {{- if .Values.prometheus.valuesOverride }}
+        {{ .Values.prometheus.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         defaultRules:
           enabled: false
         coreDns:
@@ -254,6 +257,7 @@ spec:
         alertmanager:
           config:
             route:
+              receiver: tfy-agent
               routes:
                 - continue: true
                   matchers:
@@ -604,5 +608,5 @@ spec:
                       description: |-
                         Node {{`{{ $labels.node }}`}} network is unavailable.
                           VALUE = {{`{{ $value }}`}}
-
+        {{- end }}
 {{- end }}
