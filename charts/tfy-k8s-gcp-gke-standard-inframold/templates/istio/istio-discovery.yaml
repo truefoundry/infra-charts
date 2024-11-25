@@ -20,7 +20,10 @@ spec:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.21.1
     helm:
-      values: |
+      values: |-
+        {{- if .Values.istio.discovery.valuesOverride }}
+        {{ .Values.istio.discovery.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         pilot:          
           autoscaleEnabled: true
           autoscaleMin: 2
@@ -41,6 +44,7 @@ spec:
         global:
           hub: {{ .Values.istio.discovery.hub }}
           tag: {{ .Values.istio.discovery.tag }}
+        {{- end }}
 
   syncPolicy:
     automated: {}

@@ -16,6 +16,13 @@ spec:
     targetRevision: 0.1.6
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: elasti
+    helm:
+      values: |-
+        {{- if .Values.elasti.valuesOverride }}
+        {{ .Values.elasti.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {}
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: {}

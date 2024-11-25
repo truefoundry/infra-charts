@@ -20,7 +20,12 @@ spec:
     repoURL: https://istio-release.storage.googleapis.com/charts
     targetRevision: 1.21.1
     helm:
-      values: ""
+      values: |-
+        {{- if .Values.istio.base.valuesOverride }}
+        {{ .Values.istio.base.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
