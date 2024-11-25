@@ -17,7 +17,7 @@ image:
   ##
   tag: "v0.16.0"
 
-## @param buildkitConfig buildkit configuration for tfyBuildkitdService
+## @skip buildkitConfig buildkit configuration for tfyBuildkitdService
 buildkitConfig: |
   debug = true
 
@@ -28,7 +28,7 @@ buildkitConfig: |
   enabled = true
   gc = true
   gckeepstorage = "107400000000"
-  max-parallelism = 4
+  max-parallelism = 3
 
 
   [[worker.oci.gcpolicy]]
@@ -119,12 +119,12 @@ service:
 ##
 resources:
   limits:
-    cpu: 3500m
-    memory: 13.2Gi
+    cpu: 2500m
+    memory: 8Gi
     ephemeral-storage: 100Mi
   requests:
-    cpu: 3500m
-    memory: 13.2Gi
+    cpu: 2500m
+    memory: 8Gi
     ephemeral-storage: 100Mi
 
 ## @param extraVolumes List of Volumes to attach to tfyBuildkitdService container

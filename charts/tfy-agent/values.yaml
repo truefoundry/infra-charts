@@ -25,8 +25,7 @@ config:
   ## @param config.controlPlaneClusterIP ClusterIP of the control plane to connect agent (format: `http://`)
   ##
   controlPlaneClusterIP: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
-
-   ## @param config.controlPlaneControllerClusterIP ClusterIP of the control plane controller to connect proxy (format: `http://`)
+  ## @param config.controlPlaneControllerClusterIP ClusterIP of the control plane controller to connect proxy (format: `http://`)
   ##
   controlPlaneControllerClusterIP: "http://truefoundry-tfy-controller.truefoundry.svc.cluster.local:8123"
 
@@ -73,8 +72,8 @@ config:
   #   - default
   #   - namespace-1
 
-## @param imagePullSecrets Secrets to pull images
-##
+  ## @param imagePullSecrets Secrets to pull images
+  ##
 imagePullSecrets: []
 
 ## @param nameOverride String to override partial name passed in helm install command
@@ -141,7 +140,7 @@ tfyAgent:
     ## @param tfyAgent.service.port Port for tfyAgent service
     ##
     port: 3000
-    
+
     ## @param tfyAgent.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
@@ -170,7 +169,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "29b288e0b59ba09cdd4bf51ef97c86bfdcf1e626"
+    tag: "abdd060d96379a09bed4d6c2ab7516a11e154bfa"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -322,7 +321,7 @@ tfyAgentProxy:
     pullPolicy: IfNotPresent
     ## @param tfyAgentProxy.image.tag Image tag whose default is the chart appVersion.
     ##
-    tag: "0823e317799add6beaaa4037b81068f6c25f3bf7"
+    tag: "fcfb8e398eb01f05fb72cd9115b9ec69a89b9cce"
 
   ## @param tfyAgentProxy.extraEnvVars Additional envrionment variables for tfyAgentPRoxy
   ##
@@ -420,6 +419,13 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
+  
+  ## @param tfyAgentProxy.extraVolumes Extra volume for tfyAgentProxy container
+  ##
+  extraVolumes: []
+  ## @param tfyAgentProxy.extraVolumeMounts Extra volume mount for tfyAgentProxy container
+  ##
+  extraVolumeMounts: []
 
   clusterRole:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
@@ -440,8 +446,8 @@ tfyAgentProxy:
     #   resources: ["namespaces"]
     #   verbs: ["create"]
 
-## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
-##
+    ## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
+    ##
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.
   enabled: true

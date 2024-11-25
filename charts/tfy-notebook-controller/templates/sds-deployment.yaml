@@ -39,7 +39,7 @@ spec:
             {{- with .Values.sdsServer.command }}
             {{- toYaml . | nindent 12  }}
             {{- end }}
-          image: "{{ .Values.sdsServer.image }}"
+          image: {{ .Values.sdsServer.image.repository }}:{{ .Values.sdsServer.image.tag }}
           imagePullPolicy: IfNotPresent
           name: sds-server
           readinessProbe:
