@@ -295,9 +295,23 @@ aws-eks-gpu-operator:
     enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
     version: 3.3.8-3.6.0-ubuntu22.04
-    ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
-      enabled: false
+      ## @param aws-eks-gpu-operator.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+      enabled: true
+      ## @skip aws-eks-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
+      honorLabels: true
+      ## @skip aws-eks-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
+      additionalLabels:
+        release: prometheus
+      ## @skip aws-eks-gpu-operator.dcgmExporter.serviceMonitor.relabelings
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: kubernetes_node
+        - action: replace
+          targetLabel: job
+          replacement: gpu-metrics
     ## @skip aws-eks-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
@@ -422,10 +436,23 @@ gcp-gke-standard-dcgm-exporter:
       memory: 400Mi
   ## ServiceMonitor configuration for Prometheus monitoring.
   ##
-  ## @param gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-  ##
   serviceMonitor:
-    enabled: false
+    ## @param gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+    enabled: true
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.honorLabels
+    honorLabels: true
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.additionalLabels
+    additionalLabels:
+      release: prometheus
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.relabelings
+    relabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: kubernetes_node
+      - action: replace
+        targetLabel: job
+        replacement: gpu-metrics
   ## Node affinity configuration for worker nodes with GKE accelerators.
   ##
   affinity:
@@ -736,9 +763,23 @@ azure-aks-gpu-operator:
     enabled: true
     ## @param azure-aks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
     version: 3.3.8-3.6.0-ubuntu22.04
-    ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
-      enabled: false
+      ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+      enabled: true
+      ## @skip azure-aks-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
+      honorLabels: true
+      ## @skip azure-aks-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
+      additionalLabels:
+        release: prometheus
+      ## @skip azure-aks-gpu-operator.dcgmExporter.serviceMonitor.relabelings
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: kubernetes_node
+        - action: replace
+          targetLabel: job
+          replacement: gpu-metrics
     ## @skip azure-aks-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
@@ -947,9 +988,23 @@ civo-talos-gpu-operator:
     enabled: true
     ## @param civo-talos-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
     version: 3.3.8-3.6.0-ubuntu22.04
-    ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
-      enabled: false
+      ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+      enabled: true
+      ## @skip civo-talos-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
+      honorLabels: true
+      ## @skip civo-talos-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
+      additionalLabels:
+        release: prometheus
+      ## @skip civo-talos-gpu-operator.dcgmExporter.serviceMonitor.relabelings
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: kubernetes_node
+        - action: replace
+          targetLabel: job
+          replacement: gpu-metrics
     ## @skip civo-talos-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
@@ -1195,9 +1250,23 @@ generic-gpu-operator:
     enabled: true
     ## @param generic-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
     version: 3.3.8-3.6.0-ubuntu22.04
-    ## @param generic-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     serviceMonitor:
-      enabled: false
+      ## @param generic-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+      enabled: true
+      ## @skip generic-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
+      honorLabels: true
+      ## @skip generic-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
+      additionalLabels:
+        release: prometheus
+      ## @skip generic-gpu-operator.dcgmExporter.serviceMonitor.
+      relabelings:
+        - action: replace
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: kubernetes_node
+        - action: replace
+          targetLabel: job
+          replacement: gpu-metrics
     ## @skip generic-gpu-operator.dcgmExporter.env
     env:
       - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
