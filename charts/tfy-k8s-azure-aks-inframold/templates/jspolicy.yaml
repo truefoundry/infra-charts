@@ -18,10 +18,14 @@ spec:
     repoURL: "https://charts.loft.sh"
     targetRevision: 0.2.2
     helm:
-      values: |
+      values: |-
+        {{- if .Values.jspolicy.valuesOverride }}
+        {{ .Values.jspolicy.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         replicaCount: 2
         env:
           npm_config_registry: "https://tfy.jfrog.io/artifactory/api/npm/tfy-npm-registry-local"
+        {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

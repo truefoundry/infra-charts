@@ -17,6 +17,13 @@ spec:
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-inferentia-operator
     targetRevision: 0.2.1
+    helm:
+      values: |-
+        {{- if .Values.metricsServer.valuesOverride }}
+        {{ .Values.metricsServer.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

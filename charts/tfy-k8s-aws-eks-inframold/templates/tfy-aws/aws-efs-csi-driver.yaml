@@ -18,6 +18,9 @@ spec:
     chart: aws-efs-csi-driver
     helm:
       values: |-
+        {{- if .Values.aws.awsEfsCsiDriver.valuesOverride }}
+        {{ .Values.aws.awsEfsCsiDriver.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         controller:
           serviceAccount:
             create: true
@@ -41,6 +44,7 @@ spec:
             provisioner: efs.csi.aws.com
             reclaimPolicy: Delete
             volumeBindingMode: Immediate
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: { }

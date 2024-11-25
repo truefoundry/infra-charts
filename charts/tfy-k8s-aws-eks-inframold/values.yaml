@@ -37,12 +37,18 @@ affinity: {}
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
+  ## @param argocd.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section argoWorkflows parameters
 ## @param argoWorkflows.enabled Flag to enable Argo Workflows
 ##
 argoWorkflows:
   enabled: true
+  ## @param argoWorkflows.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section argoRollouts parameters
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
@@ -50,6 +56,9 @@ argoWorkflows:
 ##
 argoRollouts:
   enabled: true
+  ## @param argoRollouts.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section notebookController parameters
 ## Notebook Controller is required to power notebooks in Truefoundry
@@ -64,19 +73,29 @@ notebookController:
   ## @param notebookController.notebookBaseDomainUrl Base domain URL for Notebook Controller
   ##
   notebookBaseDomainUrl: <to_be_provided>
+  ## @param notebookController.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section certManager parameters
 ## @param certManager.enabled Flag to enable Cert Manager
 ##
 certManager:
   enabled: false
+  ## @param certManager.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section metricsServer parameters
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
+  ## @param metricsServer.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
   enabled: true
+
 
 
 
@@ -97,6 +116,9 @@ aws:
     ## @param aws.awsLoadBalancerController.region region of AWS EKS cluster
     ##
     region: ""
+    ## @param aws.awsLoadBalancerController.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
 
 
   ## @subsection karpenter parameters
@@ -121,6 +143,10 @@ aws:
     ##
     interruptionQueue: ""
 
+    ## @param aws.karpenter.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
+
   ## @subsection awsEbsCsiDriver parameters
   ## @param aws.awsEbsCsiDriver.enabled Flag to enable AWS EBS CSI Driver
   ##
@@ -129,6 +155,9 @@ aws:
     ## @param aws.awsEbsCsiDriver.roleArn Role ARN for AWS EBS CSI Driver
     ##
     roleArn: ""
+    ## @param aws.awsEbsCsiDriver.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
 
   ## @subsection awsEfsCsiDriver parameters
   ## @param aws.awsEfsCsiDriver.enabled Flag to enable AWS EFS CSI Driver
@@ -141,10 +170,16 @@ aws:
     ## @param aws.awsEfsCsiDriver.roleArn Role ARN for AWS EFS CSI Driver
     ##
     roleArn: ""
+    ## @param aws.awsEfsCsiDriver.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
   
   ## @param aws.inferentia.enabled Flag to enable Inferentia 
   inferentia:
     enabled: false
+    ## @param aws.inferentia.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
 
 
 ## @section gpu parameters
@@ -155,6 +190,9 @@ gpu:
   ## @param gpu.clusterType Cluster type for Tfy GPU Operator
   ##
   clusterType: awsEks
+  ## @param gpu.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section truefoundry parameters
 ## @param truefoundry.enabled Flag to enable TrueFoundry
@@ -167,6 +205,9 @@ truefoundry:
   ##
   devMode:
     enabled: false
+  ## @param truefoundry.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
   ## @section truefoundryBootstrap parameters
   ## @param truefoundry.truefoundryBootstrap.enabled Flag to enable bootstrap job to prep cluster for truefoundry installation
   truefoundryBootstrap:
@@ -201,12 +242,19 @@ truefoundry:
 ##
 loki:
   enabled: true
+  ## @param loki.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
 ##
 istio:
   enabled: true
+  base:
+    ## @param istio.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
   ## @skip istio.gateway.annotations Annotations for Istio Gateway
   gateway:
     
@@ -222,12 +270,18 @@ istio:
         owner=Truefoundry, application=tfy-istio-ingress
       "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true"
     
+    ## @param istio.gateway.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
   ## @section istio discovery parameters
   discovery:
     ## @param istio.discovery.hub Hub for the istio image
     hub: gcr.io/istio-release
     ## @param istio.discovery.tag Tag for the istio image
     tag: 1.21.1-distroless
+    ## @param istio.discovery.valuesOverride Config override from default config values
+    ##
+    valuesOverride: {}
   ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
   tfyGateway:
     
@@ -239,12 +293,18 @@ istio:
 ##
 keda:
   enabled: true
+  ## @param keda.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section kubecost parameters
 ## @param kubecost.enabled Flag to enable Kubecost
 ##
 kubecost:
   enabled: true
+  ## @param kubecost.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section prometheus parameters
 ## @param prometheus.enabled Flag to enable Prometheus
@@ -268,6 +328,9 @@ prometheus:
     - source_labels: [__meta_kubernetes_pod_node_name]
       action: replace
       target_label: kubernetes_node
+  ## @param prometheus.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 
 ## @section grafana parameters
@@ -275,6 +338,9 @@ prometheus:
 ##
 grafana:
   enabled: false
+  ## @param grafana.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section tfyAgent parameters
 ## @param tfyAgent.enabled Flag to enable Tfy Agent
@@ -285,15 +351,24 @@ tfyAgent:
   ## Token for cluster authentication
   ##
   clusterToken: ""
+  ## @param tfyAgent.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section elasti parameters
 ## @param elasti.enabled Flag to enable Elasti
 ##
 elasti:
   enabled: false
+  ## @param elasti.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
 
 ## @section jspolicy parameters
 ## @param jspolicy.enabled Flag to enable jspolicy. No policy is applied by default
 ##
 jspolicy:
   enabled: false
+  ## @param jspolicy.valuesOverride Config override from default config values
+  ##
+  valuesOverride: {}
