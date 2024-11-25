@@ -18,7 +18,10 @@ spec:
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:
-      values: |
+      values: |-
+        {{- if .Values.tfyAgent.valuesOverride }}
+        {{ .Values.tfyAgent.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         config:
           clusterToken: {{ .Values.tfyAgent.clusterToken}}
           tenantName: {{ .Values.tenantName}}
@@ -41,6 +44,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

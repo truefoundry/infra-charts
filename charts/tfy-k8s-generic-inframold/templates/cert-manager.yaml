@@ -19,6 +19,9 @@ spec:
     targetRevision: v1.15.0
     helm:
       values: |-
+        {{- if .Values.certManager.valuesOverride }}
+        {{ .Values.certManager.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         installCRDs: true
         {{- with .Values.tolerations }}
         tolerations:
@@ -69,6 +72,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     retry: {}

@@ -22,7 +22,10 @@ spec:
     repoURL: https://argoproj.github.io/argo-helm
     targetRevision: 7.4.4
     helm:
-      values: |
+      values: |-
+        {{- if .Values.argocd.valuesOverride }}
+        {{ .Values.argocd.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         extraObjects: 
         - apiVersion: argoproj.io/v1alpha1
           kind: AppProject
@@ -111,6 +114,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

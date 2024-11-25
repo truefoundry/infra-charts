@@ -21,6 +21,9 @@ spec:
     chart: aws-ebs-csi-driver
     helm:
       values: |-
+        {{- if .Values.aws.awsEbsCsiDriver.valuesOverride }}
+        {{ .Values.aws.awsEbsCsiDriver.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         node:
           tolerateAllTaints: true
         controller:
@@ -54,6 +57,7 @@ spec:
             reclaimPolicy: Delete
             volumeBindingMode: WaitForFirstConsumer
             allowVolumeExpansion: true
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: { }

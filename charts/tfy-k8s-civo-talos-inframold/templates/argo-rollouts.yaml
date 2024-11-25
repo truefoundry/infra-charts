@@ -18,7 +18,10 @@ spec:
     repoURL: https://argoproj.github.io/argo-helm
     targetRevision: 2.37.6
     helm:
-      values: |
+      values: |-
+        {{- if .Values.argoRollouts.valuesOverride }}
+        {{ .Values.argoRollouts.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         controller:
           resources:
             requests:
@@ -33,6 +36,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
