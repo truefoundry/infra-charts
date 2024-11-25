@@ -60,7 +60,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.17.0-ubi8
+    version: v1.17.2-ubi8
     ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -671,7 +671,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param azure-aks-gpu-operator.toolkit.version Version of the toolkit. Note for Aure Linux change `-ubuntu20.04` to `-ubi8`. However at the time of writing Azure Linux only supports V100 and T4 GPUs
-    version: v1.17.0-ubuntu20.04
+    version: v1.17.2-ubuntu20.04
     ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -683,6 +683,7 @@ azure-aks-gpu-operator:
   mig:
     ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
     strategy: mixed
+  
   ## Device Plugin configuration.
   devicePlugin:
     ## @param azure-aks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -993,13 +994,238 @@ civo-talos-gpu-operator:
 
 ## @section generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
 generic-gpu-operator:
+    ## Node Feature Discovery enabled/disable configuration.
+  nfd:
+    ## @param generic-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
+    enabled: true
+  
+  ## GPU Feature Discovery configuration.
+  gfd:
+    ## @param generic-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
+    enabled: true
+    ## @skip generic-gpu-operator.gfd.env
+    env:
+      - name: GFD_SLEEP_INTERVAL
+        value: 60s
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
+  
   ## Operator configuration.
   operator:
     ## @param generic-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
     upgradeCRD: true
     ## @param generic-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
+    ## Resource configuration for operator requests and limits.
+    ## @param generic-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
+    ## @param generic-gpu-operator.operator.resources.requests.memory Memory request for the operator.
+    ## @param generic-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
+    ## @param generic-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+    ## @skip generic-gpu-operator.operator.tolerations
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: ''
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Equal
+        value: ''
+        effect: NoSchedule
+  ## Node Feature Discovery configuration.
+  node-feature-discovery:
+    ## @param generic-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
+    enableNodeFeatureApi: true
+    master:
+      ## @param generic-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 200Mi
+      ## @skip generic-gpu-operator.node-feature-discovery.master.tolerations
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Equal
+          effect: NoSchedule
+    worker:
+      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
+      ## @skip generic-gpu-operator.node-feature-discovery.worker.tolerations
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        - key: sku
+          operator: Equal
+          value: gpu
+          effect: NoSchedule
+    gc:
+      ## @param generic-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
+      enable: true
+      ## @param generic-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
+      interval: 30m
+      ## @param generic-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
+      ## @param generic-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      resources:
+        requests:
+          cpu: 10m
+          memory: 100Mi
+      ## @skip generic-gpu-operator.node-feature-discovery.gc.tolerations
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+  ## Daemonsets configuration
+  daemonsets:
+    ## @param generic-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
+    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
+    # The downside being Daemonset will not be updated until it is manually deleted,
+    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
+    # If needed, older nodes can be drained to force a newer versions on a newer nodes
+    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
+    # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
+    updateStrategy: OnDelete
+    ## @param generic-gpu-operator.daemonsets.priorityClassName Priority class for Daemonsets
+    priorityClassName: system-node-critical
+    ## @skip generic-gpu-operator.daemonsets.tolerations
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      - key: sku
+        operator: Equal
+        value: gpu
+        effect: NoSchedule
+
+  ## Driver configuration
+  driver:
+    ## @param generic-gpu-operator.driver.enabled Enable/Disable driver installation.
+    enabled: true
+
+  ## Toolkit configuration.
+  toolkit:
+    ## @param generic-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
+    enabled: true
+    ## @param generic-gpu-operator.toolkit.version Version of the toolkit. 
+    version: v1.17.2-ubuntu20.04
+    ## @skip generic-gpu-operator.toolkit.env
+    env:
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
+        value: 'false'
+      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
+        value: 'true'
+
+  ## MIG Configuration
+  mig:
+    ## @param generic-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
+    strategy: mixed
   
+  ## Device Plugin configuration.
+  devicePlugin:
+    ## @param generic-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
+    enabled: true
+    ## @skip generic-gpu-operator.devicePlugin.env
+    env:
+      - name: PASS_DEVICE_SPECS
+        value: 'true'
+      - name: DEVICE_LIST_STRATEGY
+        value: volume-mounts
+      - name: DEVICE_ID_STRATEGY
+        value: index
+    ## @skip generic-gpu-operator.devicePlugin.config
+    config:
+      data:
+        all: ''
+        time-sliced-10: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              renameByDefault: true
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 10
+      name: time-slicing-config
+      create: true
+      default: all
+
+  ## DCGM configuration
+  dcgm:
+    ## @param generic-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
+    enabled: false
+    ## @param generic-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
+    version: 3.3.8-1-ubuntu22.04
+    ## @param generic-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
+    ## @param generic-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
+    ## @param generic-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
+    ## @param generic-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 100m
+        memory: 1000Mi
+
+  ## DCGM Exporter configuration.
+  dcgmExporter:
+    ## @param generic-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
+    enabled: true
+    ## @param generic-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
+    version: 3.3.8-3.6.0-ubuntu22.04
+    ## @param generic-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
+    serviceMonitor:
+      enabled: false
+    ## @skip generic-gpu-operator.dcgmExporter.env
+    env:
+      - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
+        value: uid
+      - name: DCGM_EXPORTER_LISTEN
+        value: :9400
+      - name: DCGM_EXPORTER_KUBERNETES
+        value: "true"
+      - name: DCGM_EXPORTER_COLLECTORS
+        value: /etc/dcgm-exporter/dcp-metrics-included.csv
+    ## @param generic-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
+    ## @param generic-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
+    ## @param generic-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
+    ## @param generic-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 100m
+        memory: 1000Mi
+    ## @param generic-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
+    args: ["-c", "5000"]
+
+  ## MIG Manager configuration.
+  migManager:
+    ## @skip generic-gpu-operator.migManager.enabled
+    enabled: false
+
   ## Validator configuration.
   validator:
     cuda:
@@ -1012,4 +1238,3 @@ generic-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
-
