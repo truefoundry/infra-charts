@@ -19,6 +19,9 @@ spec:
     targetRevision: 2.4.1
     helm:
       values: |-
+        {{- if .Values.kubecost.valuesOverride }}
+        {{ .Values.kubecost.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         global:
           grafana:
             enabled: false
@@ -44,6 +47,7 @@ spec:
         affinity:
           {{ toYaml . | nindent 10 }}
         {{- end }}
+      {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

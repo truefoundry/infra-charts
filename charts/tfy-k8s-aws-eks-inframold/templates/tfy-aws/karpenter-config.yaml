@@ -17,7 +17,10 @@ spec:
     repoURL: https://truefoundry.github.io/infra-charts/
     targetRevision: 0.1.33
     helm:
-      values: |
+      values: |-
+        {{- if .Values.aws.karpenter.valuesOverride }}
+        {{ .Values.aws.karpenter.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         cluster:
           name: {{ .Values.clusterName }}
         karpenter:
@@ -37,6 +40,7 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: {}

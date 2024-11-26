@@ -18,7 +18,10 @@ spec:
     repoURL: "https://argoproj.github.io/argo-helm"
     targetRevision: 0.42.5
     helm:
-      values: |
+      values: |-
+        {{- if .Values.argoWorkflows.valuesOverride }}
+        {{ .Values.argoWorkflows.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         controller:
           workflowDefaults:
             spec:
@@ -60,6 +63,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:

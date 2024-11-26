@@ -19,6 +19,9 @@ spec:
     chart: tfy-notebook-controller
     helm:
       values: |-
+        {{- if .Values.notebookController.valuesOverride }}
+        {{ .Values.notebookController.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         {{- with .Values.notebookController.notebookBaseDomainUrl }}
         notebookBaseDomainUrl: {{ . }}
         {{- end }}
@@ -42,6 +45,7 @@ spec:
           affinity:
             {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
