@@ -18,6 +18,9 @@ spec:
     chart: metrics-server
     helm:
       values: |-
+        {{- if .Values.metricsServer.valuesOverride }}
+        {{ .Values.metricsServer.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         podAnnotations:
           "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
         replicas: 2
@@ -39,6 +42,7 @@ spec:
             operator: "Equal"
             value: "reserved-supercluster"
             effect: "NoSchedule"
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: {}

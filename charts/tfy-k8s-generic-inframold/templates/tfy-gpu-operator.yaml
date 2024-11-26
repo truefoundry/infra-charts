@@ -19,8 +19,12 @@ spec:
     targetRevision: 0.1.21
     helm:
       values: |-
+        {{- if .Values.gpu.valuesOverride }}
+        {{ .Values.gpu.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         clusterType:
           {{.Values.gpu.clusterType}}: true
+        {{- end }}
   syncPolicy:
     automated:
       prune: true

@@ -18,12 +18,16 @@ spec:
     chart: aws-load-balancer-controller
     helm:
       values: |-
+        {{- if .Values.aws.awsLoadBalancerController.valuesOverride }}
+        {{ .Values.aws.awsLoadBalancerController.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         clusterName: {{ .Values.clusterName | quote }}
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}
         vpcId: {{ .Values.aws.awsLoadBalancerController.vpcId | quote }}
         region: {{ .Values.aws.awsLoadBalancerController.region | quote }}
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: { }

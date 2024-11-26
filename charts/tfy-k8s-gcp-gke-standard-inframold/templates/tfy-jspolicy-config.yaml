@@ -17,6 +17,13 @@ spec:
     chart: tfy-jspolicy-config
     repoURL: "https://truefoundry.github.io/infra-charts/"
     targetRevision: 0.2.0
+    helm:
+      values: |-
+        {{- if .Values.jspolicy.valuesOverride }}
+        {{ .Values.jspolicy.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {}
+        {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

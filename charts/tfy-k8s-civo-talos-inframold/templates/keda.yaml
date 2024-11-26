@@ -18,7 +18,10 @@ spec:
     repoURL: "https://kedacore.github.io/charts"
     targetRevision: 2.15.1
     helm:
-      values: |
+      values: |-
+        {{- if .Values.keda.valuesOverride }}
+        {{ .Values.keda.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         resources:
           operator:
             requests:
@@ -41,6 +44,7 @@ spec:
         affinity:
           {{ toYaml . | nindent 10 }}
         {{- end }}
+      {{- end }}
   syncPolicy:
     automated: { }
     syncOptions:

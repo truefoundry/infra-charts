@@ -18,6 +18,9 @@ spec:
     chart: tfy-loki
     helm:
       values: |-
+        {{- if .Values.loki.valuesOverride }}
+        {{ .Values.loki.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
         loki:
           enabled: true
           monitoring:
@@ -54,6 +57,7 @@ spec:
           enabled: true
           serviceMonitor:
             enabled: true
+        {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: {}
