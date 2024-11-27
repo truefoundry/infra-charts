@@ -100,8 +100,10 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
             
           volumeMounts:
+          {{- if .Values.storage.enabled }}
             - name: buildkit-storage
               mountPath: /var/lib/buildkit
+          {{- end }}
             - name: buildkit-config
               mountPath: /etc/buildkit/buildkitd.toml
               subPath: buildkitd.toml
@@ -141,6 +143,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if .Values.storage.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: buildkit-storage
@@ -153,3 +156,4 @@ spec:
           requests:
             storage: {{ .Values.storage.size }}
         storageClassName: {{ .Values.storage.storageClassName }}
+  {{- end }}
