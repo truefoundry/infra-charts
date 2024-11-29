@@ -36,8 +36,8 @@ flyte-core:
     k8s:
       plugins:
         k8s:
-          ## @param flyte-core.configmap.k8s.plugins.k8s.default-env-vars to set the default env vars
           default-env-vars:
+            ## @param flyte-core.configmap.k8s.plugins.k8s.default-env-vars[0].TFY_INTERNAL_SIGNED_URL_SERVER_HOST to set the signed url server host 
             - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     core:
       propeller:
@@ -91,12 +91,18 @@ flyte-core:
     enabled: true
     resources:
       limits:
+        ## @param flyte-core.flytepropeller.resources.limits.cpu to set the cpu limit
         cpu: 1
+        ## @param flyte-core.flytepropeller.resources.limits.memory to set the memory limit
         memory: 800Mi
+        ## @param flyte-core.flytepropeller.resources.limits.ephemeral-storage to set the ephemeral storage limit
         ephemeral-storage: 2Gi
       requests:
+        ## @param flyte-core.flytepropeller.resources.requests.cpu to set the cpu request
         cpu: 0.5
+        ## @param flyte-core.flytepropeller.resources.requests.memory to set the memory request
         memory: 500Mi
+        ## @param flyte-core.flytepropeller.resources.requests.ephemeral-storage to set the ephemeral storage request
         ephemeral-storage: 1Gi
     serviceAccount:
       ## @param flyte-core.flytepropeller.serviceAccount.create to configure whether to create the service account or not
