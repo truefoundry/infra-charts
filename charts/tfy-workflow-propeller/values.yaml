@@ -33,10 +33,18 @@ flyte-core:
     enable-multicontainer: true
   webhook:
   ## @param flyte-core.webhook.enabled to enable the webhook
-    enabled: true
+    enabled: false
   configmap:
+    k8s:
+      plugins:
+        k8s:
+          ## @param flyte-core.configmap.k8s.plugins.k8s.default-env-vars to set the default env vars
+          default-env-vars:
+            - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     core:
       propeller:
+        ## @param flyte-core.configmap.core.propeller.max-ttl-hours to set the max ttl hours
+        max-ttl-hours: 1
         ## @param flyte-core.configmap.core.propeller.metadata-prefix to set the storage uri path to set store the metadata, its values should be bucketName/metadata
         metadata-prefix: <to_be_provided>/workflows/metadata
         ## @param  flyte-core.configmap.core.propeller.rawoutput-prefix to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
@@ -81,6 +89,24 @@ flyte-core:
   flytepropeller:
     ## @param flyte-core.flytepropeller.enabled to enable the flytepropeller
     enabled: true
+    ## @param flyte-core.flytepropeller.resources to set the resources
+    resources:
+      ## @param flyte-core.flytepropeller.resources.limits to set the resource limits
+      limits:
+        ## @param flyte-core.flytepropeller.resources.limits.cpu to set the cpu limit
+        cpu: 1
+        ## @param flyte-core.flytepropeller.resources.limits.memory to set the memory limit
+        memory: 800Mi
+        ## @param flyte-core.flytepropeller.resources.limits.ephemeral-storage to set the ephemeral storage limit
+        ephemeral-storage: 2Gi
+      ## @param flyte-core.flytepropeller.resources.requests to set the resource requests
+      requests:
+        ## @param flyte-core.flytepropeller.resources.requests.cpu to set the cpu request
+        cpu: 0.5
+        ## @param flyte-core.flytepropeller.resources.requests.memory to set the memory request
+        memory: 500Mi
+        ## @param flyte-core.flytepropeller.resources.requests.ephemeral-storage to set the ephemeral storage request
+        ephemeral-storage: 1Gi
     serviceAccount:
       ## @param flyte-core.flytepropeller.serviceAccount.create to configure whether to create the service account or not
       create: true
