@@ -27,6 +27,15 @@ spec:
           tenantName: {{ .Values.tenantName}}
           controlPlaneURL: {{ .Values.controlPlaneURL}}
         tfyAgent:
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1024Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 300m
+              memory: 512Mi
+              ephemeral-storage: 128Mi
           {{- with .Values.tolerations }}
           tolerations:
             {{ toYaml . | nindent 12 }}
@@ -36,6 +45,15 @@ spec:
             {{ toYaml . | nindent 12 }}
           {{- end }}
         tfyAgentProxy:
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
           {{- with .Values.tolerations }}
           tolerations:
             {{ toYaml . | nindent 12 }}
