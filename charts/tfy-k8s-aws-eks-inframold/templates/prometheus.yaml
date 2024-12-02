@@ -269,6 +269,16 @@ spec:
                 webhook_configs:
                   - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
                     send_resolved: true
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+                ephemeral-storage: 128Mi
+              limits:
+                cpu: 400m
+                memory: 256Mi
+                ephemeral-storage: 256Mi
           enabled: true
         nodeExporter:
           enabled: true
@@ -382,6 +392,16 @@ spec:
                     - __meta_kubernetes_endpoint_node_name
             serviceMonitor:
               selfMonitor: false
+        prometheusConfigReloader:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 400m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
         additionalPrometheusRulesMap:
           rule-name:
             groups:
