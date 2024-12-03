@@ -18,7 +18,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: 82aa37767801c5246a7b40d31a710eec1e310637
+  tag: bfc96b2a5ce10fce8a9af09821c8da911baa5ba7
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -162,5 +162,5 @@ env:
   LOG_LEVEL: info
   GATEWAY_NATS_CONFIGURATION: '{"type":"nats","url":"ws://{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080","username":"admin","password":"{{ .Values.global.llmGatewayInfra.natsAdminPassword }}"}'
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-  CONTROL_PLANE_NATS_URL: nats://{{ .Values.global.truefoundryReleaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  CONTROL_PLANE_NATS_URL: ws://{{ .Values.global.truefoundryReleaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080
   ENABLE_EXTERNAL_OAUTH: "false"
