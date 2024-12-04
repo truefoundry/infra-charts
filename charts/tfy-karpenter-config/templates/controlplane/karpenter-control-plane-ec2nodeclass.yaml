@@ -23,6 +23,8 @@ spec:
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
+    cpu: "true"
+    control-plane: "true"
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}

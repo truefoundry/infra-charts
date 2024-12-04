@@ -22,6 +22,8 @@ spec:
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
+    cpu: "true"
+    default: "true"
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}

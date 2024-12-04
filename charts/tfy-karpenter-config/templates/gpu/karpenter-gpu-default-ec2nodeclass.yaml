@@ -23,6 +23,7 @@ spec:
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
+    gpu: "true"
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraTags }}
