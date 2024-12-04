@@ -9,7 +9,8 @@ set -eu
 
 printf "\033[36m[Start]\033[0m Building and pushing the docker container. Please find the logs below\n"
 
-IMAGE="$DOCKER_REGISTRY_URL/$DOCKER_REPO"
+_REGISTRY=$(echo "${DOCKER_REGISTRY_URL}" | sed -e 's~http[s]*://~~g')
+IMAGE="$_REGISTRY/$DOCKER_REPO"
 TAG=$DOCKER_TAG
 BUILDKIT_CERTS_PATH="/etc/buildkit/certs"
 
