@@ -30,6 +30,10 @@ rules:
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
     verbs: ["list"]
+
+  - apiGroups: ["karpenter.k8s.aws", "karpenter.sh"]
+    resources: ["ec2nodeclasses", "nodepools"]
+    verbs: ["list"]
   {{- else }}
   - apiGroups: ["*"]
     resources: ["*"]
