@@ -20,15 +20,15 @@ spec:
     chart: tfy-karpenter
     helm:
       values: |-
-        {{- if .Values.aws.inferentia.valuesOverride }}
-        {{ .Values.aws.inferentia.valuesOverride | toYaml | nindent 8 }}
+        {{- if .Values.aws.karpenter.valuesOverride }}
+        {{ .Values.aws.karpenter.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         karpenter:
           serviceAccount:
             annotations:
               eks.amazonaws.com/role-arn: {{ .Values.aws.karpenter.roleArn }}
           webhook:
-            enabled: false
+            enabled: {{ .Values.aws.karpenter.webhook.enabled }}
           settings:
             clusterName: {{ .Values.clusterName }}
             clusterEndpoint: {{ .Values.aws.karpenter.clusterEndpoint }}
