@@ -60,3 +60,12 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+  Merge nodeSelector
+  */}}
+{{- define "buildkitd-service.nodeSelector" -}}
+{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.nodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}
