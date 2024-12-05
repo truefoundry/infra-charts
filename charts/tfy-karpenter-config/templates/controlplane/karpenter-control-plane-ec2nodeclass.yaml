@@ -23,8 +23,8 @@ spec:
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
-    cpu: "true"
-    control-plane: "true"
+    truefoundry.com/compute_type: cpu
+    truefoundry.com/component_type: control-plane
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}
