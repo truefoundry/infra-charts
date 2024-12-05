@@ -22,13 +22,13 @@ tolerations:
     value: "true"
     effect: NoSchedule
     operator: Equal
-
+  
 
 ## @param affinity [object] Affinity for the all chart components
 ##
-
+  
 affinity: {}
-
+  
 
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -93,12 +93,12 @@ metricsServer:
   ## @param metricsServer.valuesOverride Config override from default config values
   ##
   valuesOverride: {}
-
-  enabled: true
-
-
-
-
+  
+enabled: true
+  
+  
+  
+  
 ## @section AWS parameters
 ## AWS parameters
 ##
@@ -138,6 +138,11 @@ aws:
     ## @param aws.karpenter.defaultZones Default zones list for Karpenter
     ##
     defaultZones: []
+
+    ## @param aws.karpenter.webhook.enabled Flag to enable Karpenter webhook
+    ##
+    webhook:
+      enabled: false
 
     ## @param aws.karpenter.interruptionQueue Interruption queue name for Karpenter
     ##
@@ -180,7 +185,7 @@ aws:
     ## @param aws.inferentia.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
-
+  
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -250,6 +255,8 @@ loki:
 ## @param istio.enabled Flag to enable Istio
 ##
 istio:
+  ## @param istio.base.enabled Flag to enable Istio Base
+  ##
   enabled: true
   base:
     ## @param istio.base.valuesOverride Config override from default config values
@@ -313,21 +320,28 @@ prometheus:
   enabled: true
   ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
   ##
-  additionalScrapeConfigs: 
-  - job_name: gpu-metrics
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    metrics_path: /metrics
-    scheme: http
-    kubernetes_sd_configs:
-    - role: endpoints
-      namespaces:
-        names:
-        - tfy-gpu-operator
-    relabel_configs:
-    - source_labels: [__meta_kubernetes_pod_node_name]
-      action: replace
-      target_label: kubernetes_node
+  additionalScrapeConfigs:
+    - job_name: gpu-metrics
+      scrape_interval: 15s
+      scrape_timeout: 10s
+      metrics_path: /metrics
+      scheme: http
+      kubernetes_sd_configs:
+        - role: endpoints
+          namespaces:
+            names:
+              - tfy-gpu-operator
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          action: replace
+          target_label: kubernetes_node
+  alertmanager:
+    config:
+      receivers:
+        - name: tfy-agent
+          webhook_configs:
+              - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+                send_resolved: true
   ## @param prometheus.valuesOverride Config override from default config values
   ##
   valuesOverride: {}
@@ -355,6 +369,10 @@ tfyAgent:
   ##
   valuesOverride: {}
 
+  ## @param tfyAgent.clusterTokenSecret Secret name for cluster token
+  ## Secret for cluster token
+  clusterTokenSecret: ""
+
 ## @section elasti parameters
 ## @param elasti.enabled Flag to enable Elasti
 ##
@@ -372,3 +390,9 @@ jspolicy:
   ## @param jspolicy.valuesOverride Config override from default config values
   ##
   valuesOverride: {}
+  ## @param jspolicy.config Config for jspolicy
+  ##
+  config:
+    ## @param jspolicy.config.policy Policy for jspolicy
+    ##
+    valuesOverride: {}
