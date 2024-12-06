@@ -3,6 +3,6 @@
   */}}
 {{- define "truefoundry-bootstrap.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.truefoundryBootstrap.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.truefoundryBootstrap.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}

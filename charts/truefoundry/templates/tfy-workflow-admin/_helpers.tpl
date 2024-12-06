@@ -108,6 +108,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "tfy-workflow-admin.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyWorkflowAdmin.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.tfyWorkflowAdmin.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}

@@ -108,6 +108,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "mlfoundry-server.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.mlfoundryServer.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.mlfoundryServer.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
