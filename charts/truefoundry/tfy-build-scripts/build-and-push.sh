@@ -40,5 +40,6 @@ build_time=$((end_time - start_time))
 echo "Time taken to build the image: $build_time seconds"
 echo -n "$build_time" > /opt/truefoundry/output/tfyTimeTakenToBuildImageSeconds
 
+# Please don't remove this log line or make any edits since the clients depend on the string matching of this log to disconnect the WebSocket connection.
 printf "\033[36m[==== Docker logs end ====]\033[0m\n"
 printf "$DONE_MARKER Docker image built and pushed\n"

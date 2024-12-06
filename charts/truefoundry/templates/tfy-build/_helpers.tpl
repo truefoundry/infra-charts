@@ -42,7 +42,7 @@ Expand the name of the chart.
 */}}
 {{- define "tfy-build.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyBuild.truefoundryWorkflows.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
 
@@ -51,6 +51,6 @@ Expand the name of the chart.
 */}}
 {{- define "tfy-buildkitd.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}

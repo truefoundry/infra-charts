@@ -14,8 +14,8 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.15.0
-    repoURL: "https://truefoundry.github.io/infra-charts"
+    targetRevision: 0.16.2
+    repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
       values: |-
@@ -34,11 +34,11 @@ spec:
             password: {{ .Values.truefoundry.database.password }}
           {{- with .Values.tolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.affinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
@@ -51,7 +51,7 @@ spec:
               enabled: true
               {{- if .Values.truefoundry.virtualservice.hosts }}
               hosts:
-              {{- range $v := .Values.truefoundry.virtualservice.hosts }} 
+              {{- range $v := .Values.truefoundry.virtualservice.hosts }}
               - {{ $v | quote }}
               {{- end }}
               {{- end }}
@@ -61,15 +61,15 @@ spec:
               - {{ $v | quote }}
               {{- end }}
               {{- end }}
-        {{- end }} 
+        {{- end }}
         nats:
           {{- with .Values.tolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           {{- with .Values.affinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
   syncPolicy:

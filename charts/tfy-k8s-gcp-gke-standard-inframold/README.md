@@ -55,6 +55,7 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | Name                           | Description                                | Value   |
 | ------------------------------ | ------------------------------------------ | ------- |
 | `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
+| `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
 | `metricsServer.valuesOverride` | Config override from default config values | `{}`    |
 
 ### gpu parameters
@@ -110,6 +111,7 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | Name                           | Description                                | Value  |
 | ------------------------------ | ------------------------------------------ | ------ |
 | `istio.enabled`                | Flag to enable Istio                       | `true` |
+| `istio.enabled`                | Flag to enable Istio Base                  | `true` |
 | `istio.base.valuesOverride`    | Config override from default config values | `{}`   |
 | `istio.gateway.valuesOverride` | Config override from default config values | `{}`   |
 
@@ -152,11 +154,12 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### tfyAgent parameters
 
-| Name                      | Description                                | Value  |
-| ------------------------- | ------------------------------------------ | ------ |
-| `tfyAgent.enabled`        | Flag to enable Tfy Agent                   | `true` |
-| `tfyAgent.clusterToken`   | cluster token                              | `""`   |
-| `tfyAgent.valuesOverride` | Config override from default config values | `{}`   |
+| Name                          | Description                                | Value  |
+| ----------------------------- | ------------------------------------------ | ------ |
+| `tfyAgent.enabled`            | Flag to enable Tfy Agent                   | `true` |
+| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
+| `tfyAgent.valuesOverride`     | Config override from default config values | `{}`   |
+| `tfyAgent.clusterTokenSecret` | Secret name for cluster token              | `""`   |
 
 ### elasti parameters
 
@@ -167,7 +170,9 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### jspolicy parameters
 
-| Name                      | Description                                              | Value   |
-| ------------------------- | -------------------------------------------------------- | ------- |
-| `jspolicy.enabled`        | Flag to enable jspolicy. No policy is applied by default | `false` |
-| `jspolicy.valuesOverride` | Config override from default config values               | `{}`    |
+| Name                             | Description                                              | Value   |
+| -------------------------------- | -------------------------------------------------------- | ------- |
+| `jspolicy.enabled`               | Flag to enable jspolicy. No policy is applied by default | `false` |
+| `jspolicy.enabled`               | Flag to enable jspolicy                                  | `false` |
+| `jspolicy.valuesOverride`        | Config override from default config values               | `{}`    |
+| `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
