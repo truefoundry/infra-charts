@@ -108,6 +108,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "sfy-manifest-service.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.sfyManifestService.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.sfyManifestService.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
