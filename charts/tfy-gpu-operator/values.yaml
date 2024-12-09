@@ -92,9 +92,9 @@ aws-eks-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: time-slicing-config
-      create: true
-      default: all
+      name: ''
+      create: false
+      default: ''
   
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -335,6 +335,11 @@ aws-eks-gpu-operator:
         memory: 1000Mi
     ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
+
+  ## MIG Configuration
+  mig:
+    ## @param aws-eks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
+    strategy: none
 
   ## MIG Manager configuration.
   migManager:
@@ -709,7 +714,7 @@ azure-aks-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: mixed
+    strategy: none
   
   ## Device Plugin configuration.
   devicePlugin:
@@ -735,9 +740,9 @@ azure-aks-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: time-slicing-config
-      create: true
-      default: all
+      name: ''
+      create: false
+      default: ''
 
   ## DCGM configuration
   dcgm:
@@ -963,6 +968,21 @@ civo-talos-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+    ## @skip civo-talos-gpu-operator.devicePlugin.config
+    config:
+      data:
+        all: ''
+        time-sliced-10: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              renameByDefault: true
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 10
+      name: ''
+      create: false
+      default: ''
 
   ## DCGM configuration
   dcgm:
@@ -1028,6 +1048,11 @@ civo-talos-gpu-operator:
         memory: 1000Mi
     ## @param civo-talos-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
+
+  ## MIG Configuration
+  mig:
+    ## @param civo-talos-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
+    strategy: none
 
   ## MIG Manager configuration.
   migManager:
@@ -1193,11 +1218,6 @@ generic-gpu-operator:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
         value: 'true'
 
-  ## MIG Configuration
-  mig:
-    ## @param generic-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: mixed
-  
   ## Device Plugin configuration.
   devicePlugin:
     ## @param generic-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -1222,9 +1242,9 @@ generic-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: time-slicing-config
-      create: true
-      default: all
+      name: ''
+      create: false
+      default: ''
 
   ## DCGM configuration
   dcgm:
@@ -1290,6 +1310,11 @@ generic-gpu-operator:
         memory: 1000Mi
     ## @param generic-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
+
+  ## MIG Configuration
+  mig:
+    ## @param generic-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
+    strategy: none
 
   ## MIG Manager configuration.
   migManager:

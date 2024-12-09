@@ -107,6 +107,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "truefoundry-frontend-app.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge $defaultNodeSelector .Values.truefoundryFrontendApp.nodeSelector }}
+{{- $mergedNodeSelector := merge .Values.truefoundryFrontendApp.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}

@@ -265,10 +265,9 @@ spec:
                   receiver: tfy-agent
                   repeat_interval: 1h
             receivers:
-              - name: tfy-agent
-                webhook_configs:
-                  - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
-                    send_resolved: true
+              {{- with .Values.prometheus.alertmanager.config.receivers -}}
+              {{ toYaml . | nindent 12 }}
+              {{- end }}
           alertmanagerSpec:
             resources:
               requests:

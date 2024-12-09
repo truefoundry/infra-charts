@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.2.42
+    targetRevision: 0.2.45
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:
@@ -23,9 +23,10 @@ spec:
         {{ .Values.tfyAgent.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         config:
-          clusterToken: {{ .Values.tfyAgent.clusterToken}}
-          tenantName: {{ .Values.tenantName}}
-          controlPlaneURL: {{ .Values.controlPlaneURL}}
+          clusterToken: {{ .Values.tfyAgent.clusterToken }}
+          tenantName: {{ .Values.tenantName }}
+          controlPlaneURL: {{ .Values.controlPlaneURL }}
+          clusterTokenSecret: {{ .Values.tfyAgent.clusterTokenSecret }}
         tfyAgent:
           resources:
             limits:
