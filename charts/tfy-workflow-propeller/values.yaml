@@ -45,6 +45,14 @@ flyte-core:
         max-ttl-hours: 1
         ## @param flyte-core.configmap.core.propeller.max-workflow-retries to set the max workflow retries
         max-workflow-retries: 5
+        leader-election:
+          enabled: true
+          retry-period: 2s
+          lease-duration: 15s
+          renew-deadline: 10s
+          lock-config-map:
+            name: propeller-leader
+            namespace: tfy-workflow-propeller
         ## @param flyte-core.configmap.core.propeller.metadata-prefix to set the storage uri path to set store the metadata, its values should be bucketName/metadata
         metadata-prefix: <to_be_provided>/workflows/metadata
         ## @param  flyte-core.configmap.core.propeller.rawoutput-prefix to set the storage uri path to set store the raw output, its values should be bucketName/raw_data
