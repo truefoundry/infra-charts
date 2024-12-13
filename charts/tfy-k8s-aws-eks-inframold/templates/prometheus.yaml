@@ -265,10 +265,19 @@ spec:
                   receiver: tfy-agent
                   repeat_interval: 1h
             receivers:
-              - name: tfy-agent
-                webhook_configs:
-                  - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
-                    send_resolved: true
+              {{- with .Values.prometheus.alertmanager.config.receivers -}}
+              {{ toYaml . | nindent 12 }}
+              {{- end }}
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+                ephemeral-storage: 128Mi
+              limits:
+                cpu: 400m
+                memory: 256Mi
+                ephemeral-storage: 256Mi
           enabled: true
         nodeExporter:
           enabled: true
@@ -382,6 +391,16 @@ spec:
                     - __meta_kubernetes_endpoint_node_name
             serviceMonitor:
               selfMonitor: false
+        prometheusConfigReloader:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 400m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
         additionalPrometheusRulesMap:
           rule-name:
             groups:
@@ -439,6 +458,7 @@ spec:
                       by (pod, container, namespace) * 100 > 80
                     alert: CPUHighUtilizationForRequested
                     labels:
+                      entity: container
                       severity: warning
                     annotations:
                       summary: >-
@@ -452,6 +472,7 @@ spec:
                       sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
                     alert: MemoryHighUtilizationForRequested
                     labels:
+                      entity: container
                       severity: warning
                     annotations:
                       summary: Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
@@ -466,6 +487,7 @@ spec:
                       (pod, container, namespace) > ( 25 / 100 )
                     alert: ContainerHighThrottleRate
                     labels:
+                      entity: container
                       severity: warning
                     annotations:
                       summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
@@ -480,6 +502,7 @@ spec:
                       by (pod, container, namespace) * 100 > 70
                     alert: CPUHighUtilizationForLimit
                     labels:
+                      entity: container
                       severity: critical
                     annotations:
                       summary: >-
@@ -493,6 +516,7 @@ spec:
                       sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 70
                     alert: MemoryHighUtilizationForLimit
                     labels:
+                      entity: container
                       severity: critical
                     annotations:
                       summary: >-
@@ -506,6 +530,7 @@ spec:
                       (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
                     alert: KubernetesPodNotHealthy
                     labels:
+                      entity: pod
                       severity: critical
                     annotations:
                       summary: >-
@@ -518,6 +543,7 @@ spec:
                     expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
                     alert: KubernetesPodCrashLooping
                     labels:
+                      entity: pod
                       severity: warning
                     annotations:
                       summary: >-
@@ -531,6 +557,7 @@ spec:
                       by (container, pod, namespace) > 0
                     alert: ContainerOOMKilled
                     labels:
+                      entity: container
                       severity: critical
                     annotations:
                       summary: >-
@@ -545,6 +572,7 @@ spec:
                       sum(kubelet_volume_stats_capacity_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace)) * 100 > 90
                     alert: PersistentVolumeUsageHigh
                     labels:
+                      entity: persistentVolume
                       severity: critical
                     annotations:
                       summary: >-
@@ -557,6 +585,7 @@ spec:
                     expr: (1 - (node_filesystem_avail_bytes{job="node-exporter"} / node_filesystem_size_bytes{job="node-exporter"})) > 0.9
                     alert: NodeDiskPressure
                     labels:
+                      entity: node
                       severity: critical
                     annotations:
                       summary: >-
@@ -568,6 +597,7 @@ spec:
                     expr: node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} < 0.1
                     alert: NodeMemoryPressure
                     labels:
+                      entity: node
                       severity: critical
                     annotations:
                       summary: >-
@@ -579,6 +609,7 @@ spec:
                     expr: rate(node_cpu_seconds_total{job="node-exporter", mode="idle"}[5m]) < 0.1
                     alert: NodeCPUPressure
                     labels:
+                      entity: node
                       severity: critical
                     annotations:
                       summary: >-
@@ -590,6 +621,7 @@ spec:
                     expr: kube_node_status_condition{job="kube-state-metrics", condition="Ready", status="true"} == 0
                     alert: NodeNotReady
                     labels:
+                      entity: node
                       severity: critical
                     annotations:
                       summary: >-
@@ -601,6 +633,7 @@ spec:
                     expr: kube_node_status_condition{job="kube-state-metrics", condition="NetworkUnavailable", status="true"} == 1
                     alert: NodeNetworkUnavailable
                     labels:
+                      entity: node
                       severity: critical
                     annotations:
                       summary: >-

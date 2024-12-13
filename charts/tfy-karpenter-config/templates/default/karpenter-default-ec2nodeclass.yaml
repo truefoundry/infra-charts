@@ -22,6 +22,8 @@ spec:
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
   tags:
+    truefoundry.com/compute_type: cpu
+    truefoundry.com/component_type: default
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}

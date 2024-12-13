@@ -39,6 +39,15 @@ spec:
             extraArgs:
               - -print-config-stderr
               - -config.expand-env=true
+            resources:
+              requests:
+                cpu: 200m
+                memory: 256Mi
+                ephemeral-storage: 256Mi
+              limits:
+                cpu: 400m
+                memory: 512Mi
+                ephemeral-storage: 512Mi
             {{- with .Values.tolerations }}
             tolerations:
               {{ toYaml . | nindent 14 }}
@@ -57,6 +66,15 @@ spec:
           enabled: true
           serviceMonitor:
             enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 400m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
         {{- end }}
   project: tfy-apps
   syncPolicy:
