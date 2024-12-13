@@ -4,35 +4,19 @@ on:
   pull_request:
     branches:
       - 'main'
+    paths:
+      - '.github/workflows/update-artifacts.yml'
+      - 'charts/tfy-k8s-aws-eks-inframold/**'
+      - 'charts/tfy-k8s-azure-aks-inframold/**'
+      - 'charts/tfy-k8s-civo-talos-inframold/**'
+      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+      - 'charts/tfy-k8s-generic-inframold/**'
+      - 'scripts/generate-artifacts-manifest/**'
+      - 'scripts/upload-artifacts/**'
 
 jobs:
-  path-filter:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-      - name: Check if the following files changed
-        uses: dorny/paths-filter@v3
-        id: path_filtering
-        with:
-          filters: |
-            pathsrc:
-              - '.github/workflows/update-artifacts.yml'
-              - 'charts/tfy-k8s-aws-eks-inframold/**'
-              - 'charts/tfy-k8s-azure-aks-inframold/**'
-              - 'charts/tfy-k8s-civo-talos-inframold/**'
-              - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-              - 'charts/tfy-k8s-generic-inframold/**'
-              - 'scripts/generate-artifacts-manifest/**'
-              - 'scripts/upload-artifacts/**'
-    outputs:
-      pathsrc_output: ${{ steps.path_filtering.outputs.pathsrc}} == 'true'
-
   update-artifacts:
     runs-on: ubuntu-latest
-    needs: path-filter
     permissions:
       contents: write
       id-token: write
@@ -84,14 +68,12 @@ jobs:
           registry-type: public
 
       - name: Install python dependencies
-        if: needs.path-filter.outputs.pathsrc_output
         run: |
           pip install -r scripts/upload-artifacts/requirements.txt
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
-        if: needs.path-filter.outputs.pathsrc_output
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}";
@@ -105,7 +87,6 @@ jobs:
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
-        if: needs.path-filter.outputs.pathsrc_output
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
