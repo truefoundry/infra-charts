@@ -322,6 +322,9 @@ spec:
             value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
           - name: SOURCE_CODE_DOWNLOAD_PATH
             value: /mnt/tfy/source-code
+          {{- with .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         volumeMounts:
           - name: scripts
             mountPath: /scripts
@@ -480,6 +483,9 @@ spec:
             value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
           - name: SOURCE_CODE_DOWNLOAD_PATH
             value: /mnt/tfy/source-code
+          {{- with .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         volumeMounts:
           - name: scripts
             mountPath: /scripts
