@@ -50,8 +50,10 @@ spec:
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}
       restartPolicy: Never
+      {{- if .Values.truefoundryBootstrap.nodeSelector }}
       nodeSelector:
-        {{- include "truefoundry-bootstrap.nodeSelector" . | nindent 8 }}
+          {{- toYaml .Values.truefoundryBootstrap.nodeSelector | nindent 8 }}
+        {{- end }}
       {{- $mergedAffinity := dict | merge .Values.truefoundryBootstrap.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

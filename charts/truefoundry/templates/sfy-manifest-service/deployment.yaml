@@ -56,8 +56,10 @@ spec:
       {{- end }}
       volumes:
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
+      {{- if .Values.sfyManifestService.nodeSelector }}
       nodeSelector:
-        {{- include "servicefoundry-server.nodeSelector" . | nindent 8 }}
+          {{- toYaml .Values.sfyManifestService.nodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

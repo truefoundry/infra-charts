@@ -125,12 +125,3 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
-
-{{/*
-  Merge default nodeSelector with nodeSelector specified in tfy-k8s-controller nodeSelector
-  */}}
-{{- define "tfy-k8s-controller.nodeSelector" -}}
-{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge .Values.tfyK8sController.nodeSelector $defaultNodeSelector }}
-{{- toYaml $mergedNodeSelector }}
-{{- end }}

@@ -206,12 +206,3 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
-
-{{/*
-  Merge default nodeSelector with nodeSelector specified in servicefoundry-server nodeSelector
-  */}}
-{{- define "servicefoundry-server.nodeSelector" -}}
-{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge .Values.servicefoundryServer.nodeSelector $defaultNodeSelector }}
-{{- toYaml $mergedNodeSelector }}
-{{- end }}
