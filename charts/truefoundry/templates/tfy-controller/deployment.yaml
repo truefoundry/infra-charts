@@ -61,8 +61,10 @@ spec:
             matchLabels:
               app.kubernetes.io/name: {{ include "tfy-controller.name" . }}
         {{- end }}
+      {{- if .Values.tfyController.nodeSelector }}
       nodeSelector:
-        {{- include "tfy-controller.nodeSelector" . | nindent 8 }}
+        {{- toYaml .Values.tfyController.nodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyController.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

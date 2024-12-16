@@ -68,8 +68,10 @@ spec:
       {{- end }}
       volumes:
         {{- include "servicefoundry-server.volumes" . | nindent 8 }}
+      {{- if .Values.servicefoundryServer.nodeSelector }}
       nodeSelector:
-        {{- include "servicefoundry-server.nodeSelector" . | nindent 8 }}
+        {{- toYaml .Values.servicefoundryServer.nodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

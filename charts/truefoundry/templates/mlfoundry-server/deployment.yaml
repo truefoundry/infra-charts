@@ -68,8 +68,10 @@ spec:
       {{- end }}
       volumes:
       {{- toYaml .Values.mlfoundryServer.extraVolumes | nindent 8 }}
+      {{- if .Values.mlfoundryServer.nodeSelector }}
       nodeSelector:
-        {{- include "mlfoundry-server.nodeSelector" . | nindent 8 }}
+        {{- toYaml .Values.mlfoundryServer.nodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.mlfoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

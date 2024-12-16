@@ -76,9 +76,9 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
-      {{- with .Values.tfyWorkflowAdmin.nodeSelector }}
+      {{- if .Values.tfyWorkflowAdmin.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .Values.tfyWorkflowAdmin.nodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -164,8 +164,10 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
+      {{- if .Values.tfyWorkflowAdmin.nodeSelector }}
       nodeSelector:
-        {{- include "tfy-workflow-admin.nodeSelector" . | nindent 8 }}
+        {{- toYaml .Values.tfyWorkflowAdmin.nodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:
