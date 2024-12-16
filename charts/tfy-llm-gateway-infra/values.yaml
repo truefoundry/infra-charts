@@ -134,17 +134,17 @@ nats:
         enabled: true
   container:
     image:
-      tag: 2.10.18-alpine3.20
+      tag: 2.10.23-alpine3.21
       pullPolicy: IfNotPresent
       repository: nats
     merge:
       resources:
         limits:
           cpu: 100m
-          memory: 250Mi
+          memory: 1000Mi
         requests:
           cpu: 100m
-          memory: 250Mi
+          memory: 500Mi
     patch:
       - op: add
         path: /env/-
@@ -226,7 +226,7 @@ clickhouse:
       ephemeralStorage: 2048Mi
   storage:
     storageClassName: ''
-    size: 10Gi
+    size: 100Gi
   nats:
     url: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
     subjects: request-log.>
