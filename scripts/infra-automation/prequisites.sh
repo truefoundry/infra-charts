@@ -125,7 +125,7 @@ validate_cloud_tools() {
 	# Check each tool
 	for tool in "${tools_to_check[@]}"; do
 		if ! command_exists "$tool"; then
-			missing_tools+=("$tool: ${INSTALL_DOCS[$tool]}")
+			missing_tools+=("$tool: Please install from here ${INSTALL_DOCS[$tool]}")
 			continue
 		fi
 
