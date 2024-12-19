@@ -16,20 +16,20 @@ fi
 # Validate the argument
 cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
 case $cloud_provider in
-"aws" | "gcp" | "azure")
-	echo -e "${GREEN}Setting up environment for $cloud_provider${NC}"
-	;;
-*)
-	echo -e "${RED}Error: Invalid cloud provider. Please specify aws, gcp, or azure${NC}"
-	exit 1
-	;;
+	"aws"|"gcp"|"azure")
+		echo -e "${GREEN}Setting up environment for $cloud_provider${NC}"
+		;;
+	*)
+		echo -e "${RED}Error: Invalid cloud provider. Please specify aws, gcp, or azure${NC}"
+		exit 1
+		;;
 esac
 
 # Convert cloud provider to numeric choice for existing functions
 case $cloud_provider in
-"aws") cloud_choice="1" ;;
-"gcp") cloud_choice="2" ;;
-"azure") cloud_choice="3" ;;
+	"aws")   cloud_choice="1" ;;
+	"gcp")   cloud_choice="2" ;;
+	"azure") cloud_choice="3" ;;
 esac
 
 # Declare global variables
@@ -39,6 +39,22 @@ declare PACKAGE_MANAGER
 # Function to check if a command exists
 command_exists() {
 	command -v "$1" >/dev/null 2>&1
+}
+
+# Function to confirm installation with Y as default
+confirm_installation() {
+    local tool_name="$1"
+    echo -e "${YELLOW}$tool_name is not installed. Would you like to install it? (Y/n)${NC}"
+    read -r response
+    case "$response" in
+        [nN][oO]|[nN]|[^yYeEnNtTrR]*) 
+            echo -e "${RED}Skipping $tool_name installation${NC}"
+            return 1
+            ;;
+        [yY]|[yY][eE][sS]|"")
+            return 0
+            ;;
+    esac
 }
 
 # Function to detect OS
@@ -262,77 +278,105 @@ check_architecture
 # Check and install prerequisites
 echo -e "\n${YELLOW}Checking and installing required tools...${NC}"
 
+# Check and install wget
+if ! command_exists wget; then
+    if confirm_installation "wget"; then
+        echo -e "${YELLOW}Installing wget...${NC}"
+        install_package "wget"
+    fi
+fi
+
 # Check and install unzip
 if ! command_exists unzip; then
-	echo -e "${YELLOW}Installing unzip...${NC}"
-	install_package "unzip"
+    if confirm_installation "unzip"; then
+        echo -e "${YELLOW}Installing unzip...${NC}"
+        install_package "unzip"
+    fi
 fi
 
 # Check and install curl
 if ! command_exists curl; then
-	echo -e "${YELLOW}Installing curl...${NC}"
-	install_package "curl"
+	if confirm_installation "curl"; then
+		echo -e "${YELLOW}Installing curl...${NC}"
+		install_package "curl"
+	fi
 fi
 
 # Check and install terraform
 if ! command_exists terraform; then
-	echo -e "${YELLOW}Installing Terraform...${NC}"
-	install_terraform
+	if confirm_installation "Terraform"; then
+		echo -e "${YELLOW}Installing Terraform...${NC}"
+		install_terraform
+	fi
 fi
 
 # Check and install helm
 if ! command_exists helm; then
-	echo -e "${YELLOW}Installing Helm...${NC}"
-	install_helm
+	if confirm_installation "Helm"; then
+		echo -e "${YELLOW}Installing Helm...${NC}"
+		install_helm
+	fi
 fi
 
 # Check and install kubectl
 if ! command_exists kubectl; then
-	echo -e "${YELLOW}Installing kubectl...${NC}"
-	install_kubectl
+	if confirm_installation "kubectl"; then
+		echo -e "${YELLOW}Installing kubectl...${NC}"
+		install_kubectl
+	fi
 fi
 
 # Check and install jq
 if ! command_exists jq; then
-	echo -e "${YELLOW}Installing jq...${NC}"
-	install_package "jq"
+	if confirm_installation "jq"; then
+		echo -e "${YELLOW}Installing jq...${NC}"
+		install_package "jq"
+	fi
 fi
 
 # Install cloud-specific tools based on selection
 echo -e "\n${YELLOW}Installing cloud provider specific tools...${NC}"
 case $cloud_provider in
-"aws")
-	if ! command_exists aws; then
-		install_aws_cli
-	fi
-	;;
-"gcp")
-	if ! command_exists gcloud; then
-		echo -e "${YELLOW}Installing gcloud CLI...${NC}"
-		if [[ "$OS" == "linux" ]]; then
-			curl https://sdk.cloud.google.com | bash
-			exec -l $SHELL
-			gcloud init
-		elif [[ "$OS" == "alpine" ]]; then
-			apk add --no-cache google-cloud-sdk
-			gcloud init
-		elif [[ "$OS" == "macos" ]]; then
-			brew install --cask google-cloud-sdk
-			gcloud init
+	"aws")
+		if ! command_exists aws; then
+			if confirm_installation "AWS CLI"; then
+				install_aws_cli
+			fi
 		fi
-	fi
-	echo -e "${YELLOW}Installing GKE authentication plugin...${NC}"
-	if [[ "$OS" == "alpine" ]]; then
-		apk add --no-cache google-cloud-sdk-gke-gcloud-auth-plugin
-	else
-		gcloud components install gke-gcloud-auth-plugin
-	fi
-	;;
-"azure")
-	if ! command_exists az; then
-		install_azure_cli
-	fi
-	;;
+		;;
+	"gcp")
+		if ! command_exists gcloud; then
+			if confirm_installation "Google Cloud SDK"; then
+				echo -e "${YELLOW}Installing gcloud CLI...${NC}"
+				if [[ "$OS" == "linux" ]]; then
+					curl https://sdk.cloud.google.com | bash
+					exec -l $SHELL
+					gcloud init
+				elif [[ "$OS" == "alpine" ]]; then
+					apk add --no-cache google-cloud-sdk
+					gcloud init
+				elif [[ "$OS" == "macos" ]]; then
+					brew install --cask google-cloud-sdk
+					gcloud init
+				fi
+			fi
+		fi
+		if confirm_installation "GKE authentication plugin"; then
+			echo -e "${YELLOW}Installing GKE authentication plugin...${NC}"
+			if [[ "$OS" == "alpine" ]]; then
+				apk add --no-cache google-cloud-sdk-gke-gcloud-auth-plugin
+			else
+				gcloud components install gke-gcloud-auth-plugin
+			fi
+		fi
+		;;
+	"azure")
+		if ! command_exists az; then
+			if confirm_installation "Azure CLI"; then
+				install_azure_cli
+			fi
+		fi
+		;;
 esac
 
 # Modify version check to only show relevant versions
@@ -341,23 +385,23 @@ check_versions() {
 	echo -e "${GREEN}Terraform version: $(terraform version | head -n1)${NC}"
 	echo -e "${GREEN}kubectl version: $(kubectl version --client)${NC}"
 	echo -e "${GREEN}Helm version: $(helm version)${NC}"
-
+	
 	case $cloud_provider in
-	"aws")
-		if command_exists aws; then
-			echo -e "${GREEN}AWS CLI version: $(aws --version)${NC}"
-		fi
-		;;
-	"gcp")
-		if command_exists gcloud; then
-			echo -e "${GREEN}Google Cloud SDK version: $(gcloud --version | head -n1)${NC}"
-		fi
-		;;
-	"azure")
-		if command_exists az; then
-			echo -e "${GREEN}Azure CLI version: $(az --version | head -n1)${NC}"
-		fi
-		;;
+		"aws")
+			if command_exists aws; then
+				echo -e "${GREEN}AWS CLI version: $(aws --version)${NC}"
+			fi
+			;;
+		"gcp")
+			if command_exists gcloud; then
+				echo -e "${GREEN}Google Cloud SDK version: $(gcloud --version | head -n1)${NC}"
+			fi
+			;;
+		"azure")
+			if command_exists az; then
+				echo -e "${GREEN}Azure CLI version: $(az --version | head -n1)${NC}"
+			fi
+			;;
 	esac
 }
 
