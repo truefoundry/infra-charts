@@ -13,27 +13,50 @@ INVALID_PROVIDER=2
 MISSING_TOOLS=3
 VERSION_ERROR=4
 
-# Tool version requirements
-declare -A MIN_VERSIONS=(
-	["terraform"]="1.9.0"
-	["kubectl"]="1.28.0"
-	["helm"]="3.16.0"
-	["aws"]="2.17.0"
-	["gcloud"]="500.0.0"
-	["az"]="2.67.0"
-	["jq"]="1.7.1"
+# Tool version requirements and installation docs as parallel arrays
+TOOLS=(terraform kubectl helm aws gcloud az jq)
+MIN_VERSIONS=(1.9.0 1.28.0 3.16.0 2.17.0 500.0.0 2.67.0 1.7.1)
+INSTALL_URLS=(
+    "https://developer.hashicorp.com/terraform/downloads"
+    "https://kubernetes.io/docs/tasks/tools/"
+    "https://helm.sh/docs/intro/install/"
+    "https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
+    "https://cloud.google.com/sdk/docs/install"
+    "https://learn.microsoft.com/en-us/cli/azure/install-azure-cli"
+    "https://stedolan.github.io/jq/download/"
 )
 
-# Tool installation docs
-declare -A INSTALL_DOCS=(
-	["terraform"]="https://developer.hashicorp.com/terraform/downloads"
-	["kubectl"]="https://kubernetes.io/docs/tasks/tools/"
-	["helm"]="https://helm.sh/docs/intro/install/"
-	["aws"]="https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html"
-	["gcloud"]="https://cloud.google.com/sdk/docs/install"
-	["az"]="https://learn.microsoft.com/en-us/cli/azure/install-azure-cli"
-	["jq"]="https://stedolan.github.io/jq/download/"
-)
+# Function to get array index
+get_index() {
+    local element=$1
+    local i=0
+    for tool in "${TOOLS[@]}"; do
+        if [ "$tool" = "$element" ]; then
+            echo $i
+            return
+        fi
+        ((i++))
+    done
+    echo -1
+}
+
+# Function to get minimum version for a tool
+get_min_version() {
+    local tool=$1
+    local idx=$(get_index "$tool")
+    if [ $idx -ge 0 ]; then
+        echo "${MIN_VERSIONS[$idx]}"
+    fi
+}
+
+# Function to get install URL for a tool
+get_install_url() {
+    local tool=$1
+    local idx=$(get_index "$tool")
+    if [ $idx -ge 0 ]; then
+        echo "${INSTALL_URLS[$idx]}"
+    fi
+}
 
 # Function to check if a command exists
 command_exists() {
@@ -110,46 +133,47 @@ validate_basic_tools() {
 
 # Function to validate cloud tools
 validate_cloud_tools() {
-	local cloud_provider=$1
-	local outdated_tools=()
-	local missing_tools=()
-	local tools_to_check=("terraform" "kubectl" "helm")
+    local cloud_provider=$1
+    local outdated_tools=()
+    local missing_tools=()
+    local tools_to_check=("terraform" "kubectl" "helm")
 
-	# Add cloud-specific tool
-	case $cloud_provider in
-		"aws") tools_to_check+=("aws") ;;
-		"gcp") tools_to_check+=("gcloud") ;;
-		"azure") tools_to_check+=("az") ;;
-	esac
+    # Add cloud-specific tool
+    case $cloud_provider in
+        "aws") tools_to_check+=("aws") ;;
+        "gcp") tools_to_check+=("gcloud") ;;
+        "azure") tools_to_check+=("az") ;;
+    esac
 
-	# Check each tool
-	for tool in "${tools_to_check[@]}"; do
-		if ! command_exists "$tool"; then
-			missing_tools+=("$tool: Please install from here ${INSTALL_DOCS[$tool]}")
-			continue
-		fi
+    # Check each tool
+    for tool in "${tools_to_check[@]}"; do
+        if ! command_exists "$tool"; then
+            missing_tools+=("$tool: Please install from here $(get_install_url "$tool")")
+            continue
+        fi
 
-		local version=$(get_tool_version "$tool")
-		if ! version_compare "$version" "${MIN_VERSIONS[$tool]}"; then
-			outdated_tools+=("$tool version ${version} found. Version ${MIN_VERSIONS[$tool]} or higher required")
-		fi
-	done
+        local version=$(get_tool_version "$tool")
+        local min_version=$(get_min_version "$tool")
+        if ! version_compare "$version" "$min_version"; then
+            outdated_tools+=("$tool version ${version} found. Version ${min_version} or higher required")
+        fi
+    done
 
-	# Report missing tools
-	if [ ${#missing_tools[@]} -ne 0 ]; then
-		echo -e "\n${RED}Missing required tools:${NC}"
-		printf "${RED}%s${NC}\n" "${missing_tools[@]}"
-		return $MISSING_TOOLS
-	fi
+    # Report missing tools
+    if [ ${#missing_tools[@]} -ne 0 ]; then
+        echo -e "\n${RED}Missing required tools:${NC}"
+        printf "${RED}%s${NC}\n" "${missing_tools[@]}"
+        return $MISSING_TOOLS
+    fi
 
-	# Report outdated tools
-	if [ ${#outdated_tools[@]} -ne 0 ]; then
-		echo -e "\n${RED}Outdated tools found:${NC}"
-		printf "${RED}%s${NC}\n" "${outdated_tools[@]}"
-		return $VERSION_ERROR
-	fi
+    # Report outdated tools
+    if [ ${#outdated_tools[@]} -ne 0 ]; then
+        echo -e "\n${RED}Outdated tools found:${NC}"
+        printf "${RED}%s${NC}\n" "${outdated_tools[@]}"
+        return $VERSION_ERROR
+    fi
 
-	return $SUCCESS
+    return $SUCCESS
 }
 
 # Function to display tool versions
