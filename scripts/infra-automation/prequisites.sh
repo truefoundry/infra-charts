@@ -21,6 +21,7 @@ declare -A MIN_VERSIONS=(
 	["aws"]="2.17.0"
 	["gcloud"]="500.0.0"
 	["az"]="2.67.0"
+	["jq"]="1.7.1"
 )
 
 # Tool installation docs
@@ -77,6 +78,9 @@ get_tool_version() {
 		"az")
 			az version | jq -r '."azure-cli"'
 			;;
+		"jq")
+			jq --version | cut -d'-' -f2
+			;;
 	esac
 }
 
@@ -89,7 +93,7 @@ validate_basic_tools() {
 		if ! command_exists "$tool"; then
 			missing_tools+=("$tool")
 			if [ "$tool" = "jq" ]; then
-				missing_docs+=("$tool: ${INSTALL_DOCS[$tool]}")
+				missing_docs+=("$tool: Please install from here ${INSTALL_DOCS[$tool]}")
 			else
 				missing_docs+=("$tool: Install via your system package manager (apt, yum, brew)")
 			fi
