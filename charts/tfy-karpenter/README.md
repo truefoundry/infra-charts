@@ -19,6 +19,6 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 
 ### Upstream karpenter-crd configurations
 
-| Name                            | Description                      | Value   |
-| ------------------------------- | -------------------------------- | ------- |
-| `karpenter-crd.webhook.enabled` | Enable webhook in karpenter CRDs | `false` |
+| Name                            | Description                      | Value  |
+| ------------------------------- | -------------------------------- | ------ |
+| `karpenter-crd.webhook.enabled` | Enable webhook in karpenter CRDs | `true` |
