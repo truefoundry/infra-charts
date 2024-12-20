@@ -1,4 +1,4 @@
-apiVersion: karpenter.sh/v1beta1
+apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
   name: {{ .Values.karpenter.defaultNodePool.name }}
@@ -11,7 +11,7 @@ spec:
     {{- end }}
     spec:
       nodeClassRef:
-        apiVersion: karpenter.k8s.aws/v1beta1
+        apiVersion: karpenter.k8s.aws
         kind: EC2NodeClass
         name: {{ .Values.karpenter.defaultNodeTemplate.name }}
       requirements:

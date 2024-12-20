@@ -55,7 +55,7 @@ karpenter:
     taints: []
     ## @param karpenter.defaultNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
-      consolidationPolicy: WhenUnderutilized
+      consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.defaultNodePool.capacityTypes Capacity types for the default node pool
     capacityTypes:
     - spot
@@ -80,7 +80,7 @@ karpenter:
   ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
     ## @param karpenter.gpuDefaultNodeTemplate.enabled Enable the GPU node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.gpuDefaultNodeTemplate.name Name of the AWS node class
     name: gpu-default
     ## @param karpenter.gpuDefaultNodeTemplate.instanceProfile Instance profile override for the node template
@@ -114,7 +114,7 @@ karpenter:
   ## GPU Node Pool Config
   gpuNodePool:
     ## @param karpenter.gpuNodePool.enabled Enable the GPU node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.gpuNodePool.name Name of the GPU node pool
     name: gpu-nodepool
     ## @param karpenter.gpuNodePool.weight Weight for the GPU node pool
@@ -125,7 +125,7 @@ karpenter:
     taints: []
     ## @param karpenter.gpuNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
-      consolidationPolicy: WhenUnderutilized
+      consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.gpuNodePool.capacityTypes Capacity types for the GPU node pool
     capacityTypes:
     - spot
@@ -192,7 +192,7 @@ karpenter:
   ## Control Plane Node Pool Config
   controlPlaneNodePool:
     ## @param karpenter.controlPlaneNodePool.enabled Enable the control plane node pool
-    enabled: false
+    enabled: true
     ## @param karpenter.controlPlaneNodePool.name Name of the control plane node pool
     name: control-plane-nodepool
     ## @param karpenter.controlPlaneNodePool.weight Weight for the control plane node pool
@@ -203,7 +203,7 @@ karpenter:
     taints: []
     ## @param karpenter.controlPlaneNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
-      consolidationPolicy: WhenUnderutilized
+      consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.controlPlaneNodePool.capacityTypes Capacity types for the control plane node pool
     capacityTypes:
     - spot
@@ -271,7 +271,7 @@ karpenter:
     taints: []
     ## @param karpenter.inferentiaNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
-      consolidationPolicy: WhenUnderutilized
+      consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.inferentiaNodePool.capacityTypes Capacity types for the Inferentia node pool
     capacityTypes:
     - spot
