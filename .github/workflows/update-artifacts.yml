@@ -85,6 +85,13 @@ jobs:
         env:
           MODE: 'local'
 
+      # Check if truefoundry chart images support amd64 and arm64 using AWS chart
+      - name: Check if Chart Images Support Multiple Architectures
+        run: |
+          python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
+          charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+          scripts/generate-artifacts-manifest/extra.json
+
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
         run: |
