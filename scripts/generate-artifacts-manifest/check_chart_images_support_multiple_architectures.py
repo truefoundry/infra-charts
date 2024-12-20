@@ -66,7 +66,7 @@ def check_image_architectures(artifacts_manifest, truefoundry_chart_images, whit
             # Check architectures
             has_amd64 = "amd64" in architectures
             has_arm64 = "arm64" in architectures
-            is_whitelisted = image_url in whitelisted_set
+            is_whitelisted = image_url.split(':')[0] in whitelisted_set
 
             if has_amd64 and has_arm64:
                 pass
