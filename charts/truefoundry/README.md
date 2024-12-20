@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.20.0`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.20.2`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -51,7 +51,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.replicaCount`                         | Number of replicas for the frontend app                | `1`                                                                                        |
 | `truefoundryFrontendApp.global`                               | Global values for the frontend app                     | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                     | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                            | Image tag for the frontend app                         | `v0.19.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                            | Image tag for the frontend app                         | `v0.19.2-rc.1`                                                                             |
 | `truefoundryFrontendApp.envSecretName`                        | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                      | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                         | Override name for the frontend app                     | `""`                                                                                       |
