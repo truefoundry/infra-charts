@@ -1,5 +1,5 @@
 {{- if .Values.karpenter.inferentiaNodePool.enabled }}
-apiVersion: karpenter.sh/v1beta1
+apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
   name: {{ .Values.karpenter.inferentiaNodePool.name }}
@@ -68,7 +68,7 @@ spec:
         - key: "aws.amazon.com/neuron"
           effect: "NoSchedule"
       nodeClassRef:
-        apiVersion: karpenter.k8s.aws/v1beta1
+        group: karpenter.k8s.aws
         kind: EC2NodeClass
         name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
   {{- if .Values.karpenter.inferentiaNodePool.weight }}

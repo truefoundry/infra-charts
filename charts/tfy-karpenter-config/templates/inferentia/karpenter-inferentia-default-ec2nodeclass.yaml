@@ -1,4 +1,4 @@
-apiVersion: karpenter.k8s.aws/v1beta1
+apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
   name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
@@ -30,7 +30,9 @@ spec:
   {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
   {{- end }}
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
   amiFamily: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
+  {{- end }}
   {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms }}
   amiSelectorTerms:
   {{- .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
