@@ -23,7 +23,7 @@ karpenter:
     ## @param karpenter.defaultNodeTemplate.extraTags Additional tags for the node template.
     extraTags: {}
     ## @param karpenter.defaultNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2023"
+    # amiFamily: "AL2023"
     ## @param karpenter.defaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
     # amiSelectorTerms:
     # - tags:
@@ -31,7 +31,8 @@ karpenter:
     #     environment: test
     # - name: my-ami
     # - id: ami-123
-    amiSelectorTerms: []
+    amiSelectorTerms:
+    - alias: al2023@latest
     ## @skip karpenter.defaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -55,6 +56,9 @@ karpenter:
     taints: []
     ## @param karpenter.defaultNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
+      budgets:
+      - nodes: 10%
+      consolidateAfter: 0s
       consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.defaultNodePool.capacityTypes Capacity types for the default node pool
     capacityTypes:
@@ -93,7 +97,7 @@ karpenter:
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
     ## @param karpenter.gpuDefaultNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2"
+    # amiFamily: "AL2"
     ## @param karpenter.gpuDefaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
     # amiSelectorTerms:
     # - tags:
@@ -101,7 +105,8 @@ karpenter:
     #     environment: test
     # - name: my-ami
     # - id: ami-123
-    amiSelectorTerms: []
+    amiSelectorTerms:
+    - alias: al2@latest
     ## @skip karpenter.gpuDefaultNodeTemplate.userData
     # Set this to "default" to let the chart automatically decide this
     # Set this to "" to disable this injection
@@ -125,6 +130,9 @@ karpenter:
     taints: []
     ## @param karpenter.gpuNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
+      budgets:
+      - nodes: 10%
+      consolidateAfter: 0s
       consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.gpuNodePool.capacityTypes Capacity types for the GPU node pool
     capacityTypes:
@@ -169,7 +177,7 @@ karpenter:
     ## @param karpenter.controlPlaneNodeTemplate.extraTags Additional tags for the node template.
     extraTags: {}
     ## @param karpenter.controlPlaneNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2023"
+    # amiFamily: "AL2023"
     ## @param karpenter.controlPlaneNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
     # amiSelectorTerms:
     # - tags:
@@ -177,7 +185,8 @@ karpenter:
     #     environment: test
     # - name: my-ami
     # - id: ami-123
-    amiSelectorTerms: []
+    amiSelectorTerms:
+    - alias: al2023@latest
     ## @skip karpenter.controlPlaneNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -203,6 +212,9 @@ karpenter:
     taints: []
     ## @param karpenter.controlPlaneNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
+      budgets:
+      - nodes: 10%
+      consolidateAfter: 0s
       consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.controlPlaneNodePool.capacityTypes Capacity types for the control plane node pool
     capacityTypes:
@@ -240,7 +252,7 @@ karpenter:
     # Set this to true to enable EC2 detailed cloudwatch monitoring
     detailedMonitoring: false
     ## @param karpenter.inferentiaDefaultNodeTemplate.amiFamily AMI family to use for node template
-    amiFamily: "AL2"
+    # amiFamily: "AL2"
     ## @param karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms AMI selector terms for the node template, conditions are ANDed
     # amiSelectorTerms:
     # - tags:
@@ -248,7 +260,8 @@ karpenter:
     #     environment: test
     # - name: my-ami
     # - id: ami-123
-    amiSelectorTerms: []
+    amiSelectorTerms:
+    - alias: al2@latest
     ## @skip karpenter.inferentiaDefaultNodeTemplate.userData
     # Set this to "" to disable this injection
     userData: ""
@@ -271,6 +284,9 @@ karpenter:
     taints: []
     ## @param karpenter.inferentiaNodePool.disruption.consolidationPolicy Consolidation policy for disruption
     disruption:
+      budgets:
+      - nodes: 10%
+      consolidateAfter: 0s
       consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.inferentiaNodePool.capacityTypes Capacity types for the Inferentia node pool
     capacityTypes:
