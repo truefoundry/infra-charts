@@ -32,7 +32,9 @@ spec:
   {{- if .Values.karpenter.defaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
   {{- end }}
+  {{- if Values.karpenter.defaultNodeTemplate.amiFamily }}
   amiFamily: {{ .Values.karpenter.defaultNodeTemplate.amiFamily }}
+  {{- end }}
   {{- if .Values.karpenter.defaultNodeTemplate.amiSelectorTerms }}
   amiSelectorTerms:
   {{- .Values.karpenter.defaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}

@@ -30,7 +30,9 @@ spec:
   {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
   {{- end }}
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
   amiFamily: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily }}
+  {{- end }}
   {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms }}
   amiSelectorTerms:
   {{- .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}

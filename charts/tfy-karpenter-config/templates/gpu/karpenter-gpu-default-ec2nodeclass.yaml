@@ -32,7 +32,9 @@ spec:
   {{- if .Values.karpenter.gpuDefaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
   {{- end }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.amiFamily }}
   amiFamily: {{ .Values.karpenter.gpuDefaultNodeTemplate.amiFamily }}
+  {{- end }}
   {{- if .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms }}
   amiSelectorTerms:
   {{- .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}

@@ -33,7 +33,9 @@ spec:
   {{- if .Values.karpenter.controlPlaneNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
   {{- end }}
+  {{- if .Values.karpenter.controlPlaneNodeTemplate.amiFamily }}
   amiFamily: {{ .Values.karpenter.controlPlaneNodeTemplate.amiFamily }}
+  {{- end }}
   {{- if .Values.karpenter.controlPlaneNodeTemplate.amiSelectorTerms }}
   amiSelectorTerms:
   {{- .Values.karpenter.controlPlaneNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
