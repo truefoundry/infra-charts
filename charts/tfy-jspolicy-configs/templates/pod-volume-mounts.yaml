@@ -37,45 +37,45 @@ spec:
     print("Adding volume mounts to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
     // add the volumes to the pod
     const podVolumes = request.object.spec.volumes || [];
-    mountDetails.forEach(mountDetails => {
-      if (mountDetails.type === "secret") {
+    mountDetails.forEach(mountDetail => {
+      if (mountDetail.type === "secret") {
         // skip if the volume already exists, volume name is same as secret name
-        if (podVolumes.find(volume => volume.name === mountDetails.secretName)) {
-          print("Volume " + mountDetails.secretName + " already exists in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
+        if (podVolumes.find(volume => volume.name === mountDetail.secretName)) {
+          print("Volume " + mountDetail.secretName + " already exists in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
           return;
         }
-        print("Adding volume " + mountDetails.secretName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+        print("Adding volume " + mountDetail.secretName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
         request.object.spec.volumes = request.object.spec.volumes.concat({
-          name: mountDetails.secretName,
+          name: mountDetail.secretName,
         secret: {
-          secretName: mountDetails.secretName
+          secretName: mountDetail.secretName
           }
         });
       }
-      if (mountDetails.type === "configMap") {
+      if (mountDetail.type === "configMap") {
         // skip if the volume already exists, volume name is same as secret name
-        if (podVolumes.find(volume => volume.name === mountDetails.configMapName)) {
-          print("Volume " + mountDetails.configMapName + " already exists in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
+        if (podVolumes.find(volume => volume.name === mountDetail.configMapName)) {
+          print("Volume " + mountDetail.configMapName + " already exists in the pod " + request.object.metadata.name + " in namespace " + request.namespace + ". Skipping...");
           return;
         }
-        print("Adding volume " + mountDetails.configMapName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
+        print("Adding volume " + mountDetail.configMapName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
         request.object.spec.volumes = request.object.spec.volumes.concat({
-          name: mountDetails.configMapName,
+          name: mountDetail.configMapName,
           configMap: {
-            name: mountDetails.configMapName
+            name: mountDetail.configMapName
           }
         });
       }
       request.object.spec.containers.forEach(container => {
         let volumeName = "";
-        if (mountDetails.type === "secret") {
-          volumeName = mountDetails.secretName;
+        if (mountDetail.type === "secret") {
+          volumeName = mountDetail.secretName;
         }
-        if (mountDetails.type === "configMap") {
-          volumeName = mountDetails.configMapName;
+        if (mountDetail.type === "configMap") {
+          volumeName = mountDetail.configMapName;
         }
         if (volumeName === "") {
-          print("Invalid volume mount details: " + JSON.stringify(mountDetails));
+          print("Invalid volume mount details: " + JSON.stringify(mountDetail));
           exit();
         }
         // skip if the volume mount already exists
@@ -84,11 +84,11 @@ spec:
           return;
         }
         print("Adding volume mount " + volumeName + " to the container " + container.name + " in the pod " + request.object.metadata.name + " in namespace " + request.namespace);
-        print("Mount details: " + JSON.stringify(mountDetails));
+        print("Mount details: " + JSON.stringify(mountDetail));
         container.volumeMounts = container.volumeMounts.concat({
           name: volumeName,
-          mountPath: mountDetails.mountPath,
-          subPath: mountDetails.subPath || "",
+          mountPath: mountDetail.mountPath,
+          subPath: mountDetail.subPath || "",
           readOnly: true
           });
       });
