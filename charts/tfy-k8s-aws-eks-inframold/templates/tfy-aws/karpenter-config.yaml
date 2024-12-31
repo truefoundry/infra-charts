@@ -18,8 +18,8 @@ spec:
     targetRevision: 0.1.33
     helm:
       values: |-
-        {{- if .Values.aws.karpenter.valuesOverride }}
-        {{ .Values.aws.karpenter.valuesOverride | toYaml | nindent 8 }}
+        {{- if .Values.aws.karpenter.config.valuesOverride }}
+        {{ .Values.aws.karpenter.config.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         cluster:
           name: {{ .Values.clusterName }}
