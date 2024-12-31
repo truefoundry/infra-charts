@@ -16,3 +16,9 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 | `karpenter.controller.resources.requests.memory`                  | Memory requests for karpenter container           | `100Mi` |
 | `karpenter.controller.resources.limits.cpu`                       | CPU limits for karpenter container                | `200m`  |
 | `karpenter.controller.resources.limits.memory`                    | Memory requests for karpenter container           | `256Mi` |
+
+### Upstream karpenter crd configurations
+
+| Name                            | Description                      | Value  |
+| ------------------------------- | -------------------------------- | ------ |
+| `karpenter-crd.webhook.enabled` | Enable webhook in karpenter CRDs | `true` |
