@@ -4,27 +4,29 @@ loki:
   ## @param loki.enabled Enable loki
   enabled: true
   loki:
-    ## @skip loki.loki.schemaConfig
+    image:
+      tag: 3.3.2
+    compactor:
+      retention_enabled: true
     schemaConfig:
       configs:
         - from: 2022-01-11
-          store: boltdb-shipper
-          object_store: filesystem
-          schema: v12
           index:
-            prefix: loki_index_
             period: 24h
-    ## @skip loki.loki.image
-    image:
-      tag: 2.9.10
+            prefix: loki_index_
+          store: boltdb-shipper
+          schema: v12
+          object_store: filesystem
+        - from: 2025-01-01
+          index:
+            period: 24h
+            prefix: index_
+          store: tsdb
+          schema: v13
+          object_store: filesystem
     storage:
       ## @param loki.loki.storage.type Method to use for storage
       type: filesystem
-    compactor:
-      ## @param loki.loki.compactor.shared_store The shared store used for storing boltdb files.
-      shared_store: filesystem
-      ## @param loki.loki.compactor.retention_enabled Activate custom (per-stream,per-tenant) retention.
-      retention_enabled: true
     ## @param loki.loki.auth_enabled Enables authentication through the X-Scope-OrgID header
     auth_enabled: false
     ## @skip loki.loki.commonConfig.replication_factor
