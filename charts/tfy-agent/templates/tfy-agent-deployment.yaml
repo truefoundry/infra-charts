@@ -38,6 +38,8 @@ spec:
             - name: CONTROL_PLANE_NATS_URL
               value: {{ .Values.config.controlPlaneNatsClusterIP | quote }}
             {{- end }}
+            - name: SDS_SERVER_URL
+              value: {{ printf "%s.%s.svc.cluster.local:8000" .Release.Name .Release.Namespace | quote }}
             - name: TENANT_NAME
               value:  {{ .Values.config.tenantName | quote }}
             - name: OPENCOST_ENDPOINT
