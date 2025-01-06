@@ -37,12 +37,22 @@ loki:
     ## @param loki.loki.limits_config.max_query_lookback Limit how far back in time series data and metadata can be queried, up until lookback duration ago.
     ## @param loki.loki.limits_config.split_queries_by_interval Split queries by a time interval and execute in parallel.
     ## @param loki.loki.limits_config.max_entries_limit_per_query Maximum number of log entries that will be returned for a query.
+    ## @param loki.loki.limits_config.max_label_names_per_series Maximum number of label names that will be returned for a query.
+    ## @param loki.loki.limits_config.max_streams_per_user Maximum number of streams a single user can have.
+    ## @param loki.loki.limits_config.reject_old_samples Reject samples older than the retention period.
+    ## @param loki.loki.limits_config.reject_old_samples_max_age Maximum age of samples before they are rejected.
     limits_config:
-      retention_period: 168h
+      retention_period: 336h
       max_query_lookback: 168h
-      split_queries_by_interval: 10h
+      split_queries_by_interval: 24h
       max_entries_limit_per_query: 30000
       max_label_names_per_series: 20
+      max_streams_per_user: 10000
+      reject_old_samples: false
+      reject_old_samples_max_age: 43800h
+    ingester:
+      max_chunk_age: 336h
+
   ## @skip loki.test.enabled
   test:
     enabled: false
