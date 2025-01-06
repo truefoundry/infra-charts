@@ -125,6 +125,16 @@ spec:
             {{- end }}
             additionalScrapeConfigs:
               - scheme: http
+                job_name: elasti-resolver
+                honor_labels: true
+                metrics_path: /metrics
+                dns_sd_configs:
+                  - port: 8013
+                    type: A
+                    names:
+                      - elasti-resolver-service.elasti
+                scrape_interval: 1s
+              - scheme: http
                 job_name: keda
                 honor_labels: true
                 metrics_path: /metrics
