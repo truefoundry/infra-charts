@@ -22,6 +22,15 @@ spec:
         {{- if .Values.notebookController.valuesOverride }}
         {{ .Values.notebookController.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+            ephemeral-storage: 256Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+            ephemeral-storage: 128Mi
         {{- with .Values.notebookController.notebookBaseDomainUrl }}
         notebookBaseDomainUrl: {{ . }}
         {{- end }}
