@@ -16,7 +16,7 @@ LLM-Gateway Helm Chart
 | `image.repository`                              | Image repository for tfyLLMGateway          | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
 | `image.tag`                                     | Image tag for the tfyLLMGateway             | `d58e0ff15acccfe5a8686839a89348b3033cee18`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway  | `""`                                              |
-| `replicaCount`                                  | Number of replicas                          | `1`                                               |
+| `replicaCount`                                  | Number of replicas                          | `3`                                               |
 | `environmentName`                               | The environment name                        | `default`                                         |
 | `envSecretName`                                 | The environment secret name                 | `tfy-llm-gateway-env-secret`                      |
 | `imagePullPolicy`                               | Image pull policy                           | `IfNotPresent`                                    |
