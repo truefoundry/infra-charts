@@ -250,13 +250,8 @@ aws-eks-gpu-operator:
   ## Daemonsets configuration
   daemonsets:
     ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
-    # The downside being Daemonset will not be updated until it is manually deleted,
-    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
-    # If needed, older nodes can be drained to force a newer versions on a newer nodes
-    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
     # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
-    updateStrategy: "OnDelete"
+    updateStrategy: "RollingUpdate"
   
   ## Validator configuration.
   validator:
@@ -668,13 +663,8 @@ azure-aks-gpu-operator:
   ## Daemonsets configuration
   daemonsets:
     ## @param azure-aks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
-    # The downside being Daemonset will not be updated until it is manually deleted,
-    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
-    # If needed, older nodes can be drained to force a newer versions on a newer nodes
-    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
     # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
-    updateStrategy: OnDelete
+    updateStrategy: RollingUpdate
     ## @param azure-aks-gpu-operator.daemonsets.priorityClassName Priority class for Daemonsets
     priorityClassName: system-node-critical
     ## @skip azure-aks-gpu-operator.daemonsets.tolerations
@@ -1179,13 +1169,8 @@ generic-gpu-operator:
   ## Daemonsets configuration
   daemonsets:
     ## @param generic-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-    # This is set to OnDelete to protect against pod failures in case device plugin is unavailable during a kubelet restart (caused by toolkit container restart)
-    # The downside being Daemonset will not be updated until it is manually deleted,
-    # which is mostly okay for gpu case - effect of toolkit, device plugin daemonsets are limited to the node they run on.
-    # If needed, older nodes can be drained to force a newer versions on a newer nodes
-    # This will be changed to "RollingUpdate" when newer kubelet versions with allocation issue fix become the norm
     # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
-    updateStrategy: OnDelete
+    updateStrategy: RollingUpdate
     ## @param generic-gpu-operator.daemonsets.priorityClassName Priority class for Daemonsets
     priorityClassName: system-node-critical
     ## @skip generic-gpu-operator.daemonsets.tolerations
