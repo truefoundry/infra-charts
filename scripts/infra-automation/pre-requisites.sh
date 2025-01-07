@@ -2,7 +2,7 @@
 set -e 
 
 # Colors and Exit codes
-readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' NC='\033[0m'
+readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' NC='\033[0m'
 readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
 
 # Tool configurations
@@ -22,7 +22,8 @@ declare -A TOOL_VERSIONS=(
 declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
-log() { echo -e "${2}$3${NC}"; }
+log() { echo -e "${2}[TF] $3${NC}"; }
+log_info() { log "INFO" "$BLUE" "$1"; }
 log_debug() { log "DEBUG" "$YELLOW" "$1"; }
 log_success() { log "SUCCESS" "$GREEN" "$1"; }
 log_error() { log "ERROR" "$RED" "$1"; }
@@ -72,8 +73,8 @@ get_cloud_tools() {
 
 get_essential_tools() {
     case $1 in
-        apt-get) echo "wget curl unzip git software-properties-common apt-transport-https ca-certificates lsb-release" ;;
-        yum|dnf) echo "wget curl unzip git  which" ;;
+        apt-get) echo "wget curl unzip git" ;;
+        yum|dnf) echo "wget curl unzip git" ;;
         apk) echo "wget curl unzip git" ;;
         brew) echo "wget curl unzip git" ;;
     esac
@@ -81,11 +82,9 @@ get_essential_tools() {
 
 # System detection
 detect_system() {
-    # Check sudo availability first
     check_sudo
-    log_debug "Sudo availability: $HAS_SUDO"
+    log_debug "System check: sudo=$HAS_SUDO"
 
-    # Detect OS and package manager
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
         for pm in apt-get yum dnf apk; do
@@ -95,16 +94,15 @@ detect_system() {
                 break
             fi
         done
-        [[ -z $PACKAGE_MANAGER ]] && { log_error "Unsupported package manager"; exit 1; }
+        [[ -z $PACKAGE_MANAGER ]] && { log_error "No supported package manager found"; exit 1; }
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="darwin"
         command_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
     else
-        log_error "Unsupported operating system"; exit 1
+        log_error "Unsupported OS: $OSTYPE"; exit 1
     fi
 
-    # Detect architecture
     case "$(uname -m)" in
         x86_64*) ARCH="amd64" ;;
         aarch64*|arm64*) ARCH="arm64" ;;
@@ -112,7 +110,7 @@ detect_system() {
     esac
 
     export OS PACKAGE_MANAGER ARCH
-    log_success "Detected OS: $OS, Package Manager: $PACKAGE_MANAGER, Architecture: $ARCH"
+    log_info "System: $OS ($ARCH) using $PACKAGE_MANAGER"
 }
 
 # Installation functions
@@ -124,18 +122,28 @@ install_essential_utilities() {
     for tool in $tools_list; do
         command_exists "$tool" || missing_tools+=("$tool")
     done
-
     if [ ${#missing_tools[@]} -ne 0 ]; then
-        log_debug "Installing missing tools: ${missing_tools[*]}"
-        case $PACKAGE_MANAGER in
-            apt-get) run_with_sudo apt-get update && run_with_sudo apt-get install -y "${missing_tools[@]}" ;;
-            yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y "${missing_tools[@]}" --allowerasing ;;
-            apk) run_with_sudo apk update && run_with_sudo apk add --no-cache "${missing_tools[@]}" ;;
-            brew) brew install "${missing_tools[@]}" ;;
-        esac
-        log_success "Essential utilities installed successfully"
+        log_info "Missing utilities: ${missing_tools[*]}"
+        echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}"
+        read -r response
+        if [[ ! $response =~ ^[nN] ]]; then
+            log_debug "Installing utilities... ${missing_tools[@]}"
+            case $PACKAGE_MANAGER in
+                apt-get) 
+                    run_with_sudo apt-get update -qq >/dev/null 2>&1
+                    run_with_sudo apt-get install -y -qq "${missing_tools[@]}" >/dev/null 2>&1
+                    ;;
+                yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" >/dev/null 2>&1 ;;
+                apk) run_with_sudo apk update >/dev/null 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
+                brew) brew install --quiet "${missing_tools[@]}" >/dev/null 2>&1 ;;
+            esac
+            log_success "Utilities installed successfully"
+        else
+            log_error "Installation skipped - some features may not work"
+            return 1
+        fi
     else
-        log_success "All essential utilities are already installed"
+        log_success "All required utilities are installed"
     fi
 }
 
@@ -223,7 +231,7 @@ install_tool() {
                     run_with_sudo mv google-cloud-sdk /usr/local/
                     
                     # Run install script with appropriate flags
-                    /usr/local/google-cloud-sdk/install.sh --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.bashrc" --completion-path /etc/bash_completion.d/gcloud
+                    /usr/local/google-cloud-sdk/install.sh --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.bashrc" 
                     
                     # Add to system-wide PATH
                     echo 'export PATH=/usr/local/google-cloud-sdk/bin:$PATH' | run_with_sudo tee /etc/profile.d/gcloud.sh
@@ -484,83 +492,112 @@ create_backend() {
 # Utility functions
 display_required_tools() {
     local cloud_provider=$1
-    log_debug "Required tools and versions:"
+    log_info "Required tools for TrueFoundry deployment:"
     
     # Display common tools
-    echo -e "${YELLOW}Common tools:${NC}"
+    echo -e "${BLUE}Core Tools:${NC}"
     for tool in "${COMMON_TOOLS[@]}"; do
-        echo -e "  - $tool (>= ${TOOL_VERSIONS[$tool]})"
+        echo -e "  • $tool (min: ${TOOL_VERSIONS[$tool]})"
     done
     
     # Display cloud-specific tools
-    echo -e "\n${YELLOW}Cloud-specific tools for $cloud_provider:${NC}"
-    read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
-    for tool in "${cloud_tools[@]}"; do
-        echo -e "  - $tool (>= ${TOOL_VERSIONS[$tool]})"
-    done
+    if [ "$cloud_provider" != "generic" ]; then
+        echo -e "\n${BLUE}$cloud_provider Tools:${NC}"
+        read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
+        for tool in "${cloud_tools[@]}"; do
+            echo -e "  • $tool (min: ${TOOL_VERSIONS[$tool]})"
+        done
+    fi
     echo
 }
 
 display_installed_versions() {
     local cloud_provider=$1
-    log_success "Installed tool versions:"
+    log_info "Checking installed tools:"
     
+    local all_ok=true
     # Display common tools
+    echo -e "${BLUE}Core Tools:${NC}"
     for tool in "${COMMON_TOOLS[@]}"; do
         if command_exists "$tool"; then
             local version
             version=$(get_tool_version "$tool")
-            echo -e "  - $tool: $version"
+            if version_compare "$version" "${TOOL_VERSIONS[$tool]}"; then
+                echo -e "  ${GREEN}✓${NC} $tool $version"
+            else
+                echo -e "  ${YELLOW}!${NC} $tool $version (min: ${TOOL_VERSIONS[$tool]})"
+                all_ok=false
+            fi
+        else
+            echo -e "  ${RED}✗${NC} $tool (not installed)"
+            all_ok=false
         fi
     done
     
     # Display cloud-specific tools
-    read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
-    for tool in "${cloud_tools[@]}"; do
-        if command_exists "$tool"; then
-            local version
-            version=$(get_tool_version "$tool")
-            echo -e "  - $tool: $version"
-        fi
-    done
+    if [ "$cloud_provider" != "generic" ]; then
+        echo -e "\n${BLUE}$cloud_provider Tools:${NC}"
+        read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
+        for tool in "${cloud_tools[@]}"; do
+            if command_exists "$tool"; then
+                local version
+                version=$(get_tool_version "$tool")
+                if version_compare "$version" "${TOOL_VERSIONS[$tool]}"; then
+                    echo -e "  ${GREEN}✓${NC} $tool $version"
+                else
+                    echo -e "  ${YELLOW}!${NC} $tool $version (min: ${TOOL_VERSIONS[$tool]})"
+                    all_ok=false
+                fi
+            else
+                echo -e "  ${RED}✗${NC} $tool (not installed)"
+                all_ok=false
+            fi
+        done
+    fi
     echo
+    
+    if [ "$all_ok" = true ]; then
+        log_success "All required tools are properly installed"
+    else
+        log_error "Some tools need attention"
+    fi
 }
 
 display_login_instructions() {
     local cloud_provider=$1
     
-    echo -e "\n${YELLOW}Post-Installation Login Instructions:${NC}"
+    echo -e "\n${YELLOW}TrueFoundry Cloud Provider Authentication:${NC}"
     case $cloud_provider in
         "aws")
-            echo -e "To configure AWS CLI:"
+            echo -e "To authenticate AWS CLI for TrueFoundry:"
             echo -e "1. Run: ${GREEN}aws configure${NC}"
-            echo -e "2. Enter your:"
+            echo -e "2. Enter your AWS credentials:"
             echo -e "   - AWS Access Key ID"
             echo -e "   - AWS Secret Access Key"
-            echo -e "   - Default region name"
+            echo -e "   - Default region name (e.g., us-west-2)"
             echo -e "   - Default output format (json recommended)"
-            echo -e "\nOr to use a named profile:"
+            echo -e "\nAlternatively, for named profile setup:"
             echo -e "Run: ${GREEN}aws configure --profile <profile-name>${NC}"
             ;;
         "gcp")
-            echo -e "To configure Google Cloud CLI:"
+            echo -e "To authenticate Google Cloud CLI for TrueFoundry:"
             echo -e "1. Run: ${GREEN}gcloud init${NC}"
-            echo -e "2. Follow the prompts to:"
-            echo -e "   - Log in to your Google account"
+            echo -e "2. Complete the following steps:"
+            echo -e "   - Log in to your Google Cloud account"
             echo -e "   - Select or create a project"
-            echo -e "   - Set a default compute region and zone"
+            echo -e "   - Configure default compute region and zone"
             echo -e "\nFor service account authentication:"
             echo -e "Run: ${GREEN}gcloud auth activate-service-account --key-file=KEY-FILE${NC}"
             ;;
         "azure")
-            echo -e "To configure Azure CLI:"
+            echo -e "To authenticate Azure CLI for TrueFoundry:"
             echo -e "1. Run: ${GREEN}az login${NC}"
-            echo -e "2. Follow the browser prompt to complete authentication"
+            echo -e "2. Follow the browser prompt to authenticate"
             echo -e "\nFor service principal authentication:"
             echo -e "Run: ${GREEN}az login --service-principal -u CLIENT_ID -p CLIENT_SECRET --tenant TENANT_ID${NC}"
             ;;
         "generic")
-            echo -e "No cloud provider specified. No login required."
+            echo -e "No cloud provider specified. No authentication required."
             ;;
     esac
     echo
@@ -570,7 +607,7 @@ display_login_instructions() {
 main() {
     # Validate arguments
     if [ $# -eq 0 ]; then
-        log_debug "No cloud provider specified, using generic setup"
+        log_info "No cloud provider specified, using generic setup"
         cloud_provider="generic"
         config_file=""
     else
@@ -581,45 +618,48 @@ main() {
     # Validate cloud provider
     case $cloud_provider in
         "aws"|"gcp"|"azure"|"generic")
-            log_success "Setting up environment for $cloud_provider"
+            log_info "Checking prerequisites for $cloud_provider deployment"
             display_required_tools "$cloud_provider"
             ;;
         *)
-            log_error "Error: Invalid cloud provider. Please specify aws, gcp, azure, or generic"
-            log_error "Usage: $0 [aws|gcp|azure|generic] [config.json]"
+            log_error "Invalid cloud provider. Usage: $0 [aws|gcp|azure|generic] [config.json]"
             exit $INVALID_PROVIDER
             ;;
     esac
 
-    # Step 1: Detect system and install essential utilities
+    # Step 1: Detect system
     detect_system
-    install_essential_utilities
+    
+    # Step 2: Install essential utilities
+    install_essential_utilities || log_error "Missing essential utilities may affect deployment"
 
-    # Step 2: Verify and install required tools
+    # Step 3: Verify and install required tools
     verify_tools "$cloud_provider"
     local verify_status=$?
     if [ $verify_status -eq $MISSING_TOOLS ]; then
-        log_debug "Installing missing tools..."
+        log_info "Installing missing tools..."
         install_cloud_tools "$cloud_provider"
-        verify_tools "$cloud_provider" || exit $?
     elif [ $verify_status -ne $SUCCESS ]; then
         exit $verify_status
     fi
 
-    # Step 3: Create backend (only for cloud-specific providers)
+    # Step 4: Create backend (only for cloud-specific providers)
     if [ "$cloud_provider" != "generic" ] && [ -n "$config_file" ]; then
+        log_info "Setting up backend storage for $cloud_provider"
         create_backend "$cloud_provider" "$config_file"
     fi
 
     # Display final summary
     display_installed_versions "$cloud_provider"
-    log_success "Setup complete!"
-    # Reload shell
-    echo -e "\n${YELLOW}Important:${NC} Shell reload required"
-    echo -e "To make new tools available in your current session, run:\n"
-    echo -e "    ${GREEN}exec -l $SHELL${NC}\n"
+    
+    # Reload shell notice
+    if [ "$verify_status" -eq $SUCCESS ]; then
+        echo -e "\n${BLUE}Action Required:${NC}"
+        echo -e "Run the following command to update your shell environment:"
+        echo -e "    ${GREEN}exec -l $SHELL${NC}\n"
+    fi
 
-    # Display login instructions if a cloud provider was specified
+    # Display login instructions if needed
     if [ "$cloud_provider" != "generic" ]; then
         display_login_instructions "$cloud_provider"
     fi
