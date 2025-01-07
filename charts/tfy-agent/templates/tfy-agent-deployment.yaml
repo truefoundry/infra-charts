@@ -38,7 +38,7 @@ spec:
             - name: CONTROL_PLANE_NATS_URL
               value: {{ .Values.config.controlPlaneNatsClusterIP | quote }}
             {{- end }}
-            {{- if .Values.sdsServer.enabled -}}
+            {{- if .Values.sdsServer.enabled}}
             - name: SDS_SERVER_URL
               value: {{ printf "%s.%s.svc.cluster.local:8000" .Release.Name .Release.Namespace | quote }}
             {{- end }}
