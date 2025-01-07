@@ -222,7 +222,7 @@ function create_backend() {
 
 		local bucket_name=$(echo $manifest_inputs | jq -r '.manifest.backend.bucket_name')
 		local region=$(echo $manifest_inputs | jq -r '.manifest.region')
-		local auth_type=$(echo $manifest_inputs | jq -r '.manifest.backend.auth.type')
+		local auth_type=$(echo $manifest_inputs | jq -r '.manifest.auth.type')
 		local dynamodb_table=$(echo $manifest_inputs | jq -r '.manifest.backend.dynamodb_table')
 
 		
