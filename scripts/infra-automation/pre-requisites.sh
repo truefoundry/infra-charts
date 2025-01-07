@@ -127,7 +127,7 @@ install_essential_utilities() {
         echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}"
         read -r response
         if [[ ! $response =~ ^[nN] ]]; then
-            log_debug "Installing utilities... ${missing_tools[@]}"
+            log_debug "Installing utilities... ${missing_tools[*]}"
             case $PACKAGE_MANAGER in
                 apt-get) 
                     run_with_sudo apt-get update -qq >/dev/null 2>&1
@@ -539,6 +539,9 @@ display_installed_versions() {
         echo -e "\n${BLUE}$cloud_provider Tools:${NC}"
         read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
         for tool in "${cloud_tools[@]}"; do
+					if [ "$tool" == "gke-gcloud-auth-plugin" ]; then
+						continue
+					fi
             if command_exists "$tool"; then
                 local version
                 version=$(get_tool_version "$tool")
