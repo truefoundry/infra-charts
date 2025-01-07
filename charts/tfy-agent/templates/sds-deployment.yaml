@@ -35,37 +35,37 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       containers:
-        env:
-          {{- if .Values.config.controlPlaneURL }}
-          - name: CONTROL_PLANE_URL
-            value: {{ .Values.config.controlPlaneURL | quote }}
-          {{- else }}
-          - name: CONTROL_PLANE_URL
-            value: {{ .Values.config.controlPlaneClusterIP | quote }}
-          {{- end }}
-          - name: CLUSTER_TOKEN
-            valueFrom:
-              secretKeyRef:
-                key: CLUSTER_TOKEN
-                name: {{ include "tfy-agent.secretName" .}}
-        - command:
-            {{- with .Values.sdsServer.command }}
-            {{- toYaml . | nindent 12  }}
-            {{- end }}
-          image: {{ .Values.sdsServer.image.repository }}:{{ .Values.sdsServer.image.tag }}
+        - image: {{ .Values.sdsServer.image.repository }}:{{ .Values.sdsServer.image.tag }}
           imagePullPolicy: IfNotPresent
           name: sds-server
+          command:
+            {{- with .Values.sdsServer.command }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          env:
+            {{- if .Values.config.controlPlaneURL }}
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.config.controlPlaneURL | quote }}
+            {{- else }}
+            - name: CONTROL_PLANE_URL
+              value: {{ .Values.config.controlPlaneClusterIP | quote }}
+            {{- end }}
+            - name: CLUSTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: CLUSTER_TOKEN
+                  name: {{ include "tfy-agent.secretName" . }}
           readinessProbe:
-            {{- toYaml .Values.sdsServer.readinessProbe | nindent 12  }}
+            {{- toYaml .Values.sdsServer.readinessProbe | nindent 12 }}
           livenessProbe:
-            {{- toYaml .Values.sdsServer.livenessProbe | nindent 12  }}
+            {{- toYaml .Values.sdsServer.livenessProbe | nindent 12 }}
           ports:
             {{- with .Values.sdsServer.ports }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           resources:
             {{- with .Values.sdsServer.resources }}
-            {{- toYaml . | nindent 12  }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
       topologySpreadConstraints:
         {{- with .Values.sdsServer.topologySpreadConstraints }}
