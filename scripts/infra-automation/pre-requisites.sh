@@ -19,16 +19,36 @@ declare -A TOOL_VERSIONS=(
 )
 
 # System information
-declare OS PACKAGE_MANAGER ARCH
+declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
-log() { echo -e "${2}pre-requisite.sh - [$1] - $3${NC}"; }
+log() { echo -e "${2}$3${NC}"; }
 log_debug() { log "DEBUG" "$YELLOW" "$1"; }
-log_success() { log "INFO" "$GREEN" "$1"; }
+log_success() { log "SUCCESS" "$GREEN" "$1"; }
 log_error() { log "ERROR" "$RED" "$1"; }
 
 # Utility functions
 command_exists() { command -v "$1" >/dev/null 2>&1; }
+
+# Function to check if sudo is available and can be used
+check_sudo() {
+    if command_exists sudo; then
+        # Check if user has sudo privileges by attempting a harmless command
+        if sudo -n true 2>/dev/null; then
+            HAS_SUDO=true
+        fi
+    fi
+    HAS_SUDO=false
+}
+
+# Function to run command with sudo if available
+run_with_sudo() {
+    if [ "$HAS_SUDO" = true ]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
 
 confirm_installation() {
     echo -e "${YELLOW}$1 is not installed. Would you like to install it? (Y/n)${NC}"
@@ -61,6 +81,10 @@ get_essential_tools() {
 
 # System detection
 detect_system() {
+    # Check sudo availability first
+    check_sudo
+    log_debug "Sudo availability: $HAS_SUDO"
+
     # Detect OS and package manager
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
@@ -104,9 +128,9 @@ install_essential_utilities() {
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_debug "Installing missing tools: ${missing_tools[*]}"
         case $PACKAGE_MANAGER in
-            apt-get) sudo apt-get update && sudo apt-get install -y "${missing_tools[@]}" ;;
-            yum|dnf) sudo "$PACKAGE_MANAGER" install -y "${missing_tools[@]}" --allowerasing ;;
-            apk) sudo apk update && sudo apk add --no-cache "${missing_tools[@]}" ;;
+            apt-get) run_with_sudo apt-get update && run_with_sudo apt-get install -y "${missing_tools[@]}" ;;
+            yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y "${missing_tools[@]}" --allowerasing ;;
+            apk) run_with_sudo apk update && run_with_sudo apk add --no-cache "${missing_tools[@]}" ;;
             brew) brew install "${missing_tools[@]}" ;;
         esac
         log_success "Essential utilities installed successfully"
@@ -147,19 +171,19 @@ install_tool() {
             local version
             version=${TOOL_VERSIONS[$tool]}
             wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
-            unzip -q terraform.zip && sudo mv terraform /usr/local/bin/
+            unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
             ;;
         kubectl)
             local version
             version=${TOOL_VERSIONS[$tool]}
             wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
-            chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+            chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
             ;;
         helm)
             local version
             version=${TOOL_VERSIONS[$tool]}
             wget -q "https://get.helm.sh/helm-v${version}-${OS}-${ARCH}.tar.gz" -O helm.tar.gz
-            tar -zxf helm.tar.gz && sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
+            tar -zxf helm.tar.gz && run_with_sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
             ;;
         aws)
             case $OS in
@@ -169,12 +193,12 @@ install_tool() {
                     else
                         curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                     fi
-                    unzip -q awscliv2.zip && sudo ./aws/install --update
+                    unzip -q awscliv2.zip && run_with_sudo ./aws/install --update
                     rm -rf aws awscliv2.zip
                     ;;
                 darwin)
                     curl -s "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-                    sudo installer -pkg AWSCLIV2.pkg -target /
+                    run_with_sudo installer -pkg AWSCLIV2.pkg -target /
                     rm -f AWSCLIV2.pkg
                     ;;
             esac
@@ -195,17 +219,29 @@ install_tool() {
                     rm -f "$gcloud_archive"
                     
                     # Install to system-wide location
-                    sudo rm -rf /usr/local/google-cloud-sdk
-                    sudo mv google-cloud-sdk /usr/local/
-                    sudo /usr/local/google-cloud-sdk/install.sh --quiet --command-completion true --path-update true --usage-reporting false
+                    run_with_sudo rm -rf /usr/local/google-cloud-sdk
+                    run_with_sudo mv google-cloud-sdk /usr/local/
+                    
+                    # Run install script with appropriate flags
+                    /usr/local/google-cloud-sdk/install.sh --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.bashrc" --completion-path /etc/bash_completion.d/gcloud
                     
                     # Add to system-wide PATH
-                    echo 'export PATH=/usr/local/google-cloud-sdk/bin:$PATH' | sudo tee /etc/profile.d/gcloud.sh
+                    echo 'export PATH=/usr/local/google-cloud-sdk/bin:$PATH' | run_with_sudo tee /etc/profile.d/gcloud.sh
+                    
                     # Add to current session
                     export PATH=/usr/local/google-cloud-sdk/bin:$PATH
+                    
+                    # Source the completion script for current session if it exists
+                    [[ -f /etc/bash_completion.d/gcloud ]] && source /etc/bash_completion.d/gcloud
+                    
+                    # Initialize gcloud configuration directory
+                    mkdir -p "$HOME/.config/gcloud"
+                    
                     ;;
                 darwin) 
                     brew install --cask google-cloud-sdk
+                    # Add to current session PATH for macOS
+                    export PATH="/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"
                     ;;
             esac
             # Skip initialization as it requires user interaction
@@ -216,17 +252,17 @@ install_tool() {
                 linux)
                     case $PACKAGE_MANAGER in
                         apt-get)
-                            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                            curl -sL https://aka.ms/InstallAzureCLIDeb | run_with_sudo bash
                             ;;
                         yum|dnf)
                             # Import Microsoft repository key
-                            sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                            run_with_sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
                             
                             # Add Azure CLI repository
-                            sudo dnf install -y https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+                            run_with_sudo dnf install -y https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
                             
                             # Install Azure CLI
-                            sudo "$PACKAGE_MANAGER" install -y azure-cli
+                            run_with_sudo "$PACKAGE_MANAGER" install -y azure-cli
                             ;;
                         *)
                             log_error "Unsupported package manager for Azure CLI installation"
@@ -243,9 +279,9 @@ install_tool() {
             case $OS in
                 linux)
                     case $PACKAGE_MANAGER in
-                        apt-get) sudo apt-get update && sudo apt-get install -y jq ;;
-                        yum|dnf) sudo "$PACKAGE_MANAGER" install -y jq ;;
-                        apk) sudo apk add --no-cache jq ;;
+                        apt-get) run_with_sudo apt-get update && run_with_sudo apt-get install -y jq ;;
+                        yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y jq ;;
+                        apk) run_with_sudo apk add --no-cache jq ;;
                     esac
                     ;;
                 darwin) brew install jq ;;
@@ -257,14 +293,14 @@ install_tool() {
                 linux)
                     case $PACKAGE_MANAGER in
                         apt-get) 
-                            sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin || {
-                                log_error "Failed to install gke-gcloud-auth-plugin via apt"
+                            gcloud components install gke-gcloud-auth-plugin || {
+                                log_error "Failed to install gke-gcloud-auth-plugin via gcloud components"
                                 return 1
                             }
                             ;;
                         yum|dnf) 
                             # Install via package manager
-                            sudo "$PACKAGE_MANAGER" install -y google-cloud-sdk-gke-gcloud-auth-plugin || {
+                            run_with_sudo "$PACKAGE_MANAGER" install -y google-cloud-sdk-gke-gcloud-auth-plugin || {
                                 log_error "Failed to install gke-gcloud-auth-plugin via $PACKAGE_MANAGER"
                                 return 1
                             }
@@ -284,10 +320,7 @@ install_tool() {
                     }
                     ;;
             esac
-            # Add environment variable to both current session and profile files
-            export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-            echo 'export USE_GKE_GCLOUD_AUTH_PLUGIN=True' | sudo tee /etc/profile.d/gke-auth.sh
-            ;;
+						;;
     esac
 
     cd - > /dev/null && rm -rf "$tmp_dir"
@@ -493,6 +526,46 @@ display_installed_versions() {
     echo
 }
 
+display_login_instructions() {
+    local cloud_provider=$1
+    
+    echo -e "\n${YELLOW}Post-Installation Login Instructions:${NC}"
+    case $cloud_provider in
+        "aws")
+            echo -e "To configure AWS CLI:"
+            echo -e "1. Run: ${GREEN}aws configure${NC}"
+            echo -e "2. Enter your:"
+            echo -e "   - AWS Access Key ID"
+            echo -e "   - AWS Secret Access Key"
+            echo -e "   - Default region name"
+            echo -e "   - Default output format (json recommended)"
+            echo -e "\nOr to use a named profile:"
+            echo -e "Run: ${GREEN}aws configure --profile <profile-name>${NC}"
+            ;;
+        "gcp")
+            echo -e "To configure Google Cloud CLI:"
+            echo -e "1. Run: ${GREEN}gcloud init${NC}"
+            echo -e "2. Follow the prompts to:"
+            echo -e "   - Log in to your Google account"
+            echo -e "   - Select or create a project"
+            echo -e "   - Set a default compute region and zone"
+            echo -e "\nFor service account authentication:"
+            echo -e "Run: ${GREEN}gcloud auth activate-service-account --key-file=KEY-FILE${NC}"
+            ;;
+        "azure")
+            echo -e "To configure Azure CLI:"
+            echo -e "1. Run: ${GREEN}az login${NC}"
+            echo -e "2. Follow the browser prompt to complete authentication"
+            echo -e "\nFor service principal authentication:"
+            echo -e "Run: ${GREEN}az login --service-principal -u CLIENT_ID -p CLIENT_SECRET --tenant TENANT_ID${NC}"
+            ;;
+        "generic")
+            echo -e "No cloud provider specified. No login required."
+            ;;
+    esac
+    echo
+}
+
 # Main execution
 main() {
     # Validate arguments
@@ -541,6 +614,15 @@ main() {
     # Display final summary
     display_installed_versions "$cloud_provider"
     log_success "Setup complete!"
+		# Reload shell
+		echo "Reload your shell to ensure all tools are properly available in your PATH"
+		echo "$GREEN Please run 'exec -l $SHELL' to reload your shell"
+
+    # Display login instructions if a cloud provider was specified
+    if [ "$cloud_provider" != "generic" ]; then
+        display_login_instructions "$cloud_provider"
+    fi
+
     exit $SUCCESS
 }
 
