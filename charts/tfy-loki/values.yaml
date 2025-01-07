@@ -4,6 +4,16 @@ loki:
   ## @param loki.enabled Enable loki
   enabled: true
   loki:
+    ## @skip loki.loki.schemaConfig
+    schemaConfig:
+      configs:
+        - from: 2022-01-11
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v12
+          index:
+            prefix: loki_index_
+            period: 24h
     ## @skip loki.loki.image
     image:
       tag: 2.9.10
