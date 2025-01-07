@@ -27,6 +27,111 @@ INSTALL_URLS=(
     "https://stedolan.github.io/jq/download/"
 )
 
+# Add new functions for OS and architecture detection
+function get_os() {
+    local os
+    case "$(uname -s)" in
+        Linux*)     os="linux";;
+        Darwin*)    os="darwin";;
+        MINGW*)     os="windows";;
+        *)          os="unknown";;
+    esac
+    echo "$os"
+}
+
+function get_arch() {
+    local arch
+    case "$(uname -m)" in
+        x86_64*)    arch="amd64";;
+        aarch64*)   arch="arm64";;
+        arm64*)     arch="arm64";;
+        *)          arch="amd64";;
+    esac
+    echo "$arch"
+}
+
+# Function to install a tool
+function install_tool() {
+    local tool=$1
+    local os=$(get_os)
+    local arch=$(get_arch)
+    local tmp_dir="/tmp/tool-install"
+    
+    mkdir -p "$tmp_dir"
+    cd "$tmp_dir"
+    
+    case $tool in
+        "terraform")
+            local version="1.9.0"
+            local url="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${os}_${arch}.zip"
+            wget "$url" -O terraform.zip
+            unzip terraform.zip
+            sudo mv terraform /usr/local/bin/
+            ;;
+        "kubectl")
+            local version="v1.28.0"
+            local url="https://dl.k8s.io/release/${version}/bin/${os}/${arch}/kubectl"
+            wget "$url" -O kubectl
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+            ;;
+        "helm")
+            local version="v3.16.0"
+            local url="https://get.helm.sh/helm-${version}-${os}-${arch}.tar.gz"
+            wget "$url" -O helm.tar.gz
+            tar -zxvf helm.tar.gz
+            sudo mv "${os}"-"${arch}"/helm /usr/local/bin/
+            ;;
+        "aws")
+            case $os in
+                "linux")
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip awscliv2.zip
+                    sudo ./aws/install
+                    ;;
+                "darwin")
+                    curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+                    sudo installer -pkg AWSCLIV2.pkg -target /
+                    ;;
+            esac
+            ;;
+        "gcloud")
+            case $os in
+                "linux")
+                    curl https://sdk.cloud.google.com > install.sh
+                    bash install.sh --disable-prompts
+                    ;;
+                "darwin")
+                    brew install --cask google-cloud-sdk
+                    ;;
+            esac
+            ;;
+        "az")
+            case $os in
+                "linux")
+                    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+                    ;;
+                "darwin")
+                    brew install azure-cli
+                    ;;
+            esac
+            ;;
+        "jq")
+            case $os in
+                "linux")
+                    sudo apt-get update && sudo apt-get install -y jq || sudo yum install -y jq
+                    ;;
+                "darwin")
+                    brew install jq
+                    ;;
+            esac
+            ;;
+    esac
+    
+    cd - > /dev/null
+    rm -rf "$tmp_dir"
+}
+
 # Function to log info
 function log_debug() {
 	echo -e "${YELLOW}pre-requisite.sh - [DEBUG] - $1${NC}"
@@ -59,7 +164,7 @@ function get_index() {
 function get_min_version() {
     local tool=$1
     local idx=$(get_index "$tool")
-    if [ $idx -ge 0 ]; then
+    if [ "$idx" -ge 0 ]; then
         echo "${MIN_VERSIONS[$idx]}"
     fi
 }
@@ -68,7 +173,7 @@ function get_min_version() {
 function get_install_url() {
     local tool=$1
     local idx=$(get_index "$tool")
-    if [ $idx -ge 0 ]; then
+    if [ "$idx" -ge 0 ]; then
         echo "${INSTALL_URLS[$idx]}"
     fi
 }
@@ -159,11 +264,16 @@ function validate_cloud_tools() {
         "azure") tools_to_check+=("az") ;;
     esac
 
-    # Check each tool
+    # Check each tool and attempt installation if missing
     for tool in "${tools_to_check[@]}"; do
         if ! command_exists "$tool"; then
-            missing_tools+=("$tool: Please install from here $(get_install_url "$tool")")
-            continue
+            log_debug "Attempting to install $tool..."
+            install_tool "$tool"
+            
+            if ! command_exists "$tool"; then
+                missing_tools+=("$tool: Failed to install. Please install manually from $(get_install_url "$tool")")
+                continue
+            fi
         fi
 
         local version=$(get_tool_version "$tool")
@@ -213,21 +323,25 @@ function display_versions() {
 function create_backend() {
 	log_debug "create_backend - trying to create backend..."
 	local cloud_provider=$1
-	local manifest_inputs=$(cat $2)
+	local manifest_inputs=$(cat "$2")
 	log_debug "create_backend - $manifest_inputs"
 	case $cloud_provider in
 	"aws")
-	    # This is to disable aws pager
+		# AWS Backend Creation
+		# -------------------
+		# Disable AWS pager for cleaner output
 	    export AWS_PAGER=""
 
-		local bucket_name=$(echo $manifest_inputs | jq -r '.manifest.backend.bucket_name')
-		local region=$(echo $manifest_inputs | jq -r '.manifest.region')
-		local auth_type=$(echo $manifest_inputs | jq -r '.manifest.auth.type')
-		local dynamodb_table=$(echo $manifest_inputs | jq -r '.manifest.backend.dynamodb_table')
+		# Extract backend configuration from manifest
+		local bucket_name=$(echo "$manifest_inputs" | jq -r '.manifest.backend.bucket_name')
+		local region=$(echo "$manifest_inputs" | jq -r '.manifest.region')
+		local auth_type=$(echo "$manifest_inputs" | jq -r '.manifest.auth.type')
+		local dynamodb_table=$(echo "$manifest_inputs" | jq -r '.manifest.backend.dynamodb_table')
 
-		
+		# Handle authentication
 		if [[ $auth_type == "profile" ]]
 		then
+			# Use AWS profile-based authentication
 			log_debug "Auth mode $auth_type"
 			local profile=$(echo $manifest_inputs | jq -r '.manifest.auth.profile')
 			export AWS_PROFILE=$profile
@@ -238,25 +352,28 @@ function create_backend() {
 			local secret_key=$(echo $manifest_inputs | jq -r '.manifest.auth.secret_key')
 		fi
 		
-
+		# Create or verify S3 bucket
 		if aws s3api head-bucket --bucket "$bucket_name" --region "$region" 2>&1; then
 				log_success "create_backend - Bucket $bucket_name already present"
 		else
 			log_debug "create_backend - Bucket $bucket_name doesn't exist. Creating ..."
 			if [[ $region == "us-east-1" ]]
 			then
+				# Special handling for us-east-1 region
 				aws s3api create-bucket --bucket "$bucket_name" --region "$region"
 			else
+				# Create bucket in specified region
 				aws s3api create-bucket --bucket "$bucket_name" --region "$region" --create-bucket-configuration LocationConstraint="$region"
-			fi
-			if [$? -eq 0]
-			then
-				log_success "create_backend - Bucket $bucket_name created successfully."
-			else
-				log_error "create_backend - Failed to create bucket $bucket_name in the region $region."
+				if [ $? -eq 0 ]
+				then
+					log_success "create_backend - Bucket $bucket_name created successfully."
+				else
+					log_error "create_backend - Failed to create bucket $bucket_name in the region $region."
+				fi
 			fi
 		fi
 
+		# Create or verify DynamoDB table for state locking
 		if [[ $dynamodb_table == "null" ]]
 		then
 			log_debug "Skipping dynamodb table check as it is not present in the manifest..."
@@ -266,7 +383,7 @@ function create_backend() {
 				log_success "Table '$dynamodb_table' already exists."
 			else
 				log_debug "Table '$dynamodb_table' does not exist. Creating..."
-				# Create the table
+				# Create DynamoDB table with LockID as primary key
 				aws dynamodb create-table \
 					--table-name "$dynamodb_table" \
 					--attribute-definitions AttributeName=ID,AttributeType=S \
@@ -283,9 +400,13 @@ function create_backend() {
 		fi
 		;;
 	"gcp")
-		local bucket_name=$(echo $manifest_inputs | jq -r '.manifest.backend.bucket')
-		local region=$(echo $manifest_inputs | jq -r '.manifest.region')
+		# Google Cloud Backend Creation
+		# ---------------------------
+		# Extract backend configuration
+		local bucket_name=$(echo "$manifest_inputs" | jq -r '.manifest.backend.bucket')
+		local region=$(echo "$manifest_inputs" | jq -r '.manifest.region')
 
+		# Create or verify GCS bucket
 		if gcloud storage buckets describe gs://"$bucket_name" > /dev/null 2>&1; then
 			log_success "Bucket '$bucket_name' already exists."
 		else
@@ -299,13 +420,15 @@ function create_backend() {
 		fi
 		;;
 	"azure")
-		local resource_group=$(echo $manifest_inputs | jq -r '.manifest.backend.resource_group_name')
-		local storage_account=$(echo $manifest_inputs | jq -r '.manifest.backend.storage_account_name')
-		local container_name=$(echo $manifest_inputs | jq -r '.manifest.backend.container_name')
-		local location=$(echo $manifest_inputs | jq -r '.manifest.location')
+		# Azure Backend Creation
+		# ---------------------
+		# Extract backend configuration
+		local resource_group=$(echo "$manifest_inputs" | jq -r '.manifest.backend.resource_group_name')
+		local storage_account=$(echo "$manifest_inputs" | jq -r '.manifest.backend.storage_account_name')
+		local container_name=$(echo "$manifest_inputs" | jq -r '.manifest.backend.container_name')
+		local location=$(echo "$manifest_inputs" | jq -r '.manifest.location')
 
-
-		# Resource group
+		# Create or verify resource group
 		if az group show --name "$resource_group" > /dev/null 2>&1; then
 			log_success "Resource group '$resource_group' already exists."
 		else
@@ -317,7 +440,8 @@ function create_backend() {
 				log_error "Failed to create resource group '$resource_group'."
 			fi
 		fi
-		# Storage account
+
+		# Create or verify storage account
 		if az storage account show --name "$storage_account" --resource-group "$resource_group" > /dev/null 2>&1; then
 			log_success "Storage account '$storage_account' already exists."
 		else
@@ -330,7 +454,7 @@ function create_backend() {
 			fi
 		fi
 
-		# Container
+		# Create or verify storage container
 		if az storage container show --name "$container_name" --account-name "$storage_account" > /dev/null 2>&1; then
 			log_success "Container '$container_name' already exists in storage account '$storage_account'."
 		else
@@ -369,7 +493,7 @@ main() {
 
 	# inputs file name
 	# local manifest_inputs=$(cat "$2")
-	create_backend $cloud_provider $2
+	create_backend "$cloud_provider" "$2"
 
 	log_debug "Validating required tools..."
 
