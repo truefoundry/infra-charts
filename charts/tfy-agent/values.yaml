@@ -454,3 +454,93 @@ resourceQuota:
   ## @param resourceQuota.priorityClasses PriorityClasses to enable.
   priorityClasses:
     - system-cluster-critical
+
+
+## Config for SDS service
+##
+sdsServer:
+  ## @param sdsServer.enabled Bool value to deploy sdsServer
+  enabled: true
+  ## @param sdsServer.replicas Number of replicas of sds server
+  replicas: 2
+  image:
+    ## @param sdsServer.image.repository Repository for sds-server
+    repository: tfy.jfrog.io/tfy-images/sds-server
+    ## @param sdsServer.image.tag Tag for sds-server
+    tag: "057401955329c0801314ab11ca15ed60fb73dc97"
+  ## @param sdsServer.affinity [object] Node affinity for sds-server
+  affinity: {}
+  ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sds-server
+  imagePullSecrets: []
+  ## @param sdsServer.command Command and arguments to start the sds-server application.
+  command:
+    - /app/sds-server
+    - "--port"
+    - "8000"
+  readinessProbe:
+    tcpSocket:
+      ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
+      port: 8000
+    ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
+    initialDelaySeconds: 15
+    ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
+    periodSeconds: 10
+  livenessProbe:
+    tcpSocket:
+      ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
+      port: 8000
+    ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
+    initialDelaySeconds: 15
+    ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
+    periodSeconds: 10
+  deploymentStrategy:
+    ## @param sdsServer.deploymentStrategy.type Type of deployment strategy
+    type: RollingUpdate
+    rollingUpdate:
+      ## @param sdsServer.deploymentStrategy.rollingUpdate.maxSurge Max pods above desired number
+      maxSurge: 1
+      ## @param sdsServer.deploymentStrategy.rollingUpdate.maxUnavailable Max pods unavailable during update
+      maxUnavailable: 1
+  ## @param sdsServer.ports[0].containerPort The port on which the container is listening.
+  ports:
+    - containerPort: 8000
+      ## @param sdsServer.ports[0].name The name assigned to this port.
+      name: port-8000
+      ## @param sdsServer.ports[0].protocol The protocol used by this port (TCP/UDP).
+      protocol: TCP
+  resources:
+    limits:
+      ## @param sdsServer.resources.limits.cpu The maximum CPU resources allocated.
+      cpu: 0.02
+      ## @param sdsServer.resources.limits.ephemeral-storage The maximum ephemeral storage allocated.
+      ephemeral-storage: 20M
+      ## @param sdsServer.resources.limits.memory The maximum memory resources allocated.
+      memory: 50M
+    requests:
+      ## @param sdsServer.resources.requests.cpu The minimum CPU resources requested.
+      cpu: 0.01
+      ## @param sdsServer.resources.requests.ephemeral-storage The minimum ephemeral storage requested.
+      ephemeral-storage: 10M
+      ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
+      memory: 30M
+  ## @param sdsServer.tolerations [array] Spot tolerations for the notebook controller deployment.
+  tolerations:
+    - effect: NoSchedule
+      key: cloud.google.com/gke-spot
+      operator: Equal
+      value: 'true'
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: 'spot'
+  topologySpreadConstraints:
+    - labelSelector:
+        matchLabels:
+          ## @param sdsServer.topologySpreadConstraints[0].labelSelector.matchLabels.truefoundry.com/component Component label for the sds-server.
+          truefoundry.com/component: sds-server
+      ## @param sdsServer.topologySpreadConstraints[0].maxSkew Define the maximum skew of pods across topology domains.
+      maxSkew: 1
+      ## @param sdsServer.topologySpreadConstraints[0].topologyKey The key for the node labels used in determining the topology spread.
+      topologyKey: topology.kubernetes.io/zone
+      ## @param sdsServer.topologySpreadConstraints[0].whenUnsatisfiable Behavior policy when spreading constraints cannot be satisfied.
+      whenUnsatisfiable: ScheduleAnyway

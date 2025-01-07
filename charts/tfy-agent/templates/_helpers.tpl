@@ -75,6 +75,14 @@ app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
 {{/*
+Selector labels for sdsServer
+*/}}
+{{- define "sds-server.selectorLabels" -}}
+app.kubernetes.io/name: sds-server
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }} 
+
+{{/*
 Create the name of the service account to use for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccountName" -}}
