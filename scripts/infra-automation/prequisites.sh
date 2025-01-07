@@ -229,13 +229,13 @@ function create_backend() {
 		if [[ $auth_type == "profile" ]]
 		then
 			log_debug "Auth mode $auth_type"
-			local profile=$(echo $manifest_inputs | jq -r '.manifest.backend.auth.profile')
+			local profile=$(echo $manifest_inputs | jq -r '.manifest.auth.profile')
 			export AWS_PROFILE=$profile
 		else
-			local access_key=$(echo $manifest_inputs | jq -r '.manifest.backend.auth.access_key')
+			local access_key=$(echo $manifest_inputs | jq -r '.manifest.auth.access_key')
 			export AWS_ACCESS_KEY_ID=$access_key
 			export AWS_SECRET_ACCESS_KEY=$secret_key
-			local secret_key=$(echo $manifest_inputs | jq -r '.manifest.backend.auth.secret_key')
+			local secret_key=$(echo $manifest_inputs | jq -r '.manifest.auth.secret_key')
 		fi
 		
 
