@@ -24,19 +24,6 @@ spec:
         - host: {{ tpl .Values.clickhouse.zookeeperHost . }}
           port: {{ tpl .Values.clickhouse.zookeeperPort . }}
     files:
-      config.d/named-collections.xml: |
-        <clickhouse>
-            <named_collections>
-                <nats_config>
-                    <nats_url from_env="NATS_URL"/>
-                    <nats_subjects from_env="NATS_SUBJECTS"/>
-                    <nats_username from_env="NATS_USERNAME"/>
-                    <nats_password from_env="NATS_PASSWORD"/>
-                    <nats_format from_env="NATS_FORMAT" default="JSONEachRow"/>
-                    <date_time_input_format from_env="DATE_TIME_INPUT_FORMAT" default="best_effort"/>
-                </nats_config>
-            </named_collections>
-        </clickhouse>
       config.d/log_rotation.xml: |-
         <clickhouse>
             <logger>
@@ -100,21 +87,6 @@ spec:
             - name: clickhouse
               image: {{ .Values.clickhouse.image }}
               env:
-                - name: NATS_URL
-                  value: "{{ tpl .Values.clickhouse.nats.url . }}"
-                - name: NATS_SUBJECTS
-                  value: "{{ .Values.clickhouse.nats.subjects }}"
-                - name: NATS_USERNAME
-                  value: "{{ .Values.clickhouse.nats.username }}"
-                - name: NATS_PASSWORD
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ .Values.global.auth.secretName }}
-                      key: {{ .Values.global.auth.nats.clickhouseRequestLogsReaderPasswordKey }}
-                - name: NATS_FORMAT
-                  value: "JSONEachRow"
-                - name: DATE_TIME_INPUT_FORMAT
-                  value: "best_effort"
                 - name: CLICKHOUSE_USER_PASSWORD
                   valueFrom:
                     secretKeyRef:
