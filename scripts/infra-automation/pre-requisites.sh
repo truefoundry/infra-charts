@@ -614,9 +614,10 @@ main() {
     # Display final summary
     display_installed_versions "$cloud_provider"
     log_success "Setup complete!"
-		# Reload shell
-		echo "Reload your shell to ensure all tools are properly available in your PATH"
-		echo "$GREEN Please run 'exec -l $SHELL' to reload your shell"
+    # Reload shell
+    echo -e "\n${YELLOW}Important:${NC} Shell reload required"
+    echo -e "To make new tools available in your current session, run:\n"
+    echo -e "    ${GREEN}exec -l $SHELL${NC}\n"
 
     # Display login instructions if a cloud provider was specified
     if [ "$cloud_provider" != "generic" ]; then
