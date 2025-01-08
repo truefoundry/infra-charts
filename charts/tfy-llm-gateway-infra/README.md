@@ -4,6 +4,9 @@
 
 ### global
 
+| Name                                            | Description                                 | Value |
+| ----------------------------------------------- | ------------------------------------------- | ----- |
+| `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name | `""`  |
 
 ### global.auth [object] auth config
 
