@@ -22,9 +22,13 @@ declare -A TOOL_VERSIONS=(
 declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
-log() { echo -e "${2}[TF] $3${NC}"; }
+log() { echo -e "${2} $3${NC}"; }
 log_info() { log "INFO" "$BLUE" "$1"; }
-log_debug() { log "DEBUG" "$YELLOW" "$1"; }
+log_debug() { 
+    if  [ "$TF_DEBUG" = true ]; then 
+        log "DEBUG" "$YELLOW" "$1"; 
+    fi
+}
 log_success() { log "SUCCESS" "$GREEN" "$1"; }
 log_error() { log "ERROR" "$RED" "$1"; }
 
@@ -37,7 +41,12 @@ check_sudo() {
         # Check if user has sudo privileges by attempting a harmless command
         if sudo -n true 2>/dev/null; then
             HAS_SUDO=true
+            log_debug "Sudo access is available"
+        else
+            log_debug "Sudo access check failed"
         fi
+    else
+        log_debug "Sudo command not found"
     fi
     HAS_SUDO=false
 }
@@ -52,13 +61,13 @@ run_with_sudo() {
 }
 
 confirm_installation() {
-    echo -e "${YELLOW}$1 is not installed. Would you like to install it? (Y/n)${NC}"
-    read -r response
+    read -r -p "$(echo -e "${YELLOW}$1 is not installed. Would you like to install it? (Y/n)${NC}") " response
     [[ $response =~ ^[nN] ]] && { log_error "Skipping $1 installation"; return 1; } || return 0
 }
 
 version_compare() {
     local v1=${1#v} v2=${2#v}
+    log_debug "Comparing versions: $v1 >= $v2"
     [ "$(echo "$v1" | awk -F. '{printf "%d%02d", $1, $2}')" -ge "$(echo "$v2" | awk -F. '{printf "%d%02d", $1, $2}')" ]
 }
 
@@ -73,10 +82,10 @@ get_cloud_tools() {
 
 get_essential_tools() {
     case $1 in
-        apt-get) echo "wget curl unzip git" ;;
-        yum|dnf) echo "wget curl unzip git" ;;
-        apk) echo "wget curl unzip git" ;;
-        brew) echo "wget curl unzip git" ;;
+        apt-get) echo "wget curl unzip git python3"  ;;
+        yum|dnf) echo "wget curl unzip git python3" ;;
+        apk) echo "wget curl unzip git python3" ;;
+        brew) echo "wget curl unzip git python3" ;;
     esac
 }
 
@@ -124,18 +133,17 @@ install_essential_utilities() {
     done
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_info "Missing utilities: ${missing_tools[*]}"
-        echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}"
-        read -r response
+        read -r -p "$(echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}") " response
         if [[ ! $response =~ ^[nN] ]]; then
             log_debug "Installing utilities... ${missing_tools[*]}"
             case $PACKAGE_MANAGER in
                 apt-get) 
-                    run_with_sudo apt-get update -qq >/dev/null 2>&1
-                    run_with_sudo apt-get install -y -qq "${missing_tools[@]}" >/dev/null 2>&1
+                    run_with_sudo apt-get update 2>&1
+                    run_with_sudo apt-get install -y "${missing_tools[@]}" 2>&1
                     ;;
-                yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" >/dev/null 2>&1 ;;
-                apk) run_with_sudo apk update >/dev/null 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
-                brew) brew install --quiet "${missing_tools[@]}" >/dev/null 2>&1 ;;
+                yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" 2>&1 ;;
+                apk) run_with_sudo apk update 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
+                brew) brew install --quiet "${missing_tools[@]}" 2>&1 ;;
             esac
             log_success "Utilities installed successfully"
         else
@@ -148,15 +156,18 @@ install_essential_utilities() {
 }
 
 get_tool_version() {
+    local version
     case $1 in
-        terraform) terraform version | head -n1 | cut -d'v' -f2 ;;
-        kubectl) kubectl version --client -o json | jq -r '.clientVersion.gitVersion' | cut -d'v' -f2 ;;
-        helm) helm version --short | cut -d'v' -f2 ;;
-        aws) aws --version 2>&1 | cut -d'/' -f2 ;;
-        gcloud) gcloud version 2>/dev/null | grep "Google Cloud SDK" | awk '{print $4}' ;;
-        az) az version | jq -r '."azure-cli"' ;;
-        jq) jq --version | cut -d'-' -f2 ;;
+        terraform) version=$(terraform version | head -n1 | cut -d'v' -f2) ;;
+        kubectl) version=$(kubectl version --client -o json | jq -r '.clientVersion.gitVersion' | cut -d'v' -f2) ;;
+        helm) version=$(helm version --short | cut -d'v' -f2) ;;
+        aws) version=$(aws --version 2>&1 | cut -d'/' -f2) ;;
+        gcloud) version=$(gcloud version 2>/dev/null | grep "Google Cloud SDK" | awk '{print $4}') ;;
+        az) version=$(az version | jq -r '."azure-cli"') ;;
+        jq) version=$(jq --version | cut -d'-' -f2) ;;
     esac
+    log_debug "Got version for $1: $version"
+    echo "$version"
 }
 
 verify_tool_version() {
@@ -172,18 +183,20 @@ verify_tool_version() {
 install_tool() {
     local tool=$1 tmp_dir="/tmp/tool-install"
     mkdir -p "$tmp_dir" && cd "$tmp_dir" || exit 1
-    log_debug "Installing $tool..."
+    log_debug "Installing $tool in temporary directory: $tmp_dir"
 
     case $tool in
         terraform)
             local version
             version=${TOOL_VERSIONS[$tool]}
+            log_debug "Downloading terraform version $version"
             wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
             unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
             ;;
         kubectl)
             local version
             version=${TOOL_VERSIONS[$tool]}
+            log_debug "Downloading kubectl version $version"
             wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
             chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
             ;;
@@ -238,13 +251,6 @@ install_tool() {
                     
                     # Add to current session
                     export PATH=/usr/local/google-cloud-sdk/bin:$PATH
-                    
-                    # Source the completion script for current session if it exists
-                    [[ -f /etc/bash_completion.d/gcloud ]] && source /etc/bash_completion.d/gcloud
-                    
-                    # Initialize gcloud configuration directory
-                    mkdir -p "$HOME/.config/gcloud"
-                    
                     ;;
                 darwin) 
                     brew install --cask google-cloud-sdk
@@ -296,43 +302,13 @@ install_tool() {
             esac
             ;;
         gke-gcloud-auth-plugin)
-            command_exists gcloud || { log_error "gcloud must be installed first"; return 1; }
-            case $OS in
-                linux)
-                    case $PACKAGE_MANAGER in
-                        apt-get) 
-                            gcloud components install gke-gcloud-auth-plugin || {
-                                log_error "Failed to install gke-gcloud-auth-plugin via gcloud components"
-                                return 1
-                            }
-                            ;;
-                        yum|dnf) 
-                            # Install via package manager
-                            run_with_sudo "$PACKAGE_MANAGER" install -y google-cloud-sdk-gke-gcloud-auth-plugin || {
-                                log_error "Failed to install gke-gcloud-auth-plugin via $PACKAGE_MANAGER"
-                                return 1
-                            }
-                            ;;
-                        *) 
-                            gcloud components install gke-gcloud-auth-plugin || {
-                                log_error "Failed to install gke-gcloud-auth-plugin via gcloud components"
-                                return 1
-                            }
-                            ;;
-                    esac
-                    ;;
-                darwin) 
-                    gcloud components install gke-gcloud-auth-plugin || {
-                        log_error "Failed to install gke-gcloud-auth-plugin via gcloud components"
-                        return 1
-                    }
-                    ;;
-            esac
-						;;
+            command_exists gcloud || { log_error "gcloud must be installed first"; return 1; }        
+            gcloud components install gke-gcloud-auth-plugin
+            ;;
     esac
 
     cd - > /dev/null && rm -rf "$tmp_dir"
-    log_success "$tool installed successfully"
+    log_debug "Finished installing $tool"
 }
 
 verify_tools() {
@@ -399,7 +375,8 @@ create_backend() {
     local cloud_provider=$1
     local manifest_inputs
     manifest_inputs=$(cat "$2")
-    log_debug "Creating backend for $cloud_provider"
+    log_debug "Processing backend configuration from: $2"
+    log_info "Creating backend infrastructure for $cloud_provider"
 
     case $cloud_provider in
         aws)
@@ -409,41 +386,78 @@ create_backend() {
             region=$(echo "$manifest_inputs" | jq -r '.manifest.region')
             auth_type=$(echo "$manifest_inputs" | jq -r '.manifest.auth.type')
             dynamodb_table=$(echo "$manifest_inputs" | jq -r '.manifest.backend.dynamodb_table')
+            
+            log_debug "Backend configuration:"
+            log_debug "  Bucket: $bucket_name"
+            log_debug "  Region: $region"
+            log_debug "  Auth Type: $auth_type"
+            log_debug "  DynamoDB Table: $dynamodb_table"
 
-            # Handle AWS authentication
+            log_info "Configuring AWS authentication"
             if [[ $auth_type == "profile" ]]; then
                 local profile
                 profile=$(echo "$manifest_inputs" | jq -r '.manifest.auth.profile')
-                export AWS_PROFILE=$profile
+                log_debug "Using AWS profile: $profile"
+                export AWS_PROFILE="$profile"
+                # Verify AWS credentials
+                if ! aws sts get-caller-identity >/dev/null 2>&1; then
+                    log_error "AWS authentication failed. Please run 'aws sso login' or check your credentials"
+                    exit 1
+                fi
+                log_success "AWS authentication successful using profile: $profile"
             else
+                log_debug "Using AWS access key authentication"
                 local access_key secret_key
                 access_key=$(echo "$manifest_inputs" | jq -r '.manifest.auth.access_key')
                 secret_key=$(echo "$manifest_inputs" | jq -r '.manifest.auth.secret_key')
-                export AWS_ACCESS_KEY_ID=$access_key
-                export AWS_SECRET_ACCESS_KEY=$secret_key
-            fi
-
-            # Create S3 bucket if needed
-            if ! aws s3api head-bucket --bucket "$bucket_name" --region "$region" 2>&1; then
-                log_debug "Creating bucket $bucket_name in region $region"
-                if [[ $region == "us-east-1" ]]; then
-                    aws s3api create-bucket --bucket "$bucket_name" --region "$region"
-                else
-                    aws s3api create-bucket --bucket "$bucket_name" --region "$region" \
-                        --create-bucket-configuration LocationConstraint="$region"
+                export AWS_ACCESS_KEY_ID="$access_key"
+                export AWS_SECRET_ACCESS_KEY="$secret_key"
+                # Verify AWS credentials
+                if ! aws sts get-caller-identity >/dev/null 2>&1; then
+                    log_error "AWS authentication failed. Please check your access key and secret"
+                    exit 1
                 fi
+                log_success "AWS authentication successful using access key"
             fi
 
-            # Create DynamoDB table if needed
+            log_info "Creating S3 bucket for Terraform state"
+            log_info "Checking if bucket exists $bucket_name"
+            log_info "Running: aws s3api head-bucket --bucket $bucket_name --region $region"
+            if ! aws s3api head-bucket --bucket "$bucket_name" --region "$region" 2>/dev/null; then
+                log_info "Running: aws s3api create-bucket --bucket $bucket_name --region $region"
+                if [[ $region == "us-east-1" ]]; then
+                    if ! aws s3api create-bucket --bucket "$bucket_name" --region "$region"; then
+                        log_error "Failed to create S3 bucket"
+                        exit 1
+                    fi
+                else
+                    if ! aws s3api create-bucket --bucket "$bucket_name" --region "$region" \
+                        --create-bucket-configuration LocationConstraint="$region"; then
+                        log_error "Failed to create S3 bucket"
+                        exit 1
+                    fi
+                fi
+                log_success "Created S3 bucket: $bucket_name"
+            else
+                log_info "S3 bucket already exists: $bucket_name"
+            fi
+
             if [[ $dynamodb_table != "null" ]]; then
+                log_info "Creating DynamoDB table for state locking"
                 if ! aws dynamodb describe-table --table-name "$dynamodb_table" --region "$region" >/dev/null 2>&1; then
-                    log_debug "Creating DynamoDB table $dynamodb_table"
-                    aws dynamodb create-table \
+                    log_info "Running: aws dynamodb create-table --table-name $dynamodb_table --region $region"
+                    if ! aws dynamodb create-table \
                         --table-name "$dynamodb_table" \
                         --attribute-definitions AttributeName=ID,AttributeType=S \
                         --key-schema AttributeName=ID,KeyType=HASH \
                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-                        --region "$region"
+                        --region "$region"; then
+                        log_error "Failed to create DynamoDB table"
+                        exit 1
+                    fi
+                    log_success "Created DynamoDB table: $dynamodb_table"
+                else
+                    log_info "DynamoDB table already exists: $dynamodb_table"
                 fi
             fi
             ;;
@@ -451,7 +465,9 @@ create_backend() {
             local bucket_name region
             bucket_name=$(echo "$manifest_inputs" | jq -r '.manifest.backend.bucket')
             region=$(echo "$manifest_inputs" | jq -r '.manifest.region')
-
+            log_debug "GCP Backend configuration:"
+            log_debug "  Bucket: $bucket_name"
+            log_debug "  Region: $region"
             if ! gcloud storage buckets describe "gs://$bucket_name" >/dev/null 2>&1; then
                 log_debug "Creating GCS bucket $bucket_name"
                 gcloud storage buckets create "gs://$bucket_name" --location="$region"
@@ -463,7 +479,11 @@ create_backend() {
             storage_account=$(echo "$manifest_inputs" | jq -r '.manifest.backend.storage_account_name')
             container_name=$(echo "$manifest_inputs" | jq -r '.manifest.backend.container_name')
             location=$(echo "$manifest_inputs" | jq -r '.manifest.location')
-
+            log_debug "Azure Backend configuration:"
+            log_debug "  Resource Group: $resource_group"
+            log_debug "  Storage Account: $storage_account"
+            log_debug "  Container: $container_name"
+            log_debug "  Location: $location"
             # Create resource group if needed
             if ! az group show --name "$resource_group" >/dev/null 2>&1; then
                 log_debug "Creating resource group $resource_group"
@@ -489,35 +509,13 @@ create_backend() {
     esac
 }
 
-# Utility functions
-display_required_tools() {
-    local cloud_provider=$1
-    log_info "Required tools for TrueFoundry deployment:"
-    
-    # Display common tools
-    echo -e "${BLUE}Core Tools:${NC}"
-    for tool in "${COMMON_TOOLS[@]}"; do
-        echo -e "  • $tool (min: ${TOOL_VERSIONS[$tool]})"
-    done
-    
-    # Display cloud-specific tools
-    if [ "$cloud_provider" != "generic" ]; then
-        echo -e "\n${BLUE}$cloud_provider Tools:${NC}"
-        read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
-        for tool in "${cloud_tools[@]}"; do
-            echo -e "  • $tool (min: ${TOOL_VERSIONS[$tool]})"
-        done
-    fi
-    echo
-}
-
 display_installed_versions() {
     local cloud_provider=$1
     log_info "Checking installed tools:"
     
     local all_ok=true
     # Display common tools
-    echo -e "${BLUE}Core Tools:${NC}"
+    echo -e "${BLUE} Core Tools:${NC}"
     for tool in "${COMMON_TOOLS[@]}"; do
         if command_exists "$tool"; then
             local version
@@ -536,8 +534,7 @@ display_installed_versions() {
     
     # Display cloud-specific tools
     if [ "$cloud_provider" != "generic" ]; then
-        echo -e "\n${BLUE}$cloud_provider Tools:${NC}"
-        read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
+    read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
         for tool in "${cloud_tools[@]}"; do
 					if [ "$tool" == "gke-gcloud-auth-plugin" ]; then
 						continue
@@ -566,66 +563,40 @@ display_installed_versions() {
     fi
 }
 
-display_login_instructions() {
-    local cloud_provider=$1
-    
-    echo -e "\n${YELLOW}TrueFoundry Cloud Provider Authentication:${NC}"
-    case $cloud_provider in
-        "aws")
-            echo -e "To authenticate AWS CLI for TrueFoundry:"
-            echo -e "1. Run: ${GREEN}aws configure${NC}"
-            echo -e "2. Enter your AWS credentials:"
-            echo -e "   - AWS Access Key ID"
-            echo -e "   - AWS Secret Access Key"
-            echo -e "   - Default region name (e.g., us-west-2)"
-            echo -e "   - Default output format (json recommended)"
-            echo -e "\nAlternatively, for named profile setup:"
-            echo -e "Run: ${GREEN}aws configure --profile <profile-name>${NC}"
-            ;;
-        "gcp")
-            echo -e "To authenticate Google Cloud CLI for TrueFoundry:"
-            echo -e "1. Run: ${GREEN}gcloud init${NC}"
-            echo -e "2. Complete the following steps:"
-            echo -e "   - Log in to your Google Cloud account"
-            echo -e "   - Select or create a project"
-            echo -e "   - Configure default compute region and zone"
-            echo -e "\nFor service account authentication:"
-            echo -e "Run: ${GREEN}gcloud auth activate-service-account --key-file=KEY-FILE${NC}"
-            ;;
-        "azure")
-            echo -e "To authenticate Azure CLI for TrueFoundry:"
-            echo -e "1. Run: ${GREEN}az login${NC}"
-            echo -e "2. Follow the browser prompt to authenticate"
-            echo -e "\nFor service principal authentication:"
-            echo -e "Run: ${GREEN}az login --service-principal -u CLIENT_ID -p CLIENT_SECRET --tenant TENANT_ID${NC}"
-            ;;
-        "generic")
-            echo -e "No cloud provider specified. No authentication required."
-            ;;
-    esac
-    echo
-}
-
 # Main execution
 main() {
+    log_debug "Starting script with arguments: $*"
+    
     # Validate arguments
     if [ $# -eq 0 ]; then
         log_info "No cloud provider specified, using generic setup"
         cloud_provider="generic"
         config_file=""
+    elif [ $# -eq 1 ]; then
+        cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+        log_error "Config file is required for $cloud_provider provider"
+        log_info "Usage: $0 [aws|gcp|azure|generic] config.json"
+        exit $INVALID_PROVIDER
     else
         cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
         config_file=$2
+        
+        # Check if config file exists and is readable
+        if [ ! -f "$config_file" ]; then
+            log_error "Config file not found: $config_file"
+            exit $INVALID_PROVIDER
+        fi
+        log_debug "Using cloud provider: $cloud_provider"
+        log_debug "Config file: $config_file"
     fi
 
     # Validate cloud provider
     case $cloud_provider in
         "aws"|"gcp"|"azure"|"generic")
             log_info "Checking prerequisites for $cloud_provider deployment"
-            display_required_tools "$cloud_provider"
             ;;
         *)
-            log_error "Invalid cloud provider. Usage: $0 [aws|gcp|azure|generic] [config.json]"
+            log_error "Invalid cloud provider. Usage: $0 [aws|gcp|azure|generic] config.json"
             exit $INVALID_PROVIDER
             ;;
     esac
@@ -656,15 +627,10 @@ main() {
     display_installed_versions "$cloud_provider"
     
     # Reload shell notice
-    if [ "$verify_status" -eq $SUCCESS ]; then
+    if [ "$cloud_provider" == "gcp" ] && [ "$verify_status" -eq $SUCCESS ]; then
         echo -e "\n${BLUE}Action Required:${NC}"
         echo -e "Run the following command to update your shell environment:"
         echo -e "    ${GREEN}exec -l $SHELL${NC}\n"
-    fi
-
-    # Display login instructions if needed
-    if [ "$cloud_provider" != "generic" ]; then
-        display_login_instructions "$cloud_provider"
     fi
 
     exit $SUCCESS
