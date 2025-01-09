@@ -96,9 +96,9 @@ spec:
                           values:
                             - {{ .Values.clickhouse.clusterName }}
                     topologyKey: "kubernetes.io/hostname"
-          {{- if .Values.global.existingTruefoundryImagePullSecretName }}
+          {{- with .Values.clickhouse.imagePullSecrets }}
           imagePullSecrets:
-            - name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
+              {{- toYaml . | nindent 12 }}
           {{- end }}
           containers:
             - name: clickhouse
