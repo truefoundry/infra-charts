@@ -7,16 +7,21 @@ readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
 
 # Tool configurations
 declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
-declare -a TOOL_VERSIONS=(
-    ["terraform"]="1.9.0"
-    ["kubectl"]="1.28.0"
-    ["helm"]="3.16.0"
-    ["jq"]="1.7.1"
-    ["aws"]="2.17.0"
-    ["gcloud"]="500.0.0"
-    ["az"]="2.67.0"
-    ["gke-gcloud-auth-plugin"]="0.0.1"
-)
+
+# Get required version for a tool
+get_tool_required_version() {
+    case $1 in
+        terraform) echo "1.9.0" ;;
+        kubectl) echo "1.28.0" ;;
+        helm) echo "3.16.0" ;;
+        jq) echo "1.7.1" ;;
+        aws) echo "2.17.0" ;;
+        gcloud) echo "500.0.0" ;;
+        az) echo "2.67.0" ;;
+        gke-gcloud-auth-plugin) echo "0.0.1" ;;
+        *) echo "0.0.0" ;;  # Default case
+    esac
+}
 
 # System information
 declare OS PACKAGE_MANAGER ARCH HAS_SUDO
@@ -172,8 +177,10 @@ get_tool_version() {
 
 verify_tool_version() {
     local tool=$1
-    local required_version=${TOOL_VERSIONS[$tool]}
+    local required_version
     local current_version
+    
+    required_version=$(get_tool_required_version "$tool")
     current_version=$(get_tool_version "$tool")
     
     version_compare "$current_version" "$required_version" || \
@@ -188,21 +195,22 @@ install_tool() {
     case $tool in
         terraform)
             local version
-            version=${TOOL_VERSIONS[$tool]}
+            version=$(get_tool_required_version "$tool")
             log_debug "Downloading terraform version $version"
             wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
             unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
             ;;
         kubectl)
             local version
-            version=${TOOL_VERSIONS[$tool]}
+            version=$(get_tool_required_version "$tool")
             log_debug "Downloading kubectl version $version"
             wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
             chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
             ;;
         helm)
             local version
-            version=${TOOL_VERSIONS[$tool]}
+            version=$(get_tool_required_version "$tool")
+            log_debug "Downloading helm version $version"
             wget -q "https://get.helm.sh/helm-v${version}-${OS}-${ARCH}.tar.gz" -O helm.tar.gz
             tar -zxf helm.tar.gz && run_with_sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
             ;;
@@ -518,12 +526,13 @@ display_installed_versions() {
     echo -e "${BLUE} Core Tools:${NC}"
     for tool in "${COMMON_TOOLS[@]}"; do
         if command_exists "$tool"; then
-            local version
+            local version required_version
             version=$(get_tool_version "$tool")
-            if version_compare "$version" "${TOOL_VERSIONS[$tool]}"; then
+            required_version=$(get_tool_required_version "$tool")
+            if version_compare "$version" "$required_version"; then
                 echo -e "  ${GREEN}✓${NC} $tool $version"
             else
-                echo -e "  ${YELLOW}!${NC} $tool $version (min: ${TOOL_VERSIONS[$tool]})"
+                echo -e "  ${YELLOW}!${NC} $tool $version (min: $required_version)"
                 all_ok=false
             fi
         else
@@ -534,18 +543,19 @@ display_installed_versions() {
     
     # Display cloud-specific tools
     if [ "$cloud_provider" != "generic" ]; then
-    read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
+        read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
         for tool in "${cloud_tools[@]}"; do
-					if [ "$tool" == "gke-gcloud-auth-plugin" ]; then
-						continue
-					fi
+            if [ "$tool" == "gke-gcloud-auth-plugin" ]; then
+                continue
+            fi
             if command_exists "$tool"; then
-                local version
+                local version required_version
                 version=$(get_tool_version "$tool")
-                if version_compare "$version" "${TOOL_VERSIONS[$tool]}"; then
+                required_version=$(get_tool_required_version "$tool")
+                if version_compare "$version" "$required_version"; then
                     echo -e "  ${GREEN}✓${NC} $tool $version"
                 else
-                    echo -e "  ${YELLOW}!${NC} $tool $version (min: ${TOOL_VERSIONS[$tool]})"
+                    echo -e "  ${YELLOW}!${NC} $tool $version (min: $required_version)"
                     all_ok=false
                 fi
             else
