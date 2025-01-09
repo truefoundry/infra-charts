@@ -2,8 +2,6 @@
 ## The global section contains configuration that is applied to all components of the chart.
 ##
 global:
-  ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
-  existingTruefoundryImagePullSecretName: ""
   ## @section global.auth [object] auth config
   ## The auth section contains configuration for authentication.
   ##
@@ -217,6 +215,7 @@ clickhouse:
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:24.7.3.42-alpine
+  imagePullSecrets: []
   resources:
     requests:
       memory: 4096Mi
