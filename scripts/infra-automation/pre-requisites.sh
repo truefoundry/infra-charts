@@ -270,6 +270,7 @@ install_tool() {
             esac
             # Skip initialization as it requires user interaction
             log_debug "Skipping gcloud init as it requires user interaction. Please run 'gcloud init' manually after installation."
+            log_info "You may need to restart your shell or source your shell's rc file to use gcloud in new sessions"
             ;;
         az)
             case $OS in
