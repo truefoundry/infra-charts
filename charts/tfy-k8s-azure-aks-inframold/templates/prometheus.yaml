@@ -56,7 +56,7 @@ spec:
                 action: drop
                 sourceLabels:
                   - __name__
-              - regex: container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)
+              - regex: container_cpu_(load_average_10s|system_seconds_total|user_seconds_total)
                 action: drop
                 sourceLabels:
                   - __name__
@@ -124,6 +124,11 @@ spec:
               {{ toYaml . | nindent 14 }}
             {{- end }}
             additionalScrapeConfigs:
+              - job_name: prometheus
+                static_configs:
+                  - targets:
+                      - localhost:9090
+                scrape_interval: 30s
               - scheme: http
                 job_name: elasti-resolver
                 honor_labels: true
@@ -563,7 +568,7 @@ spec:
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
                     expr: >-
-                      sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m])) 
+                      sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m]))
                       by (container, pod, namespace) > 0
                     alert: ContainerOOMKilled
                     labels:
@@ -573,7 +578,7 @@ spec:
                       summary: >-
                         Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
                       description: |-
-                        Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} 
+                        Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
                         has been OOM killed in the last 5 minutes
                           VALUE = {{`{{ $value }}`}} times
                   - for: 10m
@@ -588,7 +593,7 @@ spec:
                       summary: >-
                         Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
                       description: |-
-                        Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}} 
+                        Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}}
                         is using more than 90% of its capacity.
                           VALUE = {{`{{ $value }}`}}%
                   - for: 5m
