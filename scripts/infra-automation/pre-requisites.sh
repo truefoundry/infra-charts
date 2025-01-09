@@ -34,21 +34,21 @@ log() {
         echo -e "$1 $2$3${NC}"
     fi
 }
-log_info() { log "INFO" "$BLUE" "$1"; }
+log_info() { log "$BLUE" "$1"; }
 log_debug() { 
     if  [ "$TF_DEBUG" = true ]; then 
-        log "DEBUG" "$YELLOW" "$1"; 
+        log "$YELLOW" "$1"; 
     fi
 }
-log_success() { log "SUCCESS" "$GREEN" "$1"; }
-log_error() { log "ERROR" "$RED" "$1"; }
+log_success() { log "$GREEN" "$1"; }
+log_error() { log "$RED" "$1"; }
 
 # Utility functions
-command_exists() { command -v "$1" >/dev/null 2>&1; }
+tool_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # Function to check if sudo is available and can be used
 check_sudo() {
-    if command_exists sudo; then
+    if tool_exists sudo; then
         # Check if user has sudo privileges by attempting a harmless command
         if sudo -n true 2>/dev/null; then
             HAS_SUDO=true
@@ -108,7 +108,7 @@ detect_system() {
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
         for pm in apt-get yum dnf apk; do
-            if command_exists "$pm"; then
+            if tool_exists "$pm"; then
                 PACKAGE_MANAGER="$pm"
                 [[ $pm == "apk" ]] && OS="alpine"
                 break
@@ -117,7 +117,7 @@ detect_system() {
         [[ -z $PACKAGE_MANAGER ]] && { log_error "No supported package manager found"; exit 1; }
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="darwin"
-        command_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
@@ -140,7 +140,7 @@ install_essential_utilities() {
     tools_list=$(get_essential_tools "$PACKAGE_MANAGER")
     
     for tool in $tools_list; do
-        command_exists "$tool" || missing_tools+=("$tool")
+        tool_exists "$tool" || missing_tools+=("$tool")
     done
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_info "Missing utilities: ${missing_tools[*]}"
@@ -312,7 +312,7 @@ install_tool() {
             esac
             ;;
         gke-gcloud-auth-plugin)
-            command_exists gcloud || { log_error "gcloud must be installed first"; return 1; }        
+            tool_exists gcloud || { log_error "gcloud must be installed first"; return 1; }        
             gcloud components install gke-gcloud-auth-plugin
             ;;
     esac
@@ -328,7 +328,7 @@ verify_tools() {
     
     # Check common tools
     for tool in "${COMMON_TOOLS[@]}"; do
-        if ! command_exists "$tool"; then
+        if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
                 install_tool "$tool" || install_failed+=("$tool")
             else
@@ -342,7 +342,7 @@ verify_tools() {
     # Check cloud-specific tools
     read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
     for tool in "${cloud_tools[@]}"; do
-        if ! command_exists "$tool"; then
+        if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
                 install_tool "$tool" || install_failed+=("$tool")
             else
@@ -371,7 +371,7 @@ install_cloud_tools() {
     read -r -a tools <<< "$(get_cloud_tools "$cloud_provider")"
     
     for tool in "${tools[@]}"; do
-        if ! command_exists "$tool"; then
+        if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
                 install_tool "$tool"
             else
@@ -527,7 +527,7 @@ display_installed_versions() {
     # Display common tools
     log "" "$BLUE" "\nCore Tools:"
     for tool in "${COMMON_TOOLS[@]}"; do
-        if command_exists "$tool"; then
+        if tool_exists "$tool"; then
             local version required_version
             version=$(get_tool_version "$tool")
             required_version=$(get_tool_required_version "$tool")
@@ -550,7 +550,7 @@ display_installed_versions() {
             if [ "$tool" == "gke-gcloud-auth-plugin" ]; then
                 continue
             fi
-            if command_exists "$tool"; then
+            if tool_exists "$tool"; then
                 local version required_version
                 version=$(get_tool_version "$tool")
                 required_version=$(get_tool_required_version "$tool")
