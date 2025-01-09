@@ -263,9 +263,27 @@ install_tool() {
                     export PATH=/usr/local/google-cloud-sdk/bin:$PATH
                     ;;
                 darwin) 
-                    brew install --cask google-cloud-sdk
-                    # Add to current session PATH for macOS
-                    export PATH="$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"
+                    # Download and install from archive for macOS
+                    local gcloud_archive
+                    if [[ "$ARCH" == "arm64" ]]; then
+                        gcloud_archive="google-cloud-cli-darwin-arm.tar.gz"
+                    else
+                        gcloud_archive="google-cloud-cli-darwin-x86_64.tar.gz"
+                    fi
+                    
+                    curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${gcloud_archive}"
+                    tar -xf "$gcloud_archive"
+                    rm -f "$gcloud_archive"
+                    
+                    # Install to system-wide location
+                    run_with_sudo rm -rf /usr/local/google-cloud-sdk
+                    run_with_sudo mv google-cloud-sdk /usr/local/
+                    
+                    # Add to system-wide PATH
+                    echo 'export PATH=/usr/local/google-cloud-sdk/bin:$PATH' | run_with_sudo tee /etc/profile.d/gcloud.sh
+                    
+                    # Add to current session
+                    export PATH=/usr/local/google-cloud-sdk/bin:$PATH
                     ;;
             esac
             # Skip initialization as it requires user interaction
