@@ -265,7 +265,7 @@ install_tool() {
                 darwin) 
                     brew install --cask google-cloud-sdk
                     # Add to current session PATH for macOS
-                    export PATH="/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"
+                    export PATH="$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"
                     ;;
             esac
             # Skip initialization as it requires user interaction
