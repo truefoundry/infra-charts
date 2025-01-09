@@ -96,6 +96,10 @@ spec:
                           values:
                             - {{ .Values.clickhouse.clusterName }}
                     topologyKey: "kubernetes.io/hostname"
+          {{- if .Values.global.existingTruefoundryImagePullSecretName }}
+          imagePullSecrets:
+            - name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
+          {{- end }}
           containers:
             - name: clickhouse
               image: {{ .Values.clickhouse.image }}
@@ -120,7 +124,6 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.global.auth.secretName }}
                       key: {{ .Values.global.auth.clickhouse.passwordKey }}
-
               resources:
                 requests:
                   memory: {{ .Values.clickhouse.resources.requests.memory }}
