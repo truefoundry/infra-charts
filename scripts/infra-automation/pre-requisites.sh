@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e 
 
-# Colors and Exit codes
 readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' NC='\033[0m'
+# Colors and Exit codes
 readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
 
 # Tool configurations
@@ -27,7 +27,13 @@ get_tool_required_version() {
 declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
-log() { echo -e "${2} $3${NC}"; }
+log() { 
+    if [ -z "$1" ]; then
+        echo -e "$2$3${NC}"
+    else
+        echo -e "$1 $2$3${NC}"
+    fi
+}
 log_info() { log "INFO" "$BLUE" "$1"; }
 log_debug() { 
     if  [ "$TF_DEBUG" = true ]; then 
@@ -191,25 +197,21 @@ install_tool() {
     local tool=$1 tmp_dir="/tmp/tool-install"
     mkdir -p "$tmp_dir" && cd "$tmp_dir" || exit 1
     log_debug "Installing $tool in temporary directory: $tmp_dir"
+    local version
+    version=$(get_tool_required_version "$tool")
 
     case $tool in
         terraform)
-            local version
-            version=$(get_tool_required_version "$tool")
             log_debug "Downloading terraform version $version"
             wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
             unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
             ;;
         kubectl)
-            local version
-            version=$(get_tool_required_version "$tool")
             log_debug "Downloading kubectl version $version"
             wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
             chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
             ;;
         helm)
-            local version
-            version=$(get_tool_required_version "$tool")
             log_debug "Downloading helm version $version"
             wget -q "https://get.helm.sh/helm-v${version}-${OS}-${ARCH}.tar.gz" -O helm.tar.gz
             tar -zxf helm.tar.gz && run_with_sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
@@ -523,20 +525,20 @@ display_installed_versions() {
     
     local all_ok=true
     # Display common tools
-    echo -e "${BLUE} Core Tools:${NC}"
+    log "" "$BLUE" "\nCore Tools:"
     for tool in "${COMMON_TOOLS[@]}"; do
         if command_exists "$tool"; then
             local version required_version
             version=$(get_tool_version "$tool")
             required_version=$(get_tool_required_version "$tool")
             if version_compare "$version" "$required_version"; then
-                echo -e "  ${GREEN}✓${NC} $tool $version"
+                log "" "$GREEN" "  ✓ $tool $version"
             else
-                echo -e "  ${YELLOW}!${NC} $tool $version (min: $required_version)"
+                log "" "$YELLOW" "  ! $tool $version (min: $required_version)"
                 all_ok=false
             fi
         else
-            echo -e "  ${RED}✗${NC} $tool (not installed)"
+            log "" "$RED" "  ✗ $tool (not installed)"
             all_ok=false
         fi
     done
@@ -553,13 +555,13 @@ display_installed_versions() {
                 version=$(get_tool_version "$tool")
                 required_version=$(get_tool_required_version "$tool")
                 if version_compare "$version" "$required_version"; then
-                    echo -e "  ${GREEN}✓${NC} $tool $version"
+                    log "" "$GREEN" "  ✓ $tool $version"
                 else
-                    echo -e "  ${YELLOW}!${NC} $tool $version (min: $required_version)"
+                    log "" "$YELLOW" "  ! $tool $version (min: $required_version)"
                     all_ok=false
                 fi
             else
-                echo -e "  ${RED}✗${NC} $tool (not installed)"
+                log "" "$RED" "  ✗ $tool (not installed)"
                 all_ok=false
             fi
         done
