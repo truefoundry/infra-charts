@@ -7,7 +7,7 @@ readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
 
 # Tool configurations
 declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
-declare -A TOOL_VERSIONS=(
+declare -a TOOL_VERSIONS=(
     ["terraform"]="1.9.0"
     ["kubectl"]="1.28.0"
     ["helm"]="3.16.0"
