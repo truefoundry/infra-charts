@@ -449,7 +449,7 @@ create_backend() {
                     if ! aws dynamodb create-table \
                         --table-name "$dynamodb_table" \
                         --attribute-definitions AttributeName=ID,AttributeType=S \
-                        --key-schema AttributeName=ID,KeyType=HASH \
+                        --key-schema AttributeName=LockID,KeyType=HASH \
                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
                         --region "$region"; then
                         log_error "Failed to create DynamoDB table"
