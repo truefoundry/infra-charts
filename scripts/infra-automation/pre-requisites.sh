@@ -452,7 +452,7 @@ create_backend() {
                         --key-schema AttributeName=LockID,KeyType=HASH \
                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
                         --region "$region"; then
-                        log_error "Failed to create DynamoDB table"
+                        log_error "Failed to create DynamoDB table $dynamodb_table in region $region"
                         exit 1
                     fi
                     log_success "Created DynamoDB table: $dynamodb_table"
