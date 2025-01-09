@@ -448,7 +448,7 @@ create_backend() {
                     log_info "Running: aws dynamodb create-table --table-name $dynamodb_table --region $region"
                     if ! aws dynamodb create-table \
                         --table-name "$dynamodb_table" \
-                        --attribute-definitions AttributeName=ID,AttributeType=S \
+                        --attribute-definitions AttributeName=LockID,AttributeType=S \
                         --key-schema AttributeName=LockID,KeyType=HASH \
                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
                         --region "$region"; then
