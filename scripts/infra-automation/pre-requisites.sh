@@ -48,6 +48,7 @@ tool_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # Function to check if sudo is available and can be used
 check_sudo() {
+    HAS_SUDO=false
     if tool_exists sudo; then
         # Check if user has sudo privileges by attempting a harmless command
         if sudo -n true 2>/dev/null; then
@@ -59,7 +60,7 @@ check_sudo() {
     else
         log_debug "Sudo command not found"
     fi
-    HAS_SUDO=false
+
 }
 
 # Function to run command with sudo if available
