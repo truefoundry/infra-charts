@@ -172,7 +172,6 @@
           "editorMode": "code",
           "expr": "round((sum(container_memory_working_set_bytes{namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\", job=\"kubelet\"}))/1024/1024/1024, 0.001)",
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Usage",
           "range": true,
           "refId": "A"
@@ -186,7 +185,6 @@
           "expr": "round(sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\"})/1024/1024/1024, 0.001)",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Requested",
           "range": true,
           "refId": "B"
@@ -200,7 +198,6 @@
           "expr": "round(sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\",}/1024/1024/1024), 0.001)",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "limit",
           "range": true,
           "refId": "C"
@@ -296,7 +293,6 @@
           "expr": "sum(max_over_time(prometheus_tsdb_head_series{job=\"prometheus\"}[$__interval]))",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Active Time Series",
           "range": true,
           "refId": "B"
@@ -668,7 +664,6 @@
           "editorMode": "code",
           "expr": "sum(rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\", instance=\"localhost:9090\"}[$__rate_interval]))",
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Samples ingested per second",
           "range": true,
           "refId": "A"
@@ -774,7 +769,6 @@
           "editorMode": "code",
           "expr": "histogram_quantile(0.99, sum(rate(prometheus_http_request_duration_seconds_bucket{job=\"prometheus\", handler=~\"/api/v1/query|/api/v1/query_range\"}[$__rate_interval])) by (le))",
           "instant": false,
-          "interval": "5m",
           "legendFormat": "p99",
           "range": true,
           "refId": "A"
@@ -987,7 +981,6 @@
           "editorMode": "code",
           "expr": "round(sum(rate(container_cpu_usage_seconds_total{namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\", job=\"kubelet\"}[$__rate_interval])), 0.001)",
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Usage",
           "range": true,
           "refId": "A"
@@ -1001,7 +994,6 @@
           "expr": "round(sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"cpu\",namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\"}), 0.001)",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Requested",
           "range": true,
           "refId": "B"
@@ -1015,7 +1007,6 @@
           "expr": "round(sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"cpu\",namespace=\"prometheus\",container!=\"POD\",container!=\"\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\",}), 0.001)",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "limit",
           "range": true,
           "refId": "C"
@@ -1109,7 +1100,6 @@
           "editorMode": "code",
           "expr": "sum(rate(prometheus_http_requests_total{job=\"prometheus\", handler!~\"/api/v1/query|/api/v1/query_range\"}[$__rate_interval]))",
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Other HTTP requests",
           "range": true,
           "refId": "A"
@@ -1123,7 +1113,6 @@
           "expr": "sum(rate(prometheus_http_requests_total{job=\"prometheus\", handler=~\"/api/v1/query|/api/v1/query_range\"}[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "interval": "5m",
           "legendFormat": "Range/Instant Metrics query",
           "range": true,
           "refId": "B"
