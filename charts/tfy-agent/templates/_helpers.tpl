@@ -31,6 +31,13 @@ Create a default fully qualified tfy-agent-proxy name
 {{- end }}
 
 {{/*
+Create a default fully qualified sds-server name
+*/}}
+{{- define "sds-server.fullname" -}}
+{{- include "tfy-agent.fullname" . | trunc 52 | trimSuffix "-" }}-sds-server
+{{- end }}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "tfy-agent.chart" -}}
