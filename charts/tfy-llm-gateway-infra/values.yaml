@@ -4,7 +4,7 @@
 global:
   ## @section global.auth [object] auth config
   ## The auth section contains configuration for authentication.
-  ## 
+  ##
   auth:
     ## @param global.auth.secretName [string, default: tfy-llm-gateway-infra-auth] secret name
     ## k8s secret containing auth credentials
@@ -215,6 +215,7 @@ clickhouse:
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   image: clickhouse/clickhouse-server:24.7.3.42-alpine
+  imagePullSecrets: []
   resources:
     requests:
       memory: 4096Mi
