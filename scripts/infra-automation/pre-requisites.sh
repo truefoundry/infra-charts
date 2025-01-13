@@ -48,6 +48,7 @@ tool_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # Function to check if sudo is available and can be used
 check_sudo() {
+    HAS_SUDO=false
     if tool_exists sudo; then
         # Check if user has sudo privileges by attempting a harmless command
         if sudo -n true 2>/dev/null; then
@@ -59,7 +60,7 @@ check_sudo() {
     else
         log_debug "Sudo command not found"
     fi
-    HAS_SUDO=false
+
 }
 
 # Function to run command with sudo if available
@@ -236,36 +237,36 @@ install_tool() {
             ;;
         gcloud)
             case $OS in
-                linux) 
-                    # Download and install from archive for all Linux systems
-                    local gcloud_archive
+                linux|darwin)
+                    # Download and install from archive
+                    local gcloud_archive install_dir
+                    install_dir="$HOME/.google-cloud-sdk"
+                    
                     if [[ "$ARCH" == "arm64" ]]; then
-                        gcloud_archive="google-cloud-cli-linux-arm.tar.gz"
+                        gcloud_archive="google-cloud-cli-${OS}-arm.tar.gz"
                     else
-                        gcloud_archive="google-cloud-cli-linux-x86_64.tar.gz"
+                        gcloud_archive="google-cloud-cli-${OS}-x86_64.tar.gz"
                     fi
                     
+                    log_debug "Downloading gcloud archive: $gcloud_archive"
                     curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${gcloud_archive}"
                     tar -xf "$gcloud_archive"
                     rm -f "$gcloud_archive"
                     
-                    # Install to system-wide location
-                    run_with_sudo rm -rf /usr/local/google-cloud-sdk
-                    run_with_sudo mv google-cloud-sdk /usr/local/
+                    # Move to install directory if it doesn't exist
+                    if [[ ! -d "$install_dir" ]]; then
+                        mv google-cloud-sdk "$install_dir"
+                    else
+                        rm -rf google-cloud-sdk
+                    fi
                     
                     # Run install script with appropriate flags
-                    /usr/local/google-cloud-sdk/install.sh --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.bashrc" 
+                    "$install_dir/install.sh" --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.$(basename "$SHELL")rc"
                     
-                    # Add to system-wide PATH
-                    echo 'export PATH=/usr/local/google-cloud-sdk/bin:$PATH' | run_with_sudo tee /etc/profile.d/gcloud.sh
+                    # Add to PATH for immediate use
+                    export PATH="$install_dir/bin:$PATH"
                     
-                    # Add to current session
-                    export PATH=/usr/local/google-cloud-sdk/bin:$PATH
-                    ;;
-                darwin) 
-                    brew install --cask google-cloud-sdk
-                    # Add to current session PATH for macOS
-                    export PATH="/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"
+                    log_info "The installer has updated your shell configuration. You may need to restart your shell or source your rc file."
                     ;;
             esac
             # Skip initialization as it requires user interaction
