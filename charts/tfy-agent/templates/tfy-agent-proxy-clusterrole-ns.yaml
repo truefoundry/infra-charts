@@ -70,6 +70,7 @@ rules:
     resources: ["notebooks"]
     verbs: ["get", "update"]
 
+  {{/* This allows us to create intercepts for redirection / shadowing traffic */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
     verbs: ["create", "patch", "delete"]
@@ -77,6 +78,16 @@ rules:
   - apiGroups: ["flyte.lyft.com"]
     resources: ["flyteworkflows"]
     verbs: ["create", "patch", "get", "delete"]
+
+  {{/* This allows us to apply VirtualService for Spark UI when applying a SparkApplication (Spark Job Run) */}}
+  - apiGroups: ["networking.istio.io"]
+    resources: ["virtualservices"]
+    verbs: ["create", "get", "patch"]
+
+  {{/* This allows us to apply/delete SparkApplication (Spark Job Run) */}}
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkapplications"]
+    verbs: ["create", "get", "delete"]
 {{- end }}
 {{- end }}
 {{- end }}
