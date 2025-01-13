@@ -40,7 +40,7 @@ spec:
             {{- end }}
             {{- if .Values.sdsServer.enabled}}
             - name: SDS_SERVER_URL
-              value: {{ printf "%s-%s.svc.cluster.local:8000" (include "sds-server.fullname" .) .Release.Namespace | quote }}
+              value: {{ printf "%s.%s.svc.cluster.local:8000" (include "sds-server.fullname" .) .Release.Namespace | quote }}
             {{- end }}
             - name: TENANT_NAME
               value:  {{ .Values.config.tenantName | quote }}
