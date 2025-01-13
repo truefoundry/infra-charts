@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: sds-server
+  name: {{ include "sds-server.fullname" . }}
 spec:
   ports:
     - name: port-{{ (index .Values.sdsServer.ports 0).containerPort }}
