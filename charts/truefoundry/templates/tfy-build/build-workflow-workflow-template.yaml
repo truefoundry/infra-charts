@@ -337,6 +337,9 @@ spec:
           - name: {{ $value.id | replace "." "-" }}
             mountPath: "/truefoundry-build-secrets/"
         {{- end }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
+        {{- toYaml . | nindent 10 }}
+        {{- end }}
         resources: 
           {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
         source: |
@@ -502,6 +505,9 @@ spec:
         {{- range $value := .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets }}
           - name: {{ $value.id | replace "." "-" }}
             mountPath: "/truefoundry-build-secrets/"
+        {{- end }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
+        {{- toYaml . | nindent 10 }}
         {{- end }}
         resources: 
           {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}

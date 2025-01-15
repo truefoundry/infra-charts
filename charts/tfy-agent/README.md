@@ -28,12 +28,12 @@ This application has two parts.
 * Note that if you have configured a list of allowed namespaces, the control plane cannot create any new namespace in the cluster.
 
 ##### Namespace Scope resource access
-* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-cs.yaml) documents all the authorization rules we set for the resources the control plane can work with namespace-scope access.
+* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-ns.yaml) documents all the authorization rules we set for the resources the control plane can work with namespace-scope access.
 * If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we use [setup role binding](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-rolebinding-ns.yaml) for only those namespaces.
 * If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
 
 
-## Trobleshoot
+## Troubleshoot
 
 ### Using self-signed certificate in control plane URL
 If your control plane URL is using self-signed CA certificate, follow these steps:

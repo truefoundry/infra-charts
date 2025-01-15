@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  name: sds-server
+  name: {{ include "sds-server.fullname" . }}
 spec:
   replicas: {{ .Values.sdsServer.replicas}}
   strategy:

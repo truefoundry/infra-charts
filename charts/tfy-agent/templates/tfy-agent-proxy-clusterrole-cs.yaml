@@ -14,11 +14,13 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list"]
-  
+
+  {{/* This allows us to list statefulsets and deployments under a helm chart to allow pausing workloads */}}
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets"]
     verbs: ["list"]
 
+  {{/* This allows us to check for conflicts in VirtualServices when user is creating new deployment */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["virtualservices", "gateways"]
     verbs: ["list"]
@@ -31,6 +33,7 @@ rules:
     resources: ["customresourcedefinitions"]
     verbs: ["list"]
 
+  {{/* This allows us to read Karpenter configuration and status to troubleshoot cluster auto scaling issues */}}
   - apiGroups: ["karpenter.k8s.aws", "karpenter.sh"]
     resources: ["ec2nodeclasses", "nodepools"]
     verbs: ["list"]
