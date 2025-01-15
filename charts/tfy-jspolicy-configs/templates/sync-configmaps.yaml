@@ -25,6 +25,7 @@ spec:
 
     const excludedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.excludeNamespaces | toYaml | nindent 4 }}`);
     let includedNamespaces = undefined;
+    const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
     if (parseYamlString(`{{ .Values.syncConfigMaps.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
       includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
     } else {
@@ -39,6 +40,10 @@ spec:
     // sync a configmaps to all namespaces in includedNamespaces
     function syncConfigMapToAllIncludedNamespaces(parentConfigMapObject) {
       includedNamespaces.forEach(namespace => {
+        if (!allNamespaces.includes(namespace)) {
+          print("Skipping namespace "+ namespace + " as it doesn't exists ...");
+          return;
+        }
         if (excludedNamespaces.includes(namespace)){
           return;
         }
@@ -48,7 +53,7 @@ spec:
           return;
         }
         print("Syncing configmaps " + parentConfigMapObject.metadata.name + " to namespace: " + namespace);
-        const configmap = get("ConfigMap", "v1", namespace + "/" + parentConfigMapObject.metadata.name);
+        let configmap = get("ConfigMap", "v1", namespace + "/" + parentConfigMapObject.metadata.name);
         if (configmap === undefined) {
           print("configmap not found, creating configmap " + parentConfigMapObject.metadata.name + " in namespace: " + namespace);
           configmap = create({
