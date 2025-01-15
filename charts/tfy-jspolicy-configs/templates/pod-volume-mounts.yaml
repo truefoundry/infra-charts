@@ -36,7 +36,7 @@ spec:
     }
     print("Adding volume mounts to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
     // add the volumes to the pod
-    const podVolumes = request.object.spec.volumes || [];
+    let podVolumes = request.object.spec.volumes || [];
     mountDetails.forEach(mountDetail => {
       if (mountDetail.type === "secret") {
         // skip if the volume already exists, volume name is same as secret name
@@ -66,7 +66,10 @@ spec:
           }
         });
       }
-      request.object.spec.containers.forEach(container => {
+
+      let containers = request.object.spec.containers || [];
+      let initContainers = request.object.spec.initContainers || [];
+      [...containers, ...initContainers].forEach(container => {
         let volumeName = "";
         if (mountDetail.type === "secret") {
           volumeName = mountDetail.secretName;
@@ -77,6 +80,10 @@ spec:
         if (volumeName === "") {
           print("Invalid volume mount details: " + JSON.stringify(mountDetail));
           exit();
+        }
+
+        if (!container.volumeMounts) {
+          container.volumeMounts = [];
         }
         // skip if the volume mount already exists
         if (container.volumeMounts.find(volumeMount => volumeMount.name === volumeName)) {
