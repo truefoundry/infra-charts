@@ -67,8 +67,8 @@ spec:
         });
       }
 
-      const containers = request.object.spec.containers || [];
-      const initContainers = request.object.spec.initContainers || [];
+      let containers = request.object.spec.containers || [];
+      let initContainers = request.object.spec.initContainers || [];
       [...containers, ...initContainers].forEach(container => {
         let volumeName = "";
         if (mountDetail.type === "secret") {
