@@ -27,8 +27,13 @@ rules:
     verbs: ["delete", "get"]
 
   - apiGroups: [""]
-    resources: ["pods/log", "events", "services", "services/status", "persistentvolumes"]
+    resources: ["pods/log", "events", "services", "persistentvolumes"]
     verbs: ["get", "list"]
+
+  {{/* This allows us to access services status  */}}
+  - apiGroups: [""]
+    resources: ["services/status"]
+    verbs: ["get"]
 
   - apiGroups: ["apps"]
     resources: ["statefulsets/scale", "deployments/scale"]
