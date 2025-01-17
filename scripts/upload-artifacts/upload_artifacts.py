@@ -126,6 +126,7 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
             logging.error(
                 f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
             )
+            exit("Cannot create multi-arch image")
 
 
 # function to download and push Helm charts
