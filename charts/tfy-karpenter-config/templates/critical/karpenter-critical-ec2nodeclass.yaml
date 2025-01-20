@@ -1,0 +1,58 @@
+{{- if .Values.karpenter.critical.nodeclass.create }}
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: {{ .Values.karpenter.critical.nodeclass.name }}
+spec:
+  {{- if .Values.karpenter.critical.nodeclass.instanceProfile }}
+  instanceProfile: {{ .Values.karpenter.critical.nodeclass.instanceProfile }}
+  {{- else }}
+  instanceProfile: {{ .Values.karpenter.instanceProfile }}
+  {{- end }}
+  subnetSelectorTerms:
+    - tags:
+        kubernetes.io/cluster/{{ .Values.cluster.name }}: shared
+        subnet: private
+        {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraSubnetTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: {{ .Values.cluster.name }}
+        {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraSecurityGroupTags }}
+        {{ $key }}: {{ $val | quote }} 
+        {{- end }}
+  tags:
+    truefoundry.com/compute_type: cpu
+    truefoundry.com/component_type: critical
+    karpenter.sh/discovery: {{ .Values.cluster.name }}
+    cluster-name: {{ .Values.cluster.name }}
+  {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraTags }}
+    {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.critical.nodeclass.detailedMonitoring }}
+  detailedMonitoring: true
+  {{- end }}
+  {{- if .Values.karpenter.critical.nodeclass.amiFamily }}
+  amiFamily: {{ .Values.karpenter.critical.nodeclass.amiFamily }}
+  {{- end }}
+  {{- if .Values.karpenter.critical.nodeclass.amiSelectorTerms }}
+  amiSelectorTerms:
+  {{- .Values.karpenter.critical.nodeclass.amiSelectorTerms | toYaml | nindent 2 }}
+  {{- end }}
+  {{- if eq .Values.karpenter.critical.nodeclass.amiFamily "Bottlerocket" }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvdb
+      ebs:
+  {{- else }}
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+  {{- end }}
+        volumeSize: {{ .Values.karpenter.critical.nodeclass.rootVolumeSize }}
+        volumeType: gp3
+        deleteOnTermination: true
+  {{- if not (eq .Values.karpenter.critical.nodeclass.userData "")}}
+  userData: {{- .Values.karpenter.critical.nodeclass.userData | toYaml | indent 2 }}
+  {{- end }}
+{{- end }}
