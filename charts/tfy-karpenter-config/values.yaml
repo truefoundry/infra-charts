@@ -322,7 +322,10 @@ karpenter:
     labels:
       class.truefoundry.com/component: "critical"
     ## @param karpenter.critical.taints [array] Taints for the critical node pool
-    taints: ["class.truefoundry.com/component=critical:NoSchedule"]
+    taints:
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
     ## @param karpenter.critical.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
