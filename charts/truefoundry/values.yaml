@@ -627,6 +627,10 @@ tfyK8sController:
     DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe
     TFY_LLM_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
     ENABLE_AUTOPILOT_DIAGNOSIS: "false"
+    CLICKHOUSE_HOST: http://{{ .Values.global.llmGatewayInfra.releaseName }}-clickhouse.{{ .Release.Namespace }}.svc.cluster.local:8123
+    CLICKHOUSE_USER: admin
+    CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhouseAdminPassword }}"
+    CLICKHOUSE_DATABASE: default
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
