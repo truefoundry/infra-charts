@@ -523,16 +523,9 @@ sdsServer:
       ephemeral-storage: 10M
       ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
       memory: 30M
-  ## @param sdsServer.tolerations [array] Spot tolerations for the notebook controller deployment.
-  tolerations:
-    - effect: NoSchedule
-      key: cloud.google.com/gke-spot
-      operator: Equal
-      value: 'true'
-    - effect: NoSchedule
-      key: kubernetes.azure.com/scalesetpriority
-      operator: Equal
-      value: 'spot'
+  ## @param sdsServer.tolerations [array] Tolerations for the sds-server application
+  ##
+  tolerations: []
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:
