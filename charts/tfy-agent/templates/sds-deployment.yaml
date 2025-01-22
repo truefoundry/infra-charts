@@ -2,15 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  {{- with .Values.labels }}
-  labels:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
   name: {{ include "sds-server.fullname" . }}
+  labels:
+    {{- include "sds-server.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.sdsServer.replicas}}
-  strategy:
-    {{- toYaml .Values.sdsServer.deploymentStrategy | nindent 4 }}
   selector:
     matchLabels:
       {{- include "sds-server.selectorLabels" . | nindent 6 }}
@@ -18,25 +14,29 @@ spec:
     metadata:
       labels:
         {{- include "sds-server.selectorLabels" . | nindent 8 }}
-        {{- with .Values.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
     spec:
       {{- with .Values.sdsServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccountName: {{ include "sds-server.serviceAccountName" . }}
+      {{- with .Values.sdsServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.sdsServer.extraVolumes | nindent 8 }}
+      {{- with .Values.sdsServer.affinity }}
       affinity:
-        {{- with .Values.sdsServer.affinity }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
+      {{- with .Values.sdsServer.tolerations }}
       tolerations:
-        {{- with .Values.sdsServer.tolerations }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
       containers:
         - image: {{ .Values.sdsServer.image.repository }}:{{ .Values.sdsServer.image.tag }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.sdsServer.image.pullPolicy }}
           name: sds-server
           command:
             {{- with .Values.sdsServer.command }}
@@ -55,14 +55,18 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" . }}
+          {{- range $val := .Values.sdsServer.extraEnvVars }}
+            - name: {{ $val.name }}
+              value: {{ $val.value | quote }}
+          {{- end }}
           readinessProbe:
             {{- toYaml .Values.sdsServer.readinessProbe | nindent 12 }}
           livenessProbe:
             {{- toYaml .Values.sdsServer.livenessProbe | nindent 12 }}
           ports:
-            {{- with .Values.sdsServer.ports }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
+          - name: http
+            containerPort: {{ .Values.sdsServer.service.port }}
+            protocol: TCP
           resources:
             {{- with .Values.sdsServer.resources }}
             {{- toYaml . | nindent 12 }}

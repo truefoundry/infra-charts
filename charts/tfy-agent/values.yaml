@@ -169,7 +169,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "1b4ddac5e3a77784381a73966bddda6d01157357"
+    tag: "6f9033a716459c53edfd7eb9c049570785347dc4"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -460,80 +460,153 @@ resourceQuota:
 ##
 sdsServer:
   ## @param sdsServer.enabled Bool value to deploy sdsServer
+  ##
   enabled: true
-  ## @param sdsServer.replicas Number of replicas of sds server
+
+  ## @param sdsServer.replicas Number of replicas of sdsServer
+  ##
   replicas: 2
+
+  ## @param sdsServer.annotations Add annotations to sdsServer pods
+  ##
+  annotations: {}
+
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    ## @param sdsServer.serviceAccount.create Bool to enable serviceAccount creation 
+    ##
+    create: true
+
+    ## @param sdsServer.serviceAccount.annotations Annotations to add to the serviceAccount
+    ## 
+    annotations: {}
+
+    ## @param sdsServer.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+    ## 
+    name: ""
+
+  ## @param sdsServer.extraEnvVars Additional envrionment variables for sdsServer
+  ##
+  extraEnvVars: []
+  ##
+  # Example:
+  # extraEnvVars:
+  #   - name: KEY1
+  #     value: VALUE1
+
+  ## Configuration for sdsServer service
+  ##
+  service:
+
+    ## @param sdsServer.service.annotations Annotations to add to the sdsServer service
+    ##   
+    annotations: {}
+    ## @param sdsServer.service.labels Labels to add to the sdsServer service
+    ##     
+    labels: {}
+    ## @param sdsServer.service.clusterIP Cluster IP for sdsServer service
+    ## 
+    clusterIP: ""
+
+    ## @param sdsServer.service.port Port for sdsServer service
+    ##
+    port: 8000
+
+    ## @param sdsServer.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
+    ##
+    nodePort: ""
+    ## List of IP addresses at which the sdsServer server service is available
+    ## Ref: https://kubernetes.io/docs/user-guide/services/#external-ips
+    ##
+
+    ## If you want to make sure that connections from a particular client are passed to the same Pod each time
+    ## Accepts 'ClientIP' or ''
+    ##
+    ## @param sdsServer.service.sessionAffinity SessionAffinity for sdsServer Service
+    ##
+    sessionAffinity: ""
+
+    ## @param sdsServer.service.type Type for sdsServer Service
+    ##
+    type: ClusterIP
+
+  ## Image of sdsServer
+  ##
   image:
-    ## @param sdsServer.image.repository Repository for sds-server
+    ## @param sdsServer.image.repository Repository for sdsServer
+    ##
     repository: tfy.jfrog.io/tfy-images/sds-server
-    ## @param sdsServer.image.tag Tag for sds-server
+    ## @param sdsServer.image.pullPolicy Pull policy for sdsServer
+    ##
+    pullPolicy: IfNotPresent
+    ## @param sdsServer.image.tag Tag for sdsServer
+    ##
     tag: "81e55e99abf55ed9fa4bfdcf3b23682464dd8f5e"
-  ## @param sdsServer.affinity [object] Node affinity for sds-server
+
+  ## @param sdsServer.affinity [object] Node affinity for sdsServer
+  ##
   affinity: {}
-  ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sds-server
+  
+  ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sdsServer
+  ##
   imagePullSecrets: []
-  ## @param sdsServer.command Command and arguments to start the sds-server application.
+  
+  ## @param sdsServer.command Command and arguments to start the sdsServer application.
+  ##
   command:
     - /app/sds-server
     - "--port"
     - "8000"
+
+  ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
+  ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
+  ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
   readinessProbe:
     tcpSocket:
-      ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
       port: 8000
-    ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
     initialDelaySeconds: 15
-    ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
     periodSeconds: 10
+
+  ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
+  ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
+  ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
   livenessProbe:
     tcpSocket:
-      ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
       port: 8000
-    ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
     initialDelaySeconds: 15
-    ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
     periodSeconds: 10
-  deploymentStrategy:
-    ## @param sdsServer.deploymentStrategy.type Type of deployment strategy
-    type: RollingUpdate
-    rollingUpdate:
-      ## @param sdsServer.deploymentStrategy.rollingUpdate.maxSurge Max pods above desired number
-      maxSurge: 1
-      ## @param sdsServer.deploymentStrategy.rollingUpdate.maxUnavailable Max pods unavailable during update
-      maxUnavailable: 1
-  ## @param sdsServer.ports[0].containerPort The port on which the container is listening.
-  ports:
-    - containerPort: 8000
-      ## @param sdsServer.ports[0].name The name assigned to this port.
-      name: port-8000
-      ## @param sdsServer.ports[0].protocol The protocol used by this port (TCP/UDP).
-      protocol: TCP
+  
+  ## Define resources requests and limits for single Pods.
+  ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  ##
+  ## customized resource limits are very general in nature and must be kept the same
+  ## decreasing the resource might make the service UNAVAILABLE
+  ## @param sdsServer.resources.limits.cpu The maximum CPU resources allocated.
+  ## @param sdsServer.resources.limits.ephemeral-storage The maximum ephemeral storage allocated.
+  ## @param sdsServer.resources.limits.memory The maximum memory resources allocated.
+  ## @param sdsServer.resources.requests.cpu The minimum CPU resources requested.
+  ## @param sdsServer.resources.requests.ephemeral-storage The minimum ephemeral storage requested.
+  ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
   resources:
     limits:
-      ## @param sdsServer.resources.limits.cpu The maximum CPU resources allocated.
       cpu: 0.02
-      ## @param sdsServer.resources.limits.ephemeral-storage The maximum ephemeral storage allocated.
       ephemeral-storage: 20M
-      ## @param sdsServer.resources.limits.memory The maximum memory resources allocated.
       memory: 50M
     requests:
-      ## @param sdsServer.resources.requests.cpu The minimum CPU resources requested.
       cpu: 0.01
-      ## @param sdsServer.resources.requests.ephemeral-storage The minimum ephemeral storage requested.
       ephemeral-storage: 10M
-      ## @param sdsServer.resources.requests.memory The minimum memory resources requested.
       memory: 30M
-  ## @param sdsServer.tolerations [array] Tolerations for the sds-server application
+
+  ## @param sdsServer.tolerations [array] Tolerations for the sdsServer application
   ##
   tolerations: []
+
+  ## @param sdsServer.topologySpreadConstraints [array] topology spread constraints on sdsServer application
   topologySpreadConstraints:
     - labelSelector:
         matchLabels:
-          ## @param sdsServer.topologySpreadConstraints[0].labelSelector.matchLabels.truefoundry.com/component Component label for the sds-server.
-          truefoundry.com/component: sds-server
-      ## @param sdsServer.topologySpreadConstraints[0].maxSkew Define the maximum skew of pods across topology domains.
+          app.kubernetes.io/name: sds-server
       maxSkew: 1
-      ## @param sdsServer.topologySpreadConstraints[0].topologyKey The key for the node labels used in determining the topology spread.
       topologyKey: topology.kubernetes.io/zone
-      ## @param sdsServer.topologySpreadConstraints[0].whenUnsatisfiable Behavior policy when spreading constraints cannot be satisfied.
       whenUnsatisfiable: ScheduleAnyway
