@@ -45,9 +45,9 @@ def parse_args(args):
 def get_truefoundry_chart_images(artifacts_manifest):
     """Extract the list of images associated with the 'truefoundry' chart."""
     for artifact in artifacts_manifest:
-        if artifact.get("details", {}).get("chart") in truefoundry_charts:
-            return artifact["details"].get("images", [])
-    return []
+        # if artifact.get("details", {}).get("chart") in truefoundry_charts:
+        return artifact["details"].get("images", [])
+    # return []
 
 
 def check_image_architectures(artifacts_manifest, truefoundry_chart_images, whitelisted_images):

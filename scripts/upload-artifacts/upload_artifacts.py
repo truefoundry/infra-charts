@@ -75,8 +75,6 @@ def check_image_exists_and_architectures(image_url):
 
 
 # function to pull and push images
-
-
 def pull_and_push_images(image_list, destination_registry, excluded_registries=[]):
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
@@ -103,28 +101,8 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
             logging.info("Skipping auto")
             continue
 
-        new_image_url = parse_image_url(image_url, destination_registry)
-
-        # Check if the new_image_url already exists and has both architectures
-        image_exists, multi_arch = check_image_exists_and_architectures(new_image_url)
-
-        if image_exists and multi_arch:
-            continue
-        elif image_exists and not multi_arch:
-            logging.info(
-                f"Image {new_image_url} already exists but does not have both arm64 and amd64 architectures."
-            )
-            exit(f"{new_image_url} does not have both arm64 and amd64 architectures.")
-        else:
-            logging.info(f"Image {new_image_url} does not exist.")
-            exit(f"{new_image_url} does not exist.")
-
-
-
 
 # function to download and push Helm charts
-
-
 def download_and_push_helm_charts(helm_list, destination_registry):
     for helm in helm_list:
         chart = helm["details"]["chart"]
