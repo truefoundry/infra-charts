@@ -106,27 +106,20 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
         new_image_url = parse_image_url(image_url, destination_registry)
 
         # Check if the new_image_url already exists and has both architectures
-        image_exists, _ = check_image_exists_and_architectures(new_image_url)
+        image_exists, multi_arch = check_image_exists_and_architectures(new_image_url)
 
-        if image_exists:
-            logging.info(f"Image {new_image_url} already exists Skipping push...")
+        if image_exists and multi_arch:
             continue
-
-        try:
-            # Use buildx imagetool create for multi-arch support
-            logging.info(f"Creating multi-arch image: {new_image_url}")
+        elif image_exists and not multi_arch:
             logging.info(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
+                f"Image {new_image_url} already exists but does not have both arm64 and amd64 architectures."
             )
-            run_command(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
-            )
-            logging.info(f"Successfully created multi-arch image: {new_image_url}")
-        except Exception as e:
-            logging.error(
-                f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
-            )
-            exit("Cannot create multi-arch image")
+            exit(f"{new_image_url} does not have both arm64 and amd64 architectures.")
+        else:
+            logging.info(f"Image {new_image_url} does not exist.")
+            exit(f"{new_image_url} does not exist.")
+
+
 
 
 # function to download and push Helm charts
