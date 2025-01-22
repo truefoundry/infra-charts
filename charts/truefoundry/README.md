@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.25.2`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.25.3`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -100,7 +100,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `mlfoundryServer.enabled`                              | Bool to enable the mlfoundry server                        | `true`                                             |
 | `mlfoundryServer.tolerations`                          | Tolerations specific to the mlfoundry server               | `{}`                                               |
 | `mlfoundryServer.image.repository`                     | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                            | Image tag for the mlfoundry server                         | `v0.20.0`                                          |
+| `mlfoundryServer.image.tag`                            | Image tag for the mlfoundry server                         | `v0.20.1`                                          |
 | `mlfoundryServer.replicaCount`                         | Number of replicas for the mlfoundry server                | `1`                                                |
 | `mlfoundryServer.environmentName`                      | Environment name for the mlfoundry server                  | `default`                                          |
 | `mlfoundryServer.envSecretName`                        | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
