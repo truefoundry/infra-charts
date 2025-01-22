@@ -8,13 +8,13 @@ metadata:
 spec:
   type: {{ .Values.sdsServer.service.type }}
   ports:
-    - name: port-8000
-      port: {{ .Values.sdsServer.service.port }}
+    - port: {{ .Values.sdsServer.service.port }}
     {{- if eq .Values.sdsServer.service.type "NodePort" }}
       nodePort: {{ .Values.sdsServer.service.nodePort }}
     {{- end }}
+      targetPort: http
       protocol: TCP
-      targetPort: port-8000
+      name: http
   selector:
     {{- include "sds-server.selectorLabels" . | nindent 4 }}
     {{- if .Values.sdsServer.service.sessionAffinity }}
