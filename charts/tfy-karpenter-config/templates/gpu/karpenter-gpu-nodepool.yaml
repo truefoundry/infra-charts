@@ -7,7 +7,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+        {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
         nvidia.com/gpu.deploy.container-toolkit: 'false'
         nvidia.com/gpu.deploy.dcgm: 'true'
         nvidia.com/gpu.deploy.dcgm-exporter: 'true'

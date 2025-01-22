@@ -1,3 +1,4 @@
+{{- if .Values.karpenter.inferentiaDefaultNodeTemplate.enabled }}
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
@@ -37,7 +38,7 @@ spec:
   amiSelectorTerms:
   {{- .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
   {{- end }}
-  {{- if eq .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  {{- if eq (include "inferentiaDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb
       ebs:
@@ -52,3 +53,4 @@ spec:
   {{- if not (eq .Values.karpenter.inferentiaDefaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.inferentiaDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
+{{- end }}

@@ -39,7 +39,7 @@ spec:
   amiSelectorTerms:
   {{- .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
   {{- end }}
-  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb
       ebs:
@@ -53,9 +53,11 @@ spec:
         deleteOnTermination: true
   {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
-  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "AL2" }}
+  {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2" }}
   userData: {{ .Files.Get "files/al2-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
-  {{- else if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2023" }}
+  userData: {{ .Files.Get "files/al2023-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
+  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   userData: {{ .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | toYaml | indent 2 }}
   {{- end }}
   {{- else }}
