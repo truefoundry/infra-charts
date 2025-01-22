@@ -19,7 +19,7 @@ The script in `userData` does the following,
 * [AL2023](./files/al2023-soci-default-provisioner-userdata.sh)
 
 ### `userData` script for `gpu-default` (GPU) EC2 Node Class
-* [AL2](./files/al2-soci-gpu-provisioner-userdata.sh)
+* [AL2023](./files/al2023-soci-gpu-provisioner-userdata.sh)
 
 
 ### Debugging
