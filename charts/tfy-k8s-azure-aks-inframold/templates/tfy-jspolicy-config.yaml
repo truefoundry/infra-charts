@@ -18,12 +18,12 @@ spec:
     repoURL: "https://truefoundry.github.io/infra-charts/"
     targetRevision: 0.2.2
     helm:
+      {{- if .Values.jspolicy.config.valuesOverride }}
       values: |-
-        {{- if .Values.jspolicy.config.valuesOverride }}
-        {{ .Values.jspolicy.config.valuesOverride | toYaml | nindent 8 }}
-        {{- else }}
-        {}
-        {{- end }}
+      {{ .Values.jspolicy.config.valuesOverride | toYaml | nindent 8 }}
+      {{- else }}
+      values: ""
+      {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
