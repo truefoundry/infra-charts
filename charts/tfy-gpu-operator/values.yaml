@@ -341,8 +341,8 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.migManager.enabled
     enabled: false
 
+  ## Fake Toolkit Ready Daemonset
   fakeToolkitReady:
-    ## @param aws-eks-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready.
     image:
       ## @param aws-eks-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -350,19 +350,16 @@ aws-eks-gpu-operator:
       tag: "3.20"
     ## @param aws-eks-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
     imagePullSecrets: []
-    ## @param aws-eks-gpu-operator.fakeToolkitReady.resources Resources for the fake toolkit ready container.
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
     resources:
-      ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources.requests
       requests:
         cpu: 5m
         memory: 10Mi
-      ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources.limits
       limits:
         cpu: 10m
         memory: 50Mi
-    ## @param aws-eks-gpu-operator.fakeToolkitReady.affinity Affinity for the fake toolkit ready container.
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
     affinity:
-      ## @skip aws-eks-gpu-operator.fakeToolkitReady.affinity.nodeAffinity
       nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -419,7 +416,7 @@ aws-eks-gpu-operator:
                       - g6e.12xlarge
                       - g6e.24xlarge
                       - g6e.48xlarge
-    ## @param aws-eks-gpu-operator.fakeToolkitReady.tolerations Tolerations for the fake toolkit ready container.
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
     tolerations:
       - key: nvidia.com/gpu
         operator: Exists
@@ -1146,7 +1143,6 @@ civo-talos-gpu-operator:
           value: "false"
 
   fakeToolkitReady:
-    ## @param civo-talos-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready.
     image:
       ## @param civo-talos-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -1154,19 +1150,16 @@ civo-talos-gpu-operator:
       tag: "3.20"
     ## @param civo-talos-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
     imagePullSecrets: []
-    ## @param civo-talos-gpu-operator.fakeToolkitReady.resources Resources for the fake toolkit ready container.
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
     resources:
-      ## @skip civo-talos-gpu-operator.fakeToolkitReady.resources.requests
       requests:
         cpu: 5m
         memory: 10Mi
-      ## @skip civo-talos-gpu-operator.fakeToolkitReady.resources.limits
       limits:
         cpu: 10m
         memory: 50Mi
-    ## @param civo-talos-gpu-operator.fakeToolkitReady.affinity Affinity for the fake toolkit ready container.
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
     affinity:
-      ## @skip civo-talos-gpu-operator.fakeToolkitReady.affinity.nodeAffinity
       nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
@@ -1186,7 +1179,7 @@ civo-talos-gpu-operator:
                       - an.g1.l40s.kube.x2
                       - an.g1.l40s.kube.x4
                       - an.g1.l40s.kube.x8
-    ## @param civo-talos-gpu-operator.fakeToolkitReady.tolerations Tolerations for the fake toolkit ready container.
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
     tolerations:
       - key: nvidia.com/gpu
         operator: Exists
