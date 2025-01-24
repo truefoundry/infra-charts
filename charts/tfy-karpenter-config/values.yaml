@@ -310,5 +310,79 @@ karpenter:
     instanceSizes:
       notAllowed: ["nano", "micro", "small", "medium", "large", "metal", "48xlarge", "metal-16xl", "metal-24xl", "metal-48xl"]
 
+  ## @section critical Section to create on-demand nodepool for critical components
+  critical:
+    ## @param karpenter.critical.enabled Enable the critical plane node pool
+    enabled: true
+    ## @param karpenter.critical.name Name of the critical node pool
+    name: tfy-critical-nodepool
+    ## @param karpenter.critical.weight Weight for the critical node pool
+    weight: 100
+    ## @param karpenter.critical.labels [object] Labels for the critical node pool
+    labels:
+      class.truefoundry.com/component: "critical"
+    ## @param karpenter.critical.taints [array] Taints for the critical node pool
+    taints:
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
+    ## @param karpenter.critical.disruption [object] Consolidation policy for disruption
+    disruption:
+      budgets:
+      - nodes: 10%
+      consolidateAfter: 0s
+      consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.critical.capacityTypes [array] Capacity types for the critical node pool
+    capacityTypes:
+    - on-demand
+    ## @param karpenter.critical.zones [array] Zones for the critical node pool
+    zones: []
+    ## @param karpenter.critical.architectures [array] Architectures for the critical node pool
+    architectures:
+    - amd64
+    instanceFamilies:
+      ## @param karpenter.critical.instanceFamilies.allowed [array] Allowed instance families for the critical node pool
+      allowed: []
+      ## @param karpenter.critical.instanceFamilies.notAllowed [array] Not allowed instance families for the critical node pool
+      notAllowed: ["t3", "t2", "t3a", "p2", "p3", "p4d", "p4de", "p5", "p5e", "g4dn", "g4ad", "g5", "g6", "gr6", "g6e", "inf1", "inf2", "trn1", "trn1n", "c1", "cc1", "cc2", "cg1", "cg2", "cr1", "g1", "g2", "hi1", "hs1", "m1", "m2", "m3"]
+    instanceSizes:
+      ## @param karpenter.critical.instanceSizes.allowed [array] Allowed instance sizes for the critical node pool
+      allowed: []
+      ## @param karpenter.critical.instanceSizes.notAllowed [array] Not allowed instance sizes for the critical node pool
+      notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
+
+    nodeclass:
+      ## @param karpenter.critical.nodeclass.create Specifies if the EC2 nodeclass with nodeclass.name should be created
+      create: true
+      ## @param karpenter.critical.nodeclass.name [array] Name of the nodeclass. If create is not set, existing nodeclass is used. 
+      name: "tfy-critical-node-template"
+      ## @param karpenter.critical.nodeclass.instanceProfile Instance profile override for the node template
+      instanceProfile: ""
+      ## @param karpenter.critical.nodeclass.rootVolumeSize Size for the root volume attached to the node
+      rootVolumeSize: 100Gi
+      ## @param karpenter.critical.nodeclass.extraTags [object] Additional tags for the node template.
+      extraTags: {}
+      ## @param karpenter.critical.nodeclass.detailedMonitoring
+      # Set this to true to enable EC2 detailed cloudwatch monitoring
+      detailedMonitoring: false
+      ## @param karpenter.critical.nodeclass.amiFamily AMI family to use for node template
+      amiFamily: ""
+      ## @param karpenter.critical.nodeclass.amiSelectorTerms [array] AMI selector terms for the node template, conditions are ANDed
+      # amiSelectorTerms:
+      # - tags:
+      #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+      #     environment: test
+      # - name: my-ami
+      # - id: ami-123
+      amiSelectorTerms:
+      - alias: al2023@latest
+      ## @skip karpenter.critical.nodeclass.userData
+      # Set this to "" to disable this injection
+      userData: ""
+      ## @param karpenter.critical.nodeclass.extraSubnetTags [object] Additional tags for the subnet.
+      extraSubnetTags: {}
+      ## @param karpenter.critical.nodeclass.extraSecurityGroupTags [object] Additional tags for the security group.
+      extraSecurityGroupTags: {}
+
 ## @param extraObjects [array] Additional objects to be created along with karpenter
 extraObjects: []

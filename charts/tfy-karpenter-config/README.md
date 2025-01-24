@@ -151,4 +151,32 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.inferentiaNodePool.architectures`                     | Architectures for the Inferentia node pool                     | `[]`                         |
 | `karpenter.inferentiaNodePool.instanceFamilies.allowed`          | Allowed instance families for the Inferentia node pool         | `[]`                         |
 | `karpenter.inferentiaNodePool.instanceSizes.notAllowed`          | Not allowed instance sizes for the Inferentia node pool        | `[]`                         |
-| `extraObjects`                                                   | Additional objects to be created along with karpenter          | `[]`                         |
+
+### critical Section to create on-demand nodepool for critical components
+
+| Name                                                  | Description                                                               | Value                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------- |
+| `karpenter.critical.enabled`                          | Enable the critical plane node pool                                       | `true`                  |
+| `karpenter.critical.name`                             | Name of the critical node pool                                            | `tfy-critical-nodepool` |
+| `karpenter.critical.weight`                           | Weight for the critical node pool                                         | `100`                   |
+| `karpenter.critical.labels`                           | Labels for the critical node pool                                         | `{}`                    |
+| `karpenter.critical.taints`                           | Taints for the critical node pool                                         | `[]`                    |
+| `karpenter.critical.disruption`                       | Consolidation policy for disruption                                       | `{}`                    |
+| `karpenter.critical.capacityTypes`                    | Capacity types for the critical node pool                                 | `[]`                    |
+| `karpenter.critical.zones`                            | Zones for the critical node pool                                          | `[]`                    |
+| `karpenter.critical.architectures`                    | Architectures for the critical node pool                                  | `[]`                    |
+| `karpenter.critical.instanceFamilies.allowed`         | Allowed instance families for the critical node pool                      | `[]`                    |
+| `karpenter.critical.instanceFamilies.notAllowed`      | Not allowed instance families for the critical node pool                  | `[]`                    |
+| `karpenter.critical.instanceSizes.allowed`            | Allowed instance sizes for the critical node pool                         | `[]`                    |
+| `karpenter.critical.instanceSizes.notAllowed`         | Not allowed instance sizes for the critical node pool                     | `[]`                    |
+| `karpenter.critical.nodeclass.create`                 | Specifies if the EC2 nodeclass with nodeclass.name should be created      | `true`                  |
+| `karpenter.critical.nodeclass.name`                   | Name of the nodeclass. If create is not set, existing nodeclass is used.  | `[]`                    |
+| `karpenter.critical.nodeclass.instanceProfile`        | Instance profile override for the node template                           | `""`                    |
+| `karpenter.critical.nodeclass.rootVolumeSize`         | Size for the root volume attached to the node                             | `100Gi`                 |
+| `karpenter.critical.nodeclass.extraTags`              | Additional tags for the node template.                                    | `{}`                    |
+| `karpenter.critical.nodeclass.detailedMonitoring`     |                                                                           | `false`                 |
+| `karpenter.critical.nodeclass.amiFamily`              | AMI family to use for node template                                       | `""`                    |
+| `karpenter.critical.nodeclass.amiSelectorTerms`       | AMI selector terms for the node template, conditions are ANDed            | `[]`                    |
+| `karpenter.critical.nodeclass.extraSubnetTags`        | Additional tags for the subnet.                                           | `{}`                    |
+| `karpenter.critical.nodeclass.extraSecurityGroupTags` | Additional tags for the security group.                                   | `{}`                    |
+| `extraObjects`                                        | Additional objects to be created along with karpenter                     | `[]`                    |

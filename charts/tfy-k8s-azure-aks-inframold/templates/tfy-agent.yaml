@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.2.49
+    targetRevision: 0.2.51
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:
@@ -55,6 +55,24 @@ spec:
               cpu: 50m
               memory: 128Mi
               ephemeral-storage: 128Mi
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+        sdsServer:
+          resources:
+            limits:
+              cpu: 200m
+              ephemeral-storage: 20M
+              memory: 50M
+            requests:
+              cpu: 100m
+              ephemeral-storage: 10M
+              memory: 30M
           {{- with .Values.tolerations }}
           tolerations:
             {{ toYaml . | nindent 12 }}

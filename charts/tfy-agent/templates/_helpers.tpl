@@ -81,6 +81,17 @@ Selector labels for tfyAgentProxy
 app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
+
+{{/*
+Common labels
+*/}}
+{{- define "sds-server.labels" -}}
+helm.sh/chart: {{ include "tfy-agent.chart" . }}
+{{ include "sds-server.selectorLabels" . }}
+app.kubernetes.io/version: {{ .Values.sdsServer.image.tag | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
 {{/*
 Selector labels for sdsServer
 */}}
@@ -108,6 +119,17 @@ Create the name of the service account to use for tfy-agent-proxy
 {{- default (include "tfy-agent-proxy.fullname" .) .Values.tfyAgentProxy.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.tfyAgentProxy.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the service account to use for sds-server
+*/}}
+{{- define "sds-server.serviceAccountName" -}}
+{{- if .Values.sdsServer.serviceAccount.create }}
+{{- default (include "sds-server.fullname" .) .Values.sdsServer.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.sdsServer.serviceAccount.name }}
 {{- end }}
 {{- end }}
 
