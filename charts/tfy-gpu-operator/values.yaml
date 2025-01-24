@@ -341,6 +341,86 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.migManager.enabled
     enabled: false
 
+  ## Fake Toolkit Ready Daemonset
+  fakeToolkitReady:
+    image:
+      ## @param aws-eks-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
+      repository: "alpine"
+      ## @param aws-eks-gpu-operator.fakeToolkitReady.image.tag Tag for the fake toolkit ready container.
+      tag: "3.20"
+    ## @param aws-eks-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
+    imagePullSecrets: []
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    resources:
+      requests:
+        cpu: 5m
+        memory: 10Mi
+      limits:
+        cpu: 10m
+        memory: 50Mi
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
+    affinity:
+      nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: feature.node.kubernetes.io/system-os_release.ID
+                    operator: In
+                    values:
+                      - bottlerocket
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values:
+                      - p2.xlarge
+                      - p2.8xlarge
+                      - p2.16xlarge
+                      - p3.2xlarge
+                      - p3.8xlarge
+                      - p3.16xlarge
+                      - p3dn.24xlarge
+                      - p4d.24xlarge
+                      - p4de.24xlarge
+                      - p5.48xlarge
+                      - p5e.48xlarge
+                      - g4dn.xlarge
+                      - g4dn.2xlarge
+                      - g4dn.4xlarge
+                      - g4dn.8xlarge
+                      - g4dn.16xlarge
+                      - g4dn.12xlarge
+                      - g4dn.metal
+                      - g4dn.xlarge
+                      - g5.xlarge
+                      - g5.2xlarge
+                      - g5.4xlarge
+                      - g5.8xlarge
+                      - g5.16xlarge
+                      - g5.12xlarge
+                      - g5.24xlarge
+                      - g5.48xlarge
+                      - g6.xlarge
+                      - g6.2xlarge
+                      - g6.4xlarge
+                      - g6.8xlarge
+                      - g6.16xlarge
+                      - g6.12xlarge
+                      - g6.24xlarge
+                      - g6.48xlarge
+                      - gr6.4xlarge
+                      - gr6.8xlarge
+                      - g6e.xlarge
+                      - g6e.2xlarge
+                      - g6e.4xlarge
+                      - g6e.8xlarge
+                      - g6e.16xlarge
+                      - g6e.12xlarge
+                      - g6e.24xlarge
+                      - g6e.48xlarge
+    ## @skip aws-eks-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
 
 ## @section gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ## The exact driver installed will depend on the COS version (decided by the GKE version)
@@ -1061,6 +1141,49 @@ civo-talos-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
+
+  fakeToolkitReady:
+    image:
+      ## @param civo-talos-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
+      repository: "alpine"
+      ## @param civo-talos-gpu-operator.fakeToolkitReady.image.tag Tag for the fake toolkit ready container.
+      tag: "3.20"
+    ## @param civo-talos-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
+    imagePullSecrets: []
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    resources:
+      requests:
+        cpu: 5m
+        memory: 10Mi
+      limits:
+        cpu: 10m
+        memory: 50Mi
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
+    affinity:
+      nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
+                    operator: In
+                    values:
+                      - g4g.40.kube.small
+                      - g4g.40.kube.medium
+                      - g4g.40.kube.large
+                      - g4g.40.kube.xlarge
+                      - g4g.kube.small
+                      - g4g.kube.medium
+                      - g4g.kube.large
+                      - g4g.kube.xlarge
+                      - an.g1.l40s.kube.x1
+                      - an.g1.l40s.kube.x2
+                      - an.g1.l40s.kube.x4
+                      - an.g1.l40s.kube.x8
+    ## @skip civo-talos-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
 
 ## @section generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
 generic-gpu-operator:
