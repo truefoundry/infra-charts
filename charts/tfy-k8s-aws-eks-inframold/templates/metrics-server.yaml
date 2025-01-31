@@ -37,11 +37,16 @@ spec:
         containerPort: 4443
         args:
           - '--kubelet-insecure-tls'
+        {{- $mergedTolerations := concat .Values.tolerations .Values.metricsServer.tolerations }}
+        {{- if $mergedTolerations }}
         tolerations:
-          - key: "dedicated"
-            operator: "Equal"
-            value: "reserved-supercluster"
-            effect: "NoSchedule"
+          {{- toYaml $mergedTolerations | nindent 14 }}
+        {{- end }}
+        {{- $mergedAffinity := dict | merge .Values.metricsServer.affinity .Values.affinity }}
+        {{- if $mergedAffinity }}
+        affinity:
+          {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
