@@ -27,15 +27,17 @@ spec:
         gateway:
           {{- with .Values.istio.gateway.annotations }}
           annotations:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.tolerations }}
-          tolerations:
-            {{ toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.affinity }}
-          affinity:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.istio.gateway.tolerations }}
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 10 }}
+          {{- end }}
+          {{- $mergedAffinity := dict | merge .Values.istio.gateway.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         tfyGateway:
           name: 'tfy-wildcard'
