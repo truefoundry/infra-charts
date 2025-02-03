@@ -61,146 +61,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install cookiecutter==2.1.1
           cookiecutter --version
+      
+      # Render and sync manifests to S3
       - run: |
-          echo "Render AWS-EKS manifests"
-          helm template inframold -n argocd -f ./charts/tfy-k8s-aws-eks-inframold/values-helm.yaml -f ./charts/tfy-k8s-aws-eks-inframold/values-ocli.yaml ./charts/tfy-k8s-aws-eks-inframold --set aws.karpenter.defaultZones={""} --output-dir catalogues
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-aws-eks-inframold/templates/truefoundry.yaml)
-          # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold/templates s3://tfy-argo-application-catalogue/aws-eks/templates --delete
-          # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-aws-eks-inframold/templates s3://tfy-argo-application-catalogue/aws-eks/$cp_chart_version/templates --delete
-          # Copy to S3 addon version files
-          for file in ./catalogues/tfy-k8s-aws-eks-inframold/templates/*; do
-            if [ -f "$file" ]; then
-              addon_name=$(basename "$file" .yaml)
-              addon_target_revision=$(yq e '.spec.source.targetRevision' "$file")
-              # Copy the addon file to S3
-              aws s3 cp "$file" "s3://tfy-argo-application-catalogue/aws-eks/addons/${addon_name}/manifest-${addon_target_revision}.yaml"
-            elif [ -d "$file" ]; then
-              for sub_file in "$file"/*; do
-                if [ -f "$sub_file" ]; then
-                  sub_addon_name=$(basename "$sub_file" .yaml)
-                  sub_addon_target_revision=$(yq e '.spec.source.targetRevision' "$sub_file")
-                  # Copy the sub-addon file to S3
-                  aws s3 cp "$sub_file" "s3://tfy-argo-application-catalogue/aws-eks/addons/${sub_addon_name}/manifest-${sub_addon_target_revision}.yaml"
-                fi
-              done
-            fi
-          done
-          echo "Synced catalogue for aws-eks successfully"
+          # AWS-EKS
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-aws-eks-inframold aws-eks
       - run: |
-          echo "Render GCP standard k8s manifests"
-          helm template inframold -n argocd -f ./charts/tfy-k8s-gcp-gke-standard-inframold/values-helm.yaml -f ./charts/tfy-k8s-gcp-gke-standard-inframold/values-ocli.yaml ./charts/tfy-k8s-gcp-gke-standard-inframold --output-dir catalogues
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates/truefoundry.yaml)
-          # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates s3://tfy-argo-application-catalogue/gcp-gke-standard/templates --delete
-          # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates s3://tfy-argo-application-catalogue/gcp-gke-standard/$cp_chart_version/templates --delete
-          # Copy to S3 addon version files
-          for file in ./catalogues/tfy-k8s-gcp-gke-standard-inframold/templates/*; do
-            if [ -f "$file" ]; then
-              addon_name=$(basename "$file" .yaml)
-              addon_target_revision=$(yq e '.spec.source.targetRevision' "$file")
-              # Copy the addon file to S3
-              aws s3 cp "$file" "s3://tfy-argo-application-catalogue/gcp-gke-standard/addons/${addon_name}/manifest-${addon_target_revision}.yaml"
-            elif [ -d "$file" ]; then
-              for sub_file in "$file"/*; do
-                if [ -f "$sub_file" ]; then
-                  sub_addon_name=$(basename "$sub_file" .yaml)
-                  sub_addon_target_revision=$(yq e '.spec.source.targetRevision' "$sub_file")
-                  # Copy the sub-addon file to S3
-                  aws s3 cp "$sub_file" "s3://tfy-argo-application-catalogue/gcp-gke-standard/addons/${sub_addon_name}/manifest-${sub_addon_target_revision}.yaml"
-                fi
-              done
-            fi
-          done
-          echo "Synced catalogue for gcp-standard successfully"
+          # GCP Standard
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-gcp-gke-standard-inframold gcp-gke-standard
       - run: |
-          echo "Render Azure-AKS manifests"
-          helm template inframold -n argocd -f ./charts/tfy-k8s-azure-aks-inframold/values-helm.yaml -f ./charts/tfy-k8s-azure-aks-inframold/values-ocli.yaml ./charts/tfy-k8s-azure-aks-inframold --output-dir catalogues
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-azure-aks-inframold/templates/truefoundry.yaml)
-          # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold/templates s3://tfy-argo-application-catalogue/azure-aks/templates --delete
-          # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-azure-aks-inframold/templates s3://tfy-argo-application-catalogue/azure-aks/$cp_chart_version/templates --delete
-          # Copy to S3 addon version files
-          for file in ./catalogues/tfy-k8s-azure-aks-inframold/templates/*; do
-            if [ -f "$file" ]; then
-              addon_name=$(basename "$file" .yaml)
-              addon_target_revision=$(yq e '.spec.source.targetRevision' "$file")
-              # Copy the addon file to S3
-              aws s3 cp "$file" "s3://tfy-argo-application-catalogue/azure-aks/addons/${addon_name}/manifest-${addon_target_revision}.yaml"
-            elif [ -d "$file" ]; then
-              for sub_file in "$file"/*; do
-                if [ -f "$sub_file" ]; then
-                  sub_addon_name=$(basename "$sub_file" .yaml)
-                  sub_addon_target_revision=$(yq e '.spec.source.targetRevision' "$sub_file")
-                  # Copy the sub-addon file to S3
-                  aws s3 cp "$sub_file" "s3://tfy-argo-application-catalogue/azure-aks/addons/${sub_addon_name}/manifest-${sub_addon_target_revision}.yaml"
-                fi
-              done
-            fi
-          done
-          echo "Synced catalogue for azure-aks successfully"
+          # Azure-AKS
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-azure-aks-inframold azure-aks
       - run: |
-          echo "Render Generic k8s manifests"
-          helm template inframold -n argocd -f ./charts/tfy-k8s-generic-inframold/values-helm.yaml -f ./charts/tfy-k8s-generic-inframold/values-ocli.yaml ./charts/tfy-k8s-generic-inframold --output-dir catalogues
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-generic-inframold/templates/truefoundry.yaml)
-          # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-generic-inframold/templates s3://tfy-argo-application-catalogue/generic/templates --delete
-          # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-generic-inframold/templates s3://tfy-argo-application-catalogue/generic/$cp_chart_version/templates --delete
-          # Copy to S3 addon version files
-          for file in ./catalogues/tfy-k8s-generic-inframold/templates/*; do
-            if [ -f "$file" ]; then
-              addon_name=$(basename "$file" .yaml)
-              addon_target_revision=$(yq e '.spec.source.targetRevision' "$file")
-              # Copy the addon file to S3
-              aws s3 cp "$file" "s3://tfy-argo-application-catalogue/generic/addons/${addon_name}/manifest-${addon_target_revision}.yaml"
-            elif [ -d "$file" ]; then
-              for sub_file in "$file"/*; do
-                if [ -f "$sub_file" ]; then
-                  sub_addon_name=$(basename "$sub_file" .yaml)
-                  sub_addon_target_revision=$(yq e '.spec.source.targetRevision' "$sub_file")
-                  # Copy the sub-addon file to S3
-                  aws s3 cp "$sub_file" "s3://tfy-argo-application-catalogue/generic/addons/${sub_addon_name}/manifest-${sub_addon_target_revision}.yaml"
-                fi
-              done
-            fi
-          done
-          echo "Synced catalogue for generic k8s successfully"
+          # Generic
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-generic-inframold generic
       - run: |
-          echo "Render Civo-Talos k8s manifests"
-          helm template inframold -n argocd -f ./charts/tfy-k8s-civo-talos-inframold/values-helm.yaml -f ./charts/tfy-k8s-civo-talos-inframold/values-ocli.yaml ./charts/tfy-k8s-civo-talos-inframold --output-dir catalogues
-          # Get the version of the truefoundry helm chart
-          cp_chart_version=$(yq e '.spec.source.targetRevision' ./catalogues/tfy-k8s-civo-talos-inframold/templates/truefoundry.yaml)
-          # Sync to S3
-          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold/templates s3://tfy-argo-application-catalogue/civo-talos/templates --delete
-          # Sync to S3 chart version folder
-          aws s3 sync ./catalogues/tfy-k8s-civo-talos-inframold/templates s3://tfy-argo-application-catalogue/civo-talos/$cp_chart_version/templates --delete
-          # Copy to S3 addon version files
-          for file in ./catalogues/tfy-k8s-civo-talos-inframold/templates/*; do
-            if [ -f "$file" ]; then
-              addon_name=$(basename "$file" .yaml)
-              addon_target_revision=$(yq e '.spec.source.targetRevision' "$file")
-              # Copy the addon file to S3
-              aws s3 cp "$file" "s3://tfy-argo-application-catalogue/civo-talos/addons/${addon_name}/manifest-${addon_target_revision}.yaml"
-            elif [ -d "$file" ]; then
-              for sub_file in "$file"/*; do
-                if [ -f "$sub_file" ]; then
-                  sub_addon_name=$(basename "$sub_file" .yaml)
-                  sub_addon_target_revision=$(yq e '.spec.source.targetRevision' "$sub_file")
-                  # Copy the sub-addon file to S3
-                  aws s3 cp "$sub_file" "s3://tfy-argo-application-catalogue/civo-talos/addons/${sub_addon_name}/manifest-${sub_addon_target_revision}.yaml"
-                fi
-              done
-            fi
-          done
-          echo "Synced catalogue for civo-talos k8s successfully"
+          # Civo-Talos
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-civo-talos-inframold civo-talos
       - run: |
           # Invalidate cloudfront
           aws configure set preview.cloudfront true && aws cloudfront create-invalidation --distribution-id EYFSW3BXDVFP0 --paths '/*'
