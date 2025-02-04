@@ -65,19 +65,19 @@ jobs:
       # Render and sync manifests to S3
       - run: |
           # AWS-EKS
-          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-aws-eks-inframold aws-eks $AWS_S3_BUCKET
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-aws-eks-inframold aws-eks ${{ env.AWS_S3_BUCKET }}
       - run: |
           # GCP Standard
-          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-gcp-gke-standard-inframold gcp-gke-standard $AWS_S3_BUCKET
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-gcp-gke-standard-inframold gcp-gke-standard ${{ env.AWS_S3_BUCKET }}
       - run: |
           # Azure-AKS
-          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-azure-aks-inframold azure-aks $AWS_S3_BUCKET
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-azure-aks-inframold azure-aks ${{ env.AWS_S3_BUCKET }}
       - run: |
           # Generic
-          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-generic-inframold generic $AWS_S3_BUCKET
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-generic-inframold generic ${{ env.AWS_S3_BUCKET }}
       - run: |
           # Civo-Talos
-          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-civo-talos-inframold civo-talos $AWS_S3_BUCKET
+          bash ./scripts/publish-app-catalogue/sync-manifests-to-s3.sh tfy-k8s-civo-talos-inframold civo-talos ${{ env.AWS_S3_BUCKET }}
       - run: |
           # Invalidate cloudfront
           aws configure set preview.cloudfront true && aws cloudfront create-invalidation --distribution-id EYFSW3BXDVFP0 --paths '/*'
