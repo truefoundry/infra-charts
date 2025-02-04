@@ -133,6 +133,8 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | --------------------- | ------------------------------------------ | ------ |
 | `loki.enabled`        | Flag to enable Loki                        | `true` |
 | `loki.valuesOverride` | Config override from default config values | `{}`   |
+| `loki.affinity`       | Affinity for loki statefulset pod          | `{}`   |
+| `loki.tolerations`    | Tolerations for loki statefulset pod       | `[]`   |
 
 ### istio parameters
 
@@ -141,6 +143,9 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `istio.enabled`                | Flag to enable Istio                       | `true` |
 | `istio.enabled`                | Flag to enable Istio Base                  | `true` |
 | `istio.base.valuesOverride`    | Config override from default config values | `{}`   |
+| `istio.gateway.annotations`    | Annotations for Istio Gateway              | `{}`   |
+| `istio.gateway.affinity`       | Affinity for the gateway pods              | `{}`   |
+| `istio.gateway.tolerations`    | Tolerations for the gateway pods           | `[]`   |
 | `istio.gateway.valuesOverride` | Config override from default config values | `{}`   |
 
 ### istio discovery parameters
@@ -168,10 +173,14 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### prometheus parameters
 
-| Name                        | Description                                | Value  |
-| --------------------------- | ------------------------------------------ | ------ |
-| `prometheus.enabled`        | Flag to enable Prometheus                  | `true` |
-| `prometheus.valuesOverride` | Config override from default config values | `{}`   |
+| Name                                 | Description                                | Value  |
+| ------------------------------------ | ------------------------------------------ | ------ |
+| `prometheus.enabled`                 | Flag to enable Prometheus                  | `true` |
+| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus   | `[]`   |
+| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus  | `{}`   |
+| `prometheus.affinity`                | Affinity for prometheus statefulset pod    | `{}`   |
+| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod | `[]`   |
+| `prometheus.valuesOverride`          | Config override from default config values | `{}`   |
 
 ### grafana parameters
 
@@ -185,8 +194,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | Name                          | Description                                | Value  |
 | ----------------------------- | ------------------------------------------ | ------ |
 | `tfyAgent.enabled`            | Flag to enable Tfy Agent                   | `true` |
-| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
 | `tfyAgent.valuesOverride`     | Config override from default config values | `{}`   |
+| `tfyAgent.tolerations`        | Tolerations for the agent pods             | `[]`   |
+| `tfyAgent.affinity`           | Affinity for the agent pods                | `{}`   |
+| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
 | `tfyAgent.clusterTokenSecret` | Secret name for cluster token              | `""`   |
 
 ### elasti parameters
@@ -203,4 +214,6 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `jspolicy.enabled`               | Flag to enable jspolicy. No policy is applied by default | `false` |
 | `jspolicy.enabled`               | Flag to enable jspolicy                                  | `false` |
 | `jspolicy.valuesOverride`        | Config override from default config values               | `{}`    |
+| `jspolicy.affinity`              | Affinity for jspolicy                                    | `{}`    |
+| `jspolicy.tolerations`           | Tolerations for jspolicy                                 | `[]`    |
 | `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
