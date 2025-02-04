@@ -22,9 +22,17 @@ spec:
         {{- if .Values.jspolicy.valuesOverride }}
         {{ .Values.jspolicy.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := concat .Values.tolerations .Values.jspolicy.tolerations }}
+        {{- if $mergedTolerations }}
+        tolerations:
+          {{- toYaml $mergedTolerations | nindent 10 }}
+        {{- end }}
+        {{- $mergedAffinity := dict | merge .Values.jspolicy.affinity .Values.affinity }}
+        {{- if $mergedAffinity }}
+        affinity:
+          {{- toYaml $mergedAffinity | nindent 10 }}
+        {{- end }}
         replicaCount: 2
-        env:
-          npm_config_registry: "https://tfy.jfrog.io/artifactory/api/npm/tfy-npm-registry-local"
         nodeSelector:
           kubernetes.io/arch: "amd64"
         {{- end }}

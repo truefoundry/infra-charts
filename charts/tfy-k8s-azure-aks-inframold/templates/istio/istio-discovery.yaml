@@ -37,13 +37,15 @@ spec:
               cpu: 400m
               memory: 1024Mi
               ephemeral-storage: 1024Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.istio.discovery.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.istio.discovery.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         global:
           hub: {{ .Values.istio.discovery.hub }}

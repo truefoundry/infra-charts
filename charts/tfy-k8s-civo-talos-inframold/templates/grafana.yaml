@@ -29,13 +29,15 @@ spec:
           adminUser: <to_be_provided>
           # Password for grafana dashboard
           adminPassword: <to_be_provided>
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.grafana.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.grafana.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         {{- end }}
   syncPolicy:

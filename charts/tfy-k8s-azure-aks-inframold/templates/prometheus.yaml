@@ -115,13 +115,15 @@ spec:
                     - ReadWriteOnce
             retentionSize: 18GB
             enableAdminAPI: true
-            {{- with .Values.tolerations }}
+            {{- $mergedTolerations := concat .Values.tolerations .Values.prometheus.tolerations }}
+            {{- if $mergedTolerations }}
             tolerations:
-              {{ toYaml . | nindent 14 }}
+              {{- toYaml $mergedTolerations | nindent 14 }}
             {{- end }}
-            {{- with .Values.affinity }}
+            {{- $mergedAffinity := dict | merge .Values.prometheus.affinity .Values.affinity }}
+            {{- if $mergedAffinity }}
             affinity:
-              {{ toYaml . | nindent 14 }}
+              {{- toYaml $mergedAffinity | nindent 14 }}
             {{- end }}
             additionalScrapeConfigs:
               - job_name: prometheus

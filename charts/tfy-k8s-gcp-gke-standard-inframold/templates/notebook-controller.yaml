@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.3.14
+    targetRevision: 0.3.16
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-notebook-controller
     helm:
@@ -37,13 +37,15 @@ spec:
         {{- with .Values.notebookController.defaultStorageClass }}
         defaultStorageClass: {{ . }}
         {{- end }}
-        {{- with .Values.tolerations }}
+        {{- $mergedTolerations := concat .Values.tolerations .Values.notebookController.tolerations }}
+        {{- if $mergedTolerations }}
         tolerations:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- with .Values.affinity }}
+        {{- $mergedAffinity := dict | merge .Values.notebookController.affinity .Values.affinity }}
+        {{- if $mergedAffinity }}
         affinity:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml $mergedAffinity | nindent 14 }}
         {{- end }}
         sdsServer:
           {{- with .Values.tolerations }}
