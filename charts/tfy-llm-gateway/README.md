@@ -14,7 +14,7 @@ LLM-Gateway Helm Chart
 | `global.llmGatewayInfra.releaseName`            | Release name for the tfy-llm-gateway-infra  | `tfy-llm-gateway-infra`                           |
 | `global.llmGatewayInfra.natsAdminPassword`      | NATS admin password                         | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway          | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway             | `755172200281b6c6fbae825b4356dde99fc5006f`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway             | `10996e0b5a834cd33ec18ad2c0aff06e2c486b3a`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway  | `""`                                              |
 | `replicaCount`                                  | Number of replicas                          | `3`                                               |
 | `environmentName`                               | The environment name                        | `default`                                         |
