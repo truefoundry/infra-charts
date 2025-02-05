@@ -72,6 +72,13 @@ spec:
     metadata:
       labels:
         name: {{ .Release.Name }}-neuron-device-plugin-ds
+        {{- with .Values.devicePlugin.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.devicePlugin.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       serviceAccount: {{ .Release.Name }}-neuron-device-plugin
       {{- with .Values.devicePlugin.imagePullSecrets | default .Values.imagePullSecrets }}
