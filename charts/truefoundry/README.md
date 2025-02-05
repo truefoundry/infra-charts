@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.29.0`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.29.1`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -137,7 +137,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.replicaCount`                         | Number of replicas for the servicefoundry server                | `1`                                                     |
 | `servicefoundryServer.global`                               | Global values for the servicefoundry server                     | `{}`                                                    |
 | `servicefoundryServer.image.repository`                     | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.29.0`                                               |
+| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.29.1`                                               |
 | `servicefoundryServer.environmentName`                      | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                        | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                      | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -263,6 +263,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `nats.nats.resources.limits.memory`                | Memory limit for NATS server                 | `1024Mi`                                                     |
 | `nats.nats.resources.requests.cpu`                 | CPU request for NATS server                  | `200m`                                                       |
 | `nats.nats.resources.requests.memory`              | Memory request for NATS server               | `512Mi`                                                      |
+| `nats.nats.limits.maxPayload`                      | Maximum message payload size for NATS server | `4Mi`                                                        |
 | `nats.natsbox.enabled`                             | Bool to enable NATSBox                       | `false`                                                      |
 | `nats.natsbox.image.repository`                    | NATSBox image repository                     | `tfy.jfrog.io/tfy-mirror/natsio/nats-box`                    |
 | `nats.natsbox.image.tag`                           | NATSBox image tag                            | `0.13.2`                                                     |
