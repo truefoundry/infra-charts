@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: kubernetes-pods-podmonitor
+  namespace: prometheus
+spec:
+  namespaceSelector:
+    any: true
+  selector:
+    matchExpressions:
+    - key: prometheus.io/scrape
+      operator: In
+      values:
+      - "true"
+  podMetricsEndpoints:
+  - relabelings:
+    - sourceLabels: [ __meta_kubernetes_namespace ]
+      regex: '(istio-system|cert-manager|kube-system)'
+      action: drop
+    - sourceLabels: [ __meta_kubernetes_pod_container_init ]
+      regex: 'true'
+      action: drop
+    - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_scheme ]
+      targetLabel: __scheme__
+    - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_path ]
+      targetLabel: __metrics_path__
+    - sourceLabels: [ __address__, __meta_kubernetes_pod_annotation_prometheus_io_port ]
+      regex: '([^:]+)(?::\d+)?;(\\d+)'
+      replacement: '$1:$2'
+      targetLabel: __address__
+    - sourceLabels: [ __meta_kubernetes_pod_name ]
+      targetLabel: pod
+    - sourceLabels: [ __meta_kubernetes_pod_container_name ]
+      targetLabel: container
+    - sourceLabels: [ __meta_kubernetes_namespace ]
+      targetLabel: namespace
+    - sourceLabels: [ __meta_kubernetes_pod_node_name ]
+      targetLabel: node
+    - sourceLabels: [ __meta_kubernetes_pod_label_truefoundry_com_application_id ]
+      targetLabel: label_truefoundry_com_application_id

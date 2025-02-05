@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argo-workflows
+  namespace: prometheus
+spec:
+  jobLabel: argo-workflows
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: argo-workflows
+  namespaceSelector:
+    matchNames:
+      - argo-workflows
+  endpoints:
+    - port: metrics
+      scheme: http
+      interval: 30s
+      path: /metrics

@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: elasti-resolver
+  namespace: prometheus
+spec:
+  jobLabel: elasti-resolver
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: elasti
+  namespaceSelector:
+    matchNames:
+      - elasti
+  endpoints:
+    - port: http-resolver
+      interval: 1s
+      scheme: http
+      path: /metrics
+      honor_labels: true

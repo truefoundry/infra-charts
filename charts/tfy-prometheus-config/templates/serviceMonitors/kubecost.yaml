@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kubecost
+  namespace: prometheus
+spec:
+  jobLabel: kubecost
+  selector:
+    matchLabels:
+      app: cost-analyzer
+  namespaceSelector:
+    matchNames:
+      - kubecost
+  endpoints:
+    - port: tcp-model
+      interval: 1m
+      scrapeTimeout: 60s
+      path: /metrics
+      honorLabels: true

@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: envoy-stats
+  namespace: prometheus
+spec:
+  namespaceSelector:
+    any: true
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - envoy
+  podMetricsEndpoints:
+  - port: envoy-prom
+    path: /stats/prometheus
+    relabelings:
+    - sourceLabels: [ __meta_kubernetes_pod_container_port_name ]
+      regex: '.*-envoy-prom'
+      action: keep
+    - sourceLabels: [ __meta_kubernetes_pod_name ]
+      targetLabel: pod
+    - sourceLabels: [ __meta_kubernetes_pod_container_name ]
+      targetLabel: container
+    - sourceLabels: [ __meta_kubernetes_namespace ]
+      targetLabel: namespace
+    - sourceLabels: [ __meta_kubernetes_pod_node_name ]
+      targetLabel: node
+    metricRelabelings:
+    - sourceLabels: [ __name__ ]
+      regex: 'envoy_(.+)'
+      action: drop
+    - sourceLabels: [ __name__ ]
+      regex: '(istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)'
+      action: drop
