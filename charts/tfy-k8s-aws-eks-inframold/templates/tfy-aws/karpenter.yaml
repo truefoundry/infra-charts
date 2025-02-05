@@ -35,6 +35,16 @@ spec:
             defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
             interruptionQueue: {{ .Values.aws.karpenter.interruptionQueue }}
           controller:
+            {{- $mergedTolerations := concat .Values.tolerations .Values.aws.karpenter.tolerations }}
+            {{- if $mergedTolerations }}
+            tolerations:
+              {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- end }}
+            {{- $mergedAffinity := dict | merge .Values.aws.karpenter.affinity .Values.affinity }}
+            {{- if $mergedAffinity }}
+            affinity:
+              {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- end }}
             resources:
               requests:
                 cpu: 100m
