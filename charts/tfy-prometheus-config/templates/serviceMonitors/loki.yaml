@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: loki
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: loki
   selector:
@@ -10,18 +12,20 @@ spec:
       app.kubernetes.io/name: loki
   namespaceSelector:
     matchNames:
-      - loki
+    - loki
   endpoints:
-    - port: http-metrics
-      interval: 30s
-      path: /metrics
-      honorLabels: true
+  - port: http-metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: loki-promtail
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: loki-promtail
   selector:
@@ -29,9 +33,9 @@ spec:
       app.kubernetes.io/name: promtail
   namespaceSelector:
     matchNames:
-      - loki
+    - loki
   endpoints:
-    - port: http-metrics
-      interval: 30s
-      path: /metrics
-      honorLabels: true
+  - port: http-metrics
+    interval: 30s
+    path: /metrics
+    honorLabels: true

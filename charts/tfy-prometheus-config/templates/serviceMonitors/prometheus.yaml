@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: prometheus
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: prometheus
   selector:
@@ -10,8 +12,8 @@ spec:
       operated-prometheus: "true"
   namespaceSelector:
     matchNames:
-      - prometheus
+    - prometheus
   endpoints:
-    - port: http-web
-      interval: 30s
-      path: /metrics
+  - port: http-web
+    interval: 30s
+    path: /metrics

@@ -3,24 +3,26 @@ kind: ServiceMonitor
 metadata:
   name: keda
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: keda-operator
   namespaceSelector:
     matchNames:
-      - keda
+    - keda
   endpoints:
-    - port: metrics
-      interval: 10s
-      scrapeTimeout: 10s
-      scheme: http
-      path: /metrics
-      honorLabels: true
-      metricRelabelings:
-        - sourceLabels: [__name__]
-          regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
-          action: drop
-        - sourceLabels: [__name__]
-          regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
-          action: drop
+  - port: metrics
+    interval: 10s
+    scrapeTimeout: 10s
+    scheme: http
+    path: /metrics
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [ __name__ ]
+      regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
+      action: drop
+    - sourceLabels: [ __name__ ]
+      regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
+      action: drop

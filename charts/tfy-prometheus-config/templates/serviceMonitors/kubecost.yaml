@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: kubecost
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: kubecost
   selector:
@@ -10,10 +12,10 @@ spec:
       app: cost-analyzer
   namespaceSelector:
     matchNames:
-      - kubecost
+    - kubecost
   endpoints:
-    - port: tcp-model
-      interval: 1m
-      scrapeTimeout: 60s
-      path: /metrics
-      honorLabels: true
+  - port: tcp-model
+    interval: 1m
+    scrapeTimeout: 60s
+    path: /metrics
+    honorLabels: true

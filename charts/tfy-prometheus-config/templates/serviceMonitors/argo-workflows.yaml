@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: argo-workflows
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: argo-workflows
   selector:
@@ -10,9 +12,9 @@ spec:
       app.kubernetes.io/instance: argo-workflows
   namespaceSelector:
     matchNames:
-      - argo-workflows
+    - argo-workflows
   endpoints:
-    - port: metrics
-      scheme: http
-      interval: 30s
-      path: /metrics
+  - port: metrics
+    scheme: http
+    interval: 30s
+    path: /metrics

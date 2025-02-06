@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: elasti-resolver
   namespace: prometheus
+  labels:
+    release: prometheus
 spec:
   jobLabel: elasti-resolver
   selector:
@@ -10,10 +12,9 @@ spec:
       app.kubernetes.io/name: elasti
   namespaceSelector:
     matchNames:
-      - elasti
+    - elasti
   endpoints:
-    - port: http-resolver
-      interval: 1s
-      scheme: http
-      path: /metrics
-      honor_labels: true
+  - port: http-resolver
+    interval: 1s
+    scheme: http
+    path: /metrics
