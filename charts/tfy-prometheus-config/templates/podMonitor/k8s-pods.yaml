@@ -8,10 +8,8 @@ spec:
     any: true
   selector:
     matchExpressions:
-    - key: prometheus.io/scrape
-      operator: In
-      values:
-      - "true"
+    - key: app.kubernetes.io/name
+      operator: Exists
   podMetricsEndpoints:
   - relabelings:
     - sourceLabels: [ __meta_kubernetes_namespace ]

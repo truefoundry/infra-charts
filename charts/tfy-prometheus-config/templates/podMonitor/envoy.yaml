@@ -8,10 +8,8 @@ spec:
     any: true
   selector:
     matchExpressions:
-    - key: app
-      operator: In
-      values:
-      - envoy
+    - key: app.kubernetes.io/name
+      operator: Exists
   podMetricsEndpoints:
   - port: envoy-prom
     path: /stats/prometheus
