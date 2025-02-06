@@ -39,13 +39,15 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argoWorkflows.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argoWorkflows.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         executor:
           resources:
@@ -67,13 +69,13 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         {{- end }}
   syncPolicy:

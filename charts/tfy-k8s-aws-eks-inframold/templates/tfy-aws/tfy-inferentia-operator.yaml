@@ -22,11 +22,31 @@ spec:
       values: |-
       {{ .Values.aws.inferentia.valuesOverride | toYaml | nindent 8 }}
       {{- else }}
-      values: ""
+      {{- $mergedTolerations := concat .Values.tolerations .Values.aws.inferentia.tolerations }}
+      {{- if $mergedTolerations }}
+      scheduler:
+        tolerations:
+        {{- toYaml $mergedTolerations | nindent 14 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.aws.inferentia.affinity .Values.affinity }}
+      {{- if $mergedAffinity }}
+        affinity:
+        {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- end }}
+        extension:
+        {{- if $mergedTolerations }}
+        tolerations:
+        {{- toYaml $mergedTolerations | nindent 14 }}
+        {{- end }}
+        {{- if $mergedAffinity }}
+        affinity:
+        {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- end }}
       {{- end }}
   syncPolicy:
     automated: {}
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-{{- end }}
+
+{{- end}}

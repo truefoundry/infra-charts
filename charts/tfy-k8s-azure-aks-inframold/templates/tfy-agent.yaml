@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.2.51
+    targetRevision: 0.2.52
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:
@@ -37,13 +37,15 @@ spec:
               cpu: 300m
               memory: 512Mi
               ephemeral-storage: 128Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.tfyAgent.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.tfyAgent.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         tfyAgentProxy:
           resources:
@@ -55,13 +57,22 @@ spec:
               cpu: 50m
               memory: 128Mi
               ephemeral-storage: 128Mi
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- end }}
+        sdsServer:
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         sdsServer:
           resources:

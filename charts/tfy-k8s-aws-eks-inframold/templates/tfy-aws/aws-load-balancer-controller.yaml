@@ -25,6 +25,16 @@ spec:
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}
+        {{- $mergedTolerations := concat .Values.tolerations .Values.aws.awsLoadBalancerController.tolerations }}
+        {{- if $mergedTolerations }}
+        tolerations:
+          {{- toYaml $mergedTolerations | nindent 14 }}
+        {{- end }}
+        {{- $mergedAffinity := dict | merge .Values.aws.awsLoadBalancerController.affinity .Values.affinity }}
+        {{- if $mergedAffinity }}
+        affinity:
+          {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- end }}
         vpcId: {{ .Values.aws.awsLoadBalancerController.vpcId | quote }}
         region: {{ .Values.aws.awsLoadBalancerController.region | quote }}
         {{- end }}

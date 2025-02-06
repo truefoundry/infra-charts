@@ -62,13 +62,15 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         server:
           extraArgs:
@@ -83,13 +85,15 @@ spec:
               cpu: 400m
               memory: 1024Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         controller:
           extraArgs:
@@ -103,13 +107,15 @@ spec:
               cpu: 400m
               memory: 1024Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         redis:
           resources:
@@ -121,13 +127,15 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         redisSecretInit:
           resources:
@@ -139,13 +147,15 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         repoServer:
           resources:
@@ -157,13 +167,15 @@ spec:
               cpu: 400m
               memory: 1024Mi
               ephemeral-storage: 512Mi
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.argocd.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.argocd.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         {{- end }}
   syncPolicy:

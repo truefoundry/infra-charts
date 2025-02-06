@@ -26,6 +26,16 @@ spec:
             create: true
             annotations:
               eks.amazonaws.com/role-arn: {{ .Values.aws.awsEfsCsiDriver.roleArn }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.aws.awsEfsCsiDriver.tolerations }}
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- $mergedAffinity := dict | merge .Values.aws.awsEfsCsiDriver.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
           tags:
             cluster-name: {{ .Values.clusterName }}
             volume-type: efs

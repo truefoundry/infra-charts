@@ -35,6 +35,16 @@ spec:
             cluster-name: {{ .Values.clusterName }}
             volume-type: csi-ebs
             truefoundry.com/managed: "true"
+          {{- $mergedTolerations := concat .Values.tolerations .Values.aws.awsEbsCsiDriver.tolerations }}
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- $mergedAffinity := dict | merge .Values.aws.awsEbsCsiDriver.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
         storageClasses:
           - name: gp2
             parameters:
