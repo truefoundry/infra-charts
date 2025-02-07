@@ -11,11 +11,17 @@ on:
       - 'charts/tfy-k8s-civo-talos-inframold/**'
       - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
       - 'charts/tfy-k8s-generic-inframold/**'
+
 env:
   AWS_S3_BUCKET: 'tfy-argo-application-catalogue'
   RELEASES_SERVER_URL: ${{ secrets.RELEASES_SERVER_URL }}
   RELEASES_SERVER_API_KEY: ${{ secrets.RELEASES_SERVER_API_KEY }}
   S3_IAM_ROLE_ARN: ${{ secrets.S3_IAM_ROLE_ARN }}
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
 jobs:
   publish_release_and_sync_to_s3:
     runs-on: ubuntu-latest
