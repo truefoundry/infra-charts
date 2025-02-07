@@ -1,0 +1,45 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: kubernetes-pods
+  namespace: prometheus
+  labels:
+    release: prometheus
+spec:
+  kubernetesSDConfigs:
+  - role: pod
+  relabelings:
+  - action: drop
+    sourceLabels: [ __meta_kubernetes_namespace ]
+    regex: (istio-system|cert-manager|kube-system)
+  - action: drop
+    sourceLabels: [ __meta_kubernetes_pod_container_init ]
+    regex: "true"
+  - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_scrape ]
+    action: keep
+    regex: "true"
+  - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_scheme ]
+    action: replace
+    targetLabel: __scheme__
+    regex: (https?)
+  - sourceLabels: [ __meta_kubernetes_pod_annotation_prometheus_io_path ]
+    action: replace
+    targetLabel: __metrics_path__
+    regex: (.+)
+  - sourceLabels: [ __address__, __meta_kubernetes_pod_annotation_prometheus_io_port ]
+    action: replace
+    targetLabel: __address__
+    regex: ([^:]+)(?::\d+)?;(\d+)
+    replacement: $1:$2
+  - sourceLabels: [ __meta_kubernetes_pod_name ]
+    targetLabel: pod
+  - sourceLabels: [ __meta_kubernetes_pod_container_name ]
+    targetLabel: container
+  - sourceLabels: [ __meta_kubernetes_namespace ]
+    targetLabel: namespace
+  - sourceLabels: [ __meta_kubernetes_pod_node_name ]
+    action: replace
+    targetLabel: node
+  - targetLabel: label_truefoundry_com_application_id
+    sourceLabels:
+    - __meta_kubernetes_pod_label_truefoundry_com_application_id

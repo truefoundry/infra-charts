@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: envoy-stats
+  namespace: prometheus
+  labels:
+    release: prometheus
+spec:
+  metricsPath: /stats/prometheus
+  kubernetesSDConfigs:
+  - role: pod
+  relabelings:
+  - regex: .*-envoy-prom
+    action: keep
+    sourceLabels:
+    - __meta_kubernetes_pod_container_port_name
+  - sourceLabels: [ __meta_kubernetes_pod_name ]
+    targetLabel: pod
+  - sourceLabels: [ __meta_kubernetes_pod_container_name ]
+    targetLabel: container
+  - sourceLabels: [ __meta_kubernetes_namespace ]
+    targetLabel: namespace
+  - sourceLabels: [ __meta_kubernetes_pod_node_name ]
+    action: replace
+    targetLabel: node
+  metricRelabelings:
+  - sourceLabels: [ __name__ ]
+    action: drop
+    regex: envoy_(.+)
+  - sourceLabels: [ __name__ ]
+    action: drop
+    regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
