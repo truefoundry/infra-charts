@@ -4,5 +4,11 @@ metadata:
   name: {{ .Release.Name }}-cicd-templates-cm
   namespace: {{ .Release.Namespace }}
 data:
+{{- if .Values.configs.cicdTemplates }}
+  {{- range $key, $value := .Values.configs.cicdTemplates }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
 {{ (.Files.Glob "files/cicd-templates/*.yaml").AsConfig | indent 2 }}
-
+{{- end }}

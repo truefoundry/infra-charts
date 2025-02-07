@@ -10,10 +10,17 @@ on:
       - 'charts/tfy-k8s-civo-talos-inframold/**'
       - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
       - 'charts/tfy-k8s-generic-inframold/**'
+
 env:
   AWS_S3_BUCKET: 'tfy-argo-application-catalogue'
   RELEASES_SERVER_URL: ${{ secrets.RELEASES_SERVER_URL }}
   RELEASES_SERVER_API_KEY: ${{ secrets.RELEASES_SERVER_API_KEY }}
+  S3_IAM_ROLE_ARN: ${{ secrets.S3_IAM_ROLE_ARN }}
+
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   publish_release_and_sync_to_s3:
     runs-on: ubuntu-latest
@@ -39,12 +46,11 @@ jobs:
         run: |
           python scripts/release-updater/release-updater.py --url ${{ env.RELEASES_SERVER_URL }} --api-key ${{ env.RELEASES_SERVER_API_KEY }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.APP_CATALOGUE_S3_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.APP_CATALOGUE_S3_SECRET_KEY }}
-          aws-region: 'eu-west-1' # optional: defaults to us-east-1
+          role-to-assume: ${{ env.S3_IAM_ROLE_ARN }}
+          aws-region: 'eu-west-1'
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.2.0
