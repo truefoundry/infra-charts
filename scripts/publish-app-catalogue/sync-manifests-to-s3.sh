@@ -41,11 +41,17 @@ helm template inframold -n argocd -f "./charts/${INFRAMOLD_NAME}/values-helm.yam
 # Get the version of the truefoundry helm chart
 cp_chart_version=$(yq e '.spec.source.targetRevision' "./catalogues/${INFRAMOLD_NAME}/templates/truefoundry.yaml")
 
+# Preview version for devtest
+cp_preview_version="preview"
+
 # Sync to S3
 aws s3 sync "./catalogues/${INFRAMOLD_NAME}/templates" "s3://${AWS_S3_BUCKET}/${CLOUD_PROVIDER}/templates" --delete
 
 # Sync to S3 chart version folder
 aws s3 sync "./catalogues/${INFRAMOLD_NAME}/templates" "s3://${AWS_S3_BUCKET}/${CLOUD_PROVIDER}/${cp_chart_version}/templates" --delete
+
+# Sync to S3 preview version folder
+aws s3 sync "./catalogues/${INFRAMOLD_NAME}/templates" "s3://${AWS_S3_BUCKET}/${CLOUD_PROVIDER}/${cp_preview_version}/templates" --delete
 
 # Copy to S3 addon version files
 copy_to_s3 "./catalogues/${INFRAMOLD_NAME}/templates" "${CLOUD_PROVIDER}"
