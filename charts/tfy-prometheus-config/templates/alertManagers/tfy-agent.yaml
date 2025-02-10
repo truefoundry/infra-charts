@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: tfy-alertmanager-config
+  namespace: prometheus
+spec:
+  route:
+    receiver: tfy-agent
+    routes:
+    - receiver: tfy-agent
+      continue: true
+      matchers:
+      - name: severity
+        matchType: regexp
+        value: "warning|critical"
+      repeatInterval: 1h
+  receivers:
+  - name: tfy-agent
+    webhookConfigs:
+    - sendResolved: true
+      url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
