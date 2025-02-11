@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 {{- if .Values.prometheus.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -267,149 +266,397 @@ spec:
                     type: A
                     names:
                       - loki-promtail-metrics.loki
-=======
-additionalScrapeConfigs:
-  - job_name: prometheus
-    static_configs:
-      - targets:
-          - localhost:9090
-    scrape_interval: 30s
-  - scheme: http
-    job_name: elasti-resolver
-    honor_labels: true
-    metrics_path: /metrics
-    dns_sd_configs:
-      - port: 8013
-        type: A
-        names:
-          - elasti-resolver-service.elasti
-    scrape_interval: 1s
-  - scheme: http
-    job_name: keda
-    honor_labels: true
-    metrics_path: /metrics
-    dns_sd_configs:
-      - port: 8080
-        type: A
-        names:
-          - keda-operator.keda
-    scrape_timeout: 10s
-    scrape_interval: 10s
-    metric_relabel_configs:
-      - regex: >-
-          (keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))
-        action: drop
-        source_labels:
-          - __name__
-      - regex: >-
-          (keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)
-        action: drop
-        source_labels:
-          - __name__
-  - job_name: "envoy-stats"
-    kubernetes_sd_configs:
-      - role: pod
-    metrics_path: "/stats/prometheus"
-    relabel_configs:
-      - regex: .*-envoy-prom
-        action: keep
-        source_labels:
-          - __meta_kubernetes_pod_container_port_name
-      - source_labels: [__meta_kubernetes_pod_name]
-        target_label: pod
-      - source_labels: [__meta_kubernetes_pod_container_name]
-        target_label: container
-      - source_labels: [__meta_kubernetes_namespace]
-        target_label: namespace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        action: replace
-        target_label: node
-    metric_relabel_configs:
-      - source_labels: [ __name__ ]
-        action: drop
-        regex: envoy_(.+)
-      - source_labels: [ __name__ ]
-        action: drop
-        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
-  - job_name: "kubernetes-pods"
-    kubernetes_sd_configs:
-      - role: pod
-    relabel_configs:
-      - action: drop
-        source_labels: [__meta_kubernetes_namespace]
-        regex: (istio-system|cert-manager|kube-system)
-      - action: drop
-        source_labels: [__meta_kubernetes_pod_container_init]
-        regex: true
-      - source_labels:
-          [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
-      - source_labels:
-          [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
-        action: replace
-        target_label: __scheme__
-        regex: (https?)
-      - source_labels:
-          [__meta_kubernetes_pod_annotation_prometheus_io_path]
-        action: replace
-        target_label: __metrics_path__
-        regex: (.+)
-      - source_labels:
-          [
-            __address__,
-            __meta_kubernetes_pod_annotation_prometheus_io_port,
-          ]
-        action: replace
-        target_label: __address__
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
-      - source_labels: [__meta_kubernetes_pod_name]
-        target_label: pod
-      - source_labels: [__meta_kubernetes_pod_container_name]
-        target_label: container
-      - source_labels: [__meta_kubernetes_namespace]
-        target_label: namespace
-      - source_labels: [__meta_kubernetes_pod_node_name]
-        action: replace
-        target_label: node
-      - target_label: label_truefoundry_com_application_id
-        source_labels:
-          - __meta_kubernetes_pod_label_truefoundry_com_application_id
-  - job_name: argo-workflows
-    static_configs:
-      - targets:
-          - argo-workflows-workflow-controller.argo-workflows.svc.cluster.local:8080
-  - scheme: http
-    job_name: kubecost
-    honor_labels: true
-    metrics_path: /metrics
-    dns_sd_configs:
-      - port: 9003
-        type: A
-        names:
-          - kubecost-cost-analyzer.kubecost
-    scrape_timeout: 60s
-    scrape_interval: 1m
-  - scheme: http
-    job_name: loki
-    honor_labels: true
-    metrics_path: /metrics
-    dns_sd_configs:
-      - port: 3100
-        type: A
-        names:
-          - loki.loki
-  - scheme: http
-    job_name: loki-promtail
-    honor_labels: true
-    metrics_path: /metrics
-    dns_sd_configs:
-      - port: 3101
-        type: A
-        names:
-          - loki-promtail-metrics.loki
->>>>>>> Stashed changes
               {{- with .Values.prometheus.additionalScrapeConfigs }}
               {{ toYaml . | nindent 14 }}
               {{- end }}
+          serviceMonitor:
+            selfMonitor: false
+        alertmanager:
+          config:
+            route:
+              receiver: tfy-agent
+              routes:
+                - continue: true
+                  matchers:
+                    - severity =~ "warning|critical"
+                  receiver: tfy-agent
+                  repeat_interval: 1h
+            receivers:
+              {{- with .Values.prometheus.alertmanager.config.receivers -}}
+              {{ toYaml . | nindent 12 }}
+              {{- end }}
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+                ephemeral-storage: 128Mi
+              limits:
+                cpu: 400m
+                memory: 256Mi
+                ephemeral-storage: 256Mi
+          enabled: true
+        nodeExporter:
+          enabled: true
+        kubeApiServer:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kube-state-metrics:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+              ephemeral-storage: 256Mi
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          prometheus:
+            monitor:
+              enabled: true
+              metricRelabelings:
+               - regex: ([;]*)([a-z-_A-Z]+)([;]*)
+                 action: replace
+                 separator: ;
+                 replacement: ${2}
+                 targetLabel: capacity_type
+                 sourceLabels:
+                   - label_karpenter_sh_capacity_type
+                   - label_eks_amazonaws_com_capacity_type
+                   - label_kubernetes_azure_com_scalesetpriority
+                   - label_cloud_google_com_gke_provisioning
+               - regex: (.+)
+                 action: lowercase
+                 targetLabel: capacity_type
+                 sourceLabels:
+                   - capacity_type
+               - regex: (.+)
+                 action: replace
+                 targetLabel: instance_type
+                 sourceLabels:
+                   - label_node_kubernetes_io_instance_type
+          metricLabelsAllowlist:
+            - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component,truefoundry.com/application-id]
+            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
+        prometheusOperator:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+              ephemeral-storage: 1Gi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+              ephemeral-storage: 256Mi
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+          admissionWebhooks:
+            patch:
+              enabled: true
+              {{- with .Values.tolerations }}
+              tolerations:
+                {{ toYaml . | nindent 14 }}
+              {{- end }}
+              {{- with .Values.affinity }}
+              affinity:
+                {{ toYaml . | nindent 14 }}
+              {{- end }}
+          serviceMonitor:
+            selfMonitor: false
+        kubeControllerManager:
+          enabled: false
+        prometheus-node-exporter:
+          extraArgs:
+            - --web.disable-exporter-metrics
+            - --collector.disable-defaults
+            - --collector.cpu
+            - --collector.meminfo
+            - --collector.filesystem
+            - --collector.stat
+            - --collector.time
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 50m
+              memory: 30Mi
+          prometheus:
+            monitor:
+              interval: 30s
+              relabelings:
+                - regex: (.+)
+                  targetLabel: node
+                  sourceLabels:
+                    - __meta_kubernetes_endpoint_node_name
+            serviceMonitor:
+              selfMonitor: false
+        prometheusConfigReloader:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 400m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+        additionalPrometheusRulesMap:
+          rule-name:
+            groups:
+              - name: CPU
+                rules:
+                  - expr: sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+                    record: cluster:cpu_usage:rate5m
+                  - expr: rate(container_cpu_usage_seconds_total{container!=""}[5m])
+                    record: cluster:cpu_usage_nosum:rate5m
+                  - expr: >-
+                      avg(irate(container_cpu_usage_seconds_total{container!="POD",
+                      container!=""}[5m])) by (container,pod,namespace)
+                    record: kubecost_container_cpu_usage_irate
+                  - expr: >-
+                      sum(container_memory_working_set_bytes{container!="POD",container!=""})
+                      by (container,pod,namespace)
+                    record: kubecost_container_memory_working_set_bytes
+                  - expr: >-
+                      sum(container_memory_working_set_bytes{container!="POD",container!=""})
+                    record: kubecost_cluster_memory_working_set_bytes
+              - name: Savings
+                rules:
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind!="DaemonSet"}) by (pod) *
+                      sum(container_cpu_allocation) by (pod))
+                    labels:
+                      daemonset: 'false'
+                    record: kubecost_savings_cpu_allocation
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind="DaemonSet"}) by (pod) *
+                      sum(container_cpu_allocation) by (pod)) / sum(kube_node_info)
+                    labels:
+                      daemonset: 'true'
+                    record: kubecost_savings_cpu_allocation
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind!="DaemonSet"}) by (pod) *
+                      sum(container_memory_allocation_bytes) by (pod))
+                    labels:
+                      daemonset: 'false'
+                    record: kubecost_savings_memory_allocation_bytes
+                  - expr: >-
+                      sum(avg(kube_pod_owner{owner_kind="DaemonSet"}) by (pod) *
+                      sum(container_memory_allocation_bytes) by (pod)) /
+                      sum(kube_node_info)
+                    labels:
+                      daemonset: 'true'
+                    record: kubecost_savings_memory_allocation_bytes
+              - name: Alerting
+                rules:
+                  - for: 2m
+                    expr: >-
+                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
+                      by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="cpu"})
+                      by (pod, container, namespace) * 100 > 80
+                    alert: CPUHighUtilizationForRequested
+                    labels:
+                      entity: container
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container CPU utilization is above 80% of requested CPU
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 2m
+                    expr: >-
+                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
+                    alert: MemoryHighUtilizationForRequested
+                    labels:
+                      entity: container
+                      severity: warning
+                    annotations:
+                      summary: Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container Memory usage is above 80% of requested memory
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 5m
+                    expr: >-
+                      sum(increase(container_cpu_cfs_throttled_periods_total{job="kubelet", container!=""}[5m]))
+                      by (pod, container, namespace) /
+                      sum(increase(container_cpu_cfs_periods_total{job="kubelet"}[5m])) by
+                      (pod, container, namespace) > ( 25 / 100 )
+                    alert: ContainerHighThrottleRate
+                    labels:
+                      entity: container
+                      severity: warning
+                    annotations:
+                      summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container is being throttled
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 2m
+                    expr: >-
+                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
+                      by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="cpu"})
+                      by (pod, container, namespace) * 100 > 70
+                    alert: CPUHighUtilizationForLimit
+                    labels:
+                      entity: container
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container CPU utilization is above 70% of CPU limit
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 2m
+                    expr: >-
+                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
+                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 70
+                    alert: MemoryHighUtilizationForLimit
+                    labels:
+                      entity: container
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
+                      description: |-
+                        Container Memory usage is above 70% of memory limit
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 15m
+                    expr: >-
+                      sum by (namespace, pod)
+                      (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
+                    alert: KubernetesPodNotHealthy
+                    labels:
+                      entity: pod
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Kubernetes Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+                      description: >-
+                        Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
+                        non-running state for longer than 15 minutes.
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 2m
+                    expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
+                    alert: KubernetesPodCrashLooping
+                    labels:
+                      entity: pod
+                      severity: warning
+                    annotations:
+                      summary: >-
+                        Kubernetes pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+                      description: |-
+                        Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 2m
+                    expr: >-
+                      sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m]))
+                      by (container, pod, namespace) > 0
+                    alert: ContainerOOMKilled
+                    labels:
+                      entity: container
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
+                      description: |-
+                        Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
+                        has been OOM killed in the last 5 minutes
+                          VALUE = {{`{{ $value }}`}} times
+                  - for: 10m
+                    expr: >-
+                      (sum(kubelet_volume_stats_used_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace) /
+                      sum(kubelet_volume_stats_capacity_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace)) * 100 > 90
+                    alert: PersistentVolumeUsageHigh
+                    labels:
+                      entity: persistentVolume
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
+                      description: |-
+                        Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}}
+                        is using more than 90% of its capacity.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: (1 - (node_filesystem_avail_bytes{job="node-exporter"} / node_filesystem_size_bytes{job="node-exporter"})) > 0.9
+                    alert: NodeDiskPressure
+                    labels:
+                      entity: node
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node disk usage is above 90% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing disk pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} < 0.1
+                    alert: NodeMemoryPressure
+                    labels:
+                      entity: node
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node memory available is below 10% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing memory pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: rate(node_cpu_seconds_total{job="node-exporter", mode="idle"}[5m]) < 0.1
+                    alert: NodeCPUPressure
+                    labels:
+                      entity: node
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node CPU usage is above 90% ({{`{{ $labels.instance }}`}})
+                      description: |-
+                        Node {{`{{ $labels.instance }}`}} is experiencing CPU pressure.
+                          VALUE = {{`{{ $value }}`}}%
+                  - for: 5m
+                    expr: kube_node_status_condition{job="kube-state-metrics", condition="Ready", status="true"} == 0
+                    alert: NodeNotReady
+                    labels:
+                      entity: node
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node is not ready ({{`{{ $labels.node }}`}})
+                      description: |-
+                        Node {{`{{ $labels.node }}`}} is not in a ready state.
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 5m
+                    expr: kube_node_status_condition{job="kube-state-metrics", condition="NetworkUnavailable", status="true"} == 1
+                    alert: NodeNetworkUnavailable
+                    labels:
+                      entity: node
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Node network is unavailable ({{`{{ $labels.node }}`}})
+                      description: |-
+                        Node {{`{{ $labels.node }}`}} network is unavailable.
+                          VALUE = {{`{{ $value }}`}}
+        {{- end }}
+{{- end }}
