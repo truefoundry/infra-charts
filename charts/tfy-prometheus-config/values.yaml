@@ -1,99 +1,94 @@
-## @param scrapeConfigsScrape configs for prometheus
+## @param scrapeConfigs
+## @description Scrape configs for prometheus
 scrapeConfigs:
-  ## @param scrapeConfigs.envoyScrape config for envoy pods
+  ## @param scrapeConfigs.envoy Scrape config for envoy pods
   envoy:
-    ## @param scrapeConfigs.envoy.enabledEnable scrape config for envoy
+    ## @param scrapeConfigs.envoy.enabled Enable scrape config for envoy
     enabled: true
-    ## @param scrapeConfigs.envoy.extraKubernetesSDConfigsExtra kubernetes SD configs for envoy
+    ## @param scrapeConfigs.envoy.extraKubernetesSDConfigs Extra kubernetes SD configs for envoy
     extraKubernetesSDConfigs: []
   ## @param scrapeConfigs.pods Scrape config for pods
   pods:
-    ## @param scrapeConfigs.pods.enabledEnable scrape config for kubernetes pods
+    ## @param scrapeConfigs.pods.enabled Enable scrape config for kubernetes pods
     enabled: true
-    ## @param scrapeConfigs.pods.extraKubernetesSDConfigsExtra kubernetes SD configs for kubernetes pods
+    ## @param scrapeConfigs.pods.extraKubernetesSDConfigs Extra kubernetes SD configs for kubernetes pods
     extraKubernetesSDConfigs: []
   ## @param scrapeConfigs.additionalScrapeConfigs Additional scrape configs for prometheus
   additionalScrapeConfigs: []
 ## @param alertManagers Alert managers for prometheus
 alertManagers:
-  ## @param alertManagers.tfyAgentAlert manager for tfy-agent
+  ## @param alertManagers.tfyAgent Alert manager for tfy-agent
   tfyAgent:
-    ## @param alertManagers.tfyAgent.enabledEnable alert manager for tfy-agent
+    ## @param alertManagers.tfyAgent.enabled Enable alert manager for tfy-agent
     enabled: true
-  ## @param alertManagers.additionalAlertManagersAdditional alert managers for prometheus
-  additionalAlertManagers: []
 ## @param prometheusRulesPrometheus rules for prometheus
 prometheusRules:
-  ## @param prometheusRules.kubecostPrometheus rules for kubecost
+  ## @param prometheusRules.kubecost Prometheus rules for kubecost
   kubecost:
-    ## @param prometheusRules.kubecost.enabledEnable prometheus rules for kubecost
+    ## @param prometheusRules.kubecost.enabled Enable prometheus rules for kubecost
     enabled: true
-  ## @param prometheusRules.additionalPrometheusRulesAdditional prometheus rules for prometheus
-  additionalPrometheusRules: []
-## @param serviceMonitorsService monitors for prometheus
+## @param serviceMonitors Service monitors for prometheus
 serviceMonitors:
-  ## @param serviceMonitors.enabledEnable service monitors for prometheus
+  ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
-  ## @param serviceMonitors.workflowsService monitor for workflows
+  ## @param serviceMonitors.workflows Service monitor for workflows
   workflows:
-    ## @param serviceMonitors.workflows.enabledEnable service monitor for workflows
+    ## @param serviceMonitors.workflows.enabled Enable service monitor for workflows
     enabled: true
-    ## @param serviceMonitors.workflows.serviceSelectorLabelsService selector labels for workflows
+    ## @param serviceMonitors.workflows.serviceSelectorLabels Service selector labels for workflows
     serviceSelectorLabels:
       app.kubernetes.io/instance: argo-workflows
-    ## @param serviceMonitors.workflows.extraEndpointsExtra endpoints for workflows
+    ## @param serviceMonitors.workflows.extraEndpoints Extra endpoints for workflows
     extraEndpoints: []
-  ## @param serviceMonitors.kedaService monitor for keda
+  ## @param serviceMonitors.keda Service monitor for keda
   keda:
-    ## @param serviceMonitors.keda.enabledEnable service monitor for keda
+    ## @param serviceMonitors.keda.enabled Enable service monitor for keda
     enabled: true
-    ## @param serviceMonitors.keda.serviceSelectorLabelsService selector labels for keda
+    ## @param serviceMonitors.keda.serviceSelectorLabels Service selector labels for keda
     serviceSelectorLabels:
       app.kubernetes.io/name: keda-operator
-    ## @param serviceMonitors.keda.extraEndpointsExtra endpoints for keda
+    ## @param serviceMonitors.keda.extraEndpoints Extra endpoints for keda
     extraEndpoints: []
-  ## @param serviceMonitors.elastiService monitor for elasti
+  ## @param serviceMonitors.elasti Service monitor for elasti
   elasti:
-    ## @param serviceMonitors.elasti.enabledEnable service monitor for elasti
+    ## @param serviceMonitors.elasti.enabled Enable service monitor for elasti
     enabled: true
-    ## @param serviceMonitors.elasti.serviceSelectorLabelsService selector labels for elasti
+    ## @param serviceMonitors.elasti.serviceSelectorLabels Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
-    ## @param serviceMonitors.elasti.extraEndpointsExtra endpoints for elasti
+    ## @param serviceMonitors.elasti.extraEndpoints Extra endpoints for elasti
     extraEndpoints: []
-  ## @param serviceMonitors.kubecostService monitor for kubecost
+  ## @param serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
-    ## @param serviceMonitors.kubecost.enabledEnable service monitor for kubecost
+    ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost
     enabled: true
-    ## @param serviceMonitors.kubecost.serviceSelectorLabelsService selector labels for kubecost
+    ## @param serviceMonitors.kubecost.serviceSelectorLabels Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
     extraEndpoints: []
-  ## @param serviceMonitors.prometheusService monitor for prometheus
+  ## @param serviceMonitors.prometheus Service monitor for prometheus
   prometheus:
-    ## @param serviceMonitors.prometheus.enabledEnable service monitor for prometheus
+    ## @param serviceMonitors.prometheus.enabled Enable service monitor for prometheus
     enabled: true
-    ## @param serviceMonitors.prometheus.serviceSelectorLabelsService selector labels for prometheus
+    ## @param serviceMonitors.prometheus.serviceSelectorLabels Service selector labels for prometheus
     serviceSelectorLabels:
       operated-prometheus: "true"
     extraEndpoints: []
-  ## @param serviceMonitors.lokiService monitor for loki
+  ## @param serviceMonitors.loki Service monitor for loki
   loki:
-    ## @param serviceMonitors.loki.enabledEnable service monitor for loki
+    ## @param serviceMonitors.loki.enabled Enable service monitor for loki
     enabled: true
-    ## @param serviceMonitors.loki.serviceSelectorLabelsService selector labels for loki
+    ## @param serviceMonitors.loki.serviceSelectorLabels Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
     extraEndpoints: []
-  ## @param serviceMonitors.promtailService monitor for promtail
+  ## @param serviceMonitors.promtail Service monitor for promtail
   promtail:
-    ## @param serviceMonitors.promtail.enabledEnable service monitor for promtail
+    ## @param serviceMonitors.promtail.enabled Enable service monitor for promtail
     enabled: true
-    ## @param serviceMonitors.promtail.serviceSelectorLabelsService selector labels for promtail
+    ## @param serviceMonitors.promtail.serviceSelectorLabels Service selector labels for promtail
     serviceSelectorLabels:
       app.kubernetes.io/name: promtail
     extraEndpoints: []
-  ## @param serviceMonitors.additionalServiceMonitorsAdditional service monitors for prometheus
-  additionalServiceMonitors: []
 ## @param extraObjects Extra objects for prometheus
 extraObjects: []
