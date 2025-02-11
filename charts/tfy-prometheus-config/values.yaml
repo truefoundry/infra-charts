@@ -1,6 +1,6 @@
 ## @section Configuration for tfy-prometheus-config
 
-# @param scrapeConfigs Scrape configs for prometheus
+## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
   # @param scrapeConfigs.envoy Scrape config for envoy pods
   envoy:
@@ -8,6 +8,8 @@ scrapeConfigs:
     enabled: true
     ## @param scrapeConfigs.envoy.name Name of the scrape config
     name: envoy-stats
+    ## @param scrapeConfigs.envoy.metricsPath Metrics path for envoy
+    metricsPath: /stats/prometheus
     ## @param scrapeConfigs.envoy.extraKubernetesSDConfigs Extra kubernetes SD configs for envoy
     extraKubernetesSDConfigs: []
   # @param scrapeConfigs.pods Scrape config for pods
@@ -20,7 +22,7 @@ scrapeConfigs:
     extraKubernetesSDConfigs: []
   ## @param scrapeConfigs.additionalScrapeConfigs Additional scrape configs for prometheus
   additionalScrapeConfigs: []
-# @param alertManagers Alert managers for prometheus
+## @section alertManagers Alert managers for prometheus
 alertManagers:
   # @param alertManagers.tfyAgent Alert manager for tfy-agent
   tfyAgent:
@@ -28,7 +30,7 @@ alertManagers:
     enabled: true
     ## @param alertManagers.tfyAgent.name Name of the alert manager
     name: tfy-alertmanager-config
-# @param prometheusRulesPrometheus rules for prometheus
+## @section prometheusRules Prometheus rules for prometheus
 prometheusRules:
   # @param prometheusRules.kubecost Prometheus rules for kubecost
   kubecost:
@@ -36,7 +38,7 @@ prometheusRules:
     enabled: true
     ## @param prometheusRules.kubecost.name Name of the prometheus rules
     name: tfy-alertmanager-config
-# @param serviceMonitors Service monitors for prometheus
+## @section serviceMonitors Service monitors for prometheus
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
