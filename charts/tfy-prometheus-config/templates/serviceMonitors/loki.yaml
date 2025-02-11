@@ -1,4 +1,4 @@
-{{ if .Values.serviceMonitors.loki.enabled }}
+{{- if .Values.serviceMonitors.loki.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -10,19 +10,12 @@ spec:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.loki.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
-    matchNames:
-    - loki
+    {{- toYaml .Values.serviceMonitors.loki.namespaceSelector | nindent 2 }}
   endpoints:
-  - port: http-metrics
-    interval: 30s
-    path: /metrics
-    honorLabels: true
-  {{- if .Values.serviceMonitors.loki.extraEndpoints }}
-  {{- toYaml .Values.serviceMonitors.loki.extraEndpoints | nindent 2 }}
-  {{- end }}
-{{ end }}
+  {{- toYaml .Values.serviceMonitors.loki.endpoints | nindent 2 }}
+{{- end }}
 ---
-{{ if .Values.serviceMonitors.loki.promtail.enabled }}
+{{- if .Values.serviceMonitors.loki.promtail.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -34,14 +27,7 @@ spec:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.loki.promtail.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
-    matchNames:
-    - loki
+    {{- toYaml .Values.serviceMonitors.loki.promtail.namespaceSelector | nindent 2 }}
   endpoints:
-  - port: http-metrics
-    interval: 30s
-    path: /metrics
-    honorLabels: true
-  {{- if .Values.serviceMonitors.loki.promtail.extraEndpoints }}
-  {{- toYaml .Values.serviceMonitors.loki.promtail.extraEndpoints | nindent 2 }}
-  {{- end }}
-{{ end }}
+  {{- toYaml .Values.serviceMonitors.loki.promtail.endpoints | nindent 2 }}
+{{- end -}}

@@ -10,13 +10,7 @@ spec:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.prometheus.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
-    matchNames:
-    - prometheus
+    {{- toYaml .Values.serviceMonitors.prometheus.namespaceSelector | nindent 2 }}
   endpoints:
-  - port: http-web
-    interval: 30s
-    path: /metrics
-  {{- if .Values.serviceMonitors.prometheus.extraEndpoints }}
-  {{- toYaml .Values.serviceMonitors.prometheus.extraEndpoints | nindent 2 }}
-  {{- end }}
-{{ end }}
+  {{- toYaml .Values.serviceMonitors.prometheus.endpoints | nindent 2 }}
+{{- end -}}

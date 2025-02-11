@@ -113,11 +113,19 @@ serviceMonitors:
     name: argo-workflows
     ## @param serviceMonitors.workflows.labels [object] Labels for workflows
     labels: {}
+    ## @param serviceMonitors.workflows.endpoints [array] Endpoints for workflows
+    endpoints:
+      - port: metrics
+        scheme: http
+        interval: 30s
+        path: /metrics
     ## @param serviceMonitors.workflows.serviceSelectorLabels [object] Service selector labels for workflows
     serviceSelectorLabels:
       app.kubernetes.io/instance: argo-workflows
-    ## @param serviceMonitors.workflows.extraEndpoints Extra endpoints for workflows
-    extraEndpoints: []
+    ## @param serviceMonitors.workflows.namespaceSelector [object] Namespace selector for workflows
+    namespaceSelector:
+      matchNames:
+        - argo-workflows
   # @param serviceMonitors.keda Service monitor for keda
   keda:
     ## @param serviceMonitors.keda.enabled Enable service monitor for keda
@@ -126,11 +134,28 @@ serviceMonitors:
     name: keda
     ## @param serviceMonitors.keda.labels [object] Labels for keda
     labels: {}
+    ## @param serviceMonitors.keda.endpoints [array] Endpoints for keda
+    endpoints:
+      - port: metrics
+        interval: 10s
+        scrapeTimeout: 10s
+        scheme: http
+        path: /metrics
+        honorLabels: true
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
+            action: drop
+          - sourceLabels: [__name__]
+            regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
+            action: drop
     ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
     serviceSelectorLabels:
       app.kubernetes.io/name: keda-operator
-    ## @param serviceMonitors.keda.extraEndpoints [array] Extra endpoints for keda
-    extraEndpoints: []
+    ## @param serviceMonitors.keda.namespaceSelector [object] Namespace selector for keda
+    namespaceSelector:
+      matchNames:
+        - keda
   # @param serviceMonitors.elasti Service monitor for elasti
   elasti:
     ## @param serviceMonitors.elasti.enabled Enable service monitor for elasti
@@ -139,11 +164,19 @@ serviceMonitors:
     name: elasti-resolver
     ## @param serviceMonitors.elasti.labels [object] Labels for elasti
     labels: {}
+    ## @param serviceMonitors.elasti.endpoints [array] Endpoints for elasti
+    endpoints:
+      - port: http-resolver
+        scheme: http
+        interval: 1s
+        path: /metrics
     ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
-    ## @param serviceMonitors.elasti.extraEndpoints [array] Extra endpoints for elasti
-    extraEndpoints: []
+    ## @param serviceMonitors.elasti.namespaceSelector [object] Namespace selector for elasti
+    namespaceSelector:
+      matchNames:
+        - elasti
   # @param serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
     ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost
@@ -152,11 +185,20 @@ serviceMonitors:
     name: kubecost
     ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
     labels: {}
+    ## @param serviceMonitors.kubecost.endpoints [array] Endpoints for kubecost
+    endpoints:
+      - port: tcp-model
+        interval: 1m
+        scrapeTimeout: 60s
+        path: /metrics
+        honorLabels: true
     ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
-    ## @param serviceMonitors.kubecost.extraEndpoints [array] Extra endpoints for kubecost
-    extraEndpoints: []
+    ## @param serviceMonitors.kubecost.namespaceSelector [object] Namespace selector for kubecost
+    namespaceSelector:
+      matchNames:
+        - kubecost
   # @param serviceMonitors.prometheus Service monitor for prometheus
   prometheus:
     ## @param serviceMonitors.prometheus.enabled Enable service monitor for prometheus
@@ -165,11 +207,18 @@ serviceMonitors:
     name: prometheus
     ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
     labels: {}
+    ## @param serviceMonitors.prometheus.endpoints [array] Endpoints for prometheus
+    endpoints:
+      - port: http-web
+        interval: 30s
+        path: /metrics
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       operated-prometheus: "true"
-    ## @param serviceMonitors.prometheus.extraEndpoints [array] Extra endpoints for prometheus
-    extraEndpoints: []
+    ## @param serviceMonitors.prometheus.namespaceSelector [object] Namespace selector for prometheus
+    namespaceSelector:
+      matchNames:
+        - prometheus
   # @param serviceMonitors.loki Service monitor for loki
   loki:
     ## @param serviceMonitors.loki.enabled Enable service monitor for loki
@@ -178,11 +227,19 @@ serviceMonitors:
     name: loki
     ## @param serviceMonitors.loki.labels [object] Labels for loki
     labels: {}
+    ## @param serviceMonitors.loki.endpoints [array] Endpoints for loki
+    endpoints:
+      - port: http-metrics
+        interval: 30s
+        path: /metrics
+        honorLabels: true
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
-    ## @param serviceMonitors.loki.extraEndpoints [array] Extra endpoints for loki
-    extraEndpoints: []
+    ## @param serviceMonitors.loki.namespaceSelector [object] Namespace selector for loki
+    namespaceSelector:
+      matchNames:
+        - loki
     # @param serviceMonitors.loki.promtail Service monitor for promtail
     promtail:
       ## @param serviceMonitors.loki.promtail.enabled Enable service monitor for promtail
@@ -191,10 +248,18 @@ serviceMonitors:
       name: loki-promtail
       ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
       labels: {}
+      ## @param serviceMonitors.loki.promtail.endpoints [array] Endpoints for promtail
+      endpoints:
+        - port: http-metrics
+          interval: 30s
+          path: /metrics
+          honorLabels: true
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail
-      ## @param serviceMonitors.loki.promtail.extraEndpoints [array] Extra endpoints for promtail
-      extraEndpoints: []
+      ## @param serviceMonitors.loki.promtail.namespaceSelector [object] Namespace selector for promtail
+      namespaceSelector:
+        matchNames:
+          - loki
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []

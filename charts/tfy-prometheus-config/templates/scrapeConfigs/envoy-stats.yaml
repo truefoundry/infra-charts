@@ -3,9 +3,9 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: {{ .Values.scrapeConfigs.envoy.name }}
-  {{ if .Values.scrapeConfigs.envoy.labels }}
+  {{- if .Values.scrapeConfigs.envoy.labels }}
   labels:
-    {{- toYaml .Values.scrapeConfigs.envoy.labels | nindent 2 }}
+    {{- toYaml .Values.scrapeConfigs.envoy.labels | nindent 4 }}
   {{- end }}
 spec:
   metricsPath: {{ .Values.scrapeConfigs.envoy.metricsPath }}

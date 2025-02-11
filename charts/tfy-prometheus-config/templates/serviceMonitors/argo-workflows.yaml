@@ -10,14 +10,7 @@ spec:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
-    matchNames:
-    - argo-workflows
+    {{- toYaml .Values.serviceMonitors.workflows.namespaceSelector | nindent 2 }}
   endpoints:
-  - port: metrics
-    scheme: http
-    interval: 30s
-    path: /metrics
-  {{- if .Values.serviceMonitors.workflows.extraEndpoints }}
-  {{- toYaml .Values.serviceMonitors.workflows.extraEndpoints | nindent 2 }}
-  {{- end }}
-{{ end }}
+  {{- toYaml .Values.serviceMonitors.workflows.endpoints | nindent 2 }}
+{{- end -}}

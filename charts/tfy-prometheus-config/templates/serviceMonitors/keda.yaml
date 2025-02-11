@@ -1,4 +1,4 @@
-{{ if .Values.serviceMonitors.keda.enabled }}
+{{- if .Values.serviceMonitors.keda.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -10,23 +10,7 @@ spec:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.keda.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
-    matchNames:
-    - keda
+    {{- toYaml .Values.serviceMonitors.keda.namespaceSelector | nindent 2 }}
   endpoints:
-  - port: metrics
-    interval: 10s
-    scrapeTimeout: 10s
-    scheme: http
-    path: /metrics
-    honorLabels: true
-    metricRelabelings:
-    - sourceLabels: [ __name__ ]
-      regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
-      action: drop
-    - sourceLabels: [ __name__ ]
-      regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
-      action: drop
-  {{- if .Values.serviceMonitors.keda.extraEndpoints }}
-  {{- toYaml .Values.serviceMonitors.keda.extraEndpoints | nindent 2 }}
-  {{- end }}
-{{ end }}
+  {{- toYaml .Values.serviceMonitors.keda.endpoints | nindent 2 }}
+{{- end -}}
