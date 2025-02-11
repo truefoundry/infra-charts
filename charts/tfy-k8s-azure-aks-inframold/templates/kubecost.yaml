@@ -22,6 +22,15 @@ spec:
         {{- if .Values.kubecost.valuesOverride }}
         {{ .Values.kubecost.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.kubecost.tolerations }}
+        {{- $mergedTolerations = .Values.kubecost.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.kubecost.affinity }}
+        {{- $mergedAffinity = .Values.kubecost.affinity }}
+        {{- end }}
         global:
           grafana:
             enabled: false
@@ -40,12 +49,10 @@ spec:
         forecasting:
           enabled: false
         server:
-          {{- $mergedTolerations := concat .Values.tolerations .Values.kubecost.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.kubecost.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

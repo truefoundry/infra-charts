@@ -22,6 +22,15 @@ spec:
         {{- if .Values.argoRollouts.valuesOverride }}
         {{ .Values.argoRollouts.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.argoRollouts.tolerations }}
+        {{- $mergedTolerations = .Values.argoRollouts.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.argoRollouts.affinity }}
+        {{- $mergedAffinity = .Values.argoRollouts.affinity }}
+        {{- end }}
         controller:
           resources:
             requests:
@@ -32,12 +41,10 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- $mergedTolerations := concat .Values.tolerations .Values.argoRollouts.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.argoRollouts.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

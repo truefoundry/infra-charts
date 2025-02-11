@@ -22,12 +22,19 @@ spec:
         {{- if .Values.jspolicy.valuesOverride }}
         {{ .Values.jspolicy.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
-        {{- $mergedTolerations := concat .Values.tolerations .Values.jspolicy.tolerations }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.jspolicy.tolerations }}
+        {{- $mergedTolerations = .Values.jspolicy.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.jspolicy.affinity }}
+        {{- $mergedAffinity = .Values.jspolicy.affinity }}
+        {{- end }}
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 10 }}
         {{- end }}
-        {{- $mergedAffinity := dict | merge .Values.jspolicy.affinity .Values.affinity }}
         {{- if $mergedAffinity }}
         affinity:
           {{- toYaml $mergedAffinity | nindent 10 }}

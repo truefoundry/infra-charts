@@ -18,30 +18,37 @@ spec:
     chart: tfy-inferentia-operator
     targetRevision: 0.2.1
     helm:
-      {{- if .Values.aws.inferentia.valuesOverride }}
       values: |-
-      {{ .Values.aws.inferentia.valuesOverride | toYaml | nindent 8 }}
-      {{- else }}
-      {{- $mergedTolerations := concat .Values.tolerations .Values.aws.inferentia.tolerations }}
-      {{- if $mergedTolerations }}
-      scheduler:
-        tolerations:
-        {{- toYaml $mergedTolerations | nindent 14 }}
-      {{- end }}
-      {{- $mergedAffinity := dict | merge .Values.aws.inferentia.affinity .Values.affinity }}
-      {{- if $mergedAffinity }}
-        affinity:
-        {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- if .Values.aws.inferentia.valuesOverride }}
+        {{ .Values.aws.inferentia.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.aws.karpenter.tolerations }}
+        {{- $mergedTolerations = .Values.aws.karpenter.tolerations }}
         {{- end }}
-        extension:
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.aws.karpenter.affinity }}
+        {{- $mergedAffinity = .Values.aws.karpenter.affinity }}
+        {{- end }}
         {{- if $mergedTolerations }}
-        tolerations:
-        {{- toYaml $mergedTolerations | nindent 14 }}
+        scheduler:
+          tolerations:
+          {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
         {{- if $mergedAffinity }}
-        affinity:
-        {{- toYaml $mergedAffinity | nindent 14 }}
-        {{- end }}
+          affinity:
+          {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
+          extension:
+          {{- if $mergedTolerations }}
+          tolerations:
+          {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+          {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
       {{- end }}
   syncPolicy:
     automated: {}

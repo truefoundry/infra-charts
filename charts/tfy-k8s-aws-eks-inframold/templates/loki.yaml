@@ -21,6 +21,15 @@ spec:
         {{- if .Values.loki.valuesOverride }}
         {{ .Values.loki.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.loki.tolerations }}
+        {{- $mergedTolerations = .Values.loki.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.loki.affinity }}
+        {{- $mergedAffinity = .Values.loki.affinity }}
+        {{- end }}
         loki:
           enabled: true
           monitoring:
@@ -48,12 +57,10 @@ spec:
                 cpu: 400m
                 memory: 512Mi
                 ephemeral-storage: 512Mi
-            {{- $mergedTolerations := concat .Values.tolerations .Values.loki.tolerations }}
             {{- if $mergedTolerations }}
             tolerations:
               {{- toYaml $mergedTolerations | nindent 12 }}
             {{- end }}
-            {{- $mergedAffinity := dict | merge .Values.loki.affinity .Values.affinity }}
             {{- if $mergedAffinity }}
             affinity: |-
               {{- toYaml $mergedAffinity | nindent 14 }}

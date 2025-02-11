@@ -21,6 +21,15 @@ spec:
         {{- if .Values.metricsServer.valuesOverride }}
         {{ .Values.metricsServer.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.metricsServer.tolerations }}
+        {{- $mergedTolerations = .Values.metricsServer.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.metricsServer.affinity }}
+        {{- $mergedAffinity = .Values.metricsServer.affinity }}
+        {{- end }}
         podAnnotations:
           "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
         replicas: 2
@@ -37,12 +46,10 @@ spec:
         containerPort: 4443
         args:
           - '--kubelet-insecure-tls'
-        {{- $mergedTolerations := concat .Values.tolerations .Values.metricsServer.tolerations }}
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- $mergedAffinity := dict | merge .Values.metricsServer.affinity .Values.affinity }}
         {{- if $mergedAffinity }}
         affinity:
           {{- toYaml $mergedAffinity | nindent 14 }}

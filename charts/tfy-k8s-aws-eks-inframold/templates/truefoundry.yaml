@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.31.0
+    targetRevision: 0.31.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -22,6 +22,16 @@ spec:
         {{- if .Values.truefoundry.valuesOverride }}
         {{ .Values.truefoundry.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.truefoundry.tolerations }}
+        {{- $mergedTolerations = .Values.truefoundry.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.truefoundry.affinity }}
+        {{- $mergedAffinity = .Values.truefoundry.affinity }}
+        {{- end }}
         global:
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
@@ -32,12 +42,10 @@ spec:
             name: {{ .Values.truefoundry.database.name }}
             username: {{ .Values.truefoundry.database.username }}
             password: {{ .Values.truefoundry.database.password }}
-          {{- $mergedTolerations := concat .Values.tolerations .Values.truefoundry.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.truefoundry.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}

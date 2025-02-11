@@ -22,6 +22,15 @@ spec:
         {{- if .Values.keda.valuesOverride }}
         {{ .Values.keda.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.keda.tolerations }}
+        {{- $mergedTolerations = .Values.keda.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.keda.affinity }}
+        {{- $mergedAffinity = .Values.keda.affinity }}
+        {{- end }}
         resources:
           operator:
             requests:
@@ -53,12 +62,10 @@ spec:
         prometheus:
           operator:
             enabled: true
-        {{- $mergedTolerations := concat .Values.tolerations .Values.keda.tolerations }}
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- $mergedAffinity := dict | merge .Values.keda.affinity .Values.affinity }}
         {{- if $mergedAffinity }}
         affinity:
           {{- toYaml $mergedAffinity | nindent 14 }}
