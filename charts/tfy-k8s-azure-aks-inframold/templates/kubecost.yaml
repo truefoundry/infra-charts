@@ -39,13 +39,25 @@ spec:
             prometheusScrape: false
         forecasting:
           enabled: false
-        {{- with .Values.tolerations }}
+        server:
+          {{- $mergedTolerations := concat .Values.tolerations .Values.kubecost.tolerations }}
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- $mergedAffinity := dict | merge .Values.kubecost.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
+
+        {{- if $mergedTolerations }}
         tolerations:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- with .Values.affinity }}
+        {{- if $mergedAffinity }}
         affinity:
-          {{ toYaml . | nindent 10 }}
+          {{- toYaml $mergedAffinity | nindent 14 }}
         {{- end }}
       {{- end }}
   syncPolicy:
