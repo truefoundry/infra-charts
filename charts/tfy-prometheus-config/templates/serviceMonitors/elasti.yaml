@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.elasti.name }}
+  {{ if .Values.serviceMonitors.elasti.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.elasti.labels | nindent 2 }}
+  {{- end }}
 spec:
   jobLabel: elasti-resolver
   selector:

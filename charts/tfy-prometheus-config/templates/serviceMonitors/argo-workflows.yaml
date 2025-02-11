@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.workflows.name }}
+  {{ if .Values.serviceMonitors.workflows.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.workflows.labels | nindent 2 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:

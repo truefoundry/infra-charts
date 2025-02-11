@@ -8,6 +8,9 @@ scrapeConfigs:
     enabled: true
     ## @param scrapeConfigs.envoy.name Name of the scrape config
     name: envoy-stats
+    ## @param scrapeConfigs.envoy.labels [object] Labels for envoy
+    labels:
+      release: prometheus
     ## @param scrapeConfigs.envoy.metricsPath Metrics path for envoy
     metricsPath: /stats/prometheus
     ## @param scrapeConfigs.envoy.relabelings [array] Relabelings for envoy
@@ -41,6 +44,9 @@ scrapeConfigs:
     enabled: true
     ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
+    ## @param scrapeConfigs.kubernetesPods.labels [object] Labels for kubernetes pods
+    labels:
+      release: prometheus
     ## @param scrapeConfigs.kubernetesPods.relabelings [array] Relabelings for kubernetes pods
     relabelings:
       - action: drop
@@ -109,6 +115,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.workflows.name Name of the service monitor
     name: argo-workflows
+    ## @param serviceMonitors.workflows.labels [object] Labels for workflows
+    labels:
+      release: prometheus
     ## @param serviceMonitors.workflows.serviceSelectorLabels [object] Service selector labels for workflows
     serviceSelectorLabels:
       app.kubernetes.io/instance: argo-workflows
@@ -120,6 +129,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.keda.name Name of the service monitor
     name: keda
+    ## @param serviceMonitors.keda.labels [object] Labels for keda
+    labels:
+      release: prometheus
     ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
     serviceSelectorLabels:
       app.kubernetes.io/name: keda-operator
@@ -131,6 +143,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.elasti.name Name of the service monitor
     name: elasti-resolver
+    ## @param serviceMonitors.elasti.labels [object] Labels for elasti
+    labels:
+      release: prometheus
     ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
@@ -142,6 +157,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.kubecost.name Name of the service monitor
     name: kubecost
+    ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
+    labels:
+      release: prometheus
     ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
@@ -153,6 +171,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.prometheus.name Name of the service monitor
     name: prometheus
+    ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
+    labels:
+      release: prometheus
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       operated-prometheus: "true"
@@ -164,6 +185,9 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.loki.name Name of the service monitor
     name: loki
+    ## @param serviceMonitors.loki.labels [object] Labels for loki
+    labels:
+      release: prometheus
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
@@ -175,6 +199,9 @@ serviceMonitors:
       enabled: true
       ## @param serviceMonitors.loki.promtail.name Name of the service monitor
       name: loki-promtail
+      ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
+      labels:
+        release: prometheus
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail

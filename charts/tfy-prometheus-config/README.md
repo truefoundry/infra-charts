@@ -13,12 +13,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | ------------------------------------------------------- | ----------------------------------------------- | ------------------- |
 | `scrapeConfigs.envoy.enabled`                           | Enable scrape config for envoy                  | `true`              |
 | `scrapeConfigs.envoy.name`                              | Name of the scrape config                       | `envoy-stats`       |
+| `scrapeConfigs.envoy.labels`                            | Labels for envoy                                | `{}`                |
 | `scrapeConfigs.envoy.metricsPath`                       | Metrics path for envoy                          | `/stats/prometheus` |
 | `scrapeConfigs.envoy.relabelings`                       | Relabelings for envoy                           | `[]`                |
 | `scrapeConfigs.envoy.metricsRelabelings`                | Metrics relabelings for envoy                   | `[]`                |
 | `scrapeConfigs.envoy.extraKubernetesSDConfigs`          | Extra kubernetes SD configs for envoy           | `[]`                |
 | `scrapeConfigs.kubernetesPods.enabled`                  | Enable scrape config for kubernetes pods        | `true`              |
 | `scrapeConfigs.kubernetesPods.name`                     | Name of the scrape config                       | `kubernetes-pods`   |
+| `scrapeConfigs.kubernetesPods.labels`                   | Labels for kubernetes pods                      | `{}`                |
 | `scrapeConfigs.kubernetesPods.relabelings`              | Relabelings for kubernetes pods                 | `[]`                |
 | `scrapeConfigs.kubernetesPods.metricsRelabelings`       | Metrics relabelings for kubernetes pods         | `[]`                |
 | `scrapeConfigs.kubernetesPods.extraKubernetesSDConfigs` | Extra kubernetes SD configs for kubernetes pods | `[]`                |
@@ -45,30 +47,37 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.enabled`                             | Enable service monitors for prometheus | `true`            |
 | `serviceMonitors.workflows.enabled`                   | Enable service monitor for workflows   | `true`            |
 | `serviceMonitors.workflows.name`                      | Name of the service monitor            | `argo-workflows`  |
+| `serviceMonitors.workflows.labels`                    | Labels for workflows                   | `{}`              |
 | `serviceMonitors.workflows.serviceSelectorLabels`     | Service selector labels for workflows  | `{}`              |
 | `serviceMonitors.workflows.extraEndpoints`            | Extra endpoints for workflows          | `[]`              |
 | `serviceMonitors.keda.enabled`                        | Enable service monitor for keda        | `true`            |
 | `serviceMonitors.keda.name`                           | Name of the service monitor            | `keda`            |
+| `serviceMonitors.keda.labels`                         | Labels for keda                        | `{}`              |
 | `serviceMonitors.keda.serviceSelectorLabels`          | Service selector labels for keda       | `{}`              |
 | `serviceMonitors.keda.extraEndpoints`                 | Extra endpoints for keda               | `[]`              |
 | `serviceMonitors.elasti.enabled`                      | Enable service monitor for elasti      | `true`            |
 | `serviceMonitors.elasti.name`                         | Name of the service monitor            | `elasti-resolver` |
+| `serviceMonitors.elasti.labels`                       | Labels for elasti                      | `{}`              |
 | `serviceMonitors.elasti.serviceSelectorLabels`        | Service selector labels for elasti     | `{}`              |
 | `serviceMonitors.elasti.extraEndpoints`               | Extra endpoints for elasti             | `[]`              |
 | `serviceMonitors.kubecost.enabled`                    | Enable service monitor for kubecost    | `true`            |
 | `serviceMonitors.kubecost.name`                       | Name of the service monitor            | `kubecost`        |
+| `serviceMonitors.kubecost.labels`                     | Labels for kubecost                    | `{}`              |
 | `serviceMonitors.kubecost.serviceSelectorLabels`      | Service selector labels for kubecost   | `{}`              |
 | `serviceMonitors.kubecost.extraEndpoints`             | Extra endpoints for kubecost           | `[]`              |
 | `serviceMonitors.prometheus.enabled`                  | Enable service monitor for prometheus  | `true`            |
 | `serviceMonitors.prometheus.name`                     | Name of the service monitor            | `prometheus`      |
+| `serviceMonitors.prometheus.labels`                   | Labels for prometheus                  | `{}`              |
 | `serviceMonitors.prometheus.serviceSelectorLabels`    | Service selector labels for prometheus | `{}`              |
 | `serviceMonitors.prometheus.extraEndpoints`           | Extra endpoints for prometheus         | `[]`              |
 | `serviceMonitors.loki.enabled`                        | Enable service monitor for loki        | `true`            |
 | `serviceMonitors.loki.name`                           | Name of the service monitor            | `loki`            |
+| `serviceMonitors.loki.labels`                         | Labels for loki                        | `{}`              |
 | `serviceMonitors.loki.serviceSelectorLabels`          | Service selector labels for loki       | `{}`              |
 | `serviceMonitors.loki.extraEndpoints`                 | Extra endpoints for loki               | `[]`              |
 | `serviceMonitors.loki.promtail.enabled`               | Enable service monitor for promtail    | `true`            |
 | `serviceMonitors.loki.promtail.name`                  | Name of the service monitor            | `loki-promtail`   |
+| `serviceMonitors.loki.promtail.labels`                | Labels for promtail                    | `{}`              |
 | `serviceMonitors.loki.promtail.serviceSelectorLabels` | Service selector labels for promtail   | `{}`              |
 | `serviceMonitors.loki.promtail.extraEndpoints`        | Extra endpoints for promtail           | `[]`              |
 | `extraObjects`                                        | Extra objects for prometheus           | `[]`              |

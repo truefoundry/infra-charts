@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.kubecost.name }}
+  {{ if .Values.serviceMonitors.kubecost.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.kubecost.labels | nindent 2 }}
+  {{- end }}
 spec:
   jobLabel: kubecost
   selector:

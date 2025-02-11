@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: {{ .Values.scrapeConfigs.envoy.name }}
+  {{ if .Values.scrapeConfigs.envoy.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.scrapeConfigs.envoy.labels | nindent 2 }}
+  {{- end }}
 spec:
   metricsPath: {{ .Values.scrapeConfigs.envoy.metricsPath }}
   kubernetesSDConfigs:

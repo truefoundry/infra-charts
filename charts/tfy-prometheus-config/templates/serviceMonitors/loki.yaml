@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.loki.name }}
+  {{ if .Values.serviceMonitors.loki.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.loki.labels | nindent 2 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:
@@ -27,8 +29,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.loki.promtail.name }}
+  {{ if .Values.serviceMonitors.loki.promtail.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.loki.promtail.labels | nindent 2 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:

@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.keda.name }}
+  {{ if .Values.serviceMonitors.keda.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.serviceMonitors.keda.labels | nindent 2 }}
+  {{- end }}
 spec:
   selector:
     matchLabels:

@@ -3,8 +3,10 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: {{ .Values.scrapeConfigs.kubernetesPods.name }}
+  {{ if .Values.scrapeConfigs.kubernetesPods.labels }}
   labels:
-    release: prometheus
+    {{- toYaml .Values.scrapeConfigs.kubernetesPods.labels | nindent 2 }}
+  {{- end }}
 spec:
   kubernetesSDConfigs:
   - role: pod
