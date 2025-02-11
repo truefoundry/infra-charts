@@ -31,24 +31,24 @@ spec:
         {{- if .Values.aws.karpenter.affinity }}
         {{- $mergedAffinity = .Values.aws.karpenter.affinity }}
         {{- end }}
-        {{- if $mergedTolerations }}
         scheduler:
-          tolerations:
-          {{- toYaml $mergedTolerations | nindent 14 }}
-        {{- end }}
-        {{- if $mergedAffinity }}
-          affinity:
-          {{- toYaml $mergedAffinity | nindent 14 }}
-          {{- end }}
-          extension:
           {{- if $mergedTolerations }}
           tolerations:
-          {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
           {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
+          extension:
+            {{- if $mergedTolerations }}
+            tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- end }}
       {{- end }}
   syncPolicy:
     automated: {}
