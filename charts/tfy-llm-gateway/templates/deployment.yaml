@@ -9,6 +9,11 @@ spec:
   selector:
     matchLabels:
       {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.rollout.maxSurge | default "100%" | quote }}
+      maxUnavailable: {{ .Values.rollout.maxUnavailable | default 0 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
