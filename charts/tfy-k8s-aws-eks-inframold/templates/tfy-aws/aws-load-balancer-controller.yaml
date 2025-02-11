@@ -21,16 +21,23 @@ spec:
         {{- if .Values.aws.awsLoadBalancerController.valuesOverride }}
         {{ .Values.aws.awsLoadBalancerController.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.aws.awsLoadBalancerController.tolerations }}
+        {{- $mergedTolerations = .Values.aws.awsLoadBalancerController.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.aws.awsLoadBalancerController.affinity }}
+        {{- $mergedAffinity = .Values.aws.awsLoadBalancerController.affinity }}
+        {{- end }}
         clusterName: {{ .Values.clusterName | quote }}
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}
-        {{- $mergedTolerations := concat .Values.tolerations .Values.aws.awsLoadBalancerController.tolerations }}
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- $mergedAffinity := dict | merge .Values.aws.awsLoadBalancerController.affinity .Values.affinity }}
         {{- if $mergedAffinity }}
         affinity:
           {{- toYaml $mergedAffinity | nindent 14 }}

@@ -24,17 +24,24 @@ spec:
         {{- if .Values.istio.gateway.valuesOverride }}
         {{ .Values.istio.gateway.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.istio.gateway.tolerations }}
+        {{- $mergedTolerations = .Values.istio.gateway.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.istio.gateway.affinity }}
+        {{- $mergedAffinity = .Values.istio.gateway.affinity }}
+        {{- end }}
         gateway:
           {{- with .Values.istio.gateway.annotations }}
           annotations:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- $mergedTolerations := concat .Values.tolerations .Values.istio.gateway.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.istio.gateway.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}

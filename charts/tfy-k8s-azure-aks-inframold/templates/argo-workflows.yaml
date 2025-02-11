@@ -22,6 +22,15 @@ spec:
         {{- if .Values.argoWorkflows.valuesOverride }}
         {{ .Values.argoWorkflows.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.argoWorkflows.tolerations }}
+        {{- $mergedTolerations = .Values.argoWorkflows.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.argoWorkflows.affinity }}
+        {{- $mergedAffinity = .Values.argoWorkflows.affinity }}
+        {{- end }}
         controller:
           workflowDefaults:
             spec:
@@ -39,12 +48,10 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
-          {{- $mergedTolerations := concat .Values.tolerations .Values.argoWorkflows.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.argoWorkflows.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

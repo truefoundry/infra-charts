@@ -24,6 +24,15 @@ spec:
         {{- if .Values.aws.awsEbsCsiDriver.valuesOverride }}
         {{ .Values.aws.awsEbsCsiDriver.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.aws.awsEbsCsiDriver.tolerations }}
+        {{- $mergedTolerations = .Values.aws.awsEbsCsiDriver.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.aws.awsEbsCsiDriver.affinity }}
+        {{- $mergedAffinity = .Values.aws.awsEbsCsiDriver.affinity }}
+        {{- end }}
         node:
           tolerateAllTaints: true
         controller:
@@ -35,12 +44,10 @@ spec:
             cluster-name: {{ .Values.clusterName }}
             volume-type: csi-ebs
             truefoundry.com/managed: "true"
-          {{- $mergedTolerations := concat .Values.tolerations .Values.aws.awsEbsCsiDriver.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.aws.awsEbsCsiDriver.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

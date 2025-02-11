@@ -22,6 +22,15 @@ spec:
         {{- if .Values.grafana.valuesOverride }}
         {{ .Values.grafana.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.grafana.tolerations }}
+        {{- $mergedTolerations = .Values.grafana.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.grafana.affinity }}
+        {{- $mergedAffinity = .Values.grafana.affinity }}
+        {{- end }}
         # Host for the grafana dashboard
         host: <to_be_provided>
         grafana:
@@ -29,12 +38,10 @@ spec:
           adminUser: <to_be_provided>
           # Password for grafana dashboard
           adminPassword: <to_be_provided>
-          {{- $mergedTolerations := concat .Values.tolerations .Values.grafana.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.grafana.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

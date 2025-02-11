@@ -22,6 +22,16 @@ spec:
         {{- if .Values.tfyAgent.valuesOverride }}
         {{ .Values.tfyAgent.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.tfyAgent.tolerations }}
+        {{- $mergedTolerations = .Values.tfyAgent.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.tfyAgent.affinity }}
+        {{- $mergedAffinity = .Values.tfyAgent.affinity }}
+        {{- end }}
         config:
           clusterToken: {{ .Values.tfyAgent.clusterToken }}
           tenantName: {{ .Values.tenantName }}
@@ -37,12 +47,10 @@ spec:
               cpu: 300m
               memory: 512Mi
               ephemeral-storage: 128Mi
-          {{- $mergedTolerations := concat .Values.tolerations .Values.tfyAgent.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.tfyAgent.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}
@@ -66,15 +74,6 @@ spec:
             {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         sdsServer:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- end }}
-        sdsServer:
           resources:
             limits:
               cpu: 200m
@@ -84,13 +83,13 @@ spec:
               cpu: 100m
               ephemeral-storage: 10M
               memory: 30M
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         {{- end }}
   syncPolicy:

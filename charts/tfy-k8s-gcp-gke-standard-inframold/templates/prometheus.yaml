@@ -28,6 +28,15 @@ spec:
         {{- if .Values.prometheus.valuesOverride }}
         {{ .Values.prometheus.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.prometheus.tolerations }}
+        {{- $mergedTolerations = .Values.prometheus.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.prometheus.affinity }}
+        {{- $mergedAffinity = .Values.prometheus.affinity }}
+        {{- end }}
         defaultRules:
           enabled: false
         coreDns:
@@ -115,12 +124,10 @@ spec:
                     - ReadWriteOnce
             retentionSize: 18GB
             enableAdminAPI: true
-            {{- $mergedTolerations := concat .Values.tolerations .Values.prometheus.tolerations }}
             {{- if $mergedTolerations }}
             tolerations:
               {{- toYaml $mergedTolerations | nindent 14 }}
             {{- end }}
-            {{- $mergedAffinity := dict | merge .Values.prometheus.affinity .Values.affinity }}
             {{- if $mergedAffinity }}
             affinity:
               {{- toYaml $mergedAffinity | nindent 14 }}
@@ -312,13 +319,13 @@ spec:
               cpu: 10m
               memory: 64Mi
               ephemeral-storage: 256Mi
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
           prometheus:
             monitor:
@@ -357,13 +364,13 @@ spec:
               cpu: 100m
               memory: 100Mi
               ephemeral-storage: 256Mi
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
           admissionWebhooks:
             patch:
