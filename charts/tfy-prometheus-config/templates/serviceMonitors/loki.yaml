@@ -2,8 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: loki
-  namespace: prometheus
+  name: {{ .Values.serviceMonitors.loki.name }}
   labels:
     release: prometheus
 spec:
@@ -27,8 +26,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: loki-promtail
-  namespace: prometheus
+  name: {{ .Values.serviceMonitors.loki.promtail.name }}
   labels:
     release: prometheus
 spec:
