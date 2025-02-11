@@ -3,15 +3,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.kubecost.name }}
-  {{ if .Values.serviceMonitors.kubecost.labels }}
   labels:
-    {{- toYaml .Values.serviceMonitors.kubecost.labels | nindent 2 }}
-  {{- end }}
+    {{- include "kubecost.labels" . | nindent 4 }}
 spec:
-  jobLabel: kubecost
   selector:
     matchLabels:
-      {{ toYaml .Values.serviceMonitors.kubecost.serviceSelectorLabels | nindent 4 }}
+      {{- toYaml .Values.serviceMonitors.kubecost.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
     - kubecost

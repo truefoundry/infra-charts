@@ -3,15 +3,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.prometheus.name }}
-  {{ if .Values.serviceMonitors.prometheus.labels }}
   labels:
-    {{- toYaml .Values.serviceMonitors.prometheus.labels | nindent 2 }}
-  {{- end }}
+    {{- include "prometheus.labels" . | nindent 4 }}
 spec:
-  jobLabel: prometheus
   selector:
     matchLabels:
-      {{ toYaml .Values.serviceMonitors.prometheus.serviceSelectorLabels | nindent 4 }}
+      {{- toYaml .Values.serviceMonitors.prometheus.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
     - prometheus

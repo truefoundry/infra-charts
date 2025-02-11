@@ -36,8 +36,6 @@ scrapeConfigs:
       - sourceLabels: [__name__]
         action: drop
         regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
-    ## @param scrapeConfigs.envoy.extraKubernetesSDConfigs Extra kubernetes SD configs for envoy
-    extraKubernetesSDConfigs: []
   # @param scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
   kubernetesPods:
     ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
@@ -85,8 +83,6 @@ scrapeConfigs:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
     metricsRelabelings: []
-    ## @param scrapeConfigs.kubernetesPods.extraKubernetesSDConfigs Extra kubernetes SD configs for kubernetes pods
-    extraKubernetesSDConfigs: []
   ## @param scrapeConfigs.additionalScrapeConfigs Additional scrape configs for prometheus
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
@@ -116,8 +112,7 @@ serviceMonitors:
     ## @param serviceMonitors.workflows.name Name of the service monitor
     name: argo-workflows
     ## @param serviceMonitors.workflows.labels [object] Labels for workflows
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.workflows.serviceSelectorLabels [object] Service selector labels for workflows
     serviceSelectorLabels:
       app.kubernetes.io/instance: argo-workflows
@@ -130,8 +125,7 @@ serviceMonitors:
     ## @param serviceMonitors.keda.name Name of the service monitor
     name: keda
     ## @param serviceMonitors.keda.labels [object] Labels for keda
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
     serviceSelectorLabels:
       app.kubernetes.io/name: keda-operator
@@ -144,8 +138,7 @@ serviceMonitors:
     ## @param serviceMonitors.elasti.name Name of the service monitor
     name: elasti-resolver
     ## @param serviceMonitors.elasti.labels [object] Labels for elasti
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
@@ -158,8 +151,7 @@ serviceMonitors:
     ## @param serviceMonitors.kubecost.name Name of the service monitor
     name: kubecost
     ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
@@ -172,8 +164,7 @@ serviceMonitors:
     ## @param serviceMonitors.prometheus.name Name of the service monitor
     name: prometheus
     ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       operated-prometheus: "true"
@@ -186,8 +177,7 @@ serviceMonitors:
     ## @param serviceMonitors.loki.name Name of the service monitor
     name: loki
     ## @param serviceMonitors.loki.labels [object] Labels for loki
-    labels:
-      release: prometheus
+    labels: {}
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
@@ -200,8 +190,7 @@ serviceMonitors:
       ## @param serviceMonitors.loki.promtail.name Name of the service monitor
       name: loki-promtail
       ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
-      labels:
-        release: prometheus
+      labels: {}
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail

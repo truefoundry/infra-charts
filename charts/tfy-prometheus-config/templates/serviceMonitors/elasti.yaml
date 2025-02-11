@@ -3,15 +3,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.elasti.name }}
-  {{ if .Values.serviceMonitors.elasti.labels }}
   labels:
-    {{- toYaml .Values.serviceMonitors.elasti.labels | nindent 2 }}
-  {{- end }}
+    {{- include "elasti.labels" . | nindent 4 }}
 spec:
-  jobLabel: elasti-resolver
   selector:
     matchLabels:
-      {{ toYaml .Values.serviceMonitors.elasti.serviceSelectorLabels | nindent 4 }}
+      {{- toYaml .Values.serviceMonitors.elasti.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
     - elasti

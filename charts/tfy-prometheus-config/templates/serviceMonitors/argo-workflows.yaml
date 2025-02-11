@@ -3,14 +3,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.workflows.name }}
-  {{ if .Values.serviceMonitors.workflows.labels }}
   labels:
-    {{- toYaml .Values.serviceMonitors.workflows.labels | nindent 2 }}
-  {{- end }}
+    {{- include "argo-workflows.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{ toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 4 }}
+      {{- toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
     - argo-workflows

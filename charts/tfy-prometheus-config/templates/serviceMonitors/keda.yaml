@@ -3,14 +3,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.keda.name }}
-  {{ if .Values.serviceMonitors.keda.labels }}
   labels:
-    {{- toYaml .Values.serviceMonitors.keda.labels | nindent 2 }}
-  {{- end }}
+    {{- include "keda.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
-      {{ toYaml .Values.serviceMonitors.keda.serviceSelectorLabels | nindent 4 }}
+      {{- toYaml .Values.serviceMonitors.keda.serviceSelectorLabels | nindent 6 }}
   namespaceSelector:
     matchNames:
     - keda
