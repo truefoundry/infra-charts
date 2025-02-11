@@ -156,6 +156,16 @@ autoscaling:
   maxReplicas: 100
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
   targetCPUUtilizationPercentage: 60
+
+## Rollout configuration
+rollout:
+  ## @param rollout.enabled Enable rollout (rolling update)
+  enabled: true
+  ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
+  maxUnavailable: 0
+  ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
+  maxSurge: 100%
+
 ## @skip env Environment variables for the llmGateway
 env:
   CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
