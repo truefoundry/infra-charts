@@ -24,6 +24,15 @@ spec:
         {{- if .Values.istio.discovery.valuesOverride }}
         {{ .Values.istio.discovery.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.istio.tolerations }}
+        {{- $mergedTolerations = .Values.istio.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.istio.affinity }}
+        {{- $mergedAffinity = .Values.istio.affinity }}
+        {{- end }}
         pilot:          
           autoscaleEnabled: true
           autoscaleMin: 2
@@ -37,12 +46,10 @@ spec:
               cpu: 400m
               memory: 1024Mi
               ephemeral-storage: 1024Mi
-          {{- $mergedTolerations := concat .Values.tolerations .Values.istio.discovery.tolerations }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.istio.discovery.affinity .Values.affinity }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 14 }}

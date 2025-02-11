@@ -23,6 +23,15 @@ spec:
         {{- if .Values.aws.karpenter.valuesOverride }}
         {{ .Values.aws.karpenter.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.aws.karpenter.tolerations }}
+        {{- $mergedTolerations = .Values.aws.karpenter.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.aws.karpenter.affinity }}
+        {{- $mergedAffinity = .Values.aws.karpenter.affinity }}
+        {{- end }}
         karpenter:
           serviceAccount:
             annotations:
@@ -35,12 +44,10 @@ spec:
             defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
             interruptionQueue: {{ .Values.aws.karpenter.interruptionQueue }}
           controller:
-            {{- $mergedTolerations := concat .Values.tolerations .Values.aws.karpenter.tolerations }}
             {{- if $mergedTolerations }}
             tolerations:
               {{- toYaml $mergedTolerations | nindent 14 }}
             {{- end }}
-            {{- $mergedAffinity := dict | merge .Values.aws.karpenter.affinity .Values.affinity }}
             {{- if $mergedAffinity }}
             affinity:
               {{- toYaml $mergedAffinity | nindent 14 }}

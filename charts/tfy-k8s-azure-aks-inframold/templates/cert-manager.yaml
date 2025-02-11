@@ -22,13 +22,20 @@ spec:
         {{- if .Values.certManager.valuesOverride }}
         {{ .Values.certManager.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.certManager.tolerations }}
+        {{- $mergedTolerations = .Values.certManager.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.certManager.affinity }}
+        {{- $mergedAffinity = .Values.certManager.affinity }}
+        {{- end }}
         installCRDs: true
-        {{- $mergedTolerations := concat .Values.tolerations .Values.certManager.tolerations }}
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}
         {{- end }}
-        {{- $mergedAffinity := dict | merge .Values.certManager.affinity .Values.affinity }}
         {{- if $mergedAffinity }}
         affinity:
           {{- toYaml $mergedAffinity | nindent 14 }}
