@@ -213,9 +213,13 @@ karpenter:
     ## @param karpenter.controlPlaneNodePool.weight Weight for the control plane node pool
     weight: 10
     ## @param karpenter.controlPlaneNodePool.labels [object] Labels for the control plane node pool
-    labels: {}
+    labels:
+      class.truefoundry.com/component: "control-plane"
     ## @param karpenter.controlPlaneNodePool.taints [array] Taints for the control plane node pool
-    taints: []
+    taints:
+    - key: "class.truefoundry.com/component"
+      value: "control-plane"
+      effect: "NoSchedule"
     ## @param karpenter.controlPlaneNodePool.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
@@ -224,7 +228,6 @@ karpenter:
       consolidationPolicy: WhenEmptyOrUnderutilized
     ## @param karpenter.controlPlaneNodePool.capacityTypes [array] Capacity types for the control plane node pool
     capacityTypes:
-    - spot
     - on-demand
     ## @param karpenter.controlPlaneNodePool.zones [array] Zones for the control plane node pool
     zones: []
@@ -386,3 +389,10 @@ karpenter:
 
 ## @param extraObjects [array] Additional objects to be created along with karpenter
 extraObjects: []
+
+providers:
+  - name: default-on-demand
+    requirements:
+      - key: "karpenter.sh/capacity-type"
+        operator: "In"
+        values: ["on-demand"]
