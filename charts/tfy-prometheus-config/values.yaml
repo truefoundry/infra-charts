@@ -10,15 +10,76 @@ scrapeConfigs:
     name: envoy-stats
     ## @param scrapeConfigs.envoy.metricsPath Metrics path for envoy
     metricsPath: /stats/prometheus
+    ## @param scrapeConfigs.envoy.relabelings [array] Relabelings for envoy
+    relabelings:
+      - regex: .*-envoy-prom
+        action: keep
+        sourceLabels:
+          - __meta_kubernetes_pod_container_port_name
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - sourceLabels: [__meta_kubernetes_pod_container_name]
+        targetLabel: container
+      - sourceLabels: [__meta_kubernetes_namespace]
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        targetLabel: node
+    ## @param scrapeConfigs.envoy.metricsRelabelings [array] Metrics relabelings for envoy
+    metricsRelabelings:
+      - sourceLabels: [__name__]
+        action: drop
+        regex: envoy_(.+)
+      - sourceLabels: [__name__]
+        action: drop
+        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
     ## @param scrapeConfigs.envoy.extraKubernetesSDConfigs Extra kubernetes SD configs for envoy
     extraKubernetesSDConfigs: []
-  # @param scrapeConfigs.pods Scrape config for pods
-  pods:
-    ## @param scrapeConfigs.pods.enabled Enable scrape config for kubernetes pods
+  # @param scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
+  kubernetesPods:
+    ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
     enabled: true
-    ## @param scrapeConfigs.pods.name Name of the scrape config
+    ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
-    ## @param scrapeConfigs.pods.extraKubernetesSDConfigs Extra kubernetes SD configs for kubernetes pods
+    ## @param scrapeConfigs.kubernetesPods.relabelings [array] Relabelings for kubernetes pods
+    relabelings:
+      - action: drop
+        sourceLabels: [__meta_kubernetes_namespace]
+        regex: (istio-system|cert-manager|kube-system)
+      - action: drop
+        sourceLabels: [__meta_kubernetes_pod_container_init]
+        regex: "true"
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+        action: replace
+        targetLabel: __scheme__
+        regex: (https?)
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        targetLabel: __metrics_path__
+        regex: (.+)
+      - sourceLabels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        targetLabel: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - sourceLabels: [__meta_kubernetes_pod_container_name]
+        targetLabel: container
+      - sourceLabels: [__meta_kubernetes_namespace]
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        targetLabel: node
+      - targetLabel: label_truefoundry_com_application_id
+        sourceLabels:
+          - __meta_kubernetes_pod_label_truefoundry_com_application_id
+    ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
+    metricsRelabelings: []
+    ## @param scrapeConfigs.kubernetesPods.extraKubernetesSDConfigs Extra kubernetes SD configs for kubernetes pods
     extraKubernetesSDConfigs: []
   ## @param scrapeConfigs.additionalScrapeConfigs Additional scrape configs for prometheus
   additionalScrapeConfigs: []
@@ -48,7 +109,7 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.workflows.name Name of the service monitor
     name: argo-workflows
-    ## @skip serviceMonitors.workflows.serviceSelectorLabels Service selector labels for workflows
+    ## @param serviceMonitors.workflows.serviceSelectorLabels [object] Service selector labels for workflows
     serviceSelectorLabels:
       app.kubernetes.io/instance: argo-workflows
     ## @param serviceMonitors.workflows.extraEndpoints Extra endpoints for workflows
@@ -59,10 +120,10 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.keda.name Name of the service monitor
     name: keda
-    ## @skip serviceMonitors.keda.serviceSelectorLabels Service selector labels for keda
+    ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
     serviceSelectorLabels:
       app.kubernetes.io/name: keda-operator
-    ## @param serviceMonitors.keda.extraEndpoints Extra endpoints for keda
+    ## @param serviceMonitors.keda.extraEndpoints [array] Extra endpoints for keda
     extraEndpoints: []
   # @param serviceMonitors.elasti Service monitor for elasti
   elasti:
@@ -70,10 +131,10 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.elasti.name Name of the service monitor
     name: elasti-resolver
-    ## @skip serviceMonitors.elasti.serviceSelectorLabels Service selector labels for elasti
+    ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
-    ## @param serviceMonitors.elasti.extraEndpoints Extra endpoints for elasti
+    ## @param serviceMonitors.elasti.extraEndpoints [array] Extra endpoints for elasti
     extraEndpoints: []
   # @param serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
@@ -81,10 +142,10 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.kubecost.name Name of the service monitor
     name: kubecost
-    ## @skip serviceMonitors.kubecost.serviceSelectorLabels Service selector labels for kubecost
+    ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
-    ## @param serviceMonitors.kubecost.extraEndpoints Extra endpoints for kubecost
+    ## @param serviceMonitors.kubecost.extraEndpoints [array] Extra endpoints for kubecost
     extraEndpoints: []
   # @param serviceMonitors.prometheus Service monitor for prometheus
   prometheus:
@@ -92,10 +153,10 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.prometheus.name Name of the service monitor
     name: prometheus
-    ## @skip serviceMonitors.prometheus.serviceSelectorLabels Service selector labels for prometheus
+    ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       operated-prometheus: "true"
-    ## @param serviceMonitors.prometheus.extraEndpoints Extra endpoints for prometheus
+    ## @param serviceMonitors.prometheus.extraEndpoints [array] Extra endpoints for prometheus
     extraEndpoints: []
   # @param serviceMonitors.loki Service monitor for loki
   loki:
@@ -103,21 +164,21 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.loki.name Name of the service monitor
     name: loki
-    ## @skip serviceMonitors.loki.serviceSelectorLabels Service selector labels for loki
+    ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
-    ## @param serviceMonitors.loki.extraEndpoints Extra endpoints for loki
+    ## @param serviceMonitors.loki.extraEndpoints [array] Extra endpoints for loki
     extraEndpoints: []
-    # @skip serviceMonitors.loki.promtail Service monitor for promtail
+    # @param serviceMonitors.loki.promtail Service monitor for promtail
     promtail:
       ## @param serviceMonitors.loki.promtail.enabled Enable service monitor for promtail
       enabled: true
       ## @param serviceMonitors.loki.promtail.name Name of the service monitor
       name: loki-promtail
-      ## @skip serviceMonitors.loki.promtail.serviceSelectorLabels Service selector labels for promtail
+      ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail
-      ## @param serviceMonitors.loki.promtail.extraEndpoints Extra endpoints for promtail
+      ## @param serviceMonitors.loki.promtail.extraEndpoints [array] Extra endpoints for promtail
       extraEndpoints: []
-## @param extraObjects Extra objects for prometheus
+## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []

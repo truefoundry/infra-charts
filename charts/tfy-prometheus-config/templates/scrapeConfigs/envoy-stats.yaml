@@ -9,27 +9,14 @@ spec:
   metricsPath: {{ .Values.scrapeConfigs.envoy.metricsPath }}
   kubernetesSDConfigs:
   - role: pod
+  {{- if .Values.scrapeConfigs.envoy.relabelings }}
   relabelings:
-  - regex: .*-envoy-prom
-    action: keep
-    sourceLabels:
-    - __meta_kubernetes_pod_container_port_name
-  - sourceLabels: [ __meta_kubernetes_pod_name ]
-    targetLabel: pod
-  - sourceLabels: [ __meta_kubernetes_pod_container_name ]
-    targetLabel: container
-  - sourceLabels: [ __meta_kubernetes_namespace ]
-    targetLabel: namespace
-  - sourceLabels: [ __meta_kubernetes_pod_node_name ]
-    action: replace
-    targetLabel: node
-  metricRelabelings:
-  - sourceLabels: [ __name__ ]
-    action: drop
-    regex: envoy_(.+)
-  - sourceLabels: [ __name__ ]
-    action: drop
-    regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
+  {{- toYaml .Values.scrapeConfigs.envoy.relabelings | nindent 2 }}
+  {{- end }}
+  {{- if .Values.scrapeConfigs.envoy.metricsRelabelings }}
+  metricsRelabelings:
+  {{- toYaml .Values.scrapeConfigs.envoy.metricsRelabelings | nindent 2 }}
+  {{- end }}
   {{- if .Values.scrapeConfigs.envoy.extraKubernetesSDConfigs }}
   {{- toYaml .Values.scrapeConfigs.envoy.extraKubernetesSDConfigs | nindent 2 }}
   {{- end }}
