@@ -56,6 +56,9 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `aws-eks-gpu-operator.dcgmExporter.resources.limits.memory`                    | Memory limit for the DCGM Exporter.                                                                                                      | `1000Mi`                  |
 | `aws-eks-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                                                                                                         | `["-c","5000"]`           |
 | `aws-eks-gpu-operator.mig.strategy`                                            | migStrategy for mig node, single or mixed                                                                                                | `none`                    |
+| `aws-eks-gpu-operator.fakeToolkitReady.image.repository`                       | Repository for the fake toolkit ready container.                                                                                         | `alpine`                  |
+| `aws-eks-gpu-operator.fakeToolkitReady.image.tag`                              | Tag for the fake toolkit ready container.                                                                                                | `3.20`                    |
+| `aws-eks-gpu-operator.fakeToolkitReady.imagePullSecrets`                       | Image pull secrets for the fake toolkit ready container.                                                                                 | `[]`                      |
 
 ### gcp-gke-standard-driver Configuration for the GKE Standard Nvidia Drivers. This section will only be used when clusterType.gcpGkeStandard is set to true.
 
@@ -182,6 +185,9 @@ Tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 | `civo-talos-gpu-operator.dcgmExporter.resources.limits.memory`                    | Memory limit for the DCGM Exporter.                                                                                                      | `1000Mi`                  |
 | `civo-talos-gpu-operator.dcgmExporter.args`                                       | Arguments for the DCGM Exporter.                                                                                                         | `["-c","5000"]`           |
 | `civo-talos-gpu-operator.mig.strategy`                                            | migStrategy for mig node, single or mixed                                                                                                | `none`                    |
+| `civo-talos-gpu-operator.fakeToolkitReady.image.repository`                       | Repository for the fake toolkit ready container.                                                                                         | `alpine`                  |
+| `civo-talos-gpu-operator.fakeToolkitReady.image.tag`                              | Tag for the fake toolkit ready container.                                                                                                | `3.20`                    |
+| `civo-talos-gpu-operator.fakeToolkitReady.imagePullSecrets`                       | Image pull secrets for the fake toolkit ready container.                                                                                 | `[]`                      |
 
 ### generic-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
 

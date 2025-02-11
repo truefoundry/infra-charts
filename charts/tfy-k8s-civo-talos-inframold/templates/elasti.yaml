@@ -17,12 +17,12 @@ spec:
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: elasti
     helm:
+      {{- if .Values.elasti.valuesOverride }}
       values: |-
-        {{- if .Values.elasti.valuesOverride }}
-        {{ .Values.elasti.valuesOverride | toYaml | nindent 8 }}
-        {{- else }}
-        {}
-        {{- end }}
+      {{ .Values.elasti.valuesOverride | toYaml | nindent 8 }}
+      {{- else }}
+      values: ""
+      {{- end }}
   project: tfy-apps
   syncPolicy:
     automated: {}

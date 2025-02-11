@@ -6,6 +6,8 @@
 ## @param devicePlugin.image.tag Image tag to use for device plugin Daemonset.
 ## @param imagePullSecrets (global) List of image pull secrets
 ## @param devicePlugin.imagePullSecrets List of image pull secrets
+## @param devicePlugin.labels Labels for device plugin Daemonsets.
+## @param devicePlugin.annotations Annotations for device plugin Daemonsets.
 ## @param devicePlugin.affinity [object] Affinity settings for device plugin Daemonset.
 imagePullSecrets: []
 devicePlugin:
@@ -18,6 +20,8 @@ devicePlugin:
     repository: public.ecr.aws/neuron/neuron-device-plugin
     tag: 2.16.18.0
   imagePullSecrets: []
+  labels: {}
+  annotations: {}
   tolerations:
     ## @skip devicePlugin.tolerations[0]
     ## @skip devicePlugin.tolerations[1]
@@ -52,6 +56,8 @@ devicePlugin:
 ## @param scheduler.enabled Enable Scheduler.
 ## @param scheduler.schedulerName Name of the scheduler.
 ## @param scheduler.image K8s Scheduler image.
+## @param scheduler.labels K8s Scheduler labels.
+## @param scheduler.annotations K8s Scheduler annotations.
 ## @skip scheduler.args
 ## @param scheduler.resources.requests.cpu CPU request for K8s scheduler.
 ## @param scheduler.resources.requests.memory Memory request for K8s scheduler.
@@ -59,6 +65,8 @@ devicePlugin:
 ## @param scheduler.extension.resources.requests.cpu CPU request for Neuron scheduler extension.
 ## @param scheduler.extension.resources.requests.memory Memory request for Neuron scheduler extension.
 ## @param scheduler.imagePullSecrets List of image pull secrets
+## @param scheduler.extension.labels Labels for Neuron scheduler extension.
+## @param scheduler.extension.annotations Annotations for Neuron scheduler extension.
 ## @param scheduler.extension.imagePullSecrets List of image pull secrets
 ## @param scheduler.affinity [object] Affinity settings for scheduler.
 ## @param scheduler.extension.affinity [object] Affinity settings for scheduler extension.
@@ -68,6 +76,8 @@ scheduler:
   schedulerName: neuron-scheduler
   image: registry.k8s.io/kube-scheduler:v1.27.7
   imagePullSecrets: []
+  labels: {}
+  annotations: {}
   args:
     - --config=/etc/kubernetes/neuron-scheduler/neuron-scheduler-config.yaml
     - --leader-elect=true
@@ -86,6 +96,8 @@ scheduler:
   extension:
     image: public.ecr.aws/neuron/neuron-scheduler:2.18.3.0
     imagePullSecrets: []
+    labels: {}
+    annotations: {}
     resources:
       requests:
         cpu: '0.1'
