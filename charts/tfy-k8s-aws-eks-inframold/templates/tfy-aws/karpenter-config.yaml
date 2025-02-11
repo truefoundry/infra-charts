@@ -15,7 +15,7 @@ spec:
   source:
     chart: tfy-karpenter-config
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.35
+    targetRevision: 0.1.36
     helm:
       values: |-
         {{- if .Values.aws.karpenter.config.valuesOverride }}
@@ -37,6 +37,10 @@ spec:
             {{- end }}
           {{- end }}
           inferentiaNodePool:
+            zones: {{- range .Values.aws.karpenter.defaultZones }}
+            - {{ . | quote }}
+            {{- end }}
+          critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
