@@ -18,6 +18,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                    | Description                                | Value  |
 | ----------------------- | ------------------------------------------ | ------ |
 | `argocd.enabled`        | Flag to enable ArgoCD                      | `true` |
+| `argocd.tolerations`    | Tolerations for ArgoCD                     | `[]`   |
+| `argocd.affinity`       | Affinity for ArgoCD                        | `{}`   |
 | `argocd.valuesOverride` | Config override from default config values | `{}`   |
 
 ### argoWorkflows parameters
@@ -25,6 +27,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                           | Description                                | Value  |
 | ------------------------------ | ------------------------------------------ | ------ |
 | `argoWorkflows.enabled`        | Flag to enable Argo Workflows              | `true` |
+| `argoWorkflows.tolerations`    | Tolerations for Argo Workflows             | `[]`   |
+| `argoWorkflows.affinity`       | Affinity for Argo Workflows                | `{}`   |
 | `argoWorkflows.valuesOverride` | Config override from default config values | `{}`   |
 
 ### argoRollouts parameters
@@ -32,6 +36,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                          | Description                                | Value  |
 | ----------------------------- | ------------------------------------------ | ------ |
 | `argoRollouts.enabled`        | Flag to enable Argo Rollouts               | `true` |
+| `argoRollouts.tolerations`    | Tolerations for Argo Rollouts              | `[]`   |
+| `argoRollouts.affinity`       | Affinity for Argo Rollouts                 | `{}`   |
 | `argoRollouts.valuesOverride` | Config override from default config values | `{}`   |
 
 ### notebookController parameters
@@ -41,6 +47,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | `notebookController.enabled`               | Flag to enable Notebook Controller            | `false`            |
 | `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
 | `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
+| `notebookController.tolerations`           | Tolerations for Notebook Controller           | `[]`               |
+| `notebookController.affinity`              | Affinity for Notebook Controller              | `{}`               |
 | `notebookController.valuesOverride`        | Config override from default config values    | `{}`               |
 
 ### certManager parameters
@@ -48,6 +56,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                         | Description                                | Value   |
 | ---------------------------- | ------------------------------------------ | ------- |
 | `certManager.enabled`        | Flag to enable Cert Manager                | `false` |
+| `certManager.tolerations`    | Tolerations for Cert Manager               | `[]`    |
+| `certManager.affinity`       | Affinity for Cert Manager                  | `{}`    |
 | `certManager.valuesOverride` | Config override from default config values | `{}`    |
 
 ### metricsServer parameters
@@ -56,6 +66,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | ------------------------------ | ------------------------------------------ | ------- |
 | `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
 | `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
+| `metricsServer.tolerations`    | Tolerations for Metrics Server             | `[]`    |
+| `metricsServer.affinity`       | Affinity for Metrics Server                | `{}`    |
 | `metricsServer.valuesOverride` | Config override from default config values | `{}`    |
 
 ### gpu parameters
@@ -98,6 +110,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | `truefoundry.database.password`              | Password of the database                                   | `""`  |
 | `truefoundry.tfyApiKey`                      | API Key for TrueFoundry                                    | `""`  |
 | `truefoundry.truefoundryImagePullConfigJSON` | Json config for authenticating to the TrueFoundry registry | `""`  |
+| `truefoundry.tolerations`                    | Tolerations for the truefoundry components                 | `[]`  |
+| `truefoundry.affinity`                       | Affinity for the truefoundry components                    | `{}`  |
 
 ### loki parameters
 
@@ -105,6 +119,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | --------------------- | ------------------------------------------ | ------ |
 | `loki.enabled`        | Flag to enable Loki                        | `true` |
 | `loki.valuesOverride` | Config override from default config values | `{}`   |
+| `loki.affinity`       | Affinity for loki statefulset pod          | `{}`   |
+| `loki.tolerations`    | Tolerations for loki statefulset pod       | `[]`   |
 
 ### istio parameters
 
@@ -113,6 +129,9 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | `istio.enabled`                | Flag to enable Istio                       | `true` |
 | `istio.enabled`                | Flag to enable Istio Base                  | `true` |
 | `istio.base.valuesOverride`    | Config override from default config values | `{}`   |
+| `istio.gateway.annotations`    | Annotations for Istio Gateway              | `{}`   |
+| `istio.gateway.affinity`       | Affinity for the gateway pods              | `{}`   |
+| `istio.gateway.tolerations`    | Tolerations for the gateway pods           | `[]`   |
 | `istio.gateway.valuesOverride` | Config override from default config values | `{}`   |
 
 ### istio discovery parameters
@@ -121,6 +140,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | -------------------------------- | ----------------------------------------------- | ---------------------- |
 | `istio.discovery.hub`            | Hub for the istio image                         | `gcr.io/istio-release` |
 | `istio.discovery.tag`            | Tag for the istio image                         | `1.21.1-distroless`    |
+| `istio.discovery.tolerations`    | Tolerations for Istio Discovery                 | `[]`                   |
+| `istio.discovery.affinity`       | Affinity for Istio Discovery                    | `{}`                   |
 | `istio.discovery.valuesOverride` | Config override from default config values      | `{}`                   |
 | `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true`                 |
 
@@ -129,6 +150,8 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                  | Description                                | Value  |
 | --------------------- | ------------------------------------------ | ------ |
 | `keda.enabled`        | Flag to enable Keda                        | `true` |
+| `keda.tolerations`    | Tolerations for Keda                       | `[]`   |
+| `keda.affinity`       | Affinity for Keda                          | `{}`   |
 | `keda.valuesOverride` | Config override from default config values | `{}`   |
 
 ### kubecost parameters
@@ -136,20 +159,28 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                      | Description                                | Value  |
 | ------------------------- | ------------------------------------------ | ------ |
 | `kubecost.enabled`        | Flag to enable Kubecost                    | `true` |
+| `kubecost.tolerations`    | Tolerations for Kubecost                   | `[]`   |
+| `kubecost.affinity`       | Affinity for Kubecost                      | `{}`   |
 | `kubecost.valuesOverride` | Config override from default config values | `{}`   |
 
 ### prometheus parameters
 
-| Name                        | Description                                | Value  |
-| --------------------------- | ------------------------------------------ | ------ |
-| `prometheus.enabled`        | Flag to enable Prometheus                  | `true` |
-| `prometheus.valuesOverride` | Config override from default config values | `{}`   |
+| Name                                 | Description                                | Value  |
+| ------------------------------------ | ------------------------------------------ | ------ |
+| `prometheus.enabled`                 | Flag to enable Prometheus                  | `true` |
+| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus   | `[]`   |
+| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus  | `{}`   |
+| `prometheus.affinity`                | Affinity for prometheus statefulset pod    | `{}`   |
+| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod | `[]`   |
+| `prometheus.valuesOverride`          | Config override from default config values | `{}`   |
 
 ### grafana parameters
 
 | Name                     | Description                                | Value   |
 | ------------------------ | ------------------------------------------ | ------- |
 | `grafana.enabled`        | Flag to enable Grafana                     | `false` |
+| `grafana.tolerations`    | Tolerations for Grafana                    | `[]`    |
+| `grafana.affinity`       | Affinity for Grafana                       | `{}`    |
 | `grafana.valuesOverride` | Config override from default config values | `{}`    |
 
 ### tfyAgent parameters
@@ -157,8 +188,10 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                          | Description                                | Value  |
 | ----------------------------- | ------------------------------------------ | ------ |
 | `tfyAgent.enabled`            | Flag to enable Tfy Agent                   | `true` |
-| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
 | `tfyAgent.valuesOverride`     | Config override from default config values | `{}`   |
+| `tfyAgent.tolerations`        | Tolerations for the agent pods             | `[]`   |
+| `tfyAgent.affinity`           | Affinity for the agent pods                | `{}`   |
+| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
 | `tfyAgent.clusterTokenSecret` | Secret name for cluster token              | `""`   |
 
 ### elasti parameters
@@ -175,4 +208,6 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | `jspolicy.enabled`               | Flag to enable jspolicy. No policy is applied by default | `false` |
 | `jspolicy.enabled`               | Flag to enable jspolicy                                  | `false` |
 | `jspolicy.valuesOverride`        | Config override from default config values               | `{}`    |
+| `jspolicy.affinity`              | Affinity for jspolicy                                    | `{}`    |
+| `jspolicy.tolerations`           | Tolerations for jspolicy                                 | `[]`    |
 | `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
