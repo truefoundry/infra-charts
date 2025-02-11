@@ -1,3 +1,4 @@
+{{ if .Values.serviceMonitors.loki.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -6,10 +7,9 @@ metadata:
   labels:
     release: prometheus
 spec:
-  jobLabel: loki
   selector:
     matchLabels:
-      app.kubernetes.io/name: loki
+      {{ toYaml .Values.serviceMonitors.loki.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - loki
@@ -18,7 +18,12 @@ spec:
     interval: 30s
     path: /metrics
     honorLabels: true
+  {{- if .Values.serviceMonitors.loki.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.loki.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}
 ---
+{{ if .Values.serviceMonitors.loki.promtail.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -27,10 +32,9 @@ metadata:
   labels:
     release: prometheus
 spec:
-  jobLabel: loki-promtail
   selector:
     matchLabels:
-      app.kubernetes.io/name: promtail
+      {{ toYaml .Values.serviceMonitors.loki.promtail.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - loki
@@ -39,3 +43,7 @@ spec:
     interval: 30s
     path: /metrics
     honorLabels: true
+  {{- if .Values.serviceMonitors.loki.promtail.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.loki.promtail.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}

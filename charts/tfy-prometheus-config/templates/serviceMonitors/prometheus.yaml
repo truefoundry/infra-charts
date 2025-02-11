@@ -1,3 +1,4 @@
+{{ if .Values.serviceMonitors.prometheus.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -9,7 +10,7 @@ spec:
   jobLabel: prometheus
   selector:
     matchLabels:
-      operated-prometheus: "true"
+      {{ toYaml .Values.serviceMonitors.prometheus.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - prometheus
@@ -17,3 +18,7 @@ spec:
   - port: http-web
     interval: 30s
     path: /metrics
+  {{- if .Values.serviceMonitors.prometheus.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.prometheus.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}

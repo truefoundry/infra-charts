@@ -1,3 +1,4 @@
+{{ if .Values.scrapeConfigs.pods.enabled }}
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -43,3 +44,7 @@ spec:
   - targetLabel: label_truefoundry_com_application_id
     sourceLabels:
     - __meta_kubernetes_pod_label_truefoundry_com_application_id
+  {{- if .Values.scrapeConfigs.pods.extraKubernetesSDConfigs }}
+  {{- toYaml .Values.scrapeConfigs.pods.extraKubernetesSDConfigs | nindent 2 }}
+  {{- end }}
+{{ end }}

@@ -1,3 +1,4 @@
+{{ if .Values.scrapeConfigs.envoy.enabled }}
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
@@ -30,3 +31,7 @@ spec:
   - sourceLabels: [ __name__ ]
     action: drop
     regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
+  {{- if .Values.scrapeConfigs.envoy.extraKubernetesSDConfigs }}
+  {{- toYaml .Values.scrapeConfigs.envoy.extraKubernetesSDConfigs | nindent 2 }}
+  {{- end }}
+{{ end }}

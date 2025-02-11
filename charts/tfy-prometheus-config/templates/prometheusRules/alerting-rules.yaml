@@ -1,0 +1,75 @@
+{{ if .Values.prometheusRules.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alerting-rules
+  namespace: prometheus
+spec:
+  groups:
+  - name: Alerting
+    rules:
+    - alert: CPUHighUtilizationForRequested
+      expr: >
+        sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m])) by (pod, container, namespace) / sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="cpu"}) by (pod, container, namespace) * 100 > 80
+      for: 2m
+      labels:
+        entity: container
+        severity: warning
+      annotations:
+        summary: "Container High CPU utilization (instance {{ .instance }})"
+        description: |-
+          Container CPU utilization is above 80% of requested CPU
+
+          VALUE = {{ .value }}
+
+    - alert: MemoryHighUtilizationForRequested
+      expr: >
+        sum(container_memory_working_set_bytes{job="kubelet", container!=""})  by (pod, container, namespace) / sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
+      for: 2m
+      labels:
+        entity: container
+        severity: warning
+      annotations:
+        summary: "Container High Memory usage (instance {{ .instance }})"
+        description: |-  
+          Container Memory usage is above 80% of requested memory
+
+          VALUE = {{ .value }}
+
+    - alert: KubernetesPodNotHealthy
+      expr: >
+        sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
+      for: 15m
+      labels:
+        entity: pod
+        severity: critical
+      annotations:
+        summary: "Kubernetes Pod not healthy ({{ .namespace }}/{{ .pod }})"
+        description: "Pod {{ .namespace }}/{{ .pod }} has been in a non-running state for 15 minutes.
+
+          VALUE = {{ .value }}"
+
+    - alert: KubernetesPodCrashLooping
+      expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
+      for: 2m
+      labels:
+        entity: pod
+        severity: warning
+      annotations:
+        summary: "Kubernetes pod crash looping ({{ .namespace }}/{{ .pod }})"
+        description: "Pod {{ .namespace }}/{{ .pod }} is crash looping
+
+          VALUE = {{ .value }}"
+
+    - alert: NodeMemoryPressure
+      expr: node_memory_MemAvailable_bytes{job="node-exporter"} / node_memory_MemTotal_bytes{job="node-exporter"} < 0.1
+      for: 5m
+      labels:
+        entity: node
+        severity: critical
+      annotations:
+        summary: "Node memory available is below 10% ({{ .instance }})"
+        description: "Node {{ .instance }} is experiencing memory pressure.
+
+          VALUE = {{ .value }}%"
+{{ end }}

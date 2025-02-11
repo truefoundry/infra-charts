@@ -1,3 +1,4 @@
+{{ if .Values.serviceMonitors.workflows.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -6,10 +7,9 @@ metadata:
   labels:
     release: prometheus
 spec:
-  jobLabel: argo-workflows
   selector:
     matchLabels:
-      app.kubernetes.io/instance: argo-workflows
+      {{ toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - argo-workflows
@@ -18,3 +18,7 @@ spec:
     scheme: http
     interval: 30s
     path: /metrics
+  {{- if .Values.serviceMonitors.workflows.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.workflows.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}

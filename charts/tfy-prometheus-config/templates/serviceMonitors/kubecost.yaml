@@ -1,3 +1,4 @@
+{{ if .Values.serviceMonitors.kubecost.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -9,7 +10,7 @@ spec:
   jobLabel: kubecost
   selector:
     matchLabels:
-      app: cost-analyzer
+      {{ toYaml .Values.serviceMonitors.kubecost.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - kubecost
@@ -19,3 +20,7 @@ spec:
     scrapeTimeout: 60s
     path: /metrics
     honorLabels: true
+  {{- if .Values.serviceMonitors.kubecost.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.kubecost.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}

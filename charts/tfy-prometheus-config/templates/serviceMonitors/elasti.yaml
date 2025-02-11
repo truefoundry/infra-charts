@@ -1,3 +1,4 @@
+{{ if .Values.serviceMonitors.elasti.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -9,7 +10,7 @@ spec:
   jobLabel: elasti-resolver
   selector:
     matchLabels:
-      app.kubernetes.io/name: elasti
+      {{ toYaml .Values.serviceMonitors.elasti.serviceSelectorLabels | nindent 4 }}
   namespaceSelector:
     matchNames:
     - elasti
@@ -18,3 +19,7 @@ spec:
     interval: 1s
     scheme: http
     path: /metrics
+  {{- if .Values.serviceMonitors.elasti.extraEndpoints }}
+  {{- toYaml .Values.serviceMonitors.elasti.extraEndpoints | nindent 2 }}
+  {{- end }}
+{{ end }}
