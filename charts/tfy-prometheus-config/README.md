@@ -9,22 +9,20 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### scrapeConfigs Scrape configs for prometheus
 
-| Name                                                    | Description                                     | Value               |
-| ------------------------------------------------------- | ----------------------------------------------- | ------------------- |
-| `scrapeConfigs.envoy.enabled`                           | Enable scrape config for envoy                  | `true`              |
-| `scrapeConfigs.envoy.name`                              | Name of the scrape config                       | `envoy-stats`       |
-| `scrapeConfigs.envoy.labels`                            | Labels for envoy                                | `{}`                |
-| `scrapeConfigs.envoy.metricsPath`                       | Metrics path for envoy                          | `/stats/prometheus` |
-| `scrapeConfigs.envoy.relabelings`                       | Relabelings for envoy                           | `[]`                |
-| `scrapeConfigs.envoy.metricsRelabelings`                | Metrics relabelings for envoy                   | `[]`                |
-| `scrapeConfigs.envoy.extraKubernetesSDConfigs`          | Extra kubernetes SD configs for envoy           | `[]`                |
-| `scrapeConfigs.kubernetesPods.enabled`                  | Enable scrape config for kubernetes pods        | `true`              |
-| `scrapeConfigs.kubernetesPods.name`                     | Name of the scrape config                       | `kubernetes-pods`   |
-| `scrapeConfigs.kubernetesPods.labels`                   | Labels for kubernetes pods                      | `{}`                |
-| `scrapeConfigs.kubernetesPods.relabelings`              | Relabelings for kubernetes pods                 | `[]`                |
-| `scrapeConfigs.kubernetesPods.metricsRelabelings`       | Metrics relabelings for kubernetes pods         | `[]`                |
-| `scrapeConfigs.kubernetesPods.extraKubernetesSDConfigs` | Extra kubernetes SD configs for kubernetes pods | `[]`                |
-| `scrapeConfigs.additionalScrapeConfigs`                 | Additional scrape configs for prometheus        | `[]`                |
+| Name                                              | Description                              | Value               |
+| ------------------------------------------------- | ---------------------------------------- | ------------------- |
+| `scrapeConfigs.envoy.enabled`                     | Enable scrape config for envoy           | `true`              |
+| `scrapeConfigs.envoy.name`                        | Name of the scrape config                | `envoy-stats`       |
+| `scrapeConfigs.envoy.labels`                      | Labels for envoy                         | `{}`                |
+| `scrapeConfigs.envoy.metricsPath`                 | Metrics path for envoy                   | `/stats/prometheus` |
+| `scrapeConfigs.envoy.relabelings`                 | Relabelings for envoy                    | `[]`                |
+| `scrapeConfigs.envoy.metricsRelabelings`          | Metrics relabelings for envoy            | `[]`                |
+| `scrapeConfigs.kubernetesPods.enabled`            | Enable scrape config for kubernetes pods | `true`              |
+| `scrapeConfigs.kubernetesPods.name`               | Name of the scrape config                | `kubernetes-pods`   |
+| `scrapeConfigs.kubernetesPods.labels`             | Labels for kubernetes pods               | `{}`                |
+| `scrapeConfigs.kubernetesPods.relabelings`        | Relabelings for kubernetes pods          | `[]`                |
+| `scrapeConfigs.kubernetesPods.metricsRelabelings` | Metrics relabelings for kubernetes pods  | `[]`                |
+| `scrapeConfigs.additionalScrapeConfigs`           | Additional scrape configs for prometheus | `[]`                |
 
 ### alertManagers Alert managers for prometheus
 
