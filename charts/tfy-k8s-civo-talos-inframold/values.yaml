@@ -26,9 +26,9 @@ tolerations:
 
 ## @param affinity [object] Affinity for the all chart components
 ##
-  
+
 affinity: {}
-  
+
 
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
@@ -37,7 +37,13 @@ affinity: {}
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
-  ## @param argocd.valuesOverride Config override from default config values
+  ## @param argocd.tolerations [array] Tolerations for ArgoCD
+  ##
+  tolerations: []
+  ## @param argocd.affinity [object] Affinity for ArgoCD
+  ##
+  affinity: {}
+  ## @param argocd.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -46,7 +52,13 @@ argocd:
 ##
 argoWorkflows:
   enabled: true
-  ## @param argoWorkflows.valuesOverride Config override from default config values
+  ## @param argoWorkflows.tolerations [array] Tolerations for Argo Workflows
+  ##
+  tolerations: []
+  ## @param argoWorkflows.affinity [object] Affinity for Argo Workflows
+  ##
+  affinity: {}
+  ## @param argoWorkflows.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -56,7 +68,13 @@ argoWorkflows:
 ##
 argoRollouts:
   enabled: true
-  ## @param argoRollouts.valuesOverride Config override from default config values
+  ## @param argoRollouts.tolerations [array] Tolerations for Argo Rollouts
+  ##
+  tolerations: []
+  ## @param argoRollouts.affinity [object] Affinity for Argo Rollouts
+  ##
+  affinity: {}
+  ## @param argoRollouts.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -73,7 +91,13 @@ notebookController:
   ## @param notebookController.notebookBaseDomainUrl Base domain URL for Notebook Controller
   ##
   notebookBaseDomainUrl: <to_be_provided>
-  ## @param notebookController.valuesOverride Config override from default config values
+  ## @param notebookController.tolerations [array] Tolerations for Notebook Controller
+  ##
+  tolerations: []
+  ## @param notebookController.affinity [object] Affinity for Notebook Controller
+  ##
+  affinity: {}
+  ## @param notebookController.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -82,7 +106,13 @@ notebookController:
 ##
 certManager:
   enabled: false
-  ## @param certManager.valuesOverride Config override from default config values
+  ## @param certManager.tolerations [array] Tolerations for Cert Manager
+  ##
+  tolerations: []
+  ## @param certManager.affinity [object] Affinity for Cert Manager
+  ##
+  affinity: {}
+  ## @param certManager.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -92,7 +122,17 @@ certManager:
 metricsServer:
   ##@param metricsServer.enabled Flag to enable Metrics Server
   enabled: false
-  ## @param metricsServer.valuesOverride Config override from default config values
+  ## @param metricsServer.tolerations [array] Tolerations for Metrics Server
+  ##
+  tolerations:
+    - key: "dedicated"
+      operator: "Equal"
+      value: "reserved-supercluster"
+      effect: "NoSchedule"
+  ## @param metricsServer.affinity [object] Affinity for Metrics Server
+  ##
+  affinity: {}
+  ## @param metricsServer.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -106,7 +146,7 @@ gpu:
   ## @param gpu.clusterType Cluster type for Tfy GPU Operator
   ##
   clusterType: civoTalos
-  ## @param gpu.valuesOverride Config override from default config values
+  ## @param gpu.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -121,7 +161,7 @@ truefoundry:
   ##
   devMode:
     enabled: false
-  ## @param truefoundry.valuesOverride Config override from default config values
+  ## @param truefoundry.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
   ## @section truefoundryBootstrap parameters
@@ -133,9 +173,9 @@ truefoundry:
   virtualservice:
     ## @param truefoundry.virtualservice.enabled Flag to enable virtualservice
     enabled: false
-    ## @param truefoundry.virtualservice.hosts Hosts for truefoundry virtualservice
+    ## @param truefoundry.virtualservice.hosts [array] Hosts for truefoundry virtualservice
     hosts: []
-    ## @param truefoundry.virtualservice.gateways Istio gateways to be configured for virtualservice
+    ## @param truefoundry.virtualservice.gateways [array] Istio gateways to be configured for virtualservice
     gateways: []
 
   ## @section database. Can be left empty if using the dev mode parameters
@@ -152,15 +192,51 @@ truefoundry:
   tfyApiKey: ""
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
+  
+  ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
+  tolerations:
+  - key: "class.truefoundry.com/component"
+    value: "control-plane"
+    effect: "NoSchedule"
+  ## @param truefoundry.affinity [object] Affinity for the truefoundry components
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - control-plane
+
 
 ## @section loki parameters
 ## @param loki.enabled Flag to enable Loki
 ##
 loki:
   enabled: true
-  ## @param loki.valuesOverride Config override from default config values
+  ## @param loki.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
+
+  ## @param loki.affinity [object] Affinity for loki statefulset pod
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - critical
+
+  ## @param loki.tolerations [array] Tolerations for loki statefulset pod
+  ##
+  tolerations:
+  - key: "class.truefoundry.com/component"
+    value: "critical"
+    effect: "NoSchedule"
 
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
@@ -171,14 +247,35 @@ istio:
   enabled: true
 
   base:
-    ## @param istio.base.valuesOverride Config override from default config values
+    ## @param istio.base.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-  ## @skip istio.gateway.annotations Annotations for Istio Gateway
+  
+  ## @param istio.gateway.annotations [object] Annotations for Istio Gateway
   gateway:
     
     annotations: {}
     
+    
+    ## @param istio.gateway.affinity [object] Affinity for the gateway pods
+    ##
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: class.truefoundry.com/component
+                  operator: In
+                  values:
+                    - critical
+    
+    ## @param istio.gateway.tolerations [array] Tolerations for the gateway pods
+    ##
+    tolerations:
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
+
     ## @param istio.gateway.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
@@ -188,6 +285,12 @@ istio:
     hub: gcr.io/istio-release
     ## @param istio.discovery.tag Tag for the istio image
     tag: 1.21.1-distroless
+    ## @param istio.discovery.tolerations [array] Tolerations for Istio Discovery
+    ##
+    tolerations: []
+    ## @param istio.discovery.affinity [object] Affinity for Istio Discovery
+    ##
+    affinity: {}
     ## @param istio.discovery.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
@@ -202,6 +305,12 @@ istio:
 ##
 keda:
   enabled: true
+  ## @param keda.tolerations [array] Tolerations for Keda
+  ##
+  tolerations: []
+  ## @param keda.affinity [object] Affinity for Keda
+  ##
+  affinity: {}
   ## @param keda.valuesOverride Config override from default config values
   ##
   valuesOverride: {}
@@ -211,6 +320,12 @@ keda:
 ##
 kubecost:
   enabled: true
+  ## @param kubecost.tolerations [array] Tolerations for Kubecost
+  ##
+  tolerations: []
+  ## @param kubecost.affinity [object] Affinity for Kubecost
+  ##
+  affinity: {}
   ## @param kubecost.valuesOverride Config override from default config values
   ##
   valuesOverride: {}
@@ -220,7 +335,7 @@ kubecost:
 ##
 prometheus:
   enabled: true
-  ## @skip prometheus.additionalScrapeConfigs Additional scrape configs for Prometheus
+  ## @param prometheus.additionalScrapeConfigs [array] Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs:
     - job_name: gpu-metrics
@@ -237,7 +352,7 @@ prometheus:
         - source_labels: [__meta_kubernetes_pod_node_name]
           action: replace
           target_label: kubernetes_node
-  ## @skip prometheus.alertmanager Alertmanager configuration for Prometheus
+  ## @param prometheus.alertmanager [object] Alertmanager configuration for Prometheus
   ##
   alertmanager:
     config:
@@ -246,7 +361,26 @@ prometheus:
           webhook_configs:
               - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
                 send_resolved: true
-  ## @param prometheus.valuesOverride Config override from default config values
+
+  ## @param prometheus.affinity [object] Affinity for prometheus statefulset pod
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - critical
+
+  ## @param prometheus.tolerations [array] Tolerations for prometheus statefulset pod
+  ##
+  tolerations:
+  - key: "class.truefoundry.com/component"
+    value: "critical"
+    effect: "NoSchedule"
+  ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -256,7 +390,13 @@ prometheus:
 ##
 grafana:
   enabled: false
-  ## @param grafana.valuesOverride Config override from default config values
+  ## @param grafana.tolerations [array] Tolerations for Grafana
+  ##
+  tolerations: []
+  ## @param grafana.affinity [object] Affinity for Grafana
+  ##
+  affinity: {}
+  ## @param grafana.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -265,13 +405,32 @@ grafana:
 ##
 tfyAgent:
   enabled: true
+  ## @param tfyAgent.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## @param tfyAgent.tolerations [array] Tolerations for the agent pods
+  ## 
+  tolerations:
+  - key: "class.truefoundry.com/component"
+    value: "critical"
+    effect: "NoSchedule"
+  ## @param tfyAgent.affinity [object] Affinity for the agent pods
+  ## 
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - critical
+
   ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
   ##
   clusterToken: ""
-  ## @param tfyAgent.valuesOverride Config override from default config values
-  ##
-  valuesOverride: {}
 
   ## @param tfyAgent.clusterTokenSecret Secret name for cluster token
   ## Secret for cluster token
@@ -282,7 +441,7 @@ tfyAgent:
 ##
 elasti:
   enabled: false
-  ## @param elasti.valuesOverride Config override from default config values
+  ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
@@ -292,12 +451,30 @@ elasti:
 jspolicy:
   ## @param jspolicy.enabled Flag to enable jspolicy
   enabled: false
-  ## @param jspolicy.valuesOverride Config override from default config values
+  ## @param jspolicy.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
+  ## @param jspolicy.affinity [object] Affinity for jspolicy
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - critical
 
+  ## @param jspolicy.tolerations [array] Tolerations for jspolicy
+  ##
+  tolerations:
+  - key: "class.truefoundry.com/component"
+    value: "critical"
+    effect: "NoSchedule"
+
+  ## @param jspolicy.config.valuesOverride [object] Config override from default config values
+  ##
   config:
-    ## @param jspolicy.config.valuesOverride Config override from default config values
-    ##
     valuesOverride: {}

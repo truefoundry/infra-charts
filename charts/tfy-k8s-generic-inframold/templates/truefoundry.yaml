@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.25.3
+    targetRevision: 0.31.0
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -32,13 +32,15 @@ spec:
             name: {{ .Values.truefoundry.database.name }}
             username: {{ .Values.truefoundry.database.username }}
             password: {{ .Values.truefoundry.database.password }}
-          {{- with .Values.tolerations }}
+          {{- $mergedTolerations := concat .Values.tolerations .Values.truefoundry.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- $mergedAffinity := dict | merge .Values.truefoundry.affinity .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
@@ -63,13 +65,13 @@ spec:
               {{- end }}
         {{- end }}
         nats:
-          {{- with .Values.tolerations }}
+          {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- end }}
-          {{- with .Values.affinity }}
+          {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         {{- end }}
   syncPolicy:
