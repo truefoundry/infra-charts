@@ -93,6 +93,22 @@ alertManagers:
     enabled: true
     ## @param alertManagers.tfyAgent.name Name of the alert manager
     name: tfy-alertmanager-config
+    ## @param alertManagers.tfyAgent.route Route for the alert manager
+    route:
+      receiver: tfy-agent
+      routes:
+        - receiver: tfy-agent
+          continue: true
+          matchers:
+            - name: severity
+              matchType: regexp
+              value: "warning|critical"
+          repeatInterval: 1h
+    receivers:
+      - name: tfy-agent
+        webhookConfigs:
+          - sendResolved: true
+            url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
 ## @section prometheusRules Prometheus rules for prometheus
 prometheusRules:
   # @param prometheusRules.kubecost Prometheus rules for kubecost
