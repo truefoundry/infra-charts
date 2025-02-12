@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.kubecost.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.kubecost.name }}
+  labels:
+    {{- include "kubecost.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.kubecost.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.kubecost.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.kubecost.endpoints | nindent 2 }}
+{{- end -}}

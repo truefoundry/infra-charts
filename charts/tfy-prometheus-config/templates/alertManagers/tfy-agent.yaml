@@ -1,0 +1,13 @@
+{{- if .Values.alertManagers.tfyAgent.enabled }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: {{ .Values.alertManagers.tfyAgent.name }}
+spec:
+  route:
+    receiver: {{ .Values.alertManagers.tfyAgent.route.receiver }}
+    routes:
+      {{- toYaml .Values.alertManagers.tfyAgent.route.routes | nindent 4 }}
+  receivers:
+    {{- toYaml .Values.alertManagers.tfyAgent.receivers | nindent 2 }}
+{{- end }}

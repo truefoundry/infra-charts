@@ -1,0 +1,288 @@
+## Configuration for tfy-prometheus-config
+
+## @section scrapeConfigs Scrape configs for prometheus
+scrapeConfigs:
+  # scrapeConfigs.envoy Scrape config for envoy pods
+  envoy:
+    ## @param scrapeConfigs.envoy.enabled Enable scrape config for envoy
+    enabled: true
+    ## @param scrapeConfigs.envoy.name Name of the scrape config
+    name: envoy-stats
+    ## @param scrapeConfigs.envoy.labels [object] Labels for envoy
+    labels:
+      release: prometheus
+    ## @param scrapeConfigs.envoy.metricsPath Metrics path for envoy
+    metricsPath: /stats/prometheus
+    ## @param scrapeConfigs.envoy.relabelings [array] Relabelings for envoy
+    relabelings:
+      - regex: .*-envoy-prom
+        action: keep
+        sourceLabels:
+          - __meta_kubernetes_pod_container_port_name
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - sourceLabels: [__meta_kubernetes_pod_container_name]
+        targetLabel: container
+      - sourceLabels: [__meta_kubernetes_namespace]
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        targetLabel: node
+    ## @param scrapeConfigs.envoy.metricsRelabelings [array] Metrics relabelings for envoy
+    metricsRelabelings:
+      - sourceLabels: [__name__]
+        action: drop
+        regex: envoy_(.+)
+      - sourceLabels: [__name__]
+        action: drop
+        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
+  # scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
+  kubernetesPods:
+    ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
+    enabled: true
+    ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
+    name: kubernetes-pods
+    ## @param scrapeConfigs.kubernetesPods.labels [object] Labels for kubernetes pods
+    labels:
+      release: prometheus
+    ## @param scrapeConfigs.kubernetesPods.relabelings [array] Relabelings for kubernetes pods
+    relabelings:
+      - action: drop
+        sourceLabels: [__meta_kubernetes_namespace]
+        regex: (istio-system|cert-manager|kube-system)
+      - action: drop
+        sourceLabels: [__meta_kubernetes_pod_container_init]
+        regex: "true"
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+        action: replace
+        targetLabel: __scheme__
+        regex: (https?)
+      - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        targetLabel: __metrics_path__
+        regex: (.+)
+      - sourceLabels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        targetLabel: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - sourceLabels: [__meta_kubernetes_pod_name]
+        targetLabel: pod
+      - sourceLabels: [__meta_kubernetes_pod_container_name]
+        targetLabel: container
+      - sourceLabels: [__meta_kubernetes_namespace]
+        targetLabel: namespace
+      - sourceLabels: [__meta_kubernetes_pod_node_name]
+        action: replace
+        targetLabel: node
+      - targetLabel: label_truefoundry_com_application_id
+        sourceLabels:
+          - __meta_kubernetes_pod_label_truefoundry_com_application_id
+    ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
+    metricsRelabelings: []
+  ## @param scrapeConfigs.additionalScrapeConfigs [array] Additional scrape configs for prometheus
+  additionalScrapeConfigs: []
+## @section alertManagers Alert managers for prometheus
+alertManagers:
+  # alertManagers.tfyAgent Alert manager for tfy-agent
+  tfyAgent:
+    ## @param alertManagers.tfyAgent.enabled Enable alert manager for tfy-agent
+    enabled: true
+    ## @param alertManagers.tfyAgent.name Name of the alert manager
+    name: tfy-alertmanager-config
+    ## @param alertManagers.tfyAgent.route [object] Route for the alert manager
+    route:
+      receiver: tfy-agent
+      routes:
+        - receiver: tfy-agent
+          continue: true
+          matchers:
+            - name: severity
+              matchType: regexp
+              value: "warning|critical"
+          repeatInterval: 1h
+    ## @param alertManagers.tfyAgent.receivers [array] Receivers for the alert manager
+    receivers:
+      - name: tfy-agent
+        webhookConfigs:
+          - sendResolved: true
+            url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+## @section prometheusRules Prometheus rules for prometheus
+prometheusRules:
+  # prometheusRules.alerts Prometheus rules for alerts
+  containerRules:
+    ## @param prometheusRules.containerRules.enabled Enable prometheus rules for alerts
+    enabled: true
+    ## @param prometheusRules.containerRules.name Name of the prometheus rules
+    name: tfy-alertmanager-config-alerting-rules
+  # prometheusRules.kubecostRules Prometheus rules for kubecost
+  kubecostRules:
+    ## @param prometheusRules.kubecostRules.enabled Enable prometheus rules for kubecost
+    enabled: true
+    ## @param prometheusRules.kubecostRules.name Name of the prometheus rules
+    name: tfy-alertmanager-config-kubecost-rules
+## @section serviceMonitors Service monitors for prometheus
+serviceMonitors:
+  ## @param serviceMonitors.enabled Enable service monitors for prometheus
+  enabled: true
+  # serviceMonitors.workflows Service monitor for workflows
+  workflows:
+    ## @param serviceMonitors.workflows.enabled Enable service monitor for workflows
+    enabled: true
+    ## @param serviceMonitors.workflows.name Name of the service monitor
+    name: argo-workflows
+    ## @param serviceMonitors.workflows.labels [object] Labels for workflows
+    labels: {}
+    ## @param serviceMonitors.workflows.endpoints [array] Endpoints for workflows
+    endpoints:
+      - port: metrics
+        scheme: http
+        interval: 30s
+        path: /metrics
+    ## @param serviceMonitors.workflows.serviceSelectorLabels [object] Service selector labels for workflows
+    serviceSelectorLabels:
+      app.kubernetes.io/instance: argo-workflows
+    ## @param serviceMonitors.workflows.namespaceSelector [object] Namespace selector for workflows
+    namespaceSelector:
+      matchNames:
+        - argo-workflows
+  # serviceMonitors.keda Service monitor for keda
+  keda:
+    ## @param serviceMonitors.keda.enabled Enable service monitor for keda
+    enabled: true
+    ## @param serviceMonitors.keda.name Name of the service monitor
+    name: keda
+    ## @param serviceMonitors.keda.labels [object] Labels for keda
+    labels: {}
+    ## @param serviceMonitors.keda.endpoints [array] Endpoints for keda
+    endpoints:
+      - port: metrics
+        interval: 10s
+        scrapeTimeout: 10s
+        scheme: http
+        path: /metrics
+        honorLabels: true
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
+            action: drop
+          - sourceLabels: [__name__]
+            regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
+            action: drop
+    ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
+    serviceSelectorLabels:
+      app.kubernetes.io/name: keda-operator
+    ## @param serviceMonitors.keda.namespaceSelector [object] Namespace selector for keda
+    namespaceSelector:
+      matchNames:
+        - keda
+  # serviceMonitors.elasti Service monitor for elasti
+  elasti:
+    ## @param serviceMonitors.elasti.enabled Enable service monitor for elasti
+    enabled: true
+    ## @param serviceMonitors.elasti.name Name of the service monitor
+    name: elasti-resolver
+    ## @param serviceMonitors.elasti.labels [object] Labels for elasti
+    labels: {}
+    ## @param serviceMonitors.elasti.endpoints [array] Endpoints for elasti
+    endpoints:
+      - port: http-resolver
+        scheme: http
+        interval: 1s
+        path: /metrics
+    ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
+    serviceSelectorLabels:
+      app.kubernetes.io/instance: elasti
+    ## @param serviceMonitors.elasti.namespaceSelector [object] Namespace selector for elasti
+    namespaceSelector:
+      matchNames:
+        - elasti
+  # serviceMonitors.kubecost Service monitor for kubecost
+  kubecost:
+    ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost
+    enabled: true
+    ## @param serviceMonitors.kubecost.name Name of the service monitor
+    name: kubecost
+    ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
+    labels: {}
+    ## @param serviceMonitors.kubecost.endpoints [array] Endpoints for kubecost
+    endpoints:
+      - port: tcp-model
+        interval: 1m
+        scrapeTimeout: 60s
+        path: /metrics
+        honorLabels: true
+    ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
+    serviceSelectorLabels:
+      app: cost-analyzer
+    ## @param serviceMonitors.kubecost.namespaceSelector [object] Namespace selector for kubecost
+    namespaceSelector:
+      matchNames:
+        - kubecost
+  # serviceMonitors.prometheus Service monitor for prometheus
+  prometheus:
+    ## @param serviceMonitors.prometheus.enabled Enable service monitor for prometheus
+    enabled: true
+    ## @param serviceMonitors.prometheus.name Name of the service monitor
+    name: prometheus
+    ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
+    labels: {}
+    ## @param serviceMonitors.prometheus.endpoints [array] Endpoints for prometheus
+    endpoints:
+      - port: http-web
+        interval: 30s
+        path: /metrics
+    ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
+    serviceSelectorLabels:
+      operated-prometheus: "true"
+    ## @param serviceMonitors.prometheus.namespaceSelector [object] Namespace selector for prometheus
+    namespaceSelector:
+      matchNames:
+        - prometheus
+  # serviceMonitors.loki Service monitor for loki
+  loki:
+    ## @param serviceMonitors.loki.enabled Enable service monitor for loki
+    enabled: true
+    ## @param serviceMonitors.loki.name Name of the service monitor
+    name: loki
+    ## @param serviceMonitors.loki.labels [object] Labels for loki
+    labels: {}
+    ## @param serviceMonitors.loki.endpoints [array] Endpoints for loki
+    endpoints:
+      - port: http-metrics
+        interval: 30s
+        path: /metrics
+        honorLabels: true
+    ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
+    serviceSelectorLabels:
+      app.kubernetes.io/name: loki
+    ## @param serviceMonitors.loki.namespaceSelector [object] Namespace selector for loki
+    namespaceSelector:
+      matchNames:
+        - loki
+    # serviceMonitors.loki.promtail Service monitor for promtail
+    promtail:
+      ## @param serviceMonitors.loki.promtail.enabled Enable service monitor for promtail
+      enabled: true
+      ## @param serviceMonitors.loki.promtail.name Name of the service monitor
+      name: loki-promtail
+      ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
+      labels: {}
+      ## @param serviceMonitors.loki.promtail.endpoints [array] Endpoints for promtail
+      endpoints:
+        - port: http-metrics
+          interval: 30s
+          path: /metrics
+          honorLabels: true
+      ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
+      serviceSelectorLabels:
+        app.kubernetes.io/name: promtail
+      ## @param serviceMonitors.loki.promtail.namespaceSelector [object] Namespace selector for promtail
+      namespaceSelector:
+        matchNames:
+          - loki
+## @param extraObjects [array] Extra objects for prometheus
+extraObjects: []
