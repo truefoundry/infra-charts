@@ -2,7 +2,7 @@
 
 ## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
-  # @param scrapeConfigs.envoy Scrape config for envoy pods
+  # scrapeConfigs.envoy Scrape config for envoy pods
   envoy:
     ## @param scrapeConfigs.envoy.enabled Enable scrape config for envoy
     enabled: true
@@ -36,7 +36,7 @@ scrapeConfigs:
       - sourceLabels: [__name__]
         action: drop
         regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
-  # @param scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
+  # scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
   kubernetesPods:
     ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
     enabled: true
@@ -87,7 +87,7 @@ scrapeConfigs:
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
 alertManagers:
-  # @param alertManagers.tfyAgent Alert manager for tfy-agent
+  # alertManagers.tfyAgent Alert manager for tfy-agent
   tfyAgent:
     ## @param alertManagers.tfyAgent.enabled Enable alert manager for tfy-agent
     enabled: true
@@ -112,13 +112,13 @@ alertManagers:
             url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
 ## @section prometheusRules Prometheus rules for prometheus
 prometheusRules:
-  # @param prometheusRules.alerts Prometheus rules for alerts
+  # prometheusRules.alerts Prometheus rules for alerts
   containerRules:
     ## @param prometheusRules.containerRules.enabled Enable prometheus rules for alerts
     enabled: true
     ## @param prometheusRules.containerRules.name Name of the prometheus rules
     name: tfy-alertmanager-config-alerting-rules
-  # @param prometheusRules.kubecostRules Prometheus rules for kubecost
+  # prometheusRules.kubecostRules Prometheus rules for kubecost
   kubecostRules:
     ## @param prometheusRules.kubecostRules.enabled Enable prometheus rules for kubecost
     enabled: true
@@ -128,7 +128,7 @@ prometheusRules:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
-  # @param serviceMonitors.workflows Service monitor for workflows
+  # serviceMonitors.workflows Service monitor for workflows
   workflows:
     ## @param serviceMonitors.workflows.enabled Enable service monitor for workflows
     enabled: true
@@ -149,7 +149,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - argo-workflows
-  # @param serviceMonitors.keda Service monitor for keda
+  # serviceMonitors.keda Service monitor for keda
   keda:
     ## @param serviceMonitors.keda.enabled Enable service monitor for keda
     enabled: true
@@ -179,7 +179,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - keda
-  # @param serviceMonitors.elasti Service monitor for elasti
+  # serviceMonitors.elasti Service monitor for elasti
   elasti:
     ## @param serviceMonitors.elasti.enabled Enable service monitor for elasti
     enabled: true
@@ -200,7 +200,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - elasti
-  # @param serviceMonitors.kubecost Service monitor for kubecost
+  # serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
     ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost
     enabled: true
@@ -222,7 +222,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - kubecost
-  # @param serviceMonitors.prometheus Service monitor for prometheus
+  # serviceMonitors.prometheus Service monitor for prometheus
   prometheus:
     ## @param serviceMonitors.prometheus.enabled Enable service monitor for prometheus
     enabled: true
@@ -242,7 +242,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - prometheus
-  # @param serviceMonitors.loki Service monitor for loki
+  # serviceMonitors.loki Service monitor for loki
   loki:
     ## @param serviceMonitors.loki.enabled Enable service monitor for loki
     enabled: true
@@ -263,7 +263,7 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - loki
-    # @param serviceMonitors.loki.promtail Service monitor for promtail
+    # serviceMonitors.loki.promtail Service monitor for promtail
     promtail:
       ## @param serviceMonitors.loki.promtail.enabled Enable service monitor for promtail
       enabled: true
