@@ -35,10 +35,12 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### prometheusRules Prometheus rules for prometheus
 
-| Name                               | Description                          | Value                     |
-| ---------------------------------- | ------------------------------------ | ------------------------- |
-| `prometheusRules.kubecost.enabled` | Enable prometheus rules for kubecost | `true`                    |
-| `prometheusRules.kubecost.name`    | Name of the prometheus rules         | `tfy-alertmanager-config` |
+| Name                               | Description                          | Value                                    |
+| ---------------------------------- | ------------------------------------ | ---------------------------------------- |
+| `prometheusRules.alerts.enabled`   | Enable prometheus rules for alerts   | `true`                                   |
+| `prometheusRules.alerts.name`      | Name of the prometheus rules         | `tfy-alertmanager-config-alerting-rules` |
+| `prometheusRules.kubecost.enabled` | Enable prometheus rules for kubecost | `true`                                   |
+| `prometheusRules.kubecost.name`    | Name of the prometheus rules         | `tfy-alertmanager-config-kubecost-rules` |
 
 ### serviceMonitors Service monitors for prometheus
 
