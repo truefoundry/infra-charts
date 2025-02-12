@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.workflows.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.workflows.name }}
+  labels:
+    {{- include "argo-workflows.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.workflows.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.workflows.endpoints | nindent 2 }}
+{{- end -}}

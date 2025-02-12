@@ -1,0 +1,22 @@
+{{- if .Values.scrapeConfigs.envoy.enabled }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: {{ .Values.scrapeConfigs.envoy.name }}
+  {{- if .Values.scrapeConfigs.envoy.labels }}
+  labels:
+    {{- toYaml .Values.scrapeConfigs.envoy.labels | nindent 4 }}
+  {{- end }}
+spec:
+  metricsPath: {{ .Values.scrapeConfigs.envoy.metricsPath }}
+  kubernetesSDConfigs:
+  - role: pod
+  {{- if .Values.scrapeConfigs.envoy.relabelings }}
+  relabelings:
+  {{- toYaml .Values.scrapeConfigs.envoy.relabelings | nindent 2 }}
+  {{- end }}
+  {{- if .Values.scrapeConfigs.envoy.metricsRelabelings }}
+  metricRelabelings:
+  {{- toYaml .Values.scrapeConfigs.envoy.metricsRelabelings | nindent 2 }}
+  {{- end }}
+{{- end }}

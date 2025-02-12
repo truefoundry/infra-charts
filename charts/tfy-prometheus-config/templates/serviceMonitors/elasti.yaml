@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.elasti.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.elasti.name }}
+  labels:
+    {{- include "elasti.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.elasti.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.elasti.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.elasti.endpoints | nindent 2 }}
+{{- end -}}

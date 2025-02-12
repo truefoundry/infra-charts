@@ -1,0 +1,21 @@
+{{- if .Values.scrapeConfigs.kubernetesPods.enabled }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: {{ .Values.scrapeConfigs.kubernetesPods.name }}
+  {{- if .Values.scrapeConfigs.kubernetesPods.labels }}
+  labels:
+    {{- toYaml .Values.scrapeConfigs.kubernetesPods.labels | nindent 4 }}
+  {{- end }}
+spec:
+  kubernetesSDConfigs:
+  - role: pod
+  {{- if .Values.scrapeConfigs.kubernetesPods.relabelings }}
+  relabelings:
+  {{- toYaml .Values.scrapeConfigs.kubernetesPods.relabelings | nindent 2 }}
+  {{- end }}
+  {{- if .Values.scrapeConfigs.kubernetesPods.metricsRelabelings }}
+  metricRelabelings:
+  {{- toYaml .Values.scrapeConfigs.kubernetesPods.metricsRelabelings | nindent 2 }}
+  {{- end }}
+{{- end }}
