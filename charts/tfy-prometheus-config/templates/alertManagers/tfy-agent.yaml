@@ -5,18 +5,9 @@ metadata:
   name: {{ .Values.alertManagers.tfyAgent.name }}
 spec:
   route:
-    receiver: tfy-agent
+    receiver: {{ .Values.alertManagers.tfyAgent.route.receiver }}
     routes:
-    - receiver: tfy-agent
-      continue: true
-      matchers:
-      - name: severity
-        matchType: regexp
-        value: "warning|critical"
-      repeatInterval: 1h
+      {{- toYaml .Values.alertManagers.tfyAgent.route.routes | nindent 4 }}
   receivers:
-  - name: tfy-agent
-    webhookConfigs:
-    - sendResolved: true
-      url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+    {{- toYaml .Values.alertManagers.tfyAgent.receivers | nindent 2 }}
 {{- end }}
