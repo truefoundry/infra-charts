@@ -93,7 +93,7 @@ alertManagers:
     enabled: true
     ## @param alertManagers.tfyAgent.name Name of the alert manager
     name: tfy-alertmanager-config
-    ## @param alertManagers.tfyAgent.route Route for the alert manager
+    ## @param alertManagers.tfyAgent.route [object] Route for the alert manager
     route:
       receiver: tfy-agent
       routes:
@@ -104,6 +104,7 @@ alertManagers:
               matchType: regexp
               value: "warning|critical"
           repeatInterval: 1h
+    ## @param alertManagers.tfyAgent.receivers [array] Receivers for the alert manager
     receivers:
       - name: tfy-agent
         webhookConfigs:
