@@ -4,9 +4,6 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ## Parameters
 
-### Configuration for tfy-prometheus-config
-
-
 ### scrapeConfigs Scrape configs for prometheus
 
 | Name                                              | Description                              | Value               |
