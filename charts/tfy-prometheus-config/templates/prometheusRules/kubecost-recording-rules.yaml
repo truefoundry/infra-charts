@@ -3,6 +3,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ .Values.prometheusRules.kubecostRules.name }}
+  labels:
+    {{- include "prometheusRules.labels" . | nindent 4 }}
 spec:
   groups:
   - name: CPU
