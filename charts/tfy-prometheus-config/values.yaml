@@ -8,6 +8,8 @@ scrapeConfigs:
     enabled: true
     ## @param scrapeConfigs.envoy.name Name of the scrape config
     name: envoy-stats
+    ## @param scrapeConfigs.envoy.jobName Job name for envoy
+    jobName: envoy-stats
     ## @param scrapeConfigs.envoy.labels [object] Labels for envoy
     labels:
       release: prometheus
@@ -42,6 +44,8 @@ scrapeConfigs:
     enabled: true
     ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
+    ## @param scrapeConfigs.kubernetesPods.jobName Job name for kubernetes pods
+    jobName: kubernetes-pods
     ## @param scrapeConfigs.kubernetesPods.labels [object] Labels for kubernetes pods
     labels:
       release: prometheus
@@ -136,6 +140,8 @@ serviceMonitors:
     name: argo-workflows
     ## @param serviceMonitors.workflows.labels [object] Labels for workflows
     labels: {}
+    ## @param serviceMonitors.workflows.jobLabel Job label for workflows
+    jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.workflows.endpoints [array] Endpoints for workflows
     endpoints:
       - port: metrics
@@ -157,6 +163,8 @@ serviceMonitors:
     name: keda
     ## @param serviceMonitors.keda.labels [object] Labels for keda
     labels: {}
+    ## @param serviceMonitors.keda.jobLabel Job label for keda
+    jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.keda.endpoints [array] Endpoints for keda
     endpoints:
       - port: metrics
@@ -187,6 +195,8 @@ serviceMonitors:
     name: elasti-resolver
     ## @param serviceMonitors.elasti.labels [object] Labels for elasti
     labels: {}
+    ## @param serviceMonitors.elasti.jobLabel Job label for elasti
+    jobLabel: app.kubernetes.io/prometheus
     ## @param serviceMonitors.elasti.endpoints [array] Endpoints for elasti
     endpoints:
       - port: http-resolver
@@ -208,6 +218,8 @@ serviceMonitors:
     name: kubecost
     ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
     labels: {}
+    ## @param serviceMonitors.kubecost.jobLabel Job label for kubecost
+    jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.kubecost.endpoints [array] Endpoints for kubecost
     endpoints:
       - port: tcp-model
@@ -230,6 +242,8 @@ serviceMonitors:
     name: prometheus
     ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
     labels: {}
+    ## @param serviceMonitors.prometheus.jobLabel Job label for prometheus
+    jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.prometheus.endpoints [array] Endpoints for prometheus
     endpoints:
       - port: http-web
@@ -237,7 +251,7 @@ serviceMonitors:
         path: /metrics
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
-      operated-prometheus: "true"
+      app.kubernetes.io/instance: prometheus
     ## @param serviceMonitors.prometheus.namespaceSelector [object] Namespace selector for prometheus
     namespaceSelector:
       matchNames:
@@ -250,6 +264,8 @@ serviceMonitors:
     name: loki
     ## @param serviceMonitors.loki.labels [object] Labels for loki
     labels: {}
+    ## @param serviceMonitors.loki.jobLabel Job label for loki
+    jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.loki.endpoints [array] Endpoints for loki
     endpoints:
       - port: http-metrics

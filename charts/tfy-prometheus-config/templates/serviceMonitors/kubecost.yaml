@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "kubecost.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.kubecost.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.kubecost.serviceSelectorLabels | nindent 6 }}

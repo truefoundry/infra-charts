@@ -8,6 +8,7 @@ metadata:
     {{- toYaml .Values.scrapeConfigs.kubernetesPods.labels | nindent 4 }}
   {{- end }}
 spec:
+  jobName: {{ .Values.scrapeConfigs.kubernetesPods.jobName }}
   kubernetesSDConfigs:
   - role: Pod
   {{- if .Values.scrapeConfigs.kubernetesPods.relabelings }}

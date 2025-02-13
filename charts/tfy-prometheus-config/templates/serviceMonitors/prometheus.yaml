@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "prometheus.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.prometheus.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.prometheus.serviceSelectorLabels | nindent 6 }}
