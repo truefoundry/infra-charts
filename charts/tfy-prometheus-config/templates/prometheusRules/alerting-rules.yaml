@@ -3,6 +3,8 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ .Values.prometheusRules.containerRules.name }}
+  labels:
+    {{- include "prometheusRules.labels" . | nindent 4 }}
 spec:
   groups:
   - name: Alerting

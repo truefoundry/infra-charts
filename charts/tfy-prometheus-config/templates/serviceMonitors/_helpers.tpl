@@ -54,3 +54,10 @@
 {{- end }}
 {{- end }}
 
+{{- define "prometheusRules.labels" -}}
+{{- if .Values.prometheusRules.labels }}
+{{- toYaml .Values.prometheusRules.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
