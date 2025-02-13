@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "elasti.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.elasti.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.elasti.serviceSelectorLabels | nindent 6 }}

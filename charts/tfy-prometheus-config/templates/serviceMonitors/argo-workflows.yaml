@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "argo-workflows.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.workflows.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.workflows.serviceSelectorLabels | nindent 6 }}

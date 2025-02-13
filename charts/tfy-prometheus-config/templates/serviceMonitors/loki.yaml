@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.loki.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.loki.serviceSelectorLabels | nindent 6 }}

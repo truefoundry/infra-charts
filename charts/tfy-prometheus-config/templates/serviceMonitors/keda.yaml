@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "keda.labels" . | nindent 4 }}
 spec:
+  jobLabel: {{ .Values.serviceMonitors.keda.jobLabel }}
   selector:
     matchLabels:
       {{- toYaml .Values.serviceMonitors.keda.serviceSelectorLabels | nindent 6 }}
