@@ -1,3 +1,9 @@
+{{- /*
+  Labels for service monitors
+*/ -}}
+{{- /*
+  Argo workflows service monitor labels
+*/ -}}
 {{- define "argo-workflows.labels" -}}
 {{- if .Values.serviceMonitors.workflows.labels }}
 {{- toYaml .Values.serviceMonitors.workflows.labels }}
@@ -6,6 +12,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Elasti service monitor labels
+*/ -}}
 {{- define "elasti.labels" -}}
 {{- if .Values.serviceMonitors.elasti.labels }}
 {{- toYaml .Values.serviceMonitors.elasti.labels }}
@@ -14,6 +23,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Keda service monitor labels
+*/ -}}
 {{- define "keda.labels" -}}
 {{- if .Values.serviceMonitors.keda.labels }}
 {{- toYaml .Values.serviceMonitors.keda.labels }}
@@ -22,6 +34,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Kubecost service monitor labels
+*/ -}}
 {{- define "kubecost.labels" -}}
 {{- if .Values.serviceMonitors.kubecost.labels }}
 {{- toYaml .Values.serviceMonitors.kubecost.labels }}
@@ -30,6 +45,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Loki service monitor labels
+*/ -}}
 {{- define "loki.labels" -}}
 {{- if .Values.serviceMonitors.loki.labels }}
 {{- toYaml .Values.serviceMonitors.loki.labels }}
@@ -38,6 +56,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Loki promtail service monitor labels
+*/ -}}
 {{- define "loki-promtail.labels" -}}
 {{- if .Values.serviceMonitors.loki.promtail.labels }}
 {{- toYaml .Values.serviceMonitors.loki.promtail.labels }}
@@ -46,6 +67,9 @@
 {{- end }}
 {{- end }}
 
+{{- /*
+  Prometheus service monitor labels
+*/ -}}
 {{- define "prometheus.labels" -}}
 {{- if .Values.serviceMonitors.prometheus.labels }}
 {{- toYaml .Values.serviceMonitors.prometheus.labels }}
@@ -54,9 +78,67 @@
 {{- end }}
 {{- end }}
 
-{{- define "prometheusRules.labels" -}}
-{{- if .Values.prometheusRules.labels }}
-{{- toYaml .Values.prometheusRules.labels }}
+{{- /*
+  Container rules labels
+*/ -}}
+{{- define "containerRule.labels" -}}
+{{- if .Values.prometheusRules.containerRules.labels }}
+{{- toYaml .Values.prometheusRules.containerRules.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Kubecost rules labels
+*/ -}}
+{{- define "kubecostRules.labels" -}}
+{{- if .Values.prometheusRules.kubecostRules.labels }}
+{{- toYaml .Values.prometheusRules.kubecostRules.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Alert manager service monitor labels
+*/ -}}
+{{- define "alert-manager.labels" -}}
+{{- if .Values.serviceMonitors.alertManager.labels }}
+{{- toYaml .Values.serviceMonitors.alertManager.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Kubelet service monitor labels
+*/ -}}
+{{- define "kubelet.labels" -}}
+{{- if .Values.serviceMonitors.kubelet.labels }}
+{{- toYaml .Values.serviceMonitors.kubelet.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Node exporter service monitor labels
+*/ -}}
+{{- define "nodeExporter.labels" -}}
+{{- if .Values.serviceMonitors.nodeExporter.labels }}
+{{- toYaml .Values.serviceMonitors.nodeExporter.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Kube state metrics service monitor labels
+*/ -}}
+{{- define "kubeStateMetrics.labels" -}}
+{{- if .Values.serviceMonitors.kubeStateMetrics.labels }}
+{{- toYaml .Values.serviceMonitors.kubeStateMetrics.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
