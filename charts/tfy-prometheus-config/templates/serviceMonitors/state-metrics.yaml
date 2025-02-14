@@ -1,0 +1,14 @@
+{{- if .Values.serviceMonitors.stateMetrics.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.stateMetrics.name }}
+  labels:
+    {{- include "stateMetrics.labels" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.stateMetrics.endpoints | nindent 2 }}
+  jobLabel: {{ .Values.serviceMonitors.stateMetrics.jobLabel }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.stateMetrics.serviceSelectorLabels | nindent 6 }}

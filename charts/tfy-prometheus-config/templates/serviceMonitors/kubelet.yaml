@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitors.kubelet.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "kubelet.labels" . | nindent 4 }}
+  name: {{ .Values.serviceMonitors.kubelet.name }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.kubelet.jobLabel }}
+  attachMetadata:
+    node: false
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.kubelet.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.kubelet.namespaceSelector | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.kubelet.serviceSelectorLabels | nindent 6 }}
+{{- end -}}

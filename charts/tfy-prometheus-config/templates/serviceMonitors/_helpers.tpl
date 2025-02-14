@@ -55,8 +55,38 @@
 {{- end }}
 
 {{- define "prometheusRules.labels" -}}
-{{- if .Values.prometheusRules.labels }}
-{{- toYaml .Values.prometheusRules.labels }}
+{{- if .Values.prometheusRules.containerRules.labels }}
+{{- toYaml .Values.prometheusRules.containerRules.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- define "alert-manager.labels" -}}
+{{- if .Values.serviceMonitors.alertManager.labels }}
+{{- toYaml .Values.serviceMonitors.alertManager.labels }}
+{{- else }}
+{{- end }}
+
+{{- define "kubelet.labels" -}}
+{{- if .Values.serviceMonitors.kubelet.labels }}
+{{- toYaml .Values.serviceMonitors.kubelet.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- define "nodeExporter.labels" -}}
+{{- if .Values.serviceMonitors.nodeExporter.labels }}
+{{- toYaml .Values.serviceMonitors.nodeExporter.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- define "stateMetrics.labels" -}}
+{{- if .Values.serviceMonitors.stateMetrics.labels }}
+{{- toYaml .Values.serviceMonitors.stateMetrics.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}

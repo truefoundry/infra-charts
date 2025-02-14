@@ -134,6 +134,28 @@ prometheusRules:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
+  # serviceMonitors.alertManager Service monitor for alert manager
+  alertManager:
+    ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager
+    enabled: true
+    ## @param serviceMonitors.alertManager.name Name of the service monitor
+    name: alert-manager
+    ## @param serviceMonitors.alertManager.labels [object] Labels for alert manager
+    labels: {}
+    ## @param serviceMonitors.alertManager.endpoints [array] Endpoints for alert manager
+    endpoints:
+      - enableHttp2: true
+        path: /metrics
+        port: http-web
+      - path: /metrics
+        port: reloader-web
+    ## @param serviceMonitors.alertManager.serviceSelectorLabels [object] Service selector labels for alert manager
+    serviceSelectorLabels:
+      app: kube-prometheus-stack-alertmanager
+    ## @param serviceMonitors.alertManager.namespaceSelector [object] Namespace selector for alert manager
+    namespaceSelector:
+      matchNames:
+        - prometheus
   # serviceMonitors.workflows Service monitor for workflows
   workflows:
     ## @param serviceMonitors.workflows.enabled Enable service monitor for workflows
@@ -236,6 +258,172 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - kubecost
+  # serviceMonitors.kubelet Service monitor for kubelet
+  kubelet:
+    ## @param serviceMonitors.kubelet.enabled Enable service monitor for kubelet
+    enabled: true
+    ## @param serviceMonitors.kubelet.name Name of the service monitor
+    name: kubelet
+    ## @param serviceMonitors.kubelet.labels [object] Labels for kubelet
+    labels: {}
+    ## @param serviceMonitors.kubelet.jobLabel Job label for kubelet
+    jobLabel: k8s-app
+    ## @param serviceMonitors.kubelet.endpoints [array] Endpoints for kubelet
+    endpoints:
+      - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        honorLabels: true
+        honorTimestamps: true
+        metricRelabelings:
+          - action: labeldrop
+            regex: name
+          - action: labeldrop
+            regex: metrics_path
+          - action: labeldrop
+            regex: endpoint
+          - action: labeldrop
+            regex: instance
+          - action: keep
+            regex: (container_(.+)|kubelet_volume_(.+))
+            sourceLabels:
+              - __name__
+        port: https-metrics
+        relabelings:
+          - action: replace
+            sourceLabels:
+              - __metrics_path__
+            targetLabel: metrics_path
+        scheme: https
+        tlsConfig:
+          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecureSkipVerify: true
+      - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+        honorLabels: true
+        honorTimestamps: true
+        interval: 10s
+        metricRelabelings:
+          - action: drop
+            regex: container_blkio_device_usage_total
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: container_memory_(mapped_file|swap)
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: container_(file_descriptors|tasks_state|threads_max)
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: container_spec_(cpu_shares|memory_reservation_limit_bytes|memory_swap_limit_bytes)
+            sourceLabels:
+              - __name__
+          - action: drop
+            regex: .+;
+            sourceLabels:
+              - id
+              - pod
+          - action: labeldrop
+            regex: id
+          - action: labeldrop
+            regex: name
+          - action: labeldrop
+            regex: metrics_path
+          - action: labeldrop
+            regex: endpoint
+          - action: labeldrop
+            regex: instance
+        path: /metrics/cadvisor
+        port: https-metrics
+        relabelings:
+          - action: replace
+            sourceLabels:
+              - __metrics_path__
+            targetLabel: metrics_path
+        scheme: https
+        tlsConfig:
+          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecureSkipVerify: true
+        trackTimestampsStaleness: true
+    ## @param serviceMonitors.kubelet.serviceSelectorLabels [object] Service selector labels for kubelet
+    serviceSelectorLabels:
+      app.kubernetes.io/name: kubelet
+      k8s-app: kubelet
+    ## @param serviceMonitors.kubelet.namespaceSelector [object] Namespace selector for kubelet
+    namespaceSelector:
+      matchNames:
+        - kube-system
+  # serviceMonitors.nodeExporter Service monitor for node exporter
+  nodeExporter:
+    ## @param serviceMonitors.nodeExporter.enabled Enable service monitor for node exporter
+    enabled: true
+    ## @param serviceMonitors.nodeExporter.name Name of the service monitor
+    name: prometheus-prometheus-node-exporter
+    ## @param serviceMonitors.nodeExporter.labels [object] Labels for node exporter
+    labels: {}
+    ## @param serviceMonitors.nodeExporter.jobLabel Job label for node exporter
+    jobLabel: jobLabel
+    ## @param serviceMonitors.nodeExporter.endpoints [array] Endpoints for node exporter
+    endpoints:
+      - interval: 30s
+        port: http-metrics
+        relabelings:
+          - action: replace
+            regex: (.+)
+            sourceLabels:
+              - __meta_kubernetes_endpoint_node_name
+            targetLabel: node
+        scheme: http
+    ## @param serviceMonitors.nodeExporter.serviceSelectorLabels [object] Service selector labels for node exporter
+    serviceSelectorLabels:
+      app.kubernetes.io/instance: prometheus
+      app.kubernetes.io/name: prometheus-node-exporter
+    ## @param serviceMonitors.nodeExporter.namespaceSelector [object] Namespace selector for node exporter
+    namespaceSelector:
+      matchNames:
+        - prometheus
+  # serviceMonitors.stateMetrics Service monitor for state metrics
+  stateMetrics:
+    ## @param serviceMonitors.stateMetrics.enabled Enable service monitor for state metrics
+    enabled: true
+    ## @param serviceMonitors.stateMetrics.name Name of the service monitor
+    name: prometheus-kube-state-metrics
+    ## @param serviceMonitors.stateMetrics.labels [object] Labels for state metrics
+    labels: {}
+    ## @param serviceMonitors.stateMetrics.jobLabel Job label for state metrics
+    jobLabel: app.kubernetes.io/name
+    ## @param serviceMonitors.stateMetrics.endpoints [array] Endpoints for state metrics
+    endpoints:
+      - honorLabels: true
+        metricRelabelings:
+          - action: replace
+            regex: ([;]*)([a-z-_A-Z]+)([;]*)
+            replacement: ${2}
+            separator: ;
+            sourceLabels:
+              - label_karpenter_sh_capacity_type
+              - label_eks_amazonaws_com_capacity_type
+              - label_kubernetes_azure_com_scalesetpriority
+              - label_cloud_google_com_gke_provisioning
+            targetLabel: capacity_type
+          - action: lowercase
+            regex: (.+)
+            sourceLabels:
+              - capacity_type
+            targetLabel: capacity_type
+          - action: replace
+            regex: (.+)
+            sourceLabels:
+              - label_node_kubernetes_io_instance_type
+            targetLabel: instance_type
+        port: http
+    ## @param serviceMonitors.stateMetrics.serviceSelectorLabels [object] Service selector labels for state metrics
+    serviceSelectorLabels:
+      app.kubernetes.io/instance: prometheus
+      app.kubernetes.io/name: kube-state-metrics
   # serviceMonitors.prometheus Service monitor for prometheus
   prometheus:
     ## @param serviceMonitors.prometheus.enabled Enable service monitor for prometheus
@@ -248,9 +436,10 @@ serviceMonitors:
     jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.prometheus.endpoints [array] Endpoints for prometheus
     endpoints:
-      - port: http-web
-        interval: 30s
-        path: /metrics
+      - path: /metrics
+        port: http-web
+      - path: /metrics
+        port: reloader-web
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       app.kubernetes.io/instance: prometheus

@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitors.nodeExporter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "nodeExporter.labels" . | nindent 4 }}
+  name: {{ .Values.serviceMonitors.nodeExporter.name }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.nodeExporter.jobLabel }}
+  attachMetadata:
+    node: false
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.nodeExporter.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.nodeExporter.namespaceSelector | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.nodeExporter.serviceSelectorLabels | nindent 6 }}
+{{- end -}}

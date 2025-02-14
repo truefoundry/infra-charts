@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.alertManager.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "alert-manager.labels" . | nindent 4 }}
+  name: {{ .Values.serviceMonitors.alertManager.name }}
+spec:
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.alertManager.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.alertManager.namespaceSelector | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.alertManager.serviceSelectorLabels | nindent 6 }}
+{{- end -}}
