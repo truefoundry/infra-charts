@@ -388,16 +388,16 @@ serviceMonitors:
       matchNames:
         - prometheus
   # serviceMonitors.stateMetrics Service monitor for state metrics
-  stateMetrics:
-    ## @param serviceMonitors.stateMetrics.enabled Enable service monitor for state metrics
+  kubeStateMetrics:
+    ## @param serviceMonitors.kubeStateMetrics.enabled Enable service monitor for kube state metrics
     enabled: true
-    ## @param serviceMonitors.stateMetrics.name Name of the service monitor
+    ## @param serviceMonitors.kubeStateMetrics.name Name of the service monitor
     name: prometheus-kube-state-metrics
-    ## @param serviceMonitors.stateMetrics.labels [object] Labels for state metrics
+    ## @param serviceMonitors.kubeStateMetrics.labels [object] Labels for kube state metrics
     labels: {}
-    ## @param serviceMonitors.stateMetrics.jobLabel Job label for state metrics
+    ## @param serviceMonitors.kubeStateMetrics.jobLabel Job label for kube state metrics
     jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.stateMetrics.endpoints [array] Endpoints for state metrics
+    ## @param serviceMonitors.kubeStateMetrics.endpoints [array] Endpoints for kube state metrics
     endpoints:
       - honorLabels: true
         metricRelabelings:
@@ -422,7 +422,7 @@ serviceMonitors:
               - label_node_kubernetes_io_instance_type
             targetLabel: instance_type
         port: http
-    ## @param serviceMonitors.stateMetrics.serviceSelectorLabels [object] Service selector labels for state metrics
+    ## @param serviceMonitors.kubeStateMetrics.serviceSelectorLabels [object] Service selector labels for kube state metrics
     serviceSelectorLabels:
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: kube-state-metrics

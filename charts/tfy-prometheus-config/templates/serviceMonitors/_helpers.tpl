@@ -90,9 +90,9 @@
 {{- end }}
 
 {{- /*
-  Recording rules labels
+  Kubecost rules labels
 */ -}}
-{{- define "recording-rules.labels" -}}
+{{- define "kubecostRules.labels" -}}
 {{- if .Values.prometheusRules.kubecostRules.labels }}
 {{- toYaml .Values.prometheusRules.kubecostRules.labels }}
 {{- else }}
@@ -101,9 +101,9 @@
 {{- end }}
 
 {{- /*
-  Alert manager service monitor labels
+  Container rules labels
 */ -}}
-{{- define "alert-manager.labels" -}}
+{{- define "containerRules.labels" -}}
 {{- if .Values.serviceMonitors.alertManager.labels }}
 {{- toYaml .Values.serviceMonitors.alertManager.labels }}
 {{- else }}
