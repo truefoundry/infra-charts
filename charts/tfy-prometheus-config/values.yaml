@@ -130,6 +130,8 @@ prometheusRules:
     enabled: true
     ## @param prometheusRules.kubecostRules.name Name of the prometheus rules
     name: tfy-alertmanager-config-kubecost-rules
+    ## @param prometheusRules.kubecostRules.labels [object] Labels for the prometheus rules
+    labels: {}
 ## @section serviceMonitors Service monitors for prometheus
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
@@ -139,7 +141,7 @@ serviceMonitors:
     ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager
     enabled: true
     ## @param serviceMonitors.alertManager.name Name of the service monitor
-    name: alert-manager
+    name: prometheus-kube-prometheus-alertmanager
     ## @param serviceMonitors.alertManager.labels [object] Labels for alert manager
     labels: {}
     ## @param serviceMonitors.alertManager.endpoints [array] Endpoints for alert manager
@@ -263,7 +265,7 @@ serviceMonitors:
     ## @param serviceMonitors.kubelet.enabled Enable service monitor for kubelet
     enabled: true
     ## @param serviceMonitors.kubelet.name Name of the service monitor
-    name: kubelet
+    name: prometheus-kube-prometheus-kubelet
     ## @param serviceMonitors.kubelet.labels [object] Labels for kubelet
     labels: {}
     ## @param serviceMonitors.kubelet.jobLabel Job label for kubelet
