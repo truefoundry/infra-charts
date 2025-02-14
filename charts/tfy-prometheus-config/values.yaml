@@ -149,8 +149,16 @@ serviceMonitors:
       - enableHttp2: true
         path: /metrics
         port: http-web
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '^(alertmanager_config_last_reload_successful|alertmanager_cluster_members|alertmanager_notifications_failed_total|alertmanager_notifications_total|alertmanager_config_hash|process_start_time_seconds|up)$'
+            action: keep
       - path: /metrics
         port: reloader-web
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '^(alertmanager_config_last_reload_successful|alertmanager_cluster_members|alertmanager_notifications_failed_total|alertmanager_notifications_total|alertmanager_config_hash|process_start_time_seconds|up)$'
+            action: keep
     ## @param serviceMonitors.alertManager.serviceSelectorLabels [object] Service selector labels for alert manager
     serviceSelectorLabels:
       app: kube-prometheus-stack-alertmanager
@@ -378,6 +386,10 @@ serviceMonitors:
             sourceLabels:
               - __meta_kubernetes_endpoint_node_name
             targetLabel: node
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '^(node_filesystem_avail_bytes|node_filesystem_size_bytes|node_filesystem_readonly|node_filesystem_files_free|node_filesystem_files|node_network_receive_errs_total|node_network_receive_packets_total|node_network_transmit_errs_total|node_network_transmit_packets_total|node_nf_conntrack_entries|node_textfile_scrape_error|node_timex_offset_seconds|node_timex_sync_status|node_timex_maxerror_seconds|node_md_disks_required|node_md_disks|node_filefd_allocated|node_filefd_maximum|node_systemd_unit_state|node_network_up)$'
+            action: keep
         scheme: http
     ## @param serviceMonitors.nodeExporter.serviceSelectorLabels [object] Service selector labels for node exporter
     serviceSelectorLabels:
@@ -421,6 +433,12 @@ serviceMonitors:
             sourceLabels:
               - label_node_kubernetes_io_instance_type
             targetLabel: instance_type
+          - sourceLabels: [__name__]
+            regex: '^(kube_pod_container_resource_requests|kube_pod_status_phase|kube_pod_status_ready|kube_pod_labels|up|kube_pod_container_resource_limits|kube_pod_container_status_restarts_total|kube_pod_owner|kube_pod_info|kube_pod_container_status_waiting_reason|kube_pod_container_state_started|kube_pod_status_container_ready_time|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_ready)$'
+            action: keep
+          - sourceLabels: [__name__]
+            regex: '^(kube_deployment_status_replicas_available)$'
+            action: keep
         port: http
     ## @param serviceMonitors.kubeStateMetrics.serviceSelectorLabels [object] Service selector labels for kube state metrics
     serviceSelectorLabels:
@@ -440,6 +458,10 @@ serviceMonitors:
     endpoints:
       - path: /metrics
         port: http-web
+        metricRelabelings:
+          - sourceLabels: [__name__]
+            regex: '^(prometheus_config_last_reload_successful| prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered| prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_order_total| prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_seriesprometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds| prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total| prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max )$'
+            action: keep
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       app.kubernetes.io/instance: prometheus
