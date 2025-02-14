@@ -2,14 +2,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.serviceMonitors.stateMetrics.name }}
+  name: {{ .Values.serviceMonitors.kubeStateMetrics.name }}
   labels:
-    {{- include "stateMetrics.labels" . | nindent 4 }}
+    {{- include "kubeStateMetrics.labels" . | nindent 4 }}
 spec:
   endpoints:
-  {{- toYaml .Values.serviceMonitors.stateMetrics.endpoints | nindent 2 }}
-  jobLabel: {{ .Values.serviceMonitors.stateMetrics.jobLabel }}
+  {{- toYaml .Values.serviceMonitors.kubeStateMetrics.endpoints | nindent 2 }}
+  jobLabel: {{ .Values.serviceMonitors.kubeStateMetrics.jobLabel }}
   selector:
     matchLabels:
-      {{- toYaml .Values.serviceMonitors.stateMetrics.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.serviceMonitors.kubeStateMetrics.serviceSelectorLabels | nindent 6 }}
 {{- end }}

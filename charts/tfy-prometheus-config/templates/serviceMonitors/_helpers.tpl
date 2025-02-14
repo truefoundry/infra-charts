@@ -134,11 +134,11 @@
 {{- end }}
 
 {{- /*
-  State metrics service monitor labels
+  Kube state metrics service monitor labels
 */ -}}
-{{- define "stateMetrics.labels" -}}
-{{- if .Values.serviceMonitors.stateMetrics.labels }}
-{{- toYaml .Values.serviceMonitors.stateMetrics.labels }}
+{{- define "kubeStateMetrics.labels" -}}
+{{- if .Values.serviceMonitors.kubeStateMetrics.labels }}
+{{- toYaml .Values.serviceMonitors.kubeStateMetrics.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
