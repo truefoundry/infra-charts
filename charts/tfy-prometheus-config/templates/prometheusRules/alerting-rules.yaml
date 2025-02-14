@@ -9,34 +9,6 @@ spec:
   groups:
   - name: Alerting
     rules:
-    - alert: CPUHighUtilizationForRequested
-      expr: >-
-        sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m])) by (pod, container, namespace) / sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="cpu"}) by (pod, container, namespace) * 100 > 80
-      for: 2m
-      labels:
-        entity: container
-        severity: warning
-      annotations:
-        summary: |-
-          Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
-        description: |-
-          Container CPU utilization is above 80% of requested CPU
-            VALUE = {{`{{ $value }}`}}
-
-    - alert: MemoryHighUtilizationForRequested
-      expr: >-
-        sum(container_memory_working_set_bytes{job="kubelet", container!=""})  by (pod, container, namespace) / sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
-      for: 2m
-      labels:
-        entity: container
-        severity: warning
-      annotations:
-        summary: |-
-          Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
-        description: |-
-          Container Memory usage is above 80% of requested memory
-            VALUE = {{`{{ $value }}`}}
-
     - alert: KubernetesPodNotHealthy
       expr: >-
         sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
