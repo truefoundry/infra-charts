@@ -79,9 +79,9 @@
 {{- end }}
 
 {{- /*
-  Alerting rules labels
+  Container rules labels
 */ -}}
-{{- define "alerting-rules.labels" -}}
+{{- define "containerRule.labels" -}}
 {{- if .Values.prometheusRules.containerRules.labels }}
 {{- toYaml .Values.prometheusRules.containerRules.labels }}
 {{- else }}
@@ -101,9 +101,9 @@
 {{- end }}
 
 {{- /*
-  Container rules labels
+  Alert manager service monitor labels
 */ -}}
-{{- define "containerRules.labels" -}}
+{{- define "alert-manager.labels" -}}
 {{- if .Values.serviceMonitors.alertManager.labels }}
 {{- toYaml .Values.serviceMonitors.alertManager.labels }}
 {{- else }}
