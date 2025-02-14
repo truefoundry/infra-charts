@@ -107,8 +107,13 @@
 {{- if .Values.serviceMonitors.alertManager.labels }}
 {{- toYaml .Values.serviceMonitors.alertManager.labels }}
 {{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
 {{- end }}
 
+{{- /*
+  Kubelet service monitor labels
+*/ -}}
 {{- define "kubelet.labels" -}}
 {{- if .Values.serviceMonitors.kubelet.labels }}
 {{- toYaml .Values.serviceMonitors.kubelet.labels }}
