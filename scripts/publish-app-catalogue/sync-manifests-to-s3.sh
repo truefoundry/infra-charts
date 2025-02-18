@@ -42,7 +42,7 @@ copy_control_plane_addon_version_to_s3() {
         addon_name=$(basename "${file}" .yaml)
         addon_target_revision=$(yq e '.spec.source.targetRevision' "${file}")
         validate_target_revision "${addon_target_revision}"
-        yq e ".${addon_name} = ${addon_target_revision}" -i ${target_addon_version_file_path}
+        yq e ".${addon_name} = \"${addon_target_revision}\"" -i ${target_addon_version_file_path}
     done
     # Copy the target version map to S3
     aws s3 cp "${target_addon_version_file_path}" "s3://${AWS_S3_BUCKET}/addons/${cluster_type}/control-planes/${cp_chart_version}/targetAddonVersion.yaml"
