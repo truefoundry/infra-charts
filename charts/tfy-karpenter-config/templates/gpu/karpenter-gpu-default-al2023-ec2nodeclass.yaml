@@ -53,8 +53,6 @@ spec:
         deleteOnTermination: true
   {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
-  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "AL2" }}
-  userData: {{ .Files.Get "files/al2-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.amiFamily "Bottlerocket" }}
   userData: {{ .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | toYaml | indent 2 }}
   {{- end }}
