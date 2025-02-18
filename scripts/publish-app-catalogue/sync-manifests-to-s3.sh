@@ -26,7 +26,7 @@ copy_addon_manifest_to_s3() {
         addon_name=$(basename "${file}" .yaml)
         addon_target_revision=$(yq e '.spec.source.targetRevision' "${file}")
         validate_target_revision "${addon_target_revision}"
-        # Copy the addon file to S3
+        # Copy the addon manifest to S3
         aws s3 cp "${file}" "s3://${AWS_S3_BUCKET}/addons/${cluster_type}/addons/${addon_name}/versions/${addon_target_revision}/manifest.yaml"
     done
 }
@@ -36,7 +36,7 @@ copy_control_plane_addon_version_to_s3() {
     local cluster_type=$2
     local cp_chart_version=$3
     local target_addon_version_file_path="/tmp/cp_addon_versions/targetAddonVersion.yaml"
-    mkdir -p /tmp/cp_addon_versions
+    mkdir -p "/tmp/cp_addon_versions"
     touch ${target_addon_version_file_path}
     for file in $(find "${directory}" -type f); do
         addon_name=$(basename "${file}" .yaml)
@@ -46,7 +46,7 @@ copy_control_plane_addon_version_to_s3() {
     done
     # Copy the target version map to S3
     aws s3 cp "${target_addon_version_file_path}" "s3://${AWS_S3_BUCKET}/addons/${cluster_type}/control-planes/${cp_chart_version}/targetAddonVersion.yaml"
-    rm -rf /tmp/cp_addon_versions
+    rm -rf "/tmp/cp_addon_versions"
 }
 
 echo "Rendering ${CLUSTER_TYPE} k8s manifests..."
