@@ -75,6 +75,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter            | `true`                                    |
+| `serviceMonitors.karpenter.name`                           | Name of the service monitor                     | `karpenter`                               |
+| `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                         | `kube-system`                             |
+| `serviceMonitors.karpenter.labels`                         | Labels for karpenter                            | `{}`                                      |
+| `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                | `{}`                                      |
+| `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                         | `[]`                                      |
+| `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter           | `{}`                                      |
 | `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `true`                                    |
 | `serviceMonitors.kubecost.name`                            | Name of the service monitor                     | `kubecost`                                |
 | `serviceMonitors.kubecost.labels`                          | Labels for kubecost                             | `{}`                                      |
