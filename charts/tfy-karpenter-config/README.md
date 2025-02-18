@@ -69,7 +69,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.defaultNodeTemplate.instanceProfile`                  | Instance profile override for the node template                | `""`                         |
 | `karpenter.defaultNodeTemplate.rootVolumeSize`                   | Size for the root volume attached to node                      | `100Gi`                      |
 | `karpenter.defaultNodeTemplate.extraTags`                        | Additional tags for the node template.                         | `{}`                         |
-| `karpenter.defaultNodeTemplate.amiFamily`                        | AMI family to use for node template                            | `""`                         |
+| `karpenter.defaultNodeTemplate.amiFamily`                        | AMI family to use for node template                            | `AL2023`                     |
 | `karpenter.defaultNodeTemplate.amiSelectorTerms`                 | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
 | `karpenter.defaultNodeTemplate.detailedMonitoring`               |                                                                | `false`                      |
 | `karpenter.defaultNodeTemplate.extraSubnetTags`                  | Additional tags for the subnet.                                | `{}`                         |
@@ -92,7 +92,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.gpuDefaultNodeTemplate.rootVolumeSize`                | Size for the root volume attached to node                      | `100Gi`                      |
 | `karpenter.gpuDefaultNodeTemplate.extraTags`                     | Additional tags for the gpu node template.                     | `{}`                         |
 | `karpenter.gpuDefaultNodeTemplate.detailedMonitoring`            |                                                                | `false`                      |
-| `karpenter.gpuDefaultNodeTemplate.amiFamily`                     | AMI family to use for node template                            | `""`                         |
+| `karpenter.gpuDefaultNodeTemplate.amiFamily`                     | AMI family to use for node template                            | `AL2023`                     |
 | `karpenter.gpuDefaultNodeTemplate.amiSelectorTerms`              | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
 | `karpenter.gpuDefaultNodeTemplate.extraSubnetTags`               | Additional tags for the subnet.                                | `{}`                         |
 | `karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags`        | Additional tags for the security group.                        | `{}`                         |
@@ -112,7 +112,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.controlPlaneNodeTemplate.instanceProfile`             | Instance profile override for the node template                | `""`                         |
 | `karpenter.controlPlaneNodeTemplate.rootVolumeSize`              | Size for the root volume attached to node                      | `100Gi`                      |
 | `karpenter.controlPlaneNodeTemplate.extraTags`                   | Additional tags for the node template.                         | `{}`                         |
-| `karpenter.controlPlaneNodeTemplate.amiFamily`                   | AMI family to use for node template                            | `""`                         |
+| `karpenter.controlPlaneNodeTemplate.amiFamily`                   | AMI family to use for node template                            | `AL2023`                     |
 | `karpenter.controlPlaneNodeTemplate.amiSelectorTerms`            | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
 | `karpenter.controlPlaneNodeTemplate.detailedMonitoring`          |                                                                | `false`                      |
 | `karpenter.controlPlaneNodeTemplate.extraSubnetTags`             | Additional tags for the subnet.                                | `{}`                         |
@@ -136,7 +136,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.inferentiaDefaultNodeTemplate.rootVolumeSize`         | Size for the root volume attached to node                      | `100Gi`                      |
 | `karpenter.inferentiaDefaultNodeTemplate.extraTags`              | Additional tags for the node template.                         | `{}`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.detailedMonitoring`     |                                                                | `false`                      |
-| `karpenter.inferentiaDefaultNodeTemplate.amiFamily`              | AMI family to use for node template                            | `""`                         |
+| `karpenter.inferentiaDefaultNodeTemplate.amiFamily`              | AMI family to use for node template                            | `AL2023`                     |
 | `karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms`       | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.extraSubnetTags`        | Additional tags for the subnet.                                | `{}`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.extraSecurityGroupTags` | Additional tags for the security group.                        | `{}`                         |
@@ -175,7 +175,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.critical.nodeclass.rootVolumeSize`         | Size for the root volume attached to the node                             | `100Gi`                 |
 | `karpenter.critical.nodeclass.extraTags`              | Additional tags for the node template.                                    | `{}`                    |
 | `karpenter.critical.nodeclass.detailedMonitoring`     |                                                                           | `false`                 |
-| `karpenter.critical.nodeclass.amiFamily`              | AMI family to use for node template                                       | `""`                    |
+| `karpenter.critical.nodeclass.amiFamily`              | AMI family to use for node template                                       | `AL2023`                |
 | `karpenter.critical.nodeclass.amiSelectorTerms`       | AMI selector terms for the node template, conditions are ANDed            | `[]`                    |
 | `karpenter.critical.nodeclass.extraSubnetTags`        | Additional tags for the subnet.                                           | `{}`                    |
 | `karpenter.critical.nodeclass.extraSecurityGroupTags` | Additional tags for the security group.                                   | `{}`                    |

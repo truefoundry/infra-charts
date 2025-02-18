@@ -86,6 +86,13 @@ spec:
       labels:
         app: {{ .Release.Name }}-scheduler
         component: scheduler-extension
+        {{- with .Values.scheduler.extension.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.scheduler.extension.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       {{- with .Values.scheduler.extension.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:

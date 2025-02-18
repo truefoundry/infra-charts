@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.27.0
+  controlPlaneChartVersion: 0.30.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -113,7 +113,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.26.0"
+    tag: "v0.30.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -256,8 +256,8 @@ truefoundryFrontendApp:
     VITE_SPARK_JOBS_ENABLED_TENANTS: ""
     VITE_ENABLE_REPORT_WEBVITALS: "false"
     VITE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
-    VITE_ENABLE_AUDIT_LOGS_GRAPH: "false"
-    VITE_AUDIT_LOGS_GRAPH_ENABLED_TENANTS: ""
+    VITE_ENABLE_NEW_DELETE_FLOW: "false"
+    VITE_NEW_DELETE_ENABLED_TENANTS: ""
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
@@ -303,7 +303,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.22.0"
+    tag: "v0.25.0"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -403,7 +403,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.27.0"
+    tag: "v0.30.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -550,7 +550,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.23.0"
+    tag: "v0.26.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -654,7 +654,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.23.0"
+    tag: "v0.26.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -760,7 +760,7 @@ nats:
       ## @param nats.nats.image.repository NATS server image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
       ## @param nats.nats.image.tag NATS server image tag
-      tag: 2.10.22-alpine3.20
+      tag: 2.10.24-alpine3.21
     ## @param nats.nats.advertise Bool to enable NATS server advertise
     advertise: false
     ## @param nats.nats.imagePullSecrets Image pull credentials for NATS server
@@ -804,6 +804,10 @@ nats:
         cpu: 200m
         ## @param nats.nats.resources.requests.memory Memory request for NATS server
         memory: 512Mi
+    ## nats.nats.limits Additional limits for NATS server
+    limits:
+      ## @param nats.nats.limits.maxPayload Maximum message payload size for NATS server
+      maxPayload: 4Mi
   ## nats.natsbox NATSBox configuration
   natsbox:
     ## @param nats.natsbox.enabled Bool to enable NATSBox
@@ -1108,7 +1112,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController
     repository: tfy.jfrog.io/tfy-private-images/tfy-controller
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.16.0
+    tag: v0.17.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1194,7 +1198,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.10.0
+    tag: v0.12.0
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables

@@ -120,6 +120,13 @@ spec:
         component: scheduler
         tier: control-plane
         version: second
+        {{- with .Values.scheduler.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.scheduler.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       priorityClassName: system-cluster-critical
       {{- with .Values.scheduler.imagePullSecrets | default .Values.imagePullSecrets }}
