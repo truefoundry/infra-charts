@@ -447,6 +447,33 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - prometheus
+  prometheusOperator:
+    ## @param serviceMonitors.prometheusOperator.enabled Enable service monitor for prometheus operator
+    enabled: true
+    ## @param serviceMonitors.prometheusOperator.name Name of the service monitor
+    name: prometheus-kube-prometheus-admission
+    ## @param serviceMonitors.prometheusOperator.labels [object] Labels for prometheus operator
+    labels: {}
+    ## @param serviceMonitors.prometheusOperator.endpoints [array] Endpoints for prometheus operator
+    endpoints:
+      - port: https
+        scheme: https
+        honorLabels: true
+        tlsConfig:
+          ca:
+            secret:
+              key: ca
+              name: prometheus-kube-prometheus-admission
+              optional: false
+            serverName: prometheus-kube-prometheus-operator
+    ## @param serviceMonitors.prometheusOperator.serviceSelectorLabels [object] Service selector labels for prometheus operator
+    serviceSelectorLabels:
+      app: kube-prometheus-stack-operator
+      release: prometheus
+    ## @param serviceMonitors.prometheusOperator.namespaceSelector [object] Namespace selector for prometheus operator
+    namespaceSelector:
+      matchNames:
+        - prometheus
   # serviceMonitors.loki Service monitor for loki
   loki:
     ## @param serviceMonitors.loki.enabled Enable service monitor for loki
