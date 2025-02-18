@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.prometheusOperator.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.prometheusOperator.name }}
+  labels:
+    {{- include "prometheusOperator.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.prometheusOperator.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.prometheusOperator.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.prometheusOperator.endpoints | nindent 2 }}
+{{- end -}}

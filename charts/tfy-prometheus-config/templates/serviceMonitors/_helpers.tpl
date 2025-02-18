@@ -79,6 +79,17 @@
 {{- end }}
 
 {{- /*
+  Prometheus operator service monitor labels
+*/ -}}
+{{- define "prometheusOperator.labels" -}}
+{{- if .Values.serviceMonitors.prometheusOperator.labels }}
+{{- toYaml .Values.serviceMonitors.prometheusOperator.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
   Container rules labels
 */ -}}
 {{- define "containerRule.labels" -}}
