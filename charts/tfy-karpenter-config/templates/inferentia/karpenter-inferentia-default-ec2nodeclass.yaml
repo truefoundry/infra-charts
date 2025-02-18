@@ -38,7 +38,7 @@ spec:
   amiSelectorTerms:
   {{- .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
   {{- end }}
-  {{- if eq .Values.karpenter.inferentiaDefaultNodeTemplate.amiFamily "Bottlerocket" }}
+  {{- if eq (include "inferentiaDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb
       ebs:

@@ -40,7 +40,7 @@ spec:
   amiSelectorTerms:
   {{- .Values.karpenter.critical.nodeclass.amiSelectorTerms | toYaml | nindent 2 }}
   {{- end }}
-  {{- if eq .Values.karpenter.critical.nodeclass.amiFamily "Bottlerocket" }}
+  {{- if eq (include "controlPlaneNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb
       ebs:
