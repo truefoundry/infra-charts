@@ -1,0 +1,16 @@
+{{- if .Values.serviceMonitors.karpenter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.karpenter.name }}
+  labels:
+    {{- include "karpenter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.karpenter.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.karpenter.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.karpenter.endpoints | nindent 2 }}
+{{- end }}

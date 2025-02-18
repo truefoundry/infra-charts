@@ -236,6 +236,28 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - elasti
+  # serviceMonitors.karpenter Service monitor for karpenter
+  karpenter:
+    ## @param serviceMonitors.karpenter.enabled Enable service monitor for karpenter
+    enabled: true
+    ## @param serviceMonitors.karpenter.name Name of the service monitor
+    name: karpenter
+    ## @param serviceMonitors.karpenter.namespace Namespace for karpenter
+    namespace: kube-system
+    ## @param serviceMonitors.karpenter.labels [object] Labels for karpenter
+    labels: {}
+    ## @param serviceMonitors.karpenter.namespaceSelector [object] Namespace selector for karpenter
+    namespaceSelector:
+      matchNames:
+        - kube-system
+    ## @param serviceMonitors.karpenter.endpoints [array] Endpoints for karpenter
+    endpoints:
+      - port: http-metrics
+        path: /metrics
+    ## @param serviceMonitors.karpenter.serviceSelectorLabels [object] Service selector labels for karpenter
+    serviceSelectorLabels:
+      app.kubernetes.io/instance: karpenter
+      app.kubernetes.io/name: karpenter
   # serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
     ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost

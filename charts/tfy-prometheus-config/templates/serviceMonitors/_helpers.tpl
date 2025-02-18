@@ -154,3 +154,14 @@
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
 {{- end }}
+
+{{- /*
+  Karpenter service monitor labels
+*/ -}}
+{{- define "karpenter.labels" -}}
+{{- if .Values.serviceMonitors.karpenter.labels }}
+{{- toYaml .Values.serviceMonitors.karpenter.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
