@@ -53,8 +53,7 @@ spec:
             VALUE = {{`{{ $value }}`}}
     - for: 2m
       expr: >-
-        sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m]))
-        by (container, pod, namespace) > 0
+        sum by (container, pod, namespace) (sum_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics"}[5m])) > 0
       alert: ContainerOOMKilled
       labels:
         entity: container
