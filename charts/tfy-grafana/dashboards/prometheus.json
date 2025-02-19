@@ -384,7 +384,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "rate(prometheus_engine_query_samples_total{instance=\"localhost:9090\",job=\"prometheus\"}[$__rate_interval])",
+          "expr": "rate(prometheus_engine_query_samples_total{pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\",job=\"prometheus\"}[$__rate_interval])",
           "instant": false,
           "legendFormat": "Total number of samples loaded by queries",
           "range": true,
@@ -662,7 +662,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\", instance=\"localhost:9090\"}[$__rate_interval]))",
+          "expr": "sum(rate(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\"}[$__rate_interval]))",
           "instant": false,
           "legendFormat": "Samples ingested per second",
           "range": true,
@@ -1271,7 +1271,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "prometheus_engine_queries{instance=\"localhost:9090\",job=\"prometheus\"}",
+          "expr": "prometheus_engine_queries{pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\",job=\"prometheus\"}",
           "instant": false,
           "legendFormat": "Total number of queries executing or waiting",
           "range": true,
@@ -1283,7 +1283,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "prometheus_engine_queries_concurrent_max{instance=\"localhost:9090\",job=\"prometheus\"}",
+          "expr": "prometheus_engine_queries_concurrent_max{pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\",job=\"prometheus\"}",
           "hide": false,
           "instant": false,
           "legendFormat": "max allowed concurrent queries",
@@ -1351,7 +1351,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(increase(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\", instance=\"localhost:9090\"}[24h])) / 1e6",
+          "expr": "sum(increase(prometheus_tsdb_head_samples_appended_total{job=\"prometheus\", pod=\"prometheus-prometheus-kube-prometheus-prometheus-0\"}[24h])) / 1e6",
           "format": "table",
           "instant": true,
           "range": false,
