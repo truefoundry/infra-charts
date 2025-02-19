@@ -23,7 +23,7 @@ copy_addon_manifest_to_s3() {
     local directory=$1
     local cluster_type=$2
     for file in $(find "${directory}" -type f); do
-        addon_name=$(basename "${file}" .yaml)
+        addon_name=$(yq e '.metadata.name' "${file}")
         addon_target_revision=$(yq e '.spec.source.targetRevision' "${file}")
         validate_target_revision "${addon_target_revision}"
         # Copy the addon manifest to S3
@@ -39,7 +39,7 @@ copy_control_plane_addon_version_to_s3() {
     mkdir -p "/tmp/cp_addon_versions"
     touch ${target_addon_version_file_path}
     for file in $(find "${directory}" -type f); do
-        addon_name=$(basename "${file}" .yaml)
+        addon_name=$(yq e '.metadata.name' "${file}")
         addon_target_revision=$(yq e '.spec.source.targetRevision' "${file}")
         validate_target_revision "${addon_target_revision}"
         yq e ".${addon_name} = \"${addon_target_revision}\"" -i ${target_addon_version_file_path}
