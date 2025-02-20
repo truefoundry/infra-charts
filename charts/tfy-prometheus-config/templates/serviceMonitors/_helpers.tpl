@@ -79,6 +79,17 @@
 {{- end }}
 
 {{- /*
+  Prometheus operator service monitor labels
+*/ -}}
+{{- define "prometheusOperator.labels" -}}
+{{- if .Values.serviceMonitors.prometheusOperator.labels }}
+{{- toYaml .Values.serviceMonitors.prometheusOperator.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
   Container rules labels
 */ -}}
 {{- define "containerRule.labels" -}}
@@ -139,6 +150,17 @@
 {{- define "kubeStateMetrics.labels" -}}
 {{- if .Values.serviceMonitors.kubeStateMetrics.labels }}
 {{- toYaml .Values.serviceMonitors.kubeStateMetrics.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{- /*
+  Karpenter service monitor labels
+*/ -}}
+{{- define "karpenter.labels" -}}
+{{- if .Values.serviceMonitors.karpenter.labels }}
+{{- toYaml .Values.serviceMonitors.karpenter.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
