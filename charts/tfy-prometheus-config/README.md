@@ -75,6 +75,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.gpu.enabled`                              | Enable service monitor for gpu                  | `true`                                    |
+| `serviceMonitors.gpu.name`                                 | Name of the service monitor                     | `gpu-metrics`                             |
+| `serviceMonitors.gpu.labels`                               | Labels for gpu                                  | `{}`                                      |
+| `serviceMonitors.gpu.jobLabel`                             | Job label for gpu                               | `operator`                                |
+| `serviceMonitors.gpu.endpoints`                            | Endpoints for gpu                               | `[]`                                      |
+| `serviceMonitors.gpu.serviceSelectorLabels`                | Service selector labels for gpu                 | `{}`                                      |
+| `serviceMonitors.gpu.namespaceSelector`                    | Namespace selector for gpu                      | `{}`                                      |
 | `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter            | `true`                                    |
 | `serviceMonitors.karpenter.name`                           | Name of the service monitor                     | `karpenter`                               |
 | `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                         | `kube-system`                             |
