@@ -15,7 +15,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `scrapeConfigs.envoy.metricsPath`                 | Metrics path for envoy                   | `/stats/prometheus` |
 | `scrapeConfigs.envoy.relabelings`                 | Relabelings for envoy                    | `[]`                |
 | `scrapeConfigs.envoy.metricsRelabelings`          | Metrics relabelings for envoy            | `[]`                |
-| `scrapeConfigs.kubernetesPods.enabled`            | Enable scrape config for kubernetes pods | `true`              |
+| `scrapeConfigs.kubernetesPods.enabled`            | Enable scrape config for kubernetes pods | `false`             |
 | `scrapeConfigs.kubernetesPods.name`               | Name of the scrape config                | `kubernetes-pods`   |
 | `scrapeConfigs.kubernetesPods.jobName`            | Job name for kubernetes pods             | `kubernetes-pods`   |
 | `scrapeConfigs.kubernetesPods.labels`             | Labels for kubernetes pods               | `{}`                |
