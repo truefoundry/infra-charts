@@ -1,0 +1,18 @@
+{{- if .Values.serviceMonitors.gpu.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.gpu.name }}
+  labels:
+    {{- include "keda.labels" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.gpu.jobLabel }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.gpu.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.gpu.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.gpu.endpoints | nindent 2 }}
+{{- end }}
+
