@@ -23,13 +23,13 @@ spec:
         {{ .Values.aws.inferentia.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         {{- $mergedTolerations := .Values.tolerations }}
-        {{- if .Values.aws.karpenter.tolerations }}
-        {{- $mergedTolerations = .Values.aws.karpenter.tolerations }}
+        {{- if .Values.aws.inferentia.tolerations }}
+        {{- $mergedTolerations = .Values.aws.inferentia.tolerations }}
         {{- end }}
 
         {{- $mergedAffinity := .Values.affinity }}
-        {{- if .Values.aws.karpenter.affinity }}
-        {{- $mergedAffinity = .Values.aws.karpenter.affinity }}
+        {{- if .Values.aws.inferentia.affinity }}
+        {{- $mergedAffinity = .Values.aws.inferentia.affinity }}
         {{- end }}
         scheduler:
           {{- if $mergedTolerations }}
@@ -38,7 +38,7 @@ spec:
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-          {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
           extension:
             {{- if $mergedTolerations }}

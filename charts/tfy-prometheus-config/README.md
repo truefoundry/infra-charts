@@ -15,7 +15,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `scrapeConfigs.envoy.metricsPath`                 | Metrics path for envoy                   | `/stats/prometheus` |
 | `scrapeConfigs.envoy.relabelings`                 | Relabelings for envoy                    | `[]`                |
 | `scrapeConfigs.envoy.metricsRelabelings`          | Metrics relabelings for envoy            | `[]`                |
-| `scrapeConfigs.kubernetesPods.enabled`            | Enable scrape config for kubernetes pods | `true`              |
+| `scrapeConfigs.kubernetesPods.enabled`            | Enable scrape config for kubernetes pods | `false`             |
 | `scrapeConfigs.kubernetesPods.name`               | Name of the scrape config                | `kubernetes-pods`   |
 | `scrapeConfigs.kubernetesPods.jobName`            | Job name for kubernetes pods             | `kubernetes-pods`   |
 | `scrapeConfigs.kubernetesPods.labels`             | Labels for kubernetes pods               | `{}`                |
@@ -75,6 +75,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter            | `true`                                    |
+| `serviceMonitors.karpenter.name`                           | Name of the service monitor                     | `karpenter`                               |
+| `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                         | `kube-system`                             |
+| `serviceMonitors.karpenter.labels`                         | Labels for karpenter                            | `{}`                                      |
+| `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                | `{}`                                      |
+| `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                         | `[]`                                      |
+| `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter           | `{}`                                      |
 | `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `true`                                    |
 | `serviceMonitors.kubecost.name`                            | Name of the service monitor                     | `kubecost`                                |
 | `serviceMonitors.kubecost.labels`                          | Labels for kubecost                             | `{}`                                      |

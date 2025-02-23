@@ -474,35 +474,6 @@ spec:
                     record: kubecost_savings_memory_allocation_bytes
               - name: Alerting
                 rules:
-                  - for: 2m
-                    expr: >-
-                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
-                      by (pod, container, namespace) /
-                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="cpu"})
-                      by (pod, container, namespace) * 100 > 80
-                    alert: CPUHighUtilizationForRequested
-                    labels:
-                      entity: container
-                      severity: warning
-                    annotations:
-                      summary: >-
-                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
-                      description: |-
-                        Container CPU utilization is above 80% of requested CPU
-                          VALUE = {{`{{ $value }}`}}
-                  - for: 2m
-                    expr: >-
-                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
-                      sum(kube_pod_container_resource_requests{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 80
-                    alert: MemoryHighUtilizationForRequested
-                    labels:
-                      entity: container
-                      severity: warning
-                    annotations:
-                      summary: Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
-                      description: |-
-                        Container Memory usage is above 80% of requested memory
-                          VALUE = {{`{{ $value }}`}}
                   - for: 5m
                     expr: >-
                       sum(increase(container_cpu_cfs_throttled_periods_total{job="kubelet", container!=""}[5m]))
@@ -517,36 +488,6 @@ spec:
                       summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
                       description: |-
                         Container is being throttled
-                          VALUE = {{`{{ $value }}`}}
-                  - for: 2m
-                    expr: >-
-                      sum(rate(container_cpu_usage_seconds_total{job="kubelet", container!=""}[5m]))
-                      by (pod, container, namespace) /
-                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="cpu"})
-                      by (pod, container, namespace) * 100 > 70
-                    alert: CPUHighUtilizationForLimit
-                    labels:
-                      entity: container
-                      severity: critical
-                    annotations:
-                      summary: >-
-                        Container High CPU utilization (instance {{ `{{ $labels.instance }}` }})
-                      description: |-
-                        Container CPU utilization is above 70% of CPU limit
-                          VALUE = {{`{{ $value }}`}}
-                  - for: 2m
-                    expr: >-
-                      sum(container_memory_working_set_bytes{job="kubelet", container!=""}) by (pod, container, namespace) /
-                      sum(kube_pod_container_resource_limits{job="kube-state-metrics", resource="memory"}) by (pod, container, namespace) * 100 > 70
-                    alert: MemoryHighUtilizationForLimit
-                    labels:
-                      entity: container
-                      severity: critical
-                    annotations:
-                      summary: >-
-                        Container High Memory usage (instance {{ `{{ $labels.instance }}` }})
-                      description: |-
-                        Container Memory usage is above 70% of memory limit
                           VALUE = {{`{{ $value }}`}}
                   - for: 15m
                     expr: >-
@@ -577,8 +518,7 @@ spec:
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
                     expr: >-
-                      sum(increase(container_oom_events_total{job="kubelet", container!=""}[5m]))
-                      by (container, pod, namespace) > 0
+                      sum by (container, pod, namespace) (sum_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics"}[5m])) > 0
                     alert: ContainerOOMKilled
                     labels:
                       entity: container
