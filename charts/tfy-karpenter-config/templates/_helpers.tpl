@@ -33,8 +33,8 @@ Control plane taints
   {{- else -}}
     {{- range .Values.karpenter.defaultNodeTemplate.amiSelectorTerms -}}
       {{- if hasKey . "alias" -}}
-        {{- $amiFamily := split "@" .alias -}}
-        {{- $inferredAmiFamily = index $amiFamily._0 -}}
+        {{- $amiFamily := splitList "@" .alias -}}
+        {{- $inferredAmiFamily = index $amiFamily 0 -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
@@ -52,8 +52,8 @@ Control plane taints
   {{- else -}}
     {{- range .Values.karpenter.gpuDefaultNodeTemplate.amiSelectorTerms -}}
       {{- if hasKey . "alias" -}}
-        {{- $amiFamily := split "@" .alias -}}
-        {{- $inferredAmiFamily = index $amiFamily._0 -}}
+        {{- $amiFamily := splitList "@" .alias -}}
+        {{- $inferredAmiFamily = index $amiFamily 0 -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
@@ -71,8 +71,8 @@ Control plane taints
   {{- else -}}
     {{- range .Values.karpenter.controlPlaneNodeTemplate.amiSelectorTerms -}}
       {{- if hasKey . "alias" -}}
-        {{- $amiFamily := split "@" .alias -}}
-        {{- $inferredAmiFamily = index $amiFamily._0 -}}
+        {{- $amiFamily := splitList "@" .alias -}}
+        {{- $inferredAmiFamily = index $amiFamily 0 -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
@@ -90,8 +90,8 @@ Control plane taints
   {{- else -}}
     {{- range .Values.karpenter.inferentiaDefaultNodeTemplate.amiSelectorTerms -}}
       {{- if hasKey . "alias" -}}
-        {{- $amiFamily := split "@" .alias -}}
-        {{- $inferredAmiFamily = index $amiFamily._0 -}}
+        {{- $amiFamily := splitList "@" .alias -}}
+        {{- $inferredAmiFamily = index $amiFamily 0 -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
@@ -109,8 +109,8 @@ Control plane taints
   {{- else -}}
     {{- range .Values.karpenter.critical.nodeclass.amiSelectorTerms -}}
       {{- if hasKey . "alias" -}}
-        {{- $amiFamily := split "@" .alias -}}
-        {{- $inferredAmiFamily = index $amiFamily._0 -}}
+        {{- $amiFamily := splitList "@" .alias -}}
+        {{- $inferredAmiFamily = index $amiFamily 0 -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
