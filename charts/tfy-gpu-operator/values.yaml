@@ -17,7 +17,6 @@ clusterType:
   civoTalos: false
   generic: false
 
-
 ## @section aws-eks-gpu-operator Configuration for the AWS EKS GPU Operator. This section will only be used when clusterType.awsEks is set to true.
 ##
 aws-eks-gpu-operator:
@@ -25,27 +24,31 @@ aws-eks-gpu-operator:
   nfd:
     ## @param aws-eks-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
-  
+
   ## GPU Feature Discovery configuration.
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-  
+    ## @param aws-eks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Operator configuration.
   operator:
     ## @param aws-eks-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
     upgradeCRD: true
     ## @param aws-eks-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
-    ## Resource configuration for operator requests and limits.
-    ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param aws-eks-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
         cpu: 10m
-        memory: 200Mi
+        memory: 300Mi
       limits:
         cpu: 50m
         memory: 300Mi
@@ -54,7 +57,7 @@ aws-eks-gpu-operator:
   driver:
     ## @param aws-eks-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: false
-    
+
   ## Toolkit configuration.
   toolkit:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
@@ -64,10 +67,18 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
-        value: 'false'
+        value: "false"
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: 'true'
-  
+        value: "true"
+    ## @param aws-eks-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Device Plugin configuration.
   devicePlugin:
     ## @param aws-eks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -75,7 +86,7 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
-        value: 'true'
+        value: "true"
       - name: DEVICE_LIST_STRATEGY
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
@@ -83,7 +94,7 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.devicePlugin.config
     config:
       data:
-        all: ''
+        all: ""
         time-sliced-10: |-
           version: v1
           sharing:
@@ -92,26 +103,33 @@ aws-eks-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: ''
+      name: ""
       create: false
-      default: ''
-  
+      default: ""
+    ## @param aws-eks-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Node Feature Discovery configuration.
   node-feature-discovery:
     ## @param aws-eks-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
-      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
       resources:
         requests:
-          cpu: 10m
-          memory: 400Mi
+          cpu: 100m
+          memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
     worker:
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
@@ -181,12 +199,14 @@ aws-eks-gpu-operator:
       enable: true
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -252,7 +272,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
     # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
     updateStrategy: "RollingUpdate"
-  
+
   ## Validator configuration.
   validator:
     cuda:
@@ -265,17 +285,22 @@ aws-eks-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
-  
+    ## @param aws-eks-gpu-operator.validator.resources [object] Resources for the gpu validators.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## DCGM configuration
   dcgm:
     ## @param aws-eks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param aws-eks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
     version: 3.3.8-1-ubuntu22.04
-    ## @param aws-eks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
-    ## @param aws-eks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
-    ## @param aws-eks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
-    ## @param aws-eks-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
+    ## @param aws-eks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
         cpu: 10m
@@ -283,7 +308,7 @@ aws-eks-gpu-operator:
       limits:
         cpu: 50m
         memory: 400Mi
-    
+
   ## DCGM Exporter configuration.
   dcgmExporter:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
@@ -317,10 +342,7 @@ aws-eks-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-    ## @param aws-eks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-    ## @param aws-eks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+    ## @param aws-eks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -350,7 +372,7 @@ aws-eks-gpu-operator:
       tag: "3.20"
     ## @param aws-eks-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
     imagePullSecrets: []
-    ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    ## @param aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
     resources:
       requests:
         cpu: 5m
@@ -361,61 +383,61 @@ aws-eks-gpu-operator:
     ## @skip aws-eks-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
     affinity:
       nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: feature.node.kubernetes.io/system-os_release.ID
-                    operator: In
-                    values:
-                      - bottlerocket
-                  - key: node.kubernetes.io/instance-type
-                    operator: In
-                    values:
-                      - p2.xlarge
-                      - p2.8xlarge
-                      - p2.16xlarge
-                      - p3.2xlarge
-                      - p3.8xlarge
-                      - p3.16xlarge
-                      - p3dn.24xlarge
-                      - p4d.24xlarge
-                      - p4de.24xlarge
-                      - p5.48xlarge
-                      - p5e.48xlarge
-                      - g4dn.xlarge
-                      - g4dn.2xlarge
-                      - g4dn.4xlarge
-                      - g4dn.8xlarge
-                      - g4dn.16xlarge
-                      - g4dn.12xlarge
-                      - g4dn.metal
-                      - g4dn.xlarge
-                      - g5.xlarge
-                      - g5.2xlarge
-                      - g5.4xlarge
-                      - g5.8xlarge
-                      - g5.16xlarge
-                      - g5.12xlarge
-                      - g5.24xlarge
-                      - g5.48xlarge
-                      - g6.xlarge
-                      - g6.2xlarge
-                      - g6.4xlarge
-                      - g6.8xlarge
-                      - g6.16xlarge
-                      - g6.12xlarge
-                      - g6.24xlarge
-                      - g6.48xlarge
-                      - gr6.4xlarge
-                      - gr6.8xlarge
-                      - g6e.xlarge
-                      - g6e.2xlarge
-                      - g6e.4xlarge
-                      - g6e.8xlarge
-                      - g6e.16xlarge
-                      - g6e.12xlarge
-                      - g6e.24xlarge
-                      - g6e.48xlarge
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: feature.node.kubernetes.io/system-os_release.ID
+                  operator: In
+                  values:
+                    - bottlerocket
+                - key: node.kubernetes.io/instance-type
+                  operator: In
+                  values:
+                    - p2.xlarge
+                    - p2.8xlarge
+                    - p2.16xlarge
+                    - p3.2xlarge
+                    - p3.8xlarge
+                    - p3.16xlarge
+                    - p3dn.24xlarge
+                    - p4d.24xlarge
+                    - p4de.24xlarge
+                    - p5.48xlarge
+                    - p5e.48xlarge
+                    - g4dn.xlarge
+                    - g4dn.2xlarge
+                    - g4dn.4xlarge
+                    - g4dn.8xlarge
+                    - g4dn.16xlarge
+                    - g4dn.12xlarge
+                    - g4dn.metal
+                    - g4dn.xlarge
+                    - g5.xlarge
+                    - g5.2xlarge
+                    - g5.4xlarge
+                    - g5.8xlarge
+                    - g5.16xlarge
+                    - g5.12xlarge
+                    - g5.24xlarge
+                    - g5.48xlarge
+                    - g6.xlarge
+                    - g6.2xlarge
+                    - g6.4xlarge
+                    - g6.8xlarge
+                    - g6.16xlarge
+                    - g6.12xlarge
+                    - g6.24xlarge
+                    - g6.48xlarge
+                    - gr6.4xlarge
+                    - gr6.8xlarge
+                    - g6e.xlarge
+                    - g6e.2xlarge
+                    - g6e.4xlarge
+                    - g6e.8xlarge
+                    - g6e.16xlarge
+                    - g6e.12xlarge
+                    - g6e.24xlarge
+                    - g6e.48xlarge
     ## @skip aws-eks-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
     tolerations:
       - key: nvidia.com/gpu
@@ -426,7 +448,7 @@ aws-eks-gpu-operator:
 ## The exact driver installed will depend on the COS version (decided by the GKE version)
 ## usually `default` is the stable older driver version and `latest` is experimental newer driver version
 ## On some COS versions default and latest will point to the same stable driver verison
-## Please see relevant GKE and COS release notes: 
+## Please see relevant GKE and COS release notes:
 ## https://cloud.google.com/container-optimized-os/docs/release-notes
 ## https://cloud.google.com/kubernetes-engine/docs/how-to/gpus#installing_drivers
 ## Note: `nvidia-l4` is kept in latest for older GKE versions running COS 105 where latest points to newer compatible driver version. We will remove it and place it back in `default` as older GKE version reaches EOL
@@ -502,18 +524,14 @@ gcp-gke-standard-dcgm-exporter:
     ]
   ## Resource configuration for DCGM Exporter requests and limits.
   ##
-  ## @param gcp-gke-standard-dcgm-exporter.resources.requests.cpu CPU request for the DCGM Exporter.
-  ## @param gcp-gke-standard-dcgm-exporter.resources.requests.memory Memory request for the DCGM Exporter.
-  ## @param gcp-gke-standard-dcgm-exporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-  ## @param gcp-gke-standard-dcgm-exporter.resources.limits.memory Memory limit for the DCGM Exporter.
-  ##
+  ## @param gcp-gke-standard-dcgm-exporter.resources [object] Requests and limits for the DCGM Exporter.
   resources:
     requests:
       cpu: 10m
-      memory: 300Mi
+      memory: 100Mi
     limits:
-      cpu: 50m
-      memory: 400Mi
+      cpu: 100m
+      memory: 1000Mi
   ## ServiceMonitor configuration for Prometheus monitoring.
   ##
   serviceMonitor:
@@ -606,7 +624,7 @@ azure-aks-gpu-operator:
   nfd:
     ## @param azure-aks-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
-  
+
   ## GPU Feature Discovery configuration.
   gfd:
     ## @param azure-aks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
@@ -617,18 +635,7 @@ azure-aks-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
-  
-  ## Operator configuration.
-  operator:
-    ## @param azure-aks-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
-    upgradeCRD: true
-    ## @param azure-aks-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
-    cleanupCRD: true
-    ## Resource configuration for operator requests and limits.
-    ## @param azure-aks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ## @param azure-aks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ## @param azure-aks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param azure-aks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param azure-aks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
         cpu: 10m
@@ -636,15 +643,28 @@ azure-aks-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
+
+  ## Operator configuration.
+  operator:
+    ## @param azure-aks-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
+    upgradeCRD: true
+    ## @param azure-aks-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
+    cleanupCRD: true
+    ## @param azure-aks-gpu-operator.operator.resources [object] Resources for the operator.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 300Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
     ## @skip azure-aks-gpu-operator.operator.tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: ''
+        operator: Exists
         effect: NoSchedule
       - key: node-role.kubernetes.io/control-plane
-        operator: Equal
-        value: ''
+        operator: Exists
         effect: NoSchedule
       - key: kubernetes.azure.com/scalesetpriority
         operator: Equal
@@ -656,12 +676,14 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
-      ## @param azure-aks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-      ## @param azure-aks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
       resources:
         requests:
-          cpu: 10m
+          cpu: 100m
           memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
       ## @skip azure-aks-gpu-operator.node-feature-discovery.master.tolerations
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -675,10 +697,7 @@ azure-aks-gpu-operator:
           value: spot
           effect: NoSchedule
     worker:
-      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
@@ -714,12 +733,14 @@ azure-aks-gpu-operator:
       enable: true
       ## @param azure-aks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
-      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip azure-aks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -777,15 +798,23 @@ azure-aks-gpu-operator:
     ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
-        value: 'false'
+        value: "false"
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: 'true'
+        value: "true"
+    ## @param azure-aks-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## MIG Configuration
   mig:
     ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
     strategy: none
-  
+
   ## Device Plugin configuration.
   devicePlugin:
     ## @param azure-aks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -793,7 +822,7 @@ azure-aks-gpu-operator:
     ## @skip azure-aks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
-        value: 'true'
+        value: "true"
       - name: DEVICE_LIST_STRATEGY
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
@@ -801,7 +830,7 @@ azure-aks-gpu-operator:
     ## @skip azure-aks-gpu-operator.devicePlugin.config
     config:
       data:
-        all: ''
+        all: ""
         time-sliced-10: |-
           version: v1
           sharing:
@@ -810,9 +839,17 @@ azure-aks-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: ''
+      name: ""
       create: false
-      default: ''
+      default: ""
+    ## @param azure-aks-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## DCGM configuration
   dcgm:
@@ -820,17 +857,14 @@ azure-aks-gpu-operator:
     enabled: false
     ## @param azure-aks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
     version: 3.3.8-1-ubuntu22.04
-    ## @param azure-aks-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
-    ## @param azure-aks-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
-    ## @param azure-aks-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
-    ## @param azure-aks-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
+    ## @param azure-aks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
         cpu: 10m
         memory: 100Mi
       limits:
-        cpu: 100m
-        memory: 1000Mi
+        cpu: 50m
+        memory: 400Mi
 
   ## DCGM Exporter configuration.
   dcgmExporter:
@@ -865,10 +899,7 @@ azure-aks-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    ## @param azure-aks-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-    ## @param azure-aks-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-    ## @param azure-aks-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-    ## @param azure-aks-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+    ## @param azure-aks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -896,6 +927,14 @@ azure-aks-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
+    ## @param azure-aks-gpu-operator.validator.resources [object] Resources for the gpu validators.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
 ## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
 ##
@@ -904,23 +943,12 @@ civo-talos-gpu-operator:
   nfd:
     ## @param civo-talos-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
-  
+
   ## GPU Feature Discovery configuration.
   gfd:
     ## @param civo-talos-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
-  
-  ## Operator configuration.
-  operator:
-    ## @param civo-talos-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
-    upgradeCRD: true
-    ## @param civo-talos-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
-    cleanupCRD: true
-    ## Resource configuration for operator requests and limits.
-    ## @param civo-talos-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ## @param civo-talos-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ## @param civo-talos-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param civo-talos-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param civo-talos-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
         cpu: 10m
@@ -928,23 +956,37 @@ civo-talos-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
-  
+
+  ## Operator configuration.
+  operator:
+    ## @param civo-talos-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
+    upgradeCRD: true
+    ## @param civo-talos-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
+    cleanupCRD: true
+    ## @param civo-talos-gpu-operator.operator.resources [object] Resources for the operator.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 300Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Node Feature Discovery configuration.
   node-feature-discovery:
     ## @param civo-talos-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
-      ## @param civo-talos-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-      ## @param civo-talos-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
       resources:
         requests:
-          cpu: 10m
+          cpu: 100m
           memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
     worker:
-      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
@@ -983,12 +1025,14 @@ civo-talos-gpu-operator:
       enable: true
       ## @param civo-talos-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
-      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      ## @param civo-talos-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip civo-talos-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -1015,17 +1059,17 @@ civo-talos-gpu-operator:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
-    
+
   ## Driver configuration
   driver:
     ## @param civo-talos-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: false
-  
+
   ## Toolkit configuration.
   toolkit:
     ## @param civo-talos-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: false
-  
+
   ## Device Plugin configuration.
   devicePlugin:
     ## @param civo-talos-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -1033,7 +1077,7 @@ civo-talos-gpu-operator:
     ## @skip civo-talos-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
-        value: 'true'
+        value: "true"
       - name: DEVICE_LIST_STRATEGY
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
@@ -1041,7 +1085,7 @@ civo-talos-gpu-operator:
     ## @skip civo-talos-gpu-operator.devicePlugin.config
     config:
       data:
-        all: ''
+        all: ""
         time-sliced-10: |-
           version: v1
           sharing:
@@ -1050,9 +1094,17 @@ civo-talos-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: ''
+      name: ""
       create: false
-      default: ''
+      default: ""
+    ## @param civo-talos-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## DCGM configuration
   dcgm:
@@ -1060,10 +1112,7 @@ civo-talos-gpu-operator:
     enabled: true
     ## @param civo-talos-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
     version: 3.3.8-1-ubuntu22.04
-    ## @param civo-talos-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
-    ## @param civo-talos-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
-    ## @param civo-talos-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
-    ## @param civo-talos-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
+    ## @param civo-talos-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
         cpu: 10m
@@ -1105,10 +1154,7 @@ civo-talos-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    ## @param civo-talos-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-    ## @param civo-talos-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-    ## @param civo-talos-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-    ## @param civo-talos-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+    ## @param civo-talos-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -1141,6 +1187,14 @@ civo-talos-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
+    ## @param civo-talos-gpu-operator.validator.resources [object] Resources for the gpu validators.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   fakeToolkitReady:
     image:
@@ -1150,7 +1204,7 @@ civo-talos-gpu-operator:
       tag: "3.20"
     ## @param civo-talos-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
     imagePullSecrets: []
-    ## @skip civo-talos-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    ## @param civo-talos-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
     resources:
       requests:
         cpu: 5m
@@ -1161,24 +1215,24 @@ civo-talos-gpu-operator:
     ## @skip civo-talos-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
     affinity:
       nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: node.kubernetes.io/instance-type
-                    operator: In
-                    values:
-                      - g4g.40.kube.small
-                      - g4g.40.kube.medium
-                      - g4g.40.kube.large
-                      - g4g.40.kube.xlarge
-                      - g4g.kube.small
-                      - g4g.kube.medium
-                      - g4g.kube.large
-                      - g4g.kube.xlarge
-                      - an.g1.l40s.kube.x1
-                      - an.g1.l40s.kube.x2
-                      - an.g1.l40s.kube.x4
-                      - an.g1.l40s.kube.x8
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node.kubernetes.io/instance-type
+                  operator: In
+                  values:
+                    - g4g.40.kube.small
+                    - g4g.40.kube.medium
+                    - g4g.40.kube.large
+                    - g4g.40.kube.xlarge
+                    - g4g.kube.small
+                    - g4g.kube.medium
+                    - g4g.kube.large
+                    - g4g.kube.xlarge
+                    - an.g1.l40s.kube.x1
+                    - an.g1.l40s.kube.x2
+                    - an.g1.l40s.kube.x4
+                    - an.g1.l40s.kube.x8
     ## @skip civo-talos-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
     tolerations:
       - key: nvidia.com/gpu
@@ -1191,7 +1245,7 @@ generic-gpu-operator:
   nfd:
     ## @param generic-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
     enabled: true
-  
+
   ## GPU Feature Discovery configuration.
   gfd:
     ## @param generic-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
@@ -1202,18 +1256,7 @@ generic-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
-  
-  ## Operator configuration.
-  operator:
-    ## @param generic-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
-    upgradeCRD: true
-    ## @param generic-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
-    cleanupCRD: true
-    ## Resource configuration for operator requests and limits.
-    ## @param generic-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ## @param generic-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ## @param generic-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param generic-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param generic-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
         cpu: 10m
@@ -1221,28 +1264,43 @@ generic-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
+
+  ## Operator configuration.
+  operator:
+    ## @param generic-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
+    upgradeCRD: true
+    ## @param generic-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
+    cleanupCRD: true
+    ## @param generic-gpu-operator.operator.resources [object] Resources for the operator.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 300Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
     ## @skip generic-gpu-operator.operator.tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: ''
+        operator: Exists
         effect: NoSchedule
       - key: node-role.kubernetes.io/control-plane
-        operator: Equal
-        value: ''
+        operator: Exists
         effect: NoSchedule
-  
+
   ## Node Feature Discovery configuration.
   node-feature-discovery:
     ## @param generic-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
-      ## @param generic-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-      ## @param generic-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
       resources:
         requests:
-          cpu: 10m
+          cpu: 100m
           memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
       ## @skip generic-gpu-operator.node-feature-discovery.master.tolerations
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -1252,10 +1310,7 @@ generic-gpu-operator:
           operator: Equal
           effect: NoSchedule
     worker:
-      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-      ## @param generic-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      ## @param generic-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
@@ -1277,12 +1332,14 @@ generic-gpu-operator:
       enable: true
       ## @param generic-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
-      ## @param generic-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param generic-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      ## @param generic-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       ## @skip generic-gpu-operator.node-feature-discovery.gc.tolerations
       tolerations:
         - key: nvidia.com/gpu
@@ -1317,14 +1374,22 @@ generic-gpu-operator:
   toolkit:
     ## @param generic-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
-    ## @param generic-gpu-operator.toolkit.version Version of the toolkit. 
+    ## @param generic-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.17.2-ubuntu20.04
     ## @skip generic-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
-        value: 'false'
+        value: "false"
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: 'true'
+        value: "true"
+    ## @param generic-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## Device Plugin configuration.
   devicePlugin:
@@ -1333,7 +1398,7 @@ generic-gpu-operator:
     ## @skip generic-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
-        value: 'true'
+        value: "true"
       - name: DEVICE_LIST_STRATEGY
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
@@ -1341,7 +1406,7 @@ generic-gpu-operator:
     ## @skip generic-gpu-operator.devicePlugin.config
     config:
       data:
-        all: ''
+        all: ""
         time-sliced-10: |-
           version: v1
           sharing:
@@ -1350,9 +1415,17 @@ generic-gpu-operator:
               resources:
               - name: nvidia.com/gpu
                 replicas: 10
-      name: ''
+      name: ""
       create: false
-      default: ''
+      default: ""
+    ## @param generic-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## DCGM configuration
   dcgm:
@@ -1360,17 +1433,14 @@ generic-gpu-operator:
     enabled: false
     ## @param generic-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
     version: 3.3.8-1-ubuntu22.04
-    ## @param generic-gpu-operator.dcgm.resources.requests.cpu CPU request for standalone DCGM container
-    ## @param generic-gpu-operator.dcgm.resources.requests.memory Memory request for standalone DCGM container
-    ## @param generic-gpu-operator.dcgm.resources.limits.cpu CPU limit for standalone DCGM container
-    ## @param generic-gpu-operator.dcgm.resources.limits.memory Memory limit for standalone DCGM container
+    ## @param generic-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
         cpu: 10m
         memory: 100Mi
       limits:
-        cpu: 100m
-        memory: 1000Mi
+        cpu: 50m
+        memory: 400Mi
 
   ## DCGM Exporter configuration.
   dcgmExporter:
@@ -1405,10 +1475,7 @@ generic-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    ## @param generic-gpu-operator.dcgmExporter.resources.requests.cpu CPU request for the DCGM Exporter.
-    ## @param generic-gpu-operator.dcgmExporter.resources.requests.memory Memory request for the DCGM Exporter.
-    ## @param generic-gpu-operator.dcgmExporter.resources.limits.cpu CPU limit for the DCGM Exporter.
-    ## @param generic-gpu-operator.dcgmExporter.resources.limits.memory Memory limit for the DCGM Exporter.
+    ## @param generic-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
         cpu: 10m
@@ -1441,3 +1508,11 @@ generic-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
+    ## @param generic-gpu-operator.validator.resources [object] Resources for the gpu validators.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
