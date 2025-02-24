@@ -21,15 +21,22 @@ scrapeConfigs:
         action: keep
         sourceLabels:
           - __meta_kubernetes_pod_container_port_name
-      - sourceLabels: [__meta_kubernetes_pod_name]
-        targetLabel: pod
-      - sourceLabels: [__meta_kubernetes_pod_container_name]
-        targetLabel: container
-      - sourceLabels: [__meta_kubernetes_namespace]
-        targetLabel: namespace
-      - sourceLabels: [__meta_kubernetes_pod_node_name]
-        action: replace
+      - targetLabel: pod
+        sourceLabels:
+          - __meta_kubernetes_pod_name
+      - targetLabel: container
+        sourceLabels:
+          - __meta_kubernetes_pod_container_name
+      - targetLabel: namespace
+        sourceLabels:
+          - __meta_kubernetes_namespace
+      - action: replace
         targetLabel: node
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+      - targetLabel: label_truefoundry_com_application_id
+        sourceLabels:
+          - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.envoy.metricsRelabelings [array] Metrics relabelings for envoy
     metricsRelabelings:
       - sourceLabels: [__name__]
@@ -37,11 +44,11 @@ scrapeConfigs:
         regex: envoy_(.+)
       - sourceLabels: [__name__]
         action: drop
-        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
+        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count|envoy_http_inbound_*_downstream_rq_total)
   # scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
   kubernetesPods:
     ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
-    enabled: true
+    enabled: false
     ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
     ## @param scrapeConfigs.kubernetesPods.jobName Job name for kubernetes pods
@@ -86,7 +93,11 @@ scrapeConfigs:
         sourceLabels:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
-    metricsRelabelings: []
+    metricsRelabelings:
+      - regex: ALERTS|elasti_resolver_queued_count|istio_requests_total|istio_request_duration_milliseconds_bucket|envoy_http_inbound_.*_downstream_rq_total
+        action: keep
+        sourceLabels:
+          - __name__
   ## @param scrapeConfigs.additionalScrapeConfigs [array] Additional scrape configs for prometheus
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
@@ -149,8 +160,18 @@ serviceMonitors:
       - enableHttp2: true
         path: /metrics
         port: http-web
+        metricRelabelings:
+          - regex: alertmanager_config_last_reload_successful|alertmanager_cluster_members|alertmanager_notifications_failed_total|alertmanager_notifications_total|alertmanager_config_hash|up|process_start_time_seconds
+            action: keep
+            sourceLabels:
+              - __name__
       - path: /metrics
         port: reloader-web
+        metricRelabelings:
+          - regex: alertmanager_config_last_reload_successful|alertmanager_cluster_members|alertmanager_notifications_failed_total|alertmanager_notifications_total|alertmanager_config_hash|up|process_start_time_seconds
+            action: keep
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.alertManager.serviceSelectorLabels [object] Service selector labels for alert manager
     serviceSelectorLabels:
       app: kube-prometheus-stack-alertmanager
@@ -229,6 +250,11 @@ serviceMonitors:
         scheme: http
         interval: 1s
         path: /metrics
+        metricRelabelings:
+          - regex: ALERTS|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count
+            action: keep
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
     serviceSelectorLabels:
       app.kubernetes.io/instance: elasti
@@ -275,6 +301,11 @@ serviceMonitors:
         scrapeTimeout: 60s
         path: /metrics
         honorLabels: true
+        metricRelabelings:
+          - regex: container_fs_limit_bytes|container_fs_usage_bytes|kube_namespace_annotations|kube_pod_annotations|kube_pod_owner|kube_pod_container_resource_requests|kubecost_load_balancer_cost|kube_persistentvolume_capacity_bytes|kube_node_status_capacity_memory_bytes|node_total_hourly_cost|kube_node_labels|kubecost_pv_info|pv_hourly_cost|node_ram_hourly_cost|node_gpu_hourly_cost|node_cpu_hourly_cost|kubecost_node_is_spot|kube_persistentvolumeclaim_info|kube_node_status_allocatable_cpu_cores|node_gpu_count|kube_node_status_capacity_cpu_cores|kube_node_status_allocatable_memory_bytes|kube_pod_container_status_running|kubecost_cluster_management_cost|kubecost_container_cpu_usage_irate|kubecost_network_zone_egress_cost|kubecost_network_region_egress_cost|kubecost_network_internet_egress_cost|pod_pvc_allocation|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_namespace_labels|container_memory_allocation_bytes|container_cpu_allocation|container_gpu_allocation|kube_pod_labels|statefulSet_match_labels|service_selector_labels|deployment_match_labels|kubecost_cluster_info|kube_node_status_allocatable|kube_node_status_capacity
+            action: keep
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.kubecost.serviceSelectorLabels [object] Service selector labels for kubecost
     serviceSelectorLabels:
       app: cost-analyzer
@@ -308,6 +339,10 @@ serviceMonitors:
             regex: instance
           - action: keep
             regex: (container_(.+)|kubelet_volume_(.+))
+            sourceLabels:
+              - __name__
+          - regex: ALERTS|container_memory_working_set_bytes|container_fs_writes_bytes_total|container_memory_cache|container_cpu_usage_seconds_total|container_cpu_cfs_throttled_periods_total|container_cpu_cfs_periods_total|container_oom_events_total|kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_pleg_relist_duration_seconds_bucket|kubelet_node_name|container_memory_swap|kubelet_volume_stats_available_bytes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubelet_pod_worker_duration_seconds_bucket|up|container_memory_rss|container_network_transmit_bytes_total|container_network_receive_bytes_total|container_cpu_cfs_throttled_seconds_total
+            action: keep
             sourceLabels:
               - __name__
         port: https-metrics
@@ -401,6 +436,11 @@ serviceMonitors:
               - __meta_kubernetes_endpoint_node_name
             targetLabel: node
         scheme: http
+        metricRelabelings:
+          - regex: node_time_seconds|node_boot_time_seconds|up|node_cpu_seconds_total|node_load1|instance:node_num_cpu:sum|node_memory_MemAvailable_bytes|node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_MemFree_bytes|node_memory_Slab_bytes|node_memory_MemTotal_bytes|node_vmstat_pgmajfault|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_network_receive_bytes_total|node_network_transmit_bytes_total|node_network_receive_drop_total|node_network_transmit_drop_total|node_filesystem_avail_bytes|node_filesystem_size_bytes|node_filesystem_readonly|node_filesystem_files_free|node_filesystem_files|node_network_receive_errs_total|node_network_receive_packets_total|node_network_transmit_errs_total|node_network_transmit_packets_total|node_nf_conntrack_entries|node_textfile_scrape_error|node_timex_offset_seconds|node_timex_sync_status|node_timex_maxerror_seconds|node_md_disks_required|node_md_disks|node_filefd_allocated|node_filefd_maximum|node_systemd_unit_state|node_network_up
+            action: keep
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.nodeExporter.serviceSelectorLabels [object] Service selector labels for node exporter
     serviceSelectorLabels:
       app.kubernetes.io/instance: prometheus
@@ -443,6 +483,10 @@ serviceMonitors:
             sourceLabels:
               - label_node_kubernetes_io_instance_type
             targetLabel: instance_type
+          - action: keep
+            regex: ALERTS|kube_pod_container_resource_requests|kube_pod_status_phase|kube_node_status_capacity|kube_pod_status_ready|kube_pod_labels|kube_node_labels|kube_pod_container_resource_limits|kube_pod_container_status_restarts_total|kube_node_status_condition|kube_pod_owner|kube_replicaset_owner|kube_node_status_allocatable|kube_resourcequota|kube_pod_info|kube_pod_container_status_waiting_reason|kube_deployment_status_observed_generation|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_deployment_status_condition|kube_statefulset_status_replicas_ready|kube_statefulset_status_replicas|kube_statefulset_status_replicas_updated|kube_statefulset_status_observed_generation|kube_statefulset_metadata_generation|kube_statefulset_status_current_revision|kube_statefulset_status_update_revision|kube_statefulset_replicas|kube_daemonset_status_current_number_scheduled|kube_daemonset_status_desired_number_scheduled|kube_daemonset_status_number_misscheduled|kube_daemonset_status_updated_number_scheduled|kube_daemonset_status_number_available|kube_job_status_start_time|kube_job_status_active|kube_job_failed|kube_horizontalpodautoscaler_status_desired_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_spec_max_replicas|kube_persistentvolume_status_phase|kube_node_spec_taint|kube_state_metrics_list_total|kube_state_metrics_watch_total|kube_state_metrics_total_shards|kube_state_metrics_shard_ordinal|kube_pod_container_state_started|kube_pod_status_container_ready_time|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_ready
+            sourceLabels:
+              - __name__
         port: http
     ## @param serviceMonitors.kubeStateMetrics.serviceSelectorLabels [object] Service selector labels for kube state metrics
     serviceSelectorLabels:
@@ -462,6 +506,11 @@ serviceMonitors:
     endpoints:
       - path: /metrics
         port: http-web
+        metricRelabelings:
+          - regex: prometheus_config_last_reload_successful|prometheus_tsdb_compaction_chunk_size_bytes_sum|prometheus_tsdb_compaction_chunk_samples_sum|prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered|prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_series|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total|prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max
+            action: keep
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.prometheus.serviceSelectorLabels [object] Service selector labels for prometheus
     serviceSelectorLabels:
       app.kubernetes.io/instance: prometheus
@@ -487,7 +536,11 @@ serviceMonitors:
               key: ca
               name: prometheus-kube-prometheus-admission
               optional: false
-            serverName: prometheus-kube-prometheus-operator
+        metricRelabelings:
+          - action: keep
+            regex: ALERTS|prometheus_operator_list_operations_failed_total|prometheus_operator_list_operations_total|prometheus_operator_watch_operations_failed_total|prometheus_operator_watch_operations_total|prometheus_operator_syncs|prometheus_operator_reconcile_errors_total|prometheus_operator_reconcile_operations_total|prometheus_operator_status_update_errors_total|prometheus_operator_status_update_operations_total|prometheus_operator_node_address_lookup_errors_total|prometheus_operator_ready|prometheus_operator_managed_resources
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.prometheusOperator.serviceSelectorLabels [object] Service selector labels for prometheus operator
     serviceSelectorLabels:
       app: kube-prometheus-stack-operator
@@ -512,6 +565,11 @@ serviceMonitors:
         interval: 30s
         path: /metrics
         honorLabels: true
+        metricRelabelings:
+          - regex: (.*)
+            action: drop
+            sourceLabels:
+              - __name__
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
@@ -533,6 +591,11 @@ serviceMonitors:
           interval: 30s
           path: /metrics
           honorLabels: true
+          metricRelabelings:
+            - regex: (.*)
+              action: drop
+              sourceLabels:
+                - __name__
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail
