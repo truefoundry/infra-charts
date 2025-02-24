@@ -1306,3 +1306,137 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+
+llmGateway:
+  ## @section Configuration for LLM Gateway
+  ## @param llmGateway.enabled Enable LLM Gateway
+  enabled: false
+  ## Image configuration for llm-gateway
+  image:
+    ## @param llmGateway.image.repository Image repository for tfyLLMGateway
+    repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
+    ## @param llmGateway.image.tag Image tag for the tfyLLMGateway
+    tag: cae2a7b420747e388808b99f2830a3051cc01fc9
+  ## @param llmGateway.replicaCount Number of replicas
+  replicaCount: 3
+  ## @param llmGateway.imagePullPolicy Image pull policy
+  imagePullPolicy: IfNotPresent
+  ## @param llmGateway.podAnnotations Pod annotations
+  podAnnotations: {}
+  ## @param llmGateway.podSecurityContext Pod security context
+  podSecurityContext: {}
+  ## @param llmGateway.securityContext Security context configuration
+  securityContext: {}
+  ## Healthcheck configuration
+  healthcheck:
+    ## @param llmGateway.healthcheck.enabled Enable healthcheck
+    enabled: true
+    ## healthcheck.readiness Readiness probe configuration
+    readiness:
+      ## @param llmGateway.healthcheck.readiness.port Port to probe
+      port: 8787
+      ## @param llmGateway.healthcheck.readiness.path Path to probe
+      path: /
+      ## @param llmGateway.healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+      initialDelaySeconds: 10
+      ## @param llmGateway.healthcheck.readiness.periodSeconds Period in seconds
+      periodSeconds: 10
+      ## @param llmGateway.healthcheck.readiness.timeoutSeconds Timeout in seconds
+      timeoutSeconds: 5
+      ## @param llmGateway.healthcheck.readiness.successThreshold Success threshold
+      successThreshold: 1
+      ## @param llmGateway.healthcheck.readiness.failureThreshold Failure threshold
+      failureThreshold: 3
+    ## healthcheck.liveness Liveness probe configuration
+    liveness:
+      ## @param llmGateway.healthcheck.liveness.port Port to probe
+      port: 8787
+      ## @param llmGateway.healthcheck.liveness.path Path to probe
+      path: /
+  ## Resource configuration
+  resources:
+    ## resources.limits Resource limits
+    limits:
+      ## @param llmGateway.resources.limits.cpu CPU limit
+      cpu: 2
+      ## @param llmGateway.resources.limits.memory Memory limit
+      memory: 1024Mi
+      ## @param llmGateway.resources.limits.ephemeral-storage Ephemeral storage limit
+      ephemeral-storage: 512Mi
+    ## resources.requests Resource requests
+    requests:
+      ## @param llmGateway.resources.requests.cpu CPU request
+      cpu: 1
+      ## @param llmGateway.resources.requests.memory Memory request
+      memory: 512Mi
+      ## @param llmGateway.resources.requests.ephemeral-storage Ephemeral storage request
+      ephemeral-storage: 256Mi
+  ## @param llmGateway.nodeSelector Node selector
+  nodeSelector: {}
+  ## @param llmGateway.tolerations Tolerations
+  tolerations: {}
+  ## @param llmGateway.affinity Affinity
+  affinity: {}
+  ## @param llmGateway.topologySpreadConstraints Topology spread constraints
+  topologySpreadConstraints: {}
+  ## @param llmGateway.terminationGracePeriodSeconds Termination grace period in seconds
+  terminationGracePeriodSeconds: 120
+  ## Service configuration
+  service:
+    ## @param llmGateway.service.type Service type
+    type: ClusterIP
+    ## @param llmGateway.service.port Service port
+    port: 8787
+    ## @param llmGateway.service.annotations Service annotations
+    annotations: {}
+  ## Service account configuration
+  serviceAccount:
+    ## @param llmGateway.serviceAccount.create Create service account
+    create: true
+    ## @param llmGateway.serviceAccount.annotations Service account annotations
+    annotations: {}
+    ## @param llmGateway.serviceAccount.name Service account name
+    name: tfy-llm-gateway
+  ## @param llmGateway.extraVolumes Extra volumes
+  extraVolumes: []
+  ## @param llmGateway.extraVolumeMounts Extra volume mounts
+  extraVolumeMounts: []
+  ## rbac configuration
+  rbac:
+    ## @param llmGateway.rbac.enabled Enable rbac
+    enabled: true
+  ## Autoscaling configuration
+  autoscaling:
+    ## @param llmGateway.autoscaling.enabled Enable autoscaling
+    enabled: true
+    ## @param llmGateway.autoscaling.minReplicas Minimum number of replicas
+    minReplicas: 3
+    ## @param llmGateway.autoscaling.maxReplicas Maximum number of replicas
+    maxReplicas: 100
+    ## @param llmGateway.autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 60
+  ## Rollout configuration
+  rollout:
+    ## @param llmGateway.rollout.enabled Enable rollout (rolling update)
+    enabled: true
+    ## @param llmGateway.rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
+    maxUnavailable: 0
+    ## @param llmGateway.rollout.maxSurge Maximum number of surge replicas during rolling update
+    maxSurge: 100%
+  ## @skip llmGateway.env Environment variables for the llmGateway
+  env:
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+    LOG_LEVEL: info
+    GATEWAY_NATS_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
+    GATEWAY_NATS_URL: http://{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    GATEWAY_NATS_USERNAME: admin
+    GATEWAY_NATS_PASSWORD: "{{ .Values.global.llmGatewayInfra.natsAdminPassword }}"
+    DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
+    CONTROL_PLANE_NATS_URL: http://{{ .Values.global.truefoundryReleaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    ENABLE_EXTERNAL_OAUTH: "false"
+
+llmGatewayInfra:
+  ## @param llmGatewayInfra.enabled [boolean, default: false] Enable llm gateway infra
+  enabled: false
