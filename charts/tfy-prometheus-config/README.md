@@ -79,7 +79,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
 | `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
 | `serviceMonitors.gpu.operator.labels`                      | Labels for gpu                                  | `{}`                                      |
-| `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `operator`                                |
+| `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `app`                                     |
 | `serviceMonitors.gpu.operator.endpoints`                   | Endpoints for gpu                               | `[]`                                      |
 | `serviceMonitors.gpu.operator.serviceSelectorLabels`       | Service selector labels for gpu                 | `{}`                                      |
 | `serviceMonitors.gpu.operator.namespaceSelector`           | Namespace selector for gpu                      | `{}`                                      |
