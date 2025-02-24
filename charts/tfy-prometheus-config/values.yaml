@@ -34,9 +34,6 @@ scrapeConfigs:
         targetLabel: node
         sourceLabels:
           - __meta_kubernetes_pod_node_name
-      - targetLabel: label_truefoundry_com_application_id
-        sourceLabels:
-          - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.envoy.metricsRelabelings [array] Metrics relabelings for envoy
     metricsRelabelings:
       - sourceLabels: [__name__]
@@ -48,7 +45,7 @@ scrapeConfigs:
   # scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
   kubernetesPods:
     ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
-    enabled: false
+    enabled: true
     ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
     ## @param scrapeConfigs.kubernetesPods.jobName Job name for kubernetes pods
