@@ -30,6 +30,14 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @param aws-eks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
   
   ## Operator configuration.
   operator:
@@ -38,10 +46,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
     ## Resource configuration for operator requests and limits.
-    ## @param aws-eks-gpu-operator.operator.resources.requests.cpu CPU request for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.requests.memory Memory request for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.limits.cpu CPU limit for the operator.
-    ## @param aws-eks-gpu-operator.operator.resources.limits.memory Memory limit for the operator.
+    ## @param aws-eks-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
         cpu: 10m
@@ -67,7 +72,15 @@ aws-eks-gpu-operator:
         value: 'false'
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
         value: 'true'
-  
+    ## @param aws-eks-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Device Plugin configuration.
   devicePlugin:
     ## @param aws-eks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
@@ -95,23 +108,30 @@ aws-eks-gpu-operator:
       name: ''
       create: false
       default: ''
-  
+    ## @param aws-eks-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
+
   ## Node Feature Discovery configuration.
   node-feature-discovery:
     ## @param aws-eks-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
     enableNodeFeatureApi: true
     master:
-      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.cpu CPU request for master node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources.requests.memory Memory request for master node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
       resources:
         requests:
-          cpu: 10m
-          memory: 400Mi
+          cpu: 100m
+          memory: 200Mi
+        limits:
+          cpu: 500m
+          memory: 500Mi
     worker:
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.cpu CPU request for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.requests.memory Memory request for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.cpu CPU limit for worker node feature discovery.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources.limits.memory Memory limit for worker node feature discovery.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
@@ -181,12 +201,14 @@ aws-eks-gpu-operator:
       enable: true
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
       interval: 30m
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.cpu CPU request for node feature discovery garbage collector.
-      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources.requests.memory Memory request for node feature discovery garbage collector.
+      ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
           cpu: 10m
           memory: 100Mi
+        limits:
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -265,6 +287,14 @@ aws-eks-gpu-operator:
       env:
         - name: WITH_WORKLOAD
           value: "false"
+    ## @param aws-eks-gpu-operator.validator.resources [object] Resources for the gpu validators.
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+      limits:
+          cpu: 50m
+          memory: 300Mi
   
   ## DCGM configuration
   dcgm:
@@ -350,7 +380,7 @@ aws-eks-gpu-operator:
       tag: "3.20"
     ## @param aws-eks-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
     imagePullSecrets: []
-    ## @skip aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    ## @param aws-eks-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
     resources:
       requests:
         cpu: 5m
