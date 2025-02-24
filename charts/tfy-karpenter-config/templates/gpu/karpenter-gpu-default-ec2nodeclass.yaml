@@ -51,6 +51,7 @@ spec:
         volumeSize: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
+        encrypted: {{ .Values.karpenter.gpuDefaultNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
   {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2" }}

@@ -50,6 +50,7 @@ spec:
         volumeSize: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
+        encrypted: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.inferentiaDefaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.inferentiaDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
