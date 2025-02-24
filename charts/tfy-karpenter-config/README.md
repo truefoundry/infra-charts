@@ -68,6 +68,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.defaultNodeTemplate.name`                             | Name of the AWS node class                                     | `default`                    |
 | `karpenter.defaultNodeTemplate.instanceProfile`                  | Instance profile override for the node template                | `""`                         |
 | `karpenter.defaultNodeTemplate.rootVolumeSize`                   | Size for the root volume attached to node                      | `100Gi`                      |
+| `karpenter.defaultNodeTemplate.encrypted`                        | Encryption for EBS volumes                                     | `true`                       |
 | `karpenter.defaultNodeTemplate.extraTags`                        | Additional tags for the node template.                         | `{}`                         |
 | `karpenter.defaultNodeTemplate.amiFamily`                        | AMI family to use for node template                            | `""`                         |
 | `karpenter.defaultNodeTemplate.amiSelectorTerms`                 | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
@@ -90,6 +91,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.gpuDefaultNodeTemplate.name`                          | Name of the AWS node class                                     | `gpu-default`                |
 | `karpenter.gpuDefaultNodeTemplate.instanceProfile`               | Instance profile override for the node template                | `""`                         |
 | `karpenter.gpuDefaultNodeTemplate.rootVolumeSize`                | Size for the root volume attached to node                      | `100Gi`                      |
+| `karpenter.gpuDefaultNodeTemplate.encrypted`                     | Encryption for EBS volumes                                     | `true`                       |
 | `karpenter.gpuDefaultNodeTemplate.extraTags`                     | Additional tags for the gpu node template.                     | `{}`                         |
 | `karpenter.gpuDefaultNodeTemplate.detailedMonitoring`            |                                                                | `false`                      |
 | `karpenter.gpuDefaultNodeTemplate.amiFamily`                     | AMI family to use for node template                            | `""`                         |
@@ -111,6 +113,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.controlPlaneNodeTemplate.name`                        | Name of the AWS node template                                  | `controlplane-node-template` |
 | `karpenter.controlPlaneNodeTemplate.instanceProfile`             | Instance profile override for the node template                | `""`                         |
 | `karpenter.controlPlaneNodeTemplate.rootVolumeSize`              | Size for the root volume attached to node                      | `100Gi`                      |
+| `karpenter.controlPlaneNodeTemplate.encrypted`                   | Encryption for EBS volumes                                     | `true`                       |
 | `karpenter.controlPlaneNodeTemplate.extraTags`                   | Additional tags for the node template.                         | `{}`                         |
 | `karpenter.controlPlaneNodeTemplate.amiFamily`                   | AMI family to use for node template                            | `""`                         |
 | `karpenter.controlPlaneNodeTemplate.amiSelectorTerms`            | AMI selector terms for the node template, conditions are ANDed | `[]`                         |
@@ -134,6 +137,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.inferentiaDefaultNodeTemplate.name`                   | Name of the AWS node class                                     | `inferentia-default`         |
 | `karpenter.inferentiaDefaultNodeTemplate.instanceProfile`        | Instance profile override for the node template                | `""`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.rootVolumeSize`         | Size for the root volume attached to node                      | `100Gi`                      |
+| `karpenter.inferentiaDefaultNodeTemplate.encrypted`              | Encryption for EBS volumes                                     | `true`                       |
 | `karpenter.inferentiaDefaultNodeTemplate.extraTags`              | Additional tags for the node template.                         | `{}`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.detailedMonitoring`     |                                                                | `false`                      |
 | `karpenter.inferentiaDefaultNodeTemplate.amiFamily`              | AMI family to use for node template                            | `""`                         |
@@ -173,6 +177,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.critical.nodeclass.name`                   | Name of the nodeclass. If create is not set, existing nodeclass is used.  | `[]`                    |
 | `karpenter.critical.nodeclass.instanceProfile`        | Instance profile override for the node template                           | `""`                    |
 | `karpenter.critical.nodeclass.rootVolumeSize`         | Size for the root volume attached to the node                             | `100Gi`                 |
+| `karpenter.critical.nodeclass.encrypted`              | Encryption for EBS volumes                                                | `true`                  |
 | `karpenter.critical.nodeclass.extraTags`              | Additional tags for the node template.                                    | `{}`                    |
 | `karpenter.critical.nodeclass.detailedMonitoring`     |                                                                           | `false`                 |
 | `karpenter.critical.nodeclass.amiFamily`              | AMI family to use for node template                                       | `""`                    |
