@@ -52,6 +52,7 @@ spec:
         volumeSize: {{ .Values.karpenter.controlPlaneNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
+        encrypted: {{ .Values.karpenter.controlPlaneNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.controlPlaneNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.controlPlaneNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}

@@ -51,6 +51,7 @@ spec:
         volumeSize: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
+        encrypted: {{ .Values.karpenter.defaultNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.defaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.defaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
