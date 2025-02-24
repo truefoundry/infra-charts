@@ -264,40 +264,61 @@ serviceMonitors:
         - elasti
   # serviceMonitors.gpu Service monitor for gpu
   gpu:
-    ## @param serviceMonitors.gpu.enabled Enable service monitor for gpu
-    enabled: true
-    ## @param serviceMonitors.gpu.name Name of the service monitor
-    name: gpu-metrics
-    ## @param serviceMonitors.gpu.labels [object] Labels for gpu
-    labels: {}
-    ## @param serviceMonitors.gpu.jobLabel Job label for gpu
-    jobLabel: operator
-    ## @param serviceMonitors.gpu.endpoints [array] Endpoints for gpu
-    endpoints:
-      - port: gpu-operator-metrics
-        path: /metrics
-        interval: 15s
-        scrapeTimeout: 10s
-        scheme: http
-        relabelings:
-          - sourceLabels: [__meta_kubernetes_pod_node_name]
-            separator: ;
-            regex: (.*)
-            targetLabel: kubernetes_node
-            replacement: $1
-            action: replace
-        metricRelabelings:
-          - regex: DCGM_FI_DEV_GPU_UTIL|DCGM_FI_DEV_FB_USED|DCGM_FI_DEV_FB_FREE|DCGM_FI_DEV_GPU_TEMP|DCGM_FI_DEV_POWER_USAGE
-            action: keep
-            sourceLabels:
-              - __name__
-    ## @param serviceMonitors.gpu.serviceSelectorLabels [object] Service selector labels for gpu
-    serviceSelectorLabels:
-      app: gpu-operator
-    ## @param serviceMonitors.gpu.namespaceSelector [object] Namespace selector for gpu
-    namespaceSelector:
-      matchNames:
-        - tfy-gpu-operator
+    ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
+    operator:
+      ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
+      enabled: true
+      ## @param serviceMonitors.gpu.operator.name Name of the service monitor
+      name: gpu-operator
+      ## @param serviceMonitors.gpu.operator.labels [object] Labels for gpu
+      labels: {}
+      ## @param serviceMonitors.gpu.operator.jobLabel Job label for gpu
+      jobLabel: operator
+      ## @param serviceMonitors.gpu.operator.endpoints [array] Endpoints for gpu
+      endpoints:
+        - port: gpu-operator-metrics
+          path: /metrics
+          interval: 15s
+          scrapeTimeout: 10s
+          scheme: http
+      ## @param serviceMonitors.gpu.operator.serviceSelectorLabels [object] Service selector labels for gpu
+      serviceSelectorLabels:
+        app: gpu-operator
+      ## @param serviceMonitors.gpu.operator.namespaceSelector [object] Namespace selector for gpu
+      namespaceSelector:
+        matchNames:
+          - tfy-gpu-operator
+    dcgmExporter:
+      ## @param serviceMonitors.gpu.dcgmExporter.enabled Enable service monitor for dcgm exporter
+      enabled: true
+      ## @param serviceMonitors.gpu.dcgmExporter.name Name of the service monitor
+      name: nvidia-dcgm-exporter
+      ## @param serviceMonitors.gpu.dcgmExporter.labels [object] Labels for dcgm exporter
+      labels: {}
+      ## @param serviceMonitors.gpu.dcgmExporter.jobLabel Job label for dcgm exporter
+      jobLabel: app
+      ## @param serviceMonitors.gpu.dcgmExporter.endpoints [array] Endpoints for dcgm exporter
+      endpoints:
+        - port: gpu-metrics
+          path: /metrics
+          interval: 15s
+          scrapeTimeout: 10s
+          scheme: http
+          relabelings:
+            - action: replace
+              sourceLabels:
+                - __meta_kubernetes_pod_node_name
+              targetLabel: kubernetes_node
+            - action: replace
+              replacement: gpu-metrics
+              targetLabel: job
+      ## @param serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels [object] Service selector labels for dcgm exporter
+      serviceSelectorLabels:
+        app: nvidia-dcgm-exporter
+      ## @param serviceMonitors.gpu.dcgmExporter.namespaceSelector [object] Namespace selector for dcgm exporter
+      namespaceSelector:
+        matchNames:
+          - tfy-gpu-operator
   # serviceMonitors.karpenter Service monitor for karpenter
   karpenter:
     ## @param serviceMonitors.karpenter.enabled Enable service monitor for karpenter
