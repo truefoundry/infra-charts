@@ -44,11 +44,11 @@ scrapeConfigs:
         regex: envoy_(.+)
       - sourceLabels: [__name__]
         action: drop
-        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count|envoy_http_inbound_*_downstream_rq_total)
+        regex: (istio_response_bytes_bucket|istio_request_bytes_bucket|istio_request_bytes_count|istio_response_bytes_count)
   # scrapeConfigs.kubernetesPods Scrape config for kubernetes pods
   kubernetesPods:
     ## @param scrapeConfigs.kubernetesPods.enabled Enable scrape config for kubernetes pods
-    enabled: false
+    enabled: true
     ## @param scrapeConfigs.kubernetesPods.name Name of the scrape config
     name: kubernetes-pods
     ## @param scrapeConfigs.kubernetesPods.jobName Job name for kubernetes pods
