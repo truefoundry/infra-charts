@@ -39,7 +39,7 @@ spec:
   amiSelectorTerms:
   {{- .Values.karpenter.defaultNodeTemplate.amiSelectorTerms | toYaml | nindent 2 }}
   {{- end }}
-  {{- if eq .Values.karpenter.defaultNodeTemplate.amiFamily "Bottlerocket" }}
+  {{- if eq (include "defaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
   blockDeviceMappings:
     - deviceName: /dev/xvdb
       ebs:
@@ -51,6 +51,7 @@ spec:
         volumeSize: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
         deleteOnTermination: true
+        encrypted: {{ .Values.karpenter.defaultNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.defaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.defaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
