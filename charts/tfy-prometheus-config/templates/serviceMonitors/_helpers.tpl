@@ -165,3 +165,14 @@
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
 {{- end }}
+
+{{- /*
+  GPU service monitor labels
+*/ -}}
+{{- define "gpu.labels" -}}
+{{- if .Values.serviceMonitors.gpu.labels }}
+{{- toYaml .Values.serviceMonitors.gpu.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,35 @@
+{{- if .Values.serviceMonitors.gpu.operator.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.gpu.operator.name }}
+  labels:
+    {{- include "gpu.labels" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.gpu.operator.jobLabel }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.gpu.operator.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.gpu.operator.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.gpu.operator.endpoints | nindent 2 }}
+{{- end }}
+---
+{{- if .Values.serviceMonitors.gpu.dcgmExporter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.gpu.dcgmExporter.name }}
+  labels:
+    {{- include "gpu.labels" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.gpu.dcgmExporter.jobLabel }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.gpu.dcgmExporter.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.gpu.dcgmExporter.endpoints | nindent 2 }}
+{{- end }}
