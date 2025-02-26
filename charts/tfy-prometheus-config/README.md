@@ -75,6 +75,21 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
+| `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
+| `serviceMonitors.gpu.operator.labels`                      | Labels for gpu                                  | `{}`                                      |
+| `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `app`                                     |
+| `serviceMonitors.gpu.operator.endpoints`                   | Endpoints for gpu                               | `[]`                                      |
+| `serviceMonitors.gpu.operator.serviceSelectorLabels`       | Service selector labels for gpu                 | `{}`                                      |
+| `serviceMonitors.gpu.operator.namespaceSelector`           | Namespace selector for gpu                      | `{}`                                      |
+| `serviceMonitors.gpu.dcgmExporter.enabled`                 | Enable service monitor for dcgm exporter        | `true`                                    |
+| `serviceMonitors.gpu.dcgmExporter.name`                    | Name of the service monitor                     | `nvidia-dcgm-exporter`                    |
+| `serviceMonitors.gpu.dcgmExporter.labels`                  | Labels for dcgm exporter                        | `{}`                                      |
+| `serviceMonitors.gpu.dcgmExporter.jobLabel`                | Job label for dcgm exporter                     | `app`                                     |
+| `serviceMonitors.gpu.dcgmExporter.endpoints`               | Endpoints for dcgm exporter                     | `[]`                                      |
+| `serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels`   | Service selector labels for dcgm exporter       | `{}`                                      |
+| `serviceMonitors.gpu.dcgmExporter.namespaceSelector`       | Namespace selector for dcgm exporter            | `{}`                                      |
 | `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter            | `true`                                    |
 | `serviceMonitors.karpenter.name`                           | Name of the service monitor                     | `karpenter`                               |
 | `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                         | `kube-system`                             |
