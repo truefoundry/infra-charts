@@ -492,7 +492,7 @@ spec:
                   - for: 15m
                     expr: >-
                       sum by (namespace, pod)
-                      (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
+                      (kube_pod_status_phase{job="kube-state-metrics", phase=~"Unknown|Failed"}) > 0
                     alert: KubernetesPodNotHealthy
                     labels:
                       entity: pod
@@ -503,6 +503,21 @@ spec:
                       description: >-
                         Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
                         non-running state for longer than 15 minutes.
+                          VALUE = {{`{{ $value }}`}}
+                  - for: 5m
+                    expr: >-
+                      sum by (namespace, pod)
+                      (kube_pod_status_phase{job="kube-state-metrics", phase="Pending"}) > 0
+                    alert: KubernetesPodPending
+                    labels:
+                      entity: pod
+                      severity: critical
+                    annotations:
+                      summary: >-
+                        Kubernetes Pod pending ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+                      description: >-
+                        Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
+                        pending state for longer than 5 minutes.
                           VALUE = {{`{{ $value }}`}}
                   - for: 2m
                     expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
