@@ -25,9 +25,9 @@ https://github.com/grafana/helm-charts/tree/8b9ca8240e4e412f72af2df42f833c94142a
 | `loki.loki.limits_config.max_entries_limit_per_query`          | Maximum number of log entries that will be returned for a query.                                    | `30000`                             |
 | `loki.singleBinary.replicas`                                   | Number of replicas for the single binary                                                            | `1`                                 |
 | `loki.singleBinary.resources.requests.cpu`                     | CPU requests for promtail container                                                                 | `0.2`                               |
-| `loki.singleBinary.resources.requests.memory`                  | Memory requests for promtail container                                                              | `806Mi`                             |
+| `loki.singleBinary.resources.requests.memory`                  | Memory requests for promtail container                                                              | `810Mi`                             |
 | `loki.singleBinary.resources.limits.cpu`                       | CPU limits for promtail container                                                                   | `0.4`                               |
-| `loki.singleBinary.resources.limits.memory`                    | Memory limits for promtail container                                                                | `1612Mi`                            |
+| `loki.singleBinary.resources.limits.memory`                    | Memory limits for promtail container                                                                | `1620Mi`                            |
 | `loki.singleBinary.persistence.size`                           | Size of persistent disk                                                                             | `50Gi`                              |
 | `loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC` | Enable StatefulSetAutoDeletePVC feature                                                             | `false`                             |
 | `promtail.enabled`                                             | Enable promtail                                                                                     | `true`                              |
