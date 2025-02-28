@@ -620,11 +620,6 @@ serviceMonitors:
         interval: 30s
         path: /metrics
         honorLabels: true
-        metricRelabelings:
-          - regex: (.*)
-            action: drop
-            sourceLabels:
-              - __name__
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
@@ -646,11 +641,6 @@ serviceMonitors:
           interval: 30s
           path: /metrics
           honorLabels: true
-          metricRelabelings:
-            - regex: (.*)
-              action: drop
-              sourceLabels:
-                - __name__
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail
