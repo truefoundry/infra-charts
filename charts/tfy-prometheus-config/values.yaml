@@ -22,12 +22,15 @@ scrapeConfigs:
         sourceLabels:
           - __meta_kubernetes_pod_container_port_name
       - targetLabel: pod
+        action: replace
         sourceLabels:
           - __meta_kubernetes_pod_name
       - targetLabel: container
+        action: replace
         sourceLabels:
           - __meta_kubernetes_pod_container_name
       - targetLabel: namespace
+        action: replace
         sourceLabels:
           - __meta_kubernetes_namespace
       - action: replace
@@ -172,6 +175,7 @@ serviceMonitors:
     ## @param serviceMonitors.alertManager.serviceSelectorLabels [object] Service selector labels for alert manager
     serviceSelectorLabels:
       app: kube-prometheus-stack-alertmanager
+      app.kubernetes.io/instance: prometheus
     ## @param serviceMonitors.alertManager.namespaceSelector [object] Namespace selector for alert manager
     namespaceSelector:
       matchNames:
@@ -264,7 +268,7 @@ serviceMonitors:
     ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
     operator:
       ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
-      enabled: true
+      enabled: false
       ## @param serviceMonitors.gpu.operator.name Name of the service monitor
       name: gpu-operator
       ## @param serviceMonitors.gpu.operator.labels [object] Labels for gpu
@@ -598,8 +602,8 @@ serviceMonitors:
               - __name__
     ## @param serviceMonitors.prometheusOperator.serviceSelectorLabels [object] Service selector labels for prometheus operator
     serviceSelectorLabels:
-      app: kube-prometheus-stack-operator
-      release: prometheus
+      app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+      app.kubernetes.io/instance: prometheus
     ## @param serviceMonitors.prometheusOperator.namespaceSelector [object] Namespace selector for prometheus operator
     namespaceSelector:
       matchNames:
@@ -620,11 +624,6 @@ serviceMonitors:
         interval: 30s
         path: /metrics
         honorLabels: true
-        metricRelabelings:
-          - regex: (.*)
-            action: drop
-            sourceLabels:
-              - __name__
     ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
     serviceSelectorLabels:
       app.kubernetes.io/name: loki
@@ -646,11 +645,6 @@ serviceMonitors:
           interval: 30s
           path: /metrics
           honorLabels: true
-          metricRelabelings:
-            - regex: (.*)
-              action: drop
-              sourceLabels:
-                - __name__
       ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
       serviceSelectorLabels:
         app.kubernetes.io/name: promtail
