@@ -75,8 +75,8 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
 | `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
 | `serviceMonitors.gpu.operator.labels`                      | Labels for gpu                                  | `{}`                                      |
 | `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `app`                                     |
