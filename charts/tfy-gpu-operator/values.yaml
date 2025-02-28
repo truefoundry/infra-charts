@@ -32,11 +32,11 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
-        cpu: 100m
-        memory: 50Mi
-      limits:
-        cpu: 200m
+        cpu: 10m
         memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## Operator configuration.
   operator:
@@ -47,11 +47,11 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
-        cpu: 100m
-        memory: 90Mi
+        cpu: 10m
+        memory: 300Mi
       limits:
-        cpu: 200m
-        memory: 170Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## Driver configuration
   driver:
@@ -74,10 +74,10 @@ aws-eks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 100Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## Device Plugin configuration.
   devicePlugin:
@@ -110,10 +110,10 @@ aws-eks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 100Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -124,19 +124,19 @@ aws-eks-gpu-operator:
       resources:
         requests:
           cpu: 100m
-          memory: 40Mi
+          memory: 200Mi
         limits:
-          cpu: 200m
-          memory: 80Mi
+          cpu: 500m
+          memory: 500Mi
     worker:
       ## @param aws-eks-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
         requests:
           cpu: 10m
-          memory: 40Mi
+          memory: 100Mi
         limits:
-          cpu: 20m
-          memory: 80Mi
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
@@ -202,11 +202,11 @@ aws-eks-gpu-operator:
       ## @param aws-eks-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
-          cpu: 100m
-          memory: 40Mi
+          cpu: 10m
+          memory: 100Mi
         limits:
-          cpu: 200m
-          memory: 80Mi
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip aws-eks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -289,10 +289,10 @@ aws-eks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 50Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## DCGM configuration
   dcgm:
@@ -345,11 +345,11 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
-        cpu: 100m
-        memory: 500Mi
+        cpu: 10m
+        memory: 100Mi
       limits:
-        cpu: 200m
-        memory: 990Mi
+        cpu: 100m
+        memory: 1000Mi
     ## @param aws-eks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
 
@@ -513,8 +513,15 @@ gcp-gke-standard-dcgm-exporter:
   ##
   ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
   ##
-  arguments: ["-c", '"5000"', "-f", "/etc/dcgm-exporter/dcp-metrics-included.csv",
-    "--kubernetes-gpu-id-type", "device-name"]
+  arguments:
+    [
+      "-c",
+      '"5000"',
+      "-f",
+      "/etc/dcgm-exporter/dcp-metrics-included.csv",
+      "--kubernetes-gpu-id-type",
+      "device-name",
+    ]
   ## Resource configuration for DCGM Exporter requests and limits.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.resources [object] Requests and limits for the DCGM Exporter.
@@ -631,11 +638,11 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
-        cpu: 300m
-        memory: 50Mi
-      limits:
-        cpu: 600m
+        cpu: 10m
         memory: 100Mi
+      limits:
+        cpu: 50m
+        memory: 300Mi
 
   ## Operator configuration.
   operator:
@@ -646,11 +653,11 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
-        cpu: 100m
-        memory: 140Mi
+        cpu: 10m
+        memory: 300Mi
       limits:
-        cpu: 200m
-        memory: 280Mi
+        cpu: 50m
+        memory: 300Mi
     ## @skip azure-aks-gpu-operator.operator.tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
@@ -673,10 +680,10 @@ azure-aks-gpu-operator:
       resources:
         requests:
           cpu: 100m
-          memory: 270Mi
+          memory: 200Mi
         limits:
-          cpu: 200m
-          memory: 540Mi
+          cpu: 500m
+          memory: 500Mi
       ## @skip azure-aks-gpu-operator.node-feature-discovery.master.tolerations
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -694,10 +701,10 @@ azure-aks-gpu-operator:
       resources:
         requests:
           cpu: 10m
-          memory: 40Mi
+          memory: 100Mi
         limits:
-          cpu: 20m
-          memory: 80Mi
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip azure-aks-gpu-operator.node-feature-discovery.worker.affinity.nodeAffinity
         nodeAffinity:
@@ -729,11 +736,11 @@ azure-aks-gpu-operator:
       ## @param azure-aks-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
-          cpu: 100m
-          memory: 210Mi
+          cpu: 10m
+          memory: 100Mi
         limits:
-          cpu: 200m
-          memory: 420Mi
+          cpu: 50m
+          memory: 300Mi
       affinity:
         ## @skip azure-aks-gpu-operator.node-feature-discovery.gc.affinity.nodeAffinity
         nodeAffinity:
@@ -798,10 +805,10 @@ azure-aks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 100Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## MIG Configuration
   mig:
@@ -839,10 +846,10 @@ azure-aks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 100Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
   ## DCGM configuration
   dcgm:
@@ -895,11 +902,11 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
-        cpu: 100m
-        memory: 490Mi
+        cpu: 10m
+        memory: 100Mi
       limits:
-        cpu: 200m
-        memory: 970Mi
+        cpu: 100m
+        memory: 1000Mi
     ## @param azure-aks-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
     args: ["-c", "5000"]
 
@@ -924,10 +931,10 @@ azure-aks-gpu-operator:
     resources:
       requests:
         cpu: 10m
-        memory: 40Mi
+        memory: 50Mi
       limits:
-        cpu: 20m
-        memory: 80Mi
+        cpu: 50m
+        memory: 300Mi
 
 ## @section civo-talos-gpu-operator Configuration for the Civo Talos GPU Operator. This section will only be used when clusterType.civoTalos is set to true.
 ##
@@ -1267,11 +1274,11 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
-        cpu: 100m
-        memory: 70Mi
+        cpu: 10m
+        memory: 300Mi
       limits:
-        cpu: 200m
-        memory: 140Mi
+        cpu: 50m
+        memory: 300Mi
     ## @skip generic-gpu-operator.operator.tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
@@ -1290,10 +1297,10 @@ generic-gpu-operator:
       resources:
         requests:
           cpu: 100m
-          memory: 40Mi
+          memory: 200Mi
         limits:
-          cpu: 200m
-          memory: 80Mi
+          cpu: 500m
+          memory: 500Mi
       ## @skip generic-gpu-operator.node-feature-discovery.master.tolerations
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -1307,10 +1314,10 @@ generic-gpu-operator:
       resources:
         requests:
           cpu: 10m
-          memory: 40Mi
+          memory: 100Mi
         limits:
-          cpu: 20m
-          memory: 80Mi
+          cpu: 50m
+          memory: 300Mi
       ## @skip generic-gpu-operator.node-feature-discovery.worker.tolerations
       tolerations:
         - key: nvidia.com/gpu
@@ -1328,11 +1335,11 @@ generic-gpu-operator:
       ## @param generic-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
       resources:
         requests:
-          cpu: 100m
-          memory: 40Mi
+          cpu: 10m
+          memory: 100Mi
         limits:
-          cpu: 200m
-          memory: 80Mi
+          cpu: 50m
+          memory: 300Mi
       ## @skip generic-gpu-operator.node-feature-discovery.gc.tolerations
       tolerations:
         - key: nvidia.com/gpu
