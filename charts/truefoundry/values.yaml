@@ -1309,3 +1309,70 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+
+
+controlPLaneNats:
+  enabled: true
+  config:
+    merge:
+      00$include: accounts/resolver.conf
+    cluster:
+      enabled: true
+      replicas: 3
+    advertise: false
+    jetstream:
+      enabled: true
+      fileStore:
+        dir: /data
+        pvc:
+          size: 10Gi
+          enabled: true
+        enabled: true
+        maxSize: 9Gi
+      memoryStore:
+        size: 1Gi
+        enabled: true
+    websocket:
+      port: 8080
+      enabled: true
+  natsBox:
+    enabled: false
+  reloader:
+    image:
+      repository: tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader
+    enabled: true
+  container:
+    image:
+      tag: 2.10.24-alpine3.21
+      repository: tfy.jfrog.io/tfy-mirror/nats
+    patch:
+      - op: add
+        path: /volumeMounts/-
+        value:
+          name: resolver-volume
+          mountPath: /etc/nats-config/accounts
+    resources:
+      limits:
+        cpu: 400m
+        memory: 1024Mi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+  podTemplate:
+    patch:
+      - op: add
+        path: /spec/volumes/-
+        value:
+          name: resolver-volume
+          configMap:
+            name: nats-accounts
+            defaultMode: 420
+    imagePullSecrets: []
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+  promExporter:
+    image:
+      repository: tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter
+    enabled: true
