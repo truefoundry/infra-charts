@@ -1,0 +1,17 @@
+{{- if .Values.serviceMonitors.ssh.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.ssh.name }}
+  labels:
+    {{- include "ssh.labels" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.ssh.jobLabel }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.ssh.serviceSelectorLabels | nindent 6 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.ssh.namespaceSelector | nindent 4 }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.ssh.endpoints | nindent 2 }}
+{{- end -}}

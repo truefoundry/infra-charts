@@ -263,6 +263,24 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - elasti
+  # serviceMonitors.argoCD Service monitor for ssh
+  ssh:
+    ## @param serviceMonitors.ssh.enabled Enable service monitor for ssh
+    enabled: true
+    ## @param serviceMonitors.ssh.name Name of the service monitor
+    name: ssh
+    ## @param serviceMonitors.ssh.labels [object] Labels for ssh
+    labels: {}
+    ## @param serviceMonitors.ssh.jobLabel Job label for ssh
+    jobLabel: app.kubernetes.io/prometheus
+    ## @param serviceMonitors.ssh.endpoints [array] Endpoints for ssh
+    endpoints:
+      - port: http-activity-monitor
+        scheme: http
+        interval: 3s
+        path: /metrics
+    serviceSelectorLabels:
+      truefoundry.com/component-type: ssh-server
   # serviceMonitors.gpu Service monitor for gpu
   gpu:
     ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu

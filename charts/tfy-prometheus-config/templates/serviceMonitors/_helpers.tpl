@@ -176,3 +176,14 @@
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
 {{- end }}
+
+{{- /*
+  SSH service monitor labels
+*/ -}}
+{{- define "ssh.labels" -}}
+{{- if .Values.serviceMonitors.ssh.labels }}
+{{- toYaml .Values.serviceMonitors.ssh.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
