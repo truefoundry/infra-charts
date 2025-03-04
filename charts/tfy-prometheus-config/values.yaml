@@ -280,8 +280,16 @@ serviceMonitors:
         scheme: http
         interval: 3s
         path: /metrics
+        relabelings:
+          - action: replace
+            replacement: ssh-server-metrics
+            targetLabel: job
+    ## @param serviceMonitors.ssh.serviceSelectorLabels [object] Service selector labels for ssh
     serviceSelectorLabels:
       truefoundry.com/component-type: ssh-server
+    ## @param serviceMonitors.ssh.namespaceSelector [object] Namespace selector for ssh
+    namespaceSelector:
+      any: true
   # serviceMonitors.gpu Service monitor for gpu
   gpu:
     ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
