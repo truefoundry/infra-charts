@@ -5,63 +5,49 @@ config:
   ## @param config.clusterToken Token to connect to the control plane
   ##
   clusterToken: ""
-
   ## @param config.clusterTokenSecret Secret of token to connect to control plane, secret key must be `CLUSTER_TOKEN`. This overrides config.clusterToken
   ##
   clusterTokenSecret: ""
-
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
   controlPlaneURL: ""
-
   ## @param config.tenantName Tenant Name
   ##
   tenantName: ""
-
   ## @param config.controlPlaneNatsClusterIP ClusterIP at which nats should connect 
   ##
   controlPlaneNatsClusterIP: "ws://truefoundry-nats.truefoundry.svc.cluster.local:8080"
-
   ## @param config.controlPlaneClusterIP ClusterIP of the control plane to connect agent (format: `http://`)
   ##
   controlPlaneClusterIP: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param config.controlPlaneControllerClusterIP ClusterIP of the control plane controller to connect proxy (format: `http://`)
   ##
   controlPlaneControllerClusterIP: "http://truefoundry-tfy-controller.truefoundry.svc.cluster.local:8123"
-
   ## Opencost configuration
   ##
   opencost:
-
     ## @param config.opencost.pollInterval Time in milliseconds for opencost scraping
     ##
     pollInterval: "180000"
-
     ## @param config.opencost.endpoint Endpoint to connect to opencost
     ##
     endpoint: http://opencost.opencost.svc.cluster.local:9003
-
   ## Prometheus configuration
   ##
   prometheus:
     ## @param config.prometheus.pollInterval Time in milliseconds for prometheus scraping config
     ##
     pollInterval: "60000"
-
     ## @param config.prometheus.endpoint Endpoint to connect to prometheus
     ##
     endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
-
   ## @param config.alertURL Truefoundry alert URL
   ##
   alertURL: "https://auth.truefoundry.com"
-
   ## @param config.nodeEnv
   nodeEnv: production
-
   ## @param config.nodeOptions Node options for tfyAgent
   nodeOptions: ""
-
   ## @param config.allowedNamespaces A list of namespaces the control plane will have access to for namespaced resources.
   ## If this list is empty, the control plane can access namespaced resources cluster-wide.
   ## If this list is non-empty, the control plane cannot create namespaces in the cluster.
@@ -71,26 +57,22 @@ config:
   # allowedNamespaces:
   #   - default
   #   - namespace-1
+## @param imagePullSecrets Secrets to pull images
+##
 
-  ## @param imagePullSecrets Secrets to pull images
-  ##
 imagePullSecrets: []
-
 ## @param nameOverride String to override partial name passed in helm install command
 ##
 nameOverride: ""
-
 ## @param fullnameOverride String to override full name passed in helm install command
 ##
 fullnameOverride: ""
-
 ## @section tfyAgent configuration parameters
 ##
 tfyAgent:
   ## @param tfyAgent.enabled Bool value to deploy tfyAgent
   ##
   enabled: true
-
   ## Number of replicas of tfyAgent
   ## value kept for future use, kept 1
   # replicaCount: 1
@@ -99,21 +81,9 @@ tfyAgent:
   ##
   annotations: {}
 
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ## @param tfyAgent.labels Add labels to tfyAgent pods
   ##
-  serviceAccount:
-    ## @param tfyAgent.serviceAccount.create Bool to enable serviceAccount creation 
-    ##
-    create: true
-
-    ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
-    ## 
-    annotations: {}
-
-    ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
-    ## 
-    name: ""
-
+  labels: {}
   ## @param tfyAgent.extraEnvVars Additional envrionment variables for tfyAgent
   ##
   extraEnvVars: []
@@ -126,7 +96,6 @@ tfyAgent:
   ## Configuration for tfyAgent service
   ##
   service:
-
     ## @param tfyAgent.service.annotations Annotations to add to the tfyAgent service
     ##   
     annotations: {}
@@ -136,11 +105,9 @@ tfyAgent:
     ## @param tfyAgent.service.clusterIP Cluster IP for tfyAgent service
     ## 
     clusterIP: ""
-
     ## @param tfyAgent.service.port Port for tfyAgent service
     ##
     port: 3000
-
     ## @param tfyAgent.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
@@ -154,11 +121,9 @@ tfyAgent:
     ## @param tfyAgent.service.sessionAffinity SessionAffinity for tfyAgent Service
     ##
     sessionAffinity: ""
-
     ## @param tfyAgent.service.type Type for tfyAgent Service
     ##
     type: ClusterIP
-
   ## Image of tfyAgent
   ##
   image:
@@ -170,7 +135,6 @@ tfyAgent:
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
     tag: "a5e6e21f8e4ef9e2b59bd3c0556cd5488edf76e6"
-
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -193,7 +157,6 @@ tfyAgent:
       cpu: 300m
       memory: 512Mi
       ephemeral-storage: 128Mi
-
   ## @param tfyAgent.livenessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.livenessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
   ## @param tfyAgent.livenessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
@@ -213,7 +176,6 @@ tfyAgent:
     successThreshold: 1
     timeoutSeconds: 1
     initialDelaySeconds: 15
-
   ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
@@ -232,7 +194,6 @@ tfyAgent:
     successThreshold: 1
     timeoutSeconds: 1
     initialDelaySeconds: 15
-
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -264,14 +225,12 @@ tfyAgent:
   ## @param tfyAgent.nodeSelector Parameters to select for scheduling of pod on a node
   ##
   nodeSelector: {}
-
   ## @param tfyAgent.extraVolumes Extra volume for tfyAgent container
   ##
   extraVolumes: []
   ## @param tfyAgent.extraVolumeMounts Extra volume mount for tfyAgent container
   ##
   extraVolumeMounts: []
-
   ## Assign custom affinity rules to the tfyAgent instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -290,10 +249,22 @@ tfyAgent:
 
   ## @param tfyAgent.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
-
   clusterRole:
     ## @param tfyAgent.clusterRole.enable Create cluster role.
     enable: true
+
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    ## @param tfyAgent.serviceAccount.create Bool to enable serviceAccount creation
+    ##
+    create: true
+    ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
+    ##
+    annotations: {}
+    ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+    ##
+    name: ""
 
 ## @section tfyAgentProxy configuration parameters
 ##
@@ -301,7 +272,6 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.enabled Bool value to deploy tfyAgentProxy
   ##
   enabled: true
-
   ## Number of replicas of tfyAgentProxy
   ## value kept for future use, ketp 1
   # replicaCount: 1
@@ -309,7 +279,6 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.annotations Add annotations to tfyAgentProxy pods
   ##
   annotations: {}
-
   ## Image of tfyAgentProxy
   ##
   image:
@@ -322,7 +291,6 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.image.tag Image tag whose default is the chart appVersion.
     ##
     tag: "b212f7fcd34c833b0b045a5b87969d0f9eea7628"
-
   ## @param tfyAgentProxy.extraEnvVars Additional envrionment variables for tfyAgentPRoxy
   ##
   extraEnvVars: []
@@ -353,7 +321,6 @@ tfyAgentProxy:
       cpu: 50m
       memory: 128Mi
       ephemeral-storage: 200M
-
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -385,7 +352,6 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.nodeSelector Parameters to select for scheduling of pod on a node
   ##
   nodeSelector: {}
-
   ## Assign custom affinity rules to the tfyAgentProxy instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -404,33 +370,27 @@ tfyAgentProxy:
 
   ## @param tfyAgentProxy.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
-
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
     ## @param tfyAgentProxy.serviceAccount.create Bool to enable serviceAccount creation 
     ##
     create: true
-
     ## @param tfyAgentProxy.serviceAccount.annotations Annotations to add to the serviceAccount
     ## 
     annotations: {}
-
     ## @param tfyAgentProxy.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
-
   ## @param tfyAgentProxy.extraVolumes Extra volume for tfyAgentProxy container
   ##
   extraVolumes: []
   ## @param tfyAgentProxy.extraVolumeMounts Extra volume mount for tfyAgentProxy container
   ##
   extraVolumeMounts: []
-
   clusterRole:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
     enable: true
-
     ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules.
     ## This field is ignored, if `config.allowedNamespaces` is not empty.
     ## if `config.allowedNamespaces` is not empty, we only add required authz rules.
@@ -438,53 +398,51 @@ tfyAgentProxy:
     ## Check templates/tfy-agent-proxy-clusterrolebinding-cs.yaml and
     ## `templates/tfy-agent-proxy-clusterrolebinding-ns.yaml` files for more details.
     strictMode: false
-
     ## @param tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules Additional rules to add to the cluster role for cluster-scoped resources.
     clusterScopedAdditionalClusterRoleRules: []
     # Example:
     # - apiGroups: [""]
     #   resources: ["namespaces"]
     #   verbs: ["create"]
+## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
+##
 
-    ## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
-    ##
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.
   enabled: true
+  ## @param resourceQuota.annotations Annotations to add to the ResourceQuota
+  ##
+  annotations: {}
+  ## @param resourceQuota.labels Labels to add to the ResourceQuota
+  ##
+  labels: {}
   ## @param resourceQuota.priorityClasses PriorityClasses to enable.
   priorityClasses:
     - system-cluster-critical
-
 ## Config for SDS service
 ##
 sdsServer:
   ## @param sdsServer.enabled Bool value to deploy sdsServer
   ##
   enabled: true
-
   ## @param sdsServer.replicas Number of replicas of sdsServer
   ##
   replicas: 2
-
   ## @param sdsServer.annotations Add annotations to sdsServer pods
   ##
   annotations: {}
-
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
     ## @param sdsServer.serviceAccount.create Bool to enable serviceAccount creation 
     ##
     create: true
-
     ## @param sdsServer.serviceAccount.annotations Annotations to add to the serviceAccount
     ## 
     annotations: {}
-
     ## @param sdsServer.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
-
   ## @param sdsServer.extraEnvVars Additional envrionment variables for sdsServer
   ##
   extraEnvVars: []
@@ -497,7 +455,6 @@ sdsServer:
   ## Configuration for sdsServer service
   ##
   service:
-
     ## @param sdsServer.service.annotations Annotations to add to the sdsServer service
     ##   
     annotations: {}
@@ -507,11 +464,9 @@ sdsServer:
     ## @param sdsServer.service.clusterIP Cluster IP for sdsServer service
     ## 
     clusterIP: ""
-
     ## @param sdsServer.service.port Port for sdsServer service
     ##
     port: 8000
-
     ## @param sdsServer.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
@@ -525,11 +480,9 @@ sdsServer:
     ## @param sdsServer.service.sessionAffinity SessionAffinity for sdsServer Service
     ##
     sessionAffinity: ""
-
     ## @param sdsServer.service.type Type for sdsServer Service
     ##
     type: ClusterIP
-
   ## Image of sdsServer
   ##
   image:
@@ -542,22 +495,18 @@ sdsServer:
     ## @param sdsServer.image.tag Tag for sdsServer
     ##
     tag: "c3bb65485f56faaa236f4ee02074c6da7ab269a8"
-
   ## @param sdsServer.affinity [object] Node affinity for sdsServer
   ##
   affinity: {}
-
   ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sdsServer
   ##
   imagePullSecrets: []
-
   ## @param sdsServer.command Command and arguments to start the sdsServer application.
   ##
   command:
     - /app/sds-server
     - "--port"
     - "8000"
-
   ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
   ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
   ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
@@ -566,7 +515,6 @@ sdsServer:
       port: 8000
     initialDelaySeconds: 15
     periodSeconds: 10
-
   ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
   ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
   ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
@@ -575,7 +523,6 @@ sdsServer:
       port: 8000
     initialDelaySeconds: 15
     periodSeconds: 10
-
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -596,11 +543,9 @@ sdsServer:
       cpu: 0.01
       ephemeral-storage: 10M
       memory: 30M
-
   ## @param sdsServer.tolerations [array] Tolerations for the sdsServer application
   ##
   tolerations: []
-
   ## @param sdsServer.topologySpreadConstraints [array] topology spread constraints on sdsServer application
   topologySpreadConstraints:
     - labelSelector:

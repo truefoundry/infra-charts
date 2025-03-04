@@ -4,6 +4,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "tfy-agent.fullname" . }}
+  labels:
+    {{- include "tfy-agent.labels" . | nindent 4 }}
+  {{- with .Values.tfyAgent.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 rules:
   - apiGroups: [""]
     resources: ["namespaces", "pods", "resourcequotas", "nodes", "events"]

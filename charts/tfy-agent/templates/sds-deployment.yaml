@@ -5,6 +5,10 @@ metadata:
   name: {{ include "sds-server.fullname" . }}
   labels:
     {{- include "sds-server.labels" . | nindent 4 }}
+  {{- with .Values.sdsServer.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.sdsServer.replicas}}
   selector:

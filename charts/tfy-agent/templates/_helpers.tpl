@@ -50,11 +50,21 @@ Common labels
 {{- define "tfy-agent.labels" -}}
 helm.sh/chart: {{ include "tfy-agent.chart" . }}
 {{ include "tfy-agent.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.tfyAgent.labels }}
+{{ toYaml . }}
 {{- end }}
+{{- end }}
+
+{{/*
+Annotations for tfyAgent
+*/}}
+{{- define "tfy-agent.annotations" -}}
+{{- with .Values.tfyAgent.annotations -}}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
 
 {{/*
 Selector labels for tfyAgent

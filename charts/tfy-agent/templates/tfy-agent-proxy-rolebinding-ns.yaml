@@ -8,6 +8,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "tfy-agent-proxy.fullname" $ }}-ns
   namespace: {{ . | trim }}
+  labels:
+    {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
+  {{- with .Values.tfyAgentProxy.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "tfy-agent-proxy.serviceAccountName" $ }}
