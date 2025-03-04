@@ -180,9 +180,9 @@
 {{- /*
   SSH service monitor labels
 */ -}}
-{{- define "ssh.labels" -}}
-{{- if .Values.serviceMonitors.ssh.labels }}
-{{- toYaml .Values.serviceMonitors.ssh.labels }}
+{{- define "sshServer.labels" -}}
+{{- if .Values.serviceMonitors.sshServer.labels }}
+{{- toYaml .Values.serviceMonitors.sshServer.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
 {{- end }}
