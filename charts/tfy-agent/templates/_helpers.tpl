@@ -59,15 +59,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 {{- end }}
 
-{{/*
-Annotations for tfyAgent
-*/}}
-{{- define "tfy-agent.annotations" -}}
-{{- with .Values.tfyAgent.annotations -}}
-{{ toYaml . }}
-{{- end }}
-{{- end }}
-
 
 {{/*
 Selector labels for tfyAgent
