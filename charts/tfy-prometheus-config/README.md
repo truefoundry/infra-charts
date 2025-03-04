@@ -75,6 +75,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.ssh.enabled`                              | Enable service monitor for ssh                  | `true`                                    |
+| `serviceMonitors.ssh.name`                                 | Name of the service monitor                     | `ssh`                                     |
+| `serviceMonitors.ssh.labels`                               | Labels for ssh                                  | `{}`                                      |
+| `serviceMonitors.ssh.jobLabel`                             | Job label for ssh                               | `truefoundry.com/component-type`          |
+| `serviceMonitors.ssh.endpoints`                            | Endpoints for ssh                               | `[]`                                      |
+| `serviceMonitors.ssh.serviceSelectorLabels`                | Service selector labels for ssh                 | `{}`                                      |
+| `serviceMonitors.ssh.namespaceSelector`                    | Namespace selector for ssh                      | `{}`                                      |
 | `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
 | `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
 | `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
