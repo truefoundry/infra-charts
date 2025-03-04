@@ -114,9 +114,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `tfyAgent.enabled`                              | Bool value to deploy tfyAgent                                                                                         | `true`                                     |
 | `tfyAgent.annotations`                          | Add annotations to tfyAgent pods                                                                                      | `{}`                                       |
-| `tfyAgent.serviceAccount.create`                | Bool to enable serviceAccount creation                                                                                | `true`                                     |
-| `tfyAgent.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                              | `{}`                                       |
-| `tfyAgent.serviceAccount.name`                  | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template     | `""`                                       |
+| `tfyAgent.labels`                               | Add labels to tfyAgent pods                                                                                           | `{}`                                       |
 | `tfyAgent.extraEnvVars`                         | Additional envrionment variables for tfyAgent                                                                         | `[]`                                       |
 | `tfyAgent.service.annotations`                  | Annotations to add to the tfyAgent service                                                                            | `{}`                                       |
 | `tfyAgent.service.labels`                       | Labels to add to the tfyAgent service                                                                                 | `{}`                                       |
@@ -158,6 +156,9 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgent.affinity`                             | Affinity rules for pod scheduling on a node                                                                           | `{}`                                       |
 | `tfyAgent.priorityClassName`                    | PriorityClass name for the pod.                                                                                       | `system-cluster-critical`                  |
 | `tfyAgent.clusterRole.enable`                   | Create cluster role.                                                                                                  | `true`                                     |
+| `tfyAgent.serviceAccount.create`                | Bool to enable serviceAccount creation                                                                                | `true`                                     |
+| `tfyAgent.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                              | `{}`                                       |
+| `tfyAgent.serviceAccount.name`                  | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template     | `""`                                       |
 
 ### tfyAgentProxy configuration parameters
 
@@ -194,6 +195,8 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | Name                                             | Description                                                                                                       | Value                                      |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `resourceQuota.enabled`                          | Create the ResourceQuota.                                                                                         | `true`                                     |
+| `resourceQuota.annotations`                      | Annotations to add to the ResourceQuota                                                                           | `{}`                                       |
+| `resourceQuota.labels`                           | Labels to add to the ResourceQuota                                                                                | `{}`                                       |
 | `resourceQuota.priorityClasses`                  | PriorityClasses to enable.                                                                                        | `["system-cluster-critical"]`              |
 | `sdsServer.enabled`                              | Bool value to deploy sdsServer                                                                                    | `true`                                     |
 | `sdsServer.replicas`                             | Number of replicas of sdsServer                                                                                   | `2`                                        |
