@@ -14,10 +14,8 @@ spec:
       {{- include "tfy-agent-proxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfyAgentProxy.annotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-agent-proxy.annotations" . | nindent 8 }}
       labels:
         {{- include "tfy-agent-proxy.selectorLabels" . | nindent 8 }}
     spec:
