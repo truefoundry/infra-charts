@@ -6,10 +6,8 @@ metadata:
   name: {{ include "tfy-agent-proxy.fullname" . }}-cs
   labels:
     {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
-  {{- with include "tfy-agent-proxy.annotations" . }}
   annotations:
-    {{- . | nindent 4 }}
-  {{- end }}
+    {{- include "tfy-agent-proxy.annotations" . | nindent 4 }}
 rules:
   {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
   {{- if not .Values.config.allowedNamespaces }}

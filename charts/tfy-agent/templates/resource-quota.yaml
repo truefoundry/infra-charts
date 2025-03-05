@@ -4,11 +4,9 @@ kind: ResourceQuota
 metadata:
   name: {{ include "tfy-agent.fullname" . }}-critical-pods
   labels:
-    {{- include "tfy-agent.labels" . | nindent 4 }}
-  {{- with include "tfy-agent.annotations" . }}
+    {{- include "resource-quotas.labels" . | nindent 4 }}
   annotations:
-    {{- . | nindent 4 }}
-  {{- end }}
+    {{- include "resource-quotas.annotations" . | nindent 4 }}
 spec:
   scopeSelector:
     matchExpressions:

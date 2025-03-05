@@ -28,15 +28,19 @@ config:
   ## @param config.controlPlaneControllerClusterIP ClusterIP of the control plane controller to connect proxy (format: `http://`)
   ##
   controlPlaneControllerClusterIP: "http://truefoundry-tfy-controller.truefoundry.svc.cluster.local:8123"
+
   ## Opencost configuration
   ##
   opencost:
+
     ## @param config.opencost.pollInterval Time in milliseconds for opencost scraping
     ##
     pollInterval: "180000"
+
     ## @param config.opencost.endpoint Endpoint to connect to opencost
     ##
     endpoint: http://opencost.opencost.svc.cluster.local:9003
+
   ## Prometheus configuration
   ##
   prometheus:
@@ -51,10 +55,13 @@ config:
   ## @param config.alertURL Truefoundry alert URL
   ##
   alertURL: "https://auth.truefoundry.com"
+
   ## @param config.nodeEnv
   nodeEnv: production
+
   ## @param config.nodeOptions Node options for tfyAgent
   nodeOptions: ""
+
   ## @param config.allowedNamespaces A list of namespaces the control plane will have access to for namespaced resources.
   ## If this list is empty, the control plane can access namespaced resources cluster-wide.
   ## If this list is non-empty, the control plane cannot create namespaces in the cluster.
@@ -68,18 +75,22 @@ config:
 ##
 
 imagePullSecrets: []
+
 ## @param nameOverride String to override partial name passed in helm install command
 ##
 nameOverride: ""
+
 ## @param fullnameOverride String to override full name passed in helm install command
 ##
 fullnameOverride: ""
+
 ## @section tfyAgent configuration parameters
 ##
 tfyAgent:
   ## @param tfyAgent.enabled Bool value to deploy tfyAgent
   ##
   enabled: true
+
   ## Number of replicas of tfyAgent
   ## value kept for future use, kept 1
   # replicaCount: 1
@@ -104,18 +115,15 @@ tfyAgent:
   ## Configuration for tfyAgent service
   ##
   service:
-    ## @param tfyAgent.service.annotations Annotations to add to the tfyAgent service
-    ##   
-    annotations: {}
-    ## @param tfyAgent.service.labels Labels to add to the tfyAgent service
-    ##     
-    labels: {}
+
     ## @param tfyAgent.service.clusterIP Cluster IP for tfyAgent service
     ## 
     clusterIP: ""
+
     ## @param tfyAgent.service.port Port for tfyAgent service
     ##
     port: 3000
+
     ## @param tfyAgent.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
@@ -129,9 +137,11 @@ tfyAgent:
     ## @param tfyAgent.service.sessionAffinity SessionAffinity for tfyAgent Service
     ##
     sessionAffinity: ""
+
     ## @param tfyAgent.service.type Type for tfyAgent Service
     ##
     type: ClusterIP
+
   ## Image of tfyAgent
   ##
   image:
@@ -143,6 +153,7 @@ tfyAgent:
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
     tag: "a5e6e21f8e4ef9e2b59bd3c0556cd5488edf76e6"
+
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -165,6 +176,7 @@ tfyAgent:
       cpu: 300m
       memory: 512Mi
       ephemeral-storage: 128Mi
+
   ## @param tfyAgent.livenessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.livenessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
   ## @param tfyAgent.livenessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
@@ -184,6 +196,7 @@ tfyAgent:
     successThreshold: 1
     timeoutSeconds: 1
     initialDelaySeconds: 15
+
   ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.port Port for http request for liveness probe of tfyAgent container
@@ -202,6 +215,7 @@ tfyAgent:
     successThreshold: 1
     timeoutSeconds: 1
     initialDelaySeconds: 15
+
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -233,6 +247,7 @@ tfyAgent:
   ## @param tfyAgent.nodeSelector Parameters to select for scheduling of pod on a node
   ##
   nodeSelector: {}
+
   ## @param tfyAgent.extraVolumes Extra volume for tfyAgent container
   ##
   extraVolumes: []
@@ -291,6 +306,10 @@ tfyAgentProxy:
   ##
   annotations: {}
 
+  ## @param tfyAgentProxy.labels Add labels to tfyAgentProxy pods
+  ##
+  labels: {}
+
   ## Image of tfyAgentProxy
   ##
   image:
@@ -303,6 +322,7 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.image.tag Image tag whose default is the chart appVersion.
     ##
     tag: "b212f7fcd34c833b0b045a5b87969d0f9eea7628"
+
   ## @param tfyAgentProxy.extraEnvVars Additional envrionment variables for tfyAgentPRoxy
   ##
   extraEnvVars: []
@@ -333,6 +353,7 @@ tfyAgentProxy:
       cpu: 50m
       memory: 128Mi
       ephemeral-storage: 200M
+
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -364,6 +385,7 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.nodeSelector Parameters to select for scheduling of pod on a node
   ##
   nodeSelector: {}
+
   ## Assign custom affinity rules to the tfyAgentProxy instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -382,18 +404,22 @@ tfyAgentProxy:
 
   ## @param tfyAgentProxy.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
+
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
     ## @param tfyAgentProxy.serviceAccount.create Bool to enable serviceAccount creation 
     ##
     create: true
+
     ## @param tfyAgentProxy.serviceAccount.annotations Annotations to add to the serviceAccount
     ## 
     annotations: {}
+
     ## @param tfyAgentProxy.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
+
   ## @param tfyAgentProxy.extraVolumes Extra volume for tfyAgentProxy container
   ##
   extraVolumes: []
@@ -404,6 +430,7 @@ tfyAgentProxy:
   clusterRole:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
     enable: true
+
     ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules.
     ## This field is ignored, if `config.allowedNamespaces` is not empty.
     ## if `config.allowedNamespaces` is not empty, we only add required authz rules.
@@ -411,6 +438,7 @@ tfyAgentProxy:
     ## Check templates/tfy-agent-proxy-clusterrolebinding-cs.yaml and
     ## `templates/tfy-agent-proxy-clusterrolebinding-ns.yaml` files for more details.
     strictMode: false
+
     ## @param tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules Additional rules to add to the cluster role for cluster-scoped resources.
     clusterScopedAdditionalClusterRoleRules: []
     # Example:
@@ -448,6 +476,14 @@ sdsServer:
   ##
   annotations: {}
 
+  ## @param sdsServer.labels Add labels to sdsServer pods
+  ##
+  labels: {}
+
+  ## @param sdsServer.nodeSelector Parameters to select for scheduling of pod on a node
+  ##
+  nodeSelector: {}
+
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
@@ -463,7 +499,11 @@ sdsServer:
     ## 
     name: ""
 
-  ## @param sdsServer.extraEnvVars Additional envrionment variables for sdsServer
+  ## @param sdsServer.extraVolunes Additional volumes for sdsServer
+  ##
+  extraVolumes: []
+
+  ## @param sdsServer.extraEnvVars Additional environment variables for sdsServer
   ##
   extraEnvVars: []
   ##
@@ -476,12 +516,6 @@ sdsServer:
   ##
   service:
 
-    ## @param sdsServer.service.annotations Annotations to add to the sdsServer service
-    ##   
-    annotations: {}
-    ## @param sdsServer.service.labels Labels to add to the sdsServer service
-    ##     
-    labels: {}
     ## @param sdsServer.service.clusterIP Cluster IP for sdsServer service
     ## 
     clusterIP: ""

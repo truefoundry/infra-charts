@@ -5,10 +5,8 @@ metadata:
   name: {{ include "sds-server.fullname" . }}
   labels:
     {{- include "sds-server.labels" . | nindent 4 }}
-  {{- with include "sds-server.annotations" . }}
   annotations:
-    {{- . | nindent 4 }}
-  {{- end }}
+    {{- include "sds-server.annotations" . | nindent 4 }}
 spec:
   type: {{ .Values.sdsServer.service.type }}
   ports:

@@ -5,10 +5,8 @@ metadata:
   name: {{ include "tfy-agent-proxy.fullname" . }}
   labels:
     {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
-  {{- with include "tfy-agent-proxy.annotations" . }}
   annotations:
-    {{- . | nindent 4 }}
-  {{- end }}
+    {{- include "tfy-agent-proxy.annotations" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
