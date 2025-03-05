@@ -40,23 +40,19 @@ helm.sh/chart: {{ include "tfy-kyverno.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.tfyKyverno.labels }}
+{{ toYaml . }}
+{{- end }}
 {{- end }}
 
 {{/*
-Selector labels
+Annotations
 */}}
-{{- define "tfy-kyverno.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-kyverno.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "tfy-kyverno.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "tfy-kyverno.fullname" .) .Values.serviceAccount.name }}
+{{- define "tfy-kyverno.annotations" -}}
+{{- if .Values.global.annotations }}
+  {{ toYaml .Values.global.annotations }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{}
 {{- end }}
 {{- end }}
+
