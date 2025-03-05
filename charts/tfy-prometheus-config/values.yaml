@@ -264,17 +264,17 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - elasti
-  # serviceMonitors.argoCD Service monitor for ssh
+  # serviceMonitors.argoCD Service monitor for ssh server
   sshServer:
-    ## @param serviceMonitors.ssh.enabled Enable service monitor for ssh
+    ## @param serviceMonitors.sshServer.enabled Enable service monitor for ssh server
     enabled: true
-    ## @param serviceMonitors.ssh.name Name of the service monitor
+    ## @param serviceMonitors.sshServer.name Name of the service monitor
     name: ssh
-    ## @param serviceMonitors.ssh.labels [object] Labels for ssh
+    ## @param serviceMonitors.sshServer.labels [object] Labels for ssh server
     labels: {}
-    ## @param serviceMonitors.ssh.jobLabel Job label for ssh
+    ## @param serviceMonitors.sshServer.jobLabel Job label for ssh server
     jobLabel: truefoundry.com/component-type
-    ## @param serviceMonitors.ssh.endpoints [array] Endpoints for ssh
+    ## @param serviceMonitors.sshServer.endpoints [array] Endpoints for ssh server
     endpoints:
       - port: http-activity-monitor
         scheme: http
@@ -284,10 +284,10 @@ serviceMonitors:
           - action: replace
             replacement: ssh-server-metrics
             targetLabel: job
-    ## @param serviceMonitors.ssh.serviceSelectorLabels [object] Service selector labels for ssh
+    ## @param serviceMonitors.sshServer.serviceSelectorLabels [object] Service selector labels for ssh server
     serviceSelectorLabels:
       truefoundry.com/component-type: ssh-server
-    ## @param serviceMonitors.ssh.namespaceSelector [object] Namespace selector for ssh
+    ## @param serviceMonitors.sshServer.namespaceSelector [object] Namespace selector for ssh server
     namespaceSelector:
       any: true
   # serviceMonitors.gpu Service monitor for gpu
