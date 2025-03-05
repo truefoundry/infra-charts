@@ -99,8 +99,8 @@ data:
         rm -f ${DIR}/rootCA.pem ${DIR}/key.pem
 
         # Create Kubernetes secrets
-        kubectl create secret generic ${PRODUCT}-daemon-certs -n truefoundry --dry-run=client -o yaml --from-file=${DIR}/daemon > $DIR/${PRODUCT}-daemon-certs.yaml
-        kubectl create secret generic ${PRODUCT}-client-certs -n truefoundry --dry-run=client -o yaml --from-file=${DIR}/client > $DIR/${PRODUCT}-client-certs.yaml
+        kubectl create secret generic ${PRODUCT}-daemon-certs -n "$TRUEFOUNDRY_NAMESPACE" --dry-run=client -o yaml --from-file=${DIR}/daemon > $DIR/${PRODUCT}-daemon-certs.yaml
+        kubectl create secret generic ${PRODUCT}-client-certs -n "$TRUEFOUNDRY_NAMESPACE" --dry-run=client -o yaml --from-file=${DIR}/client > $DIR/${PRODUCT}-client-certs.yaml
 
         kubectl apply -f $DIR/${PRODUCT}-daemon-certs.yaml
         kubectl apply -f $DIR/${PRODUCT}-client-certs.yaml
