@@ -5,18 +5,23 @@ config:
   ## @param config.clusterToken Token to connect to the control plane
   ##
   clusterToken: ""
+
   ## @param config.clusterTokenSecret Secret of token to connect to control plane, secret key must be `CLUSTER_TOKEN`. This overrides config.clusterToken
   ##
   clusterTokenSecret: ""
+
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
   controlPlaneURL: ""
+
   ## @param config.tenantName Tenant Name
   ##
   tenantName: ""
+
   ## @param config.controlPlaneNatsClusterIP ClusterIP at which nats should connect 
   ##
   controlPlaneNatsClusterIP: "ws://truefoundry-nats.truefoundry.svc.cluster.local:8080"
+
   ## @param config.controlPlaneClusterIP ClusterIP of the control plane to connect agent (format: `http://`)
   ##
   controlPlaneClusterIP: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
@@ -38,9 +43,11 @@ config:
     ## @param config.prometheus.pollInterval Time in milliseconds for prometheus scraping config
     ##
     pollInterval: "60000"
+
     ## @param config.prometheus.endpoint Endpoint to connect to prometheus
     ##
     endpoint: http://prometheus-operated.prometheus.svc.cluster.local:9090
+
   ## @param config.alertURL Truefoundry alert URL
   ##
   alertURL: "https://auth.truefoundry.com"
@@ -87,6 +94,7 @@ tfyAgent:
   ## @param tfyAgent.extraEnvVars Additional envrionment variables for tfyAgent
   ##
   extraEnvVars: []
+
   ##
   # Example:
   # extraEnvVars:
@@ -231,6 +239,7 @@ tfyAgent:
   ## @param tfyAgent.extraVolumeMounts Extra volume mount for tfyAgent container
   ##
   extraVolumeMounts: []
+
   ## Assign custom affinity rules to the tfyAgent instance
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
@@ -249,6 +258,7 @@ tfyAgent:
 
   ## @param tfyAgent.priorityClassName PriorityClass name for the pod.
   priorityClassName: system-cluster-critical
+
   clusterRole:
     ## @param tfyAgent.clusterRole.enable Create cluster role.
     enable: true
@@ -272,6 +282,7 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.enabled Bool value to deploy tfyAgentProxy
   ##
   enabled: true
+
   ## Number of replicas of tfyAgentProxy
   ## value kept for future use, ketp 1
   # replicaCount: 1
@@ -279,6 +290,7 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.annotations Add annotations to tfyAgentProxy pods
   ##
   annotations: {}
+
   ## Image of tfyAgentProxy
   ##
   image:
@@ -388,6 +400,7 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.extraVolumeMounts Extra volume mount for tfyAgentProxy container
   ##
   extraVolumeMounts: []
+
   clusterRole:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
     enable: true
@@ -419,30 +432,37 @@ resourceQuota:
   ## @param resourceQuota.priorityClasses PriorityClasses to enable.
   priorityClasses:
     - system-cluster-critical
+
 ## Config for SDS service
 ##
 sdsServer:
   ## @param sdsServer.enabled Bool value to deploy sdsServer
   ##
   enabled: true
+
   ## @param sdsServer.replicas Number of replicas of sdsServer
   ##
   replicas: 2
+
   ## @param sdsServer.annotations Add annotations to sdsServer pods
   ##
   annotations: {}
+
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
     ## @param sdsServer.serviceAccount.create Bool to enable serviceAccount creation 
     ##
     create: true
+
     ## @param sdsServer.serviceAccount.annotations Annotations to add to the serviceAccount
     ## 
     annotations: {}
+
     ## @param sdsServer.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ## 
     name: ""
+
   ## @param sdsServer.extraEnvVars Additional envrionment variables for sdsServer
   ##
   extraEnvVars: []
@@ -455,6 +475,7 @@ sdsServer:
   ## Configuration for sdsServer service
   ##
   service:
+
     ## @param sdsServer.service.annotations Annotations to add to the sdsServer service
     ##   
     annotations: {}
@@ -467,6 +488,7 @@ sdsServer:
     ## @param sdsServer.service.port Port for sdsServer service
     ##
     port: 8000
+
     ## @param sdsServer.service.nodePort Port to expose on each node. Only used if service.type is 'NodePort'
     ##
     nodePort: ""
@@ -480,9 +502,11 @@ sdsServer:
     ## @param sdsServer.service.sessionAffinity SessionAffinity for sdsServer Service
     ##
     sessionAffinity: ""
+
     ## @param sdsServer.service.type Type for sdsServer Service
     ##
     type: ClusterIP
+
   ## Image of sdsServer
   ##
   image:
@@ -498,15 +522,18 @@ sdsServer:
   ## @param sdsServer.affinity [object] Node affinity for sdsServer
   ##
   affinity: {}
+
   ## @param sdsServer.imagePullSecrets [array] Image pull credentials for sdsServer
   ##
   imagePullSecrets: []
+
   ## @param sdsServer.command Command and arguments to start the sdsServer application.
   ##
   command:
     - /app/sds-server
     - "--port"
     - "8000"
+
   ## @param sdsServer.readinessProbe.tcpSocket.port Port for TCP socket used in readiness probe
   ## @param sdsServer.readinessProbe.initialDelaySeconds Initial delay before performing readiness probe
   ## @param sdsServer.readinessProbe.periodSeconds Frequency of performing readiness probe
@@ -515,6 +542,7 @@ sdsServer:
       port: 8000
     initialDelaySeconds: 15
     periodSeconds: 10
+
   ## @param sdsServer.livenessProbe.tcpSocket.port Port for TCP socket used in liveness probe
   ## @param sdsServer.livenessProbe.initialDelaySeconds Initial delay before performing liveness probe
   ## @param sdsServer.livenessProbe.periodSeconds Frequency of performing liveness probe
@@ -523,6 +551,7 @@ sdsServer:
       port: 8000
     initialDelaySeconds: 15
     periodSeconds: 10
+
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
@@ -543,9 +572,11 @@ sdsServer:
       cpu: 0.01
       ephemeral-storage: 10M
       memory: 30M
+
   ## @param sdsServer.tolerations [array] Tolerations for the sdsServer application
   ##
   tolerations: []
+
   ## @param sdsServer.topologySpreadConstraints [array] topology spread constraints on sdsServer application
   topologySpreadConstraints:
     - labelSelector:

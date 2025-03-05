@@ -5,9 +5,9 @@ metadata:
   name: {{ include "sds-server.fullname" . }}
   labels:
     {{- include "sds-server.labels" . | nindent 4 }}
-  {{- with .Values.sdsServer.annotations }}
+  {{- with include "sds-server.annotations" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
 spec:
   type: {{ .Values.sdsServer.service.type }}

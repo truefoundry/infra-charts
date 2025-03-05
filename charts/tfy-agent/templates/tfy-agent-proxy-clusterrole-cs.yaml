@@ -6,9 +6,9 @@ metadata:
   name: {{ include "tfy-agent-proxy.fullname" . }}-cs
   labels:
     {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
-  {{- with .Values.tfyAgentProxy.annotations }}
+  {{- with include "tfy-agent-proxy.annotations" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
 rules:
   {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}

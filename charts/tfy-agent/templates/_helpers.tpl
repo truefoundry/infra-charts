@@ -59,6 +59,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 {{- end }}
 
+{{/*
+Common annotations
+*/}}
+{{- define "tfy-agent.annotations" -}}
+{{- with .Values.tfyAgent.annotations }}
+{{- toYaml .}}
+{{- end }}
+{{- end }}
 
 {{/*
 Selector labels for tfyAgent
@@ -85,6 +93,15 @@ Selector labels for tfyAgentProxy
 app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
+{{/*
+Annotations for tfyAgentProxy
+*/}}
+{{- define "tfy-agent-proxy.annotations" -}}
+{{- with .Values.tfyAgentProxy.annotations }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
 
 {{/*
 Common labels
@@ -102,7 +119,16 @@ Selector labels for sdsServer
 {{- define "sds-server.selectorLabels" -}}
 app.kubernetes.io/name: sds-server
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }} 
+{{- end }}
+
+{{/*
+Annototions for sdsServer
+*/}}
+{{- define "sds-server.annotations" -}}
+{{- with .Values.sdsServer.annotations }}
+{{- toYaml }}
+{{- end }}
+{{- end }}
 
 {{/*
 Create the name of the service account to use for tfy-agent

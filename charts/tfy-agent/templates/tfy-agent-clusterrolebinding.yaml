@@ -6,9 +6,9 @@ metadata:
   name: {{ include "tfy-agent.fullname" . }}
   labels:
     {{- include "tfy-agent.labels" . | nindent 4 }}
-  {{- with .Values.tfyAgent.annotations }}
+  {{- with include "tfy-agent.annotations" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
 subjects:
   - kind: ServiceAccount

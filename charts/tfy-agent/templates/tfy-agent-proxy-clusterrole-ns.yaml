@@ -7,9 +7,9 @@ metadata:
   name: {{ include "tfy-agent-proxy.fullname" . }}-ns
   labels:
     {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
-  {{- with .Values.tfyAgentProxy.annotations }}
+  {{- with include "tfy-agent-proxy.annotations" . }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
 rules:
   - apiGroups: [""]
