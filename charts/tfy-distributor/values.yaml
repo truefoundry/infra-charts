@@ -7,6 +7,12 @@ global:
 distributor:
   ## @param distributor.replicas number of replicas of distributor service
   replicas: 1
+  ## @param distributor.labels labels for the distributor service
+  labels:
+    distributor: label
+  ## @param distributor.annotations annotations for the distributor service
+  annotations:
+    distributor: annotation
   ## @param distributor.tolerations [array] Spot tolerations for the distributor service
   tolerations:
     - effect: NoSchedule
@@ -51,6 +57,15 @@ distributor:
 nats:
   ## @param nats.host [nullable] The host used to connect to nats server websocket
   host: null
+
+  ## @param nats.labels labels for the nats service
+  labels:
+    nats: label
+
+  ## @param nats.annotations annotations for the nats service
+  annotations:
+    nats: annotation
+
   config:
     nats:
       ## @param nats.config.nats.port Number The port on which the NATS server is running

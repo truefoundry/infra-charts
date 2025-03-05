@@ -4,6 +4,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-distributor
+  labels:
+    {{- include "tfy-distributor.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-distributor.annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.distributor.replicas | default 1 }}
   selector:
@@ -13,6 +17,9 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-distributor
+        {{- include "tfy-distributor.labels" . | nindent 8 }}
+      annotations:
+        {{- include "tfy-distributor.annotations" . | nindent 8 }}
     spec:
       tolerations:
       {{- range .Values.distributor.tolerations }}
