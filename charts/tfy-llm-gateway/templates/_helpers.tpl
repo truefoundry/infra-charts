@@ -46,6 +46,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+Annotations
+*/}}
+{{- define "tfy-llm-gateway.annotations" -}}
+{{- if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
   Selector labels
   */}}
 {{- define "tfy-llm-gateway.selectorLabels" -}}
@@ -61,6 +72,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- default (include "tfy-llm-gateway.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+ServiceAccount Annotation
+*/}}
+{{- define "tfy-llm-gateway.serviceAccount.annotations" -}}
+{{- if .Values.serviceAccount.create }}
+  {{- toYaml .Values.serviceAccount.annotations }}
+{{- else if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+  {}
+{{- end }}
+{{- end }}
+
+{{/*
+Virtual Service Annotations
+*/}}
+
+{{- define "tfy-llm-gateway.virtualservice.annotations" -}}
+{{- if .Values.istio.virtualservice.annotations }}
+  {{- toYaml .Values.istio.virtualservice.annotations }}
+{{- else if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+  {}
 {{- end }}
 {{- end }}
 
@@ -97,4 +135,43 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
+{{- end }}
+
+{{/*
+Ingress Annotations
+*/}}
+{{- define "tfy-llm-gateway.ingress.annotations" -}}
+{{- if .Values.ingress.annotations }}
+  {{- toYaml .Values.ingress.annotations }}
+{{- else if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Service Annotations
+*/}}
+{{- define "tfy-llm-gateway.service.annotations" -}}
+{{- if .Values.service.annotations }}
+  {{- toYaml .Values.service.annotations }}
+{{- else if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Annotation Labels
+*/}}
+{{- define "tfy-llm-gateway.podAnnotations" -}}
+{{- if .Values.podAnnotations }}
+  {{- toYaml .Values.podAnnotations }}
+{{- else if .Values.commonAnnotations }}
+  {{- toYaml .Values.commonAnnotations }}
+{{- end }}
+prometheus.io/scrape: "true"
+prometheus.io/port: "8787"
 {{- end }}
