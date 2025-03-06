@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.serviceMonitors.karpenter.name }}
   labels:
     {{- include "karpenter.labels" . | nindent 4 }}
+  annotations:
+    {{- include "karpenter.annotations" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
