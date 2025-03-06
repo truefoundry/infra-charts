@@ -34,6 +34,14 @@ global:
       ## clickhouse password
       ##
       passwordKey: "CLICKHOUSE_USER_PASSWORD"
+  ## @param global.labels [object] labels
+  ##
+  labels:
+    parent: tfy-llm-gateway-infra
+  ## @param global.annotations [object] annotations
+  ##
+  annotations:
+    parent: tfy-llm-gateway-infra
   ## @section global.virtualService [object] virtual service config
   ## The virtualService section contains configuration for virtual service.
   ##
@@ -214,7 +222,9 @@ clickhouse:
   replicasCount: 1
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
+  labels: {}
   image: clickhouse/clickhouse-server:24.7.3.42-alpine
+  annotations: {}
   imagePullSecrets: []
   resources:
     requests:

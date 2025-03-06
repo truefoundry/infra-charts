@@ -3,6 +3,10 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: "{{ .Release.Name }}-clickhouse"
+  labels:
+    {{- include "clickhouse.labels" . | nindent 4 }}
+  annotations:
+    {{- include "clickhouse.annotations" . | nindent 4 }}
 spec:
   hosts:
     - {{ .Values.global.virtualService.clickhouseServerHost | quote }}

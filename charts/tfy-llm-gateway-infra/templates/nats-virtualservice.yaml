@@ -3,6 +3,10 @@ apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: "{{ .Release.Name }}-nats"
+  labels:
+    {{- include "nats.labels" . | nindent 4 }}
+  annotations:
+    {{- include "nats.annotations" . | nindent 4 }}
 spec:
   hosts:
     - {{ .Values.global.virtualService.natsServerHost | quote }}
