@@ -36,17 +36,6 @@ Clickhouse virtualservice annotations
 {{- end }}
 
 {{/*
-nats labels
-*/}}
-{{- define "nats.labels" -}}
-{{- if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
 nats annotations
 */}}
 {{- define "nats.annotations" -}}
