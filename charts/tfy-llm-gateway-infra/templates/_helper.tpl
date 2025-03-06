@@ -19,6 +19,8 @@ Clickhouse annotations
 {{- toYaml .Values.clickhouse.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
 {{- end }}
 {{- end }}
 
