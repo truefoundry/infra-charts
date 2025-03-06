@@ -21,7 +21,7 @@ Annotations for device plugin
 */}}
 {{- define "neuron-device-plugin.annotations" -}}
 {{- if .Values.devicePlugin.annotations }}
-  {{- toYaml .Values.devicePlugin.annotations | nindent 4 }}
+  {{- toYaml .Values.devicePlugin.annotations }}
 {{- else }}
 {}
 {{- end }}
@@ -43,7 +43,7 @@ Annotations for neuron scheduler
 */}}
 {{- define "neuron-scheduler.annotations" -}}
 {{- if .Values.scheduler.annotations }}
-  {{- toYaml .Values.scheduler.annotations | nindent 4 }}
+  {{- toYaml .Values.scheduler.annotations }}
 {{- else }}
 {}
 {{- end }}
@@ -65,7 +65,7 @@ Annotations for neuron scheduler extension
 */}}
 {{- define "neuron-scheduler-extension.annotations" -}}
 {{- if .Values.scheduler.extension.annotations }}
-  {{- toYaml .Values.scheduler.extension.annotations | nindent 4 }}
+  {{- toYaml .Values.scheduler.extension.annotations }}
 {{- else }}
 {}
 {{- end }}
