@@ -4,6 +4,8 @@ metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
     {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.service.annotations" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
