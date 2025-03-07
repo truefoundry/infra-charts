@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitors.llmGateway.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.llmGateway.name }}
+  labels:
+    {{- include "llmGateway.labels" . | nindent 4 }}
+  annotations:
+    {{- include "llmGateway.annotations" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.llmGateway.jobLabel }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.llmGateway.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.llmGateway.namespaceSelector | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.llmGateway.serviceSelectorLabels | nindent 6 }}
+{{- end -}}

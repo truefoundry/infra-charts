@@ -503,6 +503,30 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - kube-system
+  # serviceMonitors.llmGateway Service monitor for llm gateway
+  llmGateway:
+    ## @param serviceMonitors.llmGateway.enabled Enable service monitor for llm gateway
+    enabled: true
+    ## @param serviceMonitors.llmGateway.name Name of the service monitor
+    name: tfy-llm-gateway
+    ## @param serviceMonitors.llmGateway.labels [object] Labels for llm gateway
+    labels: {}
+    ## @param serviceMonitors.llmGateway.annotations [object] Annotations for llm gateway
+    annotations: {}
+    ## @param serviceMonitors.llmGateway.jobLabel Job label for llm gateway
+    jobLabel: truefoundry.com/application
+    ## @param serviceMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
+    endpoints:
+      - path: /metrics
+        port:
+          http-8787
+    ## @param serviceMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param serviceMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
+    serviceSelectorLabels:
+      truefoundry.com/component: tfy-llm-gateway
   # serviceMonitors.nodeExporter Service monitor for node exporter
   nodeExporter:
     ## @param serviceMonitors.nodeExporter.enabled Enable service monitor for node exporter
