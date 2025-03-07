@@ -41,7 +41,7 @@
         "details": {
             "chart": "elasti",
             "repoURL": "oci://tfy.jfrog.io/tfy-helm",
-            "targetRevision": "0.1.10",
+            "targetRevision": "0.1.11",
             "images": [
                 "tfy.jfrog.io/tfy-images/elasti-operator:c9479aaef2aabbac700d34c83a23195b795b1122",
                 "tfy.jfrog.io/tfy-images/elasti-resolver:c9479aaef2aabbac700d34c83a23195b795b1122"
@@ -53,7 +53,7 @@
         "details": {
             "chart": "tfy-grafana",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.8",
+            "targetRevision": "0.1.10",
             "images": [
                 "quay.io/kiwigrid/k8s-sidecar:1.24.6",
                 "docker.io/grafana/grafana:10.0.3",
@@ -132,16 +132,25 @@
     {
         "type": "helm",
         "details": {
+            "chart": "tfy-prometheus-config",
+            "repoURL": "https://truefoundry.github.io/infra-charts/",
+            "targetRevision": "0.1.4",
+            "images": []
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
             "chart": "kube-prometheus-stack",
             "repoURL": "https://prometheus-community.github.io/helm-charts",
-            "targetRevision": "55.8.1",
+            "targetRevision": "69.6.0",
             "images": [
-                "quay.io/prometheus/node-exporter:v1.7.0",
-                "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1",
-                "quay.io/prometheus-operator/prometheus-operator:v0.70.0",
-                "quay.io/prometheus/alertmanager:v0.26.0",
-                "quay.io/prometheus/prometheus:v2.48.1",
-                "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20221220-controller-v1.5.1-58-g787ea74b6"
+                "quay.io/prometheus/node-exporter:v1.9.0",
+                "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0",
+                "quay.io/prometheus-operator/prometheus-operator:v0.80.1",
+                "quay.io/prometheus/alertmanager:v0.28.0",
+                "quay.io/prometheus/prometheus:v3.2.1",
+                "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.1"
             ]
         }
     },
@@ -163,7 +172,7 @@
         "details": {
             "chart": "tfy-gpu-operator",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.26",
+            "targetRevision": "0.1.28",
             "images": [
                 "registry.k8s.io/nfd/node-feature-discovery:v0.16.6",
                 "nvcr.io/nvidia/gpu-operator:v24.9.0"
@@ -184,15 +193,15 @@
         "details": {
             "chart": "truefoundry",
             "repoURL": "oci://tfy.jfrog.io/tfy-helm",
-            "targetRevision": "0.37.1",
+            "targetRevision": "0.38.1",
             "images": [
                 "natsio/nats-box:0.13.2",
-                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.31.0",
-                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.37.1",
-                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.32.0",
+                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.32.1",
+                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.38.0",
+                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.33.0",
                 "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.17.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.32.0",
-                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.37.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.33.1",
+                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.38.0",
                 "nats:2.9.8-alpine",
                 "natsio/nats-server-config-reloader:0.7.4",
                 "natsio/prometheus-nats-exporter:0.10.1",
@@ -681,7 +690,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/node-exporter:v1.7.0",
+            "registryURL": "quay.io/prometheus/node-exporter:v1.9.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -709,7 +718,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1",
+            "registryURL": "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -737,7 +746,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus-operator/prometheus-operator:v0.70.0",
+            "registryURL": "quay.io/prometheus-operator/prometheus-operator:v0.80.1",
             "platforms": [
                 {
                     "os": "linux",
@@ -765,19 +774,19 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/alertmanager:v0.26.0"
+            "registryURL": "quay.io/prometheus/alertmanager:v0.28.0"
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/prometheus:v2.48.1"
+            "registryURL": "quay.io/prometheus/prometheus:v3.2.1"
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20221220-controller-v1.5.1-58-g787ea74b6",
+            "registryURL": "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.1",
             "platforms": [
                 {
                     "os": "linux",
@@ -790,10 +799,6 @@
                 {
                     "os": "linux",
                     "architecture": "arm64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "s390x"
                 }
             ]
         }
@@ -905,7 +910,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.31.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.32.1",
             "platforms": [
                 {
                     "os": "linux",
@@ -921,15 +926,15 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.37.1",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.38.0",
             "platforms": [
                 {
                     "os": "linux",
-                    "architecture": "arm64"
+                    "architecture": "amd64"
                 },
                 {
                     "os": "linux",
-                    "architecture": "amd64"
+                    "architecture": "arm64"
                 }
             ]
         }
@@ -937,7 +942,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.32.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.33.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -969,7 +974,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.32.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.33.1",
             "platforms": [
                 {
                     "os": "linux",
@@ -985,7 +990,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.37.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.38.0",
             "platforms": []
         }
     },
