@@ -314,21 +314,7 @@ prometheus:
   enabled: true
   ## @param prometheus.additionalScrapeConfigs [array] Additional scrape configs for Prometheus
   ##
-  additionalScrapeConfigs:
-    - job_name: gpu-metrics
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      scheme: http
-      kubernetes_sd_configs:
-        - role: endpoints
-          namespaces:
-            names:
-              - tfy-gpu-operator
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_node_name]
-          action: replace
-          target_label: kubernetes_node
+  additionalScrapeConfigs: []
   ## @param prometheus.alertmanager [object] Alertmanager configuration for Prometheus
   ##
   alertmanager:
@@ -355,6 +341,19 @@ prometheus:
   ##
   valuesOverride: {}
 
+  ## @param prometheus.config [object] Config override for prometheus config
+  config:
+    ## @param prometheus.config.enabled Flag to enable prometheus config
+    ##
+    enabled: true
+
+    ## @param prometheus.config.valuesOverride [object] Config override from default config values
+    ##
+    valuesOverride: {}
+
+    ## @param prometheus.config.extraObjects [array] Extra objects for prometheus config
+    ##
+    extraObjects: []
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana
