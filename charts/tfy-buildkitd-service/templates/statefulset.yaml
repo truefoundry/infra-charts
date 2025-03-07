@@ -4,6 +4,8 @@ metadata:
   name: {{ include "buildkitd-service.fullname" . }}
   labels:
     {{- include "buildkitd-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "buildkitd-service.annotations" . | nindent 4 }}
 spec:
   serviceName: {{ include "buildkitd-service.fullname" . }}
   replicas: {{ .Values.replicaCount }}
@@ -12,10 +14,8 @@ spec:
       {{- include "buildkitd-service.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "buildkitd-service.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "buildkitd-service.selectorLabels" . | nindent 8 }}
     spec:
