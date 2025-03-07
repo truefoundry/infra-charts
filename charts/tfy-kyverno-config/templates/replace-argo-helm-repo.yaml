@@ -4,6 +4,10 @@ kind: ClusterPolicy
 metadata:
   name: {{ include "tfy-kyverno.fullname" . }}-replace-argo-helm-repo
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-kyverno.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-kyverno.annotations" . | nindent 4 }}
 spec:
   background: false
   rules:
