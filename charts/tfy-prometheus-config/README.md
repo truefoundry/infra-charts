@@ -129,6 +129,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.kubelet.endpoints`                        | Endpoints for kubelet                           | `[]`                                      |
 | `serviceMonitors.kubelet.serviceSelectorLabels`            | Service selector labels for kubelet             | `{}`                                      |
 | `serviceMonitors.kubelet.namespaceSelector`                | Namespace selector for kubelet                  | `{}`                                      |
+| `serviceMonitors.llmGateway.enabled`                       | Enable service monitor for llm gateway          | `true`                                    |
+| `serviceMonitors.llmGateway.name`                          | Name of the service monitor                     | `tfy-llm-gateway`                         |
+| `serviceMonitors.llmGateway.labels`                        | Labels for llm gateway                          | `{}`                                      |
+| `serviceMonitors.llmGateway.annotations`                   | Annotations for llm gateway                     | `{}`                                      |
+| `serviceMonitors.llmGateway.jobLabel`                      | Job label for llm gateway                       | `truefoundry.com/application`             |
+| `serviceMonitors.llmGateway.endpoints`                     | Endpoints for llm gateway                       | `[]`                                      |
+| `serviceMonitors.llmGateway.namespaceSelector`             | Namespace selector for llm gateway              | `{}`                                      |
+| `serviceMonitors.llmGateway.serviceSelectorLabels`         | Service selector labels for llm gateway         | `{}`                                      |
 | `serviceMonitors.nodeExporter.enabled`                     | Enable service monitor for node exporter        | `true`                                    |
 | `serviceMonitors.nodeExporter.name`                        | Name of the service monitor                     | `prometheus-prometheus-node-exporter`     |
 | `serviceMonitors.nodeExporter.labels`                      | Labels for node exporter                        | `{}`                                      |
