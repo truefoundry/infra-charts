@@ -75,8 +75,7 @@ scrapeConfigs:
         action: replace
         targetLabel: __metrics_path__
         regex: (.+)
-      - sourceLabels:
-          [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+      - sourceLabels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
         action: replace
         targetLabel: __address__
         regex: ([^:]+)(?::\d+)?;(\d+)
@@ -224,10 +223,10 @@ serviceMonitors:
         honorLabels: true
         metricRelabelings:
           - sourceLabels: [__name__]
-            regex: "(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))"
+            regex: '(keda_metrics_(.+)|workqueue_(.+)|go_(.+)|controller_(.+)|process_(.+))'
             action: drop
           - sourceLabels: [__name__]
-            regex: "(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)"
+            regex: '(keda_build_info|keda_resource_totals|keda_internal_scale_loop_latency|keda_trigger_totals|keda_scaled_object_errors|keda_scaler_metrics_latency|keda_scaler_errors|keda_scaler_errors_total|keda_scaled_object_errors|keda_scaler_active)'
             action: drop
     ## @param serviceMonitors.keda.serviceSelectorLabels [object] Service selector labels for keda
     serviceSelectorLabels:
