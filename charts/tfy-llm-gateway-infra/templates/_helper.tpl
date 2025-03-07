@@ -15,6 +15,7 @@ Clickhouse labels
 Clickhouse annotations
 */}}
 {{- define "clickhouse.annotations" -}}
+argocd.argoproj.io/sync-options: Prune=false,Delete=false
 {{- if .Values.clickhouse.annotations }}
 {{- toYaml .Values.clickhouse.annotations }}
 {{- else if .Values.global.annotations }}
@@ -36,10 +37,25 @@ Clickhouse virtualservice annotations
 {{- end }}
 
 {{/*
+nats labels
+*/}}
+{{- define "nats.virtualservice.labels" -}}
+{{- if .Values.nats.labels }}
+{{- toYaml .Values.nats.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
 nats annotations
 */}}
-{{- define "nats.annotations" -}}
-{{- if .Values.global.annotations }}
+{{- define "nats.virtualservice.annotations" -}}
+{{- if .Values.nats.annotations }}
+{{- toYaml .Values.nats.annotations }}
+{{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
 {}
