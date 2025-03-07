@@ -1,5 +1,12 @@
 ## Configuration for tfy-prometheus-config
-
+## @section global Global settings for prometheus
+global:
+  ## @param global.labels
+  ##
+  labels: {}
+  ## @param global.annotations
+  ##
+  annotations: {}
 ## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
   # scrapeConfigs.envoy Scrape config for envoy pods
@@ -13,6 +20,8 @@ scrapeConfigs:
     ## @param scrapeConfigs.envoy.labels [object] Labels for envoy
     labels:
       release: prometheus
+    ## @param scrapeConfigs.envoy.annotations [object] Annotations for envoy
+    annotations: {}
     ## @param scrapeConfigs.envoy.metricsPath Metrics path for envoy
     metricsPath: /stats/prometheus
     ## @param scrapeConfigs.envoy.relabelings [array] Relabelings for envoy
@@ -56,6 +65,8 @@ scrapeConfigs:
     ## @param scrapeConfigs.kubernetesPods.labels [object] Labels for kubernetes pods
     labels:
       release: prometheus
+    ## @param scrapeConfigs.kubernetesPods.annotations [object] Annotations for kubernetes pods
+    annotations: {}
     ## @param scrapeConfigs.kubernetesPods.relabelings [array] Relabelings for kubernetes pods
     relabelings:
       - action: drop
@@ -135,6 +146,8 @@ prometheusRules:
     name: tfy-alertmanager-config-alerting-rules
     ## @param prometheusRules.containerRules.labels [object] Labels for the prometheus rules
     labels: {}
+    ## @param prometheusRules.containerRules.annotations [object] Annotations for the prometheus rules
+    annotations: {}
   # prometheusRules.kubecostRules Prometheus rules for kubecost
   kubecostRules:
     ## @param prometheusRules.kubecostRules.enabled Enable prometheus rules for kubecost
@@ -143,6 +156,8 @@ prometheusRules:
     name: tfy-alertmanager-config-kubecost-rules
     ## @param prometheusRules.kubecostRules.labels [object] Labels for the prometheus rules
     labels: {}
+    ## @param prometheusRules.kubecostRules.annotations [object] Annotations for the prometheus rules
+    annotations: {}
 ## @section serviceMonitors Service monitors for prometheus
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
@@ -155,6 +170,8 @@ serviceMonitors:
     name: prometheus-kube-prometheus-alertmanager
     ## @param serviceMonitors.alertManager.labels [object] Labels for alert manager
     labels: {}
+    ## @param serviceMonitors.alertManager.annotations [object] Annotations for alert manager
+    annotations: {}
     ## @param serviceMonitors.alertManager.endpoints [array] Endpoints for alert manager
     endpoints:
       - enableHttp2: true
@@ -186,6 +203,8 @@ serviceMonitors:
     enabled: true
     ## @param serviceMonitors.workflows.name Name of the service monitor
     name: argo-workflows
+    ## @param serviceMonitors.workflows.annotations [object] Annotations for workflows
+    annotations: {}
     ## @param serviceMonitors.workflows.labels [object] Labels for workflows
     labels: {}
     ## @param serviceMonitors.workflows.jobLabel Job label for workflows
@@ -211,6 +230,8 @@ serviceMonitors:
     name: keda
     ## @param serviceMonitors.keda.labels [object] Labels for keda
     labels: {}
+    ## @param serviceMonitors.keda.annotations [object] Annotations for keda
+    annotations: {}
     ## @param serviceMonitors.keda.jobLabel Job label for keda
     jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.keda.endpoints [array] Endpoints for keda
@@ -243,6 +264,8 @@ serviceMonitors:
     name: elasti-resolver
     ## @param serviceMonitors.elasti.labels [object] Labels for elasti
     labels: {}
+    ## @param serviceMonitors.elasti.annotations [object] Annotations for elasti
+    annotations: {}
     ## @param serviceMonitors.elasti.jobLabel Job label for elasti
     jobLabel: app.kubernetes.io/prometheus
     ## @param serviceMonitors.elasti.endpoints [array] Endpoints for elasti
@@ -265,14 +288,16 @@ serviceMonitors:
         - elasti
   # serviceMonitors.gpu Service monitor for gpu
   gpu:
+    ## @param serviceMonitors.gpu.labels [object] Labels for gpu
+    labels: {}
+    ## @param serviceMonitors.gpu.annotations [object] Annotations for gpu
+    annotations: {}
     ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
     operator:
       ## @param serviceMonitors.gpu.operator.enabled Enable service monitor for gpu
       enabled: false
       ## @param serviceMonitors.gpu.operator.name Name of the service monitor
       name: gpu-operator
-      ## @param serviceMonitors.gpu.operator.labels [object] Labels for gpu
-      labels: {}
       ## @param serviceMonitors.gpu.operator.jobLabel Job label for gpu
       jobLabel: app
       ## @param serviceMonitors.gpu.operator.endpoints [array] Endpoints for gpu
@@ -294,8 +319,6 @@ serviceMonitors:
       enabled: true
       ## @param serviceMonitors.gpu.dcgmExporter.name Name of the service monitor
       name: nvidia-dcgm-exporter
-      ## @param serviceMonitors.gpu.dcgmExporter.labels [object] Labels for dcgm exporter
-      labels: {}
       ## @param serviceMonitors.gpu.dcgmExporter.jobLabel Job label for dcgm exporter
       jobLabel: app
       ## @param serviceMonitors.gpu.dcgmExporter.endpoints [array] Endpoints for dcgm exporter
@@ -331,6 +354,8 @@ serviceMonitors:
     namespace: kube-system
     ## @param serviceMonitors.karpenter.labels [object] Labels for karpenter
     labels: {}
+    ## @param serviceMonitors.karpenter.annotations [object] Annotations for karpenter
+    annotations: {}
     ## @param serviceMonitors.karpenter.namespaceSelector [object] Namespace selector for karpenter
     namespaceSelector:
       matchNames:
@@ -351,6 +376,8 @@ serviceMonitors:
     name: kubecost
     ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
     labels: {}
+    ## @param serviceMonitors.kubecost.annotations [object] Annotations for kubecost
+    annotations: {}
     ## @param serviceMonitors.kubecost.jobLabel Job label for kubecost
     jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.kubecost.endpoints [array] Endpoints for kubecost
@@ -380,6 +407,8 @@ serviceMonitors:
     name: prometheus-kube-prometheus-kubelet
     ## @param serviceMonitors.kubelet.labels [object] Labels for kubelet
     labels: {}
+    ## @param serviceMonitors.kubelet.annotations [object] Annotations for kubelet
+    annotations: {}
     ## @param serviceMonitors.kubelet.jobLabel Job label for kubelet
     jobLabel: k8s-app
     ## @param serviceMonitors.kubelet.endpoints [array] Endpoints for kubelet
@@ -482,6 +511,8 @@ serviceMonitors:
     name: prometheus-prometheus-node-exporter
     ## @param serviceMonitors.nodeExporter.labels [object] Labels for node exporter
     labels: {}
+    ## @param serviceMonitors.nodeExporter.annotations [object] Annotations for node exporter
+    annotations: {}
     ## @param serviceMonitors.nodeExporter.jobLabel Job label for node exporter
     jobLabel: jobLabel
     ## @param serviceMonitors.nodeExporter.endpoints [array] Endpoints for node exporter
@@ -516,6 +547,8 @@ serviceMonitors:
     name: prometheus-kube-state-metrics
     ## @param serviceMonitors.kubeStateMetrics.labels [object] Labels for kube state metrics
     labels: {}
+    ## @param serviceMonitors.kubeStateMetrics.annotations [object] Annotations for kube state metrics
+    annotations: {}
     ## @param serviceMonitors.kubeStateMetrics.jobLabel Job label for kube state metrics
     jobLabel: app.kubernetes.io/name
     ## @param serviceMonitors.kubeStateMetrics.endpoints [array] Endpoints for kube state metrics
@@ -559,6 +592,8 @@ serviceMonitors:
     name: prometheus
     ## @param serviceMonitors.prometheus.labels [object] Labels for prometheus
     labels: {}
+    ## @param serviceMonitors.prometheus.annotations [object] Annotations for prometheus
+    annotations: {}
     ## @param serviceMonitors.prometheus.jobLabel Job label for prometheus
     jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.prometheus.endpoints [array] Endpoints for prometheus
@@ -584,6 +619,8 @@ serviceMonitors:
     name: prometheus-kube-prometheus-admission
     ## @param serviceMonitors.prometheusOperator.labels [object] Labels for prometheus operator
     labels: {}
+    ## @param serviceMonitors.prometheusOperator.annotations [object] Annotations for prometheus operator
+    annotations: {}
     ## @param serviceMonitors.prometheusOperator.endpoints [array] Endpoints for prometheus operator
     endpoints:
       - port: https
@@ -616,6 +653,8 @@ serviceMonitors:
     name: loki
     ## @param serviceMonitors.loki.labels [object] Labels for loki
     labels: {}
+    ## @param serviceMonitors.loki.annotations [object] Annotations for loki
+    annotations: {}
     ## @param serviceMonitors.loki.jobLabel Job label for loki
     jobLabel: app.kubernetes.io/instance
     ## @param serviceMonitors.loki.endpoints [array] Endpoints for loki
@@ -639,6 +678,8 @@ serviceMonitors:
       name: loki-promtail
       ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
       labels: {}
+      ## @param serviceMonitors.loki.promtail.annotations [object] Annotations for promtail
+      annotations: {}
       ## @param serviceMonitors.loki.promtail.endpoints [array] Endpoints for promtail
       endpoints:
         - port: http-metrics
