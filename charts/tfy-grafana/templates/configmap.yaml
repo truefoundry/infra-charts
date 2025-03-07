@@ -2,6 +2,10 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tfy-grafana-server-config
+  labels:
+    {{- include "tfy-grafana.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-grafana.annotations" . | nindent 4 }}
 data:
   domain: {{ .Values.host }}
   root_url: {{- if .Values.path }} '%(protocol)s://%(domain)s/{{ .Values.path | trimPrefix "/" | trimSuffix "/" }}/' {{- else }} '%(protocol)s://%(domain)s/' {{- end }}
@@ -14,6 +18,9 @@ metadata:
   name: tfy-dashboard-{{ $path | replace "dashboards/" "" | replace ".json" "" }}
   labels:
     {{ $.Values.grafana.sidecar.dashboards.label }}: {{ $.Values.grafana.sidecar.dashboards.labelValue }}
+    {{- include "tfy-grafana.labels" . | nindent 4 }}
+  annotations:
+      {{- include "tfy-grafana.annotations" . | nindent 4 }}
 data:
   {{ $path | replace "dashboards/" ""   }}: |-
     {{ $name | toString | nindent 4 }}
