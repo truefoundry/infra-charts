@@ -489,3 +489,29 @@ Container rules annotations
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+  LLM Gateway service monitor labels
+*/}}
+{{- define "llmGateway.labels" -}}
+{{- if .Values.serviceMonitors.llmGateway.labels }}
+{{- toYaml .Values.serviceMonitors.llmGateway.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  LLM Gateway service monitor annotations
+*/}}
+{{- define "llmGateway.annotations" -}}
+{{- if .Values.serviceMonitors.llmGateway.annotations }}
+{{- toYaml .Values.serviceMonitors.llmGateway.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
