@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.serviceMonitors.workflows.name }}
   labels:
     {{- include "argo-workflows.labels" . | nindent 4 }}
+  annotations:
+    {{- include "argo-workflows.annotations" . | nindent 4 }}
 spec:
   jobLabel: {{ .Values.serviceMonitors.workflows.jobLabel }}
   selector:

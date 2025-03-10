@@ -46,6 +46,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+  Common Annotations
+  */}}
+{{- define "tfy-signed-url-server.annotations" -}}
+{{- if .Values.tfySignedURLServer.annotations }}
+{{ toYaml .Values.tfySignedURLServer.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
   Selector labels
   */}}
 {{- define "tfy-signed-url-server.selectorLabels" -}}

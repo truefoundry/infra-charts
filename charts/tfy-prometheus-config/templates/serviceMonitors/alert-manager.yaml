@@ -2,9 +2,11 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  name: {{ .Values.serviceMonitors.alertManager.name }}
   labels:
     {{- include "alert-manager.labels" . | nindent 4 }}
-  name: {{ .Values.serviceMonitors.alertManager.name }}
+  annotations:
+    {{- include "alert-manager.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.serviceMonitors.alertManager.endpoints | nindent 2 }}

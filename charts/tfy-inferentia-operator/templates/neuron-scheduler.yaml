@@ -4,11 +4,19 @@ kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler-as-kube-scheduler
+  labels:
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-neuron-scheduler
@@ -22,6 +30,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler-as-volume-scheduler
+  labels:
+      {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
   name: {{ .Release.Name }}-neuron-scheduler
@@ -35,6 +47,10 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler
+  labels:
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 rules:
 - apiGroups:
   - ""
@@ -59,6 +75,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -73,6 +93,10 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-neuron-scheduler-config
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 data:
   neuron-scheduler-config.yaml: |
     apiVersion: kubescheduler.config.k8s.io/v1beta2
@@ -104,8 +128,11 @@ metadata:
   labels:
     component: scheduler
     tier: control-plane
+    {{- include "neuron-scheduler.labels" . | nindent 4 }}
   name: {{ .Release.Name }}-neuron-scheduler
   namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
@@ -120,13 +147,9 @@ spec:
         component: scheduler
         tier: control-plane
         version: second
-        {{- with .Values.scheduler.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.scheduler.annotations }}
+        {{- include "neuron-scheduler.labels" . | nindent 8 }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "neuron-scheduler.annotations" . | nindent 8 }}
     spec:
       priorityClassName: system-cluster-critical
       {{- with .Values.scheduler.imagePullSecrets | default .Values.imagePullSecrets }}

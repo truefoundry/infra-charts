@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.prometheusRules.containerRules.name }}
   labels:
     {{- include "containerRule.labels" . | nindent 4 }}
+  annotations:
+    {{- include "containerRule.annotations" . | nindent 4 }}
 spec:
   groups:
   - name: Alerting

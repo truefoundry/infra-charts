@@ -4,6 +4,10 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-scheduler-extension
+  labels:
+    {{- include "neuron-scheduler-extension.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler-extension.annotations" . | nindent 4 }}
 rules:
 - apiGroups:
   - ""
@@ -53,12 +57,20 @@ kind: ServiceAccount
 metadata:
   name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler-extension.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler-extension.annotations" . | nindent 4 }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler-extension.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler-extension.annotations" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -73,6 +85,10 @@ apiVersion: apps/v1
 metadata:
   name: {{ .Release.Name }}-scheduler-extension
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "neuron-scheduler-extension.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler-extension.annotations" . | nindent 4 }}
 spec:
   replicas: 1
   strategy:
@@ -86,13 +102,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-scheduler
         component: scheduler-extension
-        {{- with .Values.scheduler.extension.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.scheduler.extension.annotations }}
+        {{- include "neuron-scheduler-extension.labels" . | nindent 8 }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+          {{- include "neuron-scheduler-extension.annotations" . | nindent 8 }}
     spec:
       {{- with .Values.scheduler.extension.imagePullSecrets | default .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -128,6 +140,9 @@ metadata:
   labels:
     app: {{ .Release.Name }}-scheduler
     component: scheduler-extension
+    {{- include "neuron-scheduler-extension.labels" . | nindent 4 }}
+  annotations:
+    {{- include "neuron-scheduler-extension.annotations" . | nindent 4 }}
 spec:
   ports:
   - port: 12345
