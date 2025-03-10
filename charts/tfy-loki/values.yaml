@@ -64,10 +64,15 @@ loki:
     replicas: 1
     ## @param loki.singleBinary.resources.requests.cpu CPU requests for promtail container
     ## @param loki.singleBinary.resources.requests.memory Memory requests for promtail container
+    ## @param loki.singleBinary.resources.limits.cpu CPU limits for promtail container
+    ## @param loki.singleBinary.resources.limits.memory Memory limits for promtail container
     resources:
       requests:
-        cpu: 0.03
-        memory: 250Mi
+        cpu: 0.2
+        memory: 810Mi
+      limits:
+        cpu: 0.4
+        memory: 1620Mi
     ## @param loki.singleBinary.persistence.size Size of persistent disk
     ## @param loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC Enable StatefulSetAutoDeletePVC feature
     persistence:
@@ -92,11 +97,16 @@ promtail:
   ## @param promtail.resources.requests.cpu CPU requests for promtail container
   ## @param promtail.resources.requests.memory Memory requests for promtail container
   ## @param promtail.resources.requests.ephemeral-storage Ephemeral storage requests for promtail container
+  ## @param promtail.resources.limits.cpu CPU limits for promtail container
+  ## @param promtail.resources.limits.memory Memory limits for promtail container
   resources:
     requests:
-      cpu: 40m
-      memory: 100Mi
+      cpu: 100m
+      memory: 512Mi
       ephemeral-storage: 256Mi
+    limits:
+      cpu: 200m
+      memory: 1024Mi
   tolerations:
     ## @skip promtail.tolerations[0]
     - key: node-role.kubernetes.io/master
