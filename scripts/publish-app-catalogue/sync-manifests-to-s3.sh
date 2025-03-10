@@ -27,14 +27,14 @@ copy_addon_manifest_to_s3() {
         addon_target_revision=$(yq e '.spec.source.targetRevision' "${file}")
         validate_target_revision "${addon_target_revision}"
         # Copy the addon manifest to S3
-        aws s3 cp "${file}" "s3://${AWS_S3_BUCKET}/addons/${cluster_type}/addons/${addon_name}/versions/${addon_target_revision}/manifest.yaml"
+        aws s3 cp "${file}" "s3://${AWS_S3_BUCKET}/addons-preview/${cluster_type}/addons/${addon_name}/versions/${addon_target_revision}/manifest.yaml"
     done
 }
 
 copy_control_plane_addon_version_to_s3() {
     local directory=$1
     local cluster_type=$2
-    local cp_chart_version=$3
+    local cp_chart_preview="preview"
     local target_addon_version_file_path="/tmp/cp_addon_versions/targetAddonVersion.yaml"
     mkdir -p "/tmp/cp_addon_versions"
     touch ${target_addon_version_file_path}
@@ -45,7 +45,7 @@ copy_control_plane_addon_version_to_s3() {
         yq e ".${addon_name} = \"${addon_target_revision}\"" -i ${target_addon_version_file_path}
     done
     # Copy the target version map to S3
-    aws s3 cp "${target_addon_version_file_path}" "s3://${AWS_S3_BUCKET}/addons/${cluster_type}/control-planes/${cp_chart_version}/targetAddonVersion.yaml"
+    aws s3 cp "${target_addon_version_file_path}" "s3://${AWS_S3_BUCKET}/addons-preview/${cluster_type}/control-planes/${cp_chart_preview}/targetAddonVersion.yaml"
     rm -rf "/tmp/cp_addon_versions"
 }
 
@@ -76,6 +76,6 @@ aws s3 sync "./catalogues/${INFRAMOLD_NAME}/templates" "s3://${AWS_S3_BUCKET}/${
 copy_addon_manifest_to_s3 "./catalogues/${INFRAMOLD_NAME}/templates" "${CLUSTER_TYPE}"
 
 # Copy control plane addon version map to S3
-copy_control_plane_addon_version_to_s3 "./catalogues/${INFRAMOLD_NAME}/templates" "${CLUSTER_TYPE}" "${cp_chart_version}"
+copy_control_plane_addon_version_to_s3 "./catalogues/${INFRAMOLD_NAME}/templates" "${CLUSTER_TYPE}"
 
 echo "Synced catalogue for ${CLUSTER_TYPE} successfully."
