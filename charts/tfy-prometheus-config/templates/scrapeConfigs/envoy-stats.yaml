@@ -3,10 +3,10 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: {{ .Values.scrapeConfigs.envoy.name }}
-  {{- if .Values.scrapeConfigs.envoy.labels }}
   labels:
-    {{- toYaml .Values.scrapeConfigs.envoy.labels | nindent 4 }}
-  {{- end }}
+    {{- include "envoyStats.labels" . | nindent 4 }}
+  annotations:
+    {{- include "envoyStats.annotations" . | nindent 4 }}
 spec:
   jobName: {{ .Values.scrapeConfigs.envoy.jobName }}
   metricsPath: {{ .Values.scrapeConfigs.envoy.metricsPath }}

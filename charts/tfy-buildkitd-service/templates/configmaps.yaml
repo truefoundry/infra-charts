@@ -4,6 +4,8 @@ metadata:
   name: {{ include "buildkitd-service.fullname" . }}-config
   labels:
     {{- include "buildkitd-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "buildkitd-service.annotations" . | nindent 4 }}
 data:
   buildkitd.toml: |
     {{- .Values.buildkitConfig | nindent 4 }}

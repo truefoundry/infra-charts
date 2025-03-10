@@ -31,6 +31,17 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Common Annotations
+*/}}
+{{- define "buildkitd-service.annotations" -}}
+{{- if .Values.annotations }}
+  {{- toYaml .Values.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "buildkitd-service.labels" -}}
@@ -40,6 +51,12 @@ helm.sh/chart: {{ include "buildkitd-service.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.labels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
 {{- end }}
 
 {{/*
@@ -68,4 +85,30 @@ Create the name of the service account to use
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
 {{- $mergedNodeSelector := merge .Values.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
+{{- end }}
+
+{{/*
+ServiceAccount annotations for sds-server
+*/}}
+{{- define "buildkitd-service.serviceAccount.annotations" -}}
+{{- if .Values.serviceAccount.annotations }}
+    {{- toYaml .Values.serviceAccount.annotations }}
+{{- else if .Values.annotations }}
+    {{- toYaml .Values.annotations }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Annotations
+*/}}
+{{- define "buildkitd-service.podAnnotations" -}}
+{{- if .Values.podAnnotations }}
+{{ toYaml .Values.podAnnotations }}
+{{- else if .Values.annotations }}
+{{ toYaml .Values.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}

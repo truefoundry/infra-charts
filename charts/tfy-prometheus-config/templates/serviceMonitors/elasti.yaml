@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.serviceMonitors.elasti.name }}
   labels:
     {{- include "elasti.labels" . | nindent 4 }}
+  annotations:
+    {{- include "elasti.annotations" . | nindent 4 }}
 spec:
   jobLabel: {{ .Values.serviceMonitors.elasti.jobLabel }}
   selector:

@@ -14,7 +14,7 @@ LLM-Gateway Helm Chart
 | `global.llmGatewayInfra.releaseName`            | Release name for the tfy-llm-gateway-infra                   | `tfy-llm-gateway-infra`                           |
 | `global.llmGatewayInfra.natsAdminPassword`      | NATS admin password                                          | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `1882538ce07ad79c9c3b3c2fd2243267cab23360`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `a0e08e7a6fe606f8432d69ba981b2cd99eeaedee`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
 | `replicaCount`                                  | Number of replicas                                           | `3`                                               |
 | `environmentName`                               | The environment name                                         | `default`                                         |
@@ -22,6 +22,7 @@ LLM-Gateway Helm Chart
 | `imagePullPolicy`                               | Image pull policy                                            | `IfNotPresent`                                    |
 | `nameOverride`                                  | Name override                                                | `""`                                              |
 | `podAnnotations`                                | Pod annotations                                              | `{}`                                              |
+| `commonAnnotations`                             | Common annotations                                           | `{}`                                              |
 | `podSecurityContext`                            | Pod security context                                         | `{}`                                              |
 | `commonLabels`                                  | Common labels                                                | `{}`                                              |
 | `securityContext`                               | Security context configuration                               | `{}`                                              |

@@ -1,0 +1,31 @@
+{{- if .Values.prometheus.config.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-prometheus-config
+  finalizers:
+     - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-prometheus-config"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  project: tfy-apps
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: prometheus
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=false
+  source:
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.4
+    chart: tfy-prometheus-config
+    helm:
+      values: |-
+        {{- if .Values.prometheus.config.valuesOverride }}
+        {{ .Values.prometheus.config.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        extraObjects: []
+        {{- end }}
+{{- end }}

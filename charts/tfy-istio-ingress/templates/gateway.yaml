@@ -4,6 +4,10 @@ kind: Gateway
 metadata:
   name: {{ .Values.tfyGateway.name }}
   namespace: istio-system
+  labels:
+    {{- include "tfy-istio-ingress.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-istio-ingress.annotations" . | nindent 4 }}
 spec: 
   {{- tpl (toYaml .Values.tfyGateway.spec) . | nindent 2 }}
 {{- end }}

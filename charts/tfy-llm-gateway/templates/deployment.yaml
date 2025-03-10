@@ -4,6 +4,8 @@ metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
     {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -18,10 +20,8 @@ spec:
     {{- end }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-llm-gateway.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-llm-gateway.labels" . | nindent 8 }}
     spec:
