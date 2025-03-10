@@ -2,9 +2,11 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
+  name: {{ .Values.serviceMonitors.nodeExporter.name }}
   labels:
     {{- include "nodeExporter.labels" . | nindent 4 }}
-  name: {{ .Values.serviceMonitors.nodeExporter.name }}
+  annotations:
+    {{- include "nodeExporter.annotations" . | nindent 4 }}
 spec:
   jobLabel: {{ .Values.serviceMonitors.nodeExporter.jobLabel }}
   attachMetadata:

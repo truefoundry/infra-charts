@@ -17,12 +17,9 @@ clusterName: ""
 
 ## @param tolerations [array] Tolerations for the all chart components
 ##
-tolerations:
-  - key: CriticalAddonsOnly
-    value: "true"
-    effect: NoSchedule
-    operator: Equal
-  
+
+tolerations: []
+
 
 ## @param affinity [object] Affinity for the all chart components
 ##
@@ -194,21 +191,15 @@ truefoundry:
   truefoundryImagePullConfigJSON: ""
   
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
-  tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "control-plane"
-    effect: "NoSchedule"
+  ##
+  
+  tolerations: []
+  
   ## @param truefoundry.affinity [object] Affinity for the truefoundry components
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - control-plane
-
+  ##
+  
+  affinity: {}
+  
 
 ## @section loki parameters
 ## @param loki.enabled Flag to enable Loki
@@ -221,22 +212,15 @@ loki:
 
   ## @param loki.affinity [object] Affinity for loki statefulset pod
   ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - critical
+  
+  affinity: {}
+  
 
   ## @param loki.tolerations [array] Tolerations for loki statefulset pod
   ##
-  tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
+  
+  tolerations: []
+  
 
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
@@ -259,22 +243,15 @@ istio:
     
     ## @param istio.gateway.affinity [object] Affinity for the gateway pods
     ##
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: class.truefoundry.com/component
-                  operator: In
-                  values:
-                    - critical
+    
+    affinity: {}
+    
     
     ## @param istio.gateway.tolerations [array] Tolerations for the gateway pods
     ##
-    tolerations:
-    - key: "class.truefoundry.com/component"
-      value: "critical"
-      effect: "NoSchedule"
+    
+    tolerations: []
+    
 
     ## @param istio.gateway.valuesOverride Config override from default config values
     ##
@@ -337,21 +314,7 @@ prometheus:
   enabled: true
   ## @param prometheus.additionalScrapeConfigs [array] Additional scrape configs for Prometheus
   ##
-  additionalScrapeConfigs:
-    - job_name: gpu-metrics
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      scheme: http
-      kubernetes_sd_configs:
-        - role: endpoints
-          namespaces:
-            names:
-              - tfy-gpu-operator
-      relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_node_name]
-          action: replace
-          target_label: kubernetes_node
+  additionalScrapeConfigs: []
   ## @param prometheus.alertmanager [object] Alertmanager configuration for Prometheus
   ##
   alertmanager:
@@ -364,26 +327,32 @@ prometheus:
 
   ## @param prometheus.affinity [object] Affinity for prometheus statefulset pod
   ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - critical
+  
+  affinity: {}
+  
 
   ## @param prometheus.tolerations [array] Tolerations for prometheus statefulset pod
   ##
-  tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
+  
+  tolerations: []
+  
+
   ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
+  config:
+    ## @param prometheus.config.enabled Flag to enable prometheus config
+    ##
+    enabled: true
+
+    ## @param prometheus.config.valuesOverride [object] Config override from default config values
+    ##
+    valuesOverride: {}
+
+    ## @param prometheus.config.extraObjects [array] Extra objects for prometheus config
+    ##
+    extraObjects: []
 
 ## @section grafana parameters
 ## @param grafana.enabled Flag to enable Grafana
@@ -411,21 +380,15 @@ tfyAgent:
 
   ## @param tfyAgent.tolerations [array] Tolerations for the agent pods
   ## 
-  tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
+  
+  tolerations: []
+  
+
   ## @param tfyAgent.affinity [object] Affinity for the agent pods
   ## 
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - critical
+  
+  affinity: {}
+  
 
   ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
@@ -457,22 +420,15 @@ jspolicy:
 
   ## @param jspolicy.affinity [object] Affinity for jspolicy
   ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - critical
+  
+  affinity: {}
+  
 
   ## @param jspolicy.tolerations [array] Tolerations for jspolicy
   ##
-  tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
+  
+  tolerations: []
+  
 
   ## @param jspolicy.config.valuesOverride [object] Config override from default config values
   ##

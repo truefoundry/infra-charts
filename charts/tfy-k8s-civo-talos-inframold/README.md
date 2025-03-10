@@ -173,6 +173,9 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | `prometheus.affinity`                | Affinity for prometheus statefulset pod    | `{}`   |
 | `prometheus.tolerations`             | Tolerations for prometheus statefulset pod | `[]`   |
 | `prometheus.valuesOverride`          | Config override from default config values | `{}`   |
+| `prometheus.config.enabled`          | Flag to enable prometheus config           | `true` |
+| `prometheus.config.valuesOverride`   | Config override from default config values | `{}`   |
+| `prometheus.config.extraObjects`     | Extra objects for prometheus config        | `[]`   |
 
 ### grafana parameters
 

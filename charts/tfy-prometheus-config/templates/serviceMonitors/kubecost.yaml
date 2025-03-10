@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.serviceMonitors.kubecost.name }}
   labels:
     {{- include "kubecost.labels" . | nindent 4 }}
+  annotations:
+      {{- include "kubecost.annotations" . | nindent 4 }}
 spec:
   jobLabel: {{ .Values.serviceMonitors.kubecost.jobLabel }}
   selector:

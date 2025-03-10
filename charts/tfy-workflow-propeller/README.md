@@ -62,6 +62,8 @@ This Helm chart package, provided by TrueFoundry, contains configurations and re
 | `tfySignedURLServer.enabled`                              | to enable the tfySignedURLServer              | `true`                                          |
 | `tfySignedURLServer.serviceAccountName`                   | to set the service account name               | `flytepropeller`                                |
 | `tfySignedURLServer.tolerations`                          | to set the tolerations                        | `[]`                                            |
+| `tfySignedURLServer.labels`                               | to set the labels for signed url server       | `{}`                                            |
+| `tfySignedURLServer.annotations`                          | to set the annotations for signed url server  | `{}`                                            |
 | `tfySignedURLServer.image.repository`                     | to set the image repository                   | `tfy.jfrog.io/tfy-images/tfy-signed-url-server` |
 | `tfySignedURLServer.image.tag`                            | to set the image tag                          | `0.0.1`                                         |
 | `tfySignedURLServer.replicaCount`                         | to set the replica count                      | `2`                                             |

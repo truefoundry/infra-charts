@@ -3,6 +3,10 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: {{ .Values.alertManagers.tfyAgent.name }}
+  labels:
+    {{- include "alertManagers.labels" . | nindent 4 }}
+  annotations:
+    {{- include "alertManagers.annotations" . | nindent 4 }}
 spec:
   route:
     receiver: {{ .Values.alertManagers.tfyAgent.route.receiver }}
