@@ -489,3 +489,14 @@ Container rules annotations
 {}
 {{- end }}
 {{- end }}
+
+{{- /*
+  SSH service monitor labels
+*/ -}}
+{{- define "sshServer.labels" -}}
+{{- if .Values.serviceMonitors.sshServer.labels }}
+{{- toYaml .Values.serviceMonitors.sshServer.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
