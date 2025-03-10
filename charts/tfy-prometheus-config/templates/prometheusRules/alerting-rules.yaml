@@ -56,6 +56,8 @@ spec:
     - for: 2m
       expr: >-
         sum by (container, pod, namespace) (sum_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics"}[5m])) > 0
+        and
+        max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[5m]) > 0)
       alert: ContainerOOMKilled
       labels:
         entity: container
