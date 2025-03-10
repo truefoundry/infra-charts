@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.34.4
+  controlPlaneChartVersion: 0.38.2
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -117,7 +117,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.34.1"
+    tag: "v0.38.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -247,7 +247,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_RECOMMENDATION_INFOBAR: "true"
     VITE_ENABLE_AUTOPILOT: "false"
     VITE_AUTOPILOT_ENABLED_TENANTS: ""
-    VITE_ENABLE_DELOYMENT_ASSISTANT: "false"
+    VITE_ENABLE_DEPLOYMENT_ASSISTANT: "false"
     VITE_DEPLOYMENT_ASSISTANT_ENABLED_TENANTS: ""
     VITE_ENABLE_ENVIRONMENT_YAML: "false"
     VITE_ENVIRONMENT_YAML_ENABLED_TENANTS: ""
@@ -268,6 +268,8 @@ truefoundryFrontendApp:
     VITE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
     VITE_ENABLE_NEW_DELETE_FLOW: "false"
     VITE_NEW_DELETE_ENABLED_TENANTS: ""
+    VITE_ENABLE_ALERT_INFOBAR: "false"
+    VITE_ALERT_INFOBAR_ENABLED_TENANTS: ""
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
@@ -293,6 +295,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_PAGESENSE: "false"
     VITE_ENABLE_MIXPANEL: "false"
     VITE_ENABLE_SCHEMA_VISUALISER: "false"
+    VITE_ENABLE_MARKDOWN_VISUALISER: "false"
     VITE_SENTRY_AUTH_TOKEN: ""
     VITE_SENTRY_ENVIRONMENT: production
     VITE_MIXPANEL_TOKEN: ""
@@ -313,7 +316,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.28.0"
+    tag: "v0.32.1"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -413,7 +416,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.34.1"
+    tag: "v0.38.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -561,7 +564,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.29.2"
+    tag: "v0.33.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -665,7 +668,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.29.0"
+    tag: "v0.33.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -943,7 +946,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository Repository for the sfyBuilder
         repository: tfy.jfrog.io/tfy-images/sfy-builder
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag Tag for the sfyBuilder
-        tag: v0.8.9
+        tag: v0.8.11
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets Image pull secrets for the sfyBuilder
       ##
       imagePullSecrets: []
@@ -1046,7 +1049,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository Repository for the SOCI index build and push
         repository: tfy.jfrog.io/tfy-images/sfy-builder
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag Tag for the SOCI index build and push
-        tag: v0.8.9
+        tag: v0.8.11
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets Image pull secrets for the sociIndexBuildAndPush
       ##
       imagePullSecrets: []

@@ -3,6 +3,10 @@ apiVersion: policy.jspolicy.com/v1beta1
 kind: JsPolicy
 metadata:
   name: "{{ .Release.Name }}-sync-configmaps.truefoundry.com"
+  labels:
+    {{- include "tfy-jspolicy-configs.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-jspolicy-configs.annotations" . | nindent 4 }}
 spec:
   operations: ["CREATE"]
   resources: ["configMaps"]

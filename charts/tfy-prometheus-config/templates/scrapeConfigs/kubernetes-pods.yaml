@@ -3,10 +3,10 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: {{ .Values.scrapeConfigs.kubernetesPods.name }}
-  {{- if .Values.scrapeConfigs.kubernetesPods.labels }}
   labels:
-    {{- toYaml .Values.scrapeConfigs.kubernetesPods.labels | nindent 4 }}
-  {{- end }}
+    {{- include "k8sPods.labels" . | nindent 4 }}
+  annotations:
+    {{- include "k8sPods.annotations" . | nindent 4 }}
 spec:
   jobName: {{ .Values.scrapeConfigs.kubernetesPods.jobName }}
   kubernetesSDConfigs:

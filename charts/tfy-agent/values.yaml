@@ -72,10 +72,6 @@ config:
   #   - default
   #   - namespace-1
 
-  ## @param imagePullSecrets Secrets to pull images
-  ##
-imagePullSecrets: []
-
 ## @param nameOverride String to override partial name passed in helm install command
 ##
 nameOverride: ""
@@ -99,24 +95,18 @@ tfyAgent:
   ##
   annotations: {}
 
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ## @param tfyAgent.labels Add labels to tfyAgent pods
   ##
-  serviceAccount:
-    ## @param tfyAgent.serviceAccount.create Bool to enable serviceAccount creation 
-    ##
-    create: true
-
-    ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
-    ## 
-    annotations: {}
-
-    ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
-    ## 
-    name: ""
+  labels: {}
 
   ## @param tfyAgent.extraEnvVars Additional envrionment variables for tfyAgent
   ##
   extraEnvVars: []
+
+  ## @param tfyAgent.imagePullSecrets Secrets to pull images for tfyAgent
+  ##
+  imagePullSecrets: []
+
   ##
   # Example:
   # extraEnvVars:
@@ -127,12 +117,6 @@ tfyAgent:
   ##
   service:
 
-    ## @param tfyAgent.service.annotations Annotations to add to the tfyAgent service
-    ##   
-    annotations: {}
-    ## @param tfyAgent.service.labels Labels to add to the tfyAgent service
-    ##     
-    labels: {}
     ## @param tfyAgent.service.clusterIP Cluster IP for tfyAgent service
     ## 
     clusterIP: ""
@@ -169,7 +153,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "a5e6e21f8e4ef9e2b59bd3c0556cd5488edf76e6"
+    tag: "43685d4e97ca44b5423ea3c763ea57b1c9a625e0"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -295,6 +279,19 @@ tfyAgent:
     ## @param tfyAgent.clusterRole.enable Create cluster role.
     enable: true
 
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+  ##
+  serviceAccount:
+    ## @param tfyAgent.serviceAccount.create Bool to enable serviceAccount creation
+    ##
+    create: true
+    ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
+    ##
+    annotations: {}
+    ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
+    ##
+    name: ""
+
 ## @section tfyAgentProxy configuration parameters
 ##
 tfyAgentProxy:
@@ -309,6 +306,14 @@ tfyAgentProxy:
   ## @param tfyAgentProxy.annotations Add annotations to tfyAgentProxy pods
   ##
   annotations: {}
+
+  ## @param tfyAgentProxy.labels Add labels to tfyAgentProxy pods
+  ##
+  labels: {}
+
+  ## @param tfyAgentProxy.imagePullSecrets Secrets to pull images for tfyAgentProxy
+  ##
+  imagePullSecrets: []
 
   ## Image of tfyAgentProxy
   ##
@@ -445,12 +450,18 @@ tfyAgentProxy:
     # - apiGroups: [""]
     #   resources: ["namespaces"]
     #   verbs: ["create"]
+## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
+##
 
-    ## @section resourceQuota Add a ResourceQuota to enable priority class in a namspace.
-    ##
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.
   enabled: true
+  ## @param resourceQuota.annotations Annotations to add to the ResourceQuota
+  ##
+  annotations: {}
+  ## @param resourceQuota.labels Labels to add to the ResourceQuota
+  ##
+  labels: {}
   ## @param resourceQuota.priorityClasses PriorityClasses to enable.
   priorityClasses:
     - system-cluster-critical
@@ -470,6 +481,14 @@ sdsServer:
   ##
   annotations: {}
 
+  ## @param sdsServer.labels Add labels to sdsServer pods
+  ##
+  labels: {}
+
+  ## @param sdsServer.nodeSelector Parameters to select for scheduling of pod on a node
+  ##
+  nodeSelector: {}
+
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
   ##
   serviceAccount:
@@ -485,7 +504,11 @@ sdsServer:
     ## 
     name: ""
 
-  ## @param sdsServer.extraEnvVars Additional envrionment variables for sdsServer
+  ## @param sdsServer.extraVolumes Additional volumes for sdsServer
+  ##
+  extraVolumes: []
+
+  ## @param sdsServer.extraEnvVars Additional environment variables for sdsServer
   ##
   extraEnvVars: []
   ##
@@ -498,12 +521,6 @@ sdsServer:
   ##
   service:
 
-    ## @param sdsServer.service.annotations Annotations to add to the sdsServer service
-    ##   
-    annotations: {}
-    ## @param sdsServer.service.labels Labels to add to the sdsServer service
-    ##     
-    labels: {}
     ## @param sdsServer.service.clusterIP Cluster IP for sdsServer service
     ## 
     clusterIP: ""

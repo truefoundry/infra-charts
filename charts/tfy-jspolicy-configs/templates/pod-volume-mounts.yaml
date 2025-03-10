@@ -4,6 +4,10 @@ kind: JsPolicy
 metadata:
   name: {{ .Release.Name }}-pod-volume-mounts.truefoundry.com
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-jspolicy-configs.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-jspolicy-configs.annotations" . | nindent 4 }}
 spec:
   type: Mutating
   operations: ["CREATE", "UPDATE"]
