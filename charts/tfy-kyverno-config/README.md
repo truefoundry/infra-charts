@@ -3,6 +3,13 @@ A Helm chart for kyverno configurations
 
 ## Parameters
 
+### Global settings for Kyverno configuration
+
+| Name                 | Description                         | Value |
+| -------------------- | ----------------------------------- | ----- |
+| `global.labels`      | Labels to add to all resources      | `{}`  |
+| `global.annotations` | Annotations to add to all resources | `{}`  |
+
 ### Configuration options for adding a CA certificate volume
 
 | Name                                               | Description                                                                    | Value   |
