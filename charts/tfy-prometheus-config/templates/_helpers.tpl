@@ -515,3 +515,81 @@ Container rules annotations
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+  Service monitor labels
+*/}}
+{{- define "servicefoundry.annotations" -}}
+{{- if .Values.serviceMonitors.servicefoundryServer.annotations }}
+{{- toYaml .Values.serviceMonitors.servicefoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Service monitor labels
+*/}}
+{{- define "servicefoundry.labels" -}}
+{{- if .Values.serviceMonitors.servicefoundryServer.labels }}
+{{- toYaml .Values.serviceMonitors.servicefoundryServer.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  SFY Manifests service monitor labels
+*/}}
+{{- define "sfyManifestService.labels" -}}
+{{- if .Values.serviceMonitors.sfyManifestService.labels }}
+{{- toYaml .Values.serviceMonitors.sfyManifestService.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  SFY Manifests service monitor annotations
+*/}}
+{{- define "sfyManifestService.annotations" -}}
+{{- if .Values.serviceMonitors.sfyManifestService.annotations }}
+{{- toYaml .Values.serviceMonitors.sfyManifestService.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  NATS service monitor labels
+*/}}
+{{- define "nats.labels" -}}
+{{- if .Values.serviceMonitors.nats.labels }}
+{{- toYaml .Values.serviceMonitors.nats.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  NATS service monitor annotations
+*/}}
+{{- define "nats.annotations" -}}
+{{- if .Values.serviceMonitors.nats.annotations }}
+{{- toYaml .Values.serviceMonitors.nats.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
