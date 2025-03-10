@@ -90,6 +90,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.elasti.endpoints`                         | Endpoints for elasti                            | `[]`                                      |
 | `serviceMonitors.elasti.serviceSelectorLabels`             | Service selector labels for elasti              | `{}`                                      |
 | `serviceMonitors.elasti.namespaceSelector`                 | Namespace selector for elasti                   | `{}`                                      |
+| `serviceMonitors.sshServer.enabled`                        | Enable service monitor for ssh server           | `true`                                    |
+| `serviceMonitors.sshServer.name`                           | Name of the service monitor                     | `ssh`                                     |
+| `serviceMonitors.sshServer.labels`                         | Labels for ssh server                           | `{}`                                      |
+| `serviceMonitors.sshServer.jobLabel`                       | Job label for ssh server                        | `truefoundry.com/component-type`          |
+| `serviceMonitors.sshServer.endpoints`                      | Endpoints for ssh server                        | `[]`                                      |
+| `serviceMonitors.sshServer.serviceSelectorLabels`          | Service selector labels for ssh server          | `{}`                                      |
+| `serviceMonitors.sshServer.namespaceSelector`              | Namespace selector for ssh server               | `{}`                                      |
 | `serviceMonitors.gpu.labels`                               | Labels for gpu                                  | `{}`                                      |
 | `serviceMonitors.gpu.annotations`                          | Annotations for gpu                             | `{}`                                      |
 | `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
@@ -183,6 +190,3 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.loki.promtail.serviceSelectorLabels`      | Service selector labels for promtail            | `{}`                                      |
 | `serviceMonitors.loki.promtail.namespaceSelector`          | Namespace selector for promtail                 | `{}`                                      |
 | `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
-
-
-

@@ -24,6 +24,8 @@
 | Name                                 | Description         | Value |
 | ------------------------------------ | ------------------- | ----- |
 | `global.auth.clickhouse.passwordKey` | clickhouse password | `""`  |
+| `global.labels`                      | labels              | `{}`  |
+| `global.annotations`                 | annotations         | `{}`  |
 
 ### global.virtualService [object] virtual service config
 
