@@ -105,7 +105,7 @@ scrapeConfigs:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
     metricsRelabelings:
-      - regex: ALERTS|elasti_resolver_queued_count|istio_requests_total|istio_request_duration_milliseconds_bucket|envoy_http_inbound_.*_downstream_rq_total
+      - regex: ALERTS|elasti_resolver_queued_count|istio_requests_total|istio_request_duration_milliseconds_bucket|nats_stream_total_messages|envoy_http_inbound_.*_downstream_rq_total
         action: keep
         sourceLabels:
           - __name__
@@ -455,7 +455,7 @@ serviceMonitors:
             regex: (container_(.+)|kubelet_volume_(.+))
             sourceLabels:
               - __name__
-          - regex: ALERTS|container_memory_working_set_bytes|container_fs_writes_bytes_total|container_memory_cache|container_cpu_usage_seconds_total|container_cpu_cfs_throttled_periods_total|container_cpu_cfs_periods_total|container_oom_events_total|kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_pleg_relist_duration_seconds_bucket|kubelet_node_name|container_memory_swap|kubelet_volume_stats_available_bytes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubelet_pod_worker_duration_seconds_bucket|up|container_memory_rss|container_network_transmit_bytes_total|container_network_receive_bytes_total|container_cpu_cfs_throttled_seconds_total
+          - regex: ALERTS|container_memory_working_set_bytes|container_fs_reads_bytes_total|container_fs_writes_bytes_total|container_memory_cache|container_cpu_usage_seconds_total|container_cpu_cfs_throttled_periods_total|container_cpu_cfs_periods_total|container_oom_events_total|kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_pleg_relist_duration_seconds_bucket|kubelet_node_name|container_memory_swap|kubelet_volume_stats_available_bytes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubelet_pod_worker_duration_seconds_bucket|up|container_memory_rss|container_network_transmit_bytes_total|container_network_receive_bytes_total|container_cpu_cfs_throttled_seconds_total
             action: keep
             sourceLabels:
               - __name__
