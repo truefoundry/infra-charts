@@ -190,7 +190,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.loki.promtail.serviceSelectorLabels`        | Service selector labels for promtail              | `{}`                                      |
 | `serviceMonitors.loki.promtail.namespaceSelector`            | Namespace selector for promtail                   | `{}`                                      |
 | `serviceMonitors.nats.enabled`                               | Enable service monitor for nats                   | `true`                                    |
-| `serviceMonitors.nats.name`                                  | Name of the service monitor                       | `nats`                                    |
+| `serviceMonitors.nats.name`                                  | Name of the service monitor                       | `truefoundry-nats`                        |
 | `serviceMonitors.nats.labels`                                | Labels for nats                                   | `{}`                                      |
 | `serviceMonitors.nats.annotations`                           | Annotations for nats                              | `{}`                                      |
 | `serviceMonitors.nats.jobLabel`                              | Job label for nats                                | `app.kubernetes.io/name`                  |
@@ -213,4 +213,12 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.sfyManifestService.endpoints`               | Endpoints for sfy manifest service                | `[]`                                      |
 | `serviceMonitors.sfyManifestService.serviceSelectorLabels`   | Service selector labels for sfy manifest service  | `{}`                                      |
 | `serviceMonitors.sfyManifestService.namespaceSelector`       | Namespace selector for sfy manifest service       | `{}`                                      |
+| `serviceMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller         | `true`                                    |
+| `serviceMonitors.tfyController.name`                         | Name of the service monitor                       | `tfy-controller`                          |
+| `serviceMonitors.tfyController.labels`                       | Labels for tfy-controller                         | `{}`                                      |
+| `serviceMonitors.tfyController.annotations`                  | Annotations for tfy-controller                    | `{}`                                      |
+| `serviceMonitors.tfyController.jobLabel`                     | Job label for tfy-controller                      | `app.kubernetes.io/name`                  |
+| `serviceMonitors.tfyController.endpoints`                    | Endpoints for tfy-controller                      | `[]`                                      |
+| `serviceMonitors.tfyController.serviceSelectorLabels`        | Service selector labels for tfy-controller        | `{}`                                      |
+| `serviceMonitors.tfyController.namespaceSelector`            | Namespace selector for tfy-controller             | `{}`                                      |
 | `extraObjects`                                               | Extra objects for prometheus                      | `[]`                                      |
