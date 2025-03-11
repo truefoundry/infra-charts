@@ -490,6 +490,110 @@ Container rules annotations
 {{- end }}
 {{- end }}
 
+{{/*
+  LLM Gateway service monitor labels
+*/}}
+{{- define "llmGateway.labels" -}}
+{{- if .Values.serviceMonitors.llmGateway.labels }}
+{{- toYaml .Values.serviceMonitors.llmGateway.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  LLM Gateway service monitor annotations
+*/}}
+{{- define "llmGateway.annotations" -}}
+{{- if .Values.serviceMonitors.llmGateway.annotations }}
+{{- toYaml .Values.serviceMonitors.llmGateway.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Servicefoundry server service monitor labels
+*/}}
+{{- define "servicefoundry.annotations" -}}
+{{- if .Values.serviceMonitors.servicefoundryServer.annotations }}
+{{- toYaml .Values.serviceMonitors.servicefoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Servicefoundry server service monitor labels
+*/}}
+{{- define "servicefoundry.labels" -}}
+{{- if .Values.serviceMonitors.servicefoundryServer.labels }}
+{{- toYaml .Values.serviceMonitors.servicefoundryServer.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Sfy-manifests service monitor labels
+*/}}
+{{- define "sfyManifestService.labels" -}}
+{{- if .Values.serviceMonitors.sfyManifestService.labels }}
+{{- toYaml .Values.serviceMonitors.sfyManifestService.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Sfy-manifests service monitor annotations
+*/}}
+{{- define "sfyManifestService.annotations" -}}
+{{- if .Values.serviceMonitors.sfyManifestService.annotations }}
+{{- toYaml .Values.serviceMonitors.sfyManifestService.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  NATS service monitor labels
+*/}}
+{{- define "nats.labels" -}}
+{{- if .Values.serviceMonitors.nats.labels }}
+{{- toYaml .Values.serviceMonitors.nats.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  NATS service monitor annotations
+*/}}
+{{- define "nats.annotations" -}}
+{{- if .Values.serviceMonitors.nats.annotations }}
+{{- toYaml .Values.serviceMonitors.nats.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 {{- /*
   SSH service monitor labels
 */ -}}
@@ -498,5 +602,31 @@ Container rules annotations
 {{- toYaml .Values.serviceMonitors.sshServer.labels }}
 {{- else }}
 {{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  TFY Controller service monitor labels
+ */}}
+{{- define "tfyController.labels" -}}
+{{- if .Values.serviceMonitors.tfyController.labels }}
+{{- toYaml .Values.serviceMonitors.tfyController.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  TFY Controller service monitor annotations
+  */}}
+{{- define "tfyController.annotations" -}}
+{{- if .Values.serviceMonitors.tfyController.annotations }}
+{{- toYaml .Values.serviceMonitors.tfyController.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
 {{- end }}
 {{- end }}

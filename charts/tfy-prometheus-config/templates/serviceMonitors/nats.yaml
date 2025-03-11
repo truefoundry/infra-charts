@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitors.nats.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.nats.name }}
+  labels:
+    {{- include "nats.labels" . | nindent 4 }}
+  annotations:
+    {{- include "nats.annotations" . | indent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.nats.jobLabel }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.nats.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.nats.namespaceSelector | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.nats.serviceSelectorLabels | nindent 6 }}
+{{- end -}}
