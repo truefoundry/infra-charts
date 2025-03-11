@@ -136,7 +136,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.kubelet.endpoints`                          | Endpoints for kubelet                             | `[]`                                      |
 | `serviceMonitors.kubelet.serviceSelectorLabels`              | Service selector labels for kubelet               | `{}`                                      |
 | `serviceMonitors.kubelet.namespaceSelector`                  | Namespace selector for kubelet                    | `{}`                                      |
-| `serviceMonitors.llmGateway.enabled`                         | Enable service monitor for llm gateway            | `true`                                    |
+| `serviceMonitors.llmGateway.enabled`                         | Enable service monitor for llm gateway            | `false`                                   |
 | `serviceMonitors.llmGateway.name`                            | Name of the service monitor                       | `tfy-llm-gateway`                         |
 | `serviceMonitors.llmGateway.labels`                          | Labels for llm gateway                            | `{}`                                      |
 | `serviceMonitors.llmGateway.annotations`                     | Annotations for llm gateway                       | `{}`                                      |
@@ -189,7 +189,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.loki.promtail.endpoints`                    | Endpoints for promtail                            | `[]`                                      |
 | `serviceMonitors.loki.promtail.serviceSelectorLabels`        | Service selector labels for promtail              | `{}`                                      |
 | `serviceMonitors.loki.promtail.namespaceSelector`            | Namespace selector for promtail                   | `{}`                                      |
-| `serviceMonitors.nats.enabled`                               | Enable service monitor for nats                   | `true`                                    |
+| `serviceMonitors.nats.enabled`                               | Enable service monitor for nats                   | `false`                                   |
 | `serviceMonitors.nats.name`                                  | Name of the service monitor                       | `truefoundry-nats`                        |
 | `serviceMonitors.nats.labels`                                | Labels for nats                                   | `{}`                                      |
 | `serviceMonitors.nats.annotations`                           | Annotations for nats                              | `{}`                                      |
@@ -197,7 +197,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.nats.endpoints`                             | Endpoints for nats                                | `[]`                                      |
 | `serviceMonitors.nats.serviceSelectorLabels`                 | Service selector labels for nats                  | `{}`                                      |
 | `serviceMonitors.nats.namespaceSelector`                     | Namespace selector for nats                       | `{}`                                      |
-| `serviceMonitors.servicefoundryServer.enabled`               | Enable service monitor for servicefoundry server  | `true`                                    |
+| `serviceMonitors.servicefoundryServer.enabled`               | Enable service monitor for servicefoundry server  | `false`                                   |
 | `serviceMonitors.servicefoundryServer.name`                  | Name of the service monitor                       | `""`                                      |
 | `serviceMonitors.servicefoundryServer.labels`                | Labels for servicefoundry server                  | `{}`                                      |
 | `serviceMonitors.servicefoundryServer.annotations`           | Annotations for servicefoundry server             | `{}`                                      |
@@ -205,7 +205,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.servicefoundryServer.endpoints`             | Endpoints for servicefoundry server               | `[]`                                      |
 | `serviceMonitors.servicefoundryServer.serviceSelectorLabels` | Service selector labels for servicefoundry server | `{}`                                      |
 | `serviceMonitors.servicefoundryServer.namespaceSelector`     | Namespace selector for servicefoundry server      | `{}`                                      |
-| `serviceMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service   | `true`                                    |
+| `serviceMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service   | `false`                                   |
 | `serviceMonitors.sfyManifestService.name`                    | Name of the service monitor                       | `sfy-manifest-service`                    |
 | `serviceMonitors.sfyManifestService.labels`                  | Labels for sfy manifest service                   | `{}`                                      |
 | `serviceMonitors.sfyManifestService.annotations`             | Annotations for sfy manifest service              | `{}`                                      |
@@ -213,7 +213,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.sfyManifestService.endpoints`               | Endpoints for sfy manifest service                | `[]`                                      |
 | `serviceMonitors.sfyManifestService.serviceSelectorLabels`   | Service selector labels for sfy manifest service  | `{}`                                      |
 | `serviceMonitors.sfyManifestService.namespaceSelector`       | Namespace selector for sfy manifest service       | `{}`                                      |
-| `serviceMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller         | `true`                                    |
+| `serviceMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller         | `false`                                   |
 | `serviceMonitors.tfyController.name`                         | Name of the service monitor                       | `tfy-controller`                          |
 | `serviceMonitors.tfyController.labels`                       | Labels for tfy-controller                         | `{}`                                      |
 | `serviceMonitors.tfyController.annotations`                  | Annotations for tfy-controller                    | `{}`                                      |
