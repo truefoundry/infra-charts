@@ -544,8 +544,7 @@ serviceMonitors:
     ## @param serviceMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
     endpoints:
       - path: /metrics
-        port:
-          http-8787
+        port: http-8787
     ## @param serviceMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
     namespaceSelector:
       matchNames:
@@ -748,7 +747,7 @@ serviceMonitors:
     ## @param serviceMonitors.nats.enabled Enable service monitor for nats
     enabled: true
     ## @param serviceMonitors.nats.name Name of the service monitor
-    name: nats
+    name: truefoundry-nats
     ## @param serviceMonitors.nats.labels [object] Labels for nats
     labels: {}
     ## @param serviceMonitors.nats.annotations [object] Annotations for nats
@@ -809,6 +808,29 @@ serviceMonitors:
     serviceSelectorLabels:
       app.kubernetes.io/name: sfy-manifest-service
     ## @param serviceMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # serviceMonitors.controller Service monitor for tfy-controller
+  tfyController:
+    ## @param serviceMonitors.controller.enabled Enable service monitor for tfy-controller
+    enabled: true
+    ## @param serviceMonitors.controller.name Name of the service monitor
+    name: tfy-controller
+    ## @param serviceMonitors.controller.labels [object] Labels for tfy-controller
+    labels: {}
+    ## @param serviceMonitors.controller.annotations [object] Annotations for tfy-controller
+    annotations: {}
+    ## @param serviceMonitors.controller.jobLabel Job label for tfy-controller
+    jobLabel: app.kubernetes.io/name
+    ## @param serviceMonitors.controller.endpoints [array] Endpoints for tfy-controller
+    endpoints:
+      - port: port-8123
+        honorLabels: true
+    ## @param serviceMonitors.controller.serviceSelectorLabels [object] Service selector labels for tfy-controller
+    serviceSelectorLabels:
+      app.kubernetes.io/name: tfy-controller
+    ## @param serviceMonitors.controller.namespaceSelector [object] Namespace selector for tfy-controller
     namespaceSelector:
       matchNames:
         - truefoundry
