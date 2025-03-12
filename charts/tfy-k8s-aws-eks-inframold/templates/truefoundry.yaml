@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.38.1
+    targetRevision: 0.39.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -45,16 +45,43 @@ spec:
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- else }}
+          tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- else }}
+          affinity: {}
           {{- end }}
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
-       {{- if .Values.truefoundry.virtualservice.enabled }}
+        # Cluster-specific IAM role configuration
+        servicefoundryServer:
+          serviceAccount:
+            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 12 }}
+        mlfoundryServer:
+          serviceAccount:
+            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 12 }}
+        {{- if .Values.truefoundry.devMode.enabled }}
+        postgresql:
+          primary:
+            {{- if $mergedTolerations }}
+            tolerations:
+              {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- else }}
+            tolerations: []
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+              {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- else }}
+            affinity: {}
+            {{- end }}
+        {{- end }}
+        
         truefoundryFrontendApp:
           istio:
             virtualservice:
@@ -71,26 +98,34 @@ spec:
               - {{ $v | quote }}
               {{- end }}
               {{- end }}
-        {{- end }}
+
         nats:
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- else }}
+          tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- else }}
+          affinity: {}
           {{- end }}
         tfy-buildkitd-service:
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- else }}
+          tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- else }}
+          affinity: {}
           {{- end }}
-          {{- end }} 
+        {{- end }}
 
   syncPolicy:
     automated: {}
