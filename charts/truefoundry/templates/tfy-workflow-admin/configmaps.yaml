@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-options: PruneLast=true
+  name: {{ include "tfy-workflow-admin.fullname" . }}-config
   labels:
     {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
-  name: {{ include "tfy-workflow-admin.fullname" . }}-config
+  annotations:
+    {{- include "tfy-workflow-admin.configMap.annotations" . | indent 4 }}
 data:
   flyteadmin-config.yaml: |
     server:

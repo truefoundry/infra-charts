@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.39.0
+  controlPlaneChartVersion: 0.39.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -34,6 +34,10 @@ global:
   tfyApiKey: ""
   ## @param global.affinity Affinity for all services
   affinity: {}
+  ## @param global.labels [object] Labels for all services
+  labels: {}
+  ## @param global.annotations [object] Annotations for all services
+  annotations: {}
   ## @skip global.tolerations
   tolerations:
     - key: class.truefoundry.io/control-plane
@@ -81,6 +85,10 @@ truefoundryBootstrap:
     tag: "latest"
   ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
   natsConfigmapName: "nats-accounts"
+  ## @param truefoundryBootstrap.annotations [object] Annotations for the bootstrap job
+  annotations: {}
+  ## @param truefoundryBootstrap.labels [object] Labels for the bootstrap job
+  labels: {}
   ## @param truefoundryBootstrap.extraEnvVars Extra environment variables for the bootstrap container
   extraEnvVars: []
   ## @param truefoundryBootstrap.extraVolumeMounts Extra volume mounts for the bootstrap container
@@ -110,8 +118,8 @@ truefoundryFrontendApp:
   tolerations: {}
   ## @param truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
   replicaCount: 1
-  ## @param truefoundryFrontendApp.global Global values for the frontend app
-  global: {}
+  ## @param truefoundryFrontendApp.annotations [object] Annotations for the frontend app
+  annotations: {}
   ## truefoundryFrontendApp.image Image for the frontend app
   image:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
@@ -313,6 +321,8 @@ mlfoundryServer:
   enabled: true
   ## @param mlfoundryServer.tolerations Tolerations specific to the mlfoundry server
   tolerations: {}
+  ## @param mlfoundryServer.annotations [object] Annotations for the mlfoundry server
+  annotations: {}
   ## mlfoundryServer.image Image for the mlfoundry server
   image:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
@@ -411,14 +421,14 @@ servicefoundryServer:
   tolerations: {}
   ## @param servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
   replicaCount: 1
-  ## @param servicefoundryServer.global Global values for the servicefoundry server
-  global: {}
+  ## @param servicefoundryServer.annotations [object] Annotations for the mlfoundry server
+  annotations: {}
   ## servicefoundryServer.image Image for the servicefoundry server
   image:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.39.0"
+    tag: "v0.39.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -559,8 +569,8 @@ tfyK8sController:
   tolerations: {}
   ## @param tfyK8sController.replicaCount Number of replicas for the tfyK8sController
   replicaCount: 1
-  ## @param tfyK8sController.global Global values for the tfyK8sController
-  global: {}
+  ## @param tfyK8sController.annotations [object] Annotations for the tfyK8sController
+  annotations: {}
   ## tfyK8sController.image Image for the tfyK8sController
   image:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
@@ -661,10 +671,10 @@ sfyManifestService:
   ## @param sfyManifestService.enabled Bool to enable the sfy manifest service
   enabled: true
   # SFY_API_KEY: <api_key>
+  ## @param sfyManifestService.annotations [object] Annotations for the sfy manifest service
+  annotations: {}
   ## @param sfyManifestService.tolerations Tolerations specific to the sfy manifest service
   tolerations: {}
-  ## @param sfyManifestService.global Global values for the sfy manifest service
-  global: {}
   ## sfyManifestService.image Image for the sfy manifest service
   image:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
@@ -909,8 +919,10 @@ nats:
 tfyBuild:
   ## @param tfyBuild.enabled Bool to enable the tfyBuild server
   enabled: true
-  ## @param tfyBuild.global Global values for the tfyBuild server
-  global: {}
+  ## @param tfyBuild.annotations [object] Annotations for the tfyBuild server
+  annotations: {}
+  ## @param tfyBuild.labels [object] Labels for the tfyBuild server
+  labels: {}
   ## @param tfyBuild.nameOverride Override name for the tfyBuild server
   nameOverride: ''
   ## @param tfyBuild.fullnameOverride Full name override for the tfyBuild server
@@ -1121,8 +1133,8 @@ tfyController:
   enabled: true
   ## @skip tfyController.tolerations Tolerations specific to the tfyController
   tolerations: {}
-  ## @param tfyController.global Global values for the tfyController
-  global: {}
+  ## @param tfyController.annotations Annotations for the tfyController
+  annotations: {}
   ## tfyController.image Image for the tfyController
   image:
     ## @param tfyController.image.repository Image repository for the tfyController
@@ -1207,14 +1219,16 @@ tfyWorkflowAdmin:
   enabled: false
   ## @skip tfyWorkflowAdmin.tolerations Tolerations specific to the tfyWorkflowAdmin
   tolerations: {}
-  ## @param tfyWorkflowAdmin.global Global values for the tfyWorkflowAdmin
-  global: {}
+  ## @param tfyWorkflowAdmin.annotations Annotations for the tfyWorkflowAdmin
+  annotations: {}
   ## tfyWorkflowAdmin.image Image for the tfyWorkflowAdmin
   image:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
     tag: v0.12.0
+  ## @param tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
+  replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables

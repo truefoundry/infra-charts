@@ -4,12 +4,9 @@ kind: RoleBinding
 metadata:
   name: truefoundry-bootstrap-job-rolebinding
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-3"
-    "helm.sh/hook-delete-policy": before-hook-creation
-    "argocd.argoproj.io/hook": PreSync
-    "argocd.argoproj.io/sync-wave": "-3"
-    "argocd.argoproj.io/hook-delete-policy": BeforeHookCreation
+    {{- include "bootstrap-annotations" (dict "hookWeight" "-3" "syncWave" "-3" "annotations" .Values.truefoundryBootstrap.annotations "globalAnnotations" .Values.global.annotations) | nindent 4 }}
+  labels:
+    {{- include "bootstrap-labels" . | indent 4 }}
 subjects:
 - kind: ServiceAccount
   name: truefoundry-bootstrap-job-sa

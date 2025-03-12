@@ -50,6 +50,77 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "truefoundry-frontend-app.labels" -}}
 helm.sh/chart: {{ include "truefoundry-frontend-app.chart" . }}
 {{ include "truefoundry-frontend-app.podLabels" . }}
+{{- if .Values.truefoundryFrontendApp.commonLabels }}
+{{ toYaml .Values.truefoundryFrontendApp.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "truefoundry-frontend-app.annotations" -}}
+{{- if .Values.truefoundryFrontendApp.annotations }}
+{{ toYaml .Values.truefoundryFrontendApp.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "truefoundry-frontend-app.serviceAccountAnnotations" -}}
+{{- if .Values.truefoundryFrontendApp.serviceAccount.annotations }}
+{{ toYaml .Values.truefoundryFrontendApp.serviceAccount.annotations }}
+{{- else if .Values.truefoundryFrontendApp.annotations }}
+{{ toYaml .Values.truefoundryFrontendApp.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Ingress Annotations
+  */}}
+{{- define "truefoundry-frontend-app.ingress.annotations" -}}
+{{- if .Values.truefoundryFrontendApp.ingress.annotations }}
+{{- toYaml .Values.truefoundryFrontendApp.ingress.annotations }}
+{{- else if .Values.truefoundryFrontendApp.annotations }}
+{{- toYaml .Values.truefoundryFrontendApp.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Ingress VirtualService Annotations
+  */}}
+{{- define "truefoundry-frontend-app.istio.virtualService.annotations" -}}
+{{- if .Values.truefoundryFrontendApp.istio.virtualservice.annotations }}
+{{- toYaml .Values.truefoundryFrontendApp.istio.virtualservice.annotations }}
+{{- else if .Values.truefoundryFrontendApp.annotations }}
+{{- toYaml .Values.truefoundryFrontendApp.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Ingress Labels
+  */}}
+{{- define "truefoundry-frontend-app.ingress.labels" -}}
+{{- include "truefoundry-frontend-app.labels" . }}
+{{- if .Values.truefoundryFrontendApp.ingress.labels }}
+{{- toYaml .Values.truefoundryFrontendApp.ingress.labels | nindent 4 }}
+{{- end }}
 {{- end }}
 
 {{/*
