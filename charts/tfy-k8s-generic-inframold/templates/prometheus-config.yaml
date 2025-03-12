@@ -19,13 +19,24 @@ spec:
       - CreateNamespace=false
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.4
+    targetRevision: 0.1.8
     chart: tfy-prometheus-config
     helm:
       values: |-
         {{- if .Values.prometheus.config.valuesOverride }}
         {{ .Values.prometheus.config.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
+        serviceMonitors:
+          llmGateway:
+            enabled: {{ .Values.truefoundry.enabled }}
+          nats:
+            enabled: {{ .Values.truefoundry.enabled }}
+          servicefoundryServer:
+            enabled: {{ .Values.truefoundry.enabled }}
+          sfyManifestService:
+            enabled: {{ .Values.truefoundry.enabled }}
+          tfyController:
+            enabled: {{ .Values.truefoundry.enabled }}
         extraObjects: []
         {{- end }}
 {{- end }}
