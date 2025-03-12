@@ -55,10 +55,10 @@ spec:
           prometheusSpec:
             resources:
               limits:
-                cpu: 2
+                cpu: 3.8
                 memory: 10Gi
               requests:
-                cpu: 400m
+                cpu: 1.9
                 memory: 2Gi
             retention: 30d
             storageSpec:
@@ -99,12 +99,12 @@ spec:
           alertmanagerSpec:
             resources:
               requests:
-                cpu: 100m
-                memory: 128Mi
+                cpu: 200m
+                memory: 240Mi
                 ephemeral-storage: 128Mi
               limits:
                 cpu: 400m
-                memory: 256Mi
+                memory: 480Mi
                 ephemeral-storage: 256Mi
           enabled: true
           serviceMonitor:
@@ -118,12 +118,12 @@ spec:
         kube-state-metrics:
           resources:
             limits:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 200m
+              memory: 330Mi
               ephemeral-storage: 256Mi
             requests:
-              cpu: 10m
-              memory: 64Mi
+              cpu: 100m
+              memory: 170Mi
               ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
@@ -142,11 +142,11 @@ spec:
         prometheusOperator:
           resources:
             limits:
-              cpu: 200m
+              cpu: 400m
               memory: 200Mi
               ephemeral-storage: 1Gi
             requests:
-              cpu: 100m
+              cpu: 200m
               memory: 100Mi
               ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
@@ -185,11 +185,11 @@ spec:
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
           resources:
             limits:
-              cpu: 100m
-              memory: 100Mi
+              cpu: 200m
+              memory: 80Mi
             requests:
-              cpu: 50m
-              memory: 30Mi
+              cpu: 100m
+              memory: 40Mi
           prometheus:
             monitor:
               enabled: false
@@ -197,11 +197,11 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 128Mi
+              memory: 40Mi
               ephemeral-storage: 128Mi
             limits:
-              cpu: 400m
-              memory: 256Mi
+              cpu: 200m
+              memory: 80Mi
               ephemeral-storage: 256Mi
         additionalPrometheusRulesMap: {}
         {{- end }}
