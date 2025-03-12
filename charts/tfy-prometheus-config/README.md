@@ -213,4 +213,12 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.tfyController.endpoints`                    | Endpoints for tfy-controller                      | `[]`                                      |
 | `serviceMonitors.tfyController.serviceSelectorLabels`        | Service selector labels for tfy-controller        | `{}`                                      |
 | `serviceMonitors.tfyController.namespaceSelector`            | Namespace selector for tfy-controller             | `{}`                                      |
+| `serviceMonitors.tfyK8sController.enabled`                   | Enable service monitor for tfy-k8s-controller     | `true`                                    |
+| `serviceMonitors.tfyK8sController.name`                      | Name of the service monitor                       | `tfy-k8s-controller`                      |
+| `serviceMonitors.tfyK8sController.labels`                    | Labels for tfy-k8s-controller                     | `{}`                                      |
+| `serviceMonitors.tfyK8sController.annotations`               | Annotations for tfy-k8s-controller                | `{}`                                      |
+| `serviceMonitors.tfyK8sController.jobLabel`                  | Job label for tfy-k8s-controller                  | `app.kubernetes.io/name`                  |
+| `serviceMonitors.tfyK8sController.endpoints`                 | Endpoints for tfy-k8s-controller                  | `[]`                                      |
+| `serviceMonitors.tfyK8sController.serviceSelectorLabels`     | Service selector labels for tfy-k8s-controller    | `{}`                                      |
+| `serviceMonitors.tfyK8sController.namespaceSelector`         | Namespace selector for tfy-k8s-controller         | `{}`                                      |
 | `extraObjects`                                               | Extra objects for prometheus                      | `[]`                                      |
