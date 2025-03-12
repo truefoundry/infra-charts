@@ -806,6 +806,29 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - truefoundry
+  # serviceMonitors.tfyK8sController Service monitor for tfy-k8s-controller
+  tfyK8sController:
+    ## @param serviceMonitors.tfyK8sController.enabled Enable service monitor for tfy-k8s-controller
+    enabled: true
+    ## @param serviceMonitors.tfyK8sController.name Name of the service monitor
+    name: tfy-k8s-controller
+    ## @param serviceMonitors.tfyK8sController.labels [object] Labels for tfy-k8s-controller
+    labels: {}
+    ## @param serviceMonitors.tfyK8sController.annotations [object] Annotations for tfy-k8s-controller
+    annotations: {}
+    ## @param serviceMonitors.tfyK8sController.jobLabel Job label for tfy-k8s-controller
+    jobLabel: app.kubernetes.io/name
+    ## @param serviceMonitors.tfyK8sController.endpoints [array] Endpoints for tfy-k8s-controller
+    endpoints:
+      - path: /metrics
+        port: http-3002
+    ## @param serviceMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
+    serviceSelectorLabels:
+      app.kubernetes.io/name: tfy-k8s-controller
+    ## @param serviceMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
+    namespaceSelector:
+      matchNames:
+        - truefoundry
 
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []
