@@ -630,3 +630,29 @@ Container rules annotations
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+  TFY K8S Controller service monitor labels
+ */}}
+{{- define "tfyK8sController.labels" -}}
+{{- if .Values.serviceMonitors.tfyK8sController.labels }}
+{{- toYaml .Values.serviceMonitors.tfyK8sController.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  TFY K8S Controller service monitor annotations
+  */}}
+{{- define "tfyK8sController.annotations" -}}
+{{- if .Values.serviceMonitors.tfyK8sController.annotations }}
+{{- toYaml .Values.serviceMonitors.tfyK8sController.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
