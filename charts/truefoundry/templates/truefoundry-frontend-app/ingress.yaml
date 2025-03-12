@@ -4,18 +4,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-{{- if .Values.truefoundryFrontendApp.ingress.annotations }}
-  annotations:
-  {{- range $key, $value := .Values.truefoundryFrontendApp.ingress.annotations }}
-    {{ $key }}: {{ $value | quote }}
-  {{- end }}
-{{- end }}
   name: {{ include "truefoundry-frontend-app.fullname" . }}
+  annotations:
+    {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
   labels:
-    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
-    {{- if .Values.truefoundryFrontendApp.ingress.labels }}
-    {{- toYaml .Values.truefoundryFrontendApp.ingress.labels | nindent 4 }}
-    {{- end }}
+    {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
   rules:

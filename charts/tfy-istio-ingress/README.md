@@ -26,6 +26,8 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | Name                                                | Description                             | Value                 |
 | --------------------------------------------------- | --------------------------------------- | --------------------- |
 | `tfyGateway.name`                                   | Name of the tfyGateway.                 | `""`                  |
+| `tfyGateway.labels`                                 | Labels for the tfyGateway.              | `{}`                  |
+| `tfyGateway.annotations`                            | Annotations for the tfyGateway.         | `{}`                  |
 | `tfyGateway.spec.selector.istio`                    | Selector to enable istio for tfyGateway | `{{ .Release.Name }}` |
 | `tfyGateway.spec.servers[0].hosts`                  | List of hosts for the first server.     | `[]`                  |
 | `tfyGateway.spec.servers[0].port.name`              | Name of the port.                       | `http-tfy-wildcard`   |

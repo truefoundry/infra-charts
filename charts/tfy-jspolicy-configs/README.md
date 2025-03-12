@@ -3,6 +3,13 @@ A Helm chart for jspolicy configurations
 
 ## Parameters
 
+### Global settings
+
+| Name                 | Description                   | Value |
+| -------------------- | ----------------------------- | ----- |
+| `global.labels`      | Labels for all resources      | `{}`  |
+| `global.annotations` | Annotations for all resources | `{}`  |
+
 ### replaceImageRegistry Configuration options for replacing the image registry
 
 | Name                                          | Description                                                                                                     | Value   |

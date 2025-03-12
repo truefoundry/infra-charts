@@ -45,11 +45,72 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+  Server Pod Labels
+  */}}
+{{- define "tfy-workflow-admin.server.podLabels" -}}
+{{ include "tfy-workflow-admin.podLabels" . }}
+app.kubernetes.io/workflow-component: server
+{{- end }}
+
+{{/*
   Common labels
   */}}
 {{- define "tfy-workflow-admin.labels" -}}
 helm.sh/chart: {{ include "tfy-workflow-admin.chart" . }}
 {{ include "tfy-workflow-admin.podLabels" . }}
+{{- if .Values.tfyWorkflowAdmin.commonLabels }}
+{{ toYaml .Values.tfyWorkflowAdmin.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Scheduler Pod Labels
+  */}}
+{{- define "tfy-workflow-admin.scheduler.podLabels" -}}
+{{- include "tfy-workflow-admin.podLabels" . }}
+app.kubernetes.io/workflow-component: scheduler
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "tfy-workflow-admin.annotations" -}}
+{{- if .Values.tfyWorkflowAdmin.annotations }}
+{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  ConfigMap annotations
+  */}}
+{{- define "tfy-workflow-admin.configMap.annotations" -}}
+{{- if .Values.tfyWorkflowAdmin.annotations }}
+{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- end }}
+argocd.argoproj.io/sync-options: PruneLast=true
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "tfy-workflow-admin.serviceAccountAnnotations" -}}
+{{- if .Values.tfyWorkflowAdmin.serviceAccount.annotations }}
+{{ toYaml .Values.tfyWorkflowAdmin.serviceAccount.annotations }}
+{{- else if .Values.tfyWorkflowAdmin.annotations }}
+{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -58,6 +119,22 @@ helm.sh/chart: {{ include "tfy-workflow-admin.chart" . }}
 {{- define "tfy-workflow-admin.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "tfy-workflow-admin.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
+  Server selector labels
+  */}}
+{{- define "tfy-workflow-admin.server.selectorLabels" -}}
+{{- include "tfy-workflow-admin.selectorLabels" . }}
+app.kubernetes.io/workflow-component: server
+{{- end }}
+
+{{/*
+  Scheduler selector labels
+  */}}
+{{- define "tfy-workflow-admin.scheduler.selectorLabels" -}}
+{{- include "tfy-workflow-admin.selectorLabels" . }}
+app.kubernetes.io/workflow-component: scheduler
 {{- end }}
 
 {{/*

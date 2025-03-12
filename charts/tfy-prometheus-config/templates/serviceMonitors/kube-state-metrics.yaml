@@ -5,6 +5,8 @@ metadata:
   name: {{ .Values.serviceMonitors.kubeStateMetrics.name }}
   labels:
     {{- include "kubeStateMetrics.labels" . | nindent 4 }}
+  annotations:
+    {{- include "kubeStateMetrics.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.serviceMonitors.kubeStateMetrics.endpoints | nindent 2 }}

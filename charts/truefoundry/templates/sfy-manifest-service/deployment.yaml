@@ -5,6 +5,8 @@ metadata:
   name: {{ include "sfy-manifest-service.fullname" . }}
   labels:
     {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+  annotations:
+    {{- include "sfy-manifest-service.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.sfyManifestService.replicaCount }}
   selector:

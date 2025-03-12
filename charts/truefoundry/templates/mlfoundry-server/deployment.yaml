@@ -5,6 +5,8 @@ metadata:
   name: {{ include "mlfoundry-server.fullname" . }}
   labels:
     {{- include "mlfoundry-server.labels" . | nindent 4 }}
+  annotations:
+    {{- include "mlfoundry-server.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.mlfoundryServer.replicaCount }}
   selector:

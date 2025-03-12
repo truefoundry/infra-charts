@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.36.0
+    targetRevision: 0.38.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -81,7 +81,17 @@ spec:
           affinity:
             {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
-        {{- end }}
+        tfy-buildkitd-service:
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- end }}
+          {{- end }} 
+
   syncPolicy:
     automated: {}
     syncOptions:

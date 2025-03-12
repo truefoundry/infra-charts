@@ -54,3 +54,43 @@ Expand the name of the chart.
 {{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
+
+{{/*
+  Common labels
+  */}}
+{{- define "tfy-build.labels" -}}
+helm.sh/chart: {{ include "tfy-build.chart" . }}
+{{- if .Values.tfyBuild.labels }}
+{{ toYaml .Values.tfyBuild.labels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "tfy-build.annotations" -}}
+{{- if .Values.tfyBuild.annotations }}
+{{ toYaml .Values.tfyBuild.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "tfy-build.serviceAccountAnnotations" -}}
+{{- if .Values.tfyBuild.serviceAccount.annotations }}
+{{ toYaml .Values.tfyBuild.serviceAccount.annotations }}
+{{- else if .Values.tfyBuild.annotations }}
+{{ toYaml .Values.tfyBuild.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}

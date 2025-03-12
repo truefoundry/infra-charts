@@ -22,6 +22,7 @@ LLM-Gateway Helm Chart
 | `imagePullPolicy`                               | Image pull policy                                            | `IfNotPresent`                                    |
 | `nameOverride`                                  | Name override                                                | `""`                                              |
 | `podAnnotations`                                | Pod annotations                                              | `{}`                                              |
+| `commonAnnotations`                             | Common annotations                                           | `{}`                                              |
 | `podSecurityContext`                            | Pod security context                                         | `{}`                                              |
 | `commonLabels`                                  | Common labels                                                | `{}`                                              |
 | `securityContext`                               | Security context configuration                               | `{}`                                              |

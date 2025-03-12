@@ -50,7 +50,26 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "sfy-manifest-service.labels" -}}
 helm.sh/chart: {{ include "sfy-manifest-service.chart" . }}
 {{ include "sfy-manifest-service.podLabels" . }}
+{{- if .Values.sfyManifestService.commonLabels }}
+{{ toYaml .Values.sfyManifestService.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
 {{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "sfy-manifest-service.annotations" -}}
+{{- if .Values.sfyManifestService.annotations }}
+{{ toYaml .Values.sfyManifestService.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 
 {{/*
   Selector labels
@@ -65,7 +84,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "sfy-manifest-service.serviceAccountName" -}}
 {{- default (include "sfy-manifest-service.fullname" .) "sfy-manifest-service"}}
+{{- end }}
 
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "sfy-manifest-service.serviceAccountAnnotations" -}}
+{{- if .Values.sfyManifestService.serviceAccount.annotations }}
+{{ toYaml .Values.sfyManifestService.serviceAccount.annotations }}
+{{- else if .Values.sfyManifestService.annotations }}
+{{ toYaml .Values.sfyManifestService.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 {{/*

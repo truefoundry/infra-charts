@@ -3,6 +3,10 @@ apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: build
+  labels:
+    {{- include "tfy-build.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-build.annotations" . | indent 4 }}
 spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
   workflowMetadata:
