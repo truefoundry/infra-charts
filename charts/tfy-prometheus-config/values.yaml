@@ -105,7 +105,7 @@ scrapeConfigs:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
     metricsRelabelings:
-      - regex: ALERTS|elasti_resolver_queued_count|istio_requests_total|istio_request_duration_milliseconds_bucket|nats_stream_total_messages|envoy_http_inbound_.*_downstream_rq_total
+      - regex: ALERTS|istio_requests_total|istio_request_duration_milliseconds_bucket|nats_stream_total_messages|envoy_http_inbound_.*_downstream_rq_total
         action: keep
         sourceLabels:
           - __name__
@@ -256,36 +256,6 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - keda
-  # serviceMonitors.elasti Service monitor for elasti
-  elasti:
-    ## @param serviceMonitors.elasti.enabled Enable service monitor for elasti
-    enabled: true
-    ## @param serviceMonitors.elasti.name Name of the service monitor
-    name: elasti-resolver
-    ## @param serviceMonitors.elasti.labels [object] Labels for elasti
-    labels: {}
-    ## @param serviceMonitors.elasti.annotations [object] Annotations for elasti
-    annotations: {}
-    ## @param serviceMonitors.elasti.jobLabel Job label for elasti
-    jobLabel: app.kubernetes.io/prometheus
-    ## @param serviceMonitors.elasti.endpoints [array] Endpoints for elasti
-    endpoints:
-      - port: http-resolver
-        scheme: http
-        interval: 1s
-        path: /metrics
-        metricRelabelings:
-          - regex: ALERTS|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count|elasti_resolver_queued_count
-            action: keep
-            sourceLabels:
-              - __name__
-    ## @param serviceMonitors.elasti.serviceSelectorLabels [object] Service selector labels for elasti
-    serviceSelectorLabels:
-      app.kubernetes.io/instance: elasti
-    ## @param serviceMonitors.elasti.namespaceSelector [object] Namespace selector for elasti
-    namespaceSelector:
-      matchNames:
-        - elasti
   # serviceMonitors.argoCD Service monitor for ssh server
   sshServer:
     ## @param serviceMonitors.sshServer.enabled Enable service monitor for ssh server

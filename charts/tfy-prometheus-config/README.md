@@ -82,14 +82,6 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.keda.endpoints`                             | Endpoints for keda                                | `[]`                                      |
 | `serviceMonitors.keda.serviceSelectorLabels`                 | Service selector labels for keda                  | `{}`                                      |
 | `serviceMonitors.keda.namespaceSelector`                     | Namespace selector for keda                       | `{}`                                      |
-| `serviceMonitors.elasti.enabled`                             | Enable service monitor for elasti                 | `true`                                    |
-| `serviceMonitors.elasti.name`                                | Name of the service monitor                       | `elasti-resolver`                         |
-| `serviceMonitors.elasti.labels`                              | Labels for elasti                                 | `{}`                                      |
-| `serviceMonitors.elasti.annotations`                         | Annotations for elasti                            | `{}`                                      |
-| `serviceMonitors.elasti.jobLabel`                            | Job label for elasti                              | `app.kubernetes.io/prometheus`            |
-| `serviceMonitors.elasti.endpoints`                           | Endpoints for elasti                              | `[]`                                      |
-| `serviceMonitors.elasti.serviceSelectorLabels`               | Service selector labels for elasti                | `{}`                                      |
-| `serviceMonitors.elasti.namespaceSelector`                   | Namespace selector for elasti                     | `{}`                                      |
 | `serviceMonitors.sshServer.enabled`                          | Enable service monitor for ssh server             | `true`                                    |
 | `serviceMonitors.sshServer.name`                             | Name of the service monitor                       | `ssh`                                     |
 | `serviceMonitors.sshServer.labels`                           | Labels for ssh server                             | `{}`                                      |
