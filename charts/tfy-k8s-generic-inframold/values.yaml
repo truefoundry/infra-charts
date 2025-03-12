@@ -75,29 +75,6 @@ argoRollouts:
   ##
   valuesOverride: {}
 
-## @section notebookController parameters
-## Notebook Controller is required to power notebooks in Truefoundry
-##
-notebookController:
-  ## @param notebookController.enabled Flag to enable Notebook Controller
-  ##
-  enabled: false
-  ## @param notebookController.defaultStorageClass Default storage class for Notebook Controller
-  ##
-  defaultStorageClass: ""
-  ## @param notebookController.notebookBaseDomainUrl Base domain URL for Notebook Controller
-  ##
-  notebookBaseDomainUrl: <to_be_provided>
-  ## @param notebookController.tolerations [array] Tolerations for Notebook Controller
-  ##
-  tolerations: []
-  ## @param notebookController.affinity [object] Affinity for Notebook Controller
-  ##
-  affinity: {}
-  ## @param notebookController.valuesOverride [object] Config override from default config values
-  ##
-  valuesOverride: {}
-
 ## @section certManager parameters
 ## @param certManager.enabled Flag to enable Cert Manager
 ##
@@ -189,6 +166,15 @@ truefoundry:
   tfyApiKey: ""
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
+  ## @param truefoundry.truefoundry_iam_role_arn_annotations [object] IAM role annotations for service accounts
+  ## Annotations to be added to service accounts for cloud provider IAM integration
+  ## For AWS EKS: eks.amazonaws.com/role-arn
+  ## For GCP GKE: iam.gke.io/gcp-service-account
+  ## For other providers: empty object
+  truefoundry_iam_role_arn_annotations: 
+    
+    {}
+    
   
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
   ##
@@ -340,7 +326,7 @@ prometheus:
   ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
-
+  
   config:
     ## @param prometheus.config.enabled Flag to enable prometheus config
     ##
@@ -434,3 +420,4 @@ jspolicy:
   ##
   config:
     valuesOverride: {}
+

@@ -40,17 +40,6 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `argoRollouts.affinity`       | Affinity for Argo Rollouts                 | `{}`   |
 | `argoRollouts.valuesOverride` | Config override from default config values | `{}`   |
 
-### notebookController parameters
-
-| Name                                       | Description                                   | Value              |
-| ------------------------------------------ | --------------------------------------------- | ------------------ |
-| `notebookController.enabled`               | Flag to enable Notebook Controller            | `false`            |
-| `notebookController.defaultStorageClass`   | Default storage class for Notebook Controller | `""`               |
-| `notebookController.notebookBaseDomainUrl` | Base domain URL for Notebook Controller       | `<to_be_provided>` |
-| `notebookController.tolerations`           | Tolerations for Notebook Controller           | `[]`               |
-| `notebookController.affinity`              | Affinity for Notebook Controller              | `{}`               |
-| `notebookController.valuesOverride`        | Config override from default config values    | `{}`               |
-
 ### certManager parameters
 
 | Name                         | Description                                | Value   |
@@ -140,16 +129,17 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### database. Can be left empty if using the dev mode parameters
 
-| Name                                         | Description                                                | Value |
-| -------------------------------------------- | ---------------------------------------------------------- | ----- |
-| `truefoundry.database.host`                  | Hostname of the database                                   | `""`  |
-| `truefoundry.database.name`                  | Name of the database                                       | `""`  |
-| `truefoundry.database.username`              | Username of the database                                   | `""`  |
-| `truefoundry.database.password`              | Password of the database                                   | `""`  |
-| `truefoundry.tfyApiKey`                      | API Key for TrueFoundry                                    | `""`  |
-| `truefoundry.truefoundryImagePullConfigJSON` | Json config for authenticating to the TrueFoundry registry | `""`  |
-| `truefoundry.tolerations`                    | Tolerations for the truefoundry components                 | `[]`  |
-| `truefoundry.affinity`                       | Affinity for the truefoundry components                    | `{}`  |
+| Name                                               | Description                                                | Value |
+| -------------------------------------------------- | ---------------------------------------------------------- | ----- |
+| `truefoundry.database.host`                        | Hostname of the database                                   | `""`  |
+| `truefoundry.database.name`                        | Name of the database                                       | `""`  |
+| `truefoundry.database.username`                    | Username of the database                                   | `""`  |
+| `truefoundry.database.password`                    | Password of the database                                   | `""`  |
+| `truefoundry.tfyApiKey`                            | API Key for TrueFoundry                                    | `""`  |
+| `truefoundry.truefoundryImagePullConfigJSON`       | Json config for authenticating to the TrueFoundry registry | `""`  |
+| `truefoundry.truefoundry_iam_role_arn_annotations` | IAM role annotations for service accounts                  | `{}`  |
+| `truefoundry.tolerations`                          | Tolerations for the truefoundry components                 | `[]`  |
+| `truefoundry.affinity`                             | Affinity for the truefoundry components                    | `{}`  |
 
 ### loki parameters
 
