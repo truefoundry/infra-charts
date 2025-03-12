@@ -5,6 +5,8 @@ metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
   labels:
     {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-k8s-controller.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.tfyK8sController.replicaCount }}
   selector:

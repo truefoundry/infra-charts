@@ -5,12 +5,13 @@ metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-server
   labels:
     {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.tfyWorkflowAdmin.replicaCount }}
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/workflow-component: server
+      {{- include "tfy-workflow-admin.server.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
@@ -18,8 +19,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "tfy-workflow-admin.podLabels" . | nindent 8 }}
-        app.kubernetes.io/workflow-component: server
+        {{- include "tfy-workflow-admin.server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
       {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
@@ -108,12 +108,13 @@ metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-scheduler
   labels:
     {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/workflow-component: scheduler
+      {{- include "tfy-workflow-admin.scheduler.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
@@ -121,8 +122,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "tfy-workflow-admin.labels" . | nindent 8 }}
-        app.kubernetes.io/workflow-component: scheduler
+        {{- include "tfy-workflow-admin.scheduler.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
       {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
