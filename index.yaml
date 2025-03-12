@@ -39,6 +39,15 @@ entries:
     version: 0.1.1-rc.1
   tfy-agent:
   - apiVersion: v2
+    created: "2025-03-12T06:36:11.527578752Z"
+    description: Truefoundry workload agent for k8s clusters
+    digest: 3dd97505558b583496b0d1167d1c60eb1be07467d6f45ce8e7e25d3a5b4321d7
+    name: tfy-agent
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-agent-0.2.57/tfy-agent-0.2.57.tgz
+    version: 0.2.57
+  - apiVersion: v2
     created: "2025-03-06T07:33:50.713209971Z"
     description: Truefoundry workload agent for k8s clusters
     digest: 70828fe6cf4174e22399b31b31aea4f9ba468883864e7d169a883558aa8edbd0
@@ -9344,6 +9353,25 @@ entries:
   tfy-karpenter:
   - apiVersion: v2
     appVersion: 1.2.1
+    created: "2025-03-12T06:36:11.747639359Z"
+    dependencies:
+    - name: karpenter-crd
+      repository: oci://public.ecr.aws/karpenter
+      version: 1.2.1
+    - name: karpenter
+      repository: oci://public.ecr.aws/karpenter
+      version: 1.2.1
+    description: Truefoundry karpenter provisioner
+    digest: 808701dc81c38bc963fa29edcea321dbf24c1c21c39788e0b3d0617ed90f06c5
+    maintainers:
+    - name: truefoundry
+    name: tfy-karpenter
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-0.4.4/tfy-karpenter-0.4.4.tgz
+    version: 0.4.4
+  - apiVersion: v2
+    appVersion: 1.2.1
     created: "2025-02-12T16:52:41.843225225Z"
     dependencies:
     - name: karpenter-crd
@@ -11584,6 +11612,25 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-llm-gateway-monitoring-0.1.0-rc.1/tfy-llm-gateway-monitoring-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
   tfy-loki:
+  - apiVersion: v2
+    created: "2025-03-12T06:36:11.92022416Z"
+    dependencies:
+    - condition: loki.enabled
+      name: loki
+      repository: https://grafana.github.io/helm-charts
+      version: 5.47.2
+    - condition: promtail.enabled
+      name: promtail
+      repository: https://grafana.github.io/helm-charts
+      version: 6.15.5
+    description: Truefoundry Loki Provisioner
+    digest: 40a3f18c2e17daf85f55862e135e51fe9660578d50529919d8a427a09c2ae083
+    maintainers:
+    - name: truefoundry
+    name: tfy-loki
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-loki-0.1.4-rc.2/tfy-loki-0.1.4-rc.2.tgz
+    version: 0.1.4-rc.2
   - apiVersion: v2
     created: "2025-01-03T11:39:13.286808723Z"
     dependencies:
@@ -15040,4 +15087,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-configs-0.1.0-rc.1/truefoundry-configs-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2025-03-11T14:59:33.47806391Z"
+generated: "2025-03-12T06:36:12.098320963Z"
