@@ -3,6 +3,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: buildkit-placeholder-deployment
+  labels:
+    {{- include "tfy-build.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-build.annotations" . | indent 4 }}
 spec:
   replicas: 1
   strategy:

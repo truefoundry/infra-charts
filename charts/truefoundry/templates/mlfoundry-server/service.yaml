@@ -3,7 +3,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "mlfoundry-server.fullname" . }}
-  labels: {{- include "mlfoundry-server.labels" . | nindent 4 }}
+  labels:
+    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+  annotations:
+    {{- include "mlfoundry-server.annotations" . | indent 4 }}
 spec:
   type: {{ .Values.mlfoundryServer.service.type }}
   ports:

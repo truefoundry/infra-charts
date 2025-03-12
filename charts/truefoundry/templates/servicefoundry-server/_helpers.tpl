@@ -48,8 +48,26 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   Common labels
   */}}
 {{- define "servicefoundry-server.labels" -}}
+{{- include "servicefoundry-server.podLabels" . }}
 helm.sh/chart: {{ include "servicefoundry-server.chart" . }}
-{{ include "servicefoundry-server.podLabels" . }}
+{{- if .Values.servicefoundryServer.commonLabels }}
+{{ toYaml .Values.servicefoundryServer.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "servicefoundry-server.annotations" -}}
+{{- if .Values.servicefoundryServer.annotations }}
+{{ toYaml .Values.servicefoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -65,9 +83,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "servicefoundry-server.serviceAccountName" -}}
 {{- default (include "servicefoundry-server.fullname" .) "servicefoundry-server" }}
-
 {{- end }}
 
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "servicefoundry-server.serviceAccountAnnotations" -}}
+{{- if .Values.servicefoundryServer.serviceAccount.annotations }}
+{{ toYaml .Values.servicefoundryServer.serviceAccount.annotations }}
+{{- else if .Values.servicefoundryServer.annotations }}
+{{ toYaml .Values.servicefoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
 
 {{/*
 Here we are trying to get the full name of buildkitd service and statefulset

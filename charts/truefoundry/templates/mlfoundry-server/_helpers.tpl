@@ -48,8 +48,26 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
   Common labels
   */}}
 {{- define "mlfoundry-server.labels" -}}
+{{- include "mlfoundry-server.podLabels" . }}
 helm.sh/chart: {{ include "mlfoundry-server.chart" . }}
-{{ include "mlfoundry-server.podLabels" . }}
+{{- if .Values.mlfoundryServer.commonLabels }}
+{{ toYaml .Values.mlfoundryServer.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "mlfoundry-server.annotations" -}}
+{{- if .Values.mlfoundryServer.annotations }}
+{{ toYaml .Values.mlfoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -65,6 +83,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "mlfoundry-server.serviceAccountName" -}}
 {{- default (include "mlfoundry-server.fullname" .) "mlfoundry-server" }}
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "mlfoundry-server.serviceAccountAnnotations" -}}
+{{- if .Values.mlfoundryServer.serviceAccount.annotations }}
+{{ toYaml .Values.mlfoundryServer.serviceAccount.annotations }}
+{{- else if .Values.mlfoundryServer.annotations }}
+{{ toYaml .Values.mlfoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 

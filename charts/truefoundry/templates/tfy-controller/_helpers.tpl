@@ -50,6 +50,39 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- define "tfy-controller.labels" -}}
 helm.sh/chart: {{ include "tfy-controller.chart" . }}
 {{ include "tfy-controller.podLabels" . }}
+{{- if .Values.tfyController.commonLabels }}
+{{ toYaml .Values.tfyController.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Common annotations
+  */}}
+{{- define "tfy-controller.annotations" -}}
+{{- if .Values.tfyController.annotations }}
+{{ toYaml .Values.tfyController.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "tfy-controller.serviceAccountAnnotations" -}}
+{{- if .Values.tfyController.serviceAccount.annotations }}
+{{ toYaml .Values.tfyController.serviceAccount.annotations }}
+{{- else if .Values.tfyController.annotations }}
+{{ toYaml .Values.tfyController.annotations }}
+{{- else if .Values.global.annotations }}
+{{ toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
 {{- end }}
 
 {{/*

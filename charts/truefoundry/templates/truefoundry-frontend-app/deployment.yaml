@@ -5,6 +5,8 @@ metadata:
   name: {{ include "truefoundry-frontend-app.fullname" . }}
   labels:
     {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+  annotations:
+    {{- include "truefoundry-frontend-app.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.truefoundryFrontendApp.replicaCount }}
   selector:

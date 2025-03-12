@@ -5,6 +5,8 @@ metadata:
   name: {{ include "servicefoundry-server.fullname" . }}
   labels:
     {{- include "servicefoundry-server.labels" . | nindent 4 }}
+  annotations:
+    {{- include "servicefoundry-server.annotations" . | indent 4 }}
 spec:
   replicas: {{ .Values.servicefoundryServer.replicaCount }}
   selector:
