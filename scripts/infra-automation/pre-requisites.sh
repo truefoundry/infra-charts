@@ -60,7 +60,6 @@ check_sudo() {
     else
         log_debug "Sudo command not found"
     fi
-
 }
 
 # Function to run command with sudo if available
@@ -322,21 +321,46 @@ install_tool() {
     log_debug "Finished installing $tool"
 }
 
+# Function to check and enforce Terraform version
+enforce_terraform_version() {
+    local required_version current_version
+    required_version=$(get_tool_required_version "terraform")
+    
+    if ! tool_exists terraform; then
+        log_info "Terraform not found. Installing version $required_version..."
+        install_tool "terraform"
+        return
+    fi
+    
+    current_version=$(get_tool_version "terraform")
+    if ! version_compare "$current_version" "$required_version"; then
+        log_info "Terraform $current_version found. Required version is $required_version. Upgrading..."
+        install_tool "terraform"
+    else
+        log_success "Terraform $current_version is already installed and meets the minimum required version"
+    fi
+}
+
 verify_tools() {
     local cloud_provider=$1
     local missing_tools=()
     local install_failed=()
     
-    # Check common tools
+    # First, make sure Terraform is installed with the correct version
+    enforce_terraform_version
+    
+    # Check other common tools (skip terraform as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
-        if ! tool_exists "$tool"; then
-            if confirm_installation "$tool"; then
-                install_tool "$tool" || install_failed+=("$tool")
-            else
-                missing_tools+=("$tool")
+        if [ "$tool" != "terraform" ]; then
+            if ! tool_exists "$tool"; then
+                if confirm_installation "$tool"; then
+                    install_tool "$tool" || install_failed+=("$tool")
+                else
+                    missing_tools+=("$tool")
+                fi
+            elif ! verify_tool_version "$tool"; then
+                return $VERSION_ERROR
             fi
-        elif ! verify_tool_version "$tool"; then
-            return $VERSION_ERROR
         fi
     done
 
