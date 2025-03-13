@@ -41,10 +41,12 @@ spec:
           args:
             - |-
               set -ex;
-              touch /run/nvidia/validations/host-driver-ready;
-              touch /run/nvidia/validations/driver-ready;
-              touch /run/nvidia/validations/toolkit-ready;
-              sleep infinity;
+              while true; do
+                touch /run/nvidia/validations/host-driver-ready;
+                touch /run/nvidia/validations/driver-ready;
+                touch /run/nvidia/validations/toolkit-ready;
+                sleep 5;
+              done;
           resources: 
             {{- $fakeToolkitReady.resources | toYaml | nindent 12 }}
           volumeMounts:
