@@ -1,0 +1,19 @@
+{{- if .Values.tfyOtelCollector.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.annotations" . | indent 4 }}
+spec:
+  type: {{ .Values.tfyOtelCollector.service.type }}
+  ports:
+    - port: {{ .Values.tfyOtelCollector.service.port }}
+      targetPort: {{ .Values.tfyOtelCollector.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "tfy-otel-collector.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,96 @@
+{{- if .Values.tfyOtelCollector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.annotations" . | indent 4 }}
+spec:
+  replicas: {{ .Values.tfyOtelCollector.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.tfyOtelCollector.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "tfy-otel-collector.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
+      {{- with .Values.tfyOtelCollector.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-otel-collector"
+          {{- with .Values.tfyOtelCollector.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyOtelCollector.image.repository }}:{{ .Values.tfyOtelCollector.image.tag }}"
+          imagePullPolicy: {{ .Values.tfyOtelCollector.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyOtelCollector.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.tfyOtelCollector.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.tfyOtelCollector.service.port }}
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.tfyOtelCollector.service.port }}
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 15
+          volumeMounts:
+            {{- include "tfy-otel-collector.volumeMounts" . | nindent 12 }}
+      {{- with .Values.tfyOtelCollector.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- include "tfy-otel-collector.volumes" . | nindent 8 }}
+      {{- if .Values.tfyOtelCollector.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.tfyOtelCollector.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.tfyOtelCollector.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.tfyOtelCollector.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyOtelCollector.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "tfy-otel-collector.name" . }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyOtelCollector.tolerations }}
+        {{- .Values.tfyOtelCollector.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}

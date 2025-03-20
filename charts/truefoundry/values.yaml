@@ -1326,3 +1326,94 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+###################################################################################################################
+####################################### Tfy Otel Collector #######################################################
+###################################################################################################################
+## @section tfyOtelCollector Truefoundry Tfy Otel Collector values
+tfyOtelCollector:
+  ## @param tfyOtelCollector.enabled Bool to enable the tfyOtelCollector
+  enabled: false
+  ## @param tfyOtelCollector.tolerations Tolerations specific to the tfyOtelCollector
+  tolerations: {}
+  ## @param tfyOtelCollector.replicaCount Number of replicas for the tfyOtelCollector
+  replicaCount: 1
+  ## @param tfyOtelCollector.annotations [object] Annotations for the tfyOtelCollector
+  annotations: {}
+  ## tfyOtelCollector.image Image for the tfyOtelCollector
+  image:
+    ## @param tfyOtelCollector.image.repository Image repository for the tfyOtelCollector
+    repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
+    ## @param tfyOtelCollector.image.tag Image tag for the tfyOtelCollector
+    tag: "v0.35.0"
+  ## @param tfyOtelCollector.environmentName Environment name for tfyOtelCollector
+  environmentName: default
+  ## @param tfyOtelCollector.envSecretName Secret name for the tfyOtelCollector environment variables
+  envSecretName: 'tfy-otel-collector-env-secret'
+  ## @param tfyOtelCollector.imagePullPolicy Image pull policy for the tfyOtelCollector
+  imagePullPolicy: IfNotPresent
+  ## @param tfyOtelCollector.nameOverride Override name for the tfyOtelCollector
+  nameOverride: ''
+  ## @param tfyOtelCollector.fullnameOverride Full name override for the tfyOtelCollector
+  fullnameOverride: ''
+  ## @param tfyOtelCollector.podAnnotations [object] Annotations for the tfyOtelCollector pods
+  podAnnotations:
+    karpenter.sh/do-not-disrupt: "true"
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  ## @param tfyOtelCollector.podSecurityContext Security context for the tfyOtelCollector pods
+  podSecurityContext: {}
+  ## @param tfyOtelCollector.commonLabels Common labels for the tfyOtelCollector pods
+  commonLabels: {}
+  ## @param tfyOtelCollector.securityContext Security context for the tfyOtelCollector
+  securityContext: {}
+  ## tfyOtelCollector.resources Resource requests and limits for the tfyOtelCollector
+  resources:
+    ## tfyOtelCollector.resources.limits Resource limits for the tfyOtelCollector
+    limits:
+      ## @param tfyOtelCollector.resources.limits.cpu CPU limit for the tfyOtelCollector
+      cpu: 400m
+      ## @param tfyOtelCollector.resources.limits.memory Memory limit for the tfyOtelCollector
+      memory: 512Mi
+      ## @param tfyOtelCollector.resources.limits.ephemeral-storage Ephemeral storage limit for the tfyOtelCollector
+      ephemeral-storage: 256Mi
+    ## tfyOtelCollector.resources.requests Resource requests for the tfyOtelCollector
+    requests:
+      ## @param tfyOtelCollector.resources.requests.cpu CPU request for the tfyOtelCollector
+      cpu: 200m
+      ## @param tfyOtelCollector.resources.requests.memory Memory request for the tfyOtelCollector
+      memory: 256Mi
+      ## @param tfyOtelCollector.resources.requests.ephemeral-storage Ephemeral storage request for the tfyOtelCollector
+      ephemeral-storage: 128Mi
+  ## @param tfyOtelCollector.nodeSelector Node selector for the tfyOtelCollector
+  nodeSelector: {}
+  ## @param tfyOtelCollector.affinity Affinity settings for the tfyOtelCollector
+  affinity: {}
+  ## @param tfyOtelCollector.topologySpreadConstraints Topology spread constraints for the tfyOtelCollector
+  topologySpreadConstraints: {}
+  ## tfyOtelCollector.service Service settings for the tfyOtelCollector
+  service:
+    ## @param tfyOtelCollector.service.type Service type for the tfyOtelCollector
+    type: ClusterIP
+    ## @param tfyOtelCollector.service.port Service port for the tfyOtelCollector
+    port: 3002
+    ## @param tfyOtelCollector.service.annotations Annotations for the tfyOtelCollector service
+    annotations: {}
+    ## tfyOtelCollector.serviceAccount Service account settings for the tfyOtelCollector
+  serviceAccount:
+    ## @param tfyOtelCollector.serviceAccount.annotations Annotations for the tfyOtelCollector service account
+    annotations: {}
+  ## @param tfyOtelCollector.extraVolumes Extra volumes for the tfyOtelCollector
+  extraVolumes: []
+  ## @param tfyOtelCollector.extraVolumeMounts Extra volume mounts for the tfyOtelCollector
+  extraVolumeMounts: []
+  ## @param tfyOtelCollector.imagePullSecrets Image pull secrets for the tfyOtelCollector
+  ##
+  imagePullSecrets: []
+  ## @skip tfyOtelCollector.env Environment variables for the tfyOtelCollector
+  env:
+    CLICKHOUSE_USER: user
+    CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
+    AUTH_BASE_URL=http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    CLICKHOUSE_USER=user
+    CLICKHOUSE_PASSWORD="{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
+    CLICKHOUSE_TCP_HOST=tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
+###################################################################################################################
