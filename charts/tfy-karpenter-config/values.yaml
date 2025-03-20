@@ -35,11 +35,16 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @skip karpenter.defaultNodeTemplate.userData
-    # Set this to "" to disable this injection
+    ## @param karpenter.defaultNodeTemplate.userData User data to append in the default node template. Set this to "" to disable injection.
     userData: ""
-    ## @param karpenter.defaultNodeTemplate.detailedMonitoring
-    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    ## @param karpenter.defaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the default node template.
+    # metadataOptions:
+    #   httpEndpoint: enabled
+    #   httpProtocolIPv6: disabled
+    #   httpPutResponseHopLimit: 1
+    #   httpTokens: required
+    metadataOptions: {}
+    ## @param karpenter.defaultNodeTemplate.detailedMonitoring. Set this to true to enable EC2 detailed cloudwatch monitoring.
     detailedMonitoring: false
     ## @param karpenter.defaultNodeTemplate.extraSubnetTags [object] Additional tags for the subnet.
     extraSubnetTags: {}
@@ -96,8 +101,7 @@ karpenter:
     encrypted: true
     ## @param karpenter.gpuDefaultNodeTemplate.extraTags [object] Additional tags for the gpu node template.
     extraTags: {}
-    ## @param karpenter.gpuDefaultNodeTemplate.detailedMonitoring
-    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    ## @param karpenter.gpuDefaultNodeTemplate.detailedMonitoring. Set this to true to enable EC2 detailed cloudwatch monitoring.
     detailedMonitoring: false
     ## @param karpenter.gpuDefaultNodeTemplate.amiFamily AMI family to use for node template
     amiFamily: ""
@@ -110,10 +114,15 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @skip karpenter.gpuDefaultNodeTemplate.userData
-    # Set this to "default" to let the chart automatically decide this
-    # Set this to "" to disable this injection
+    ## @param karpenter.gpuDefaultNodeTemplate.userData User data script for GPU node template. Set this to "default" to let the chart automatically decide this. Set this to "" to disable this injection.
     userData: "default"
+    ## @param karpenter.gpuDefaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the GPU node template.
+    # metadataOptions:
+    #   httpEndpoint: enabled
+    #   httpProtocolIPv6: disabled
+    #   httpPutResponseHopLimit: 1
+    #   httpTokens: required
+    metadataOptions: {}
     ## @param karpenter.gpuDefaultNodeTemplate.extraSubnetTags [object] Additional tags for the subnet.
     extraSubnetTags: {}
     ## @param karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags [object] Additional tags for the security group.
@@ -203,11 +212,16 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @skip karpenter.controlPlaneNodeTemplate.userData
-    # Set this to "" to disable this injection
+    ## @param karpenter.controlPlaneNodeTemplate.userData User data script for control-plane node template. Set this to "" to disable this injection.
     userData: ""
-    ## @param karpenter.controlPlaneNodeTemplate.detailedMonitoring
-    # Set this to true to enable EC2 detailed cloudwatch monitoring
+    ## @param karpenter.controlPlaneNodeTemplate.metadataOptions [object] Metadata options to be passed to the instance.
+    # metadataOptions:
+    #   httpEndpoint: enabled
+    #   httpProtocolIPv6: disabled
+    #   httpPutResponseHopLimit: 1
+    #   httpTokens: required
+    metadataOptions: {}
+    ## @param karpenter.controlPlaneNodeTemplate.detailedMonitoring. Set this to true to enable EC2 detailed cloudwatch monitoring.
     detailedMonitoring: false
     ## @param karpenter.controlPlaneNodeTemplate.extraSubnetTags [object] Additional tags for the subnet.
     extraSubnetTags: {}
@@ -288,9 +302,15 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @skip karpenter.inferentiaDefaultNodeTemplate.userData
-    # Set this to "" to disable this injection
+    ## @param karpenter.inferentiaDefaultNodeTemplate.userData User data script for GPU node template. Set this to "" to disable this injection.
     userData: ""
+    ## @param karpenter.inferentiaDefaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the inferentia node template.
+    # metadataOptions:
+    #   httpEndpoint: enabled
+    #   httpProtocolIPv6: disabled
+    #   httpPutResponseHopLimit: 1
+    #   httpTokens: required
+    metadataOptions: {}
     ## @param karpenter.inferentiaDefaultNodeTemplate.extraSubnetTags [object] Additional tags for the subnet.
     extraSubnetTags: {}
     ## @param karpenter.inferentiaDefaultNodeTemplate.extraSecurityGroupTags [object] Additional tags for the security group.
@@ -392,8 +412,7 @@ karpenter:
       encrypted: true
       ## @param karpenter.critical.nodeclass.extraTags [object] Additional tags for the node template.
       extraTags: {}
-      ## @param karpenter.critical.nodeclass.detailedMonitoring
-      # Set this to true to enable EC2 detailed cloudwatch monitoring
+      ## @param karpenter.critical.nodeclass.detailedMonitoring. Set this to true to enable EC2 detailed cloudwatch monitoring.
       detailedMonitoring: false
       ## @param karpenter.critical.nodeclass.amiFamily AMI family to use for node template
       amiFamily: ""
@@ -406,9 +425,15 @@ karpenter:
       # - id: ami-123
       amiSelectorTerms:
       - alias: al2023@latest
-      ## @skip karpenter.critical.nodeclass.userData
-      # Set this to "" to disable this injection
+      ## @param karpenter.critical.nodeclass.userData User data script for critical node template. Set this to "" to disable this injection.
       userData: ""
+      ## @param karpenter.critical.nodeclass.metadataOptions [object] Metadata options to be passed to the instance.
+      # metadataOptions:
+      #   httpEndpoint: enabled
+      #   httpProtocolIPv6: disabled
+      #   httpPutResponseHopLimit: 1
+      #   httpTokens: required
+      metadataOptions: {}
       ## @param karpenter.critical.nodeclass.extraSubnetTags [object] Additional tags for the subnet.
       extraSubnetTags: {}
       ## @param karpenter.critical.nodeclass.extraSecurityGroupTags [object] Additional tags for the security group.
