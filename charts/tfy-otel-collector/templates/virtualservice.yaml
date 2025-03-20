@@ -1,0 +1,28 @@
+{{- if .Values.istio.virtualservice.enabled -}}
+{{- $serviceName := include "tfy-otel-collector.fullname" . -}}
+{{- $servicePort := .Values.service.port -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.virtualservice.annotations" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  gateways:
+  {{- range .Values.istio.virtualservice.gateways}}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.istio.virtualservice.hosts}}
+  - {{ . }}
+  {{- end }}
+  http:
+  - route:
+    - destination:
+        host: {{ include "tfy-otel-collector.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}
+{{- end }}

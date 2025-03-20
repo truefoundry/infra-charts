@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if .Values.rollout.enabled }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.rollout.maxSurge | default "100%" | quote }}
+      maxUnavailable: {{ .Values.rollout.maxUnavailable | default 0 }}
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-otel-collector.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-otel-collector.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.liveness.path }}
+              port: {{ .Values.healthcheck.liveness.port }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.readiness.path }}
+              port: {{ .Values.healthcheck.readiness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 5 }}
+            successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
+          {{- end }}
+          volumeMounts:
+          {{- if gt (len .Values.extraVolumeMounts) 0 }}
+          {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      volumes:
+      {{- if gt (len .Values.extraVolumes) 0 }}
+      {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
