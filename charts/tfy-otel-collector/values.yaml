@@ -105,16 +105,6 @@ serviceAccount:
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
-## Autoscaling configuration
-autoscaling:
-  ## @param autoscaling.enabled Enable autoscaling  
-  enabled: true
-  ## @param autoscaling.minReplicas Minimum number of replicas
-  minReplicas: 2
-  ## @param autoscaling.maxReplicas Maximum number of replicas
-  maxReplicas: 100
-  ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
-  targetCPUUtilizationPercentage: 60
 
 ## Rollout configuration
 rollout:
@@ -123,7 +113,7 @@ rollout:
   ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
   maxUnavailable: 1
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
-  maxSurge: 1
+  maxSurge: 50%
 
 ## @skip env Environment variables for the tfyOtelCollector
 env:
