@@ -22,6 +22,10 @@ spec:
         {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
+  {{- if .Values.karpenter.controlPlaneNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.controlPlaneNodeTemplate.metadataOptions | nindent 4 }}
+  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: control-plane
