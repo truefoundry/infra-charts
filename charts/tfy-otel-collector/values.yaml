@@ -13,7 +13,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: f71e2c2380c21136a7e887df03129731ebb623a3
+  tag: b81d3f3694c700e5b3252920cad16613407ac2be
 
 ## @param fullnameOverride Full name override for the tfy-otel-collector
 fullnameOverride: ""
@@ -136,5 +136,5 @@ rollout:
 env:
   CLICKHOUSE_USER: user
   CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
-  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000  
+  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
