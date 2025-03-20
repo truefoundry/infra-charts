@@ -58,16 +58,16 @@ spec:
             successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
             failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
           {{- end }}
-          volumeMounts:
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
+          volumeMounts:
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
-      volumes:
       {{- if gt (len .Values.extraVolumes) 0 }}
+      volumes:
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
