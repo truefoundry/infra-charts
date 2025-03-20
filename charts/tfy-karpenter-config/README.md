@@ -85,8 +85,8 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.defaultNodePool.architectures`                        | Architectures for the default node pool                        | `[]`                         |
 | `karpenter.defaultNodePool.instanceFamilies.notAllowed`          | Not allowed instance families for the default node pool        | `[]`                         |
 | `karpenter.defaultNodePool.instanceSizes.notAllowed`             | Not allowed instance sizes for the default node pool           | `[]`                         |
-| `karpenter.defaultNodePool.limits.cpu`                           | CPU limit for the default node pool                            | `75`                         |
-| `karpenter.defaultNodePool.limits.memory`                        | Memory limit for the default node pool                         | `300Gi`                      |
+| `karpenter.defaultNodePool.limits`                               | compute limits for the default nodepool                        | `{}`                         |
+| `karpenter.defaultNodePool.additionalRequirements`               | List of additional requirements for default nodepool           | `[]`                         |
 | `karpenter.gpuDefaultNodeTemplate.enabled`                       | Enable the GPU node pool                                       | `true`                       |
 | `karpenter.gpuDefaultNodeTemplate.name`                          | Name of the AWS node class                                     | `gpu-default`                |
 | `karpenter.gpuDefaultNodeTemplate.instanceProfile`               | Instance profile override for the node template                | `""`                         |
@@ -109,6 +109,8 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.gpuNodePool.architectures`                            | Architectures for the GPU node pool                            | `[]`                         |
 | `karpenter.gpuNodePool.instanceFamilies.allowed`                 | Allowed instance families for the GPU node pool                | `[]`                         |
 | `karpenter.gpuNodePool.instanceSizes.notAllowed`                 | Not allowed instance sizes for the GPU node pool               | `[]`                         |
+| `karpenter.gpuNodePool.limits`                                   | compute limits for the GPU node pool                           | `{}`                         |
+| `karpenter.gpuNodePool.additionalRequirements`                   | List of additional requirements for GPU node pool              | `[]`                         |
 | `karpenter.controlPlaneNodeTemplate.enabled`                     | Enable the control plane node template                         | `true`                       |
 | `karpenter.controlPlaneNodeTemplate.name`                        | Name of the AWS node template                                  | `controlplane-node-template` |
 | `karpenter.controlPlaneNodeTemplate.instanceProfile`             | Instance profile override for the node template                | `""`                         |
@@ -133,6 +135,8 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.controlPlaneNodePool.instanceFamilies.notAllowed`     | Not allowed instance families for the control plane node pool  | `[]`                         |
 | `karpenter.controlPlaneNodePool.instanceSizes.allowed`           | Allowed instance sizes for the control plane node pool         | `[]`                         |
 | `karpenter.controlPlaneNodePool.instanceSizes.notAllowed`        | Not allowed instance sizes for the control plane node pool     | `[]`                         |
+| `karpenter.controlPlaneNodePool.limits`                          | compute limits for the control plane node pool                 | `{}`                         |
+| `karpenter.controlPlaneNodePool.additionalRequirements`          | List of additional requirements for control plane node pool    | `[]`                         |
 | `karpenter.inferentiaDefaultNodeTemplate.enabled`                | Enable the inferentia node pool                                | `false`                      |
 | `karpenter.inferentiaDefaultNodeTemplate.name`                   | Name of the AWS node class                                     | `inferentia-default`         |
 | `karpenter.inferentiaDefaultNodeTemplate.instanceProfile`        | Instance profile override for the node template                | `""`                         |
@@ -155,6 +159,8 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.inferentiaNodePool.architectures`                     | Architectures for the Inferentia node pool                     | `[]`                         |
 | `karpenter.inferentiaNodePool.instanceFamilies.allowed`          | Allowed instance families for the Inferentia node pool         | `[]`                         |
 | `karpenter.inferentiaNodePool.instanceSizes.notAllowed`          | Not allowed instance sizes for the Inferentia node pool        | `[]`                         |
+| `karpenter.inferentiaNodePool.limits`                            | compute limits for the Inferentia node pool                    | `{}`                         |
+| `karpenter.inferentiaNodePool.additionalRequirements`            | List of additional requirements for Inferentia node pool       | `[]`                         |
 
 ### critical Section to create on-demand nodepool for critical components
 
@@ -173,6 +179,8 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.critical.instanceFamilies.notAllowed`      | Not allowed instance families for the critical node pool                  | `[]`                    |
 | `karpenter.critical.instanceSizes.allowed`            | Allowed instance sizes for the critical node pool                         | `[]`                    |
 | `karpenter.critical.instanceSizes.notAllowed`         | Not allowed instance sizes for the critical node pool                     | `[]`                    |
+| `karpenter.critical.limits`                           | compute limits for the critical node pool                                 | `{}`                    |
+| `karpenter.critical.additionalRequirements`           | List of additional requirements for critical node pool                    | `[]`                    |
 | `karpenter.critical.nodeclass.create`                 | Specifies if the EC2 nodeclass with nodeclass.name should be created      | `true`                  |
 | `karpenter.critical.nodeclass.name`                   | Name of the nodeclass. If create is not set, existing nodeclass is used.  | `[]`                    |
 | `karpenter.critical.nodeclass.instanceProfile`        | Instance profile override for the node template                           | `""`                    |
