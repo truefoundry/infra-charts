@@ -1,0 +1,203 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/prometheus.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prometheus
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "prometheus"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  project: tfy-apps
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: prometheus
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+  source:
+    repoURL: "https://prometheus-community.github.io/helm-charts"
+    targetRevision: 69.6.0
+    chart: kube-prometheus-stack
+    helm:
+      values: |-
+        defaultRules:
+          enabled: false
+        coreDns:
+          enabled: false
+        grafana:
+          enabled: false
+        kubelet:
+          enabled: true
+        kubeEtcd:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        kubernetesServiceMonitors:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            resources:
+              limits:
+                cpu: "3.8"
+                memory: 10Gi
+              requests:
+                cpu: "1.9"
+                memory: 2Gi
+            retention: 30d
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  resources:
+                    requests:
+                      storage: 20Gi
+                  accessModes:
+                    - ReadWriteOnce
+            retentionSize: 18GB
+            enableAdminAPI: true
+            tolerations:
+              - effect: NoSchedule
+                key: class.truefoundry.com/component
+                value: critical
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: class.truefoundry.com/component
+                      operator: In
+                      values:
+                      - critical
+            additionalScrapeConfigs: []
+          serviceMonitor:
+            selfMonitor: false
+        alertmanager:
+          config:
+            route:
+              receiver: tfy-agent
+              routes:
+                - continue: true
+                  matchers:
+                    - severity =~ "warning|critical"
+                  receiver: tfy-agent
+                  repeat_interval: 1h
+            receivers:
+            - name: tfy-agent
+              webhook_configs:
+              - send_resolved: true
+                url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 200m
+                memory: 240Mi
+                ephemeral-storage: 128Mi
+              limits:
+                cpu: 400m
+                memory: 480Mi
+                ephemeral-storage: 256Mi
+          enabled: true
+          serviceMonitor:
+            selfMonitor: false
+        nodeExporter:
+          enabled: true
+        kubeApiServer:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kube-state-metrics:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 330Mi
+              ephemeral-storage: 256Mi
+            requests:
+              cpu: 100m
+              memory: 170Mi
+              ephemeral-storage: 256Mi
+          tolerations:
+            - effect: NoSchedule
+              key: class.truefoundry.com/component
+              value: critical
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: class.truefoundry.com/component
+                    operator: In
+                    values:
+                    - critical
+          prometheus:
+            monitor:
+              enabled: false
+          metricLabelsAllowlist:
+            - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component,truefoundry.com/application-id]
+            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
+        prometheusOperator:
+          resources:
+            limits:
+              cpu: 400m
+              memory: 200Mi
+              ephemeral-storage: 1Gi
+            requests:
+              cpu: 200m
+              memory: 100Mi
+              ephemeral-storage: 256Mi
+          tolerations:
+            - effect: NoSchedule
+              key: class.truefoundry.com/component
+              value: critical
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: class.truefoundry.com/component
+                    operator: In
+                    values:
+                    - critical
+          admissionWebhooks:
+            patch:
+              enabled: true
+          serviceMonitor:
+            selfMonitor: false
+        kubeControllerManager:
+          enabled: false
+        prometheus-node-exporter:
+          extraArgs:
+            - --web.disable-exporter-metrics
+            - --collector.disable-defaults
+            - --collector.cpu
+            - --collector.meminfo
+            - --collector.filesystem
+            - --collector.stat
+            - --collector.time
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
+          resources:
+            limits:
+              cpu: 200m
+              memory: 80Mi
+            requests:
+              cpu: 100m
+              memory: 40Mi
+          prometheus:
+            monitor:
+              enabled: false
+        prometheusConfigReloader:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 40Mi
+              ephemeral-storage: 128Mi
+            limits:
+              cpu: 200m
+              memory: 80Mi
+              ephemeral-storage: 256Mi
+        additionalPrometheusRulesMap: {}

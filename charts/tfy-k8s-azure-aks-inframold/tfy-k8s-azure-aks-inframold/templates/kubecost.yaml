@@ -1,0 +1,75 @@
+---
+# Source: tfy-k8s-azure-aks-inframold/templates/kubecost.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubecost
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "kubecost"
+    truefoundry.com/infra-migration-tag: "1001"
+spec:
+  destination:
+    namespace: kubecost
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: "cost-analyzer"
+    repoURL: https://kubecost.github.io/cost-analyzer/
+    targetRevision: 2.4.1
+    helm:
+      values: |-
+        global:
+          grafana:
+            enabled: false
+            proxy: false
+          prometheus:
+            fqdn: http://prometheus-operated.prometheus.svc.cluster.local:9090/
+            enabled: false
+        diagnostics:
+          enabled: true
+        networkCosts:
+          enabled: false
+        kubecostMetrics:
+          exporter:
+            enabled: false
+            prometheusScrape: false
+        forecasting:
+          enabled: false
+        server:
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+        affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

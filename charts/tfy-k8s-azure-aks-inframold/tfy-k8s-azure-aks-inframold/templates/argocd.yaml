@@ -1,0 +1,212 @@
+---
+# Source: tfy-k8s-azure-aks-inframold/templates/argocd.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    helm.sh/hook: pre-install
+    helm.sh/hook-weight: "-20"
+  labels:
+    truefoundry.com/infra-component: "argocd"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: argo-cd
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 7.4.4
+    helm:
+      values: |-
+        extraObjects: 
+        - apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          metadata:
+            name: tfy-apps
+          spec:
+            clusterResourceWhitelist:
+            - group: '*'
+              kind: '*'
+            destinations:
+            - namespace: '*'
+              server: '*'
+            sourceRepos:
+            - '*'
+            sourceNamespaces:
+            - "*"
+        
+        notifications:
+          enabled: false
+        dex:
+          enabled: false
+        configs:
+          cm:
+            resource.customizations.ignoreDifferences.storage.k8s.io_CSIDriver: |
+              jqPathExpressions:
+              - '.spec.seLinuxMount'
+        applicationSet:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 50Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 200m
+              memory: 100Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        server:
+          extraArgs:
+            - --insecure
+            - '--application-namespaces="*"'
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 400m
+              memory: 1024Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        controller:
+          extraArgs:
+            - '--application-namespaces="*"'
+          resources:
+            requests:
+              cpu: 1.3
+              memory: 550Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 2.6
+              memory: 1100Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        redis:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        redisSecretInit:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+        repoServer:
+          resources:
+            requests:
+              cpu: 0.6
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 1.2
+              memory: 1024Mi
+              ephemeral-storage: 512Mi
+          tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+          affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

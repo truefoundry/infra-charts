@@ -1,0 +1,41 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/tfy-aws/karpenter-config.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-config
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "karpenter-config"
+    truefoundry.com/infra-migration-tag: "1002"
+spec:
+  destination:
+    namespace: kube-system
+    server: "https://kubernetes.default.svc"
+  source:
+    chart: tfy-karpenter-config
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.38
+    helm:
+      values: |-
+        cluster:
+          name: 
+        karpenter:
+          enabled: true
+          instanceProfile: 
+          defaultNodePool:
+            zones:
+          gpuNodePool:
+            zones:
+          inferentiaNodePool:
+            zones:
+          critical:
+            zones:
+          controlPlaneNodePool:
+            zones:
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=false

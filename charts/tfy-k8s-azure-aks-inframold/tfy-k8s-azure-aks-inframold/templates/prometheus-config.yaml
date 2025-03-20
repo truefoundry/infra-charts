@@ -1,0 +1,40 @@
+---
+# Source: tfy-k8s-azure-aks-inframold/templates/prometheus-config.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-prometheus-config
+  finalizers:
+     - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-prometheus-config"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  project: tfy-apps
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: prometheus
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=false
+  source:
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.11
+    chart: tfy-prometheus-config
+    helm:
+      values: |-
+        serviceMonitors:
+          llmGateway:
+            enabled: false
+          nats:
+            enabled: false
+          servicefoundryServer:
+            enabled: false
+          sfyManifestService:
+            enabled: false
+          tfyController:
+            enabled: false
+          tfyK8sController:
+            enabled: false
+        extraObjects: []

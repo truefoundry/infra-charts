@@ -1,0 +1,74 @@
+---
+# Source: tfy-k8s-azure-aks-inframold/templates/keda.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keda
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "keda"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: keda
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: keda
+    repoURL: "https://kedacore.github.io/charts"
+    targetRevision: 2.15.1
+    helm:
+      values: |-
+        resources:
+          operator:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+          webhooks:
+            requests:
+              cpu: 100m
+              memory: 40Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 200m
+              memory: 80Mi
+              ephemeral-storage: 512Mi
+          metricServer:
+            requests:
+              cpu: 600m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 1.2 
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+        prometheus:
+          operator:
+            enabled: true
+        tolerations:
+              - effect: NoSchedule
+                key: kubernetes.azure.com/scalesetpriority
+                operator: Equal
+                value: spot
+        affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: kubernetes.azure.com/scalesetpriority
+                      operator: In
+                      values:
+                      - spot
+                  weight: 1
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true

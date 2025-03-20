@@ -1,0 +1,50 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/tfy-aws/aws-efs-csi-driver.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-efs-csi-driver
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "aws-efs-csi-driver"
+    truefoundry.com/infra-migration-tag: "1001"
+spec:
+  destination:
+    namespace: aws-efs-csi-driver
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: https://kubernetes-sigs.github.io/aws-efs-csi-driver/
+    targetRevision: 3.1.7
+    chart: aws-efs-csi-driver
+    helm:
+      values: |-
+        controller:
+          serviceAccount:
+            create: true
+            annotations:
+              eks.amazonaws.com/role-arn: 
+          tags:
+            cluster-name: 
+            volume-type: efs
+            truefoundry.com/managed: "true"
+        storageClasses:
+          - name: efs-sc
+            mountOptions:
+              - iam
+            parameters:
+              basePath: /truefoundry
+              directoryPerms: "700"
+              fileSystemId: 
+              gidRangeEnd: "2000"
+              gidRangeStart: "1000"
+              provisioningMode: efs-ap
+            provisioner: efs.csi.aws.com
+            reclaimPolicy: Delete
+            volumeBindingMode: Immediate
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,37 @@
+---
+# Source: tfy-k8s-generic-inframold/templates/argo-rollouts.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollout
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "argo-rollout"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: argo-rollouts
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    chart: argo-rollouts
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 2.39.0
+    helm:
+      values: |-
+        controller:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 200m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

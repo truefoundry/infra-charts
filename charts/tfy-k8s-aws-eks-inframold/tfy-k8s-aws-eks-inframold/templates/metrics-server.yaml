@@ -1,0 +1,45 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/metrics-server.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "metrics-server"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: kube-system
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: 'https://kubernetes-sigs.github.io/metrics-server/'
+    targetRevision: 3.12.1
+    chart: metrics-server
+    helm:
+      values: |-
+        podAnnotations:
+          "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
+        replicas: 2
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        podDisruptionBudget:
+          enabled: true
+          minAvailable: 1
+        containerPort: 4443
+        args:
+          - '--kubelet-insecure-tls'
+        tolerations:
+              - effect: NoSchedule
+                key: dedicated
+                operator: Equal
+                value: reserved-supercluster
+  project: tfy-apps
+  syncPolicy:
+    automated: {}

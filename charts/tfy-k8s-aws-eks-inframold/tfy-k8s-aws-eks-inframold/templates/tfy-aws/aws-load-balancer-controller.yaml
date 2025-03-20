@@ -1,0 +1,34 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/tfy-aws/aws-load-balancer-controller.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-load-balancer-controller
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "aws-load-balancer-controller"
+    truefoundry.com/infra-migration-tag: "1001"
+spec:
+  destination:
+    namespace: aws-load-balancer-controller
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: "https://aws.github.io/eks-charts"
+    targetRevision: 1.11.0
+    chart: aws-load-balancer-controller
+    helm:
+      values: |-
+        clusterName: ""
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: 
+        vpcId: ""
+        region: ""
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true

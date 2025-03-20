@@ -1,0 +1,49 @@
+---
+# Source: tfy-k8s-aws-eks-inframold/templates/tfy-aws/karpenter.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+  labels:
+    truefoundry.com/infra-component: "karpenter"
+    truefoundry.com/infra-migration-tag: "1000"
+spec:
+  destination:
+    namespace: kube-system
+    server: 'https://kubernetes.default.svc'
+  source:
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.4.4
+    chart: tfy-karpenter
+    helm:
+      values: |-
+        karpenter:
+          serviceAccount:
+            annotations:
+              eks.amazonaws.com/role-arn: 
+          webhook:
+            enabled: true
+          settings:
+            clusterName: 
+            clusterEndpoint: 
+            defaultInstanceProfile: 
+            interruptionQueue: 
+          controller:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 200m
+                memory: 512Mi
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
