@@ -35,7 +35,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
             {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
-          command: ["./main", "--config", "/data/config.yml"]
+          command: ["./main", "--config", "/data/config.yaml"]
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
