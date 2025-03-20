@@ -1394,7 +1394,7 @@ tfyOtelCollector:
     ## @param tfyOtelCollector.service.type Service type for the tfyOtelCollector
     type: ClusterIP
     ## @param tfyOtelCollector.service.port Service port for the tfyOtelCollector
-    port: 3002
+    port: 4318
     ## @param tfyOtelCollector.service.annotations Annotations for the tfyOtelCollector service
     annotations: {}
     ## tfyOtelCollector.serviceAccount Service account settings for the tfyOtelCollector
@@ -1404,7 +1404,10 @@ tfyOtelCollector:
   ## @param tfyOtelCollector.extraVolumes Extra volumes for the tfyOtelCollector
   extraVolumes: []
   ## @param tfyOtelCollector.extraVolumeMounts Extra volume mounts for the tfyOtelCollector
-  extraVolumeMounts: []
+  extraVolumeMounts: 
+   - name: configmap-tfy-otel-collector
+      mountPath: /data/config.yml
+      subPath: config.yml
   ## @param tfyOtelCollector.imagePullSecrets Image pull secrets for the tfyOtelCollector
   ##
   imagePullSecrets: []
@@ -1416,4 +1419,62 @@ tfyOtelCollector:
     CLICKHOUSE_USER=user
     CLICKHOUSE_PASSWORD="{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
     CLICKHOUSE_TCP_HOST=tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
+  otelconfig: |
+    extensions:
+      tfyauth: # Custom authorisation 
+        base_url: ${env:AUTH_BASE_URL}
+        cache_ttl: 5m
+
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318  
+            include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
+            auth:
+              authenticator: tfyauth
+
+    exporters:
+      debug:
+        verbosity: detailed # For debug. Have to add clickhouse exporter
+      nop:
+      clickhouse:
+        endpoint: ${env:CLICKHOUSE_TCP_HOST}
+        username: ${env:CLICKHOUSE_USER}
+        password: ${env:CLICKHOUSE_PASSWORD}
+        cluster_name: default 
+        timeout: 10s
+        sending_queue:
+          queue_size: 1000
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 5000
+      resource: # trace level attributes
+        attributes:
+          - key: tfytenantid
+            from_context: auth.tfytenant
+            action: upsert
+
+    service:
+      extensions:
+        - tfyauth
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resource, batch]
+          exporters: [clickhouse]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [nop]
+
+    
+
 ###################################################################################################################
