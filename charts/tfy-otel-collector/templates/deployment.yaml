@@ -62,10 +62,6 @@ spec:
           volumeMounts:
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
       {{- if gt (len .Values.extraVolumes) 0 }}
       volumes:
       {{- toYaml .Values.extraVolumes | nindent 8 }}
