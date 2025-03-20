@@ -79,7 +79,7 @@ karpenter:
       notAllowed: ["nano", "micro", "small", "medium", "large", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
     ## @param karpenter.defaultNodePool.limits [object] compute limits for the default nodepool
     limits: {}
-    ## @param karpenter.defaultNodePool.additionalRequirements [array] List of additional requirements for default-nodepool
+    ## @param karpenter.defaultNodePool.additionalRequirements [array] List of additional requirements for default nodepool
     additionalRequirements: []
 
   ## Default GPU Node Template Config
@@ -173,7 +173,9 @@ karpenter:
       - metal-16xl
       - metal-24xl
       - metal-48xl
-    ## @param karpenter.gpuNodePool.additionalRequirements [array] List of additional requirements for gpu-nodepool
+    ## @param karpenter.gpuNodePool.limits [object] compute limits for the GPU node pool
+    limits: {}
+    ## @param karpenter.gpuNodePool.additionalRequirements [array] List of additional requirements for GPU node pool
     additionalRequirements: []
 
   ## Control Plane Node Template Config
@@ -252,7 +254,10 @@ karpenter:
       allowed: []
       ## @param karpenter.controlPlaneNodePool.instanceSizes.notAllowed [array] Not allowed instance sizes for the control plane node pool
       notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
-    ## @param karpenter.controlPlaneNodePool.additionalRequirements [array] List of additional requirements for control-planenodepool
+    ## @param karpenter.controlPlaneNodePool.limits [object] compute limits for the control plane node pool
+    limits: {}
+    ## @param karpenter.controlPlaneNodePool.additionalRequirements [array] List of additional requirements for control plane node pool
+
     additionalRequirements: []
 
   ## Default Inferentia Node Template Config
@@ -324,7 +329,9 @@ karpenter:
     ## @param karpenter.inferentiaNodePool.instanceSizes.notAllowed [array] Not allowed instance sizes for the Inferentia node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "small", "medium", "large", "metal", "48xlarge", "metal-16xl", "metal-24xl", "metal-48xl"]
-    ## @param karpenter.inferentiaNodePool.additionalRequirements [array] List of additional requirements for inferentia-nodepool
+    ## @param karpenter.inferentiaNodePool.limits [object] compute limits for the Inferentia node pool
+    limits: {}
+    ## @param karpenter.inferentiaNodePool.additionalRequirements [array] List of additional requirements for Inferentia node pool
     additionalRequirements: []
 
   ## @section critical Section to create on-demand nodepool for critical components
@@ -367,7 +374,9 @@ karpenter:
       allowed: []
       ## @param karpenter.critical.instanceSizes.notAllowed [array] Not allowed instance sizes for the critical node pool
       notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
-    ## @param karpenter.critical.additionalRequirements [array] List of additional requirements for critical-nodepool
+    ## @param karpenter.critical.limits [object] compute limits for the critical node pool
+    limits: {}
+    ## @param karpenter.critical.additionalRequirements [array] List of additional requirements for critical node pool
     additionalRequirements: []
 
     nodeclass:
