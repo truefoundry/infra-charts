@@ -1,19 +1,11 @@
 ## @section Configuration for LLM Gateway
-
 global:
   ## @param global.controlPlaneURL Control plane URL
-  controlPlaneURL: ""
-  ## @param global.truefoundryReleaseName Truefoundry release name
-  truefoundryReleaseName: "truefoundry"
-  ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
-  existingTruefoundryImagePullSecretName: ""
   llmGatewayInfra:
     ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
     enabled: false
-    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-otel-collector-infra
-    releaseName: "tfy-otel-collector-infra"
-    ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
-    natsAdminPassword: ""
+    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
+    releaseName: "tfy-llm-gateway-infra"
 
 ## Image configuration for llm-gateway
 image:
@@ -48,7 +40,7 @@ securityContext: {}
 ## Healthcheck configuration
 healthcheck:
   ## @param healthcheck.enabled Enable healthcheck
-  enabled: true
+  enabled: false
   ## healthcheck.liveness liveness probe configuration
   liveness:
     ## @param healthcheck.liveness.port Port to probe
@@ -70,17 +62,17 @@ resources:
   ## resources.limits Resource limits
   limits:
     ## @param resources.limits.cpu CPU limit
-    cpu: 2
+    cpu: 1
     ## @param resources.limits.memory Memory limit
-    memory: 1024Mi
+    memory: 512Mi
     ## @param resources.limits.ephemeral-storage Ephemeral storage limit
     ephemeral-storage: 512Mi
   ## resources.requests Resource requests
   requests:
     ## @param resources.requests.cpu CPU request
-    cpu: 1
+    cpu: 0.5
     ## @param resources.requests.memory Memory request
-    memory: 512Mi
+    memory: 256Mi
     ## @param resources.requests.ephemeral-storage Ephemeral storage request
     ephemeral-storage: 256Mi
 ## @param nodeSelector Node selector
@@ -93,33 +85,6 @@ affinity: {}
 topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
 terminationGracePeriodSeconds: 120
-
-## Ingress configuration
-ingress:
-  ## @param ingress.enabled Enable ingress configuration
-  enabled: false
-  ## @param ingress.annotations Ingress annotations
-  annotations: {}
-  ## @param ingress.labels Ingress labels
-  labels: {}
-  ## @param ingress.ingressClassName Ingress class name
-  ingressClassName: istio
-  ## @param ingress.tls Ingress TLS configuration
-  tls: []
-  ## @param ingress.hosts Ingress hosts
-  hosts: []
-## Istio configuration
-istio:
-  ## istio.virtualservice Virtual service configuration
-  virtualservice:
-    ## @param istio.virtualservice.enabled Enable virtual service
-    enabled: false
-    ## @param istio.virtualservice.annotations Virtual service annotations
-    annotations: {}
-    ## @param istio.virtualservice.gateways Virtual service gateways
-    gateways: []
-    ## @param istio.virtualservice.hosts Virtual service hosts
-    hosts: []
 ## Service configuration
 service:
   ## @param service.type Service type
@@ -140,11 +105,6 @@ serviceAccount:
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
-## rbac configuration
-rbac:
-  ## @param rbac.enabled Enable rbac
-  enabled: true
-
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling  
@@ -161,13 +121,13 @@ rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
   enabled: true
   ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
-  maxUnavailable: 0
+  maxUnavailable: 1
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
-  maxSurge: 100%
+  maxSurge: 1
 
-## @skip env Environment variables for the llmGateway
+## @skip env Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
+  CLICKHOUSE_PASSWORD: "tfy-secret/CLICKHOUSE_PASSWORD"
   AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
