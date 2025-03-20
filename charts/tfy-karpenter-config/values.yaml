@@ -77,11 +77,10 @@ karpenter:
     ## @param karpenter.defaultNodePool.instanceSizes.notAllowed [array] Not allowed instance sizes for the default node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "small", "medium", "large", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
-    ## @param karpenter.defaultNodePool.limits.cpu CPU limit for the default node pool
-    limits:
-      cpu: 75
-      ## @param karpenter.defaultNodePool.limits.memory Memory limit for the default node pool
-      memory: 300Gi
+    ## @param karpenter.defaultNodePool.limits [object] compute limits for the default nodepool
+    limits: {}
+    ## @param karpenter.defaultNodePool.additionalRequirements [array] List of additional requirements for default-nodepool
+    additionalRequirements: []
 
   ## Default GPU Node Template Config
   gpuDefaultNodeTemplate:
@@ -174,6 +173,8 @@ karpenter:
       - metal-16xl
       - metal-24xl
       - metal-48xl
+    ## @param karpenter.gpuNodePool.additionalRequirements [array] List of additional requirements for gpu-nodepool
+    additionalRequirements: []
 
   ## Control Plane Node Template Config
   controlPlaneNodeTemplate:
@@ -251,6 +252,8 @@ karpenter:
       allowed: []
       ## @param karpenter.controlPlaneNodePool.instanceSizes.notAllowed [array] Not allowed instance sizes for the control plane node pool
       notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
+    ## @param karpenter.controlPlaneNodePool.additionalRequirements [array] List of additional requirements for control-planenodepool
+    additionalRequirements: []
 
   ## Default Inferentia Node Template Config
   inferentiaDefaultNodeTemplate:
@@ -321,6 +324,8 @@ karpenter:
     ## @param karpenter.inferentiaNodePool.instanceSizes.notAllowed [array] Not allowed instance sizes for the Inferentia node pool
     instanceSizes:
       notAllowed: ["nano", "micro", "small", "medium", "large", "metal", "48xlarge", "metal-16xl", "metal-24xl", "metal-48xl"]
+    ## @param karpenter.inferentiaNodePool.additionalRequirements [array] List of additional requirements for inferentia-nodepool
+    additionalRequirements: []
 
   ## @section critical Section to create on-demand nodepool for critical components
   critical:
@@ -362,6 +367,8 @@ karpenter:
       allowed: []
       ## @param karpenter.critical.instanceSizes.notAllowed [array] Not allowed instance sizes for the critical node pool
       notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
+    ## @param karpenter.critical.additionalRequirements [array] List of additional requirements for critical-nodepool
+    additionalRequirements: []
 
     nodeclass:
       ## @param karpenter.critical.nodeclass.create Specifies if the EC2 nodeclass with nodeclass.name should be created

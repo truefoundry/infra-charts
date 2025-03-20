@@ -78,6 +78,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.controlPlaneNodePool.additionalRequirements }}
+        {{- .Values.karpenter.controlPlaneNodePool.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       {{- if .Values.karpenter.controlPlaneNodePool.taints }}
       taints:
         {{- toYaml .Values.karpenter.controlPlaneNodePool.taints | nindent 6 }}

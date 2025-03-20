@@ -70,6 +70,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.inferentiaNodePool.additionalRequirements }}
+        {{- .Values.karpenter.inferentiaNodePool.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       taints:
         - key: "aws.amazon.com/neuron"
           effect: "NoSchedule"
