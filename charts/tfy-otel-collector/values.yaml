@@ -7,6 +7,13 @@ global:
   truefoundryReleaseName: "truefoundry"
   ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
   existingTruefoundryImagePullSecretName: ""
+  llmGatewayInfra:
+    ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
+    enabled: false
+    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-otel-collector-infra
+    releaseName: "tfy-otel-collector-infra"
+    ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
+    natsAdminPassword: ""
 
 ## Image configuration for llm-gateway
 image:
@@ -87,6 +94,32 @@ topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
 terminationGracePeriodSeconds: 120
 
+## Ingress configuration
+ingress:
+  ## @param ingress.enabled Enable ingress configuration
+  enabled: false
+  ## @param ingress.annotations Ingress annotations
+  annotations: {}
+  ## @param ingress.labels Ingress labels
+  labels: {}
+  ## @param ingress.ingressClassName Ingress class name
+  ingressClassName: istio
+  ## @param ingress.tls Ingress TLS configuration
+  tls: []
+  ## @param ingress.hosts Ingress hosts
+  hosts: []
+## Istio configuration
+istio:
+  ## istio.virtualservice Virtual service configuration
+  virtualservice:
+    ## @param istio.virtualservice.enabled Enable virtual service
+    enabled: false
+    ## @param istio.virtualservice.annotations Virtual service annotations
+    annotations: {}
+    ## @param istio.virtualservice.gateways Virtual service gateways
+    gateways: []
+    ## @param istio.virtualservice.hosts Virtual service hosts
+    hosts: []
 ## Service configuration
 service:
   ## @param service.type Service type
