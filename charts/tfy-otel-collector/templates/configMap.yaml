@@ -23,6 +23,19 @@ data:
     exporters:
       debug:
         verbosity: detailed # For debug. Have to add clickhouse exporter
+      clickhouse:
+        endpoint: tcp://clickhouse-tracing-infra.truefoundry.svc.cluster.local:9000
+        username: user
+        password: clickhouse!@#123!
+        cluster_name: default
+        timeout: 10s
+        sending_queue:
+          queue_size: 1000
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
     processors:
       batch:
         timeout: 5s
@@ -32,6 +45,14 @@ data:
           - key: tfytenantid
             from_context: auth.tfytenant
             action: upsert
+          # attributes: # span level attributes
+          #   actions:
+          #     - key: api_key
+          #       from_context: metadata.api_key
+          #       action: upsert
+          # - key: auth_raw
+          #   from_context: auth.raw
+          #   action: upsert
     service:
       extensions:
         - tfyauth
@@ -39,4 +60,4 @@ data:
         traces:
           receivers: [ otlp ]
           processors: [ resource, batch ]
-          exporters: [ debug ]
+          exporters: [ debug, clickhouse ]

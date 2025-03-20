@@ -107,7 +107,6 @@ extraVolumes:
   - name: config-volume
     configMap:
       name: tfy-otel-collector-config
-## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts:
   - name: config-volume
     mountPath: /data/config.yaml
@@ -125,5 +124,7 @@ rollout:
 
 ## @skip env Environment variables for the tfyOtelCollector
 env:
+  CLICKHOUSE_USER: user
+  CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-creds/CLICKHOUSE_PASSWORD}
   AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
