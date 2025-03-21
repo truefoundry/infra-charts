@@ -1,20 +1,14 @@
-# llm-gateway helm chart by Truefoundry
-LLM-Gateway Helm Chart 
+# Tfy-Otel_collector helm chart by Truefoundry
+Tfy-Otel_collector Helm Chart 
 
 ## Parameters
 
-### Configuration for LLM Gateway
+### Configuration for Tfy-otel-collector
 
 | Name                                            | Description                                                  | Value                                                |
 | ----------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
-| `global.controlPlaneURL`                        | Control plane URL                                            | `""`                                                 |
-| `global.truefoundryReleaseName`                 | Truefoundry release name                                     | `truefoundry`                                        |
-| `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name                  | `""`                                                 |
-| `global.llmGatewayInfra.enabled`                | Bool if llm gateway infra is enabled                         | `false`                                              |
-| `global.llmGatewayInfra.releaseName`            | Release name for the tfy-otel-collector-infra                | `tfy-otel-collector-infra`                           |
-| `global.llmGatewayInfra.natsAdminPassword`      | NATS admin password                                          | `""`                                                 |
 | `image.repository`                              | Image repository for tfyOTELCollector                        | `tfy.jfrog.io/tfy-private-images/tfy-otel-collector` |
-| `image.tag`                                     | Image tag for the tfyOTELCollector                           | `f71e2c2380c21136a7e887df03129731ebb623a3`           |
+| `image.tag`                                     | Image tag for the tfyOTELCollector                           | `b81d3f3694c700e5b3252920cad16613407ac2be`          |
 | `fullnameOverride`                              | Full name override for the tfy-otel-collector                | `""`                                                 |
 | `replicaCount`                                  | Number of replicas                                           | `2`                                                  |
 | `environmentName`                               | The environment name                                         | `default`                                            |
