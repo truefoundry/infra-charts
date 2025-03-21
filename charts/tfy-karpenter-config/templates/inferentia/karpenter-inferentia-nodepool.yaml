@@ -70,6 +70,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.inferentiaNodePool.additionalRequirements }}
+        {{- .Values.karpenter.inferentiaNodePool.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       taints:
         - key: "aws.amazon.com/neuron"
           effect: "NoSchedule"
@@ -84,8 +87,8 @@ spec:
   {{- if .Values.karpenter.inferentiaNodePool.disruption }}
     {{- .Values.karpenter.inferentiaNodePool.disruption | toYaml | nindent 4 }}
   {{- end }}
-  {{- if .Values.karpenter.gpuNodePool.limits }}
+  {{- if .Values.karpenter.inferentiaNodePool.limits }}
   limits:
-  {{- .Values.karpenter.gpuNodePool.limits | toYaml | nindent 4 }}
+  {{- .Values.karpenter.inferentiaNodePool.limits | toYaml | nindent 4 }}
   {{- end }}
 {{- end }}

@@ -78,6 +78,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.critical.additionalRequirements }}
+        {{- .Values.karpenter.critical.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       {{- if .Values.karpenter.critical.taints }}
       taints:
         {{- toYaml .Values.karpenter.critical.taints | nindent 6 }}

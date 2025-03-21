@@ -79,6 +79,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.defaultNodePool.additionalRequirements }}
+        {{- .Values.karpenter.defaultNodePool.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       {{- if .Values.karpenter.defaultNodePool.taints }}
       taints:
         {{- toYaml .Values.karpenter.defaultNodePool.taints | nindent 6 }}
@@ -90,7 +93,7 @@ spec:
   {{- if .Values.karpenter.defaultNodePool.disruption }}
     {{- .Values.karpenter.defaultNodePool.disruption | toYaml | nindent 4 }}
   {{- end }}
-  {{- if .Values.karpenter.gpuNodePool.limits }}
+  {{- if .Values.karpenter.defaultNodePool.limits }}
   limits:
-  {{- .Values.karpenter.gpuNodePool.limits | toYaml | nindent 4 }}
+  {{- .Values.karpenter.defaultNodePool.limits | toYaml | nindent 4 }}
   {{- end }}

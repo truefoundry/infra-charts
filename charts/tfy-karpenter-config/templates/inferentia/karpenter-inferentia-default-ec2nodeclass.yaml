@@ -22,6 +22,10 @@ spec:
         {{- range $key, $val := .Values.karpenter.inferentiaDefaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
+  {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.inferentiaDefaultNodeTemplate.metadataOptions | nindent 4 }}
+  {{- end }}
   tags:
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}

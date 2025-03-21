@@ -21,6 +21,10 @@ spec:
         {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
+  {{- if .Values.karpenter.defaultNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.defaultNodeTemplate.metadataOptions | nindent 4 }}
+  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: default

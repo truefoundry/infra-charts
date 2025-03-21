@@ -22,6 +22,10 @@ spec:
         {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions | nindent 4 }}
+  {{- end }}
   tags:
     truefoundry.com/compute_type: gpu
     karpenter.sh/discovery: {{ .Values.cluster.name }}
