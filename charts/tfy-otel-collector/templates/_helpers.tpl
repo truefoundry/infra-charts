@@ -46,21 +46,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-  Ingress labels
-  */}}
-{{- define "tfy-otel-collector.ingress.labels" -}}
-helm.sh/chart: {{ include "tfy-otel-collector.chart" . }}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-otel-collector.selectorLabels" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
 Annotations
 */}}
 {{- define "tfy-otel-collector.annotations" -}}
@@ -160,8 +145,6 @@ Pod Annotation Labels
 {{- else if .Values.commonAnnotations }}
   {{- toYaml .Values.commonAnnotations }}
 {{- end }}
-prometheus.io/scrape: "true"
-prometheus.io/port: "8787"
 {{- end }}
 
 {{/*
