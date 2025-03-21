@@ -1,12 +1,13 @@
-## @section Configuration for LLM Gateway
+## @section Configuration for tfy-otel-collector
 global:
-  existingTruefoundryImagePullSecretName: tfy-otel-collector
-  ## @param global.controlPlaneURL Control plane URL
+  ## @param global.existingTruefoundryImagePullSecretName Existing image pull secret name
+  existingTruefoundryImagePullSecretName: ""
+  ## @param global.llmGatewayInfra Configuration for llmGatewayInfra
   llmGatewayInfra:
     ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
     enabled: false
     ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
-    releaseName: "tfy-llm-gateway-infra"
+    releaseName: ""
 
 ## Image configuration for llm-gateway
 image:
@@ -23,7 +24,7 @@ replicaCount: 2
 ## @param environmentName The environment name
 environmentName: default
 ## @param envSecretName The environment secret name
-envSecretName: tfy-otel-collector-env-secret
+envSecretName: ""
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
@@ -108,11 +109,12 @@ serviceAccount:
   annotations: {}
   ## @param serviceAccount.name Service account name
   name: tfy-otel-collector
-## @param extraVolumes Extra volumes
+## @param extraVolumes [array] Extra volumes
 extraVolumes:
-  - name: config-volume
+  - name: config-volume1
     configMap:
       name: tfy-otel-collector-config
+## @param extraVolumeMounts [array] Extra volume mounts
 extraVolumeMounts:
   - name: config-volume
     mountPath: /data/config.yaml

@@ -58,9 +58,6 @@ helm.sh/chart: {{ include "tfy-otel-collector.chart" . }}
 app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- if .Values.ingress.labels }}
-{{- toYaml .Values.ingress.labels | nindent 4 }}
-{{- end }}
 {{- end }}
 
 {{/*
@@ -107,20 +104,6 @@ ServiceAccount Annotation
 {{- end }}
 
 {{/*
-Virtual Service Annotations
-*/}}
-
-{{- define "tfy-otel-collector.virtualservice.annotations" -}}
-{{- if .Values.istio.virtualservice.annotations }}
-  {{- toYaml .Values.istio.virtualservice.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-  {}
-{{- end }}
-{{- end }}
-
-{{/*
   Parse env from template
   */}}
 {{- define "tfy-otel-collector.parseEnv" -}}
@@ -156,19 +139,6 @@ Virtual Service Annotations
 {{- end }}
 
 {{/*
-Ingress Annotations
-*/}}
-{{- define "tfy-otel-collector.ingress.annotations" -}}
-{{- if .Values.ingress.annotations }}
-  {{- toYaml .Values.ingress.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
 Service Annotations
 */}}
 {{- define "tfy-otel-collector.service.annotations" -}}
@@ -192,4 +162,29 @@ Pod Annotation Labels
 {{- end }}
 prometheus.io/scrape: "true"
 prometheus.io/port: "8787"
+{{- end }}
+
+{{/*
+Deployment Volumes
+*/}}
+{{- define "tfy-otel-collector.volumes" -}}
+- name: config-volume
+  configMap:
+    name: {{ include "tfy-otel-collector.fullname" . }}-cm
+{{- with .Values.extraVolumes }}
+{{- toYaml . | nindent 0 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Deployment VolumeMounts
+*/}}
+{{- define "tfy-otel-collector.volumeMounts" -}}
+- name: config-volume
+  mountPath: /data/config.yaml
+  readOnly: true
+  subPath: config.yaml
+{{- with .Values.extraVolumeMounts }}
+{{- toYaml . | nindent 0 }}
+{{- end }}
 {{- end }}

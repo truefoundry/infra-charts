@@ -59,14 +59,10 @@ spec:
             successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
             failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
           {{- end }}
-          {{- if gt (len .Values.extraVolumeMounts) 0 }}
           volumeMounts:
-          {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
-          {{- end }}
-      {{- if gt (len .Values.extraVolumes) 0 }}
+          {{- include "tfy-otel-collector.volumeMounts" . | nindent 12 }}
       volumes:
-      {{- toYaml .Values.extraVolumes | nindent 8 }}
-      {{- end }}
+      {{- include "tfy-otel-collector.volumes" . | nindent 8 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
