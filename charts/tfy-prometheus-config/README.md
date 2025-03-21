@@ -104,7 +104,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.gpu.dcgmExporter.endpoints`                 | Endpoints for dcgm exporter                       | `[]`                                      |
 | `serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels`     | Service selector labels for dcgm exporter         | `{}`                                      |
 | `serviceMonitors.gpu.dcgmExporter.namespaceSelector`         | Namespace selector for dcgm exporter              | `{}`                                      |
-| `serviceMonitors.karpenter.enabled`                          | Enable service monitor for karpenter              | `true`                                    |
+| `serviceMonitors.karpenter.enabled`                          | Enable service monitor for karpenter              | `false`                                   |
 | `serviceMonitors.karpenter.name`                             | Name of the service monitor                       | `karpenter`                               |
 | `serviceMonitors.karpenter.namespace`                        | Namespace for karpenter                           | `kube-system`                             |
 | `serviceMonitors.karpenter.labels`                           | Labels for karpenter                              | `{}`                                      |
