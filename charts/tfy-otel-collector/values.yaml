@@ -2,12 +2,12 @@
 global:
   ## @param global.existingTruefoundryImagePullSecretName Existing image pull secret name
   existingTruefoundryImagePullSecretName: ""
-  ## @param global.llmGatewayInfra Configuration for llmGatewayInfra
+  ## Configuration for llmGatewayInfra
   llmGatewayInfra:
     ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
     enabled: false
     ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
-    releaseName: ""
+    releaseName: "tfy-llm-gateway-infra"
 
 ## Image configuration for llm-gateway
 image:
@@ -108,7 +108,7 @@ serviceAccount:
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
   ## @param serviceAccount.name Service account name
-  name: tfy-otel-collector
+  name: ""
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts
@@ -127,5 +127,5 @@ rollout:
 env:
   CLICKHOUSE_USER: user
   CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-creds/CLICKHOUSE_PASSWORD}
-  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  AUTH_BASE_URL: http://servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
