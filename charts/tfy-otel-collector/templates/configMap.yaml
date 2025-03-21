@@ -9,25 +9,30 @@ metadata:
 data:
   config.yaml: |-
     extensions:
-      tfyauth: # Custom authorisation
-        base_url: https://internal.devtest.truefoundry.tech/api/svc
+      tfyauth: # Custom authorisation 
+        base_url: ${env:AUTH_BASE_URL}
         cache_ttl: 5m
+      health_check:
+        endpoint: 0.0.0.0:3000
+
     receivers:
       otlp:
         protocols:
           http:
-            endpoint: 0.0.0.0:4318
+            endpoint: 0.0.0.0:4318  
             include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
             auth:
               authenticator: tfyauth
+
     exporters:
       debug:
         verbosity: detailed # For debug. Have to add clickhouse exporter
+      nop:
       clickhouse:
-        endpoint: tcp://clickhouse-tracing-infra.truefoundry.svc.cluster.local:9000
-        username: user
-        password: clickhouse!@#123!
-        cluster_name: default
+        endpoint: ${env:CLICKHOUSE_TCP_HOST}
+        username: ${env:CLICKHOUSE_USER}
+        password: ${env:CLICKHOUSE_PASSWORD}
+        cluster_name: default 
         timeout: 10s
         sending_queue:
           queue_size: 1000
@@ -45,19 +50,17 @@ data:
           - key: tfytenantid
             from_context: auth.tfytenant
             action: upsert
-          # attributes: # span level attributes
-          #   actions:
-          #     - key: api_key
-          #       from_context: metadata.api_key
-          #       action: upsert
-          # - key: auth_raw
-          #   from_context: auth.raw
-          #   action: upsert
     service:
       extensions:
         - tfyauth
+        - health_check
       pipelines:
         traces:
-          receivers: [ otlp ]
-          processors: [ resource, batch ]
-          exporters: [ debug, clickhouse ]
+          receivers: [otlp]
+          processors: [resource, batch]
+          exporters: [clickhouse]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [nop]
+

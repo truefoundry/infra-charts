@@ -41,23 +41,29 @@ securityContext: {}
 ## Healthcheck configuration
 healthcheck:
   ## @param healthcheck.enabled Enable healthcheck
-  enabled: false
-  ## healthcheck.liveness liveness probe configuration
+  enabled: true
+  ## healthcheck.readiness Readiness probe configuration
+  readiness:
+    ## @param healthcheck.readiness.port Port to probe
+    port: 3000
+    ## @param healthcheck.readiness.path Path to probe
+    path: /
+    ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 10
+    ## @param healthcheck.readiness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 5
+    ## @param healthcheck.readiness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.readiness.failureThreshold Failure threshold
+    failureThreshold: 3
+  ## healthcheck.liveness Liveness probe configuration
   liveness:
     ## @param healthcheck.liveness.port Port to probe
-    port: 13133
+    port: 3000
     ## @param healthcheck.liveness.path Path to probe
     path: /
-    ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
-    initialDelaySeconds: 30
-    ## @param healthcheck.liveness.periodSeconds Period in seconds
-    periodSeconds: 10
-    ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 5
-    ## @param healthcheck.liveness.successThreshold Success threshold
-    successThreshold: 1
-    ## @param healthcheck.liveness.failureThreshold Failure threshold
-    failureThreshold: 3
 ## Resource configuration
 resources:
   ## resources.limits Resource limits
