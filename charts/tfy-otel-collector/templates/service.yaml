@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.service.annotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "tfy-otel-collector.selectorLabels" . | nindent 4 }}
