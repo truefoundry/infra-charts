@@ -29,18 +29,18 @@ data:
         verbosity: detailed # For debug. Have to add clickhouse exporter
       nop:
       clickhouse:
-        endpoint: ${env:CLICKHOUSE_TCP_HOST}
-        username: ${env:CLICKHOUSE_USER}
-        password: ${env:CLICKHOUSE_PASSWORD}
-        cluster_name: default 
-        timeout: 10s
-        sending_queue:
-          queue_size: 1000
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_interval: 30s
-          max_elapsed_time: 300s
+         endpoint: tcp://clickhouse-tracing-infra.truefoundry.svc.cluster.local:9000
+         username: user
+         password: clickhouse!@#123!
+         cluster_name: default
+         timeout: 10s
+         sending_queue:
+           queue_size: 1000
+         retry_on_failure:
+           enabled: true
+           initial_interval: 5s
+           max_interval: 30s
+           max_elapsed_time: 300s
     processors:
       batch:
         timeout: 5s
