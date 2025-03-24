@@ -636,7 +636,6 @@ display_installed_versions() {
 # Main execution
 main() {
     log_debug "Starting script with arguments: $*"
-    original_args=("$@")
 
     # Parse arguments
     cloud_provider="generic"
