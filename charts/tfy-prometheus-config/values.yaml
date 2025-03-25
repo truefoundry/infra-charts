@@ -74,7 +74,7 @@ scrapeConfigs:
         regex: (istio-system|cert-manager|kube-system)
       - action: drop
         sourceLabels: [__meta_kubernetes_pod_container_init]
-        regex: "true"
+        regex: "true;(?!istio-proxy$).*"
       - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep
         regex: "true"
