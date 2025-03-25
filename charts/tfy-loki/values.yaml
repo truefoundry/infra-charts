@@ -3,6 +3,17 @@
 loki:
   ## @param loki.enabled Enable loki
   enabled: true
+  ## @param loki.deploymentMode Deployment mode for Loki. Can be SingleBinary, SimpleScalable or Distributed
+  deploymentMode: SingleBinary
+  ## @param loki.read.replicas Number of replicas for the read component - only used in SimpleScalable and Distributed deployment modes
+  read:
+    replicas: 0
+  ## @param loki.write.replicas Number of replicas for the write component - only used in SimpleScalable and Distributed deployment modes
+  write:
+    replicas: 0
+  ## @param loki.queryFrontend.replicas Number of replicas for the query frontend component - only used in SimpleScalable and Distributed deployment modes
+  backend:
+    replicas: 0
   loki:
     ## @skip loki.loki.schemaConfig
     schemaConfig:
