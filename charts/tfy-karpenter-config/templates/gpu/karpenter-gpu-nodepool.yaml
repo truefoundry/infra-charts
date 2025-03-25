@@ -76,6 +76,9 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if .Values.karpenter.gpuNodePool.additionalRequirements }}
+        {{- .Values.karpenter.gpuNodePool.additionalRequirements | toYaml | nindent 8 }}
+        {{- end }}
       taints:
         - key: "nvidia.com/gpu"
           effect: "NoSchedule"

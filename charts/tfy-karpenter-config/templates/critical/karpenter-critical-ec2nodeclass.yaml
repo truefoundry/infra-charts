@@ -22,6 +22,10 @@ spec:
         {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
+  {{- if .Values.karpenter.critical.nodeclass.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.critical.nodeclass.metadataOptions | nindent 4 }}
+  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: critical
