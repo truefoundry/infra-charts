@@ -144,6 +144,8 @@ Pod Annotation Labels
   {{- toYaml .Values.podAnnotations }}
 {{- else if .Values.commonAnnotations }}
   {{- toYaml .Values.commonAnnotations }}
+{{- else }}
+{}
 {{- end }}
 {{- end }}
 
