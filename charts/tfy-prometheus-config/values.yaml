@@ -73,8 +73,8 @@ scrapeConfigs:
         sourceLabels: [__meta_kubernetes_namespace]
         regex: (istio-system|cert-manager|kube-system)
       - action: drop
-        sourceLabels: [__meta_kubernetes_pod_container_init]
-        regex: "true"
+        sourceLabels: [__meta_kubernetes_pod_container_init, __meta_kubernetes_pod_container_name]
+        regex: "true;^(?!istio-proxy$).*"
       - sourceLabels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep
         regex: "true"
@@ -105,7 +105,7 @@ scrapeConfigs:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
     metricsRelabelings:
-      - regex: ALERTS|istio_requests_total|istio_request_duration_milliseconds_bucket|nats_stream_total_messages|envoy_http_inbound_.*_downstream_rq_total
+      - regex: ALERTS|istio_requests_total|istio_request_duration_milliseconds_bucket|nats_stream_total_messages|envoy_http_inbound_.*_downstream_rq_total|tfy_async_processor_.*
         action: keep
         sourceLabels:
           - __name__
@@ -343,7 +343,7 @@ serviceMonitors:
   # serviceMonitors.karpenter Service monitor for karpenter
   karpenter:
     ## @param serviceMonitors.karpenter.enabled Enable service monitor for karpenter
-    enabled: true
+    enabled: false
     ## @param serviceMonitors.karpenter.name Name of the service monitor
     name: karpenter
     ## @param serviceMonitors.karpenter.namespace Namespace for karpenter
