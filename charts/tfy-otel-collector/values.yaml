@@ -1,13 +1,9 @@
-## @section Configuration for tfy-otel-collector
-global:
-  ## @param global.existingTruefoundryImagePullSecretName Existing image pull secret name
-  existingTruefoundryImagePullSecretName: ""
-  ## Configuration for llmGatewayInfra
-  llmGatewayInfra:
-    ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
-    enabled: false
-    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
-    releaseName: "tfy-llm-gateway-infra"
+## @param env [object] Environment variables for the tfyOtelCollector
+env:
+  CLICKHOUSE_USER: user
+  CLICKHOUSE_PASSWORD: ""
+  AUTH_BASE_URL: http://servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  CLICKHOUSE_TCP_HOST: tcp://clickhouse-tfy-llm-gateway-infra.{{ .Release.Namespace }}.svc.cluster.local:9000
 
 ## Image configuration for llm-gateway
 image:
@@ -15,6 +11,9 @@ image:
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
   tag: b81d3f3694c700e5b3252920cad16613407ac2be
+
+## @param imagePullSecrets [array] List of secrets to pull images
+imagePullSecrets: []
 
 ## @param fullnameOverride Full name override for the tfy-otel-collector
 fullnameOverride: ""
@@ -122,10 +121,3 @@ rollout:
   maxUnavailable: 1
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 50%
-
-## @skip env Environment variables for the tfyOtelCollector
-env:
-  CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: ""
-  AUTH_BASE_URL: http://servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-  CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:9000
