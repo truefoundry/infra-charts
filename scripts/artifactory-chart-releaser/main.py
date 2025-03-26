@@ -40,12 +40,11 @@ def upload_chart(chart_dir):
             
             package_file = f"{chart_name}-{chart_version}.tgz"
             try:
-                print(f"Pushing {chart_name} to oci://{repo_url} command")
-                # subprocess.run(
-                #     ["helm", "push", package_file, f"oci://{repo_url}"],
-                #     check=True,
-                #     cwd=chart_dir
-                # )
+                subprocess.run(
+                    ["helm", "push", package_file, f"oci://{repo_url}"],
+                    check=True,
+                    cwd=chart_dir
+                )
                 print(f"Pushed helm chart {package_file} to the OCI repository oci://{repo_url}")
             except subprocess.CalledProcessError as e:
                 print(f"Failed to push helm chart {chart_name}: {e}")
