@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}-cm
+  labels:
+      {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  annotations:
+      {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
+data:
+  config.yaml: |-
+    extensions:
+      tfyauth: # Custom authorisation 
+        base_url: ${env:AUTH_BASE_URL}
+        cache_ttl: 5m
+      health_check:
+        endpoint: 0.0.0.0:3000
+
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318  
+            include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
+            auth:
+              authenticator: tfyauth
+
+    exporters:
+      debug:
+        verbosity: detailed # For debug. Have to add clickhouse exporter
+      nop:
+      clickhouse:
+        endpoint: ${env:CLICKHOUSE_TCP_HOST}
+        username: ${env:CLICKHOUSE_USER}
+        password: ${env:CLICKHOUSE_PASSWORD}
+        cluster_name: default 
+        timeout: 10s
+        sending_queue:
+          queue_size: 1000
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 300s
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 5000
+      resource: # trace level attributes
+        attributes:
+          - key: tfytenantid
+            from_context: auth.tfytenant
+            action: upsert
+    service:
+      extensions:
+        - tfyauth
+        - health_check
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resource, batch]
+          exporters: [clickhouse]
+        metrics:
+          receivers: [otlp]
+          processors: []
+          exporters: [nop]
+
