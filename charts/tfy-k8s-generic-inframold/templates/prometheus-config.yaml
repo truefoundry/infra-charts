@@ -19,7 +19,7 @@ spec:
       - CreateNamespace=false
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.11
+    targetRevision: 0.1.13
     chart: tfy-prometheus-config
     helm:
       values: |-
@@ -27,6 +27,10 @@ spec:
         {{ .Values.prometheus.config.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         serviceMonitors:
+          {% if cookiecutter.clusterType == "aws-eks" %}}
+          karpenter:
+            enabled: true
+          {% endif %}
           llmGateway:
             enabled: {{ .Values.truefoundry.enabled }}
           nats:
