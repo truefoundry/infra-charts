@@ -3,7 +3,7 @@
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: ""
+  CLICKHOUSE_PASSWORD: ${k8s-secret/tfy-llm-gateway-infra-auth/CLICKHOUSE_PASSWORD}
   AUTH_BASE_URL: http://servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-tfy-llm-gateway-infra.{{ .Release.Namespace }}.svc.cluster.local:9000
 
