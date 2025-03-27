@@ -17,10 +17,10 @@ show_help() {
 Usage: $0 [PROVIDER] [CONFIG_FILE] [OPTIONS]
 
 PROVIDER:
-  aws, gcp, azure, generic   Cloud provider to use (default: generic)
+  aws, gcp, azure   Cloud provider to use (default: aws)
 
 CONFIG_FILE:
-  Path to JSON config file (required for aws, gcp, azure)
+  Path to JSON config file (required)
 
 OPTIONS:
   -y, --yes                  Auto-confirm all installation prompts
@@ -29,7 +29,6 @@ OPTIONS:
 Example:
   $0 aws config.json -y      Install AWS tools without confirmation
   $0 -y aws config.json      Same as above (order doesn't matter)
-  $0 generic                 Basic setup with no cloud provider
 EOF
 }
 
@@ -115,7 +114,7 @@ get_cloud_tools() {
         aws) echo "aws" ;;
         gcp) echo "gcloud gke-gcloud-auth-plugin" ;;
         azure) echo "az" ;;
-        generic|"") echo "" ;;  # Return empty for generic/default case
+        *) echo "" ;;  # Return empty for invalid provider
     esac
 }
 
@@ -638,7 +637,7 @@ main() {
     log_debug "Starting script with arguments: $*"
 
     # Parse arguments
-    cloud_provider="generic"
+    cloud_provider="aws"  # Default to AWS
     config_file=""
     positional_args=()
 
@@ -671,14 +670,12 @@ main() {
 
     # Process positional arguments
     if [ $# -eq 0 ]; then
-        log_info "No cloud provider specified, using generic setup"
+        log_info "No cloud provider specified, using AWS as default"
     elif [ $# -eq 1 ]; then
         cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
-        if [ "$cloud_provider" != "generic" ]; then
-            log_error "Config file is required for $cloud_provider provider"
-            log_info "Run with --help for usage information"
-            exit $INVALID_PROVIDER
-        fi
+        log_error "Config file is required for $cloud_provider provider"
+        log_info "Run with --help for usage information"
+        exit $INVALID_PROVIDER
     elif [ $# -ge 2 ]; then
         cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
         config_file=$2
@@ -694,7 +691,7 @@ main() {
 
     # Validate cloud provider
     case $cloud_provider in
-        "aws"|"gcp"|"azure"|"generic")
+        "aws"|"gcp"|"azure")
             log_info "Checking prerequisites for $cloud_provider deployment"
             ;;
         *)
@@ -720,10 +717,13 @@ main() {
         exit $verify_status
     fi
 
-    # Step 4: Create backend (only for cloud-specific providers)
-    if [ "$cloud_provider" != "generic" ] && [ -n "$config_file" ]; then
+    # Step 4: Create backend (required for all providers)
+    if [ -n "$config_file" ]; then
         log_info "Setting up backend storage for $cloud_provider"
         create_backend "$cloud_provider" "$config_file"
+    else
+        log_error "Config file is required for backend setup"
+        exit $INVALID_PROVIDER
     fi
 
     # Display final summary
