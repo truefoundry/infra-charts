@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e 
+set -e
 
 readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' NC='\033[0m'
 # Colors and Exit codes
@@ -7,6 +7,30 @@ readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
 
 # Tool configurations
 declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
+
+# Auto-confirm installations when true
+AUTO_CONFIRM=false
+
+# Display usage information
+show_help() {
+    cat << EOF
+Usage: $0 [PROVIDER] [CONFIG_FILE] [OPTIONS]
+
+PROVIDER:
+  aws, gcp, azure   Cloud provider to use (default: aws)
+
+CONFIG_FILE:
+  Path to JSON config file (required)
+
+OPTIONS:
+  -y, --yes                  Auto-confirm all installation prompts
+  -h, --help                 Show this help message
+
+Example:
+  $0 aws config.json -y      Install AWS tools without confirmation
+  $0 -y aws config.json      Same as above (order doesn't matter)
+EOF
+}
 
 # Get required version for a tool
 get_tool_required_version() {
@@ -27,7 +51,7 @@ get_tool_required_version() {
 declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
-log() { 
+log() {
     if [ -z "$1" ]; then
         echo -e "$2$3${NC}"
     else
@@ -35,9 +59,9 @@ log() {
     fi
 }
 log_info() { log "$BLUE" "$1"; }
-log_debug() { 
-    if  [ "$TF_DEBUG" = true ]; then 
-        log "$YELLOW" "$1"; 
+log_debug() {
+    if  [ "$TF_DEBUG" = true ]; then
+        log "$YELLOW" "$1";
     fi
 }
 log_success() { log "$GREEN" "$1"; }
@@ -72,6 +96,9 @@ run_with_sudo() {
 }
 
 confirm_installation() {
+    if [ "$AUTO_CONFIRM" = true ]; then
+        return 0
+    fi
     read -r -p "$(echo -e "${YELLOW}$1 is not installed. Would you like to install it? (Y/n)${NC}") " response
     [[ $response =~ ^[nN] ]] && { log_error "Skipping $1 installation"; return 1; } || return 0
 }
@@ -87,7 +114,7 @@ get_cloud_tools() {
         aws) echo "aws" ;;
         gcp) echo "gcloud gke-gcloud-auth-plugin" ;;
         azure) echo "az" ;;
-        generic|"") echo "" ;;  # Return empty for generic/default case
+        *) echo "" ;;  # Return empty for invalid provider
     esac
 }
 
@@ -110,7 +137,8 @@ detect_system() {
         for pm in apt-get yum dnf apk; do
             if tool_exists "$pm"; then
                 PACKAGE_MANAGER="$pm"
-                [[ $pm == "apk" ]] && OS="alpine"
+                # Check if Alpine Linux to adjust some behaviors
+                [[ $pm == "apk" ]] && IS_ALPINE=true || IS_ALPINE=false
                 break
             fi
         done
@@ -119,6 +147,7 @@ detect_system() {
         OS="darwin"
         tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
+        IS_ALPINE=false
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
     fi
@@ -138,29 +167,32 @@ install_essential_utilities() {
     local missing_tools=()
     local tools_list
     tools_list=$(get_essential_tools "$PACKAGE_MANAGER")
-    
+
     for tool in $tools_list; do
         tool_exists "$tool" || missing_tools+=("$tool")
     done
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_info "Missing utilities: ${missing_tools[*]}"
-        read -r -p "$(echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}") " response
-        if [[ ! $response =~ ^[nN] ]]; then
-            log_debug "Installing utilities... ${missing_tools[*]}"
-            case $PACKAGE_MANAGER in
-                apt-get) 
-                    run_with_sudo apt-get update 2>&1
-                    run_with_sudo apt-get install -y "${missing_tools[@]}" 2>&1
-                    ;;
-                yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" 2>&1 ;;
-                apk) run_with_sudo apk update 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
-                brew) brew install --quiet "${missing_tools[@]}" 2>&1 ;;
-            esac
-            log_success "Utilities installed successfully"
+        if [ "$AUTO_CONFIRM" = true ]; then
+            log_info "Auto-installing missing utilities..."
         else
-            log_error "Installation skipped - some features may not work"
-            return 1
+            read -r -p "$(echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}") " response
+            if [[ ! $response =~ [yY|Yes|yes|YES] ]]; then
+                log_error "Installation skipped - some features may not work"
+                return 1
+            fi
         fi
+        log_debug "Installing utilities... ${missing_tools[*]}"
+        case $PACKAGE_MANAGER in
+            apt-get)
+                run_with_sudo apt-get update 2>&1
+                run_with_sudo apt-get install -y "${missing_tools[@]}" 2>&1
+                ;;
+            yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" 2>&1 ;;
+            apk) run_with_sudo apk update 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
+            brew) brew install --quiet "${missing_tools[@]}" 2>&1 ;;
+        esac
+        log_success "Utilities installed successfully"
     else
         log_success "All required utilities are installed"
     fi
@@ -185,10 +217,10 @@ verify_tool_version() {
     local tool=$1
     local required_version
     local current_version
-    
+
     required_version=$(get_tool_required_version "$tool")
     current_version=$(get_tool_version "$tool")
-    
+
     version_compare "$current_version" "$required_version" || \
         log_error "$tool version $current_version found. Version $required_version or higher required"
 }
@@ -240,31 +272,31 @@ install_tool() {
                     # Download and install from archive
                     local gcloud_archive install_dir
                     install_dir="$HOME/.google-cloud-sdk"
-                    
+
                     if [[ "$ARCH" == "arm64" ]]; then
                         gcloud_archive="google-cloud-cli-${OS}-arm.tar.gz"
                     else
                         gcloud_archive="google-cloud-cli-${OS}-x86_64.tar.gz"
                     fi
-                    
+
                     log_debug "Downloading gcloud archive: $gcloud_archive"
                     curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${gcloud_archive}"
                     tar -xf "$gcloud_archive"
                     rm -f "$gcloud_archive"
-                    
+
                     # Move to install directory if it doesn't exist
                     if [[ ! -d "$install_dir" ]]; then
                         mv google-cloud-sdk "$install_dir"
                     else
                         rm -rf google-cloud-sdk
                     fi
-                    
+
                     # Run install script with appropriate flags
                     "$install_dir/install.sh" --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.$(basename "$SHELL")rc"
-                    
+
                     # Add to PATH for immediate use
                     export PATH="$install_dir/bin:$PATH"
-                    
+
                     log_info "The installer has updated your shell configuration. You may need to restart your shell or source your rc file."
                     ;;
             esac
@@ -281,10 +313,10 @@ install_tool() {
                         yum|dnf)
                             # Import Microsoft repository key
                             run_with_sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-                            
+
                             # Add Azure CLI repository
                             run_with_sudo dnf install -y https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-                            
+
                             # Install Azure CLI
                             run_with_sudo "$PACKAGE_MANAGER" install -y azure-cli
                             ;;
@@ -312,7 +344,7 @@ install_tool() {
             esac
             ;;
         gke-gcloud-auth-plugin)
-            tool_exists gcloud || { log_error "gcloud must be installed first"; return 1; }        
+            tool_exists gcloud || { log_error "gcloud must be installed first"; return 1; }
             gcloud components install gke-gcloud-auth-plugin
             ;;
     esac
@@ -325,13 +357,13 @@ install_tool() {
 enforce_terraform_version() {
     local required_version current_version
     required_version=$(get_tool_required_version "terraform")
-    
+
     if ! tool_exists terraform; then
         log_info "Terraform not found. Installing version $required_version..."
         install_tool "terraform"
         return
     fi
-    
+
     current_version=$(get_tool_version "terraform")
     if ! version_compare "$current_version" "$required_version"; then
         log_info "Terraform $current_version found. Required version is $required_version. Upgrading..."
@@ -345,10 +377,10 @@ verify_tools() {
     local cloud_provider=$1
     local missing_tools=()
     local install_failed=()
-    
+
     # First, make sure Terraform is installed with the correct version
     enforce_terraform_version
-    
+
     # Check other common tools (skip terraform as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
         if [ "$tool" != "terraform" ]; then
@@ -394,7 +426,7 @@ verify_tools() {
 install_cloud_tools() {
     local cloud_provider=$1
     read -r -a tools <<< "$(get_cloud_tools "$cloud_provider")"
-    
+
     for tool in "${tools[@]}"; do
         if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
@@ -421,7 +453,7 @@ create_backend() {
             region=$(echo "$manifest_inputs" | jq -r '.manifest.region')
             auth_type=$(echo "$manifest_inputs" | jq -r '.manifest.auth.type')
             dynamodb_table=$(echo "$manifest_inputs" | jq -r '.manifest.backend.dynamodb_table')
-            
+
             log_debug "Backend configuration:"
             log_debug "  Bucket: $bucket_name"
             log_debug "  Region: $region"
@@ -547,7 +579,7 @@ create_backend() {
 display_installed_versions() {
     local cloud_provider=$1
     log_info "Checking installed tools:"
-    
+
     local all_ok=true
     # Display common tools
     log "" "$BLUE" "\nCore Tools:"
@@ -567,7 +599,7 @@ display_installed_versions() {
             all_ok=false
         fi
     done
-    
+
     # Display cloud-specific tools
     if [ "$cloud_provider" != "generic" ]; then
         read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
@@ -592,7 +624,7 @@ display_installed_versions() {
         done
     fi
     echo
-    
+
     if [ "$all_ok" = true ]; then
         log_success "All required tools are properly installed"
     else
@@ -603,21 +635,51 @@ display_installed_versions() {
 # Main execution
 main() {
     log_debug "Starting script with arguments: $*"
-    
-    # Validate arguments
+
+    # Parse arguments
+    cloud_provider="aws"  # Default to AWS
+    config_file=""
+    positional_args=()
+
+    # Process all arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -y|--yes)
+                AUTO_CONFIRM=true
+                log_debug "Auto-confirm enabled"
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit $SUCCESS
+                ;;
+            -*)
+                log_error "Unknown option: $1"
+                show_help
+                exit $INVALID_PROVIDER
+                ;;
+            *)
+                positional_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # Restore positional arguments for processing
+    set -- "${positional_args[@]}"
+
+    # Process positional arguments
     if [ $# -eq 0 ]; then
-        log_info "No cloud provider specified, using generic setup"
-        cloud_provider="generic"
-        config_file=""
+        log_info "No cloud provider specified, using AWS as default"
     elif [ $# -eq 1 ]; then
         cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
         log_error "Config file is required for $cloud_provider provider"
-        log_info "Usage: $0 [aws|gcp|azure|generic] config.json"
+        log_info "Run with --help for usage information"
         exit $INVALID_PROVIDER
-    else
+    elif [ $# -ge 2 ]; then
         cloud_provider=$(echo "$1" | tr '[:upper:]' '[:lower:]')
         config_file=$2
-        
+
         # Check if config file exists and is readable
         if [ ! -f "$config_file" ]; then
             log_error "Config file not found: $config_file"
@@ -629,18 +691,19 @@ main() {
 
     # Validate cloud provider
     case $cloud_provider in
-        "aws"|"gcp"|"azure"|"generic")
+        "aws"|"gcp"|"azure")
             log_info "Checking prerequisites for $cloud_provider deployment"
             ;;
         *)
-            log_error "Invalid cloud provider. Usage: $0 [aws|gcp|azure|generic] config.json"
+            log_error "Invalid cloud provider: $cloud_provider"
+            log_info "Run with --help for usage information"
             exit $INVALID_PROVIDER
             ;;
     esac
 
     # Step 1: Detect system
     detect_system
-    
+
     # Step 2: Install essential utilities
     install_essential_utilities || log_error "Missing essential utilities may affect deployment"
 
@@ -654,15 +717,18 @@ main() {
         exit $verify_status
     fi
 
-    # Step 4: Create backend (only for cloud-specific providers)
-    if [ "$cloud_provider" != "generic" ] && [ -n "$config_file" ]; then
+    # Step 4: Create backend (required for all providers)
+    if [ -n "$config_file" ]; then
         log_info "Setting up backend storage for $cloud_provider"
         create_backend "$cloud_provider" "$config_file"
+    else
+        log_error "Config file is required for backend setup"
+        exit $INVALID_PROVIDER
     fi
 
     # Display final summary
     display_installed_versions "$cloud_provider"
-    
+
     # Reload shell notice
     if [ "$cloud_provider" == "gcp" ] && [ "$verify_status" -eq $SUCCESS ]; then
         echo -e "\n${BLUE}Action Required:${NC}"
