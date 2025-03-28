@@ -82,9 +82,10 @@ elif [[ $BUILD_TYPE == "gitlab" ]]; then
     printf "\033[36m[Start]\033[0m Downloading source code from %s\n" "$TRIMMED_URL"
     
     # Set auth token
+    BASE_HOST=${GITLAB_BASE_HOST:-gitlab.com}
 
     git config --system credential.helper store
-    echo "https://oauth2:$TOKEN@gitlab.com" > ~/.git-credentials
+    echo "https://oauth2:$TOKEN@$BASE_HOST" > ~/.git-credentials
 
     git clone --recurse-submodules "$TRIMMED_URL" "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
