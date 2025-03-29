@@ -3,6 +3,7 @@ import subprocess
 import yaml
 
 ARTIFACTORY_REPOSITORY_URL = os.getenv("ARTIFACTORY_REPOSITORY_URL")
+INFRAMOLD_ARTIFACTORY_REPOSITORY_URL = os.getenv("INFRAMOLD_ARTIFACTORY_REPOSITORY_URL")
 
 def get_chart_info(chart_dir):
     """Extract chart name and version from Chart.yaml"""
@@ -12,11 +13,11 @@ def get_chart_info(chart_dir):
         chart_version = chart_yaml.get("version")
     return chart_name, chart_version
 
-def helm_chart_exists(chart_name, chart_version):
+def helm_chart_exists(chart_name, chart_version, repo_url):
     """Check if a Helm chart exists in the repository"""
     try:
         subprocess.run(
-            ["helm", "pull", f"oci://{ARTIFACTORY_REPOSITORY_URL}/{chart_name}", "--version", chart_version],
+            ["helm", "pull", f"oci://{repo_url}/{chart_name}", "--version", chart_version],
             check=True,
             capture_output=True,
             text=True
@@ -26,29 +27,29 @@ def helm_chart_exists(chart_name, chart_version):
         return False
 
 def upload_chart(chart_dir):
-    """Upload Helm chart to OCI repository"""
+    """Upload Helm chart to OCI repository and inframold repository"""
     chart_name, chart_version = get_chart_info(chart_dir)
     print(f"Uploading chart {chart_name} with version {chart_version}")
 
-    if helm_chart_exists(chart_name, chart_version):
-        print(f"Helm chart {chart_name} with version {chart_version} already exists in {ARTIFACTORY_REPOSITORY_URL}. Skipping...")
-        return
 
-    # Update dependencies, package the chart, and push to the repository
-    subprocess.run(["helm", "dependency", "update"], check=True, cwd=chart_dir)
-    subprocess.run(["helm", "package", "."], check=True, cwd=chart_dir)
-    
-    package_file = f"{chart_name}-{chart_version}.tgz"
-    try:
-        subprocess.run(
-            ["helm", "push", package_file, f"oci://{ARTIFACTORY_REPOSITORY_URL}"],
-            check=True,
-            cwd=chart_dir
-        )
-        print(f"Pushed helm chart {package_file} to the OCI repository oci://{ARTIFACTORY_REPOSITORY_URL}")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to push helm chart {chart_name}: {e}")
-        exit(1)
+    for repo_url in [ARTIFACTORY_REPOSITORY_URL, INFRAMOLD_ARTIFACTORY_REPOSITORY_URL]:
+        if not helm_chart_exists(chart_name, chart_version, repo_url):
+            # Update dependencies, package the chart, and push to the repository
+            subprocess.run(["helm", "dependency", "update"], check=True, cwd=chart_dir)
+            subprocess.run(["helm", "package", "."], check=True, cwd=chart_dir)
+            
+            package_file = f"{chart_name}-{chart_version}.tgz"
+            try:
+                subprocess.run(
+                    ["helm", "push", package_file, f"oci://{repo_url}"],
+                    check=True,
+                    cwd=chart_dir
+                )
+                print(f"Pushed helm chart {package_file} to the OCI repository oci://{repo_url}")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to push helm chart {chart_name}: {e}")
+                exit(1)
+        
 
 def main():
     """Main script to iterate over chart directories and upload charts"""
