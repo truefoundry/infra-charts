@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.43.1`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.43.2`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -183,7 +183,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.replicaCount`                         | Number of replicas for the tfyK8sController                | `1`                                                  |
 | `tfyK8sController.annotations`                          | Annotations for the tfyK8sController                       | `{}`                                                 |
 | `tfyK8sController.image.repository`                     | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.38.0`                                            |
+| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.38.1`                                            |
 | `tfyK8sController.environmentName`                      | Environment name for tfyK8sController                      | `default`                                            |
 | `tfyK8sController.envSecretName`                        | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                      | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
@@ -393,7 +393,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.enabled`                    | Bool to enable the tfyWorkflowAdmin                        | `false`                                              |
 | `tfyWorkflowAdmin.annotations`                | Annotations for the tfyWorkflowAdmin                       | `{}`                                                 |
 | `tfyWorkflowAdmin.image.repository`           | Image repository for the tfyWorkflowAdmin                  | `tfy.jfrog.io/tfy-private-images/tfy-workflow-admin` |
-| `tfyWorkflowAdmin.image.tag`                  | Image tag for the tfyWorkflowAdmin                         | `v0.12.0`                                            |
+| `tfyWorkflowAdmin.image.tag`                  | Image tag for the tfyWorkflowAdmin                         | `v0.12.1`                                            |
 | `tfyWorkflowAdmin.replicaCount`               | Number of replicas for the tfyWorkflowAdmin                | `1`                                                  |
 | `tfyWorkflowAdmin.environmentName`            | Environment name for the tfyWorkflowAdmin                  | `default`                                            |
 | `tfyWorkflowAdmin.envSecretName`              | Secret name for the tfyWorkflowAdmin environment variables | `tfy-workflow-admin-env-secret`                      |
