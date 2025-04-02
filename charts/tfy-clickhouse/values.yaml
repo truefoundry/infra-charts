@@ -1,0 +1,46 @@
+## @skip altinity-clickhouse-operator [object] altinity operator
+altinity-clickhouse-operator:
+  enabled: true
+  metrics:
+    image:
+      tag: 0.23.7
+  operator:
+    image:
+      tag: 0.23.7
+
+## @skip zookeeper [object] zookeper config
+zookeeper:
+  enabled: true
+
+## @skip clickhouse [object] clickhouse config
+clickhouse:
+  enabled: true
+  clusterName: clickhouse
+  auth:
+    user: user
+    secretName: tfy-llm-gateway-infra-auth
+    passwordKey: "CLICKHOUSE_USER_PASSWORD"
+  shardsCount: 1
+  replicasCount: 1
+  zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
+  zookeeperPort: '2181'
+  labels: {}
+  image: clickhouse/clickhouse-server:24.7.3.42-alpine
+  annotations: {}
+  imagePullSecrets: []
+  resources:
+    requests:
+      memory: 4096Mi
+      cpu: 500m
+      ephemeralStorage: 2048Mi
+    limits:
+      memory: 4096Mi
+      cpu: 500m
+      ephemeralStorage: 2048Mi
+  storage:
+    storageClassName: ''
+    size: 100Gi
+  virtualService:
+    enabled: false
+    gatewayName: 'istio-system/tfy-wildcard'
+    host: ''
