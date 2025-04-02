@@ -1,3 +1,3 @@
-# TrueFoundry LLM Gateway Infra Stack
+# TrueFoundry Clickhouse Stack
 
 ## Parameters
