@@ -3,9 +3,9 @@
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: ${k8s-secret/tfy-llm-gateway-infra-auth/CLICKHOUSE_USER_PASSWORD}
-  AUTH_BASE_URL: http://truefoundry-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-  CLICKHOUSE_TCP_HOST: tcp://clickhouse-tfy-llm-gateway-infra.{{ .Release.Namespace }}.svc.cluster.local:9000
+  CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
+  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
 
 ## Image configuration for llm-gateway
 image:
