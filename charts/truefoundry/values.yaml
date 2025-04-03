@@ -773,143 +773,76 @@ sfyManifestService:
 ## @skip natsDeprecated Truefoundry NATS settings
 natsDeprecated:
   nameOverride: nats
-  ## @param nats.enabled Bool to enable the NATS server
   enabled: false
-  ## @param nats.topologySpreadConstraints [object] Topology spread constraints for NATS server
   topologySpreadConstraints:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
-  ## nats.nats NATS server configuration
   nats:
-    ## nats.nats.image NATS server image
     image:
-      ## @param nats.nats.image.repository NATS server image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
-      ## @param nats.nats.image.tag NATS server image tag
       tag: 2.10.24-alpine3.21
-    ## @param nats.nats.advertise Bool to enable NATS server advertise
     advertise: false
-    ## @param nats.nats.imagePullSecrets Image pull credentials for NATS server
     imagePullSecrets: []
-    ## nats.nats.jetstream Jetstream configuration for NATS server
     jetstream:
-      ## @param nats.nats.jetstream.enabled Bool to enable Jetstream for NATS server
       enabled: true
-      ## nats.nats.jetstream.memStorage Memory for Jetstream
       memStorage:
-        ## @param nats.nats.jetstream.memStorage.enabled Bool to enable memory for Jetstream
         enabled: true
-        ## @param nats.nats.jetstream.memStorage.size Memory Storage size for Jetstream
         size: 1Gi
-      ## nats.nats.jetstream.fileStorage File storage for Jetstream
       fileStorage:
-        ## @param nats.nats.jetstream.fileStorage.enabled Bool to enable file storage for Jetstream
         enabled: true
-        ## @param nats.nats.jetstream.fileStorage.storageDirectory Storage directory
         storageDirectory: /data
-        ## @param nats.nats.jetstream.fileStorage.size Size for file storage for Jetstream
         size: 10Gi
-        ## @param nats.nats.jetstream.fileStorage.accessModes Storage directory Access Modes
         accessModes:
           - ReadWriteOnce
-    ## nats.nats.logging Logging configuration for NATS server
     logging:
-      ## @param nats.nats.logging.debug Bool to enable debug logging for NATS server
       debug: true
-    ## nats.nats.resources Resource requests and limits for NATS server
     resources:
-      ## nats.nats.resources.limits Resource limits for NATS server
       limits:
-        ## @param nats.nats.resources.limits.cpu CPU limit for NATS server
         cpu: 800m
-        ## @param nats.nats.resources.limits.memory Memory limit for NATS server
         memory: 1024Mi
-      ## nats.nats.resources.requests Resource requests for NATS server
       requests:
-        ## @param nats.nats.resources.requests.cpu CPU request for NATS server
         cpu: 400m
-        ## @param nats.nats.resources.requests.memory Memory request for NATS server
         memory: 512Mi
-    ## nats.nats.limits Additional limits for NATS server
     limits:
-      ## @param nats.nats.limits.maxPayload Maximum message payload size for NATS server
       maxPayload: 4Mi
-  ## nats.natsbox NATSBox configuration
   natsbox:
-    ## @param nats.natsbox.enabled Bool to enable NATSBox
     enabled: false
-    ## nats.natsbox.image NATSBox image
     image:
-      ## @param nats.natsbox.image.repository NATSBox image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/nats-box
-      ## @param nats.natsbox.image.tag NATSBox image tag
       tag: 0.13.2
-    ## @param nats.natsbox.imagePullSecrets Image pull credentials for NATSBox
     imagePullSecrets: []
-    ## nats.natsbox.resources Resource requests and limits for NATSBox
     resources:
-      ## nats.natsbox.resources.limits Resource limits for NATSBox
       limits:
-        ## @param nats.natsbox.resources.limits.cpu CPU limit for NATSBox
         cpu: 50m
-        ## @param nats.natsbox.resources.limits.memory Memory limit for NATSBox
         memory: 512Ki
-      ## nats.natsbox.resources.requests Resource requests for NATSBox
       requests:
-        ## @param nats.natsbox.resources.requests.cpu CPU request for NATSBox
         cpu: 25m
-        ## @param nats.natsbox.resources.requests.memory Memory request for NATSBox
         memory: 256Ki
-  ## nats.exporter NATS exporter configuration
   exporter:
-    ## @param nats.exporter.enabled Bool to enable NATS exporter
     enabled: true
-    ## nats.exporter.image NATS exporter image
     image:
-      ## @param nats.exporter.image.repository NATS exporter image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter
-      ## @param nats.exporter.image.tag NATS exporter image tag
       tag: "0.15.0"
-  ## nats.reloader NATS reloader configuration
   reloader:
-    ## @param nats.reloader.enabled Bool to enable NATS reloader
     enabled: true
-    ## nats.reloader.image NATS reloader image
     image:
-      ## @param nats.reloader.image.repository NATS reloader image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader
-      ## @param nats.reloader.image.tag NATS reloader image tag
       tag: "0.14.3"
-  ## nats.cluster NATS cluster configuration
   cluster:
-    ## @param nats.cluster.enabled Bool to enable NATS cluster
     enabled: true
-    ## @param nats.cluster.replicas Number of replicas for NATS cluster
     replicas: 3
-    ## @param nats.cluster.noAdvertise Bool to enable NATS cluster
     noAdvertise: true
-  ## nats.websocket NATS websocket configuration
   websocket:
-    ## @param nats.websocket.enabled Bool to enable NATS websocket
     enabled: true
-    ## @param nats.websocket.port Port for NATS websocket
     port: 8080
-    ## @param nats.websocket.noTLS Bool to enable NATS websocket without TLS
     noTLS: true
-    ## @param nats.websocket.sameOrigin Bool to enable NATS websocket same origin
     sameOrigin: false
-    ## @param nats.websocket.allowedOrigins Allowed origins for NATS websocket
     allowedOrigins: []
-  ## nats.auth NATS authentication configuration
   auth:
-    ## @param nats.auth.enabled Bool to enable NATS authentication
     enabled: true
-    ## nats.auth.resolver NATS authentication resolver configuration
     resolver:
-      ## @param nats.auth.resolver.type Type for NATS authentication resolver
       type: memory
-      ## @skip nats.auth.resolver.configMap ConfigMap for NATS authentication resolver
       configMap:
         name: nats-accounts
         key: resolver.conf
@@ -1326,48 +1259,91 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-## @skip tfyNats
+###################################################################################################################
+################################################# Tfy Nats  #######################################################
+###################################################################################################################
+## @section tfyNats Truefoundry NATS settings
 tfyNats:
+  ## @param tfyNats.nameOverride Override name for NATS server
   nameOverride: tfy-nats
+  ## @param tfyNats.enabled Bool to enable the NATS server
   enabled: true
+  ## tfyNats.config NATS server configuration
   config:
+    ## @param tfyNats.config.merge Configuration to merge
     merge:
       00$include: accounts/resolver.conf
+    ## tfyNats.config.cluster Cluster configuration
     cluster:
+      ## @param tfyNats.config.cluster.enabled Bool to enable clustering
       enabled: true
+      ## @param tfyNats.config.cluster.replicas Number of replicas in cluster
       replicas: 3
+    ## @param tfyNats.config.advertise Bool to enable NATS server advertise
     advertise: false
+    ## tfyNats.config.jetstream Jetstream configuration
     jetstream:
+      ## @param tfyNats.config.jetstream.enabled Bool to enable Jetstream
       enabled: true
+      ## tfyNats.config.jetstream.fileStore File storage configuration
       fileStore:
+        ## @param tfyNats.config.jetstream.fileStore.dir Storage directory path
         dir: /data
+        ## tfyNats.config.jetstream.fileStore.pvc PVC configuration
         pvc:
+          ## @param tfyNats.config.jetstream.fileStore.pvc.size PVC storage size
           size: 10Gi
+          ## @param tfyNats.config.jetstream.fileStore.pvc.enabled Bool to enable PVC
           enabled: true
+        ## @param tfyNats.config.jetstream.fileStore.enabled Bool to enable file storage
         enabled: true
+        ## @param tfyNats.config.jetstream.fileStore.maxSize Maximum file storage size
         maxSize: 9Gi
+      ## tfyNats.config.jetstream.memoryStore Memory storage configuration
       memoryStore:
+        ## @param tfyNats.config.jetstream.memoryStore.size Memory storage size
         size: 1Gi
+        ## @param tfyNats.config.jetstream.memoryStore.enabled Bool to enable memory storage
         enabled: true
+    ## tfyNats.config.websocket Websocket configuration
     websocket:
+      ## @param tfyNats.config.websocket.port Websocket port
       port: 8080
+      ## @param tfyNats.config.websocket.enabled Bool to enable websocket
       enabled: true
+  ## tfyNats.natsBox NATS Box configuration
   natsBox:
+    ## @param tfyNats.natsBox.enabled Bool to enable NATS Box
     enabled: false
+  ## tfyNats.reloader Config reloader configuration
   reloader:
+    ## tfyNats.reloader.image Reloader image configuration
     image:
+      ## @param tfyNats.reloader.image.repository Reloader image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader
+      ## @param tfyNats.reloader.image.tag Reloader image tag
       tag: "0.14.3"
+    ## @param tfyNats.reloader.enabled Bool to enable config reloader
     enabled: true
+  ## tfyNats.promExporter Prometheus exporter configuration
   promExporter:
+    ## tfyNats.promExporter.image Exporter image configuration
     image:
+      ## @param tfyNats.promExporter.image.repository Exporter image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter
+      ## @param tfyNats.promExporter.image.tag Exporter image tag
       tag: "0.15.0"
+    ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
+  ## tfyNats.container Container configuration
   container:
+    ## tfyNats.container.image Container image configuration
     image:
+      ## @param tfyNats.container.image.tag Container image tag
       tag: 2.10.24-alpine3.21
+      ## @param tfyNats.container.image.repository Container image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
+    ## @param tfyNats.container.patch Container patches
     patch:
       - op: add
         path: /volumeMounts/-
@@ -1383,7 +1359,9 @@ tfyNats:
           requests:
             cpu: 200m
             memory: 512Mi
+  ## tfyNats.podTemplate Pod template configuration
   podTemplate:
+    ## @param tfyNats.podTemplate.patch Pod template patches
     patch:
       - op: add
         path: /spec/volumes/-
@@ -1395,6 +1373,7 @@ tfyNats:
       - op: add
         path: /spec/imagePullSecrets
         value: []
+    ## @param tfyNats.podTemplate.topologySpreadConstraints Topology spread constraints for NATS server
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
