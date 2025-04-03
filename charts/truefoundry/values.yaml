@@ -1270,7 +1270,7 @@ tfyNats:
   enabled: true
   ## tfyNats.config NATS server configuration
   config:
-    ## @param tfyNats.config.merge Configuration to merge
+    ## @skip tfyNats.config.merge Configuration to merge
     merge:
       00$include: accounts/resolver.conf
     ## tfyNats.config.cluster Cluster configuration
@@ -1343,7 +1343,7 @@ tfyNats:
       tag: 2.10.24-alpine3.21
       ## @param tfyNats.container.image.repository Container image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
-    ## @param tfyNats.container.patch Container patches
+    ## @skip tfyNats.container.patch Container patches
     patch:
       - op: add
         path: /volumeMounts/-
@@ -1359,9 +1359,9 @@ tfyNats:
           requests:
             cpu: 200m
             memory: 512Mi
-  ## tfyNats.podTemplate Pod template configuration
+  ## skip tfyNats.podTemplate Pod template configuration
   podTemplate:
-    ## @param tfyNats.podTemplate.patch Pod template patches
+    ## @skip tfyNats.podTemplate.patch Pod template patches
     patch:
       - op: add
         path: /spec/volumes/-
@@ -1373,7 +1373,7 @@ tfyNats:
       - op: add
         path: /spec/imagePullSecrets
         value: []
-    ## @param tfyNats.podTemplate.topologySpreadConstraints Topology spread constraints for NATS server
+    ## @skip tfyNats.podTemplate.topologySpreadConstraints Topology spread constraints for NATS server
     topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
