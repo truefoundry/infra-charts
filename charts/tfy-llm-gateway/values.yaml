@@ -11,7 +11,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: 9145bc00576cc89c93bd0fc74020cb4578305ed0
+  tag: 52a5b893fef48131ec097132fab947112f8be8e3
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -174,9 +174,8 @@ rollout:
 
 ## @skip env Environment variables for the llmGateway
 env:
-  CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-  AUTH_SERVER_URL: https://auth.truefoundry.com
   LOG_LEVEL: info
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
   CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
