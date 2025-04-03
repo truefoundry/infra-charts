@@ -42,8 +42,22 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.tfyController.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: {{ .Values.tfyController.service.port }}
+              scheme: HTTP
+            failureThreshold: 10
+            initialDelaySeconds: 600
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           readinessProbe:
             failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
