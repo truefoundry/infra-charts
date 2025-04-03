@@ -3,17 +3,8 @@
 global:
   ## @param global.controlPlaneURL Control plane URL
   controlPlaneURL: ""
-  ## @param global.truefoundryReleaseName Truefoundry release name
-  truefoundryReleaseName: "truefoundry"
   ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
   existingTruefoundryImagePullSecretName: ""
-  llmGatewayInfra:
-    ## @param global.llmGatewayInfra.enabled Bool if llm gateway infra is enabled
-    enabled: false
-    ## @param global.llmGatewayInfra.releaseName Release name for the tfy-llm-gateway-infra
-    releaseName: "tfy-llm-gateway-infra"
-    ## @param global.llmGatewayInfra.natsAdminPassword NATS admin password  
-    natsAdminPassword: ""
 
 ## Image configuration for llm-gateway
 image:
@@ -71,6 +62,16 @@ healthcheck:
     port: 8787
     ## @param healthcheck.liveness.path Path to probe
     path: /
+    ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 600
+    ## @param healthcheck.liveness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 5
+    ## @param healthcheck.liveness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.liveness.failureThreshold Failure threshold
+    failureThreshold: 3
 ## Resource configuration
 resources:
   ## resources.limits Resource limits

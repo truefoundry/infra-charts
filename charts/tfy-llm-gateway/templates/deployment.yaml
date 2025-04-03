@@ -48,6 +48,11 @@ spec:
             httpGet:
               path: {{ .Values.healthcheck.liveness.path }}
               port: {{ .Values.healthcheck.liveness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 5 }}
+            successThreshold: {{ .Values.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.liveness.failureThreshold | default 3 }}
           readinessProbe:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
