@@ -119,7 +119,7 @@ helm.sh/chart: {{ include "truefoundry-frontend-app.chart" . }}
 {{- define "truefoundry-frontend-app.ingress.labels" -}}
 {{- include "truefoundry-frontend-app.labels" . }}
 {{- if .Values.truefoundryFrontendApp.ingress.labels }}
-{{- toYaml .Values.truefoundryFrontendApp.ingress.labels | nindent 4 }}
+{{ toYaml .Values.truefoundryFrontendApp.ingress.labels }}
 {{- end }}
 {{- end }}
 
