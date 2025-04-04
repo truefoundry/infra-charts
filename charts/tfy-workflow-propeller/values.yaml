@@ -72,11 +72,17 @@ flyte-core:
         type: admin
         ## @param flyte-core.configmap.admin.event.capacity to set the capacity
         capacity: 100
-    logger:
-      ## @param flyte-core.configmap.logger.level to set the log level
-      level: 5
-      ## @param  flyte-core.configmap.logger.show-source to set the log format
-      show-source: true
+    task_logs:
+      ## @param flyte-core.configmap.task_logs.plugins to set the plugins for logs
+      plugins:
+        ## @param flyte-core.configmap.task_logs.plugins.logs to set configuration for the logs
+        logs:
+          ## @param flyte-core.configmap.task_logs.plugins.logs.cloudwatch-enabled to enable cloudwatch
+          cloudwatch-enabled: false
+          ## @param flyte-core.configmap.task_logs.plugins.logs.kubernetes-enabled to enable kubernetes
+          kubernetes-enabled: true
+          ## @param flyte-core.configmap.task_logs.plugins.logs.kubernetes-template-uri to set the kubernetes uri to fetch the logs
+          kubernetes-template-uri: '{{ "{{" }} .podName {{ "}}" }}'
   flyteadmin:
     ## @param flyte-core.flyteadmin.enabled to enable the flyteadmin
     enabled: false
