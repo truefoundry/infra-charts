@@ -1,14 +1,16 @@
 {{- if and .Values.truefoundryFrontendApp.enabled .Values.truefoundryFrontendApp.ingress.enabled -}}
-{{- $serviceName := include "truefoundry-frontend-app.fullname" . -}}
-{{- $servicePort := .Values.truefoundryFrontendApp.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "truefoundry-frontend-app.fullname" . }}
-  annotations:
-    {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
+  name: {{ include "truefoundry-frontend-app.fullname" . }}-be
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
   rules:
@@ -16,17 +18,64 @@ spec:
     - host: {{ $host }}
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /api/svc/socket\.io(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
-                name: {{ $serviceName }}
+                name: {{ tpl $.Values.truefoundryFrontendApp.servicefoundryServerHost $ }}
                 port:
-                  number: {{ $servicePort }}
-
-    {{- end -}}
+                  number: 3000
+          - path: /api/llm(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ tpl $.Values.truefoundryFrontendApp.llmGateway.backendHost $ }}
+                port:
+                  number: {{ $.Values.truefoundryFrontendApp.llmGateway.backendPort }}
+          - path: /api/proxy-server(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ tpl $.Values.truefoundryFrontendApp.proxyServerHost $ }}
+                port:
+                  number: 8123
+          - path: /flyteidl\.service\.AdminService(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ tpl $.Values.truefoundryFrontendApp.tfyWorkflowAdminHost $ }}
+                port:
+                  number: 8089
+    {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry-frontend-app.fullname" . }}-fe
+  labels:
+    {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
   {{- if .Values.truefoundryFrontendApp.ingress.tls }}
   tls:
-  {{- toYaml .Values.truefoundryFrontendApp.ingress.tls | nindent 4 }}
-  {{- end -}}
+    {{- toYaml .Values.truefoundryFrontendApp.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $host := .Values.truefoundryFrontendApp.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "truefoundry-frontend-app.fullname" $ }}.{{ $.Release.Namespace }}.svc.cluster.local
+                port:
+                  number: 5000
+    {{- end }}
 {{- end -}}
