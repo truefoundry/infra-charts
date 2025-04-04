@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.42.2
+  controlPlaneChartVersion: 0.45.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -55,16 +55,14 @@ global:
       value: spot
       effect: NoSchedule
       operator: Equal
-  ## global.llmGatewayInfra LLM Gateway Infra configuration
-  llmGatewayInfra:
-    ## @param global.llmGatewayInfra.enabled Bool to enable LLM Gateway Infra
-    enabled: false
-    ## @param global.llmGatewayInfra.releaseName Release name for LLM Gateway Infra
-    releaseName: "tfy-llm-gateway-infra"
-    ## @param global.llmGatewayInfra.natsAdminPassword Password for nats admin
-    natsAdminPassword: ""
-    ## @param global.llmGatewayInfra.clickhousePassword Password for clickhouse user
-    clickhousePassword: ""
+# tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
+tags:
+  ## @param tags.llmGateway Bool to enable llmGateway infra
+  llmGateway: false
+  ## @param tags.llmGatewayRequestLogging Bool to enable request logging feature in LLM gateway
+  llmGatewayRequestLogging: false
+  ## @param tags.tracing Bool to enable OTEL tracing feature
+  tracing: false
 ## devMode  When enabled creates a dev installation of the control plane for testing purposes
 devMode:
   ## @param devMode.enabled Bool to enable dev mode
@@ -84,7 +82,7 @@ truefoundryBootstrap:
     ## @param truefoundryBootstrap.image.tag Truefoundry bootstrap image tag
     tag: "latest"
   ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
-  natsConfigmapName: "nats-accounts"
+  natsConfigmapName: "tfy-nats-accounts"
   ## @param truefoundryBootstrap.annotations [object] Annotations for the bootstrap job
   annotations: {}
   ## @param truefoundryBootstrap.labels [object] Labels for the bootstrap job
@@ -125,7 +123,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.42.2"
+    tag: "v0.44.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -211,7 +209,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
     external: false
     ## @param truefoundryFrontendApp.llmGateway.backendHost Backend Host for the LLM gateway
-    backendHost: 'tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local'
+    backendHost: '{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local'
     ## @param truefoundryFrontendApp.llmGateway.backendPort Backend Port for the LLM gateway
     backendPort: 8787
   ## @param truefoundryFrontendApp.proxyServerHost Proxy server host for the frontend app
@@ -230,18 +228,20 @@ truefoundryFrontendApp:
   ## @skip truefoundryFrontendApp.env Environment variables for the frontend app
   env:
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    NATS_URL: ws://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:8080
+    NATS_URL: ws://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_CONTROLLER_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
     DEBUGGING_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
-    TFY_OTEL_COLLECTOR_URL: http://tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318
+    TFY_OTEL_COLLECTOR_URL: http://tfy-llm-gateway-infra-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318
+    TRT_ENGINE_BUILDER_BASE_URL: https://tfy-trt-llm-engine-builder.tfy-ctl-euwe1-production.production.truefoundry.com
     VITE_AUTHSERVER_URL: /api/auth
     VITE_MLFOUNDRY_URL: /api/ml
     VITE_SVCFOUNDRY_URL: /api/svc
     VITE_DEBUGGING_AGENT_URL: /api/agent
     VITE_LLM_GATEWAY_URL: /api/llm
     VITE_LIVE_DEMO_TOKEN_VENDOR_URL: /api/live-demo-token-vendor
+    VITE_TRT_ENGINE_BUILDER_URL: /api/trt-engine-builder
     VITE_SOCKET_URL: ""
     VITE_NATS_URL: ""
     VITE_FUSIONAUTH_URL: https://login.truefoundry.com
@@ -279,7 +279,7 @@ truefoundryFrontendApp:
     VITE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
     VITE_ENABLE_NEW_DELETE_FLOW: "false"
     VITE_NEW_DELETE_ENABLED_TENANTS: ""
-    VITE_ENABLE_LLM_GATEWAY_TRACING: "false"
+    VITE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
     VITE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
     VITE_ENABLE_ALERT_INFOBAR: "false"
     VITE_ALERT_INFOBAR_ENABLED_TENANTS: ""
@@ -291,7 +291,7 @@ truefoundryFrontendApp:
     VITE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
     VITE_CIVO_RESOURCES_STRING: ""
     VITE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
-    VITE_ENABLE_LLM_GATEWAY: "{{ .Values.global.llmGatewayInfra.enabled }}"
+    VITE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
     VITE_LLM_GATEWAY_PATH: llm-gateway
     VITE_ENABLE_SENTRY: "true"
     VITE_ENABLE_PROMPT_TEMPLATES: "false"
@@ -331,7 +331,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.35.0"
+    tag: "v0.37.0"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -431,7 +431,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.42.0"
+    tag: "v0.45.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -523,14 +523,14 @@ servicefoundryServer:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace }}.svc.cluster.local:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
-    NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
-    NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-tfy-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
+    NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     NATS_QGROUP_NAME: ""
     FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local:8089
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
     BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-    LLM_GATEWAY_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
+    LLM_GATEWAY_ENABLED: "{{ .Values.tags.llmGateway }}"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
     GITHUB_INSTALLATION_URL: ""
     GITHUB_PRIVATE_KEY: ""
@@ -543,10 +543,10 @@ servicefoundryServer:
     GITLAB_SCOPE: ""
     AZURE_CLIENT_ID: ""
     AZURE_CLIENT_SECRET: ""
-    CLICKHOUSE_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
-    CLICKHOUSE_HOST: http://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:8123
+    CLICKHOUSE_ENABLED: "{{ .Values.tags.llmGatewayRequestLogging }}"
+    CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
     CLICKHOUSE_USER: user
-    CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
+    CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
     OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
@@ -579,7 +579,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.37.0"
+    tag: "v0.40.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -646,26 +646,23 @@ tfyK8sController:
   ## @skip tfyK8sController.env Environment variables for the tfyK8sController
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-    CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local:8123
     CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
     ANALYTICS_SERVER_URL: https://analytics.truefoundry.com
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    ENABLE_GATEWAY_CONSUMER: "{{ .Values.global.llmGatewayInfra.enabled }}"
-    GATEWAY_NATS_USERNAME: admin
-    GATEWAY_NATS_PASSWORD: "{{ .Values.global.llmGatewayInfra.natsAdminPassword }}"
-    GATEWAY_NATS_URL: http://{{ .Values.global.llmGatewayInfra.releaseName }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     NODE_ENV: production
     DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe
     TFY_LLM_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
     ENABLE_AUTOPILOT_DIAGNOSIS: "false"
     SENTRY_ENABLED: "true"
-    CLICKHOUSE_ENABLED: "{{ .Values.global.llmGatewayInfra.enabled }}"
-    CLICKHOUSE_HOST: http://clickhouse-{{ .Values.global.llmGatewayInfra.releaseName }}.{{ .Release.Namespace }}.svc.cluster.local:8123
+    CLICKHOUSE_ENABLED: "{{ .Values.tags.llmGatewayRequestLogging }}"
+    CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
     CLICKHOUSE_USER: user
-    CLICKHOUSE_PASSWORD: "{{ .Values.global.llmGatewayInfra.clickhousePassword }}"
+    CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -683,7 +680,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.37.0"
+    tag: "v0.39.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -762,7 +759,7 @@ sfyManifestService:
     TFY_NOTIFICATION_SENDER_IMAGE: tfy.jfrog.io/tfy-images/tfy-notification-sender:0.0.4
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
-    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     AUTOPILOT_PROCESSOR_NATS_PULL_MAX_BYTES: "10485760"
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
@@ -773,10 +770,11 @@ sfyManifestService:
 ###################################################################################################################
 ######################################### NATS ####################################################################
 ###################################################################################################################
-## @section nats Truefoundry NATS settings
-nats:
+## @skip natsDeprecated Truefoundry NATS settings
+natsDeprecated:
+  nameOverride: nats
   ## @param nats.enabled Bool to enable the NATS server
-  enabled: true
+  enabled: false
   ## @param nats.topologySpreadConstraints [object] Topology spread constraints for NATS server
   topologySpreadConstraints:
     - maxSkew: 1
@@ -1212,7 +1210,7 @@ tfyController:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
-    TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
 ###################################################################################################################
@@ -1229,7 +1227,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.12.0
+    tag: v0.12.1
   ## @param tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -1328,3 +1326,76 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+## @skip tfyNats
+tfyNats:
+  nameOverride: tfy-nats
+  enabled: true
+  config:
+    merge:
+      00$include: accounts/resolver.conf
+    cluster:
+      enabled: true
+      replicas: 3
+    advertise: false
+    jetstream:
+      enabled: true
+      fileStore:
+        dir: /data
+        pvc:
+          size: 10Gi
+          enabled: true
+        enabled: true
+        maxSize: 9Gi
+      memoryStore:
+        size: 1Gi
+        enabled: true
+    websocket:
+      port: 8080
+      enabled: true
+  natsBox:
+    enabled: false
+  reloader:
+    image:
+      repository: tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader
+      tag: "0.14.3"
+    enabled: true
+  promExporter:
+    image:
+      repository: tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter
+      tag: "0.15.0"
+    enabled: true
+  container:
+    image:
+      tag: 2.10.24-alpine3.21
+      repository: tfy.jfrog.io/tfy-mirror/nats
+    patch:
+      - op: add
+        path: /volumeMounts/-
+        value:
+          name: resolver-volume
+          mountPath: /etc/nats-config/accounts
+      - op: add
+        path: /resources
+        value:
+          limits:
+            cpu: 400m
+            memory: 1024Mi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+  podTemplate:
+    patch:
+      - op: add
+        path: /spec/volumes/-
+        value:
+          name: resolver-volume
+          configMap:
+            name: tfy-nats-accounts
+            defaultMode: 420
+      - op: add
+        path: /spec/imagePullSecrets
+        value: []
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
