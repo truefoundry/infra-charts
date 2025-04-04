@@ -32,8 +32,8 @@ spec:
         <clickhouse>
             <logger>
                 <level>information</level>
-                <log>/var/log/clickhouse-server/clickhouse-server.log</log>
-                <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+                <log>/tmp/log/clickhouse-server/clickhouse-server.log</log>
+                <errorlog>/tmp/log/clickhouse-server/clickhouse-server.err.log</errorlog>
                 <size>100M</size>
                 <count>5</count>
                 <console>1</console>
@@ -91,6 +91,17 @@ spec:
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
           {{- end }}
+          volumes:
+            - name: tmp
+              emptyDir: {}
+          securityContext:
+            capabilities:
+              add:
+                - CAP_NICE
+                - CAP_IPC_LOCK
+            fsGroup: 101
+            runAsGroup: 101
+            runAsUser: 101
           containers:
             - name: clickhouse
               image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
@@ -109,6 +120,11 @@ spec:
                   memory: {{ .Values.clickhouse.resources.limits.memory }}
                   cpu: {{ .Values.clickhouse.resources.limits.cpu }}
                   ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              securityContext:
+                readOnlyRootFilesystem: true
     volumeClaimTemplates:
       - name: clickhouse-data-volume
         spec:
