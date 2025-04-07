@@ -32,7 +32,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | ----------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------- |
 | `truefoundryBootstrap.enabled`                        | Bool to enable truefoundry bootstrap                    | `true`                                          |
 | `truefoundryBootstrap.image.repository`               | Truefoundry bootstrap image repository                  | `tfy.jfrog.io/tfy-images/truefoundry-bootstrap` |
-| `truefoundryBootstrap.image.tag`                      | Truefoundry bootstrap image tag                         | `0.1.2`                                         |
+| `truefoundryBootstrap.image.tag`                      | Truefoundry bootstrap image tag                         | `0.1.3`                                         |
 | `truefoundryBootstrap.natsConfigmapName`              | Truefoundry nats configmap name                         | `tfy-nats-accounts`                             |
 | `truefoundryBootstrap.annotations`                    | Annotations for the bootstrap job                       | `{}`                                            |
 | `truefoundryBootstrap.labels`                         | Labels for the bootstrap job                            | `{}`                                            |
