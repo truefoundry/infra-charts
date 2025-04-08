@@ -265,10 +265,10 @@ clickhouse:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
           - matchExpressions:
-              - key: node.kubernetes.io/lifecycle
-                operator: NotIn
+              - key: karpenter.sh/capacity-type
                 values:
-                  - spot
+                  - on-demand
+                operator: In
 
 ## @skip tfy-otel-collector [object] tfy-otel-collector config
 tfy-otel-collector:
