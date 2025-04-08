@@ -78,6 +78,20 @@ altinity-clickhouse-operator:
 ## @skip zookeeper [object] zookeper config
 zookeeper:
   enabled: true
+  replicaCount: 3
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  tolerations:
+    - effect: NoSchedule
+      key: cloud.google.com/gke-spot
+      operator: Equal
+      value: 'true'
+    - effect: NoSchedule
+      key: kubernetes.azure.com/scalesetpriority
+      operator: Equal
+      value: 'spot'
 
 ## @skip nats [object] nats config
 nats:
@@ -219,7 +233,7 @@ clickhouse:
   clusterName: clickhouse
   user: user
   shardsCount: 1
-  replicasCount: 1
+  replicasCount: 2
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   labels: {}
@@ -228,20 +242,33 @@ clickhouse:
   imagePullSecrets: []
   resources:
     requests:
-      memory: 4096Mi
-      cpu: 500m
-      ephemeralStorage: 2048Mi
+      memory: 15000Mi
+      cpu: 3.5
+      ephemeralStorage: 15000Mi
     limits:
-      memory: 4096Mi
-      cpu: 500m
-      ephemeralStorage: 2048Mi
+      memory: 30000Mi
+      cpu: 7
+      ephemeralStorage: 30000Mi
   storage:
     storageClassName: ''
-    size: 100Gi
+    size: 200Gi
   nats:
     url: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
     subjects: request-log.>
     username: clickhouse-request-logs-reader
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: karpenter.sh/capacity-type
+                values:
+                  - on-demand
+                operator: In
 
 ## @skip tfy-otel-collector [object] tfy-otel-collector config
 tfy-otel-collector:
