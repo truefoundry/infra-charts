@@ -83,9 +83,6 @@ zookeeper:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/component: zookeeper
   tolerations:
     - effect: NoSchedule
       key: cloud.google.com/gke-spot
@@ -259,6 +256,19 @@ clickhouse:
     url: "{{ .Release.Name }}-nats.{{ .Release.Namespace }}.svc.cluster.local:4222"
     subjects: request-log.>
     username: clickhouse-request-logs-reader
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/lifecycle
+                operator: NotIn
+                values:
+                  - spot
 
 ## @skip tfy-otel-collector [object] tfy-otel-collector config
 tfy-otel-collector:

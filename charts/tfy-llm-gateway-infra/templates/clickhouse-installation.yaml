@@ -88,16 +88,14 @@ spec:
     podTemplates:
       - name: clickhouse-stable
         spec:
+          {{- with .Values.clickhouse.topologySpreadConstraints }}
           topologySpreadConstraints:
-            - maxSkew: 1
-              topologyKey: kubernetes.io/hostname
-              whenUnsatisfiable: ScheduleAnyway
-              labelSelector:
-                matchExpressions:
-                  - key: clickhouse.altinity.com/cluster
-                    operator: In
-                    values:
-                      - {{ .Values.clickhouse.clusterName }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.clickhouse.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.clickhouse.imagePullSecrets }}
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
