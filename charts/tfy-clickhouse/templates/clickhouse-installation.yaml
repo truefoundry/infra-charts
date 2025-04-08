@@ -32,11 +32,9 @@ spec:
         <clickhouse>
             <logger>
                 <level>information</level>
-                <log>/tmp/log/clickhouse-server/clickhouse-server.log</log>
-                <errorlog>/tmp/log/clickhouse-server/clickhouse-server.err.log</errorlog>
-                <size>100M</size>
-                <count>5</count>
-                <console>1</console>
+                <console>true</console>
+                <log remove="remove"/>
+                <errorlog remove="remove"/>
             </logger>
         </clickhouse>
       users.d/users.xml: |-
@@ -91,9 +89,6 @@ spec:
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
           {{- end }}
-          volumes:
-            - name: tmp
-              emptyDir: {}
           securityContext:
             capabilities:
               add:
@@ -120,9 +115,6 @@ spec:
                   memory: {{ .Values.clickhouse.resources.limits.memory }}
                   cpu: {{ .Values.clickhouse.resources.limits.cpu }}
                   ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
-              volumeMounts:
-                - name: tmp
-                  mountPath: /tmp
               securityContext:
                 readOnlyRootFilesystem: true
     volumeClaimTemplates:
