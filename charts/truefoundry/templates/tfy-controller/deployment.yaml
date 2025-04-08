@@ -47,17 +47,17 @@ spec:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
               scheme: HTTP
-            failureThreshold: 10
-            initialDelaySeconds: 600
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
+            failureThreshold: {{ .Values.tfyController.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyController.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyController.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyController.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyController.livenessProbe.timeoutSeconds }}
           readinessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
+            failureThreshold: {{ .Values.tfyController.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyController.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyController.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyController.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyController.readinessProbe.timeoutSeconds }}
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}

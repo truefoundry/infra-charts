@@ -49,11 +49,21 @@ spec:
           resources:
             {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}
           readinessProbe:
+            failureThreshold: {{ .Values.tfyWorkflowAdmin.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyWorkflowAdmin.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.timeoutSeconds }}
             exec:
               command:
                 - /bin/grpc_health_probe
                 - '-addr=:{{ .Values.tfyWorkflowAdmin.service.port }}'
           livenessProbe:
+            failureThreshold: {{ .Values.tfyWorkflowAdmin.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyWorkflowAdmin.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.timeoutSeconds }}
             exec:
               command:
                 - /bin/grpc_health_probe

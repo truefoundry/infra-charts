@@ -43,14 +43,21 @@ spec:
           resources:
             {{- toYaml .Values.truefoundryFrontendApp.resources | nindent 12 }}
           livenessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 600
+            failureThreshold: {{ .Values.truefoundryFrontendApp.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.truefoundryFrontendApp.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.truefoundryFrontendApp.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.truefoundryFrontendApp.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.truefoundryFrontendApp.livenessProbe.timeoutSeconds }}
             httpGet:
               path: /livez
               port: {{ .Values.truefoundryFrontendApp.service.port }}
               scheme: HTTP
           readinessProbe:
-            failureThreshold: 3
+            failureThreshold: {{ .Values.truefoundryFrontendApp.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.truefoundryFrontendApp.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.truefoundryFrontendApp.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.truefoundryFrontendApp.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.truefoundryFrontendApp.readinessProbe.timeoutSeconds }}
             httpGet:
               path: /readyz
               port: {{ .Values.truefoundryFrontendApp.service.port }}
