@@ -129,7 +129,6 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | Name                             | Description                                     | Value                  |
 | -------------------------------- | ----------------------------------------------- | ---------------------- |
 | `istio.discovery.hub`            | Hub for the istio image                         | `gcr.io/istio-release` |
-| `istio.discovery.tag`            | Tag for the istio image                         | `1.21.1-distroless`    |
 | `istio.discovery.tolerations`    | Tolerations for Istio Discovery                 | `[]`                   |
 | `istio.discovery.affinity`       | Affinity for Istio Discovery                    | `{}`                   |
 | `istio.discovery.valuesOverride` | Config override from default config values      | `{}`                   |
@@ -143,6 +142,15 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | `keda.tolerations`    | Tolerations for Keda                       | `[]`   |
 | `keda.affinity`       | Affinity for Keda                          | `{}`   |
 | `keda.valuesOverride` | Config override from default config values | `{}`   |
+
+### sparkOperator parameters
+
+| Name                           | Description                                | Value  |
+| ------------------------------ | ------------------------------------------ | ------ |
+| `sparkOperator.enabled`        | Flag to enable Spark Operator              | `true` |
+| `sparkOperator.tolerations`    | Tolerations for Spark Operator             | `[]`   |
+| `sparkOperator.affinity`       | Affinity for Spark Operator                | `{}`   |
+| `sparkOperator.valuesOverride` | Config override from default config values | `{}`   |
 
 ### kubecost parameters
 
