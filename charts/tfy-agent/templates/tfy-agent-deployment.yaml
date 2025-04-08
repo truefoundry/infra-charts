@@ -19,6 +19,12 @@ spec:
       labels:
         {{- include "tfy-agent.selectorLabels" . | nindent 8 }}
     spec:
+      securityContext:
+        fsGroup: 1001210000
+        seLinuxOptions:
+          level: s0:c35,c10
+        seccompProfile:
+          type: RuntimeDefault
       {{- with .Values.tfyAgent.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -27,7 +33,12 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.tfyAgent.securityContext | nindent 12 }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            runAsUser: 1001210000
           env:
             {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL
