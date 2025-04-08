@@ -1,0 +1,58 @@
+{{- if .Values.sparkOperator.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spark-operator
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "spark-operator"
+spec:
+  destination:
+    namespace: spark-operator
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 2.1.1
+    repoURL: "https://kubeflow.github.io/spark-operator"
+    chart: spark-operator
+    helm:
+      values: |-
+        {{- if .Values.sparkOperator.valuesOverride }}
+        {{ .Values.sparkOperator.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.sparkOperator.tolerations }}
+        {{- $mergedTolerations = .Values.sparkOperator.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.sparkOperator.affinity }}
+        {{- $mergedAffinity = .Values.sparkOperator.affinity }}
+        {{- end }}
+        resources:
+          operator:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+              ephemeral-storage: 512Mi
+        {{- if $mergedTolerations }}
+        tolerations:
+          {{- toYaml $mergedTolerations | nindent 14 }}
+        {{- end }}
+        {{- if $mergedAffinity }}
+        affinity:
+          {{- toYaml $mergedAffinity | nindent 14 }}
+        {{- end }}
+      {{- end }}
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
