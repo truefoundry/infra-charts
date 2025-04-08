@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.45.3
+  controlPlaneChartVersion: 0.46.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -80,7 +80,7 @@ truefoundryBootstrap:
     ## @param truefoundryBootstrap.image.repository Truefoundry bootstrap image repository
     repository: "tfy.jfrog.io/tfy-images/truefoundry-bootstrap"
     ## @param truefoundryBootstrap.image.tag Truefoundry bootstrap image tag
-    tag: "0.1.2"
+    tag: "0.1.3"
   ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
   natsConfigmapName: "tfy-nats-accounts"
   ## @param truefoundryBootstrap.annotations [object] Annotations for the bootstrap job
@@ -123,7 +123,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.44.0"
+    tag: "v0.45.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -150,6 +150,38 @@ truefoundryFrontendApp:
       memory: 512Mi
       ## @param truefoundryFrontendApp.resources.limits.ephemeral-storage Ephemeral storage limit for the frontend app
       ephemeral-storage: 256Mi
+    ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
+    requests:
+      ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
+      cpu: 50m
+      ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
+      memory: 256Mi
+      ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
+      ephemeral-storage: 128Mi
+  ## @param truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
+  livenessProbe:
+    ## @param truefoundryFrontendApp.livenessProbe.initialDelaySeconds Initial delay seconds for the liveness probe
+    initialDelaySeconds: 600
+    ## @param truefoundryFrontendApp.livenessProbe.periodSeconds Period seconds for the liveness probe
+    periodSeconds: 30
+    ## @param truefoundryFrontendApp.livenessProbe.timeoutSeconds Timeout seconds for the liveness probe
+    timeoutSeconds: 5
+    ## @param truefoundryFrontendApp.livenessProbe.failureThreshold Failure threshold for the liveness probe
+    failureThreshold: 3
+    ## @param truefoundryFrontendApp.livenessProbe.successThreshold Success threshold for the liveness probe
+    successThreshold: 1
+  ## @param truefoundryFrontendApp.readinessProbe Readiness probe settings for the frontend app
+  readinessProbe:
+    ## @param truefoundryFrontendApp.readinessProbe.initialDelaySeconds Initial delay seconds for the readiness probe
+    initialDelaySeconds: 30
+    ## @param truefoundryFrontendApp.readinessProbe.periodSeconds Period seconds for the readiness probe
+    periodSeconds: 30
+    ## @param truefoundryFrontendApp.readinessProbe.timeoutSeconds Timeout seconds for the readiness probe
+    timeoutSeconds: 5
+    ## @param truefoundryFrontendApp.readinessProbe.failureThreshold Failure threshold for the readiness probe
+    failureThreshold: 3
+    ## @param truefoundryFrontendApp.readinessProbe.successThreshold Success threshold for the readiness probe
+    successThreshold: 1
     ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
     requests:
       ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
@@ -267,8 +299,6 @@ truefoundryFrontendApp:
     VITE_ENABLE_TROUBLESHOOT: "false"
     VITE_TROUBLESHOOT_ENABLED_TENANTS: ""
     VITE_ENABLE_RSTUDIO: "false"
-    VITE_ENABLE_PROMPT_MANAGEMENT: "false"
-    VITE_PROMPT_MANAGEMENT_ENABLED_TENANTS: ""
     VITE_DATA_DIRECTORY_ENABLED_TENANTS: ""
     VITE_ENABLE_DATA_DIRECTORY: "false"
     VITE_ENABLE_EVENTS_GRAPHS: "true"
@@ -279,6 +309,8 @@ truefoundryFrontendApp:
     VITE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
     VITE_ENABLE_NEW_DELETE_FLOW: "false"
     VITE_NEW_DELETE_ENABLED_TENANTS: ""
+    VITE_ENABLE_LLM_GATEWAY_REQUEST_LOGS: "true"
+    VITE_LLM_GATEWAY_REQUEST_LOGS_ENABLED_TENANTS: ""
     VITE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
     VITE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
     VITE_ENABLE_ALERT_INFOBAR: "false"
@@ -294,7 +326,6 @@ truefoundryFrontendApp:
     VITE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
     VITE_LLM_GATEWAY_PATH: llm-gateway
     VITE_ENABLE_SENTRY: "true"
-    VITE_ENABLE_PROMPT_TEMPLATES: "false"
     VITE_ENABLE_TOOLS_AGENTS: "false"
     VITE_ENABLE_READ_ONLY_INTERACTIVE_MODE: "false"
     VITE_AGENT_ENABLED_TENANTS: truefoundry,internal
@@ -331,7 +362,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.37.0"
+    tag: "v0.38.0"
   ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -370,6 +401,30 @@ mlfoundryServer:
       memory: 1024Mi
       ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
       ephemeral-storage: 128Mi
+  ## mlfoundryServer.livenessProbe Liveness probe settings for the mlfoundry server
+  livenessProbe:
+    ## @param mlfoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for mlfoundry server
+    failureThreshold: 3
+    ## @param mlfoundryServer.livenessProbe.initialDelaySeconds Liveness probe initial delay for mlfoundry server
+    initialDelaySeconds: 600
+    ## @param mlfoundryServer.livenessProbe.periodSeconds Liveness probe period for mlfoundry server
+    periodSeconds: 10
+    ## @param mlfoundryServer.livenessProbe.successThreshold Liveness probe success threshold for mlfoundry server
+    successThreshold: 1
+    ## @param mlfoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for mlfoundry server
+    timeoutSeconds: 1
+  ## mlfoundryServer.readinessProbe Readiness probe settings for the mlfoundry server
+  readinessProbe:
+    ## @param mlfoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for mlfoundry server
+    failureThreshold: 3
+    ## @param mlfoundryServer.readinessProbe.initialDelaySeconds Readiness probe initial delay for mlfoundry server
+    initialDelaySeconds: 30
+    ## @param mlfoundryServer.readinessProbe.periodSeconds Readiness probe period for mlfoundry server
+    periodSeconds: 10
+    ## @param mlfoundryServer.readinessProbe.successThreshold Readiness probe success threshold for mlfoundry server
+    successThreshold: 1
+    ## @param mlfoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for mlfoundry server
+    timeoutSeconds: 1
   ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
   nodeSelector: {}
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
@@ -431,7 +486,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.45.2"
+    tag: "v0.46.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -468,6 +523,30 @@ servicefoundryServer:
       memory: 800Mi
       ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
       ephemeral-storage: 128Mi
+  ## servicefoundryServer.livenessProbe Liveness probe settings for the servicefoundry server
+  livenessProbe:
+    ## @param servicefoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for servicefoundry server
+    failureThreshold: 3
+    ## @param servicefoundryServer.livenessProbe.initialDelaySeconds Liveness probe initial delay for servicefoundry server
+    initialDelaySeconds: 600
+    ## @param servicefoundryServer.livenessProbe.periodSeconds Liveness probe period for servicefoundry server
+    periodSeconds: 10
+    ## @param servicefoundryServer.livenessProbe.successThreshold Liveness probe success threshold for servicefoundry server
+    successThreshold: 1
+    ## @param servicefoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for servicefoundry server
+    timeoutSeconds: 1
+  ## servicefoundryServer.readinessProbe Readiness probe settings for the servicefoundry server
+  readinessProbe:
+    ## @param servicefoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for servicefoundry server
+    failureThreshold: 3
+    ## @param servicefoundryServer.readinessProbe.initialDelaySeconds Readiness probe initial delay for servicefoundry server
+    initialDelaySeconds: 30
+    ## @param servicefoundryServer.readinessProbe.periodSeconds Readiness probe period for servicefoundry server
+    periodSeconds: 10
+    ## @param servicefoundryServer.readinessProbe.successThreshold Readiness probe success threshold for servicefoundry server
+    successThreshold: 1
+    ## @param servicefoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for servicefoundry server
+    timeoutSeconds: 1
   ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
   nodeSelector: {}
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
@@ -579,7 +658,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.40.1"
+    tag: "v0.41.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -618,6 +697,30 @@ tfyK8sController:
       memory: 256Mi
       ## @param tfyK8sController.resources.requests.ephemeral-storage Ephemeral storage request for the tfyK8sController
       ephemeral-storage: 128Mi
+  ## tfyK8sController.livenessProbe Liveness probe settings for the tfyK8sController
+  livenessProbe:
+    ## @param tfyK8sController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyK8sController
+    failureThreshold: 3
+    ## @param tfyK8sController.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyK8sController
+    initialDelaySeconds: 600
+    ## @param tfyK8sController.livenessProbe.periodSeconds Liveness probe period for tfyK8sController
+    periodSeconds: 10
+    ## @param tfyK8sController.livenessProbe.successThreshold Liveness probe success threshold for tfyK8sController
+    successThreshold: 1
+    ## @param tfyK8sController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyK8sController
+    timeoutSeconds: 1
+  ## tfyK8sController.readinessProbe Readiness probe settings for the tfyK8sController
+  readinessProbe:
+    ## @param tfyK8sController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyK8sController
+    failureThreshold: 3
+    ## @param tfyK8sController.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyK8sController
+    initialDelaySeconds: 30
+    ## @param tfyK8sController.readinessProbe.periodSeconds Readiness probe period for tfyK8sController
+    periodSeconds: 10
+    ## @param tfyK8sController.readinessProbe.successThreshold Readiness probe success threshold for tfyK8sController
+    successThreshold: 1
+    ## @param tfyK8sController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyK8sController
+    timeoutSeconds: 1
   ## @param tfyK8sController.nodeSelector Node selector for the tfyK8sController
   nodeSelector: {}
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
@@ -680,7 +783,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.39.1"
+    tag: "v0.40.0"
   ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -719,6 +822,30 @@ sfyManifestService:
       memory: 256Mi
       ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
       ephemeral-storage: 128Mi
+  ## sfyManifestService.livenessProbe Liveness probe settings for the sfy manifest service
+  livenessProbe:
+    ## @param sfyManifestService.livenessProbe.failureThreshold Liveness probe failure threshold for sfy manifest service
+    failureThreshold: 3
+    ## @param sfyManifestService.livenessProbe.initialDelaySeconds Liveness probe initial delay for sfy manifest service
+    initialDelaySeconds: 600
+    ## @param sfyManifestService.livenessProbe.periodSeconds Liveness probe period for sfy manifest service
+    periodSeconds: 10
+    ## @param sfyManifestService.livenessProbe.successThreshold Liveness probe success threshold for sfy manifest service
+    successThreshold: 1
+    ## @param sfyManifestService.livenessProbe.timeoutSeconds Liveness probe timeout for sfy manifest service
+    timeoutSeconds: 1
+  ## sfyManifestService.readinessProbe Readiness probe settings for the sfy manifest service
+  readinessProbe:
+    ## @param sfyManifestService.readinessProbe.failureThreshold Readiness probe failure threshold for sfy manifest service
+    failureThreshold: 3
+    ## @param sfyManifestService.readinessProbe.initialDelaySeconds Readiness probe initial delay for sfy manifest service
+    initialDelaySeconds: 30
+    ## @param sfyManifestService.readinessProbe.periodSeconds Readiness probe period for sfy manifest service
+    periodSeconds: 10
+    ## @param sfyManifestService.readinessProbe.successThreshold Readiness probe success threshold for sfy manifest service
+    successThreshold: 1
+    ## @param sfyManifestService.readinessProbe.timeoutSeconds Readiness probe timeout for sfy manifest service
+    timeoutSeconds: 1
   ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
   nodeSelector: {}
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
@@ -1086,7 +1213,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController
     repository: tfy.jfrog.io/tfy-private-images/tfy-controller
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.17.0
+    tag: v0.18.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1120,6 +1247,29 @@ tfyController:
       cpu: 200m
       memory: 512Mi
       ephemeral-storage: 128Mi
+  ## tfyController.livenessProbe Liveness probe settings for the tfyController
+  livenessProbe:
+    ## @param tfyController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyController
+    failureThreshold: 3
+    ## @param tfyController.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyController
+    initialDelaySeconds: 600
+    ## @param tfyController.livenessProbe.periodSeconds Liveness probe period for the tfyController
+    periodSeconds: 10
+    ## @param tfyController.livenessProbe.successThreshold Liveness probe success threshold for tfyController
+    successThreshold: 1
+    ## @param tfyController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyController
+    timeoutSeconds: 1
+  readinessProbe:
+    ## @param tfyController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyController
+    failureThreshold: 3
+    ## @param tfyController.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyController
+    initialDelaySeconds: 30
+    ## @param tfyController.readinessProbe.periodSeconds Readiness probe period for tfyController
+    periodSeconds: 10
+    ## @param tfyController.readinessProbe.successThreshold Readiness probe success threshold for tfyController
+    successThreshold: 1
+    ## @param tfyController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyController
+    timeoutSeconds: 1
   ## @param tfyController.nodeSelector Node selector for the tfyController
   nodeSelector: {}
   ## @param tfyController.affinity Affinity settings for the tfyController
@@ -1172,7 +1322,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.12.1
+    tag: v0.13.0
   ## @param tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -1206,6 +1356,30 @@ tfyWorkflowAdmin:
       cpu: 50m
       memory: 256Mi
       ephemeral-storage: 128Mi
+  ## tfyWorkflowAdmin.livenessProbe Liveness probe settings for the tfyWorkflowAdmin
+  livenessProbe:
+    ## @param tfyWorkflowAdmin.livenessProbe.failureThreshold Liveness probe failure threshold for tfyWorkflowAdmin
+    failureThreshold: 3
+    ## @param tfyWorkflowAdmin.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyWorkflowAdmin
+    initialDelaySeconds: 600
+    ## @param tfyWorkflowAdmin.livenessProbe.periodSeconds Liveness probe period for the tfyWorkflowAdmin
+    periodSeconds: 10
+    ## @param tfyWorkflowAdmin.livenessProbe.successThreshold Liveness probe success threshold for tfyWorkflowAdmin
+    successThreshold: 1
+    ## @param tfyWorkflowAdmin.livenessProbe.timeoutSeconds Liveness probe timeout for tfyWorkflowAdmin
+    timeoutSeconds: 1
+  ## tfyWorkflowAdmin.readinessProbe Readiness probe settings for the tfyWorkflowAdmin
+  readinessProbe:
+    ## @param tfyWorkflowAdmin.readinessProbe.failureThreshold Readiness probe failure threshold for tfyWorkflowAdmin
+    failureThreshold: 3
+    ## @param tfyWorkflowAdmin.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyWorkflowAdmin
+    initialDelaySeconds: 30
+    ## @param tfyWorkflowAdmin.readinessProbe.periodSeconds Readiness probe period for the tfyWorkflowAdmin
+    periodSeconds: 10
+    ## @param tfyWorkflowAdmin.readinessProbe.successThreshold Readiness probe success threshold for tfyWorkflowAdmin
+    successThreshold: 1
+    ## @param tfyWorkflowAdmin.readinessProbe.timeoutSeconds Readiness probe timeout for tfyWorkflowAdmin
+    timeoutSeconds: 1
   ## @param tfyWorkflowAdmin.nodeSelector Node selector for the tfyWorkflowAdmin
   nodeSelector: {}
   ## @param tfyWorkflowAdmin.affinity Affinity settings for the tfyWorkflowAdmin
