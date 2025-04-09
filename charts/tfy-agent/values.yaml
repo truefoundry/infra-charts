@@ -217,10 +217,15 @@ tfyAgent:
     timeoutSeconds: 1
     initialDelaySeconds: 15
 
-  ## SecurityContext holds pod-level security attributes and common container settings.
-  ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ## PodSecurityContext holds pod-level security attributes and common container settings
+  ## @param tfyAgent.podSecurityContext Pod-level Security Context for the tfyAgent Deployment
+  ##
+  podSecurityContext: {}
 
+  ## SecurityContext holds container-level security attributes.
+  ## This can be used to override user, capabilities, etc. for the tfyAgent container.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ##
   ## @param tfyAgent.securityContext Security Context for the tfyAgent container
   ##
   securityContext: {}
