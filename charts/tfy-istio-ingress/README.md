@@ -8,7 +8,7 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | Name                                                 | Description                                                      | Value |
 | ---------------------------------------------------- | ---------------------------------------------------------------- | ----- |
 | `gateway.autoscaling.minReplicas`                    | Minimum number of replicas for autoscaling the Gateway.          | `3`   |
-| `gateway.autoscaling.maxReplicas`                    | Maximum number of replicas for autoscaling the Gateway.          | `10`  |
+| `gateway.autoscaling.maxReplicas`                    | Maximum number of replicas for autoscaling the Gateway.          | `100` |
 | `gateway.autoscaling.targetCPUUtilizationPercentage` | CPU utilization percentage wrt requests for scaling gateway pods | `70`  |
 | `gateway.resources`                                  | Resource section for the gateway pods                            | `{}`  |
 
