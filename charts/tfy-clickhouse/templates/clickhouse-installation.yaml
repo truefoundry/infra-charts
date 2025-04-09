@@ -75,15 +75,15 @@ spec:
     podTemplates:
       - name: clickhouse-stable
         spec:
-          {{- with .Values.nodeSelector }}
+          {{- with .Values.clickhouse.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.tolerations }}
+          {{- with .Values.clickhouse.tolerations }}
           tolerations:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.clickhouse.tolerrations }}
+          {{- with .Values.clickhouse.topologySpreadConstraints }}
           topologySpreadConstraints:
             {{- toYaml . | nindent 12 }}
           {{- end }}
