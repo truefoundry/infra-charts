@@ -158,7 +158,7 @@ truefoundryFrontendApp:
       memory: 256Mi
       ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
       ephemeral-storage: 128Mi
-  ## @param truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
+  ## truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
   livenessProbe:
     ## @param truefoundryFrontendApp.livenessProbe.initialDelaySeconds Initial delay seconds for the liveness probe
     initialDelaySeconds: 600
@@ -170,7 +170,7 @@ truefoundryFrontendApp:
     failureThreshold: 3
     ## @param truefoundryFrontendApp.livenessProbe.successThreshold Success threshold for the liveness probe
     successThreshold: 1
-  ## @param truefoundryFrontendApp.readinessProbe Readiness probe settings for the frontend app
+  ## truefoundryFrontendApp.readinessProbe Readiness probe settings for the frontend app
   readinessProbe:
     ## @param truefoundryFrontendApp.readinessProbe.initialDelaySeconds Initial delay seconds for the readiness probe
     initialDelaySeconds: 30
@@ -182,14 +182,6 @@ truefoundryFrontendApp:
     failureThreshold: 3
     ## @param truefoundryFrontendApp.readinessProbe.successThreshold Success threshold for the readiness probe
     successThreshold: 1
-    ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
-    requests:
-      ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
-      cpu: 50m
-      ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
-      memory: 256Mi
-      ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
-      ephemeral-storage: 128Mi
   ## @param truefoundryFrontendApp.nodeSelector Node selector for the frontend app
   nodeSelector: {}
   ## @param truefoundryFrontendApp.affinity Affinity settings for the frontend app
@@ -1259,6 +1251,7 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyController
     timeoutSeconds: 1
+  ## tfyController.readinessProbe Readiness probe settings for the tfyController
   readinessProbe:
     ## @param tfyController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyController
     failureThreshold: 3
