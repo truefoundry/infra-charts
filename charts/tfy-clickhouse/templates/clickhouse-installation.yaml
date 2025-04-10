@@ -32,11 +32,9 @@ spec:
         <clickhouse>
             <logger>
                 <level>information</level>
-                <log>/var/log/clickhouse-server/clickhouse-server.log</log>
-                <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
-                <size>100M</size>
-                <count>5</count>
-                <console>1</console>
+                <console>true</console>
+                <log remove="remove"/>
+                <errorlog remove="remove"/>
             </logger>
         </clickhouse>
       users.d/users.xml: |-
@@ -95,6 +93,10 @@ spec:
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.clickhouse.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           containers:
             - name: clickhouse
               image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
@@ -113,6 +115,10 @@ spec:
                   memory: {{ .Values.clickhouse.resources.limits.memory }}
                   cpu: {{ .Values.clickhouse.resources.limits.cpu }}
                   ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
+              {{- with .Values.clickhouse.containerSecurityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
     volumeClaimTemplates:
       - name: clickhouse-data-volume
         spec:
