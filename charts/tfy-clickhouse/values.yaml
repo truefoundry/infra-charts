@@ -14,6 +14,7 @@ altinity-clickhouse-operator:
 ## @skip zookeeper [object] zookeper config
 zookeeper:
   enabled: true
+  replicaCount: 1
   image:
     registry: "tfy.jfrog.io/tfy-mirror"
     repository: bitnami/zookeeper
@@ -42,16 +43,23 @@ clickhouse:
   containerSecurityContext: {}
   resources:
     requests:
-      memory: 4096Mi
-      cpu: 500m
-      ephemeralStorage: 2048Mi
+      memory: 4Gi
+      cpu: 1
+      ephemeralStorage: 5Gi
     limits:
-      memory: 4096Mi
-      cpu: 500m
-      ephemeralStorage: 2048Mi
+      memory: 8Gi
+      cpu: 2
+      ephemeralStorage: 10Gi
   storage:
     storageClassName: ''
     size: 100Gi
+  nodeSelector: {}
+  tolerations: {}
+  affinity: {}
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
   virtualService:
     enabled: false
     gatewayName: 'istio-system/tfy-wildcard'

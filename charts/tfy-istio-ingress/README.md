@@ -5,21 +5,12 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### gateway Configuration for the Gateway component.
 
-| Name                                  | Description                                             | Value         |
-| ------------------------------------- | ------------------------------------------------------- | ------------- |
-| `gateway.autoscaling.minReplicas`     | Minimum number of replicas for autoscaling the Gateway. | `3`           |
-| `gateway.service.ports[0].name`       | Name of the port.                                       | `status-port` |
-| `gateway.service.ports[0].port`       | Port number for status-port.                            | `15021`       |
-| `gateway.service.ports[0].protocol`   | Protocol of the port.                                   | `TCP`         |
-| `gateway.service.ports[0].targetPort` | Target port.                                            | `15021`       |
-| `gateway.service.ports[1].name`       | Name of the port.                                       | `http2`       |
-| `gateway.service.ports[1].port`       | Port number for http.                                   | `80`          |
-| `gateway.service.ports[1].protocol`   | Protocol of the port.                                   | `TCP`         |
-| `gateway.service.ports[1].targetPort` | Target port.                                            | `80`          |
-| `gateway.service.ports[2].name`       | Name of the port.                                       | `https`       |
-| `gateway.service.ports[2].port`       | Port number for https.                                  | `443`         |
-| `gateway.service.ports[2].protocol`   | Protocol of the port.                                   | `TCP`         |
-| `gateway.service.ports[2].targetPort` | Target port.                                            | `443`         |
+| Name                                                 | Description                                                      | Value |
+| ---------------------------------------------------- | ---------------------------------------------------------------- | ----- |
+| `gateway.autoscaling.minReplicas`                    | Minimum number of replicas for autoscaling the Gateway.          | `3`   |
+| `gateway.autoscaling.maxReplicas`                    | Maximum number of replicas for autoscaling the Gateway.          | `100` |
+| `gateway.autoscaling.targetCPUUtilizationPercentage` | CPU utilization percentage wrt requests for scaling gateway pods | `70`  |
+| `gateway.resources`                                  | Resource section for the gateway pods                            | `{}`  |
 
 ### tfyGateway Configuration for the tfyGateway.
 

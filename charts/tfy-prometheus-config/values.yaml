@@ -761,6 +761,29 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - truefoundry
+  # serviceMonitors.mlfoundryServer Service monitor for mlfoundry server
+  mlfoundryServer:
+    ## @param serviceMonitors.mlfoundryServer.enabled Enable service monitor for mlfoundry server
+    enabled: false
+    ## @param serviceMonitors.mlfoundryServer.name [string] Name of the service monitor
+    name: mlfoundry-server
+    ## @param serviceMonitors.mlfoundryServer.labels [object] Labels for mlfoundry server
+    labels: {}
+    ## @param serviceMonitors.mlfoundryServer.annotations [object] Annotations for mlfoundry server
+    annotations: {}
+    ## @param serviceMonitors.mlfoundryServer.jobLabel Job label for mlfoundry server
+    jobLabel: app.kubernetes.io/name
+    ## @param serviceMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
+    endpoints:
+      - port: http
+        honorLabels: true
+    ## @param serviceMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
+    serviceSelectorLabels:
+      app.kubernetes.io/name: mlfoundry-server
+    ## @param serviceMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
+    namespaceSelector:
+      matchNames:
+        - truefoundry
   # serviceMonitors.sfyManifestService Service monitor for sfy manifest service
   sfyManifestService:
     ## @param serviceMonitors.sfyManifestService.enabled Enable service monitor for sfy manifest service

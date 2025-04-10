@@ -27,6 +27,10 @@ spec:
       - name: dockerRepo
       - name: dockerTag
       - name: buildkitServiceURL
+      - name: applicationId
+        default: ""
+      - name: deploymentId
+        default: ""
   templates:
     - name: build
       inputs:
@@ -40,6 +44,8 @@ spec:
           - name: dockerTag
           - name: buildkitServiceURL
           - name: callbackURL
+          - name: applicationId
+          - name: deploymentId
       steps:
       - - name: should-use-external-buildkit
           template: should-use-external-buildkit
@@ -71,6 +77,10 @@ spec:
               value: "127.0.0.1:1234"
             - name: callbackURL
               value: "{{`{{inputs.parameters.callbackURL}}`}}"
+            - name: applicationId
+              value: "{{`{{inputs.parameters.applicationId}}`}}"
+            - name: deploymentId
+              value: "{{`{{inputs.parameters.deploymentId}}`}}"
       - - name: build-and-push-with-external-buildkit
           template: build-and-push-with-external-buildkit
           when: >-
@@ -95,6 +105,10 @@ spec:
               value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
             - name: callbackURL
               value: "{{`{{inputs.parameters.callbackURL}}`}}"
+            - name: applicationId
+              value: "{{`{{inputs.parameters.applicationId}}`}}"
+            - name: deploymentId
+              value: "{{`{{inputs.parameters.deploymentId}}`}}"
 
     - name: exit-handler
       inputs:
@@ -248,6 +262,8 @@ spec:
           - name: dockerTag
           - name: buildkitServiceURL
           - name: callbackURL
+          - name: applicationId
+          - name: deploymentId
       outputs:
         parameters:
         - name: tfyBuildStatus
@@ -318,6 +334,10 @@ spec:
             value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
           - name: CALLBACK_URL
             value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: APPLICATION_ID
+            valie: "{{`{{inputs.parameters.applicationId}}`}}"
+          - name: DEPLOYMENT_ID
+            valie: "{{`{{inputs.parameters.deploymentId}}`}}"
           - name: DONE_MARKER
             value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
           - name: FAILED_MARKER
@@ -408,6 +428,8 @@ spec:
           - name: dockerTag
           - name: buildkitServiceURL
           - name: callbackURL
+          - name: applicationId
+          - name: deploymentId
       outputs:
         parameters:
         - name: tfyBuildStatus
@@ -483,6 +505,10 @@ spec:
             value: "{{`{{inputs.parameters.buildkitServiceURL}}`}}"
           - name: CALLBACK_URL
             value: "{{`{{inputs.parameters.callbackURL}}`}}"
+          - name: APPLICATION_ID
+            valie: "{{`{{inputs.parameters.applicationId}}`}}"
+          - name: DEPLOYMENT_ID
+            valie: "{{`{{inputs.parameters.deploymentId}}`}}"
           - name: DONE_MARKER
             value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
           - name: FAILED_MARKER

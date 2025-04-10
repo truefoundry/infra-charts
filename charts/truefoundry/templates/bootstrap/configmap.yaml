@@ -27,17 +27,6 @@ data:
         echo "$(tput setaf 1)$1$(tput sgr0)"
     }
 
-    # function to install binaries - kubectl, nsc, helm
-    install_binaries() {
-      apt update && apt install wget unzip tar -y \
-        && wget https://github.com/nats-io/nsc/releases/download/v2.8.6/nsc-linux-amd64.zip \
-        && unzip nsc-linux-amd64.zip \
-        && mv nsc /usr/bin/ \
-        && wget https://storage.googleapis.com/kubernetes-release/release/v1.29.3/bin/linux/amd64/kubectl \
-            && chmod +x kubectl \
-            && mv kubectl /usr/bin/
-    }
-
     create_tfy_buildkit_tls_certificates_and_secrets(){
       (
         set -eu
@@ -136,7 +125,6 @@ data:
         exit 1
     fi
 
-    install_binaries
     create_tfy_buildkit_tls_certificates_and_secrets  *.{{ include "tfy-buildkitd.buildkitdServiceName" . }}.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local *.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local
 
     if [[ "$CLICKHOUSE_ENABLED" == "true" ]]; then

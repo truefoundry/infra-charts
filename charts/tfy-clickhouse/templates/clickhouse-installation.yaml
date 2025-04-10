@@ -73,18 +73,22 @@ spec:
     podTemplates:
       - name: clickhouse-stable
         spec:
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.clickhouse.tolerrations }}
+          topologySpreadConstraints:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.clickhouse.affinity }}
           affinity:
-            podAntiAffinity:
-              preferredDuringSchedulingIgnoredDuringExecution:
-                - weight: 100
-                  podAffinityTerm:
-                    labelSelector:
-                      matchExpressions:
-                        - key: clickhouse.altinity.com/cluster
-                          operator: In
-                          values:
-                            - {{ .Values.clickhouse.clusterName }}
-                    topologyKey: "kubernetes.io/hostname"
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.clickhouse.imagePullSecrets }}
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
