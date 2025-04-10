@@ -197,6 +197,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.servicefoundryServer.endpoints`             | Endpoints for servicefoundry server               | `[]`                                      |
 | `serviceMonitors.servicefoundryServer.serviceSelectorLabels` | Service selector labels for servicefoundry server | `{}`                                      |
 | `serviceMonitors.servicefoundryServer.namespaceSelector`     | Namespace selector for servicefoundry server      | `{}`                                      |
+| `serviceMonitors.mlfoundryServer.enabled`                    | Enable service monitor for mlfoundry server       | `false`                                   |
+| `serviceMonitors.mlfoundryServer.name`                       | Name of the service monitor                       | `""`                                      |
+| `serviceMonitors.mlfoundryServer.labels`                     | Labels for mlfoundry server                       | `{}`                                      |
+| `serviceMonitors.mlfoundryServer.annotations`                | Annotations for mlfoundry server                  | `{}`                                      |
+| `serviceMonitors.mlfoundryServer.jobLabel`                   | Job label for mlfoundry server                    | `app.kubernetes.io/name`                  |
+| `serviceMonitors.mlfoundryServer.endpoints`                  | Endpoints for mlfoundry server                    | `[]`                                      |
+| `serviceMonitors.mlfoundryServer.serviceSelectorLabels`      | Service selector labels for mlfoundry server      | `{}`                                      |
+| `serviceMonitors.mlfoundryServer.namespaceSelector`          | Namespace selector for mlfoundry server           | `{}`                                      |
 | `serviceMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service   | `false`                                   |
 | `serviceMonitors.sfyManifestService.name`                    | Name of the service monitor                       | `sfy-manifest-service`                    |
 | `serviceMonitors.sfyManifestService.labels`                  | Labels for sfy manifest service                   | `{}`                                      |
