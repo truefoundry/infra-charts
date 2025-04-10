@@ -89,14 +89,10 @@ spec:
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- with .Values.clickhouse.podSecurityContext }}
           securityContext:
-            capabilities:
-              add:
-                - CAP_NICE
-                - CAP_IPC_LOCK
-            fsGroup: 101
-            runAsGroup: 101
-            runAsUser: 101
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           containers:
             - name: clickhouse
               image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
@@ -115,8 +111,10 @@ spec:
                   memory: {{ .Values.clickhouse.resources.limits.memory }}
                   cpu: {{ .Values.clickhouse.resources.limits.cpu }}
                   ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
+              {{- with .Values.clickhouse.containerSecurityContext }}
               securityContext:
-                readOnlyRootFilesystem: true
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
     volumeClaimTemplates:
       - name: clickhouse-data-volume
         spec:
