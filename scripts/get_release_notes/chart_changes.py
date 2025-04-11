@@ -70,17 +70,19 @@ def parse_image_changes(diff):
             match = re.search(r'"registryURL":\s*"([^"]+)"', line)
             if match:
                 image = match.group(1)
-                path, old_tag = image.rsplit(":", 1)
-                name = path.split("/")[-1]
-                old_images[name] = old_tag
+                if ":" in image:
+                    path, old_tag = image.rsplit(":", 1)
+                    name = path.split("/")[-1]
+                    old_images[name] = old_tag
 
         if line.startswith("+") and "registryURL" in line:
             match = re.search(r'"registryURL":\s*"([^"]+)"', line)
             if match:
                 image = match.group(1)
-                path, new_tag = image.rsplit(":", 1)
-                name = path.split("/")[-1]
-                new_images[name] = new_tag
+                if ":" in image:
+                    path, new_tag = image.rsplit(":", 1)
+                    name = path.split("/")[-1]
+                    new_images[name] = new_tag
 
     for name in new_images:
         if name in old_images and old_images[name] != new_images[name]:
