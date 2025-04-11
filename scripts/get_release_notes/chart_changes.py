@@ -45,7 +45,7 @@ def extract_target_revision(diff_path):
         return None, None
 
 def fetch_diff_from_github(base, head):
-    url = f"https://api.github.com/repos/{OWNER}/{REPO}/compare/{base}...{head}"
+    url = f"https://api.github.com/repos/{OWNER}/{REPO}/compare/truefoundry-{base}...truefoundry-{head}"
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
 
     response = requests.get(url, headers=headers)
