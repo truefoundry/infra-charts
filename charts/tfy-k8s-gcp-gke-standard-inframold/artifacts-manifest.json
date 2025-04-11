@@ -67,7 +67,7 @@
         "details": {
             "chart": "base",
             "repoURL": "https://istio-release.storage.googleapis.com/charts",
-            "targetRevision": "1.21.1",
+            "targetRevision": "1.25.1",
             "images": []
         }
     },
@@ -76,9 +76,9 @@
         "details": {
             "chart": "istiod",
             "repoURL": "https://istio-release.storage.googleapis.com/charts",
-            "targetRevision": "1.21.1",
+            "targetRevision": "1.25.1",
             "images": [
-                "gcr.io/istio-release/pilot:1.21.1-distroless"
+                "gcr.io/istio-release/pilot:1.25.1"
             ]
         }
     },
@@ -159,13 +159,24 @@
     {
         "type": "helm",
         "details": {
+            "chart": "spark-operator",
+            "repoURL": "https://kubeflow.github.io/spark-operator",
+            "targetRevision": "2.1.1",
+            "images": [
+                "docker.io/kubeflow/spark-operator:2.1.1"
+            ]
+        }
+    },
+    {
+        "type": "helm",
+        "details": {
             "chart": "tfy-agent",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.2.58",
+            "targetRevision": "0.2.59",
             "images": [
                 "tfy.jfrog.io/tfy-images/sds-server:c3bb65485f56faaa236f4ee02074c6da7ab269a8",
-                "tfy.jfrog.io/tfy-images/tfy-agent:e7d2a7adab04ffd9396fb90ed571cebcac1988a8",
-                "tfy.jfrog.io/tfy-images/tfy-agent-proxy:b212f7fcd34c833b0b045a5b87969d0f9eea7628"
+                "tfy.jfrog.io/tfy-images/tfy-agent:7452a61579c97e6b27721451a705603217fbb386",
+                "tfy.jfrog.io/tfy-images/tfy-agent-proxy:ee2b4bf959a135adbafa3ce450358cb8fb7de556"
             ]
         }
     },
@@ -197,21 +208,20 @@
         "details": {
             "chart": "truefoundry",
             "repoURL": "oci://tfy.jfrog.io/tfy-helm",
-            "targetRevision": "0.42.2",
+            "targetRevision": "0.46.0",
             "images": [
-                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.35.0",
-                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.42.0",
-                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.37.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.17.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.37.0",
-                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.42.2",
+                "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.38.0",
+                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.46.0",
+                "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.40.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.18.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.41.0",
+                "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.45.0",
+                "tfy.jfrog.io/tfy-mirror/bitnami/postgresql:16.2.0-debian-12-r12",
+                "tfy.jfrog.io/tfy-mirror/moby/buildkit:v0.16.0",
                 "tfy.jfrog.io/tfy-mirror/nats:2.10.24-alpine3.21",
                 "tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader:0.14.3",
                 "tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter:0.15.0",
-                "docker.io/bitnami/postgresql:16.2.0-debian-12-r12",
-                "moby/buildkit:v0.16.0",
-                "synadia/nats-box",
-                "tfy.jfrog.io/tfy-mirror/library/ubuntu:latest"
+                "tfy.jfrog.io/tfy-images/truefoundry-bootstrap:0.1.3"
             ]
         }
     },
@@ -232,7 +242,7 @@
         "details": {
             "chart": "tfy-istio-ingress",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.3",
+            "targetRevision": "0.2.0",
             "images": [
                 "auto"
             ]
@@ -561,7 +571,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "gcr.io/istio-release/pilot:1.21.1-distroless",
+            "registryURL": "gcr.io/istio-release/pilot:1.25.1",
             "platforms": [
                 {
                     "os": "linux",
@@ -841,6 +851,22 @@
     {
         "type": "image",
         "details": {
+            "registryURL": "docker.io/kubeflow/spark-operator:2.1.1",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
+        }
+    },
+    {
+        "type": "image",
+        "details": {
             "registryURL": "tfy.jfrog.io/tfy-images/sds-server:c3bb65485f56faaa236f4ee02074c6da7ab269a8",
             "platforms": [
                 {
@@ -857,15 +883,15 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent:e7d2a7adab04ffd9396fb90ed571cebcac1988a8",
+            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent:7452a61579c97e6b27721451a705603217fbb386",
             "platforms": [
                 {
                     "os": "linux",
-                    "architecture": "amd64"
+                    "architecture": "arm64"
                 },
                 {
                     "os": "linux",
-                    "architecture": "arm64"
+                    "architecture": "amd64"
                 }
             ]
         }
@@ -873,7 +899,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent-proxy:b212f7fcd34c833b0b045a5b87969d0f9eea7628",
+            "registryURL": "tfy.jfrog.io/tfy-images/tfy-agent-proxy:ee2b4bf959a135adbafa3ce450358cb8fb7de556",
             "platforms": [
                 {
                     "os": "linux",
@@ -935,7 +961,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.35.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.38.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -951,7 +977,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.42.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.46.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -967,7 +993,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.37.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.40.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -983,7 +1009,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.17.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.18.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -999,15 +1025,15 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.37.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.41.0",
             "platforms": [
                 {
                     "os": "linux",
-                    "architecture": "amd64"
+                    "architecture": "arm64"
                 },
                 {
                     "os": "linux",
-                    "architecture": "arm64"
+                    "architecture": "amd64"
                 }
             ]
         }
@@ -1015,8 +1041,56 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.42.2",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app:v0.45.0",
             "platforms": []
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "tfy.jfrog.io/tfy-mirror/bitnami/postgresql:16.2.0-debian-12-r12",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                }
+            ]
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "tfy.jfrog.io/tfy-mirror/moby/buildkit:v0.16.0",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "riscv64"
+                }
+            ]
         }
     },
     {
@@ -1102,7 +1176,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "docker.io/bitnami/postgresql:16.2.0-debian-12-r12",
+            "registryURL": "tfy.jfrog.io/tfy-images/truefoundry-bootstrap:0.1.3",
             "platforms": [
                 {
                     "os": "linux",
@@ -1111,77 +1185,6 @@
                 {
                     "os": "linux",
                     "architecture": "arm64"
-                }
-            ]
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "moby/buildkit:v0.16.0",
-            "platforms": [
-                {
-                    "os": "linux",
-                    "architecture": "amd64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "arm"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "arm64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "s390x"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "ppc64le"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "riscv64"
-                }
-            ]
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "synadia/nats-box",
-            "platforms": []
-        }
-    },
-    {
-        "type": "image",
-        "details": {
-            "registryURL": "tfy.jfrog.io/tfy-mirror/library/ubuntu:latest",
-            "platforms": [
-                {
-                    "os": "linux",
-                    "architecture": "amd64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "arm"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "arm64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "ppc64le"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "riscv64"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "s390x"
                 }
             ]
         }
@@ -1265,7 +1268,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "gcr.io/istio-release/proxyv2:1.21.1-distroless"
+            "registryURL": "gcr.io/istio-release/proxyv2:1.25.1-distroless"
         }
     },
     {
@@ -1295,7 +1298,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "gcr.io/istio-release/proxyv2:1.21.1-distroless"
+            "registryURL": "gcr.io/istio-release/proxyv2:1.25.1-distroless"
         }
     },
     {
@@ -1313,7 +1316,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus-operator/prometheus-config-reloader:v0.70.0"
+            "registryURL": "quay.io/prometheus-operator/prometheus-config-reloader:v0.80.1"
         }
     },
     {

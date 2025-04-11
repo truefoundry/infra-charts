@@ -26,6 +26,7 @@ elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "github" ]]; then
 
     git config --global url."https://github.com/".insteadOf git@github.com:
     git config --global url."https://".insteadOf git://
+    git lfs install
 
     # Example of GIT_URL="https://x-access-token:<token>@github.com/user_name/repo_name"
     # Example of TRIMMED_URL="https://github.com/user_name/repo_name"
@@ -40,15 +41,19 @@ elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "github" ]]; then
     git config --system credential.helper store
     echo "https://x-access-token:$TOKEN@github.com" > ~/.git-credentials
 
-    git clone --recursive "$TRIMMED_URL" "$SOURCE_CODE_DOWNLOAD_PATH"
+    git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
+    git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
     git reset --hard "$GIT_REF"
+    git submodule update --depth 1 --init --recursive
+
 elif [[ $BUILD_TYPE == "bitbucket" ]]; then
     GIT_URL=$(echo "$BUILD_SOURCE" | jq -r '.repo_url')
     GIT_REF=$(echo "$BUILD_SOURCE" | jq -r '.ref')
 
     git config --global url."https://bitbucket.org/".insteadOf git@bitbucket.org:
     git config --global url."https://".insteadOf git://
+    git lfs install
 
     # Example of GIT_URL="https://x-token-auth:<token>@bitbucket.org/user_name/repo_name"
     # Example of TRIMMED_URL="https://bitbucket.org/user_name/repo_name"
@@ -63,15 +68,19 @@ elif [[ $BUILD_TYPE == "bitbucket" ]]; then
     git config --system credential.helper store
     echo "https://x-token-auth:$TOKEN@bitbucket.org" > ~/.git-credentials
 
-    git clone --recurse-submodules "$TRIMMED_URL" "$SOURCE_CODE_DOWNLOAD_PATH"
+    git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
+    git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
     git reset --hard "$GIT_REF"
+    git submodule update --depth 1 --init --recursive
+
 elif [[ $BUILD_TYPE == "gitlab" ]]; then
     GIT_URL=$(echo "$BUILD_SOURCE" | jq -r '.repo_url')
     GIT_REF=$(echo "$BUILD_SOURCE" | jq -r '.ref')
 
     git config --global url."https://gitlab.com/".insteadOf git@gitlab.com:
     git config --global url."https://".insteadOf git://
+    git lfs install
 
     # Example of GIT_URL="https://oauth2:<token>@gitlab.com/user_name/repo_name"
     # Example of TRIMMED_URL="https://gitlab.com/user_name/repo_name"
@@ -87,15 +96,19 @@ elif [[ $BUILD_TYPE == "gitlab" ]]; then
     git config --system credential.helper store
     echo "https://oauth2:$TOKEN@$BASE_HOST" > ~/.git-credentials
 
-    git clone --recurse-submodules "$TRIMMED_URL" "$SOURCE_CODE_DOWNLOAD_PATH"
+    git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
+    git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
     git reset --hard "$GIT_REF"
+    git submodule update --depth 1 --init --recursive
+
 elif [[ $BUILD_TYPE == "azure" ]]; then
     GIT_URL=$(echo "$BUILD_SOURCE" | jq -r '.repo_url')
     GIT_REF=$(echo "$BUILD_SOURCE" | jq -r '.ref')
 
     git config --global url."https://dev.azure.com/".insteadOf git@ssh.dev.azure.com:v3/
     git config --global url."https://".insteadOf git://
+    git lfs install
 
     # Example of GIT_URL="https://x-token-auth:<token>@dev.azure.com/organization/project/_git/repo_name"
     # Example of TRIMMED_URL="https://dev.azure.com/organization/project/_git/repo_name"
@@ -109,9 +122,12 @@ elif [[ $BUILD_TYPE == "azure" ]]; then
     git config --system credential.helper store
     echo "https://x-token-auth:$TOKEN@dev.azure.com" > ~/.git-credentials
 
-    git clone --recurse-submodules "$TRIMMED_URL" "$SOURCE_CODE_DOWNLOAD_PATH"
+    git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
+    git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
     git reset --hard "$GIT_REF"
+    git submodule update --depth 1 --init --recursive
+    
 elif [[ $BUILD_TYPE == "notebook_build" ]]; then
     :
 else

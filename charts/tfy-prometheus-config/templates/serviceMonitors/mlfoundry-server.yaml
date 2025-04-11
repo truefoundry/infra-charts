@@ -1,0 +1,19 @@
+{{- if .Values.serviceMonitors.mlfoundryServer.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.serviceMonitors.mlfoundryServer.name }}
+  labels:
+    {{- include "mlfoundry.labels" . | nindent 4 }}
+  annotations:
+    {{- include "mlfoundry.annotations" . | indent 4 }}
+spec:
+  jobLabel: {{ .Values.serviceMonitors.mlfoundryServer.jobLabel }}
+  endpoints:
+  {{- toYaml .Values.serviceMonitors.mlfoundryServer.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitors.mlfoundryServer.namespaceSelector | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.serviceMonitors.mlfoundryServer.serviceSelectorLabels | nindent 6 }}
+{{- end -}}

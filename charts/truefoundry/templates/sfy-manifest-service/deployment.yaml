@@ -43,10 +43,20 @@ spec:
           resources:
             {{- toYaml .Values.sfyManifestService.resources | nindent 12 }}
           livenessProbe:
+            failureThreshold: {{ .Values.sfyManifestService.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.sfyManifestService.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sfyManifestService.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.sfyManifestService.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.sfyManifestService.livenessProbe.timeoutSeconds }}
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
           readinessProbe:
+            failureThreshold: {{ .Values.sfyManifestService.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.sfyManifestService.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sfyManifestService.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.sfyManifestService.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.sfyManifestService.readinessProbe.timeoutSeconds }}
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
@@ -62,7 +72,7 @@ spec:
       nodeSelector:
           {{- toYaml .Values.sfyManifestService.nodeSelector | nindent 8 }}
       {{- end }}
-      {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
+      {{- $mergedAffinity := dict | merge .Values.sfyManifestService.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:
       {{- toYaml $mergedAffinity | nindent 8 }}

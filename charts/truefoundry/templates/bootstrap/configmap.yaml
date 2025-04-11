@@ -12,8 +12,11 @@ data:
     #!/bin/bash
     # This script will output one set of creds in the current directory.
     # The script creates a nats resolver config file called resolver.conf
-    TRUEFOUNDRY_NATS_SECRET_NAME=truefoundry-nats-secret
+    TRUEFOUNDRY_NATS_SECRET_NAME=truefoundry-tfy-nats-secret
+    TRUEFOUNDRY_NATS_DIR_SECRET_NAME=truefoundry-tfy-nsc-dir-secret
     TRUEFOUNDRY_CREDS_SECRET_NAME=truefoundry-creds
+    TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME=truefoundry-clickhouse-secret
+    OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME=tfy-llm-gateway-infra-auth
     print_green() {
         echo "$(tput setaf 2)$1$(tput sgr0)"
     }
@@ -22,17 +25,6 @@ data:
     }
     print_red() {
         echo "$(tput setaf 1)$1$(tput sgr0)"
-    }
-
-    # function to install binaries - kubectl, nsc, helm
-    install_binaries() {
-      apt update && apt install wget unzip  -y \
-        && wget https://github.com/nats-io/nsc/releases/download/v2.8.6/nsc-linux-amd64.zip \
-        && unzip nsc-linux-amd64.zip \
-        && mv nsc /usr/bin/ \
-        && wget https://storage.googleapis.com/kubernetes-release/release/v1.29.3/bin/linux/amd64/kubectl \
-            && chmod +x kubectl \
-            && mv kubectl /usr/bin/
     }
 
     create_tfy_buildkit_tls_certificates_and_secrets(){
@@ -104,41 +96,27 @@ data:
       )
     }
 
-    migrate_nats_seed_to_dedicated_secret() {
-      # Get the value of NATS_CONTROLPLANE_ACCOUNT_SEED from the secret
-      NATS_SEED=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.NATS_CONTROLPLANE_ACCOUNT_SEED}' | base64 --decode)
-
-      # Check if the NATS_SEED is empty
-      if [ -z "$NATS_SEED" ]; then
-        print_red "NATS_CONTROLPLANE_ACCOUNT_SEED is not set in the secret servicefoundry-env-secret."
-        exit 1
+    migrate_clickhouse_password_to_dedicated_secret() {
+      # Get the value of CLICKHOUSE_USER_PASSWORD from the secret
+      CLICKHOUSE_PASSWORD=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME -o jsonpath='{.data.CLICKHOUSE_USER_PASSWORD}' | base64 --decode)
+      # Check if the CLICKHOUSE_PASSWORD is empty
+      if [ -z "$CLICKHOUSE_PASSWORD" ]; then
+        print_yellow "CLICKHOUSE_USER_PASSWORD is not set in the secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME. Checking with CLICKHOUSE_PASSWORD..."
+        CLICKHOUSE_PASSWORD=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME -o jsonpath='{.data.CLICKHOUSE_PASSWORD}' | base64 --decode)
+        if [ -z "$CLICKHOUSE_PASSWORD" ]; then
+          print_red "CLICKHOUSE_PASSWORD is also not set in the secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME."
+          exit 1
+        fi
       fi
-
-      # Create the new secret using the NATS_SEED
-      kubectl create secret generic $TRUEFOUNDRY_NATS_SECRET_NAME --from-literal=NATS_CONTROLPLANE_ACCOUNT_SEED="$NATS_SEED" -n $TRUEFOUNDRY_NAMESPACE
+      # Create the new secret using the CLICKHOUSE_PASSWORD
+      kubectl create secret generic $TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME --from-literal=CLICKHOUSE_PASSWORD="$CLICKHOUSE_PASSWORD" -n $TRUEFOUNDRY_NAMESPACE
     }
 
-    migrate_truefoundry_creds_to_dedicated_secret() {
-      # Get the value of NATS_CONTROLPLANE_ACCOUNT_SEED from the secret
-      DB_HOST=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_HOST}' | base64 --decode)
-      DB_USERNAME=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_USERNAME}' | base64 --decode)
-      DB_PASSWORD=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 --decode)
-      DB_NAME=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.DB_NAME}' | base64 --decode)
-      TFY_API_KEY=$(kubectl -n $TRUEFOUNDRY_NAMESPACE get secret servicefoundry-server-env-secret -o jsonpath='{.data.SVC_FOUNDRY_SERVICE_API_KEY}' | base64 --decode)
-
-      # Check if the DB creds are empty
-      if [ -z "$DB_HOST" ] || [ -z "$DB_USERNAME" ] || [ -z "$DB_PASSWORD" ] || [ -z "$DB_NAME" ] || [ -z "$TFY_API_KEY" ]; then
-        print_red "DB and Tfy API creds not set in the secret servicefoundry-env-secret"
-        exit 1
-      fi
-      # Create the new secret using the DB creds
-      kubectl create secret generic $TRUEFOUNDRY_CREDS_SECRET_NAME \
-        --from-literal=DB_HOST="$DB_HOST" \
-        --from-literal=DB_USERNAME="$DB_USERNAME" \
-        --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-        --from-literal=DB_NAME="$DB_NAME" \
-        --from-literal=TFY_API_KEY="$TFY_API_KEY" \
-        -n $TRUEFOUNDRY_NAMESPACE
+    generate_clickhouse_password_and_add_to_dedicated_secret() {
+      # Generate the value for CLICKHOUSE_PASSWORD
+      CLICKHOUSE_PASSWORD=$(openssl rand -hex 16)
+      # Create the new secret using the CLICKHOUSE_PASSWORD
+      kubectl create secret generic $TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME --from-literal=CLICKHOUSE_PASSWORD="$CLICKHOUSE_PASSWORD" -n $TRUEFOUNDRY_NAMESPACE
     }
 
     # check if the following variables are not set
@@ -147,21 +125,29 @@ data:
         exit 1
     fi
 
-    install_binaries
     create_tfy_buildkit_tls_certificates_and_secrets  *.{{ include "tfy-buildkitd.buildkitdServiceName" . }}.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local *.$TRUEFOUNDRY_NAMESPACE.svc.cluster.local
+
+    if [[ "$CLICKHOUSE_ENABLED" == "true" ]]; then
+      print_yellow "Clickhouse needs to be setup."
+      kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME
+      if [ $? -eq 0 ]; then
+        print_red "Secret $TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME already exists. Exiting..."
+      else
+        kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME
+        if [ $? -eq 0 ]; then
+          print_yellow "We are going to create the secret $TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME from existing secret $OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME. This is a migration scenario dated 2025-04-02"
+          migrate_clickhouse_password_to_dedicated_secret
+        else
+          print_yellow "Generating new clickhouse password and adding to secret."
+          generate_clickhouse_password_and_add_to_dedicated_secret
+        fi
+      fi
+    fi
 
     kubectl -n $TRUEFOUNDRY_NAMESPACE get cm $TRUEFOUNDRY_NATS_CONFIGMAP
     if [ $? -eq 0 ]; then
-      kubectl -n $TRUEFOUNDRY_NAMESPACE get secret $TRUEFOUNDRY_NATS_SECRET_NAME
-      if [ $? -eq 0 ]; then
-        print_red "Secret $TRUEFOUNDRY_NATS_SECRET_NAME already exists. Exiting..."
-        exit 0
-      else
-        print_yellow "We are going to create the secret $TRUEFOUNDRY_NATS_SECRET_NAME and $TRUEFOUNDRY_CREDS_SECRET_NAME from existing seed. This is a migration scenario dated 2024-05-01"
-        migrate_nats_seed_to_dedicated_secret
-        migrate_truefoundry_creds_to_dedicated_secret
-        exit 0
-      fi
+      print_yellow "$TRUEFOUNDRY_NATS_CONFIGMAP already found. Skipping creation of NATS account and configmap..."
+      exit 0
     fi
     print_yellow "$TRUEFOUNDRY_NATS_CONFIGMAP not found. Creating NATS account and configmap..."
 
@@ -178,8 +164,9 @@ data:
     # Create tfy-controlplane account. The seed for this account is provided as an environment variable
     # to servicefoundry-server
     nsc add account --name tfy-controlplane
-    # enable JS
-    nsc edit account --name tfy-controlplane --js-disk-storage 512M
+    # enable JS - by setting js-disk-storage or js-mem-storage
+    # Note: -1 means unlimited making it configurable in server side
+    nsc edit account --name tfy-controlplane --js-disk-storage -1 --js-mem-storage -1
 
     # Create user to create a stream.
     nsc add user --account tfy-controlplane --name js-creator
@@ -193,25 +180,21 @@ data:
     nsc export keys --account tfy-controlplane --accounts --dir "${NKEYS_EXPORT_DIR}"
     NKEYS_FILE_NAME=$(ls "${NKEYS_EXPORT_DIR}" | grep "A*.nk" | head -1)
     NKEYS_PATH="${NKEYS_EXPORT_DIR}/${NKEYS_FILE_NAME}"
-    SEED=$(cat "${NKEYS_PATH}")
-    cat "${NKEYS_PATH}" > nsc/tfy.seed
+    NATS_SEED=$(cat "${NKEYS_PATH}")
+
+    # Tar and save the complete nsc folder
+    # We can use this later to change any nats config
+    # Steps to extract the folder:
+    # - kubectl get secret $TRUEFOUNDRY_NATS_SECRET_NAME -o jsonpath='{.data.nsc_dir\.tar}' -n $TRUEFOUNDRY_NAMESPACE | base64 --decode > nsc_dir.tar
+    # - tar -xf nsc_dir.tar
+    tar -cf nsc_dir.tar ./nsc/
+    kubectl create secret generic $TRUEFOUNDRY_NATS_DIR_SECRET_NAME --from-file "nsc_dir.tar" -n $TRUEFOUNDRY_NAMESPACE -o yaml --dry-run=client | kubectl apply -f -
+    rm -r nsc_dir.tar
 
     # Create K8s config map to store the account resolver.
     # This will be imported by the main config file.
-    kubectl create configmap $TRUEFOUNDRY_NATS_CONFIGMAP --from-file "nsc/resolver.conf" -n $TRUEFOUNDRY_NAMESPACE -o yaml --dry-run | kubectl apply -f -
-
-    # copy the nats seed to /tfy.seed
-    NATS_SEED=$(cat nsc/tfy.seed)
+    kubectl create configmap $TRUEFOUNDRY_NATS_CONFIGMAP --from-file "nsc/resolver.conf" -n $TRUEFOUNDRY_NAMESPACE -o yaml --dry-run=client | kubectl apply -f -
 
     # creating the secret
-    kubectl create -f -<<EOF
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: $TRUEFOUNDRY_NATS_SECRET_NAME
-      namespace: $TRUEFOUNDRY_NAMESPACE
-    stringData:
-      NATS_CONTROLPLANE_ACCOUNT_SEED: $NATS_SEED
-    ---
-    EOF
+    kubectl create secret generic $TRUEFOUNDRY_NATS_SECRET_NAME --from-literal=NATS_CONTROLPLANE_ACCOUNT_SEED=$NATS_SEED -n $TRUEFOUNDRY_NAMESPACE -o yaml --dry-run=client | kubectl apply -f -
 {{- end }}

@@ -18,7 +18,7 @@ spec:
   source:
     chart: istiod
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.21.1
+    targetRevision: 1.25.1
     helm:
       values: |-
         {{- if .Values.istio.discovery.valuesOverride }}
@@ -55,8 +55,12 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         global:
+          {{- if .Values.istio.discovery.hub }}
           hub: {{ .Values.istio.discovery.hub }}
+          {{- end }}
+          {{- if .Values.istio.discovery.tag }}
           tag: {{ .Values.istio.discovery.tag }}
+          {{- end }}
         {{- end }}
 
   syncPolicy:

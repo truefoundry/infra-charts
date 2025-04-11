@@ -543,6 +543,32 @@ Container rules annotations
 {{- end }}
 
 {{/*
+  MLFoundry server service monitor labels
+*/}}
+{{- define "mlfoundry.annotations" -}}
+{{- if .Values.serviceMonitors.mlfoundryServer.annotations }}
+{{- toYaml .Values.serviceMonitors.mlfoundryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  MLFoundry server service monitor labels
+*/}}
+{{- define "mlfoundry.labels" -}}
+{{- if .Values.serviceMonitors.mlfoundryServer.labels }}
+{{- toYaml .Values.serviceMonitors.mlfoundryServer.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
   Sfy-manifests service monitor labels
 */}}
 {{- define "sfyManifestService.labels" -}}
