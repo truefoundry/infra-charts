@@ -97,9 +97,15 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          volumes:
+          - name: tmp
+            emptyDir: {}
           containers:
             - name: clickhouse
               image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
+              volumeMounts:
+              - name: tmp
+                mountPath: /var/lib/clickhouse
               env:
                 - name: CLICKHOUSE_USER_PASSWORD
                   valueFrom:
