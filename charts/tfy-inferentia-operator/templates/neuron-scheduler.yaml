@@ -164,16 +164,15 @@ spec:
       affinity:
         {{- toYaml (index .Values "scheduler" "affinity") | nindent 8 }}
       containers:
-      - image: {{ .Values.scheduler.image }}
+      - image: "{{ .Values.scheduler.image.repository }}:{{ .Values.scheduler.image.tag }}"
+        command:
+        - /usr/local/bin/kube-scheduler
         args:
         {{- range .Values.scheduler.args }}
           - {{ . | quote | nindent 10 | trim }}
         {{- else }}
           []
         {{- end }}
-        command:
-        - /usr/local/bin/kube-scheduler
-        image: {{ .Values.scheduler.image }}
         livenessProbe:
           httpGet:
             path: /healthz

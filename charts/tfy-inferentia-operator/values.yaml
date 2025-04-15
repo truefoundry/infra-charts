@@ -93,7 +93,9 @@ devicePlugin:
 scheduler:
   enabled: true
   schedulerName: neuron-scheduler
-  image: public.ecr.aws/eks-distro/kubernetes/kube-scheduler:v1.28.5-eks-1-28-latest
+  image:
+    repository: public.ecr.aws/eks-distro/kubernetes/kube-scheduler
+    tag: "v1.29.14-eks-1-29-latest"
   imagePullSecrets: []
   labels: {}
   annotations: {}
@@ -114,7 +116,9 @@ scheduler:
       operator: Exists
   affinity: {}
   extension:
-    image: public.ecr.aws/neuron/neuron-scheduler:2.23.30.0
+    image:
+      repository: public.ecr.aws/neuron/neuron-scheduler
+      tag: "2.23.30.0"
     imagePullSecrets: []
     labels: {}
     annotations: {}
