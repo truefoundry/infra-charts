@@ -111,12 +111,14 @@ spec:
       affinity:
         {{- toYaml (index .Values "devicePlugin" "affinity") | nindent 8 }}
       containers:
-      - image: {{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}
+      - image: "{{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}"
         imagePullPolicy: Always
         name: neuron-device-plugin
         resources:
           {{- toYaml (index .Values "devicePlugin" "resources") | nindent 10 }}
         env:
+        - name: KUBECONFIG
+          value: /etc/kubernetes/kubelet.conf
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -130,6 +132,9 @@ spec:
             mountPath: /var/lib/kubelet/device-plugins
           - name: infa-map
             mountPath: /run
+          - mountPath: /opt/aws
+            name: aws-config
+            readOnly: true
       volumes:
         - name: device-plugin
           hostPath:
@@ -137,5 +142,9 @@ spec:
         - name: infa-map
           hostPath:
             path: /run
+        - name: aws-config
+          hostPath:
+            path: /opt/aws
+          
 ---
 {{- end }}
