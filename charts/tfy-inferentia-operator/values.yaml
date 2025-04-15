@@ -2,6 +2,8 @@
 ## @param devicePlugin.enabled Enable device plugin Daemonset.
 ## @param devicePlugin.resources.requests.cpu CPU request for device plugin Daemonset.
 ## @param devicePlugin.resources.requests.memory Memory request for device plugin Daemonset.
+## @param devicePlugin.resources.limits.cpu CPU limit for device plugin Daemonset.
+## @param devicePlugin.resources.limits.memory Memory limit for device plugin Daemonset.
 ## @param devicePlugin.image.repository Image repository to use for device plugin Daemonset.
 ## @param devicePlugin.image.tag Image tag to use for device plugin Daemonset.
 ## @param imagePullSecrets (global) List of image pull secrets
@@ -16,6 +18,9 @@ devicePlugin:
     requests:
       cpu: 100m
       memory: 128Mi
+    limits:
+      cpu: 400m
+      memory: 256Mi
   image:
     repository: public.ecr.aws/neuron/neuron-device-plugin
     tag: "2.23.30.0"
@@ -74,15 +79,21 @@ devicePlugin:
 ## @section Configuration for the scheduler responsible for scheduling neuron pods
 ## @param scheduler.enabled Enable Scheduler.
 ## @param scheduler.schedulerName Name of the scheduler.
-## @param scheduler.image K8s Scheduler image.
+## @param scheduler.image.repository K8s Scheduler image repository.
+## @param scheduler.image.tag K8s Scheduler image tag.
 ## @param scheduler.labels K8s Scheduler labels.
 ## @param scheduler.annotations K8s Scheduler annotations.
 ## @skip scheduler.args
 ## @param scheduler.resources.requests.cpu CPU request for K8s scheduler.
 ## @param scheduler.resources.requests.memory Memory request for K8s scheduler.
-## @param scheduler.extension.image Neuron scheduler extension image.
+## @param scheduler.resources.limits.cpu CPU limit for K8s scheduler.
+## @param scheduler.resources.limits.memory Memory limit for K8s scheduler.
+## @param scheduler.extension.image.repository Neuron scheduler extension image repository.
+## @param scheduler.extension.image.tag Neuron scheduler extension image tag.
 ## @param scheduler.extension.resources.requests.cpu CPU request for Neuron scheduler extension.
 ## @param scheduler.extension.resources.requests.memory Memory request for Neuron scheduler extension.
+## @param scheduler.extension.resources.limits.cpu CPU limit for Neuron scheduler extension.
+## @param scheduler.extension.resources.limits.memory Memory limit for Neuron scheduler extension.
 ## @param scheduler.imagePullSecrets List of image pull secrets
 ## @param scheduler.extension.labels Labels for Neuron scheduler extension.
 ## @param scheduler.extension.annotations Annotations for Neuron scheduler extension.
