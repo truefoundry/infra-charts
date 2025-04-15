@@ -18,18 +18,23 @@ devicePlugin:
       memory: 128Mi
   image:
     repository: public.ecr.aws/neuron/neuron-device-plugin
-    tag: 2.16.18.0
+    tag: "2.23.30.0"
   imagePullSecrets: []
   labels: {}
   annotations: {}
   tolerations:
     ## @skip devicePlugin.tolerations[0]
     ## @skip devicePlugin.tolerations[1]
+    ## @skip devicePlugin.tolerations[2]
     - key: CriticalAddonsOnly
       operator: Exists
-    - key: aws.amazon.com/neuron
+    - effect: NoSchedule
+      key: aws.amazon.com/neuron
       operator: Exists
-      effect: NoSchedule
+    - effect: NoSchedule
+      key: sagemaker.amazonaws.com/node-health-status
+      operator: Equal
+      value: Unschedulable
   affinity:
     ## @skip devicePlugin.affinity.nodeAffinity
     nodeAffinity:
@@ -39,18 +44,32 @@ devicePlugin:
               - key: "node.kubernetes.io/instance-type"
                 operator: In
                 values:
-                  - inf1.xlarge
+                  - inf1.24xlarge
                   - inf1.2xlarge
                   - inf1.6xlarge
-                  - inf1.24xlarge
-                  - inf2.xlarge
-                  - inf2.4xlarge
-                  - inf2.8xlarge
+                  - inf1.xlarge
                   - inf2.24xlarge
                   - inf2.48xlarge
+                  - inf2.8xlarge
+                  - inf2.xlarge
+                  - ml.inf2.24xlarge
+                  - ml.inf2.48xlarge
+                  - ml.inf2.8xlarge
+                  - ml.inf2.xlarge
+                  - ml.trn1.2xlarge
+                  - ml.trn1.32xlarge
+                  - ml.trn1n.32xlarge
                   - trn1.2xlarge
                   - trn1.32xlarge
                   - trn1n.32xlarge
+                  - trn2.48xlarge
+                  - trn2u.48xlarge
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                  - fargate
+                  - hybrid
+                  - auto
 
 ## @section Configuration for the scheduler responsible for scheduling neuron pods
 ## @param scheduler.enabled Enable Scheduler.
@@ -74,7 +93,7 @@ devicePlugin:
 scheduler:
   enabled: true
   schedulerName: neuron-scheduler
-  image: registry.k8s.io/kube-scheduler:v1.27.7
+  image: public.ecr.aws/eks-distro/kubernetes/kube-scheduler:v1.28.5-eks-1-28-latest
   imagePullSecrets: []
   labels: {}
   annotations: {}
@@ -97,7 +116,7 @@ scheduler:
       operator: Exists
   affinity: {}
   extension:
-    image: public.ecr.aws/neuron/neuron-scheduler:2.18.3.0
+    image: public.ecr.aws/neuron/neuron-scheduler:2.23.30.0
     imagePullSecrets: []
     labels: {}
     annotations: {}

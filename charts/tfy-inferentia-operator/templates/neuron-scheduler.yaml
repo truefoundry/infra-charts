@@ -99,7 +99,7 @@ metadata:
     {{- include "neuron-scheduler.annotations" . | nindent 4 }}
 data:
   neuron-scheduler-config.yaml: |
-    apiVersion: kubescheduler.config.k8s.io/v1beta2
+    apiVersion: kubescheduler.config.k8s.io/v1
     kind: KubeSchedulerConfiguration
     profiles:
       - schedulerName: {{ .Values.scheduler.schedulerName }}
@@ -108,13 +108,11 @@ data:
         filterVerb: filter
         bindVerb: bind
         enableHTTPS: false
-        nodeCacheCapable: true
+        nodeCacheCapable: false
         managedResources:
           - name: 'aws.amazon.com/neuron'
             ignoredByScheduler: false
           - name: 'aws.amazon.com/neuroncore'
-            ignoredByScheduler: false
-          - name: 'aws.amazon.com/neurondevice'
             ignoredByScheduler: false
         ignorable: false
     leaderElection:
