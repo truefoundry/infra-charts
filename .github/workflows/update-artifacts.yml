@@ -112,6 +112,8 @@ jobs:
             python scripts/get-release-notes/chart_changes.py charts/$chart/old-artifacts-manifest.json charts/$chart/artifacts-manifest.json --output charts/$chart/changelog.json
             rm -rf charts/$chart/old-artifacts-manifest.json
           done
+        env:
+          TFY_GITHUUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
