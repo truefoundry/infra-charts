@@ -123,8 +123,13 @@ jobs:
       - name: Upload Changelog to S3
         run: |
           chart="tfy-k8s-aws-eks-inframold"
-          version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-          aws s3 sync charts/$chart/changelog.json s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
+          changelog_path="charts/$chart/changelog.json"
+          if [ -f "$changelog_path" ]; then
+            version=$(grep version charts/$chart/Chart.yaml | awk '{print $2}')
+            aws s3 cp "$changelog_path" s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
+          else
+            echo "changelog.json not found - skipping S3 upload."
+          fi
 
       - name: Cleanup Old Artifacts Manifest and Changelog
         run: |
