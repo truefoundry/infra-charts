@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - 'main'
+      - 'add-truefoundry-prs'
     paths:
       - '.github/workflows/update-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
@@ -13,6 +14,7 @@ on:
       - 'charts/tfy-k8s-generic-inframold/**'
       - 'scripts/generate-artifacts-manifest/**'
       - 'scripts/upload-artifacts/**'
+      - 'scripts/get-release-notes/**'
 
 jobs:
   update-artifacts:
@@ -72,10 +74,20 @@ jobs:
           pip install -r scripts/upload-artifacts/requirements.txt
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
+      - name: Copy the current artifacts manifest file to old-artifacts.json for changelog
+        run: |
+          charts_list=("tfy-k8s-aws-eks-inframold")
+          for chart in "${chart_list[@]}";
+          do 
+            if [-f charts/$chart/artifacts-manifest.json]; then
+              cp charts/$chart/artifacts-manifest.json charts/$chart/old-artifacts-manifest.json
+            fi
+          done
+
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
+          charts_list=("tfy-k8s-aws-eks-inframold")
           for chart in "${charts_list[@]}";
           do
             version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
@@ -91,6 +103,15 @@ jobs:
           python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
           charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
+
+      - name: Generate Changelog
+        run: |
+          charts_list=("tfy-k8s-aws-eks-inframold")
+          for chart in "${charts_list[@]}";
+          do
+            python scripts/get-release-notes/chart_changes.py charts/$chart/old-artifacts-manifest.json charts/$chart/artifacts-manifest.json --output charts/$chart/changelog.json
+            rm -rf charts/$chart/old-artifacts-manifest.json
+          done
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
