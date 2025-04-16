@@ -77,11 +77,9 @@ jobs:
       - name: Copy the current artifacts manifest file to old-artifacts.json for changelog
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold")
-          for chart in "${chart_list[@]}";
+          for chart in "${charts_list[@]}"
           do 
-            if [-f charts/$chart/artifacts-manifest.json]; then
-              cp charts/$chart/artifacts-manifest.json charts/$chart/old-artifacts-manifest.json
-            fi
+            cp charts/$chart/artifacts-manifest.json charts/$chart/old-artifacts-manifest.json
           done
 
       # Generate artifacts manifest for inframold charts
