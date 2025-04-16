@@ -17,7 +17,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
-    targetRevision: 2.39.3
+    targetRevision: 2.41.0
     chart: aws-ebs-csi-driver
     helm:
       values: |-
@@ -41,7 +41,7 @@ spec:
             annotations:
               eks.amazonaws.com/role-arn: {{ .Values.aws.awsEbsCsiDriver.roleArn }}
           extraVolumeTags:
-            cluster-name: {{ .Values.clusterName }}
+            cluster-name: "{{ .Values.clusterName }}"
             volume-type: csi-ebs
             truefoundry.com/managed: "true"
           {{- if $mergedTolerations }}
