@@ -60,7 +60,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -108,14 +108,22 @@ jobs:
           for chart in "${charts_list[@]}";
           do
             python scripts/get-release-notes/chart_changes.py charts/$chart/old-artifacts-manifest.json charts/$chart/artifacts-manifest.json --output charts/$chart/changelog.json
-            rm -rf charts/$chart/old-artifacts-manifest.json
-          
-            ## upload to aws s3
-            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-            aws s3 sync charts/$chart/changelog.json s3://tfy-changelog-bucket/$version/changelog.json
           done
         env:
           TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Upload Changelog to S3
+      - name: Upload Changelog to S3
+        run: |
+          chart="tfy-k8s-aws-eks-inframold"
+          version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+          aws s3 sync charts/$chart/changelog.json s3://tfy-changelog-bucket/$version/changelog.json
 
       - name: Cleanup Old Artifacts Manifest and Changelog
         run: |
