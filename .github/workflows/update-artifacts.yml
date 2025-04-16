@@ -109,9 +109,22 @@ jobs:
           do
             python scripts/get-release-notes/chart_changes.py charts/$chart/old-artifacts-manifest.json charts/$chart/artifacts-manifest.json --output charts/$chart/changelog.json
             rm -rf charts/$chart/old-artifacts-manifest.json
+          
+            ## upload to aws s3
+            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+            aws s3 sync charts/$chart/changelog.json s3://tfy-changelog-bucket/$version/changelog.json
           done
         env:
           TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
+
+      - name: Cleanup Old Artifacts Manifest and Changelog
+        run: |
+          charts_list=("tfy-k8s-aws-eks-inframold")
+          for chart in "${charts_list[@]}";
+          do
+            rm -rf charts/$chart/old-artifacts-manifest.json
+            rm -rf charts/$chart/changelog.json
+          done
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
