@@ -124,7 +124,7 @@ jobs:
         run: |
           chart="tfy-k8s-aws-eks-inframold"
           version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-          aws s3 sync charts/$chart/changelog.json s3:/$CHANGELOG_S3_BUCKET/$version/changelog.json
+          aws s3 sync charts/$chart/changelog.json s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
 
       - name: Cleanup Old Artifacts Manifest and Changelog
         run: |
