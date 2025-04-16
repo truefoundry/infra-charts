@@ -27,6 +27,7 @@ jobs:
       ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+      CHANGELOG_S3_BUCKET: "tfy-changelog-bucket"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -60,7 +61,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
@@ -112,7 +113,7 @@ jobs:
         env:
           TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials for s3 uploads
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
@@ -123,7 +124,7 @@ jobs:
         run: |
           chart="tfy-k8s-aws-eks-inframold"
           version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-          aws s3 sync charts/$chart/changelog.json s3://tfy-changelog-bucket/$version/changelog.json
+          aws s3 sync charts/$chart/changelog.json s3:/$CHANGELOG_S3_BUCKET/$version/changelog.json
 
       - name: Cleanup Old Artifacts Manifest and Changelog
         run: |
