@@ -6,13 +6,13 @@ import argparse
 from typing import Dict, List, Optional
 
 # Read GitHub token from env
-GITHUB_TOKEN = os.getenv("TFY_GITHUB_TOKEN", "")
-if not GITHUB_TOKEN:
-    raise EnvironmentError("❌ GITHUB_TOKEN not set in environment variables")
+TFY_GITHUB_TOKEN = os.getenv("TFY_GITHUB_TOKEN", "")
+if not TFY_GITHUB_TOKEN:
+    raise EnvironmentError("❌ TFY_GITHUB_TOKEN not set in environment variables")
 
 GITHUB_API_HEADERS = {
     "Accept": "application/vnd.github+json",
-    "Authorization": f"Bearer {GITHUB_TOKEN}"
+    "Authorization": f"Bearer {TFY_GITHUB_TOKEN}"
 }
 
 
