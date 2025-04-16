@@ -6,7 +6,7 @@ import argparse
 from typing import Dict, List, Optional
 
 # Read GitHub token from env
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GITHUB_TOKEN = os.getenv("TFY_GITHUB_TOKEN", "")
 if not GITHUB_TOKEN:
     raise EnvironmentError("❌ GITHUB_TOKEN not set in environment variables")
 
