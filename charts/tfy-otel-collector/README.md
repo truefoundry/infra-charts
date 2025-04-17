@@ -8,12 +8,12 @@ Tfy-Otel_collector Helm Chart
 
 | Name                                        | Description                                                  | Value                                                |
 | ------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
+| `global.resourceTier`                       | Resource deployment type                                     | `""`                                                 |
 | `env`                                       | Environment variables for the tfyOtelCollector               | `{}`                                                 |
 | `image.repository`                          | Image repository for tfyOTELCollector                        | `tfy.jfrog.io/tfy-private-images/tfy-otel-collector` |
 | `image.tag`                                 | Image tag for the tfyOTELCollector                           | `416fc71c5d729be2613a9b197e203cd5fdc1d8d4`           |
 | `imagePullSecrets`                          | List of secrets to pull images                               | `[]`                                                 |
 | `fullnameOverride`                          | Full name override for the tfy-otel-collector                | `""`                                                 |
-| `replicaCount`                              | Number of replicas                                           | `2`                                                  |
 | `environmentName`                           | The environment name                                         | `default`                                            |
 | `envSecretName`                             | The environment secret name                                  | `""`                                                 |
 | `imagePullPolicy`                           | Image pull policy                                            | `IfNotPresent`                                       |
@@ -33,12 +33,6 @@ Tfy-Otel_collector Helm Chart
 | `healthcheck.readiness.failureThreshold`    | Failure threshold                                            | `3`                                                  |
 | `healthcheck.liveness.port`                 | Port to probe                                                | `3000`                                               |
 | `healthcheck.liveness.path`                 | Path to probe                                                | `/`                                                  |
-| `resources.limits.cpu`                      | CPU limit                                                    | `1`                                                  |
-| `resources.limits.memory`                   | Memory limit                                                 | `512Mi`                                              |
-| `resources.limits.ephemeral-storage`        | Ephemeral storage limit                                      | `512Mi`                                              |
-| `resources.requests.cpu`                    | CPU request                                                  | `0.5`                                                |
-| `resources.requests.memory`                 | Memory request                                               | `256Mi`                                              |
-| `resources.requests.ephemeral-storage`      | Ephemeral storage request                                    | `256Mi`                                              |
 | `nodeSelector`                              | Node selector                                                | `{}`                                                 |
 | `tolerations`                               | Tolerations                                                  | `{}`                                                 |
 | `affinity`                                  | Affinity                                                     | `{}`                                                 |
