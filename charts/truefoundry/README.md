@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.48.1`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.48.5`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -53,7 +53,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.tolerations`                        | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                        | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                   | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                          | Image tag for the frontend app                         | `v0.47.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                          | Image tag for the frontend app                         | `v0.47.2`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                      | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                    | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                       | Override name for the frontend app                     | `""`                                                                                       |
@@ -146,7 +146,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.tolerations`                         | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                         | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                    | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                           | Image tag for the servicefoundry server                         | `v0.48.0`                                               |
+| `servicefoundryServer.image.tag`                           | Image tag for the servicefoundry server                         | `v0.48.1`                                               |
 | `servicefoundryServer.environmentName`                     | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                       | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                     | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -190,7 +190,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.tolerations`                        | Tolerations specific to the tfyK8sController               | `{}`                                                 |
 | `tfyK8sController.annotations`                        | Annotations for the tfyK8sController                       | `{}`                                                 |
 | `tfyK8sController.image.repository`                   | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                          | Image tag for the tfyK8sController                         | `v0.43.0`                                            |
+| `tfyK8sController.image.tag`                          | Image tag for the tfyK8sController                         | `v0.43.1`                                            |
 | `tfyK8sController.environmentName`                    | Environment name for tfyK8sController                      | `default`                                            |
 | `tfyK8sController.envSecretName`                      | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                    | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
@@ -229,7 +229,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.annotations`                        | Annotations for the sfy manifest service                       | `{}`                                                   |
 | `sfyManifestService.tolerations`                        | Tolerations specific to the sfy manifest service               | `{}`                                                   |
 | `sfyManifestService.image.repository`                   | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                          | Image tag for the sfy manifest service                         | `v0.41.0`                                              |
+| `sfyManifestService.image.tag`                          | Image tag for the sfy manifest service                         | `v0.41.1`                                              |
 | `sfyManifestService.environmentName`                    | Environment name for the sfy manifest service                  | `default`                                              |
 | `sfyManifestService.envSecretName`                      | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
 | `sfyManifestService.imagePullPolicy`                    | Image pull policy for the sfy manifest service                 | `IfNotPresent`                                         |
@@ -414,11 +414,11 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.config.advertise`                       | Bool to enable NATS server advertise | `false`                                                      |
 | `tfyNats.config.jetstream.enabled`               | Bool to enable Jetstream             | `true`                                                       |
 | `tfyNats.config.jetstream.fileStore.dir`         | Storage directory path               | `/data`                                                      |
-| `tfyNats.config.jetstream.fileStore.pvc.size`    | PVC storage size                     | `20Gi`                                                       |
+| `tfyNats.config.jetstream.fileStore.pvc.size`    | PVC storage size                     | `10Gi`                                                       |
 | `tfyNats.config.jetstream.fileStore.pvc.enabled` | Bool to enable PVC                   | `true`                                                       |
 | `tfyNats.config.jetstream.fileStore.enabled`     | Bool to enable file storage          | `true`                                                       |
-| `tfyNats.config.jetstream.fileStore.maxSize`     | Maximum file storage size            | `10Gi`                                                       |
-| `tfyNats.config.jetstream.memoryStore.size`      | Memory storage size                  | `400Mi`                                                      |
+| `tfyNats.config.jetstream.fileStore.maxSize`     | Maximum file storage size            | `9Gi`                                                        |
+| `tfyNats.config.jetstream.memoryStore.size`      | Memory storage size                  | `1Gi`                                                        |
 | `tfyNats.config.jetstream.memoryStore.enabled`   | Bool to enable memory storage        | `true`                                                       |
 | `tfyNats.config.websocket.port`                  | Websocket port                       | `8080`                                                       |
 | `tfyNats.config.websocket.enabled`               | Bool to enable websocket             | `true`                                                       |
