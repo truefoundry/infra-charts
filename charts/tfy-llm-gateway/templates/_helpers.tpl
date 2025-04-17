@@ -193,3 +193,75 @@ Pod Annotation Labels
 prometheus.io/scrape: "true"
 prometheus.io/port: "8787"
 {{- end }}
+
+{{- define "tfy-llm-gateway.defaultResources.dev" }}
+requests:
+  cpu: 1000m
+  memory: 512Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 2000m
+  memory: 1024Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "tfy-llm-gateway.defaultResources.medium" }}
+requests:
+  cpu: 500m
+  memory: 512Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 1000m
+  memory: 1024Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "tfy-llm-gateway.defaultResources.high" }}
+requests:
+  cpu: 1000m
+  memory: 1024Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 2000m
+  memory: 2048Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "tfy-llm-gateway.resources" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "dev" }}
+  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.dev" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.medium" . }}
+{{- else if eq $tier "high" }}
+  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.high" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-llm-gateway.replicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.replicaCount }}
+{{ .Values.replicaCount }}
+{{- else if eq $tier "dev" -}}
+3
+{{- else if eq $tier "medium" -}}
+3
+{{- else if eq $tier "high" -}}
+3
+{{- end }}
+{{- end }}

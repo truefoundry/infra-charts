@@ -8,7 +8,7 @@ metadata:
     {{- include "buildkitd-service.annotations" . | nindent 4 }}
 spec:
   serviceName: {{ include "buildkitd-service.fullname" . }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{- include "buildkitd-service.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "buildkitd-service.selectorLabels" . | nindent 6 }}
@@ -97,7 +97,7 @@ spec:
                 - debug
                 - workers
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- include "buildkitd-service.resources" . | indent 12 }}
             
           volumeMounts:
           {{- if .Values.storage.enabled }}

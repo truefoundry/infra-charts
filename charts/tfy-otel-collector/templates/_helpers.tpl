@@ -173,3 +173,75 @@ Deployment VolumeMounts
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- end }}
+
+{{- define "tfy-otel-collector.resources" }}
+{{- $tier := .Values.resourceTier | default "medium" }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "dev" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.dev" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.medium" . }}
+{{- else if eq $tier "high" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.high" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.dev" }}
+requests:
+  cpu: 500m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 2000m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.medium" }}
+requests:
+  cpu: 100m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 200m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.high" }}
+requests:
+  cpu: 500m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 1000m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.replicas" }}
+{{- $tier := .Values.resourceTier | default "medium" }}
+{{- if .Values.replicaCount }}
+{{ .Values.replicaCount }}
+{{- else if eq $tier "dev" -}}
+2
+{{- else if eq $tier "medium" -}}
+2
+{{- else if eq $tier "high" -}}
+3
+{{- end }}
+{{- end }}

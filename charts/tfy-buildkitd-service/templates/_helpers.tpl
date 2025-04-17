@@ -112,3 +112,75 @@ Pod Annotations
 {}
 {{- end }}
 {{- end }}
+
+{{- define "buildkitd-service.resources" }}
+{{- $tier := .Values.resourceTier | default "medium" }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "dev" }}
+  {{- $defaultsYaml = include "buildkitd-service.defaultResources.dev" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "buildkitd-service.defaultResources.medium" . }}
+{{- else if eq $tier "high" }}
+  {{- $defaultsYaml = include "buildkitd-service.defaultResources.high" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{- define "buildkitd-service.defaultResources.dev" }}
+requests:
+  cpu: 2500m
+  memory: 8192Mi
+  ephemeral-storage: 100Mi
+limits:
+  cpu: 5000m
+  memory: 16384Mi
+  ephemeral-storage: 100Mi
+{{- end }}
+
+{{- define "buildkitd-service.defaultResources.medium" }}
+requests:
+  cpu: 2500m
+  memory: 8192Mi
+  ephemeral-storage: 100Mi
+limits:
+  cpu: 5000m
+  memory: 16384Mi
+  ephemeral-storage: 100Mi
+{{- end }}
+
+{{- define "buildkitd-service.defaultResources.high" }}
+requests:
+  cpu: 2500m
+  memory: 8192Mi
+  ephemeral-storage: 100Mi
+limits:
+  cpu: 5000m
+  memory: 16384Mi
+  ephemeral-storage: 100Mi
+{{- end }}
+
+{{- define "buildkitd-service.replicas" }}
+{{- $tier := .Values.resourceTier | default "medium" }}
+{{- if .Values.replicaCount }}
+{{ .Values.replicaCount }}
+{{- else if eq $tier "dev" -}}
+1
+{{- else if eq $tier "medium" -}}
+1
+{{- else if eq $tier "high" -}}
+1
+{{- end }}
+{{- end }}

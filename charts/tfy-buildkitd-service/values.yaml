@@ -1,8 +1,10 @@
 ## @section Parameters for tfyBuildkitdService
 
-## @param replicaCount Number of replicas of  Value kept for future use, kept 1
-##
-replicaCount: 1
+## @param resourceTier [string] Resource deployment type
+resourceTier: "medium"
+
+## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
+# replicaCount: 1
 
 ## Image of tfyBuildkitdService
 ##
@@ -120,22 +122,8 @@ service:
 ## customized resource limits are very general in nature and must be kept the same
 ## decreasing the resource might make the service UNAVAILABLE
 
-## @param resources.limits.cpu CPU resource limits for tfyBuildkitdService container.
-## @param resources.limits.memory Memory Resource limits for tfyBuildkitdService container.
-## @param resources.limits.ephemeral-storage Ephemeral Storage limits for tfyBuildkitdService container.
-## @param resources.requests.cpu CPU resource requests for tfyBuildkitdService container.
-## @param resources.requests.memory Memory Resource requests for tfyBuildkitdService container.
-## @param resources.requests.ephemeral-storage Ephemeral Storage requests for tfyBuildkitdService container.
-##
-resources:
-  limits:
-    cpu: 2500m
-    memory: 8Gi
-    ephemeral-storage: 100Mi
-  requests:
-    cpu: 2500m
-    memory: 8Gi
-    ephemeral-storage: 100Mi
+## Resource requests and limits for tfyBuildkitdService
+resources: {}
 
 ## @param extraVolumes List of Volumes to attach to tfyBuildkitdService container
 ## @param extraVolumeMounts List of Volume Mounts to attach to tfyBuildkitdService container

@@ -1,5 +1,8 @@
 ## @section Configuration values for tfy-otel-collector
 
+## @param resourceType [string] Resource deployment type
+resourceTier: "medium"
+
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
@@ -20,8 +23,9 @@ imagePullSecrets: []
 ## @param fullnameOverride Full name override for the tfy-otel-collector
 fullnameOverride: ""
 
-## @param replicaCount Number of replicas
-replicaCount: 2
+## @skip replicaCount Number of replicas
+# replicaCount: 2
+
 ## @param environmentName The environment name
 environmentName: default
 ## @param envSecretName The environment secret name
@@ -67,23 +71,7 @@ healthcheck:
     ## @param healthcheck.liveness.path Path to probe
     path: /
 ## Resource configuration
-resources:
-  ## resources.limits Resource limits
-  limits:
-    ## @param resources.limits.cpu CPU limit
-    cpu: 1
-    ## @param resources.limits.memory Memory limit
-    memory: 512Mi
-    ## @param resources.limits.ephemeral-storage Ephemeral storage limit
-    ephemeral-storage: 512Mi
-  ## resources.requests Resource requests
-  requests:
-    ## @param resources.requests.cpu CPU request
-    cpu: 0.5
-    ## @param resources.requests.memory Memory request
-    memory: 256Mi
-    ## @param resources.requests.ephemeral-storage Ephemeral storage request
-    ephemeral-storage: 256Mi
+resources: {}
 ## @param nodeSelector Node selector
 nodeSelector: {}
 ## @param tolerations Tolerations

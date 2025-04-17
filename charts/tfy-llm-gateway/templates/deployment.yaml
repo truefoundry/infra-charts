@@ -7,7 +7,7 @@ metadata:
   annotations:
     {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{- include "tfy-llm-gateway.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
@@ -42,7 +42,7 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- include "tfy-llm-gateway.resources" . | nindent 12 }}
           {{- if .Values.healthcheck.enabled }}
           livenessProbe:
             httpGet:
