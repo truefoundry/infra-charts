@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "truefoundry-frontend-app.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.truefoundryFrontendApp.replicaCount }}
+  replicas: {{- include "truefoundry-frontend-app.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "truefoundry-frontend-app.selectorLabels" . | nindent 6 }}
@@ -41,7 +41,7 @@ spec:
               containerPort: {{ .Values.truefoundryFrontendApp.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.truefoundryFrontendApp.resources | nindent 12 }}
+            {{- include "truefoundry-frontend-app.resources" . | indent 12 }}
           livenessProbe:
             failureThreshold: {{ .Values.truefoundryFrontendApp.livenessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.truefoundryFrontendApp.livenessProbe.initialDelaySeconds }}
