@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "sfy-manifest-service.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.sfyManifestService.replicaCount }}
+  replicas: {{- include "sfy-manifest-service.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
@@ -41,7 +41,7 @@ spec:
               containerPort: {{ .Values.sfyManifestService.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.sfyManifestService.resources | nindent 12 }}
+            {{- include "sfy-manifest-service.resources" . | indent 12 }}
           livenessProbe:
             failureThreshold: {{ .Values.sfyManifestService.livenessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.sfyManifestService.livenessProbe.initialDelaySeconds }}

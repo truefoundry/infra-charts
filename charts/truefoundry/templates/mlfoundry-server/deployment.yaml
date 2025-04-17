@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "mlfoundry-server.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.mlfoundryServer.replicaCount }}
+  replicas: {{- include "mlfoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
@@ -41,7 +41,7 @@ spec:
               containerPort: {{ .Values.mlfoundryServer.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.mlfoundryServer.resources | nindent 12 }}
+            {{- include "mlfoundry-server.resources" . | indent 12 }}
           livenessProbe:
             failureThreshold: {{ .Values.mlfoundryServer.livenessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.mlfoundryServer.livenessProbe.initialDelaySeconds }}

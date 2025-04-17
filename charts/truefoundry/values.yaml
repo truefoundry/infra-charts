@@ -15,7 +15,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.48.4
+  controlPlaneChartVersion: 0.48.5
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -114,8 +114,8 @@ truefoundryFrontendApp:
   enabled: true
   ## @param truefoundryFrontendApp.tolerations Tolerations specific to the frontend app
   tolerations: {}
-  ## @param truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
-  replicaCount: 1
+  ## @skip truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
+  #  replicaCount: 1
   ## @param truefoundryFrontendApp.annotations [object] Annotations for the frontend app
   annotations: {}
   ## truefoundryFrontendApp.image Image for the frontend app
@@ -140,24 +140,24 @@ truefoundryFrontendApp:
   commonLabels: {}
   ## @param truefoundryFrontendApp.securityContext Security context for the frontend app
   securityContext: {}
-  ## truefoundryFrontendApp.resources Resource requests and limits for the frontend app
-  resources:
-    ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
-    limits:
-      ## @param truefoundryFrontendApp.resources.limits.cpu CPU limit for the frontend app
-      cpu: 200m
-      ## @param truefoundryFrontendApp.resources.limits.memory Memory limit for the frontend app
-      memory: 512Mi
-      ## @param truefoundryFrontendApp.resources.limits.ephemeral-storage Ephemeral storage limit for the frontend app
-      ephemeral-storage: 256Mi
-    ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
-    requests:
-      ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
-      cpu: 50m
-      ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
-      memory: 256Mi
-      ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
-      ephemeral-storage: 128Mi
+  ## @skip truefoundryFrontendApp.resources Resource requests and limits for the frontend app
+  #resources:
+  #  ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
+  #  limits:
+  #    ## @param truefoundryFrontendApp.resources.limits.cpu CPU limit for the frontend app
+  #    cpu: 200m
+  #    ## @param truefoundryFrontendApp.resources.limits.memory Memory limit for the frontend app
+  #    memory: 512Mi
+  #    ## @param truefoundryFrontendApp.resources.limits.ephemeral-storage Ephemeral storage limit for the frontend app
+  #    ephemeral-storage: 256Mi
+  #  ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
+  #  requests:
+  #    ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
+  #    cpu: 50m
+  #    ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
+  #    memory: 256Mi
+  #    ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
+  #    ephemeral-storage: 128Mi
   ## truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
   livenessProbe:
     ## @param truefoundryFrontendApp.livenessProbe.initialDelaySeconds Initial delay seconds for the liveness probe
@@ -359,8 +359,8 @@ mlfoundryServer:
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
     tag: "v0.40.0"
-  ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
-  replicaCount: 1
+  ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
+  # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
   environmentName: default
   ## @param mlfoundryServer.envSecretName Secret name for the mlfoundry server environment variables
@@ -379,24 +379,24 @@ mlfoundryServer:
   commonLabels: {}
   ## @param mlfoundryServer.securityContext Security context for the mlfoundry server
   securityContext: {}
-  ## mlfoundryServer.resources Resource requests and limits for the mlfoundry server
-  resources:
-    ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
-    limits:
-      ## @param mlfoundryServer.resources.limits.cpu CPU limit for the mlfoundry server
-      cpu: 1200m
-      ## @param mlfoundryServer.resources.limits.memory Memory limit for the mlfoundry server
-      memory: 2048Mi
-      ## @param mlfoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the mlfoundry server
-      ephemeral-storage: 256Mi
-    ## mlfoundryServer.resources.requests Resource requests for the mlfoundry server
-    requests:
-      ## @param mlfoundryServer.resources.requests.cpu CPU request for the mlfoundry server
-      cpu: 600m
-      ## @param mlfoundryServer.resources.requests.memory Memory request for the mlfoundry server
-      memory: 1024Mi
-      ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
-      ephemeral-storage: 128Mi
+  ## @skip mlfoundryServer.resources Resource requests and limits for the mlfoundry server
+  #resources:
+  #  ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
+  #  limits:
+  #    ## @param mlfoundryServer.resources.limits.cpu CPU limit for the mlfoundry server
+  #    cpu: 1200m
+  #    ## @param mlfoundryServer.resources.limits.memory Memory limit for the mlfoundry server
+  #    memory: 2048Mi
+  #    ## @param mlfoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the mlfoundry server
+  #    ephemeral-storage: 256Mi
+  #  ## mlfoundryServer.resources.requests Resource requests for the mlfoundry server
+  #  requests:
+  #    ## @param mlfoundryServer.resources.requests.cpu CPU request for the mlfoundry server
+  #    cpu: 600m
+  #    ## @param mlfoundryServer.resources.requests.memory Memory request for the mlfoundry server
+  #    memory: 1024Mi
+  #    ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
+  #    ephemeral-storage: 128Mi
   ## mlfoundryServer.livenessProbe Liveness probe settings for the mlfoundry server
   livenessProbe:
     ## @param mlfoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for mlfoundry server
@@ -476,8 +476,8 @@ servicefoundryServer:
   enabled: true
   ## @param servicefoundryServer.tolerations Tolerations specific to the servicefoundry server
   tolerations: {}
-  ## @param servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
-  replicaCount: 1
+  ## @skip servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
+  # replicaCount: 1
   ## @param servicefoundryServer.annotations [object] Annotations for the mlfoundry server
   annotations: {}
   ## servicefoundryServer.image Image for the servicefoundry server
@@ -504,24 +504,24 @@ servicefoundryServer:
   commonLabels: {}
   ## @param servicefoundryServer.securityContext Security context for the servicefoundry server
   securityContext: {}
-  ## servicefoundryServer.resources Resource requests and limits for the servicefoundry server
-  resources:
-    ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
-    limits:
-      ## @param servicefoundryServer.resources.limits.cpu CPU limit for the servicefoundry server
-      cpu: 600m
-      ## @param servicefoundryServer.resources.limits.memory Memory limit for the servicefoundry server
-      memory: 1600Mi
-      ## @param servicefoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the servicefoundry server
-      ephemeral-storage: 256Mi
-    ## servicefoundryServer.resources.requests Resource requests for the servicefoundry server
-    requests:
-      ## @param servicefoundryServer.resources.requests.cpu CPU request for the servicefoundry server
-      cpu: 400m
-      ## @param servicefoundryServer.resources.requests.memory Memory request for the servicefoundry server
-      memory: 800Mi
-      ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
-      ephemeral-storage: 128Mi
+  ## @skip servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
+  #resources:
+  #  ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
+  #  limits:
+  #    ## @param servicefoundryServer.resources.limits.cpu CPU limit for the servicefoundry server
+  #    cpu: 600m
+  #    ## @param servicefoundryServer.resources.limits.memory Memory limit for the servicefoundry server
+  #    memory: 1600Mi
+  #    ## @param servicefoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the servicefoundry server
+  #    ephemeral-storage: 256Mi
+  #  ## servicefoundryServer.resources.requests Resource requests for the servicefoundry server
+  #  requests:
+  #    ## @param servicefoundryServer.resources.requests.cpu CPU request for the servicefoundry server
+  #    cpu: 400m
+  #    ## @param servicefoundryServer.resources.requests.memory Memory request for the servicefoundry server
+  #    memory: 800Mi
+  #    ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
+  #    ephemeral-storage: 128Mi
   ## servicefoundryServer.livenessProbe Liveness probe settings for the servicefoundry server
   livenessProbe:
     ## @param servicefoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for servicefoundry server
@@ -649,8 +649,8 @@ tfyK8sController:
   enabled: true
   ## @param tfyK8sController.tolerations Tolerations specific to the tfyK8sController
   tolerations: {}
-  ## @param tfyK8sController.replicaCount Number of replicas for the tfyK8sController
-  replicaCount: 1
+  ## @skip tfyK8sController.replicaCount Number of replicas for the tfyK8sController
+  # replicaCount: 1
   ## @param tfyK8sController.annotations [object] Annotations for the tfyK8sController
   annotations: {}
   ## tfyK8sController.image Image for the tfyK8sController
@@ -658,7 +658,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.43.0"
+    tag: "v0.43.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -670,31 +670,33 @@ tfyK8sController:
   ## @param tfyK8sController.fullnameOverride Full name override for the tfyK8sController
   fullnameOverride: ''
   ## @param tfyK8sController.podAnnotations [object] Annotations for the tfyK8sController pods
-  podAnnotations: {}
+  podAnnotations:
+    karpenter.sh/do-not-disrupt: "true"
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
   ## @param tfyK8sController.podSecurityContext Security context for the tfyK8sController pods
   podSecurityContext: {}
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
   ## @param tfyK8sController.securityContext Security context for the tfyK8sController
   securityContext: {}
-  ## tfyK8sController.resources Resource requests and limits for the tfyK8sController
-  resources:
-    ## tfyK8sController.resources.limits Resource limits for the tfyK8sController
-    limits:
-      ## @param tfyK8sController.resources.limits.cpu CPU limit for the tfyK8sController
-      cpu: 400m
-      ## @param tfyK8sController.resources.limits.memory Memory limit for the tfyK8sController
-      memory: 512Mi
-      ## @param tfyK8sController.resources.limits.ephemeral-storage Ephemeral storage limit for the tfyK8sController
-      ephemeral-storage: 256Mi
-    ## tfyK8sController.resources.requests Resource requests for the tfyK8sController
-    requests:
-      ## @param tfyK8sController.resources.requests.cpu CPU request for the tfyK8sController
-      cpu: 200m
-      ## @param tfyK8sController.resources.requests.memory Memory request for the tfyK8sController
-      memory: 256Mi
-      ## @param tfyK8sController.resources.requests.ephemeral-storage Ephemeral storage request for the tfyK8sController
-      ephemeral-storage: 128Mi
+  ## @skip tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
+  #resources:
+  #  ## tfyK8sController.resources.limits Resource limits for the tfyK8sController
+  #  limits:
+  #    ## @param tfyK8sController.resources.limits.cpu CPU limit for the tfyK8sController
+  #    cpu: 400m
+  #    ## @param tfyK8sController.resources.limits.memory Memory limit for the tfyK8sController
+  #    memory: 512Mi
+  #    ## @param tfyK8sController.resources.limits.ephemeral-storage Ephemeral storage limit for the tfyK8sController
+  #    ephemeral-storage: 256Mi
+  #  ## tfyK8sController.resources.requests Resource requests for the tfyK8sController
+  #  requests:
+  #    ## @param tfyK8sController.resources.requests.cpu CPU request for the tfyK8sController
+  #    cpu: 200m
+  #    ## @param tfyK8sController.resources.requests.memory Memory request for the tfyK8sController
+  #    memory: 256Mi
+  #    ## @param tfyK8sController.resources.requests.ephemeral-storage Ephemeral storage request for the tfyK8sController
+  #    ephemeral-storage: 128Mi
   ## tfyK8sController.livenessProbe Liveness probe settings for the tfyK8sController
   livenessProbe:
     ## @param tfyK8sController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyK8sController
@@ -782,8 +784,8 @@ sfyManifestService:
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
     tag: "v0.41.1"
-  ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
-  replicaCount: 1
+  ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
+  # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
   environmentName: default
   ## @param sfyManifestService.envSecretName Secret name for the sfy manifest service environment variables
@@ -802,24 +804,24 @@ sfyManifestService:
   commonLabels: {}
   ## @param sfyManifestService.securityContext Security context for the sfy manifest service
   securityContext: {}
-  ## sfyManifestService.resources Resource requests and limits for the sfy manifest service
-  resources:
-    ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
-    limits:
-      ## @param sfyManifestService.resources.limits.cpu CPU limit for the sfy manifest service
-      cpu: 200m
-      ## @param sfyManifestService.resources.limits.memory Memory limit for the sfy manifest service
-      memory: 512Mi
-      ## @param sfyManifestService.resources.limits.ephemeral-storage Ephemeral storage limit for the sfy manifest service
-      ephemeral-storage: 256Mi
-    ## sfyManifestService.resources.requests Resource requests for the sfy manifest service
-    requests:
-      ## @param sfyManifestService.resources.requests.cpu CPU request for the sfy manifest service
-      cpu: 100m
-      ## @param sfyManifestService.resources.requests.memory Memory request for the sfy manifest service
-      memory: 256Mi
-      ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
-      ephemeral-storage: 128Mi
+  ## @skip sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
+  #resources:
+  #  ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
+  #  limits:
+  #    ## @param sfyManifestService.resources.limits.cpu CPU limit for the sfy manifest service
+  #    cpu: 200m
+  #    ## @param sfyManifestService.resources.limits.memory Memory limit for the sfy manifest service
+  #    memory: 512Mi
+  #    ## @param sfyManifestService.resources.limits.ephemeral-storage Ephemeral storage limit for the sfy manifest service
+  #    ephemeral-storage: 256Mi
+  #  ## sfyManifestService.resources.requests Resource requests for the sfy manifest service
+  #  requests:
+  #    ## @param sfyManifestService.resources.requests.cpu CPU request for the sfy manifest service
+  #    cpu: 100m
+  #    ## @param sfyManifestService.resources.requests.memory Memory request for the sfy manifest service
+  #    memory: 256Mi
+  #    ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
+  #    ephemeral-storage: 128Mi
   ## sfyManifestService.livenessProbe Liveness probe settings for the sfy manifest service
   livenessProbe:
     ## @param sfyManifestService.livenessProbe.failureThreshold Liveness probe failure threshold for sfy manifest service
@@ -1235,16 +1237,16 @@ tfyController:
   ## @param tfyController.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
-  ## @skip tfyController.resources Resource requests and limits for the tfyController
-  resources:
-    limits:
-      cpu: 400m
-      memory: 1024Mi
-      ephemeral-storage: 256Mi
-    requests:
-      cpu: 200m
-      memory: 512Mi
-      ephemeral-storage: 128Mi
+  ## @skip tfyController.resources [object] Resource requests and limits for the tfyController
+  #resources:
+  #  limits:
+  #    cpu: 400m
+  #    memory: 1024Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 200m
+  #    memory: 512Mi
+  #    ephemeral-storage: 128Mi
   ## tfyController.livenessProbe Liveness probe settings for the tfyController
   livenessProbe:
     ## @param tfyController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyController
@@ -1322,8 +1324,8 @@ tfyWorkflowAdmin:
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
     tag: v0.15.0
-  ## @param tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
-  replicaCount: 1
+  ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
+  # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables
@@ -1345,16 +1347,16 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
-  ## @skip tfyWorkflowAdmin.resources Resource requests and limits for the tfyWorkflowAdmin
-  resources:
-    limits:
-      cpu: 100m
-      memory: 256Mi
-      ephemeral-storage: 256Mi
-    requests:
-      cpu: 50m
-      memory: 256Mi
-      ephemeral-storage: 128Mi
+  ## @skip fyWorkflowAdmin.resources [object] Resource requests and limits for the tfyWorkflowAdmin
+  #resources:
+  #  limits:
+  #    cpu: 100m
+  #    memory: 256Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 50m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
   ## tfyWorkflowAdmin.livenessProbe Liveness probe settings for the tfyWorkflowAdmin
   livenessProbe:
     ## @param tfyWorkflowAdmin.livenessProbe.failureThreshold Liveness probe failure threshold for tfyWorkflowAdmin
