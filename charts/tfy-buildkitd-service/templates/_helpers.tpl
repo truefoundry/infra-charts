@@ -117,12 +117,12 @@ Pod Annotations
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 
 {{- $defaultsYaml := "" }}
-{{- if eq $tier "dev" }}
-  {{- $defaultsYaml = include "buildkitd-service.defaultResources.dev" . }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "buildkitd-service.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "buildkitd-service.defaultResources.medium" . }}
-{{- else if eq $tier "high" }}
-  {{- $defaultsYaml = include "buildkitd-service.defaultResources.high" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "buildkitd-service.defaultResources.large" . }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
@@ -139,7 +139,7 @@ Pod Annotations
 {{ toYaml $merged }}
 {{- end }}
 
-{{- define "buildkitd-service.defaultResources.dev" }}
+{{- define "buildkitd-service.defaultResources.small" }}
 requests:
   cpu: 2500m
   memory: 8192Mi
@@ -161,7 +161,7 @@ limits:
   ephemeral-storage: 100Mi
 {{- end }}
 
-{{- define "buildkitd-service.defaultResources.high" }}
+{{- define "buildkitd-service.defaultResources.large" }}
 requests:
   cpu: 2500m
   memory: 8192Mi
@@ -176,11 +176,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount }}
 {{ .Values.replicaCount }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
 1
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 1
 {{- end }}
 {{- end }}
@@ -189,11 +189,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.storage.size }}
 {{ .Values.storage.size }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 200Gi
 {{- else if eq $tier "medium" -}}
 200Gi
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 200Gi
 {{- end }}
 {{- end }}

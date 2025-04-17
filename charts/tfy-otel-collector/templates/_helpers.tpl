@@ -178,12 +178,12 @@ Deployment VolumeMounts
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 
 {{- $defaultsYaml := "" }}
-{{- if eq $tier "dev" }}
-  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.dev" . }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.medium" . }}
-{{- else if eq $tier "high" }}
-  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.high" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.large" . }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
@@ -200,7 +200,7 @@ Deployment VolumeMounts
 {{ toYaml $merged }}
 {{- end }}
 
-{{- define "tfy-otel-collector.defaultResources.dev" }}
+{{- define "tfy-otel-collector.defaultResources.small" }}
 requests:
   cpu: 500m
   memory: 256Mi
@@ -222,7 +222,7 @@ limits:
   ephemeral-storage: 512Mi
 {{- end }}
 
-{{- define "tfy-otel-collector.defaultResources.high" }}
+{{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
   cpu: 500m
   memory: 256Mi
@@ -237,11 +237,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount }}
 {{ .Values.replicaCount }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 2
 {{- else if eq $tier "medium" -}}
 2
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 3
 {{- end }}
 {{- end }}

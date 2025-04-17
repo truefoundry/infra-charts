@@ -24,12 +24,12 @@ Clickhouse resoures
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 
 {{- $defaultsYaml := "" }}
-{{- if eq $tier "dev" }}
-  {{- $defaultsYaml = include "clickhouse.defaultResources.dev" . }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "clickhouse.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "clickhouse.defaultResources.medium" . }}
-{{- else if eq $tier "high" }}
-  {{- $defaultsYaml = include "clickhouse.defaultResources.high" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "clickhouse.defaultResources.large" . }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
@@ -46,7 +46,7 @@ Clickhouse resoures
 {{ toYaml $merged }}
 {{- end }}
 
-{{- define "clickhouse.defaultResources.dev" }}
+{{- define "clickhouse.defaultResources.small" }}
 requests:
   cpu: 1000m
   memory: 4096Mi
@@ -68,7 +68,7 @@ limits:
   ephemeral-storage: 10Gi
 {{- end }}
 
-{{- define "clickhouse.defaultResources.high" }}
+{{- define "clickhouse.defaultResources.large" }}
 requests:
   cpu: 3500m
   memory: 15360Mi
@@ -83,11 +83,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.clickhouse.replicasCount }}
 {{ .Values.clickhouse.replicasCount }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
 2
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 3
 {{- end }}
 {{- end }}
@@ -96,11 +96,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.clickhouse.storage.size }}
 {{ .Values.clickhouse.storage.size }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 100Gi
 {{- else if eq $tier "medium" -}}
 100Gi
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 100Gi
 {{- end }}
 {{- end }}

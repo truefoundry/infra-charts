@@ -194,7 +194,7 @@ prometheus.io/scrape: "true"
 prometheus.io/port: "8787"
 {{- end }}
 
-{{- define "tfy-llm-gateway.defaultResources.dev" }}
+{{- define "tfy-llm-gateway.defaultResources.small" }}
 requests:
   cpu: 1000m
   memory: 512Mi
@@ -216,7 +216,7 @@ limits:
   ephemeral-storage: 256Mi
 {{- end }}
 
-{{- define "tfy-llm-gateway.defaultResources.high" }}
+{{- define "tfy-llm-gateway.defaultResources.large" }}
 requests:
   cpu: 1000m
   memory: 1024Mi
@@ -231,12 +231,12 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 
 {{- $defaultsYaml := "" }}
-{{- if eq $tier "dev" }}
-  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.dev" . }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.medium" . }}
-{{- else if eq $tier "high" }}
-  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.high" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "tfy-llm-gateway.defaultResources.large" . }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
@@ -257,11 +257,11 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount }}
 {{ .Values.replicaCount }}
-{{- else if eq $tier "dev" -}}
+{{- else if eq $tier "small" -}}
 3
 {{- else if eq $tier "medium" -}}
 3
-{{- else if eq $tier "high" -}}
+{{- else if eq $tier "large" -}}
 3
 {{- end }}
 {{- end }}
