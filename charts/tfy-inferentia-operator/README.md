@@ -29,25 +29,27 @@ Refer to,
 
 ### Configuration for the scheduler responsible for scheduling neuron pods
 
-| Name                                            | Description                                    | Value                                                                          |
-| ----------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------ |
-| `scheduler.enabled`                             | Enable Scheduler.                              | `true`                                                                         |
-| `scheduler.schedulerName`                       | Name of the scheduler.                         | `neuron-scheduler`                                                             |
-| `scheduler.image`                               | K8s Scheduler image.                           | `public.ecr.aws/eks-distro/kubernetes/kube-scheduler:v1.29.14-eks-1-29-latest` |
-| `scheduler.labels`                              | K8s Scheduler labels.                          | `{}`                                                                           |
-| `scheduler.annotations`                         | K8s Scheduler annotations.                     | `{}`                                                                           |
-| `scheduler.resources.requests.cpu`              | CPU request for K8s scheduler.                 | `200m`                                                                         |
-| `scheduler.resources.requests.memory`           | Memory request for K8s scheduler.              | `128Mi`                                                                        |
-| `scheduler.resources.limits.cpu`                | CPU limit for K8s scheduler.                   | `400m`                                                                         |
-| `scheduler.resources.limits.memory`             | Memory limit for K8s scheduler.                | `256Mi`                                                                        |
-| `scheduler.extension.image`                     | Neuron scheduler extension image.              | `public.ecr.aws/neuron/neuron-scheduler:2.23.30.0`                             |
-| `scheduler.extension.resources.requests.cpu`    | CPU request for Neuron scheduler extension.    | `200m`                                                                         |
-| `scheduler.extension.resources.requests.memory` | Memory request for Neuron scheduler extension. | `128Mi`                                                                        |
-| `scheduler.extension.resources.limits.cpu`      | CPU limit for Neuron scheduler extension.      | `400m`                                                                         |
-| `scheduler.extension.resources.limits.memory`   | Memory limit for Neuron scheduler extension.   | `256Mi`                                                                        |
-| `scheduler.imagePullSecrets`                    | List of image pull secrets                     | `[]`                                                                           |
-| `scheduler.extension.labels`                    | Labels for Neuron scheduler extension.         | `{}`                                                                           |
-| `scheduler.extension.annotations`               | Annotations for Neuron scheduler extension.    | `{}`                                                                           |
-| `scheduler.extension.imagePullSecrets`          | List of image pull secrets                     | `[]`                                                                           |
-| `scheduler.affinity`                            | Affinity settings for scheduler.               | `{}`                                                                           |
-| `scheduler.extension.affinity`                  | Affinity settings for scheduler extension.     | `{}`                                                                           |
+| Name                                            | Description                                    | Value                                                 |
+| ----------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| `scheduler.enabled`                             | Enable Scheduler.                              | `true`                                                |
+| `scheduler.schedulerName`                       | Name of the scheduler.                         | `neuron-scheduler`                                    |
+| `scheduler.image.repository`                    | K8s Scheduler image repository.                | `public.ecr.aws/eks-distro/kubernetes/kube-scheduler` |
+| `scheduler.image.tag`                           | K8s Scheduler image tag.                       | `v1.29.14-eks-1-29-latest`                            |
+| `scheduler.labels`                              | K8s Scheduler labels.                          | `{}`                                                  |
+| `scheduler.annotations`                         | K8s Scheduler annotations.                     | `{}`                                                  |
+| `scheduler.resources.requests.cpu`              | CPU request for K8s scheduler.                 | `200m`                                                |
+| `scheduler.resources.requests.memory`           | Memory request for K8s scheduler.              | `128Mi`                                               |
+| `scheduler.resources.limits.cpu`                | CPU limit for K8s scheduler.                   | `400m`                                                |
+| `scheduler.resources.limits.memory`             | Memory limit for K8s scheduler.                | `256Mi`                                               |
+| `scheduler.extension.image.repository`          | Neuron scheduler extension image repository.   | `public.ecr.aws/neuron/neuron-scheduler`              |
+| `scheduler.extension.image.tag`                 | Neuron scheduler extension image tag.          | `2.23.30.0`                                           |
+| `scheduler.extension.resources.requests.cpu`    | CPU request for Neuron scheduler extension.    | `200m`                                                |
+| `scheduler.extension.resources.requests.memory` | Memory request for Neuron scheduler extension. | `128Mi`                                               |
+| `scheduler.extension.resources.limits.cpu`      | CPU limit for Neuron scheduler extension.      | `400m`                                                |
+| `scheduler.extension.resources.limits.memory`   | Memory limit for Neuron scheduler extension.   | `256Mi`                                               |
+| `scheduler.imagePullSecrets`                    | List of image pull secrets                     | `[]`                                                  |
+| `scheduler.extension.labels`                    | Labels for Neuron scheduler extension.         | `{}`                                                  |
+| `scheduler.extension.annotations`               | Annotations for Neuron scheduler extension.    | `{}`                                                  |
+| `scheduler.extension.imagePullSecrets`          | List of image pull secrets                     | `[]`                                                  |
+| `scheduler.affinity`                            | Affinity settings for scheduler.               | `{}`                                                  |
+| `scheduler.extension.affinity`                  | Affinity settings for scheduler extension.     | `{}`                                                  |
