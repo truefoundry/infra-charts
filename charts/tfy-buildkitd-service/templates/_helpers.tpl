@@ -184,3 +184,16 @@ limits:
 1
 {{- end }}
 {{- end }}
+
+{{- define "buildkitd-service.storageSize" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.storage.size }}
+{{ .Values.storage.size }}
+{{- else if eq $tier "dev" -}}
+200Gi
+{{- else if eq $tier "medium" -}}
+200Gi
+{{- else if eq $tier "high" -}}
+200Gi
+{{- end }}
+{{- end }}
