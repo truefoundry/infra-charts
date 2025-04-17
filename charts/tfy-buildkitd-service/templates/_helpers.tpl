@@ -114,7 +114,7 @@ Pod Annotations
 {{- end }}
 
 {{- define "buildkitd-service.resources" }}
-{{- $tier := .Values.resourceTier | default "medium" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "dev" }}
@@ -173,7 +173,7 @@ limits:
 {{- end }}
 
 {{- define "buildkitd-service.replicas" }}
-{{- $tier := .Values.resourceTier | default "medium" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount }}
 {{ .Values.replicaCount }}
 {{- else if eq $tier "dev" -}}
