@@ -164,7 +164,7 @@ spec:
       affinity:
         {{- toYaml (index .Values "scheduler" "affinity") | nindent 8 }}
       containers:
-      - image: {{ .Values.scheduler.image }}
+      - image: {{ .Values.scheduler.image.repository }}:{{ .Values.scheduler.image.tag }}
         command:
         - /usr/local/bin/kube-scheduler
         args:
