@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "tfy-controller.annotations" . | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{- include "tfy-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-controller.selectorLabels" . | nindent 6 }}
@@ -41,7 +41,7 @@ spec:
               containerPort: {{ .Values.tfyController.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfyController.resources | nindent 12 }}
+            {{- include "tfy-controller.resources" . | indent 12 }}
           livenessProbe:
             httpGet:
               path: /healthy

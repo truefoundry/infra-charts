@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "tfy-k8s-controller.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.tfyK8sController.replicaCount }}
+  replicas: {{- include "tfy-k8s-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
@@ -41,7 +41,7 @@ spec:
               containerPort: {{ .Values.tfyK8sController.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfyK8sController.resources | nindent 12 }}
+            {{- include "tfy-k8s-controller.resources" . | indent 12 }}
           livenessProbe:
             httpGet:
               path: /

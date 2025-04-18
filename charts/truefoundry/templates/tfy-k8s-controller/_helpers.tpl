@@ -158,3 +158,73 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
+
+{{- define "tfy-k8s-controller.replicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.tfyK8sController.replicaCount }}
+{{ .Values.tfyK8sController.replicaCount }}
+{{- else if eq $tier "small" -}}
+1
+{{- else if eq $tier "medium" -}}
+3
+{{- else if eq $tier "large" -}}
+3
+{{- end }}
+{{- end }}
+
+{{- define "tfy-k8s-controller.defaultResources.small"}}
+requests:
+  cpu: 100m
+  memory: 256Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 200m
+  memory: 512Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+{{- define "tfy-k8s-controller.defaultResources.medium" }}
+requests:
+  cpu: 500m
+  memory: 512Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 1000m
+  memory: 1024Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+{{- define "tfy-k8s-controller.defaultResources.large" }}
+requests:
+  cpu: 500m
+  memory: 1024Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 1000m
+  memory: 2056Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "tfy-k8s-controller.resources" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "tfy-controller.defaultResources.small" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "tfy-controller.defaultResources.medium" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "tfy-controller.defaultResources.large" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.tfyK8sController.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}

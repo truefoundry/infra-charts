@@ -17,7 +17,7 @@ spec:
         by (pod, container, namespace) /
         sum(increase(container_cpu_cfs_periods_total{job="kubelet"}[5m])) by
         (pod, container, namespace) > ( 25 / 100 )
-      alert: ContainerHighThrottleRate
+      alert: ContainerHighCPUThrottleRate
       labels:
         entity: container
         severity: warning
@@ -75,26 +75,26 @@ spec:
       expr: >-
         sum by (namespace, pod)
         (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
-      alert: KubernetesPodNotHealthy
+      alert: PodNotHealthy
       labels:
         entity: pod
         severity: critical
       annotations:
         summary: >-
-          Kubernetes Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+          Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: >-
           Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
           non-running state for longer than 15 minutes.
             VALUE = {{`{{ $value }}`}}
     - for: 2m
       expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
-      alert: KubernetesPodCrashLooping
+      alert: PodCrashLooping
       labels:
         entity: pod
         severity: warning
       annotations:
         summary: >-
-          Kubernetes pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+          Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: |-
           Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
             VALUE = {{`{{ $value }}`}}

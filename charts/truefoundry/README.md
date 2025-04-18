@@ -11,7 +11,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.48.4`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.48.5`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
@@ -47,253 +47,218 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 
 ### Truefoundry Frontend App values
 
-| Name                                                          | Description                                            | Value                                                                                      |
-| ------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `truefoundryFrontendApp.enabled`                              | Bool to enable the frontend app                        | `true`                                                                                     |
-| `truefoundryFrontendApp.tolerations`                          | Tolerations specific to the frontend app               | `{}`                                                                                       |
-| `truefoundryFrontendApp.replicaCount`                         | Number of replicas for the frontend app                | `1`                                                                                        |
-| `truefoundryFrontendApp.annotations`                          | Annotations for the frontend app                       | `{}`                                                                                       |
-| `truefoundryFrontendApp.image.repository`                     | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                            | Image tag for the frontend app                         | `v0.47.2`                                                                                  |
-| `truefoundryFrontendApp.envSecretName`                        | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
-| `truefoundryFrontendApp.imagePullPolicy`                      | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
-| `truefoundryFrontendApp.nameOverride`                         | Override name for the frontend app                     | `""`                                                                                       |
-| `truefoundryFrontendApp.fullnameOverride`                     | Full name override for the frontend app                | `""`                                                                                       |
-| `truefoundryFrontendApp.podAnnotations`                       | Annotations for the frontend app pods                  | `{}`                                                                                       |
-| `truefoundryFrontendApp.podSecurityContext`                   | Security context for the frontend app pods             | `{}`                                                                                       |
-| `truefoundryFrontendApp.commonLabels`                         | Common labels for the frontend app pods                | `{}`                                                                                       |
-| `truefoundryFrontendApp.securityContext`                      | Security context for the frontend app                  | `{}`                                                                                       |
-| `truefoundryFrontendApp.resources.limits.cpu`                 | CPU limit for the frontend app                         | `200m`                                                                                     |
-| `truefoundryFrontendApp.resources.limits.memory`              | Memory limit for the frontend app                      | `512Mi`                                                                                    |
-| `truefoundryFrontendApp.resources.limits.ephemeral-storage`   | Ephemeral storage limit for the frontend app           | `256Mi`                                                                                    |
-| `truefoundryFrontendApp.resources.requests.cpu`               | CPU request for the frontend app                       | `50m`                                                                                      |
-| `truefoundryFrontendApp.resources.requests.memory`            | Memory request for the frontend app                    | `256Mi`                                                                                    |
-| `truefoundryFrontendApp.resources.requests.ephemeral-storage` | Ephemeral storage request for the frontend app         | `128Mi`                                                                                    |
-| `truefoundryFrontendApp.livenessProbe.initialDelaySeconds`    | Initial delay seconds for the liveness probe           | `600`                                                                                      |
-| `truefoundryFrontendApp.livenessProbe.periodSeconds`          | Period seconds for the liveness probe                  | `30`                                                                                       |
-| `truefoundryFrontendApp.livenessProbe.timeoutSeconds`         | Timeout seconds for the liveness probe                 | `5`                                                                                        |
-| `truefoundryFrontendApp.livenessProbe.failureThreshold`       | Failure threshold for the liveness probe               | `3`                                                                                        |
-| `truefoundryFrontendApp.livenessProbe.successThreshold`       | Success threshold for the liveness probe               | `1`                                                                                        |
-| `truefoundryFrontendApp.readinessProbe.initialDelaySeconds`   | Initial delay seconds for the readiness probe          | `30`                                                                                       |
-| `truefoundryFrontendApp.readinessProbe.periodSeconds`         | Period seconds for the readiness probe                 | `30`                                                                                       |
-| `truefoundryFrontendApp.readinessProbe.timeoutSeconds`        | Timeout seconds for the readiness probe                | `5`                                                                                        |
-| `truefoundryFrontendApp.readinessProbe.failureThreshold`      | Failure threshold for the readiness probe              | `3`                                                                                        |
-| `truefoundryFrontendApp.readinessProbe.successThreshold`      | Success threshold for the readiness probe              | `1`                                                                                        |
-| `truefoundryFrontendApp.nodeSelector`                         | Node selector for the frontend app                     | `{}`                                                                                       |
-| `truefoundryFrontendApp.affinity`                             | Affinity settings for the frontend app                 | `{}`                                                                                       |
-| `truefoundryFrontendApp.topologySpreadConstraints`            | Topology spread constraints for the frontend app       | `{}`                                                                                       |
-| `truefoundryFrontendApp.service.type`                         | Service type for the frontend app                      | `ClusterIP`                                                                                |
-| `truefoundryFrontendApp.service.port`                         | Service port for the frontend app                      | `5000`                                                                                     |
-| `truefoundryFrontendApp.service.annotations`                  | Annotations for the frontend app service               | `{}`                                                                                       |
-| `truefoundryFrontendApp.ingress.enabled`                      | Enable ingress for the frontend app                    | `false`                                                                                    |
-| `truefoundryFrontendApp.ingress.annotations`                  | Annotations for the frontend app ingress               | `{}`                                                                                       |
-| `truefoundryFrontendApp.ingress.labels`                       | Labels for the frontend app ingress                    | `{}`                                                                                       |
-| `truefoundryFrontendApp.ingress.ingressClassName`             | Ingress class name for the frontend app                | `istio`                                                                                    |
-| `truefoundryFrontendApp.ingress.tls`                          | TLS settings for the frontend app                      | `[]`                                                                                       |
-| `truefoundryFrontendApp.ingress.hosts`                        | Hosts for the frontend app                             | `[]`                                                                                       |
-| `truefoundryFrontendApp.istio.virtualservice.enabled`         | Enable virtual service for the frontend app            | `false`                                                                                    |
-| `truefoundryFrontendApp.istio.virtualservice.annotations`     | Annotations for the frontend app virtual service       | `{}`                                                                                       |
-| `truefoundryFrontendApp.istio.virtualservice.gateways`        | Gateways for the frontend app virtual service          | `[]`                                                                                       |
-| `truefoundryFrontendApp.istio.virtualservice.hosts`           | Hosts for the frontend app virtual service             | `[]`                                                                                       |
-| `truefoundryFrontendApp.servicefoundryServerHost`             | Servicefoundry server host for the frontend app        | `{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local`     |
-| `truefoundryFrontendApp.tfyWorkflowAdminHost`                 | tfy workflow admin host for the frontend app           | `{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local` |
-| `truefoundryFrontendApp.llmGateway.external`                  | Make LLMGateway external                               | `false`                                                                                    |
-| `truefoundryFrontendApp.llmGateway.backendHost`               | Backend Host for the LLM gateway                       | `{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local`           |
-| `truefoundryFrontendApp.llmGateway.backendPort`               | Backend Port for the LLM gateway                       | `8787`                                                                                     |
-| `truefoundryFrontendApp.proxyServerHost`                      | Proxy server host for the frontend app                 | `{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local`            |
-| `truefoundryFrontendApp.serviceAccount.annotations`           | Annotations for the frontend app service account       | `{}`                                                                                       |
-| `truefoundryFrontendApp.extraVolumes`                         | Extra volumes for the frontend app                     | `[]`                                                                                       |
-| `truefoundryFrontendApp.extraVolumeMounts`                    | Extra volume mounts for the frontend app               | `[]`                                                                                       |
-| `truefoundryFrontendApp.imagePullSecrets`                     | Image pull secrets for the frontend app                | `[]`                                                                                       |
+| Name                                                        | Description                                            | Value                                                                                      |
+| ----------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `truefoundryFrontendApp.enabled`                            | Bool to enable the frontend app                        | `true`                                                                                     |
+| `truefoundryFrontendApp.tolerations`                        | Tolerations specific to the frontend app               | `{}`                                                                                       |
+| `truefoundryFrontendApp.annotations`                        | Annotations for the frontend app                       | `{}`                                                                                       |
+| `truefoundryFrontendApp.image.repository`                   | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
+| `truefoundryFrontendApp.image.tag`                          | Image tag for the frontend app                         | `v0.47.2`                                                                                  |
+| `truefoundryFrontendApp.envSecretName`                      | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
+| `truefoundryFrontendApp.imagePullPolicy`                    | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
+| `truefoundryFrontendApp.nameOverride`                       | Override name for the frontend app                     | `""`                                                                                       |
+| `truefoundryFrontendApp.fullnameOverride`                   | Full name override for the frontend app                | `""`                                                                                       |
+| `truefoundryFrontendApp.podAnnotations`                     | Annotations for the frontend app pods                  | `{}`                                                                                       |
+| `truefoundryFrontendApp.podSecurityContext`                 | Security context for the frontend app pods             | `{}`                                                                                       |
+| `truefoundryFrontendApp.commonLabels`                       | Common labels for the frontend app pods                | `{}`                                                                                       |
+| `truefoundryFrontendApp.securityContext`                    | Security context for the frontend app                  | `{}`                                                                                       |
+| `truefoundryFrontendApp.livenessProbe.initialDelaySeconds`  | Initial delay seconds for the liveness probe           | `600`                                                                                      |
+| `truefoundryFrontendApp.livenessProbe.periodSeconds`        | Period seconds for the liveness probe                  | `30`                                                                                       |
+| `truefoundryFrontendApp.livenessProbe.timeoutSeconds`       | Timeout seconds for the liveness probe                 | `5`                                                                                        |
+| `truefoundryFrontendApp.livenessProbe.failureThreshold`     | Failure threshold for the liveness probe               | `3`                                                                                        |
+| `truefoundryFrontendApp.livenessProbe.successThreshold`     | Success threshold for the liveness probe               | `1`                                                                                        |
+| `truefoundryFrontendApp.readinessProbe.initialDelaySeconds` | Initial delay seconds for the readiness probe          | `30`                                                                                       |
+| `truefoundryFrontendApp.readinessProbe.periodSeconds`       | Period seconds for the readiness probe                 | `30`                                                                                       |
+| `truefoundryFrontendApp.readinessProbe.timeoutSeconds`      | Timeout seconds for the readiness probe                | `5`                                                                                        |
+| `truefoundryFrontendApp.readinessProbe.failureThreshold`    | Failure threshold for the readiness probe              | `3`                                                                                        |
+| `truefoundryFrontendApp.readinessProbe.successThreshold`    | Success threshold for the readiness probe              | `1`                                                                                        |
+| `truefoundryFrontendApp.nodeSelector`                       | Node selector for the frontend app                     | `{}`                                                                                       |
+| `truefoundryFrontendApp.affinity`                           | Affinity settings for the frontend app                 | `{}`                                                                                       |
+| `truefoundryFrontendApp.topologySpreadConstraints`          | Topology spread constraints for the frontend app       | `{}`                                                                                       |
+| `truefoundryFrontendApp.service.type`                       | Service type for the frontend app                      | `ClusterIP`                                                                                |
+| `truefoundryFrontendApp.service.port`                       | Service port for the frontend app                      | `5000`                                                                                     |
+| `truefoundryFrontendApp.service.annotations`                | Annotations for the frontend app service               | `{}`                                                                                       |
+| `truefoundryFrontendApp.ingress.enabled`                    | Enable ingress for the frontend app                    | `false`                                                                                    |
+| `truefoundryFrontendApp.ingress.annotations`                | Annotations for the frontend app ingress               | `{}`                                                                                       |
+| `truefoundryFrontendApp.ingress.labels`                     | Labels for the frontend app ingress                    | `{}`                                                                                       |
+| `truefoundryFrontendApp.ingress.ingressClassName`           | Ingress class name for the frontend app                | `istio`                                                                                    |
+| `truefoundryFrontendApp.ingress.tls`                        | TLS settings for the frontend app                      | `[]`                                                                                       |
+| `truefoundryFrontendApp.ingress.hosts`                      | Hosts for the frontend app                             | `[]`                                                                                       |
+| `truefoundryFrontendApp.istio.virtualservice.enabled`       | Enable virtual service for the frontend app            | `false`                                                                                    |
+| `truefoundryFrontendApp.istio.virtualservice.annotations`   | Annotations for the frontend app virtual service       | `{}`                                                                                       |
+| `truefoundryFrontendApp.istio.virtualservice.gateways`      | Gateways for the frontend app virtual service          | `[]`                                                                                       |
+| `truefoundryFrontendApp.istio.virtualservice.hosts`         | Hosts for the frontend app virtual service             | `[]`                                                                                       |
+| `truefoundryFrontendApp.servicefoundryServerHost`           | Servicefoundry server host for the frontend app        | `{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local`     |
+| `truefoundryFrontendApp.tfyWorkflowAdminHost`               | tfy workflow admin host for the frontend app           | `{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local` |
+| `truefoundryFrontendApp.llmGateway.external`                | Make LLMGateway external                               | `false`                                                                                    |
+| `truefoundryFrontendApp.llmGateway.backendHost`             | Backend Host for the LLM gateway                       | `{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local`           |
+| `truefoundryFrontendApp.llmGateway.backendPort`             | Backend Port for the LLM gateway                       | `8787`                                                                                     |
+| `truefoundryFrontendApp.proxyServerHost`                    | Proxy server host for the frontend app                 | `{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local`            |
+| `truefoundryFrontendApp.serviceAccount.annotations`         | Annotations for the frontend app service account       | `{}`                                                                                       |
+| `truefoundryFrontendApp.extraVolumes`                       | Extra volumes for the frontend app                     | `[]`                                                                                       |
+| `truefoundryFrontendApp.extraVolumeMounts`                  | Extra volume mounts for the frontend app               | `[]`                                                                                       |
+| `truefoundryFrontendApp.imagePullSecrets`                   | Image pull secrets for the frontend app                | `[]`                                                                                       |
 
 ### mlfoundryServer Truefoundry mlfoundry server values
 
-| Name                                                   | Description                                                | Value                                              |
-| ------------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------- |
-| `mlfoundryServer.enabled`                              | Bool to enable the mlfoundry server                        | `true`                                             |
-| `mlfoundryServer.tolerations`                          | Tolerations specific to the mlfoundry server               | `{}`                                               |
-| `mlfoundryServer.annotations`                          | Annotations for the mlfoundry server                       | `{}`                                               |
-| `mlfoundryServer.image.repository`                     | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                            | Image tag for the mlfoundry server                         | `v0.40.0`                                          |
-| `mlfoundryServer.replicaCount`                         | Number of replicas for the mlfoundry server                | `1`                                                |
-| `mlfoundryServer.environmentName`                      | Environment name for the mlfoundry server                  | `default`                                          |
-| `mlfoundryServer.envSecretName`                        | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
-| `mlfoundryServer.imagePullPolicy`                      | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
-| `mlfoundryServer.nameOverride`                         | Override name for the mlfoundry server                     | `""`                                               |
-| `mlfoundryServer.fullnameOverride`                     | Full name override for the mlfoundry server                | `""`                                               |
-| `mlfoundryServer.podAnnotations`                       | Annotations for the mlfoundry server pods                  | `{}`                                               |
-| `mlfoundryServer.podSecurityContext`                   | Security context for the mlfoundry server pods             | `{}`                                               |
-| `mlfoundryServer.commonLabels`                         | Common labels for the mlfoundry server pods                | `{}`                                               |
-| `mlfoundryServer.securityContext`                      | Security context for the mlfoundry server                  | `{}`                                               |
-| `mlfoundryServer.resources.limits.cpu`                 | CPU limit for the mlfoundry server                         | `1200m`                                            |
-| `mlfoundryServer.resources.limits.memory`              | Memory limit for the mlfoundry server                      | `2048Mi`                                           |
-| `mlfoundryServer.resources.limits.ephemeral-storage`   | Ephemeral storage limit for the mlfoundry server           | `256Mi`                                            |
-| `mlfoundryServer.resources.requests.cpu`               | CPU request for the mlfoundry server                       | `600m`                                             |
-| `mlfoundryServer.resources.requests.memory`            | Memory request for the mlfoundry server                    | `1024Mi`                                           |
-| `mlfoundryServer.resources.requests.ephemeral-storage` | Ephemeral storage request for the mlfoundry server         | `128Mi`                                            |
-| `mlfoundryServer.livenessProbe.failureThreshold`       | Liveness probe failure threshold for mlfoundry server      | `3`                                                |
-| `mlfoundryServer.livenessProbe.initialDelaySeconds`    | Liveness probe initial delay for mlfoundry server          | `600`                                              |
-| `mlfoundryServer.livenessProbe.periodSeconds`          | Liveness probe period for mlfoundry server                 | `10`                                               |
-| `mlfoundryServer.livenessProbe.successThreshold`       | Liveness probe success threshold for mlfoundry server      | `1`                                                |
-| `mlfoundryServer.livenessProbe.timeoutSeconds`         | Liveness probe timeout for mlfoundry server                | `1`                                                |
-| `mlfoundryServer.readinessProbe.failureThreshold`      | Readiness probe failure threshold for mlfoundry server     | `3`                                                |
-| `mlfoundryServer.readinessProbe.initialDelaySeconds`   | Readiness probe initial delay for mlfoundry server         | `30`                                               |
-| `mlfoundryServer.readinessProbe.periodSeconds`         | Readiness probe period for mlfoundry server                | `10`                                               |
-| `mlfoundryServer.readinessProbe.successThreshold`      | Readiness probe success threshold for mlfoundry server     | `1`                                                |
-| `mlfoundryServer.readinessProbe.timeoutSeconds`        | Readiness probe timeout for mlfoundry server               | `1`                                                |
-| `mlfoundryServer.nodeSelector`                         | Node selector for the mlfoundry server                     | `{}`                                               |
-| `mlfoundryServer.affinity`                             | Affinity settings for the mlfoundry server                 | `{}`                                               |
-| `mlfoundryServer.topologySpreadConstraints`            | Topology spread constraints for the mlfoundry server       | `{}`                                               |
-| `mlfoundryServer.service.type`                         | Service type for the mlfoundry server                      | `ClusterIP`                                        |
-| `mlfoundryServer.service.port`                         | Service port for the mlfoundry server                      | `5000`                                             |
-| `mlfoundryServer.service.annotations`                  | Annotations for the mlfoundry server service               | `{}`                                               |
-| `mlfoundryServer.serviceAccount.annotations`           | Annotations for the mlfoundry server service account       | `{}`                                               |
-| `mlfoundryServer.imagePullSecrets`                     | Image pull credentials for mlfoundry server                | `[]`                                               |
-| `mlfoundryServer.extraVolumes`                         | Extra volumes for the mlfoundry server                     | `[]`                                               |
-| `mlfoundryServer.extraVolumeMounts`                    | Extra volume mounts for the mlfoundry server               | `[]`                                               |
+| Name                                                 | Description                                                | Value                                              |
+| ---------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| `mlfoundryServer.enabled`                            | Bool to enable the mlfoundry server                        | `true`                                             |
+| `mlfoundryServer.tolerations`                        | Tolerations specific to the mlfoundry server               | `{}`                                               |
+| `mlfoundryServer.annotations`                        | Annotations for the mlfoundry server                       | `{}`                                               |
+| `mlfoundryServer.image.repository`                   | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
+| `mlfoundryServer.image.tag`                          | Image tag for the mlfoundry server                         | `v0.40.0`                                          |
+| `mlfoundryServer.environmentName`                    | Environment name for the mlfoundry server                  | `default`                                          |
+| `mlfoundryServer.envSecretName`                      | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
+| `mlfoundryServer.imagePullPolicy`                    | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
+| `mlfoundryServer.nameOverride`                       | Override name for the mlfoundry server                     | `""`                                               |
+| `mlfoundryServer.fullnameOverride`                   | Full name override for the mlfoundry server                | `""`                                               |
+| `mlfoundryServer.podAnnotations`                     | Annotations for the mlfoundry server pods                  | `{}`                                               |
+| `mlfoundryServer.podSecurityContext`                 | Security context for the mlfoundry server pods             | `{}`                                               |
+| `mlfoundryServer.commonLabels`                       | Common labels for the mlfoundry server pods                | `{}`                                               |
+| `mlfoundryServer.securityContext`                    | Security context for the mlfoundry server                  | `{}`                                               |
+| `mlfoundryServer.livenessProbe.failureThreshold`     | Liveness probe failure threshold for mlfoundry server      | `3`                                                |
+| `mlfoundryServer.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for mlfoundry server          | `600`                                              |
+| `mlfoundryServer.livenessProbe.periodSeconds`        | Liveness probe period for mlfoundry server                 | `10`                                               |
+| `mlfoundryServer.livenessProbe.successThreshold`     | Liveness probe success threshold for mlfoundry server      | `1`                                                |
+| `mlfoundryServer.livenessProbe.timeoutSeconds`       | Liveness probe timeout for mlfoundry server                | `1`                                                |
+| `mlfoundryServer.readinessProbe.failureThreshold`    | Readiness probe failure threshold for mlfoundry server     | `3`                                                |
+| `mlfoundryServer.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for mlfoundry server         | `30`                                               |
+| `mlfoundryServer.readinessProbe.periodSeconds`       | Readiness probe period for mlfoundry server                | `10`                                               |
+| `mlfoundryServer.readinessProbe.successThreshold`    | Readiness probe success threshold for mlfoundry server     | `1`                                                |
+| `mlfoundryServer.readinessProbe.timeoutSeconds`      | Readiness probe timeout for mlfoundry server               | `1`                                                |
+| `mlfoundryServer.nodeSelector`                       | Node selector for the mlfoundry server                     | `{}`                                               |
+| `mlfoundryServer.affinity`                           | Affinity settings for the mlfoundry server                 | `{}`                                               |
+| `mlfoundryServer.topologySpreadConstraints`          | Topology spread constraints for the mlfoundry server       | `{}`                                               |
+| `mlfoundryServer.service.type`                       | Service type for the mlfoundry server                      | `ClusterIP`                                        |
+| `mlfoundryServer.service.port`                       | Service port for the mlfoundry server                      | `5000`                                             |
+| `mlfoundryServer.service.annotations`                | Annotations for the mlfoundry server service               | `{}`                                               |
+| `mlfoundryServer.serviceAccount.annotations`         | Annotations for the mlfoundry server service account       | `{}`                                               |
+| `mlfoundryServer.imagePullSecrets`                   | Image pull credentials for mlfoundry server                | `[]`                                               |
+| `mlfoundryServer.extraVolumes`                       | Extra volumes for the mlfoundry server                     | `[]`                                               |
+| `mlfoundryServer.extraVolumeMounts`                  | Extra volume mounts for the mlfoundry server               | `[]`                                               |
 
 ### servicefoundryServer Truefoundry servicefoundry server values
 
-| Name                                                        | Description                                                     | Value                                                   |
-| ----------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
-| `servicefoundryServer.enabled`                              | Bool to enable the servicefoundry server                        | `true`                                                  |
-| `servicefoundryServer.tolerations`                          | Tolerations specific to the servicefoundry server               | `{}`                                                    |
-| `servicefoundryServer.replicaCount`                         | Number of replicas for the servicefoundry server                | `1`                                                     |
-| `servicefoundryServer.annotations`                          | Annotations for the mlfoundry server                            | `{}`                                                    |
-| `servicefoundryServer.image.repository`                     | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.48.1`                                               |
-| `servicefoundryServer.environmentName`                      | Environment name for the servicefoundry server                  | `default`                                               |
-| `servicefoundryServer.envSecretName`                        | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
-| `servicefoundryServer.imagePullPolicy`                      | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
-| `servicefoundryServer.nameOverride`                         | Override name for the servicefoundry server                     | `""`                                                    |
-| `servicefoundryServer.fullnameOverride`                     | Full name override for the servicefoundry server                | `""`                                                    |
-| `servicefoundryServer.podAnnotations`                       | Annotations for the servicefoundry server pods                  | `{}`                                                    |
-| `servicefoundryServer.podSecurityContext`                   | Security context for the servicefoundry server pods             | `{}`                                                    |
-| `servicefoundryServer.commonLabels`                         | Common labels for the servicefoundry server pods                | `{}`                                                    |
-| `servicefoundryServer.securityContext`                      | Security context for the servicefoundry server                  | `{}`                                                    |
-| `servicefoundryServer.resources.limits.cpu`                 | CPU limit for the servicefoundry server                         | `600m`                                                  |
-| `servicefoundryServer.resources.limits.memory`              | Memory limit for the servicefoundry server                      | `1600Mi`                                                |
-| `servicefoundryServer.resources.limits.ephemeral-storage`   | Ephemeral storage limit for the servicefoundry server           | `256Mi`                                                 |
-| `servicefoundryServer.resources.requests.cpu`               | CPU request for the servicefoundry server                       | `400m`                                                  |
-| `servicefoundryServer.resources.requests.memory`            | Memory request for the servicefoundry server                    | `800Mi`                                                 |
-| `servicefoundryServer.resources.requests.ephemeral-storage` | Ephemeral storage request for the servicefoundry server         | `128Mi`                                                 |
-| `servicefoundryServer.livenessProbe.failureThreshold`       | Liveness probe failure threshold for servicefoundry server      | `3`                                                     |
-| `servicefoundryServer.livenessProbe.initialDelaySeconds`    | Liveness probe initial delay for servicefoundry server          | `600`                                                   |
-| `servicefoundryServer.livenessProbe.periodSeconds`          | Liveness probe period for servicefoundry server                 | `10`                                                    |
-| `servicefoundryServer.livenessProbe.successThreshold`       | Liveness probe success threshold for servicefoundry server      | `1`                                                     |
-| `servicefoundryServer.livenessProbe.timeoutSeconds`         | Liveness probe timeout for servicefoundry server                | `1`                                                     |
-| `servicefoundryServer.readinessProbe.failureThreshold`      | Readiness probe failure threshold for servicefoundry server     | `3`                                                     |
-| `servicefoundryServer.readinessProbe.initialDelaySeconds`   | Readiness probe initial delay for servicefoundry server         | `30`                                                    |
-| `servicefoundryServer.readinessProbe.periodSeconds`         | Readiness probe period for servicefoundry server                | `10`                                                    |
-| `servicefoundryServer.readinessProbe.successThreshold`      | Readiness probe success threshold for servicefoundry server     | `1`                                                     |
-| `servicefoundryServer.readinessProbe.timeoutSeconds`        | Readiness probe timeout for servicefoundry server               | `1`                                                     |
-| `servicefoundryServer.nodeSelector`                         | Node selector for the servicefoundry server                     | `{}`                                                    |
-| `servicefoundryServer.affinity`                             | Affinity settings for the servicefoundry server                 | `{}`                                                    |
-| `servicefoundryServer.topologySpreadConstraints`            | Topology spread constraints for the servicefoundry server       | `{}`                                                    |
-| `servicefoundryServer.service.type`                         | Service type for the servicefoundry server                      | `ClusterIP`                                             |
-| `servicefoundryServer.service.port`                         | Service port for the servicefoundry server                      | `3000`                                                  |
-| `servicefoundryServer.service.annotations`                  | Annotations for the servicefoundry server service               | `{}`                                                    |
-| `servicefoundryServer.serviceAccount.annotations`           | Annotations for the servicefoundry server service account       | `{}`                                                    |
-| `servicefoundryServer.extraVolumes`                         | Extra volumes for the servicefoundry server                     | `[]`                                                    |
-| `servicefoundryServer.extraVolumeMounts`                    | Extra volume mounts for the servicefoundry server               | `[]`                                                    |
-| `servicefoundryServer.imagePullSecrets`                     | Image pull credentials for servicefoundry server                | `[]`                                                    |
-| `servicefoundryServer.rbac.enabled`                         | Enable RBAC for the servicefoundry server                       | `true`                                                  |
-| `servicefoundryServer.configs.cicdTemplates`                | CICD Template for servicefoundry server                         | `{{ .Release.Name }}-cicd-templates-cm`                 |
-| `servicefoundryServer.configs.workbenchImages`              | Workbench Images for workbench deployments                      | `{{ .Release.Name }}-workbench-images-cm`               |
-| `servicefoundryServer.configs.imageMutationPolicy`          | Image Mutations policy for workloads                            | `{{ .Release.Name }}-image-mutation-policy-cm`          |
-| `servicefoundryServer.configs.k8sManifestValidationPolicy`  | K8s Manifest Validation policy for workloads                    | `{{ .Release.Name }}-k8s-manifest-validation-policy-cm` |
+| Name                                                       | Description                                                     | Value                                                   |
+| ---------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
+| `servicefoundryServer.enabled`                             | Bool to enable the servicefoundry server                        | `true`                                                  |
+| `servicefoundryServer.tolerations`                         | Tolerations specific to the servicefoundry server               | `{}`                                                    |
+| `servicefoundryServer.annotations`                         | Annotations for the mlfoundry server                            | `{}`                                                    |
+| `servicefoundryServer.image.repository`                    | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
+| `servicefoundryServer.image.tag`                           | Image tag for the servicefoundry server                         | `v0.48.1`                                               |
+| `servicefoundryServer.environmentName`                     | Environment name for the servicefoundry server                  | `default`                                               |
+| `servicefoundryServer.envSecretName`                       | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
+| `servicefoundryServer.imagePullPolicy`                     | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
+| `servicefoundryServer.nameOverride`                        | Override name for the servicefoundry server                     | `""`                                                    |
+| `servicefoundryServer.fullnameOverride`                    | Full name override for the servicefoundry server                | `""`                                                    |
+| `servicefoundryServer.podAnnotations`                      | Annotations for the servicefoundry server pods                  | `{}`                                                    |
+| `servicefoundryServer.podSecurityContext`                  | Security context for the servicefoundry server pods             | `{}`                                                    |
+| `servicefoundryServer.commonLabels`                        | Common labels for the servicefoundry server pods                | `{}`                                                    |
+| `servicefoundryServer.securityContext`                     | Security context for the servicefoundry server                  | `{}`                                                    |
+| `servicefoundryServer.livenessProbe.failureThreshold`      | Liveness probe failure threshold for servicefoundry server      | `3`                                                     |
+| `servicefoundryServer.livenessProbe.initialDelaySeconds`   | Liveness probe initial delay for servicefoundry server          | `600`                                                   |
+| `servicefoundryServer.livenessProbe.periodSeconds`         | Liveness probe period for servicefoundry server                 | `10`                                                    |
+| `servicefoundryServer.livenessProbe.successThreshold`      | Liveness probe success threshold for servicefoundry server      | `1`                                                     |
+| `servicefoundryServer.livenessProbe.timeoutSeconds`        | Liveness probe timeout for servicefoundry server                | `1`                                                     |
+| `servicefoundryServer.readinessProbe.failureThreshold`     | Readiness probe failure threshold for servicefoundry server     | `3`                                                     |
+| `servicefoundryServer.readinessProbe.initialDelaySeconds`  | Readiness probe initial delay for servicefoundry server         | `30`                                                    |
+| `servicefoundryServer.readinessProbe.periodSeconds`        | Readiness probe period for servicefoundry server                | `10`                                                    |
+| `servicefoundryServer.readinessProbe.successThreshold`     | Readiness probe success threshold for servicefoundry server     | `1`                                                     |
+| `servicefoundryServer.readinessProbe.timeoutSeconds`       | Readiness probe timeout for servicefoundry server               | `1`                                                     |
+| `servicefoundryServer.nodeSelector`                        | Node selector for the servicefoundry server                     | `{}`                                                    |
+| `servicefoundryServer.affinity`                            | Affinity settings for the servicefoundry server                 | `{}`                                                    |
+| `servicefoundryServer.topologySpreadConstraints`           | Topology spread constraints for the servicefoundry server       | `{}`                                                    |
+| `servicefoundryServer.service.type`                        | Service type for the servicefoundry server                      | `ClusterIP`                                             |
+| `servicefoundryServer.service.port`                        | Service port for the servicefoundry server                      | `3000`                                                  |
+| `servicefoundryServer.service.annotations`                 | Annotations for the servicefoundry server service               | `{}`                                                    |
+| `servicefoundryServer.serviceAccount.annotations`          | Annotations for the servicefoundry server service account       | `{}`                                                    |
+| `servicefoundryServer.extraVolumes`                        | Extra volumes for the servicefoundry server                     | `[]`                                                    |
+| `servicefoundryServer.extraVolumeMounts`                   | Extra volume mounts for the servicefoundry server               | `[]`                                                    |
+| `servicefoundryServer.imagePullSecrets`                    | Image pull credentials for servicefoundry server                | `[]`                                                    |
+| `servicefoundryServer.rbac.enabled`                        | Enable RBAC for the servicefoundry server                       | `true`                                                  |
+| `servicefoundryServer.configs.cicdTemplates`               | CICD Template for servicefoundry server                         | `{{ .Release.Name }}-cicd-templates-cm`                 |
+| `servicefoundryServer.configs.workbenchImages`             | Workbench Images for workbench deployments                      | `{{ .Release.Name }}-workbench-images-cm`               |
+| `servicefoundryServer.configs.imageMutationPolicy`         | Image Mutations policy for workloads                            | `{{ .Release.Name }}-image-mutation-policy-cm`          |
+| `servicefoundryServer.configs.k8sManifestValidationPolicy` | K8s Manifest Validation policy for workloads                    | `{{ .Release.Name }}-k8s-manifest-validation-policy-cm` |
 
 ### tfyK8sController Truefoundry tfy k8s controller values
 
-| Name                                                    | Description                                                | Value                                                |
-| ------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
-| `tfyK8sController.enabled`                              | Bool to enable the tfyK8sController                        | `true`                                               |
-| `tfyK8sController.tolerations`                          | Tolerations specific to the tfyK8sController               | `{}`                                                 |
-| `tfyK8sController.replicaCount`                         | Number of replicas for the tfyK8sController                | `1`                                                  |
-| `tfyK8sController.annotations`                          | Annotations for the tfyK8sController                       | `{}`                                                 |
-| `tfyK8sController.image.repository`                     | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.43.0`                                            |
-| `tfyK8sController.environmentName`                      | Environment name for tfyK8sController                      | `default`                                            |
-| `tfyK8sController.envSecretName`                        | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
-| `tfyK8sController.imagePullPolicy`                      | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
-| `tfyK8sController.nameOverride`                         | Override name for the tfyK8sController                     | `""`                                                 |
-| `tfyK8sController.fullnameOverride`                     | Full name override for the tfyK8sController                | `""`                                                 |
-| `tfyK8sController.podAnnotations`                       | Annotations for the tfyK8sController pods                  | `{}`                                                 |
-| `tfyK8sController.podSecurityContext`                   | Security context for the tfyK8sController pods             | `{}`                                                 |
-| `tfyK8sController.commonLabels`                         | Common labels for the tfyK8sController pods                | `{}`                                                 |
-| `tfyK8sController.securityContext`                      | Security context for the tfyK8sController                  | `{}`                                                 |
-| `tfyK8sController.resources.limits.cpu`                 | CPU limit for the tfyK8sController                         | `400m`                                               |
-| `tfyK8sController.resources.limits.memory`              | Memory limit for the tfyK8sController                      | `512Mi`                                              |
-| `tfyK8sController.resources.limits.ephemeral-storage`   | Ephemeral storage limit for the tfyK8sController           | `256Mi`                                              |
-| `tfyK8sController.resources.requests.cpu`               | CPU request for the tfyK8sController                       | `200m`                                               |
-| `tfyK8sController.resources.requests.memory`            | Memory request for the tfyK8sController                    | `256Mi`                                              |
-| `tfyK8sController.resources.requests.ephemeral-storage` | Ephemeral storage request for the tfyK8sController         | `128Mi`                                              |
-| `tfyK8sController.livenessProbe.failureThreshold`       | Liveness probe failure threshold for tfyK8sController      | `3`                                                  |
-| `tfyK8sController.livenessProbe.initialDelaySeconds`    | Liveness probe initial delay for tfyK8sController          | `600`                                                |
-| `tfyK8sController.livenessProbe.periodSeconds`          | Liveness probe period for tfyK8sController                 | `10`                                                 |
-| `tfyK8sController.livenessProbe.successThreshold`       | Liveness probe success threshold for tfyK8sController      | `1`                                                  |
-| `tfyK8sController.livenessProbe.timeoutSeconds`         | Liveness probe timeout for tfyK8sController                | `1`                                                  |
-| `tfyK8sController.readinessProbe.failureThreshold`      | Readiness probe failure threshold for tfyK8sController     | `3`                                                  |
-| `tfyK8sController.readinessProbe.initialDelaySeconds`   | Readiness probe initial delay for tfyK8sController         | `30`                                                 |
-| `tfyK8sController.readinessProbe.periodSeconds`         | Readiness probe period for tfyK8sController                | `10`                                                 |
-| `tfyK8sController.readinessProbe.successThreshold`      | Readiness probe success threshold for tfyK8sController     | `1`                                                  |
-| `tfyK8sController.readinessProbe.timeoutSeconds`        | Readiness probe timeout for tfyK8sController               | `1`                                                  |
-| `tfyK8sController.nodeSelector`                         | Node selector for the tfyK8sController                     | `{}`                                                 |
-| `tfyK8sController.affinity`                             | Affinity settings for the tfyK8sController                 | `{}`                                                 |
-| `tfyK8sController.topologySpreadConstraints`            | Topology spread constraints for the tfyK8sController       | `{}`                                                 |
-| `tfyK8sController.service.type`                         | Service type for the tfyK8sController                      | `ClusterIP`                                          |
-| `tfyK8sController.service.port`                         | Service port for the tfyK8sController                      | `3002`                                               |
-| `tfyK8sController.service.annotations`                  | Annotations for the tfyK8sController service               | `{}`                                                 |
-| `tfyK8sController.serviceAccount.annotations`           | Annotations for the tfyK8sController service account       | `{}`                                                 |
-| `tfyK8sController.extraVolumes`                         | Extra volumes for the tfyK8sController                     | `[]`                                                 |
-| `tfyK8sController.extraVolumeMounts`                    | Extra volume mounts for the tfyK8sController               | `[]`                                                 |
-| `tfyK8sController.imagePullSecrets`                     | Image pull secrets for the tfyK8sController                | `[]`                                                 |
+| Name                                                  | Description                                                | Value                                                |
+| ----------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| `tfyK8sController.enabled`                            | Bool to enable the tfyK8sController                        | `true`                                               |
+| `tfyK8sController.tolerations`                        | Tolerations specific to the tfyK8sController               | `{}`                                                 |
+| `tfyK8sController.annotations`                        | Annotations for the tfyK8sController                       | `{}`                                                 |
+| `tfyK8sController.image.repository`                   | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
+| `tfyK8sController.image.tag`                          | Image tag for the tfyK8sController                         | `v0.43.1`                                            |
+| `tfyK8sController.environmentName`                    | Environment name for tfyK8sController                      | `default`                                            |
+| `tfyK8sController.envSecretName`                      | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
+| `tfyK8sController.imagePullPolicy`                    | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
+| `tfyK8sController.nameOverride`                       | Override name for the tfyK8sController                     | `""`                                                 |
+| `tfyK8sController.fullnameOverride`                   | Full name override for the tfyK8sController                | `""`                                                 |
+| `tfyK8sController.podAnnotations`                     | Annotations for the tfyK8sController pods                  | `{}`                                                 |
+| `tfyK8sController.podSecurityContext`                 | Security context for the tfyK8sController pods             | `{}`                                                 |
+| `tfyK8sController.commonLabels`                       | Common labels for the tfyK8sController pods                | `{}`                                                 |
+| `tfyK8sController.securityContext`                    | Security context for the tfyK8sController                  | `{}`                                                 |
+| `tfyK8sController.livenessProbe.failureThreshold`     | Liveness probe failure threshold for tfyK8sController      | `3`                                                  |
+| `tfyK8sController.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for tfyK8sController          | `600`                                                |
+| `tfyK8sController.livenessProbe.periodSeconds`        | Liveness probe period for tfyK8sController                 | `10`                                                 |
+| `tfyK8sController.livenessProbe.successThreshold`     | Liveness probe success threshold for tfyK8sController      | `1`                                                  |
+| `tfyK8sController.livenessProbe.timeoutSeconds`       | Liveness probe timeout for tfyK8sController                | `1`                                                  |
+| `tfyK8sController.readinessProbe.failureThreshold`    | Readiness probe failure threshold for tfyK8sController     | `3`                                                  |
+| `tfyK8sController.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for tfyK8sController         | `30`                                                 |
+| `tfyK8sController.readinessProbe.periodSeconds`       | Readiness probe period for tfyK8sController                | `10`                                                 |
+| `tfyK8sController.readinessProbe.successThreshold`    | Readiness probe success threshold for tfyK8sController     | `1`                                                  |
+| `tfyK8sController.readinessProbe.timeoutSeconds`      | Readiness probe timeout for tfyK8sController               | `1`                                                  |
+| `tfyK8sController.nodeSelector`                       | Node selector for the tfyK8sController                     | `{}`                                                 |
+| `tfyK8sController.affinity`                           | Affinity settings for the tfyK8sController                 | `{}`                                                 |
+| `tfyK8sController.topologySpreadConstraints`          | Topology spread constraints for the tfyK8sController       | `{}`                                                 |
+| `tfyK8sController.service.type`                       | Service type for the tfyK8sController                      | `ClusterIP`                                          |
+| `tfyK8sController.service.port`                       | Service port for the tfyK8sController                      | `3002`                                               |
+| `tfyK8sController.service.annotations`                | Annotations for the tfyK8sController service               | `{}`                                                 |
+| `tfyK8sController.serviceAccount.annotations`         | Annotations for the tfyK8sController service account       | `{}`                                                 |
+| `tfyK8sController.extraVolumes`                       | Extra volumes for the tfyK8sController                     | `[]`                                                 |
+| `tfyK8sController.extraVolumeMounts`                  | Extra volume mounts for the tfyK8sController               | `[]`                                                 |
+| `tfyK8sController.imagePullSecrets`                   | Image pull secrets for the tfyK8sController                | `[]`                                                 |
 
 ### sfyManifestService Truefoundry sfy manifest service values
 
-| Name                                                      | Description                                                    | Value                                                  |
-| --------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| `sfyManifestService.enabled`                              | Bool to enable the sfy manifest service                        | `true`                                                 |
-| `sfyManifestService.annotations`                          | Annotations for the sfy manifest service                       | `{}`                                                   |
-| `sfyManifestService.tolerations`                          | Tolerations specific to the sfy manifest service               | `{}`                                                   |
-| `sfyManifestService.image.repository`                     | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                            | Image tag for the sfy manifest service                         | `v0.41.1`                                              |
-| `sfyManifestService.replicaCount`                         | Number of replicas for the sfy manifest service                | `1`                                                    |
-| `sfyManifestService.environmentName`                      | Environment name for the sfy manifest service                  | `default`                                              |
-| `sfyManifestService.envSecretName`                        | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
-| `sfyManifestService.imagePullPolicy`                      | Image pull policy for the sfy manifest service                 | `IfNotPresent`                                         |
-| `sfyManifestService.nameOverride`                         | Override name for the sfy manifest service                     | `""`                                                   |
-| `sfyManifestService.fullnameOverride`                     | Full name override for the sfy manifest service                | `""`                                                   |
-| `sfyManifestService.podAnnotations`                       | Annotations for the sfy manifest service pods                  | `{}`                                                   |
-| `sfyManifestService.podSecurityContext`                   | Security context for the sfy manifest service pods             | `{}`                                                   |
-| `sfyManifestService.commonLabels`                         | Common labels for the sfy manifest service pods                | `{}`                                                   |
-| `sfyManifestService.securityContext`                      | Security context for the sfy manifest service                  | `{}`                                                   |
-| `sfyManifestService.resources.limits.cpu`                 | CPU limit for the sfy manifest service                         | `200m`                                                 |
-| `sfyManifestService.resources.limits.memory`              | Memory limit for the sfy manifest service                      | `512Mi`                                                |
-| `sfyManifestService.resources.limits.ephemeral-storage`   | Ephemeral storage limit for the sfy manifest service           | `256Mi`                                                |
-| `sfyManifestService.resources.requests.cpu`               | CPU request for the sfy manifest service                       | `100m`                                                 |
-| `sfyManifestService.resources.requests.memory`            | Memory request for the sfy manifest service                    | `256Mi`                                                |
-| `sfyManifestService.resources.requests.ephemeral-storage` | Ephemeral storage request for the sfy manifest service         | `128Mi`                                                |
-| `sfyManifestService.livenessProbe.failureThreshold`       | Liveness probe failure threshold for sfy manifest service      | `3`                                                    |
-| `sfyManifestService.livenessProbe.initialDelaySeconds`    | Liveness probe initial delay for sfy manifest service          | `600`                                                  |
-| `sfyManifestService.livenessProbe.periodSeconds`          | Liveness probe period for sfy manifest service                 | `10`                                                   |
-| `sfyManifestService.livenessProbe.successThreshold`       | Liveness probe success threshold for sfy manifest service      | `1`                                                    |
-| `sfyManifestService.livenessProbe.timeoutSeconds`         | Liveness probe timeout for sfy manifest service                | `1`                                                    |
-| `sfyManifestService.readinessProbe.failureThreshold`      | Readiness probe failure threshold for sfy manifest service     | `3`                                                    |
-| `sfyManifestService.readinessProbe.initialDelaySeconds`   | Readiness probe initial delay for sfy manifest service         | `30`                                                   |
-| `sfyManifestService.readinessProbe.periodSeconds`         | Readiness probe period for sfy manifest service                | `10`                                                   |
-| `sfyManifestService.readinessProbe.successThreshold`      | Readiness probe success threshold for sfy manifest service     | `1`                                                    |
-| `sfyManifestService.readinessProbe.timeoutSeconds`        | Readiness probe timeout for sfy manifest service               | `1`                                                    |
-| `sfyManifestService.nodeSelector`                         | Node selector for the sfy manifest service                     | `{}`                                                   |
-| `sfyManifestService.affinity`                             | Affinity settings for the sfy manifest service                 | `{}`                                                   |
-| `sfyManifestService.topologySpreadConstraints`            | Topology spread constraints for the sfy manifest service       | `{}`                                                   |
-| `sfyManifestService.service.type`                         | Service type for the sfy manifest service                      | `ClusterIP`                                            |
-| `sfyManifestService.service.port`                         | Service port for the sfy manifest service                      | `8080`                                                 |
-| `sfyManifestService.service.annotations`                  | Annotations for the sfy manifest service                       | `{}`                                                   |
-| `sfyManifestService.serviceAccount.annotations`           | Annotations for the sfy manifest service service account       | `{}`                                                   |
-| `sfyManifestService.extraVolumes`                         | Extra volumes for the sfy manifest service                     | `[]`                                                   |
-| `sfyManifestService.extraVolumeMounts`                    | Extra volume mounts for the sfy manifest service               | `[]`                                                   |
-| `sfyManifestService.imagePullSecrets`                     | Image pull credentials for the sfy manifest service            | `[]`                                                   |
+| Name                                                    | Description                                                    | Value                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| `sfyManifestService.enabled`                            | Bool to enable the sfy manifest service                        | `true`                                                 |
+| `sfyManifestService.annotations`                        | Annotations for the sfy manifest service                       | `{}`                                                   |
+| `sfyManifestService.tolerations`                        | Tolerations specific to the sfy manifest service               | `{}`                                                   |
+| `sfyManifestService.image.repository`                   | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
+| `sfyManifestService.image.tag`                          | Image tag for the sfy manifest service                         | `v0.41.1`                                              |
+| `sfyManifestService.environmentName`                    | Environment name for the sfy manifest service                  | `default`                                              |
+| `sfyManifestService.envSecretName`                      | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
+| `sfyManifestService.imagePullPolicy`                    | Image pull policy for the sfy manifest service                 | `IfNotPresent`                                         |
+| `sfyManifestService.nameOverride`                       | Override name for the sfy manifest service                     | `""`                                                   |
+| `sfyManifestService.fullnameOverride`                   | Full name override for the sfy manifest service                | `""`                                                   |
+| `sfyManifestService.podAnnotations`                     | Annotations for the sfy manifest service pods                  | `{}`                                                   |
+| `sfyManifestService.podSecurityContext`                 | Security context for the sfy manifest service pods             | `{}`                                                   |
+| `sfyManifestService.commonLabels`                       | Common labels for the sfy manifest service pods                | `{}`                                                   |
+| `sfyManifestService.securityContext`                    | Security context for the sfy manifest service                  | `{}`                                                   |
+| `sfyManifestService.livenessProbe.failureThreshold`     | Liveness probe failure threshold for sfy manifest service      | `3`                                                    |
+| `sfyManifestService.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for sfy manifest service          | `600`                                                  |
+| `sfyManifestService.livenessProbe.periodSeconds`        | Liveness probe period for sfy manifest service                 | `10`                                                   |
+| `sfyManifestService.livenessProbe.successThreshold`     | Liveness probe success threshold for sfy manifest service      | `1`                                                    |
+| `sfyManifestService.livenessProbe.timeoutSeconds`       | Liveness probe timeout for sfy manifest service                | `1`                                                    |
+| `sfyManifestService.readinessProbe.failureThreshold`    | Readiness probe failure threshold for sfy manifest service     | `3`                                                    |
+| `sfyManifestService.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for sfy manifest service         | `30`                                                   |
+| `sfyManifestService.readinessProbe.periodSeconds`       | Readiness probe period for sfy manifest service                | `10`                                                   |
+| `sfyManifestService.readinessProbe.successThreshold`    | Readiness probe success threshold for sfy manifest service     | `1`                                                    |
+| `sfyManifestService.readinessProbe.timeoutSeconds`      | Readiness probe timeout for sfy manifest service               | `1`                                                    |
+| `sfyManifestService.nodeSelector`                       | Node selector for the sfy manifest service                     | `{}`                                                   |
+| `sfyManifestService.affinity`                           | Affinity settings for the sfy manifest service                 | `{}`                                                   |
+| `sfyManifestService.topologySpreadConstraints`          | Topology spread constraints for the sfy manifest service       | `{}`                                                   |
+| `sfyManifestService.service.type`                       | Service type for the sfy manifest service                      | `ClusterIP`                                            |
+| `sfyManifestService.service.port`                       | Service port for the sfy manifest service                      | `8080`                                                 |
+| `sfyManifestService.service.annotations`                | Annotations for the sfy manifest service                       | `{}`                                                   |
+| `sfyManifestService.serviceAccount.annotations`         | Annotations for the sfy manifest service service account       | `{}`                                                   |
+| `sfyManifestService.extraVolumes`                       | Extra volumes for the sfy manifest service                     | `[]`                                                   |
+| `sfyManifestService.extraVolumeMounts`                  | Extra volume mounts for the sfy manifest service               | `[]`                                                   |
+| `sfyManifestService.imagePullSecrets`                   | Image pull credentials for the sfy manifest service            | `[]`                                                   |
 
 ### tfyBuild Truefoundry tfy build settings
 
@@ -409,7 +374,6 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.annotations`                        | Annotations for the tfyWorkflowAdmin                       | `{}`                                                 |
 | `tfyWorkflowAdmin.image.repository`                   | Image repository for the tfyWorkflowAdmin                  | `tfy.jfrog.io/tfy-private-images/tfy-workflow-admin` |
 | `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                         | `v0.15.0`                                            |
-| `tfyWorkflowAdmin.replicaCount`                       | Number of replicas for the tfyWorkflowAdmin                | `1`                                                  |
 | `tfyWorkflowAdmin.environmentName`                    | Environment name for the tfyWorkflowAdmin                  | `default`                                            |
 | `tfyWorkflowAdmin.envSecretName`                      | Secret name for the tfyWorkflowAdmin environment variables | `tfy-workflow-admin-env-secret`                      |
 | `tfyWorkflowAdmin.imagePullPolicy`                    | Image pull policy for the tfyWorkflowAdmin                 | `IfNotPresent`                                       |

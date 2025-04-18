@@ -1,6 +1,8 @@
 ## @section Configuration for LLM Gateway
 
 global:
+  ## @param global.resourceTier Resource deployment type
+  resourceTier: "medium"
   ## @param global.controlPlaneURL Control plane URL
   controlPlaneURL: ""
   ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
@@ -11,13 +13,14 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: 9851181d1ada910af43b7007bb3e73c7353ebf1d
+  tag: 1cb1923b93e11d5a574d326e737be46460733f62
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 
-## @param replicaCount Number of replicas
-replicaCount: 3
+## @skip replicaCount Number of replicas
+# replicaCount: 3
+
 ## @param environmentName The environment name
 environmentName: default
 ## @param envSecretName The environment secret name
@@ -72,24 +75,16 @@ healthcheck:
     successThreshold: 1
     ## @param healthcheck.liveness.failureThreshold Failure threshold
     failureThreshold: 3
-## Resource configuration
-resources:
-  ## resources.limits Resource limits
-  limits:
-    ## @param resources.limits.cpu CPU limit
-    cpu: 2
-    ## @param resources.limits.memory Memory limit
-    memory: 1024Mi
-    ## @param resources.limits.ephemeral-storage Ephemeral storage limit
-    ephemeral-storage: 512Mi
-  ## resources.requests Resource requests
-  requests:
-    ## @param resources.requests.cpu CPU request
-    cpu: 1
-    ## @param resources.requests.memory Memory request
-    memory: 512Mi
-    ## @param resources.requests.ephemeral-storage Ephemeral storage request
-    ephemeral-storage: 256Mi
+## @skip resources [object] Resource configuration
+# resources:
+#   limits:
+#     cpu: 1000m
+#     ephemeral-storage: 256Mi
+#     memory: 1024Mi
+#   requests:
+#     cpu: 500m
+#     ephemeral-storage: 128Mi
+#     memory: 512Mi
 ## @param nodeSelector Node selector
 nodeSelector: {}
 ## @param tolerations Tolerations

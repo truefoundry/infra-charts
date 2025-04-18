@@ -1,3 +1,8 @@
+## Global Config
+global:
+  ## @param global.resourceTier Resource deployment type
+  resourceTier: "medium"
+
 ## @skip altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
@@ -30,7 +35,7 @@ clickhouse:
     secretName: truefoundry-clickhouse-secret
     passwordKey: "CLICKHOUSE_PASSWORD"
   shardsCount: 1
-  replicasCount: 1
+#  replicasCount: 1
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   labels: {}
@@ -41,18 +46,18 @@ clickhouse:
   imagePullSecrets: []
   podSecurityContext: {}
   containerSecurityContext: {}
-  resources:
-    requests:
-      memory: 4Gi
-      cpu: 1
-      ephemeralStorage: 5Gi
-    limits:
-      memory: 8Gi
-      cpu: 2
-      ephemeralStorage: 10Gi
+#  resources:
+#    requests:
+#      memory: 4Gi
+#      cpu: 1
+#      ephemeralStorage: 5Gi
+#    limits:
+#      memory: 8Gi
+#      cpu: 2
+#      ephemeralStorage: 10Gi
   storage:
     storageClassName: ''
-    size: 100Gi
+#    size: 100Gi
   nodeSelector: {}
   tolerations: {}
   affinity: {}

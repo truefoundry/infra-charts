@@ -79,7 +79,8 @@ devicePlugin:
 ## @section Configuration for the scheduler responsible for scheduling neuron pods
 ## @param scheduler.enabled Enable Scheduler.
 ## @param scheduler.schedulerName Name of the scheduler.
-## @param scheduler.image K8s Scheduler image.
+## @param scheduler.image.repository K8s Scheduler image repository.
+## @param scheduler.image.tag K8s Scheduler image tag.
 ## @param scheduler.labels K8s Scheduler labels.
 ## @param scheduler.annotations K8s Scheduler annotations.
 ## @skip scheduler.args
@@ -87,7 +88,8 @@ devicePlugin:
 ## @param scheduler.resources.requests.memory Memory request for K8s scheduler.
 ## @param scheduler.resources.limits.cpu CPU limit for K8s scheduler.
 ## @param scheduler.resources.limits.memory Memory limit for K8s scheduler.
-## @param scheduler.extension.image Neuron scheduler extension image.
+## @param scheduler.extension.image.repository Neuron scheduler extension image repository.
+## @param scheduler.extension.image.tag Neuron scheduler extension image tag.
 ## @param scheduler.extension.resources.requests.cpu CPU request for Neuron scheduler extension.
 ## @param scheduler.extension.resources.requests.memory Memory request for Neuron scheduler extension.
 ## @param scheduler.extension.resources.limits.cpu CPU limit for Neuron scheduler extension.
@@ -102,7 +104,9 @@ devicePlugin:
 scheduler:
   enabled: true
   schedulerName: neuron-scheduler
-  image: public.ecr.aws/eks-distro/kubernetes/kube-scheduler:v1.29.14-eks-1-29-latest
+  image:
+    repository: public.ecr.aws/eks-distro/kubernetes/kube-scheduler
+    tag: "v1.29.14-eks-1-29-latest"
   imagePullSecrets: []
   labels: {}
   annotations: {}
@@ -123,7 +127,9 @@ scheduler:
       operator: Exists
   affinity: {}
   extension:
-    image: public.ecr.aws/neuron/neuron-scheduler:2.23.30.0
+    image:
+      repository: public.ecr.aws/neuron/neuron-scheduler
+      tag: "2.23.30.0"
     imagePullSecrets: []
     labels: {}
     annotations: {}

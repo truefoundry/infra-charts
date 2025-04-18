@@ -7,12 +7,12 @@ LLM-Gateway Helm Chart
 
 | Name                                            | Description                                                  | Value                                             |
 | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| `global.resourceTier`                           | Resource deployment type                                     | `medium`                                          |
 | `global.controlPlaneURL`                        | Control plane URL                                            | `""`                                              |
 | `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name                  | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `9851181d1ada910af43b7007bb3e73c7353ebf1d`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `1cb1923b93e11d5a574d326e737be46460733f62`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
-| `replicaCount`                                  | Number of replicas                                           | `3`                                               |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
 | `imagePullPolicy`                               | Image pull policy                                            | `IfNotPresent`                                    |
@@ -37,12 +37,6 @@ LLM-Gateway Helm Chart
 | `healthcheck.liveness.timeoutSeconds`           | Timeout in seconds                                           | `5`                                               |
 | `healthcheck.liveness.successThreshold`         | Success threshold                                            | `1`                                               |
 | `healthcheck.liveness.failureThreshold`         | Failure threshold                                            | `3`                                               |
-| `resources.limits.cpu`                          | CPU limit                                                    | `2`                                               |
-| `resources.limits.memory`                       | Memory limit                                                 | `1024Mi`                                          |
-| `resources.limits.ephemeral-storage`            | Ephemeral storage limit                                      | `512Mi`                                           |
-| `resources.requests.cpu`                        | CPU request                                                  | `1`                                               |
-| `resources.requests.memory`                     | Memory request                                               | `512Mi`                                           |
-| `resources.requests.ephemeral-storage`          | Ephemeral storage request                                    | `256Mi`                                           |
 | `nodeSelector`                                  | Node selector                                                | `{}`                                              |
 | `tolerations`                                   | Tolerations                                                  | `{}`                                              |
 | `affinity`                                      | Affinity                                                     | `{}`                                              |
