@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'add-truefoundry-prs'
     paths:
       - '.github/workflows/update-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
@@ -27,7 +26,7 @@ jobs:
       ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
-      CHANGELOG_S3_BUCKET: "tfy-changelog-bucket"
+      CHANGELOG_S3_BUCKET: "tfy-euwe1-production-control-plane-changelog"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -86,7 +85,7 @@ jobs:
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold")
+          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}";
           do
             version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
