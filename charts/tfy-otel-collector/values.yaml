@@ -11,13 +11,17 @@ env:
   CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
   AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
+  PROJECT_BASE_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
+  NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000/v1/x/tfy-otel-collector/nats-creds
+  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 416fc71c5d729be2613a9b197e203cd5fdc1d8d4
+  tag: dc847fff91abf8abe0653ab356e81c7bed4e16ea
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
