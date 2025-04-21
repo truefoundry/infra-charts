@@ -9,6 +9,8 @@ Tfy-Otel_collector Helm Chart
 | Name                                        | Description                                                  | Value                                                |
 | ------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
 | `global.resourceTier`                       | Resource deployment type                                     | `""`                                                 |
+| `global.affinity`                           | Affinity rules for pod scheduling on a node                  | `{}`                                                 |
+| `global.tolerations`                        | Tolerations for pod scheduling on a node                     | `[]`                                                 |
 | `env`                                       | Environment variables for the tfyOtelCollector               | `{}`                                                 |
 | `image.repository`                          | Image repository for tfyOTELCollector                        | `tfy.jfrog.io/tfy-private-images/tfy-otel-collector` |
 | `image.tag`                                 | Image tag for the tfyOTELCollector                           | `ac75290f3e20a59efd3729ab0533a3d40651e411`           |
@@ -25,14 +27,14 @@ Tfy-Otel_collector Helm Chart
 | `securityContext`                           | Security context configuration                               | `{}`                                                 |
 | `healthcheck.enabled`                       | Enable healthcheck                                           | `true`                                               |
 | `healthcheck.readiness.port`                | Port to probe                                                | `3000`                                               |
-| `healthcheck.readiness.path`                | Path to probe                                                | `/`                                                  |
+| `healthcheck.readiness.path`                | Path to probe                                                | `/health/status`                                     |
 | `healthcheck.readiness.initialDelaySeconds` | Initial delay in seconds                                     | `10`                                                 |
 | `healthcheck.readiness.periodSeconds`       | Period in seconds                                            | `10`                                                 |
 | `healthcheck.readiness.timeoutSeconds`      | Timeout in seconds                                           | `5`                                                  |
 | `healthcheck.readiness.successThreshold`    | Success threshold                                            | `1`                                                  |
 | `healthcheck.readiness.failureThreshold`    | Failure threshold                                            | `3`                                                  |
 | `healthcheck.liveness.port`                 | Port to probe                                                | `3000`                                               |
-| `healthcheck.liveness.path`                 | Path to probe                                                | `/`                                                  |
+| `healthcheck.liveness.path`                 | Path to probe                                                | `/health/status`                                     |
 | `nodeSelector`                              | Node selector                                                | `{}`                                                 |
 | `tolerations`                               | Tolerations                                                  | `{}`                                                 |
 | `affinity`                                  | Affinity                                                     | `{}`                                                 |
