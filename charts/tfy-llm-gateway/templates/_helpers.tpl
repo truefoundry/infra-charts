@@ -265,3 +265,32 @@ limits:
 3
 {{- end }}
 {{- end }}
+
+{{/*
+Affinity for tfy-llm-gateway deployment
+*/}}
+{{- define "tfy-llm-gateway.affinity" -}}
+{{- if .Values.affinity }}
+{{- toYaml .Values.affinity }}
+{{- else if .Values.global.affinity }}
+{{- toYaml .Values.global.affinity }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations for tfy-llm-gateway deployment
+*/}}
+{{- define "tfy-llm-gateway.tolerations" -}}
+{{- if .Values.tolerations }}
+{{- toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations }}
+{{- toYaml .Values.global.tolerations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+*/}}
