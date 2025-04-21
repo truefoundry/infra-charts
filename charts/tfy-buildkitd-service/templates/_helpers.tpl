@@ -199,7 +199,7 @@ limits:
 {{- end }}
 
 {{/*
-Affinity
+Affinity for the buildkitd service
 */}}
 {{- define "buildkitd-service.affinity" -}}
 {{- if .Values.affinity -}}
@@ -212,7 +212,7 @@ Affinity
 {{- end }}
 
 {{/*
-Tolerations
+Tolerations for the buildkitd service
 */}}
 {{- define "buildkitd-service.tolerations" -}}
 {{- if .Values.tolerations }}
