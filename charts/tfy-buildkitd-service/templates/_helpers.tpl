@@ -197,3 +197,29 @@ limits:
 200Gi
 {{- end }}
 {{- end }}
+
+{{/*
+Affinity
+*/}}
+{{- define "buildkitd-service.affinity" -}}
+{{- if .Values.affinity -}}
+{{ toYaml .Values.affinity }}
+{{- else if .Values.global.affinity -}}
+{{ toYaml .Values.global.affinity }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations
+*/}}
+{{- define "buildkitd-service.tolerations" -}}
+{{- if .Values.tolerations }}
+{{ toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{ toYaml .Values.global.tolerations -}}
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
