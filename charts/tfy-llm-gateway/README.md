@@ -11,7 +11,7 @@ LLM-Gateway Helm Chart
 | `global.controlPlaneURL`                        | Control plane URL                                            | `""`                                              |
 | `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name                  | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `1cb1923b93e11d5a574d326e737be46460733f62`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `7291f9748c476cb9126a1287482b9e378d4b9447`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
