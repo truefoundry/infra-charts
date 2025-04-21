@@ -77,18 +77,14 @@ spec:
           nodeSelector:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.clickhouse.tolerations }}
           tolerations:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.clickhouse.tolerations }}
+            {{- include "clickhouse.tolerations" . | nindent 12 }}
+          {{- with .Values.clickhouse.topologySpreadConstraints }}
           topologySpreadConstraints:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.clickhouse.affinity }}
           affinity:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- include "clickhouse.affinity" . | nindent 12 }}
           {{- with .Values.clickhouse.imagePullSecrets }}
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
