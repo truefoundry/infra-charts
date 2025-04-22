@@ -10,5 +10,6 @@ TFY-Clickhouse is a helm chart for deploying Clickhouse on Kubernetes. It is des
 | `global.resourceTier`          | Resource deployment type                    | `medium` |
 | `global.affinity`              | Affinity rules for pod scheduling on a node | `{}`     |
 | `global.tolerations`           | Tolerations for pod scheduling on a node    | `[]`     |
+| `global.nodeSelector`          | Node selector                               | `{}`     |
 | `altinity-clickhouse-operator` | altinity operator                           | `{}`     |
 | `clickhouse`                   | clickhouse config                           | `{}`     |

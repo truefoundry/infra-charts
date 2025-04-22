@@ -12,6 +12,7 @@ LLM-Gateway Helm Chart
 | `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name                  | `""`                                              |
 | `global.affinity`                               | Affinity rules for pod scheduling on a node                  | `{}`                                              |
 | `global.tolerations`                            | Tolerations for pod scheduling on a node                     | `[]`                                              |
+| `global.nodeSelector`                           | Node selector                                                | `{}`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
 | `image.tag`                                     | Image tag for the tfyLLMGateway                              | `7291f9748c476cb9126a1287482b9e378d4b9447`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
