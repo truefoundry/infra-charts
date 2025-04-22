@@ -25,14 +25,14 @@ Tfy-Otel_collector Helm Chart
 | `securityContext`                           | Security context configuration                               | `{}`                                                 |
 | `healthcheck.enabled`                       | Enable healthcheck                                           | `true`                                               |
 | `healthcheck.readiness.port`                | Port to probe                                                | `3000`                                               |
-| `healthcheck.readiness.path`                | Path to probe                                                | `/`                                                  |
+| `healthcheck.readiness.path`                | Path to probe                                                | `/health/status`                                     |
 | `healthcheck.readiness.initialDelaySeconds` | Initial delay in seconds                                     | `10`                                                 |
 | `healthcheck.readiness.periodSeconds`       | Period in seconds                                            | `10`                                                 |
 | `healthcheck.readiness.timeoutSeconds`      | Timeout in seconds                                           | `5`                                                  |
 | `healthcheck.readiness.successThreshold`    | Success threshold                                            | `1`                                                  |
 | `healthcheck.readiness.failureThreshold`    | Failure threshold                                            | `3`                                                  |
 | `healthcheck.liveness.port`                 | Port to probe                                                | `3000`                                               |
-| `healthcheck.liveness.path`                 | Path to probe                                                | `/`                                                  |
+| `healthcheck.liveness.path`                 | Path to probe                                                | `/health/status`                                     |
 | `nodeSelector`                              | Node selector                                                | `{}`                                                 |
 | `tolerations`                               | Tolerations                                                  | `{}`                                                 |
 | `affinity`                                  | Affinity                                                     | `{}`                                                 |
