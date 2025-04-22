@@ -229,7 +229,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.tfyK8sController.endpoints`                       | Endpoints for tfy-k8s-controller                         | `[]`                                      |
 | `serviceMonitors.tfyK8sController.serviceSelectorLabels`           | Service selector labels for tfy-k8s-controller           | `{}`                                      |
 | `serviceMonitors.tfyK8sController.namespaceSelector`               | Namespace selector for tfy-k8s-controller                | `{}`                                      |
-| `serviceMonitors.tfyOtelCollector.enabled`                         | Enable service monitor for llm gateway                   | `true`                                    |
+| `serviceMonitors.tfyOtelCollector.enabled`                         | Enable service monitor for tfy-otel-collector            | `true`                                    |
 | `serviceMonitors.tfyOtelCollector.name`                            | Name of the service monitor                              | `tfy-otel-collector`                      |
 | `serviceMonitors.tfyOtelCollector.labels`                          | Labels for otel collector                                | `{}`                                      |
 | `serviceMonitors.tfyOtelCollector.annotations`                     | Annotations for otel collector                           | `{}`                                      |
@@ -237,7 +237,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.tfyOtelCollector.endpoints`                       | Endpoints for otel collector                             | `[]`                                      |
 | `serviceMonitors.tfyOtelCollector.namespaceSelector`               | Namespace selector for otel collector                    | `{}`                                      |
 | `serviceMonitors.tfyOtelCollector.serviceSelectorLabels`           | Service selector labels for otel collector               | `{}`                                      |
-| `serviceMonitors.altinityClickHouseOperator.enabled`               | Enable service monitor for llm gateway                   | `true`                                    |
+| `serviceMonitors.altinityClickHouseOperator.enabled`               | Enable service monitor for Altinity ClickHouse operator  | `true`                                    |
 | `serviceMonitors.altinityClickHouseOperator.name`                  | Name of the service monitor                              | `""`                                      |
 | `serviceMonitors.altinityClickHouseOperator.labels`                | Labels for Altinity ClickHouse operator                  | `{}`                                      |
 | `serviceMonitors.altinityClickHouseOperator.annotations`           | Annotations for Altinity ClickHouse operator             | `{}`                                      |
