@@ -132,7 +132,7 @@ Tolerations for Clickhouse
 {{- end }}
 
 {{/*
-Node Selector for tfy-llm-gateway deployment
+Node Selector for clickhouse deployment
 */}}
 {{- define "clickhouse.nodeSelector" -}}
 {{- if .Values.clickhouse.nodeSelector -}}
