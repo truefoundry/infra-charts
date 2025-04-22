@@ -853,6 +853,52 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - truefoundry
+  # serviceMonitors.tfyOtelCollector Service monitor for tfy-otel-collector
+  tfyOtelCollector:
+    ## @param serviceMonitors.tfyOtelCollector.enabled Enable service monitor for llm gateway
+    enabled: true
+    ## @param serviceMonitors.tfyOtelCollector.name Name of the service monitor
+    name: tfy-otel-collector
+    ## @param serviceMonitors.tfyOtelCollector.labels [object] Labels for otel collector
+    labels: {}
+    ## @param serviceMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
+    annotations: {}
+    ## @param serviceMonitors.tfyOtelCollector.jobLabel Job label for otel collector
+    jobLabel: truefoundry.com/application
+    ## @param serviceMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
+    endpoints:
+      - path: /metrics
+        port: http-8888
+    ## @param serviceMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param serviceMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
+    serviceSelectorLabels:
+      truefoundry.com/application: tfy-otel-collector
+  # serviceMonitors.altinityClickHouseOperator Service monitor for tfy-otel-collector
+  altinityClickHouseOperator:
+    ## @param serviceMonitors.altinityClickHouseOperator.enabled Enable service monitor for llm gateway
+    enabled: true
+    ## @param serviceMonitors.altinityClickHouseOperator.name [string] Name of the service monitor
+    name: tfy-clickhouse-operator
+    ## @param serviceMonitors.altinityClickHouseOperator.labels [object] Labels for Altinity ClickHouse operator
+    labels: {}
+    ## @param serviceMonitors.altinityClickHouseOperator.annotations [object] Annotations for Altinity ClickHouse operator
+    annotations: {}
+    ## @param serviceMonitors.altinityClickHouseOperator.jobLabel Job label for Altinity ClickHouse operator
+    jobLabel: app.kubernetes.io/name
+    ## @param serviceMonitors.altinityClickHouseOperator.endpoints [array] Endpoints for Altinity ClickHouse operator
+    endpoints:
+      - path: /metrics
+        port: metrics
+    ## @param serviceMonitors.altinityClickHouseOperator.namespaceSelector [object] Namespace selector for Altinity ClickHouse operator
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param serviceMonitors.altinityClickHouseOperator.serviceSelectorLabels [object] Service selector labels for Altinity ClickHouse operator
+    serviceSelectorLabels:
+      app.kubernetes.io/name: altinity-clickhouse-operator
 
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []

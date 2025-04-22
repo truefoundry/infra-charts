@@ -682,3 +682,55 @@ Container rules annotations
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+  Otel Collector service monitor labels
+*/}}
+{{- define "otelCollector.labels" -}}
+{{- if .Values.serviceMonitors.tfyOtelCollector.labels }}
+{{- toYaml .Values.serviceMonitors.tfyOtelCollector.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Otel Collector service monitor annotations
+*/}}
+{{- define "otelCollector.annotations" -}}
+{{- if .Values.serviceMonitors.tfyOtelCollector.annotations }}
+{{- toYaml .Values.serviceMonitors.tfyOtelCollector.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Altinity ClickHouse Operator service monitor labels
+*/}}
+{{- define "clickhouseOperator.labels" -}}
+{{- if .Values.serviceMonitors.altinityClickHouseOperator.labels }}
+{{- toYaml .Values.serviceMonitors.altinityClickHouseOperator.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Altinity ClickHouse Operator service monitor annotations
+*/}}
+{{- define "clickhouseOperator.annotations" -}}
+{{- if .Values.serviceMonitors.altinityClickHouseOperator.annotations }}
+{{- toYaml .Values.serviceMonitors.altinityClickHouseOperator.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
