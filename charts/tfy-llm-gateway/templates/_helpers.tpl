@@ -270,11 +270,11 @@ limits:
 Affinity for tfy-llm-gateway deployment
 */}}
 {{- define "tfy-llm-gateway.affinity" -}}
-{{- if .Values.affinity }}
+{{- if .Values.affinity -}}
 {{- toYaml .Values.affinity }}
-{{- else if .Values.global.affinity }}
+{{- else if .Values.global.affinity -}}
 {{- toYaml .Values.global.affinity }}
-{{- else }}
+{{- else -}}
 {}
 {{- end }}
 {{- end }}
@@ -283,14 +283,24 @@ Affinity for tfy-llm-gateway deployment
 Tolerations for tfy-llm-gateway deployment
 */}}
 {{- define "tfy-llm-gateway.tolerations" -}}
-{{- if .Values.tolerations }}
+{{- if .Values.tolerations -}}
 {{- toYaml .Values.tolerations }}
-{{- else if .Values.global.tolerations }}
+{{- else if .Values.global.tolerations -}}
 {{- toYaml .Values.global.tolerations }}
-{{- else }}
+{{- else -}}
 {}
 {{- end }}
 {{- end }}
 
 {{/*
+Node Selector for tfy-llm-gateway deployment
 */}}
+{{- define "tfy-llm-gateway.nodeSelector" -}}
+{{- if .Values.nodeSelector -}}
+{{- toYaml .Values.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}

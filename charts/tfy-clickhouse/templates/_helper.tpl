@@ -130,3 +130,16 @@ Tolerations for Clickhouse
 []
 {{- end }}
 {{- end }}
+
+{{/*
+Node Selector for tfy-llm-gateway deployment
+*/}}
+{{- define "clickhouse.nodeSelector" -}}
+{{- if .Values.clickhouse.nodeSelector -}}
+{{- toYaml .Values.clickhouse.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}

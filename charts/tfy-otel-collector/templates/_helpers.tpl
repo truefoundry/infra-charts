@@ -271,3 +271,16 @@ Tolerations for Otel-collector
 []
 {{- end }}
 {{- end }}
+
+{{/*
+Node Selector for tfy-otel-collector deployment
+*/}}
+{{- define "tfy-otel-collector.nodeSelector" -}}
+{{- if .Values.nodeSelector -}}
+{{- toYaml .Values.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
