@@ -202,12 +202,12 @@ Deployment VolumeMounts
 
 {{- define "tfy-otel-collector.defaultResources.small" }}
 requests:
-  cpu: 500m
-  memory: 256Mi
+  cpu: 50m
+  memory: 128Mi
   ephemeral-storage: 256Mi
 limits:
-  cpu: 2000m
-  memory: 512Mi
+  cpu: 100m
+  memory: 256Mi
   ephemeral-storage: 512Mi
 {{- end }}
 
@@ -224,18 +224,18 @@ limits:
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
-  cpu: 500m
+  cpu: 200m
   memory: 256Mi
   ephemeral-storage: 256Mi
 limits:
-  cpu: 1000m
+  cpu: 400m
   memory: 512Mi
   ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.replicaCount }}
+{{- if .Values.replicaCount -}}
 {{ .Values.replicaCount }}
 {{- else if eq $tier "small" -}}
 2

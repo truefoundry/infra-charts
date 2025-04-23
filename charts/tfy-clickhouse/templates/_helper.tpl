@@ -48,12 +48,12 @@ Clickhouse resoures
 
 {{- define "clickhouse.defaultResources.small" }}
 requests:
-  cpu: 1000m
-  memory: 4096Mi
+  cpu: 500m
+  memory: 3000Mi
   ephemeral-storage: 5Gi
 limits:
-  cpu: 2000m
-  memory: 8192Mi
+  cpu: 1000m
+  memory: 6000Mi
   ephemeral-storage: 10Gi
 {{- end }}
 
@@ -81,14 +81,14 @@ limits:
 
 {{- define "clickhouse.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.clickhouse.replicasCount }}
+{{- if .Values.clickhouse.replicasCount -}}
 {{ .Values.clickhouse.replicasCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
 2
 {{- else if eq $tier "large" -}}
-3
+2
 {{- end }}
 {{- end }}
 
