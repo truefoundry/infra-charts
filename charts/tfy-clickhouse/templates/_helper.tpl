@@ -104,3 +104,42 @@ limits:
 100Gi
 {{- end }}
 {{- end }}
+
+{{/*
+Affinity rules for Clickhouse
+*/}}
+{{- define "clickhouse.affinity" }}
+{{- if .Values.clickhouse.affinity }}
+{{ toYaml .Values.clickhouse.affinity }}
+{{- else if .Values.global.affinity }}
+{{ toYaml .Values.global.affinity }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations for Clickhouse
+*/}}
+{{- define "clickhouse.tolerations" }}
+{{- if .Values.clickhouse.tolerations }}
+{{ toYaml .Values.clickhouse.tolerations }}
+{{- else if .Values.global.tolerations }}
+{{ toYaml .Values.global.tolerations }}
+{{- else }}
+[]
+{{- end }}
+{{- end }}
+
+{{/*
+Node Selector for clickhouse deployment
+*/}}
+{{- define "clickhouse.nodeSelector" -}}
+{{- if .Values.clickhouse.nodeSelector -}}
+{{- toYaml .Values.clickhouse.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}

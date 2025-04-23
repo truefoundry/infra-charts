@@ -83,8 +83,16 @@ Create the name of the service account to use
   */}}
 {{- define "buildkitd-service.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
+{{- if .Values.nodeSelector -}}
 {{- $mergedNodeSelector := merge .Values.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- $mergedNodeSelector := merge .Values.global.nodeSelector $defaultNodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- else -}}
+{{- $mergedNodeSelector := $defaultNodeSelector }}
+{{- toYaml $mergedNodeSelector }}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -178,5 +186,31 @@ limits:
 200Gi
 {{- else if eq $tier "large" -}}
 200Gi
+{{- end }}
+{{- end }}
+
+{{/*
+Affinity for the buildkitd service
+*/}}
+{{- define "buildkitd-service.affinity" -}}
+{{- if .Values.affinity -}}
+{{ toYaml .Values.affinity }}
+{{- else if .Values.global.affinity -}}
+{{ toYaml .Values.global.affinity }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations for the buildkitd service
+*/}}
+{{- define "buildkitd-service.tolerations" -}}
+{{- if .Values.tolerations }}
+{{ toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{ toYaml .Values.global.tolerations -}}
+{{- else -}}
+[]
 {{- end }}
 {{- end }}

@@ -133,14 +133,10 @@ spec:
       {{- end }}
       nodeSelector:
         {{- include "buildkitd-service.nodeSelector" . | nindent 8 }}
-      {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
+        {{- include "buildkitd-service.affinity" . | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "buildkitd-service.tolerations" . | nindent 8 }}
   {{- if .Values.storage.enabled }}
   volumeClaimTemplates:
     - metadata:

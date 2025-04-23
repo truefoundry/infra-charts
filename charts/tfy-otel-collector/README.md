@@ -9,6 +9,9 @@ Tfy-Otel_collector Helm Chart
 | Name                                        | Description                                                  | Value                                                |
 | ------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
 | `global.resourceTier`                       | Resource deployment type                                     | `""`                                                 |
+| `global.affinity`                           | Affinity rules for pod scheduling on a node                  | `{}`                                                 |
+| `global.tolerations`                        | Tolerations for pod scheduling on a node                     | `[]`                                                 |
+| `global.nodeSelector`                       | Node selector                                                | `{}`                                                 |
 | `env`                                       | Environment variables for the tfyOtelCollector               | `{}`                                                 |
 | `image.repository`                          | Image repository for tfyOTELCollector                        | `tfy.jfrog.io/tfy-private-images/tfy-otel-collector` |
 | `image.tag`                                 | Image tag for the tfyOTELCollector                           | `ac75290f3e20a59efd3729ab0533a3d40651e411`           |
