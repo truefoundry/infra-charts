@@ -182,20 +182,20 @@ app.kubernetes.io/workflow-component: scheduler
 
 {{- define "tfy-workflow-admin-server.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.tfyWorkflowAdmin.replicaCount }}
+{{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
-{{- else if eq $tier "small" }}
+{{- else if eq $tier "small" -}}
 1
-{{- else if eq $tier "medium" }}
+{{- else if eq $tier "medium" -}}
 2
-{{- else if eq $tier "large" }}
+{{- else if eq $tier "large" -}}
 2
 {{- end }}
 {{- end }}
 
 {{- define "tfy-workflow-admin-scheduler.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.tfyWorkflowAdmin.replicaCount }}
+{{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
@@ -219,12 +219,12 @@ limits:
 
 {{- define "tfy-workflow-admin-server.defaultResources.medium" }}
 requests:
-  cpu: 200m
-  memory: 512Mi
+  cpu: 100m
+  memory: 256Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 400m
-  memory: 1024Mi
+  cpu: 200m
+  memory: 512Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
@@ -241,22 +241,22 @@ limits:
 
 {{- define "tfy-workflow-admin-scheduler.defaultResources.small" }}
 requests:
-  cpu: 200m
-  memory: 512Mi
-  ephemeral-storage: 128Mi
-limits:
-  cpu: 400m
-  memory: 1024Mi
-  ephemeral-storage: 256Mi
-{{- end }}
-
-{{- define "tfy-workflow-admin-scheduler.defaultResources.medium" }}
-requests:
   cpu: 50m
   memory: 128Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 100m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "tfy-workflow-admin-scheduler.defaultResources.medium" }}
+requests:
+  cpu: 100m
+  memory: 128Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 200m
   memory: 256Mi
   ephemeral-storage: 256Mi
 {{- end }}

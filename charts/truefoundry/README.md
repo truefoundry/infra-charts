@@ -62,6 +62,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.podSecurityContext`                 | Security context for the frontend app pods             | `{}`                                                                                       |
 | `truefoundryFrontendApp.commonLabels`                       | Common labels for the frontend app pods                | `{}`                                                                                       |
 | `truefoundryFrontendApp.securityContext`                    | Security context for the frontend app                  | `{}`                                                                                       |
+| `truefoundryFrontendApp.resources`                          | Resource requests and limits for the frontend app      | `{}`                                                                                       |
 | `truefoundryFrontendApp.livenessProbe.initialDelaySeconds`  | Initial delay seconds for the liveness probe           | `600`                                                                                      |
 | `truefoundryFrontendApp.livenessProbe.periodSeconds`        | Period seconds for the liveness probe                  | `30`                                                                                       |
 | `truefoundryFrontendApp.livenessProbe.timeoutSeconds`       | Timeout seconds for the liveness probe                 | `5`                                                                                        |
@@ -117,6 +118,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `mlfoundryServer.podSecurityContext`                 | Security context for the mlfoundry server pods             | `{}`                                               |
 | `mlfoundryServer.commonLabels`                       | Common labels for the mlfoundry server pods                | `{}`                                               |
 | `mlfoundryServer.securityContext`                    | Security context for the mlfoundry server                  | `{}`                                               |
+| `mlfoundryServer.resources`                          | Resource requests and limits for the mlfoundry server      | `{}`                                               |
 | `mlfoundryServer.livenessProbe.failureThreshold`     | Liveness probe failure threshold for mlfoundry server      | `3`                                                |
 | `mlfoundryServer.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for mlfoundry server          | `600`                                              |
 | `mlfoundryServer.livenessProbe.periodSeconds`        | Liveness probe period for mlfoundry server                 | `10`                                               |
@@ -156,6 +158,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.podSecurityContext`                  | Security context for the servicefoundry server pods             | `{}`                                                    |
 | `servicefoundryServer.commonLabels`                        | Common labels for the servicefoundry server pods                | `{}`                                                    |
 | `servicefoundryServer.securityContext`                     | Security context for the servicefoundry server                  | `{}`                                                    |
+| `servicefoundryServer.resources`                           | Resource requests and limits for the servicefoundry server      | `{}`                                                    |
 | `servicefoundryServer.livenessProbe.failureThreshold`      | Liveness probe failure threshold for servicefoundry server      | `3`                                                     |
 | `servicefoundryServer.livenessProbe.initialDelaySeconds`   | Liveness probe initial delay for servicefoundry server          | `600`                                                   |
 | `servicefoundryServer.livenessProbe.periodSeconds`         | Liveness probe period for servicefoundry server                 | `10`                                                    |
@@ -200,6 +203,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.podSecurityContext`                 | Security context for the tfyK8sController pods             | `{}`                                                 |
 | `tfyK8sController.commonLabels`                       | Common labels for the tfyK8sController pods                | `{}`                                                 |
 | `tfyK8sController.securityContext`                    | Security context for the tfyK8sController                  | `{}`                                                 |
+| `tfyK8sController.resources`                          | Resource requests and limits for the tfyK8sController      | `{}`                                                 |
 | `tfyK8sController.livenessProbe.failureThreshold`     | Liveness probe failure threshold for tfyK8sController      | `3`                                                  |
 | `tfyK8sController.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for tfyK8sController          | `600`                                                |
 | `tfyK8sController.livenessProbe.periodSeconds`        | Liveness probe period for tfyK8sController                 | `10`                                                 |
@@ -239,6 +243,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.podSecurityContext`                 | Security context for the sfy manifest service pods             | `{}`                                                   |
 | `sfyManifestService.commonLabels`                       | Common labels for the sfy manifest service pods                | `{}`                                                   |
 | `sfyManifestService.securityContext`                    | Security context for the sfy manifest service                  | `{}`                                                   |
+| `sfyManifestService.resources`                          | Resource requests and limits for the sfy manifest service      | `{}`                                                   |
 | `sfyManifestService.livenessProbe.failureThreshold`     | Liveness probe failure threshold for sfy manifest service      | `3`                                                    |
 | `sfyManifestService.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for sfy manifest service          | `600`                                                  |
 | `sfyManifestService.livenessProbe.periodSeconds`        | Liveness probe period for sfy manifest service                 | `10`                                                   |
@@ -348,6 +353,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.commonLabels`                       | Common labels for the tfyController pods                | `{}`                                             |
 | `tfyController.securityContext`                    | Security context for the tfyController                  | `{}`                                             |
 | `tfyController.imagePullSecrets`                   | Image pull secrets for the tfycontroller                | `[]`                                             |
+| `tfyController.resources`                          | Resource requests and limits for the tfyController      | `{}`                                             |
 | `tfyController.livenessProbe.failureThreshold`     | Liveness probe failure threshold for tfyController      | `3`                                              |
 | `tfyController.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for tfyController          | `600`                                            |
 | `tfyController.livenessProbe.periodSeconds`        | Liveness probe period for the tfyController             | `10`                                             |
@@ -384,6 +390,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.commonLabels`                       | Common labels for the tfyWorkflowAdmin pods                | `{}`                                                 |
 | `tfyWorkflowAdmin.securityContext`                    | Security context for the tfyWorkflowAdmin                  | `{}`                                                 |
 | `tfyWorkflowAdmin.imagePullSecrets`                   | Image pull secrets for the tfycontroller                   | `[]`                                                 |
+| `tfyWorkflowAdmin.resources`                          | Resource requests and limits for the tfyWorkflowAdmin      | `{}`                                                 |
 | `tfyWorkflowAdmin.livenessProbe.failureThreshold`     | Liveness probe failure threshold for tfyWorkflowAdmin      | `3`                                                  |
 | `tfyWorkflowAdmin.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for tfyWorkflowAdmin          | `600`                                                |
 | `tfyWorkflowAdmin.livenessProbe.periodSeconds`        | Liveness probe period for the tfyWorkflowAdmin             | `10`                                                 |

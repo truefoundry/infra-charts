@@ -240,12 +240,12 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 {{- define "servicefoundry-server.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.servicefoundryServer.replicaCount }}
+{{- if .Values.servicefoundryServer.replicaCount -}}
 {{ .Values.servicefoundryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-3
+2
 {{- else if eq $tier "large" -}}
 3
 {{- end }}
@@ -253,11 +253,11 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 {{- define "servicefoundry-server.defaultResources.small" }}
 requests:
-  cpu: 200m
+  cpu: 100m
   memory: 512Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 400m
+  cpu: 200m
   memory: 1024Mi
   ephemeral-storage: 256Mi
 {{- end }}

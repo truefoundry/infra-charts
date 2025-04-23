@@ -184,12 +184,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "truefoundry-frontend-app.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.truefoundryFrontendApp.replicaCount }}
+{{- if .Values.truefoundryFrontendApp.replicaCount -}}
 {{ .Values.truefoundryFrontendApp.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-3
+2
 {{- else if eq $tier "large" -}}
 3
 {{- end }}
@@ -198,33 +198,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "truefoundry-frontend-app.defaultResources.small" }}
 requests:
   cpu: 50m
-  memory: 256Mi
+  memory: 128Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 100m
-  memory: 512Mi
+  memory: 256Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "truefoundry-frontend-app.defaultResources.medium" }}
 requests:
   cpu: 100m
-  memory: 256Mi
+  memory: 200Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 200m
-  memory: 512Mi
+  memory: 400Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "truefoundry-frontend-app.defaultResources.large" }}
 requests:
-  cpu: 500m
-  memory: 512Mi
+  cpu: 300m
+  memory: 400Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 1000m
-  memory: 1024Mi
+  cpu: 600m
+  memory: 800Mi
   ephemeral-storage: 256Mi
 {{- end }}
 

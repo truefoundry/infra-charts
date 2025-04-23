@@ -138,12 +138,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "mlfoundry-server.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.mlfoundryServer.replicaCount }}
+{{- if .Values.mlfoundryServer.replicaCount -}}
 {{ .Values.mlfoundryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-3
+2
 {{- else if eq $tier "large" -}}
 3
 {{- end }}
@@ -152,33 +152,33 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "mlfoundry-server.defaultResources.small" }}
 requests:
   cpu: 500m
-  memory: 1024Mi
+  memory: 512Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 1000m
-  memory: 2048Mi
+  memory: 1024Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "mlfoundry-server.defaultResources.medium" }}
 requests:
   cpu: 200m
-  memory: 2048Mi
+  memory: 800Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 400m
-  memory: 4096Mi
+  memory: 1600Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "mlfoundry-server.defaultResources.large" }}
 requests:
-  cpu: 1000m
-  memory: 2048Mi
+  cpu: 600m
+  memory: 1024Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 2000m
-  memory: 4096Mi
+  cpu: 1200m
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
