@@ -138,7 +138,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "sfy-manifest-service.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.sfyManifestService.replicaCount }}
+{{- if .Values.sfyManifestService.replicaCount -}}
 {{ .Values.sfyManifestService.replicaCount }}
 {{- else if eq $tier "small" -}}
 1

@@ -161,25 +161,25 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "tfy-k8s-controller.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.tfyK8sController.replicaCount }}
+{{- if .Values.tfyK8sController.replicaCount -}}
 {{ .Values.tfyK8sController.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-3
+1
 {{- else if eq $tier "large" -}}
-3
+1
 {{- end }}
 {{- end }}
 
 {{- define "tfy-k8s-controller.defaultResources.small"}}
 requests:
   cpu: 100m
-  memory: 256Mi
+  memory: 128Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 200m
-  memory: 512Mi
+  memory: 256Mi
   ephemeral-storage: 256Mi
 {{- end }}
 {{- define "tfy-k8s-controller.defaultResources.medium" }}
@@ -195,11 +195,11 @@ limits:
 {{- define "tfy-k8s-controller.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 1024Mi
+  memory: 800Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 1000m
-  memory: 2056Mi
+  memory: 1600Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
