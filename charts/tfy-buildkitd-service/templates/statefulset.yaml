@@ -148,6 +148,6 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.storage.size }}
+            storage: {{- include "buildkitd-service.storageSize" . | indent 1 }}
         storageClassName: {{ .Values.storage.storageClassName }}
   {{- end }}
