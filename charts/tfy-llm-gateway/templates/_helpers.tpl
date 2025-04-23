@@ -196,12 +196,12 @@ prometheus.io/port: "8787"
 
 {{- define "tfy-llm-gateway.defaultResources.small" }}
 requests:
-  cpu: 1000m
-  memory: 512Mi
+  cpu: 100m
+  memory: 256Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 2000m
-  memory: 1024Mi
+  cpu: 200m
+  memory: 512Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
@@ -255,10 +255,10 @@ limits:
 
 {{- define "tfy-llm-gateway.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.replicaCount }}
+{{- if .Values.replicaCount -}}
 {{ .Values.replicaCount }}
 {{- else if eq $tier "small" -}}
-3
+1
 {{- else if eq $tier "medium" -}}
 3
 {{- else if eq $tier "large" -}}
