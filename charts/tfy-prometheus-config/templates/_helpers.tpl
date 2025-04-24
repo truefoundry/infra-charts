@@ -308,6 +308,33 @@ Container rules annotations
 {{- end }}
 {{- end }}
 
+
+{{/*
+  Container rules labels
+*/}}
+{{- define "envoyPortRules.labels" -}}
+{{- if .Values.prometheusRules.envoyPortRules.labels }}
+{{- toYaml .Values.prometheusRules.envoyPortRules.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+Container rules annotations
+*/}}
+{{- define "envoyPortRules.annotations" -}}
+{{- if .Values.prometheusRules.envoyPortRules.annotations }}
+{{- toYaml .Values.prometheusRules.envoyPortRules.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 {{/*
   Kubecost rules labels
 */}}
