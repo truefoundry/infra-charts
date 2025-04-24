@@ -53,6 +53,11 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `prometheusRules.kubecostRules.name`         | Name of the prometheus rules         | `tfy-alertmanager-config-kubecost-rules` |
 | `prometheusRules.kubecostRules.labels`       | Labels for the prometheus rules      | `{}`                                     |
 | `prometheusRules.kubecostRules.annotations`  | Annotations for the prometheus rules | `{}`                                     |
+| `prometheusRules.envoyPortRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
+| `prometheusRules.envoyPortRules.name`        | Name of the prometheus rules         | `tfy-envoy-port-rules`                   |
+| `prometheusRules.envoyPortRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
+| `prometheusRules.envoyPortRules.annotations` | Annotations for the prometheus rules | `{}`                                     |
+| `prometheusRules.envoyPortRules.portList`    | List of common ports                 | `[]`                                     |
 
 ### serviceMonitors Service monitors for prometheus
 
