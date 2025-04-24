@@ -159,6 +159,18 @@ prometheusRules:
     labels: {}
     ## @param prometheusRules.kubecostRules.annotations [object] Annotations for the prometheus rules
     annotations: {}
+  # prometheusRules.envoyPortRules Prometheus rules for alerts
+  envoyPortRules:
+    ## @param prometheusRules.envoyPortRules.enabled Enable prometheus rules for alerts
+    enabled: true
+    ## @param prometheusRules.envoyPortRules.name Name of the prometheus rules
+    name: tfy-envoy-port-rules
+    ## @param prometheusRules.envoyPortRules.labels [object] Labels for the prometheus rules
+    labels: {}
+    ## @param prometheusRules.envoyPortRules.annotations [object] Annotations for the prometheus rules
+    annotations: {}
+    ## @param prometheusRules.envoyPortRules.portList [array] List of common ports
+    portList: ["80", "443", "3000", "8000", "8080", "8443", "5000", "9000", "9090", "10000"]
 ## @section serviceMonitors Service monitors for prometheus
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
