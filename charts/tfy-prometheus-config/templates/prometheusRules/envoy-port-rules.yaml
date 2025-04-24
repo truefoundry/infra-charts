@@ -8,6 +8,10 @@ metadata:
   annotations:
     {{- include "envoyPortRules.annotations" . | nindent 4 }}
 spec:
+  groups:
+    - name: envoy-recording.rules
+      interval: 10s
+      rules:
 {{- range $port := .Values.prometheusRules.envoyPortRules.portList }}
       - record: envoy_http_inbound_0_0_0_0_{{ $port }}_downstream_rq_total
         expr: envoy_http_downstream_rq_total{http_conn_manager_prefix="inbound_0.0.0.0_{{ $port }}"}
