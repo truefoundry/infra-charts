@@ -63,7 +63,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                                                              | Description                                          | Value                         |
 | ----------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------- |
-| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components | `true`                        |
+| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components | `false`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors    | `{}`                          |
 | `controlPlaneMonitors.clickHouseOperator.enabled`                 | Enable service monitor for ClickHouse operator       | `true`                        |
 | `controlPlaneMonitors.clickHouseOperator.name`                    | Name of the service monitor                          | `tfy-clickhouse-operator`     |
@@ -73,7 +73,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.clickHouseOperator.endpoints`               | Endpoints for ClickHouse operator                    | `[]`                          |
 | `controlPlaneMonitors.clickHouseOperator.namespaceSelector`       | Namespace selector for ClickHouse operator           | `{}`                          |
 | `controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels`   | Service selector labels for ClickHouse operator      | `{}`                          |
-| `controlPlaneMonitors.servicefoundryServer.enabled`               | Enable service monitor for servicefoundry server     | `false`                       |
+| `controlPlaneMonitors.servicefoundryServer.enabled`               | Enable service monitor for servicefoundry server     | `true`                        |
 | `controlPlaneMonitors.servicefoundryServer.name`                  | Name of the service monitor                          | `servicefoundry-server`       |
 | `controlPlaneMonitors.servicefoundryServer.labels`                | Labels for servicefoundry server                     | `{}`                          |
 | `controlPlaneMonitors.servicefoundryServer.annotations`           | Annotations for servicefoundry server                | `{}`                          |
@@ -81,7 +81,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.servicefoundryServer.endpoints`             | Endpoints for servicefoundry server                  | `[]`                          |
 | `controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels` | Service selector labels for servicefoundry server    | `{}`                          |
 | `controlPlaneMonitors.servicefoundryServer.namespaceSelector`     | Namespace selector for servicefoundry server         | `{}`                          |
-| `controlPlaneMonitors.mlfoundryServer.enabled`                    | Enable service monitor for mlfoundry server          | `false`                       |
+| `controlPlaneMonitors.mlfoundryServer.enabled`                    | Enable service monitor for mlfoundry server          | `true`                        |
 | `controlPlaneMonitors.mlfoundryServer.name`                       | Name of the service monitor                          | `mlfoundry-server`            |
 | `controlPlaneMonitors.mlfoundryServer.labels`                     | Labels for mlfoundry server                          | `{}`                          |
 | `controlPlaneMonitors.mlfoundryServer.annotations`                | Annotations for mlfoundry server                     | `{}`                          |
@@ -89,7 +89,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.mlfoundryServer.endpoints`                  | Endpoints for mlfoundry server                       | `[]`                          |
 | `controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels`      | Service selector labels for mlfoundry server         | `{}`                          |
 | `controlPlaneMonitors.mlfoundryServer.namespaceSelector`          | Namespace selector for mlfoundry server              | `{}`                          |
-| `controlPlaneMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service      | `false`                       |
+| `controlPlaneMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service      | `true`                        |
 | `controlPlaneMonitors.sfyManifestService.name`                    | Name of the service monitor                          | `sfy-manifest-service`        |
 | `controlPlaneMonitors.sfyManifestService.labels`                  | Labels for sfy manifest service                      | `{}`                          |
 | `controlPlaneMonitors.sfyManifestService.annotations`             | Annotations for sfy manifest service                 | `{}`                          |
@@ -97,7 +97,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.sfyManifestService.endpoints`               | Endpoints for sfy manifest service                   | `[]`                          |
 | `controlPlaneMonitors.sfyManifestService.serviceSelectorLabels`   | Service selector labels for sfy manifest service     | `{}`                          |
 | `controlPlaneMonitors.sfyManifestService.namespaceSelector`       | Namespace selector for sfy manifest service          | `{}`                          |
-| `controlPlaneMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller            | `false`                       |
+| `controlPlaneMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller            | `true`                        |
 | `controlPlaneMonitors.tfyController.name`                         | Name of the service monitor                          | `tfy-controller`              |
 | `controlPlaneMonitors.tfyController.labels`                       | Labels for tfy-controller                            | `{}`                          |
 | `controlPlaneMonitors.tfyController.annotations`                  | Annotations for tfy-controller                       | `{}`                          |
@@ -105,7 +105,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.tfyController.endpoints`                    | Endpoints for tfy-controller                         | `[]`                          |
 | `controlPlaneMonitors.tfyController.serviceSelectorLabels`        | Service selector labels for tfy-controller           | `{}`                          |
 | `controlPlaneMonitors.tfyController.namespaceSelector`            | Namespace selector for tfy-controller                | `{}`                          |
-| `controlPlaneMonitors.tfyK8sController.enabled`                   | Enable service monitor for tfy-k8s-controller        | `false`                       |
+| `controlPlaneMonitors.tfyK8sController.enabled`                   | Enable service monitor for tfy-k8s-controller        | `true`                        |
 | `controlPlaneMonitors.tfyK8sController.name`                      | Name of the service monitor                          | `tfy-k8s-controller`          |
 | `controlPlaneMonitors.tfyK8sController.labels`                    | Labels for tfy-k8s-controller                        | `{}`                          |
 | `controlPlaneMonitors.tfyK8sController.annotations`               | Annotations for tfy-k8s-controller                   | `{}`                          |
@@ -121,7 +121,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.tfyOtelCollector.endpoints`                 | Endpoints for otel collector                         | `[]`                          |
 | `controlPlaneMonitors.tfyOtelCollector.namespaceSelector`         | Namespace selector for otel collector                | `{}`                          |
 | `controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels`     | Service selector labels for otel collector           | `{}`                          |
-| `controlPlaneMonitors.llmGateway.enabled`                         | Enable service monitor for llm gateway               | `false`                       |
+| `controlPlaneMonitors.llmGateway.enabled`                         | Enable service monitor for llm gateway               | `true`                        |
 | `controlPlaneMonitors.llmGateway.name`                            | Name of the service monitor                          | `tfy-llm-gateway`             |
 | `controlPlaneMonitors.llmGateway.labels`                          | Labels for llm gateway                               | `{}`                          |
 | `controlPlaneMonitors.llmGateway.annotations`                     | Annotations for llm gateway                          | `{}`                          |
@@ -129,7 +129,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.llmGateway.endpoints`                       | Endpoints for llm gateway                            | `[]`                          |
 | `controlPlaneMonitors.llmGateway.namespaceSelector`               | Namespace selector for llm gateway                   | `{}`                          |
 | `controlPlaneMonitors.llmGateway.serviceSelectorLabels`           | Service selector labels for llm gateway              | `{}`                          |
-| `controlPlaneMonitors.nats.enabled`                               | Enable service monitor for nats                      | `false`                       |
+| `controlPlaneMonitors.nats.enabled`                               | Enable service monitor for nats                      | `true`                        |
 | `controlPlaneMonitors.nats.name`                                  | Name of the service monitor                          | `truefoundry-nats`            |
 | `controlPlaneMonitors.nats.labels`                                | Labels for nats                                      | `{}`                          |
 | `controlPlaneMonitors.nats.annotations`                           | Annotations for nats                                 | `{}`                          |
