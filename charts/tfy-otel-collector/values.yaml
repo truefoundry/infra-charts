@@ -67,11 +67,11 @@ healthcheck:
     ## @param healthcheck.readiness.path Path to probe
     path: /health/status
     ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
-    initialDelaySeconds: 10
+    initialDelaySeconds: 30
     ## @param healthcheck.readiness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 5
+    timeoutSeconds: 1
     ## @param healthcheck.readiness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
@@ -82,6 +82,16 @@ healthcheck:
     port: 3000
     ## @param healthcheck.liveness.path Path to probe
     path: /health/status
+    ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 600
+    ## @param healthcheck.liveness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 1
+    ## @param healthcheck.liveness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.liveness.failureThreshold Failure threshold
+    failureThreshold: 3
 ## @skip resources [object] Resource configuration
 #resources:
 #  limits:
