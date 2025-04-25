@@ -171,6 +171,223 @@ prometheusRules:
     annotations: {}
     ## @param prometheusRules.envoyPortRules.portList [array] List of common ports
     portList: ["80", "443", "3000", "5000", "5005", "8000", "8008", "8080", "8443", "6000", "9000", "9090", "10000"]
+## @section controlPlaneMonitors service monitors for control plane components
+controlPlaneMonitors:
+  ## @param controlPlaneMonitors.enabled Enable service monitors for control plane components
+  enabled: false
+  ## @param controlPlaneMonitors.namespaceSelector [object] Namespace selector for the control plane monitors
+  namespaceSelector:
+    matchNames:
+      - truefoundry
+  # controlPlaneMonitors.clickHouseOperator Service monitor for ClickHouse operator
+  clickHouseOperator:
+    ## @param controlPlaneMonitors.clickHouseOperator.enabled Enable service monitor for ClickHouse operator
+    enabled: true
+    ## @param controlPlaneMonitors.clickHouseOperator.name Name of the service monitor
+    name: tfy-clickhouse-operator
+    ## @param controlPlaneMonitors.clickHouseOperator.labels [object] Labels for ClickHouse operator
+    labels: {}
+    ## @param controlPlaneMonitors.clickHouseOperator.annotations [object] Annotations for ClickHouse operator
+    annotations: {}
+    ## @param controlPlaneMonitors.clickHouseOperator.jobLabel Job label for ClickHouse operator
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.clickHouseOperator.endpoints [array] Endpoints for ClickHouse operator
+    endpoints:
+      - path: /metrics
+        port: metrics
+    ## @param controlPlaneMonitors.clickHouseOperator.namespaceSelector [object] Namespace selector for ClickHouse operator
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels [object] Service selector labels for ClickHouse operator
+    serviceSelectorLabels:
+      app.kubernetes.io/name: clickhouse-operator
+  # controlPlaneMonitors.servicefoundryServer Service monitor for servicefoundry server
+  servicefoundryServer:
+    ## @param controlPlaneMonitors.servicefoundryServer.enabled Enable service monitor for servicefoundry server
+    enabled: true
+    ## @param controlPlaneMonitors.servicefoundryServer.name Name of the service monitor
+    name: servicefoundry-server
+    ## @param controlPlaneMonitors.servicefoundryServer.labels [object] Labels for servicefoundry server
+    labels: {}
+    ## @param controlPlaneMonitors.servicefoundryServer.annotations [object] Annotations for servicefoundry server
+    annotations: {}
+    ## @param controlPlaneMonitors.servicefoundryServer.jobLabel Job label for servicefoundry server
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.servicefoundryServer.endpoints [array] Endpoints for servicefoundry server
+    endpoints:
+      - port: http
+        honorLabels: true
+    ## @param controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
+    serviceSelectorLabels:
+      app.kubernetes.io/name: servicefoundry-server
+    ## @param controlPlaneMonitors.servicefoundryServer.namespaceSelector [object] Namespace selector for servicefoundry server
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.mlfoundryServer Service monitor for mlfoundry server
+  mlfoundryServer:
+    ## @param controlPlaneMonitors.mlfoundryServer.enabled Enable service monitor for mlfoundry server
+    enabled: true
+    ## @param controlPlaneMonitors.mlfoundryServer.name  Name of the service monitor
+    name: mlfoundry-server
+    ## @param controlPlaneMonitors.mlfoundryServer.labels [object] Labels for mlfoundry server
+    labels: {}
+    ## @param controlPlaneMonitors.mlfoundryServer.annotations [object] Annotations for mlfoundry server
+    annotations: {}
+    ## @param controlPlaneMonitors.mlfoundryServer.jobLabel Job label for mlfoundry server
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
+    endpoints:
+      - port: http
+        honorLabels: true
+    ## @param controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
+    serviceSelectorLabels:
+      app.kubernetes.io/name: mlfoundry-server
+    ## @param controlPlaneMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.sfyManifestService Service monitor for sfy manifest service
+  sfyManifestService:
+    ## @param controlPlaneMonitors.sfyManifestService.enabled Enable service monitor for sfy manifest service
+    enabled: true
+    ## @param controlPlaneMonitors.sfyManifestService.name Name of the service monitor
+    name: sfy-manifest-service
+    ## @param controlPlaneMonitors.sfyManifestService.labels [object] Labels for sfy manifest service
+    labels: {}
+    ## @param controlPlaneMonitors.sfyManifestService.annotations [object] Annotations for sfy manifest service
+    annotations: {}
+    ## @param controlPlaneMonitors.sfyManifestService.jobLabel Job label for sfy manifest service
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.sfyManifestService.endpoints [array] Endpoints for sfy manifest service
+    endpoints:
+      - port: http
+        honorLabels: true
+    ## @param controlPlaneMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
+    serviceSelectorLabels:
+      app.kubernetes.io/name: sfy-manifest-service
+    ## @param controlPlaneMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.tfyController Service monitor for tfy-controller
+  tfyController:
+    ## @param controlPlaneMonitors.tfyController.enabled Enable service monitor for tfy-controller
+    enabled: true
+    ## @param controlPlaneMonitors.tfyController.name Name of the service monitor
+    name: tfy-controller
+    ## @param controlPlaneMonitors.tfyController.labels [object] Labels for tfy-controller
+    labels: {}
+    ## @param controlPlaneMonitors.tfyController.annotations [object] Annotations for tfy-controller
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyController.jobLabel Job label for tfy-controller
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.tfyController.endpoints [array] Endpoints for tfy-controller
+    endpoints:
+      - port: port-8123
+        honorLabels: true
+    ## @param controlPlaneMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
+    serviceSelectorLabels:
+      app.kubernetes.io/name: tfy-controller
+    ## @param controlPlaneMonitors.tfyController.namespaceSelector [object] Namespace selector for tfy-controller
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.tfyK8sController Service monitor for tfy-k8s-controller
+  tfyK8sController:
+    ## @param controlPlaneMonitors.tfyK8sController.enabled Enable service monitor for tfy-k8s-controller
+    enabled: true
+    ## @param controlPlaneMonitors.tfyK8sController.name Name of the service monitor
+    name: tfy-k8s-controller
+    ## @param controlPlaneMonitors.tfyK8sController.labels [object] Labels for tfy-k8s-controller
+    labels: {}
+    ## @param controlPlaneMonitors.tfyK8sController.annotations [object] Annotations for tfy-k8s-controller
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyK8sController.jobLabel Job label for tfy-k8s-controller
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.tfyK8sController.endpoints [array] Endpoints for tfy-k8s-controller
+    endpoints:
+      - path: /metrics
+        port: http-3002
+    ## @param controlPlaneMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
+    serviceSelectorLabels:
+      app.kubernetes.io/name: tfy-k8s-controller
+    ## @param controlPlaneMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.tfyOtelCollector Service monitor for tfy-otel-collector
+  tfyOtelCollector:
+    ## @param controlPlaneMonitors.tfyOtelCollector.enabled Enable service monitor for tfy-otel-collector
+    enabled: true
+    ## @param controlPlaneMonitors.tfyOtelCollector.name Name of the service monitor
+    name: tfy-otel-collector
+    ## @param controlPlaneMonitors.tfyOtelCollector.labels [object] Labels for otel collector
+    labels: {}
+    ## @param controlPlaneMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyOtelCollector.jobLabel Job label for otel collector
+    jobLabel: truefoundry.com/application
+    ## @param controlPlaneMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
+    endpoints:
+      - path: /metrics
+        port: http-8888
+    ## @param controlPlaneMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
+    serviceSelectorLabels:
+      truefoundry.com/application: tfy-otel-collector
+  # controlPlaneMonitors.llmGateway Service monitor for llm gateway
+  llmGateway:
+    ## @param controlPlaneMonitors.llmGateway.enabled Enable service monitor for llm gateway
+    enabled: true
+    ## @param controlPlaneMonitors.llmGateway.name Name of the service monitor
+    name: tfy-llm-gateway
+    ## @param controlPlaneMonitors.llmGateway.labels [object] Labels for llm gateway
+    labels: {}
+    ## @param controlPlaneMonitors.llmGateway.annotations [object] Annotations for llm gateway
+    annotations: {}
+    ## @param controlPlaneMonitors.llmGateway.jobLabel Job label for llm gateway
+    jobLabel: truefoundry.com/application
+    ## @param controlPlaneMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
+    endpoints:
+      - path: /metrics
+        port: http-8787
+    ## @param controlPlaneMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+    ## @param controlPlaneMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
+    serviceSelectorLabels:
+      app.kubernetes.io/name: tfy-llm-gateway
+  # controlPlaneMonitors.nats Service monitor for nats
+  nats:
+    ## @param controlPlaneMonitors.nats.enabled Enable service monitor for nats
+    enabled: true
+    ## @param controlPlaneMonitors.nats.name Name of the service monitor
+    name: truefoundry-nats
+    ## @param controlPlaneMonitors.nats.labels [object] Labels for nats
+    labels: {}
+    ## @param controlPlaneMonitors.nats.annotations [object] Annotations for nats
+    annotations: {}
+    ## @param controlPlaneMonitors.nats.jobLabel Job label for nats
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.nats.podMetricsEndpoints [array] Pod metrics endpoints for nats
+    podMetricsEndpoints:
+      - port: prom-metrics
+    ## @param controlPlaneMonitors.nats.serviceSelectorLabels [object] Service selector labels for nats
+    serviceSelectorLabels:
+      app.kubernetes.io/name: nats
+      app.kubernetes.io/component: nats
+      app.kubernetes.io/instance: truefoundry
+    ## @param controlPlaneMonitors.nats.namespaceSelector [object] Namespace selector for nats
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+
 ## @section serviceMonitors Service monitors for prometheus
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
@@ -512,29 +729,6 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - kube-system
-  # serviceMonitors.llmGateway Service monitor for llm gateway
-  llmGateway:
-    ## @param serviceMonitors.llmGateway.enabled Enable service monitor for llm gateway
-    enabled: false
-    ## @param serviceMonitors.llmGateway.name Name of the service monitor
-    name: tfy-llm-gateway
-    ## @param serviceMonitors.llmGateway.labels [object] Labels for llm gateway
-    labels: {}
-    ## @param serviceMonitors.llmGateway.annotations [object] Annotations for llm gateway
-    annotations: {}
-    ## @param serviceMonitors.llmGateway.jobLabel Job label for llm gateway
-    jobLabel: truefoundry.com/application
-    ## @param serviceMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
-    endpoints:
-      - path: /metrics
-        port: http-8787
-    ## @param serviceMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-    ## @param serviceMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-llm-gateway
   # serviceMonitors.nodeExporter Service monitor for node exporter
   nodeExporter:
     ## @param serviceMonitors.nodeExporter.enabled Enable service monitor for node exporter
@@ -726,191 +920,6 @@ serviceMonitors:
       namespaceSelector:
         matchNames:
           - loki
-  # serviceMonitors.nats Service monitor for nats
-  nats:
-    ## @param serviceMonitors.nats.enabled Enable service monitor for nats
-    enabled: false
-    ## @param serviceMonitors.nats.name Name of the service monitor
-    name: truefoundry-nats
-    ## @param serviceMonitors.nats.labels [object] Labels for nats
-    labels: {}
-    ## @param serviceMonitors.nats.annotations [object] Annotations for nats
-    annotations: {}
-    ## @param serviceMonitors.nats.jobLabel Job label for nats
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.nats.endpoints [array] Endpoints for nats
-    endpoints:
-      - port: metrics
-        honorLabels: true
-    ## @param serviceMonitors.nats.serviceSelectorLabels [object] Service selector labels for nats
-    serviceSelectorLabels:
-      app.kubernetes.io/name: nats
-      app.kubernetes.io/instance: truefoundry
-    ## @param serviceMonitors.nats.namespaceSelector [object] Namespace selector for nats
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.servicefoundryServer Service monitor for servicefoundry server
-  servicefoundryServer:
-    ## @param serviceMonitors.servicefoundryServer.enabled Enable service monitor for servicefoundry server
-    enabled: false
-    ## @param serviceMonitors.servicefoundryServer.name [string] Name of the service monitor
-    name: servicefoundry-server
-    ## @param serviceMonitors.servicefoundryServer.labels [object] Labels for servicefoundry server
-    labels: {}
-    ## @param serviceMonitors.servicefoundryServer.annotations [object] Annotations for servicefoundry server
-    annotations: {}
-    ## @param serviceMonitors.servicefoundryServer.jobLabel Job label for servicefoundry server
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.servicefoundryServer.endpoints [array] Endpoints for servicefoundry server
-    endpoints:
-      - port: http
-        honorLabels: true
-    ## @param serviceMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
-    serviceSelectorLabels:
-      app.kubernetes.io/name: servicefoundry-server
-    ## @param serviceMonitors.servicefoundryServer.namespaceSelector [object] Namespace selector for servicefoundry server
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.mlfoundryServer Service monitor for mlfoundry server
-  mlfoundryServer:
-    ## @param serviceMonitors.mlfoundryServer.enabled Enable service monitor for mlfoundry server
-    enabled: false
-    ## @param serviceMonitors.mlfoundryServer.name [string] Name of the service monitor
-    name: mlfoundry-server
-    ## @param serviceMonitors.mlfoundryServer.labels [object] Labels for mlfoundry server
-    labels: {}
-    ## @param serviceMonitors.mlfoundryServer.annotations [object] Annotations for mlfoundry server
-    annotations: {}
-    ## @param serviceMonitors.mlfoundryServer.jobLabel Job label for mlfoundry server
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
-    endpoints:
-      - port: http
-        honorLabels: true
-    ## @param serviceMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
-    serviceSelectorLabels:
-      app.kubernetes.io/name: mlfoundry-server
-    ## @param serviceMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.sfyManifestService Service monitor for sfy manifest service
-  sfyManifestService:
-    ## @param serviceMonitors.sfyManifestService.enabled Enable service monitor for sfy manifest service
-    enabled: false
-    ## @param serviceMonitors.sfyManifestService.name Name of the service monitor
-    name: sfy-manifest-service
-    ## @param serviceMonitors.sfyManifestService.labels [object] Labels for sfy manifest service
-    labels: {}
-    ## @param serviceMonitors.sfyManifestService.annotations [object] Annotations for sfy manifest service
-    annotations: {}
-    ## @param serviceMonitors.sfyManifestService.jobLabel Job label for sfy manifest service
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.sfyManifestService.endpoints [array] Endpoints for sfy manifest service
-    endpoints:
-    - port: http
-      honorLabels: true
-    ## @param serviceMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
-    serviceSelectorLabels:
-      app.kubernetes.io/name: sfy-manifest-service
-    ## @param serviceMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.tfyController Service monitor for tfy-controller
-  tfyController:
-    ## @param serviceMonitors.tfyController.enabled Enable service monitor for tfy-controller
-    enabled: false
-    ## @param serviceMonitors.tfyController.name Name of the service monitor
-    name: tfy-controller
-    ## @param serviceMonitors.tfyController.labels [object] Labels for tfy-controller
-    labels: {}
-    ## @param serviceMonitors.tfyController.annotations [object] Annotations for tfy-controller
-    annotations: {}
-    ## @param serviceMonitors.tfyController.jobLabel Job label for tfy-controller
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.tfyController.endpoints [array] Endpoints for tfy-controller
-    endpoints:
-      - port: port-8123
-        honorLabels: true
-    ## @param serviceMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-controller
-    ## @param serviceMonitors.tfyController.namespaceSelector [object] Namespace selector for tfy-controller
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.tfyK8sController Service monitor for tfy-k8s-controller
-  tfyK8sController:
-    ## @param serviceMonitors.tfyK8sController.enabled Enable service monitor for tfy-k8s-controller
-    enabled: false
-    ## @param serviceMonitors.tfyK8sController.name Name of the service monitor
-    name: tfy-k8s-controller
-    ## @param serviceMonitors.tfyK8sController.labels [object] Labels for tfy-k8s-controller
-    labels: {}
-    ## @param serviceMonitors.tfyK8sController.annotations [object] Annotations for tfy-k8s-controller
-    annotations: {}
-    ## @param serviceMonitors.tfyK8sController.jobLabel Job label for tfy-k8s-controller
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.tfyK8sController.endpoints [array] Endpoints for tfy-k8s-controller
-    endpoints:
-      - path: /metrics
-        port: http-3002
-    ## @param serviceMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-k8s-controller
-    ## @param serviceMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-  # serviceMonitors.tfyOtelCollector Service monitor for tfy-otel-collector
-  tfyOtelCollector:
-    ## @param serviceMonitors.tfyOtelCollector.enabled Enable service monitor for tfy-otel-collector
-    enabled: true
-    ## @param serviceMonitors.tfyOtelCollector.name Name of the service monitor
-    name: tfy-otel-collector
-    ## @param serviceMonitors.tfyOtelCollector.labels [object] Labels for otel collector
-    labels: {}
-    ## @param serviceMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
-    annotations: {}
-    ## @param serviceMonitors.tfyOtelCollector.jobLabel Job label for otel collector
-    jobLabel: truefoundry.com/application
-    ## @param serviceMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
-    endpoints:
-      - path: /metrics
-        port: http-8888
-    ## @param serviceMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-    ## @param serviceMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
-    serviceSelectorLabels:
-      truefoundry.com/application: tfy-otel-collector
-  # serviceMonitors.altinityClickHouseOperator Service monitor for tfy-otel-collector
-  altinityClickHouseOperator:
-    ## @param serviceMonitors.altinityClickHouseOperator.enabled Enable service monitor for Altinity ClickHouse operator
-    enabled: true
-    ## @param serviceMonitors.altinityClickHouseOperator.name [string] Name of the service monitor
-    name: tfy-clickhouse-operator
-    ## @param serviceMonitors.altinityClickHouseOperator.labels [object] Labels for Altinity ClickHouse operator
-    labels: {}
-    ## @param serviceMonitors.altinityClickHouseOperator.annotations [object] Annotations for Altinity ClickHouse operator
-    annotations: {}
-    ## @param serviceMonitors.altinityClickHouseOperator.jobLabel Job label for Altinity ClickHouse operator
-    jobLabel: app.kubernetes.io/name
-    ## @param serviceMonitors.altinityClickHouseOperator.endpoints [array] Endpoints for Altinity ClickHouse operator
-    endpoints:
-      - path: /metrics
-        port: metrics
-    ## @param serviceMonitors.altinityClickHouseOperator.namespaceSelector [object] Namespace selector for Altinity ClickHouse operator
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-    ## @param serviceMonitors.altinityClickHouseOperator.serviceSelectorLabels [object] Service selector labels for Altinity ClickHouse operator
-    serviceSelectorLabels:
-      app.kubernetes.io/name: altinity-clickhouse-operator
 
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []
