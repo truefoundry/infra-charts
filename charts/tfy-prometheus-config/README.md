@@ -134,7 +134,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.nats.labels`                                | Labels for nats                                      | `{}`                          |
 | `controlPlaneMonitors.nats.annotations`                           | Annotations for nats                                 | `{}`                          |
 | `controlPlaneMonitors.nats.jobLabel`                              | Job label for nats                                   | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.nats.endpoints`                             | Endpoints for nats                                   | `[]`                          |
+| `controlPlaneMonitors.nats.podMetricsEndpoints`                   | Pod metrics endpoints for nats                       | `[]`                          |
 | `controlPlaneMonitors.nats.serviceSelectorLabels`                 | Service selector labels for nats                     | `{}`                          |
 | `controlPlaneMonitors.nats.namespaceSelector`                     | Namespace selector for nats                          | `{}`                          |
 

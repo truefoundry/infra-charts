@@ -1,6 +1,6 @@
 {{- if and .Values.controlPlaneMonitors.nats.enabled .Values.controlPlaneMonitors.enabled }}
 apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+kind: PodMonitor
 metadata:
   name: {{ .Values.controlPlaneMonitors.nats.name }}
   labels:
@@ -9,10 +9,8 @@ metadata:
     {{- include "nats.annotations" . | indent 4 }}
 spec:
   jobLabel: {{ .Values.controlPlaneMonitors.nats.jobLabel }}
-  endpoints:
-  {{- toYaml .Values.controlPlaneMonitors.nats.endpoints | nindent 2 }}
-  namespaceSelector:
-    {{- toYaml (or .Values.controlPlaneMonitors.nats.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  podMetricsEndpoints:
+    {{- toYaml .Values.controlPlaneMonitors.nats.podMetricsEndpoints | nindent 2 }}
   selector:
     matchLabels:
       {{- toYaml .Values.controlPlaneMonitors.nats.serviceSelectorLabels | nindent 6 }}
