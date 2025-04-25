@@ -29,13 +29,18 @@ Tfy-Otel_collector Helm Chart
 | `healthcheck.enabled`                       | Enable healthcheck                                           | `true`                                               |
 | `healthcheck.readiness.port`                | Port to probe                                                | `3000`                                               |
 | `healthcheck.readiness.path`                | Path to probe                                                | `/health/status`                                     |
-| `healthcheck.readiness.initialDelaySeconds` | Initial delay in seconds                                     | `10`                                                 |
+| `healthcheck.readiness.initialDelaySeconds` | Initial delay in seconds                                     | `30`                                                 |
 | `healthcheck.readiness.periodSeconds`       | Period in seconds                                            | `10`                                                 |
-| `healthcheck.readiness.timeoutSeconds`      | Timeout in seconds                                           | `5`                                                  |
+| `healthcheck.readiness.timeoutSeconds`      | Timeout in seconds                                           | `1`                                                  |
 | `healthcheck.readiness.successThreshold`    | Success threshold                                            | `1`                                                  |
 | `healthcheck.readiness.failureThreshold`    | Failure threshold                                            | `3`                                                  |
 | `healthcheck.liveness.port`                 | Port to probe                                                | `3000`                                               |
 | `healthcheck.liveness.path`                 | Path to probe                                                | `/health/status`                                     |
+| `healthcheck.liveness.initialDelaySeconds`  | Initial delay in seconds                                     | `600`                                                |
+| `healthcheck.liveness.periodSeconds`        | Period in seconds                                            | `10`                                                 |
+| `healthcheck.liveness.timeoutSeconds`       | Timeout in seconds                                           | `1`                                                  |
+| `healthcheck.liveness.successThreshold`     | Success threshold                                            | `1`                                                  |
+| `healthcheck.liveness.failureThreshold`     | Failure threshold                                            | `3`                                                  |
 | `nodeSelector`                              | Node selector                                                | `{}`                                                 |
 | `tolerations`                               | Tolerations                                                  | `{}`                                                 |
 | `affinity`                                  | Affinity                                                     | `{}`                                                 |
