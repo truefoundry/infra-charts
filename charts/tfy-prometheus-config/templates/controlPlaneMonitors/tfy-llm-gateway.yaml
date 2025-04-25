@@ -1,19 +1,19 @@
-{{- if .Values.serviceMonitors.llmGateway.enabled }}
+{{- if and .Values.controlPlaneMonitors.llmGateway.enabled .Values.controlPlaneMonitors.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.serviceMonitors.llmGateway.name }}
+  name: {{ .Values.controlPlaneMonitors.llmGateway.name }}
   labels:
     {{- include "llmGateway.labels" . | nindent 4 }}
   annotations:
     {{- include "llmGateway.annotations" . | nindent 4 }}
 spec:
-  jobLabel: {{ .Values.serviceMonitors.llmGateway.jobLabel }}
+  jobLabel: {{ .Values.controlPlaneMonitors.llmGateway.jobLabel }}
   endpoints:
-  {{- toYaml .Values.serviceMonitors.llmGateway.endpoints | nindent 2 }}
+  {{- toYaml .Values.controlPlaneMonitors.llmGateway.endpoints | nindent 2 }}
   namespaceSelector:
-    {{- toYaml .Values.serviceMonitors.llmGateway.namespaceSelector | nindent 4 }}
+    {{- toYaml (or .Values.controlPlaneMonitors.llmGateway.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
-      {{- toYaml .Values.serviceMonitors.llmGateway.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.controlPlaneMonitors.llmGateway.serviceSelectorLabels | nindent 6 }}
 {{- end -}}

@@ -1,19 +1,19 @@
-{{- if .Values.serviceMonitors.mlfoundryServer.enabled }}
+{{- if .Values.controlPlaneMonitors.mlfoundryServer.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.serviceMonitors.mlfoundryServer.name }}
+  name: {{ .Values.controlPlaneMonitors.mlfoundryServer.name }}
   labels:
     {{- include "mlfoundry.labels" . | nindent 4 }}
   annotations:
     {{- include "mlfoundry.annotations" . | indent 4 }}
 spec:
-  jobLabel: {{ .Values.serviceMonitors.mlfoundryServer.jobLabel }}
+  jobLabel: {{ .Values.controlPlaneMonitors.mlfoundryServer.jobLabel }}
   endpoints:
-  {{- toYaml .Values.serviceMonitors.mlfoundryServer.endpoints | nindent 2 }}
+  {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.endpoints | nindent 2 }}
   namespaceSelector:
-    {{- toYaml .Values.serviceMonitors.mlfoundryServer.namespaceSelector | nindent 4 }}
+    {{- toYaml (or .Values.controlPlaneMonitors.mlfoundryServer.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
-      {{- toYaml .Values.serviceMonitors.mlfoundryServer.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels | nindent 6 }}
 {{- end -}}

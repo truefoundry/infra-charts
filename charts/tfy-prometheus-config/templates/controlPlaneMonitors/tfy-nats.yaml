@@ -1,19 +1,19 @@
-{{- if .Values.serviceMonitors.nats.enabled }}
+{{- if and .Values.controlPlaneMonitors.nats.enabled .Values.controlPlaneMonitors.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.serviceMonitors.nats.name }}
+  name: {{ .Values.controlPlaneMonitors.nats.name }}
   labels:
     {{- include "nats.labels" . | nindent 4 }}
   annotations:
     {{- include "nats.annotations" . | indent 4 }}
 spec:
-  jobLabel: {{ .Values.serviceMonitors.nats.jobLabel }}
+  jobLabel: {{ .Values.controlPlaneMonitors.nats.jobLabel }}
   endpoints:
-  {{- toYaml .Values.serviceMonitors.nats.endpoints | nindent 2 }}
+  {{- toYaml .Values.controlPlaneMonitors.nats.endpoints | nindent 2 }}
   namespaceSelector:
-    {{- toYaml .Values.serviceMonitors.nats.namespaceSelector | nindent 4 }}
+    {{- toYaml (or .Values.controlPlaneMonitors.nats.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
-      {{- toYaml .Values.serviceMonitors.nats.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.controlPlaneMonitors.nats.serviceSelectorLabels | nindent 6 }}
 {{- end -}}

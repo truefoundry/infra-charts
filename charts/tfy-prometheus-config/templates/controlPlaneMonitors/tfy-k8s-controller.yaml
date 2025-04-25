@@ -1,19 +1,19 @@
-{{- if .Values.serviceMonitors.tfyK8sController.enabled }}
+{{- if and .Values.controlPlaneMonitors.tfyK8sController.enabled .Values.controlPlaneMonitors.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.serviceMonitors.tfyK8sController.name }}
+  name: {{ .Values.controlPlaneMonitors.tfyK8sController.name }}
   labels:
     {{- include "tfyK8sController.labels" . | nindent 4 }}
   annotations:
     {{- include "tfyK8sController.annotations" . | nindent 4 }}
 spec:
-  jobLabel: {{ .Values.serviceMonitors.tfyK8sController.jobLabel }}
+  jobLabel: {{ .Values.controlPlaneMonitors.tfyK8sController.jobLabel }}
   endpoints:
-  {{- toYaml .Values.serviceMonitors.tfyK8sController.endpoints | nindent 2 }}
+  {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.endpoints | nindent 2 }}
   namespaceSelector:
-    {{- toYaml .Values.serviceMonitors.tfyK8sController.namespaceSelector | nindent 4 }}
+    {{- toYaml (or .Values.controlPlaneMonitors.tfyK8sController.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
-      {{- toYaml .Values.serviceMonitors.tfyK8sController.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.serviceSelectorLabels | nindent 6 }}
 {{- end -}}
