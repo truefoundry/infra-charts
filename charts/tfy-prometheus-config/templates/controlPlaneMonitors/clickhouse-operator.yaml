@@ -1,19 +1,19 @@
-{{- if and .Values.controlPlaneMonitors.altinityClickHouseOperator.enabled .Values.controlPlaneMonitors.enabled }}
+{{- if and .Values.controlPlaneMonitors.clickHouseOperator.enabled .Values.controlPlaneMonitors.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Values.controlPlaneMonitors.altinityClickHouseOperator.name }}
+  name: {{ .Values.controlPlaneMonitors.clickHouseOperator.name }}
   labels:
     {{- include "clickhouseOperator.labels" . | nindent 4 }}
   annotations:
     {{- include "clickhouseOperator.annotations" . | nindent 4 }}
 spec:
-  jobLabel: {{ .Values.controlPlaneMonitors.altinityClickHouseOperator.jobLabel }}
+  jobLabel: {{ .Values.controlPlaneMonitors.clickHouseOperator.jobLabel }}
   endpoints:
-  {{- toYaml .Values.controlPlaneMonitors.altinityClickHouseOperator.endpoints | nindent 2 }}
+  {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.endpoints | nindent 2 }}
   namespaceSelector:
-    {{- toYaml (or .Values.controlPlaneMonitors.altinityClickHouseOperator.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+    {{- toYaml (or .Values.controlPlaneMonitors.clickHouseOperator.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
-      {{- toYaml .Values.controlPlaneMonitors.altinityClickHouseOperator.serviceSelectorLabels | nindent 6 }}
+      {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels | nindent 6 }}
 {{- end -}}

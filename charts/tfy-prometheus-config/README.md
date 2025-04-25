@@ -61,82 +61,82 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### controlPlaneMonitors service monitors for control plane components
 
-| Name                                                                    | Description                                              | Value                         |
-| ----------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------- |
-| `controlPlaneMonitors.enabled`                                          | Enable service monitors for control plane components     | `true`                        |
-| `controlPlaneMonitors.namespaceSelector`                                | Namespace selector for the control plane monitors        | `{}`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.enabled`               | Enable service monitor for Altinity ClickHouse operator  | `true`                        |
-| `controlPlaneMonitors.altinityClickHouseOperator.name`                  | Name of the service monitor                              | `""`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.labels`                | Labels for Altinity ClickHouse operator                  | `{}`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.annotations`           | Annotations for Altinity ClickHouse operator             | `{}`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.jobLabel`              | Job label for Altinity ClickHouse operator               | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.altinityClickHouseOperator.endpoints`             | Endpoints for Altinity ClickHouse operator               | `[]`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.namespaceSelector`     | Namespace selector for Altinity ClickHouse operator      | `{}`                          |
-| `controlPlaneMonitors.altinityClickHouseOperator.serviceSelectorLabels` | Service selector labels for Altinity ClickHouse operator | `{}`                          |
-| `controlPlaneMonitors.servicefoundryServer.enabled`                     | Enable service monitor for servicefoundry server         | `false`                       |
-| `controlPlaneMonitors.servicefoundryServer.name`                        | Name of the service monitor                              | `""`                          |
-| `controlPlaneMonitors.servicefoundryServer.labels`                      | Labels for servicefoundry server                         | `{}`                          |
-| `controlPlaneMonitors.servicefoundryServer.annotations`                 | Annotations for servicefoundry server                    | `{}`                          |
-| `controlPlaneMonitors.servicefoundryServer.jobLabel`                    | Job label for servicefoundry server                      | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.servicefoundryServer.endpoints`                   | Endpoints for servicefoundry server                      | `[]`                          |
-| `controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels`       | Service selector labels for servicefoundry server        | `{}`                          |
-| `controlPlaneMonitors.servicefoundryServer.namespaceSelector`           | Namespace selector for servicefoundry server             | `{}`                          |
-| `controlPlaneMonitors.mlfoundryServer.enabled`                          | Enable service monitor for mlfoundry server              | `false`                       |
-| `controlPlaneMonitors.mlfoundryServer.name`                             | Name of the service monitor                              | `""`                          |
-| `controlPlaneMonitors.mlfoundryServer.labels`                           | Labels for mlfoundry server                              | `{}`                          |
-| `controlPlaneMonitors.mlfoundryServer.annotations`                      | Annotations for mlfoundry server                         | `{}`                          |
-| `controlPlaneMonitors.mlfoundryServer.jobLabel`                         | Job label for mlfoundry server                           | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.mlfoundryServer.endpoints`                        | Endpoints for mlfoundry server                           | `[]`                          |
-| `controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels`            | Service selector labels for mlfoundry server             | `{}`                          |
-| `controlPlaneMonitors.mlfoundryServer.namespaceSelector`                | Namespace selector for mlfoundry server                  | `{}`                          |
-| `controlPlaneMonitors.sfyManifestService.enabled`                       | Enable service monitor for sfy manifest service          | `false`                       |
-| `controlPlaneMonitors.sfyManifestService.name`                          | Name of the service monitor                              | `sfy-manifest-service`        |
-| `controlPlaneMonitors.sfyManifestService.labels`                        | Labels for sfy manifest service                          | `{}`                          |
-| `controlPlaneMonitors.sfyManifestService.annotations`                   | Annotations for sfy manifest service                     | `{}`                          |
-| `controlPlaneMonitors.sfyManifestService.jobLabel`                      | Job label for sfy manifest service                       | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.sfyManifestService.endpoints`                     | Endpoints for sfy manifest service                       | `[]`                          |
-| `controlPlaneMonitors.sfyManifestService.serviceSelectorLabels`         | Service selector labels for sfy manifest service         | `{}`                          |
-| `controlPlaneMonitors.sfyManifestService.namespaceSelector`             | Namespace selector for sfy manifest service              | `{}`                          |
-| `controlPlaneMonitors.tfyController.enabled`                            | Enable service monitor for tfy-controller                | `false`                       |
-| `controlPlaneMonitors.tfyController.name`                               | Name of the service monitor                              | `tfy-controller`              |
-| `controlPlaneMonitors.tfyController.labels`                             | Labels for tfy-controller                                | `{}`                          |
-| `controlPlaneMonitors.tfyController.annotations`                        | Annotations for tfy-controller                           | `{}`                          |
-| `controlPlaneMonitors.tfyController.jobLabel`                           | Job label for tfy-controller                             | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.tfyController.endpoints`                          | Endpoints for tfy-controller                             | `[]`                          |
-| `controlPlaneMonitors.tfyController.serviceSelectorLabels`              | Service selector labels for tfy-controller               | `{}`                          |
-| `controlPlaneMonitors.tfyController.namespaceSelector`                  | Namespace selector for tfy-controller                    | `{}`                          |
-| `controlPlaneMonitors.tfyK8sController.enabled`                         | Enable service monitor for tfy-k8s-controller            | `false`                       |
-| `controlPlaneMonitors.tfyK8sController.name`                            | Name of the service monitor                              | `tfy-k8s-controller`          |
-| `controlPlaneMonitors.tfyK8sController.labels`                          | Labels for tfy-k8s-controller                            | `{}`                          |
-| `controlPlaneMonitors.tfyK8sController.annotations`                     | Annotations for tfy-k8s-controller                       | `{}`                          |
-| `controlPlaneMonitors.tfyK8sController.jobLabel`                        | Job label for tfy-k8s-controller                         | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.tfyK8sController.endpoints`                       | Endpoints for tfy-k8s-controller                         | `[]`                          |
-| `controlPlaneMonitors.tfyK8sController.serviceSelectorLabels`           | Service selector labels for tfy-k8s-controller           | `{}`                          |
-| `controlPlaneMonitors.tfyK8sController.namespaceSelector`               | Namespace selector for tfy-k8s-controller                | `{}`                          |
-| `controlPlaneMonitors.tfyOtelCollector.enabled`                         | Enable service monitor for tfy-otel-collector            | `true`                        |
-| `controlPlaneMonitors.tfyOtelCollector.name`                            | Name of the service monitor                              | `tfy-otel-collector`          |
-| `controlPlaneMonitors.tfyOtelCollector.labels`                          | Labels for otel collector                                | `{}`                          |
-| `controlPlaneMonitors.tfyOtelCollector.annotations`                     | Annotations for otel collector                           | `{}`                          |
-| `controlPlaneMonitors.tfyOtelCollector.jobLabel`                        | Job label for otel collector                             | `truefoundry.com/application` |
-| `controlPlaneMonitors.tfyOtelCollector.endpoints`                       | Endpoints for otel collector                             | `[]`                          |
-| `controlPlaneMonitors.tfyOtelCollector.namespaceSelector`               | Namespace selector for otel collector                    | `{}`                          |
-| `controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels`           | Service selector labels for otel collector               | `{}`                          |
-| `controlPlaneMonitors.llmGateway.enabled`                               | Enable service monitor for llm gateway                   | `false`                       |
-| `controlPlaneMonitors.llmGateway.name`                                  | Name of the service monitor                              | `tfy-llm-gateway`             |
-| `controlPlaneMonitors.llmGateway.labels`                                | Labels for llm gateway                                   | `{}`                          |
-| `controlPlaneMonitors.llmGateway.annotations`                           | Annotations for llm gateway                              | `{}`                          |
-| `controlPlaneMonitors.llmGateway.jobLabel`                              | Job label for llm gateway                                | `truefoundry.com/application` |
-| `controlPlaneMonitors.llmGateway.endpoints`                             | Endpoints for llm gateway                                | `[]`                          |
-| `controlPlaneMonitors.llmGateway.namespaceSelector`                     | Namespace selector for llm gateway                       | `{}`                          |
-| `controlPlaneMonitors.llmGateway.serviceSelectorLabels`                 | Service selector labels for llm gateway                  | `{}`                          |
-| `controlPlaneMonitors.nats.enabled`                                     | Enable service monitor for nats                          | `false`                       |
-| `controlPlaneMonitors.nats.name`                                        | Name of the service monitor                              | `truefoundry-nats`            |
-| `controlPlaneMonitors.nats.labels`                                      | Labels for nats                                          | `{}`                          |
-| `controlPlaneMonitors.nats.annotations`                                 | Annotations for nats                                     | `{}`                          |
-| `controlPlaneMonitors.nats.jobLabel`                                    | Job label for nats                                       | `app.kubernetes.io/name`      |
-| `controlPlaneMonitors.nats.endpoints`                                   | Endpoints for nats                                       | `[]`                          |
-| `controlPlaneMonitors.nats.serviceSelectorLabels`                       | Service selector labels for nats                         | `{}`                          |
-| `controlPlaneMonitors.nats.namespaceSelector`                           | Namespace selector for nats                              | `{}`                          |
+| Name                                                              | Description                                          | Value                         |
+| ----------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------- |
+| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components | `true`                        |
+| `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors    | `{}`                          |
+| `controlPlaneMonitors.clickHouseOperator.enabled`                 | Enable service monitor for ClickHouse operator       | `true`                        |
+| `controlPlaneMonitors.clickHouseOperator.name`                    | Name of the service monitor                          | `tfy-clickhouse-operator`     |
+| `controlPlaneMonitors.clickHouseOperator.labels`                  | Labels for ClickHouse operator                       | `{}`                          |
+| `controlPlaneMonitors.clickHouseOperator.annotations`             | Annotations for ClickHouse operator                  | `{}`                          |
+| `controlPlaneMonitors.clickHouseOperator.jobLabel`                | Job label for ClickHouse operator                    | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.clickHouseOperator.endpoints`               | Endpoints for ClickHouse operator                    | `[]`                          |
+| `controlPlaneMonitors.clickHouseOperator.namespaceSelector`       | Namespace selector for ClickHouse operator           | `{}`                          |
+| `controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels`   | Service selector labels for ClickHouse operator      | `{}`                          |
+| `controlPlaneMonitors.servicefoundryServer.enabled`               | Enable service monitor for servicefoundry server     | `false`                       |
+| `controlPlaneMonitors.servicefoundryServer.name`                  | Name of the service monitor                          | `servicefoundry-server`       |
+| `controlPlaneMonitors.servicefoundryServer.labels`                | Labels for servicefoundry server                     | `{}`                          |
+| `controlPlaneMonitors.servicefoundryServer.annotations`           | Annotations for servicefoundry server                | `{}`                          |
+| `controlPlaneMonitors.servicefoundryServer.jobLabel`              | Job label for servicefoundry server                  | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.servicefoundryServer.endpoints`             | Endpoints for servicefoundry server                  | `[]`                          |
+| `controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels` | Service selector labels for servicefoundry server    | `{}`                          |
+| `controlPlaneMonitors.servicefoundryServer.namespaceSelector`     | Namespace selector for servicefoundry server         | `{}`                          |
+| `controlPlaneMonitors.mlfoundryServer.enabled`                    | Enable service monitor for mlfoundry server          | `false`                       |
+| `controlPlaneMonitors.mlfoundryServer.name`                       | Name of the service monitor                          | `mlfoundry-server`            |
+| `controlPlaneMonitors.mlfoundryServer.labels`                     | Labels for mlfoundry server                          | `{}`                          |
+| `controlPlaneMonitors.mlfoundryServer.annotations`                | Annotations for mlfoundry server                     | `{}`                          |
+| `controlPlaneMonitors.mlfoundryServer.jobLabel`                   | Job label for mlfoundry server                       | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.mlfoundryServer.endpoints`                  | Endpoints for mlfoundry server                       | `[]`                          |
+| `controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels`      | Service selector labels for mlfoundry server         | `{}`                          |
+| `controlPlaneMonitors.mlfoundryServer.namespaceSelector`          | Namespace selector for mlfoundry server              | `{}`                          |
+| `controlPlaneMonitors.sfyManifestService.enabled`                 | Enable service monitor for sfy manifest service      | `false`                       |
+| `controlPlaneMonitors.sfyManifestService.name`                    | Name of the service monitor                          | `sfy-manifest-service`        |
+| `controlPlaneMonitors.sfyManifestService.labels`                  | Labels for sfy manifest service                      | `{}`                          |
+| `controlPlaneMonitors.sfyManifestService.annotations`             | Annotations for sfy manifest service                 | `{}`                          |
+| `controlPlaneMonitors.sfyManifestService.jobLabel`                | Job label for sfy manifest service                   | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.sfyManifestService.endpoints`               | Endpoints for sfy manifest service                   | `[]`                          |
+| `controlPlaneMonitors.sfyManifestService.serviceSelectorLabels`   | Service selector labels for sfy manifest service     | `{}`                          |
+| `controlPlaneMonitors.sfyManifestService.namespaceSelector`       | Namespace selector for sfy manifest service          | `{}`                          |
+| `controlPlaneMonitors.tfyController.enabled`                      | Enable service monitor for tfy-controller            | `false`                       |
+| `controlPlaneMonitors.tfyController.name`                         | Name of the service monitor                          | `tfy-controller`              |
+| `controlPlaneMonitors.tfyController.labels`                       | Labels for tfy-controller                            | `{}`                          |
+| `controlPlaneMonitors.tfyController.annotations`                  | Annotations for tfy-controller                       | `{}`                          |
+| `controlPlaneMonitors.tfyController.jobLabel`                     | Job label for tfy-controller                         | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.tfyController.endpoints`                    | Endpoints for tfy-controller                         | `[]`                          |
+| `controlPlaneMonitors.tfyController.serviceSelectorLabels`        | Service selector labels for tfy-controller           | `{}`                          |
+| `controlPlaneMonitors.tfyController.namespaceSelector`            | Namespace selector for tfy-controller                | `{}`                          |
+| `controlPlaneMonitors.tfyK8sController.enabled`                   | Enable service monitor for tfy-k8s-controller        | `false`                       |
+| `controlPlaneMonitors.tfyK8sController.name`                      | Name of the service monitor                          | `tfy-k8s-controller`          |
+| `controlPlaneMonitors.tfyK8sController.labels`                    | Labels for tfy-k8s-controller                        | `{}`                          |
+| `controlPlaneMonitors.tfyK8sController.annotations`               | Annotations for tfy-k8s-controller                   | `{}`                          |
+| `controlPlaneMonitors.tfyK8sController.jobLabel`                  | Job label for tfy-k8s-controller                     | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.tfyK8sController.endpoints`                 | Endpoints for tfy-k8s-controller                     | `[]`                          |
+| `controlPlaneMonitors.tfyK8sController.serviceSelectorLabels`     | Service selector labels for tfy-k8s-controller       | `{}`                          |
+| `controlPlaneMonitors.tfyK8sController.namespaceSelector`         | Namespace selector for tfy-k8s-controller            | `{}`                          |
+| `controlPlaneMonitors.tfyOtelCollector.enabled`                   | Enable service monitor for tfy-otel-collector        | `true`                        |
+| `controlPlaneMonitors.tfyOtelCollector.name`                      | Name of the service monitor                          | `tfy-otel-collector`          |
+| `controlPlaneMonitors.tfyOtelCollector.labels`                    | Labels for otel collector                            | `{}`                          |
+| `controlPlaneMonitors.tfyOtelCollector.annotations`               | Annotations for otel collector                       | `{}`                          |
+| `controlPlaneMonitors.tfyOtelCollector.jobLabel`                  | Job label for otel collector                         | `truefoundry.com/application` |
+| `controlPlaneMonitors.tfyOtelCollector.endpoints`                 | Endpoints for otel collector                         | `[]`                          |
+| `controlPlaneMonitors.tfyOtelCollector.namespaceSelector`         | Namespace selector for otel collector                | `{}`                          |
+| `controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels`     | Service selector labels for otel collector           | `{}`                          |
+| `controlPlaneMonitors.llmGateway.enabled`                         | Enable service monitor for llm gateway               | `false`                       |
+| `controlPlaneMonitors.llmGateway.name`                            | Name of the service monitor                          | `tfy-llm-gateway`             |
+| `controlPlaneMonitors.llmGateway.labels`                          | Labels for llm gateway                               | `{}`                          |
+| `controlPlaneMonitors.llmGateway.annotations`                     | Annotations for llm gateway                          | `{}`                          |
+| `controlPlaneMonitors.llmGateway.jobLabel`                        | Job label for llm gateway                            | `truefoundry.com/application` |
+| `controlPlaneMonitors.llmGateway.endpoints`                       | Endpoints for llm gateway                            | `[]`                          |
+| `controlPlaneMonitors.llmGateway.namespaceSelector`               | Namespace selector for llm gateway                   | `{}`                          |
+| `controlPlaneMonitors.llmGateway.serviceSelectorLabels`           | Service selector labels for llm gateway              | `{}`                          |
+| `controlPlaneMonitors.nats.enabled`                               | Enable service monitor for nats                      | `false`                       |
+| `controlPlaneMonitors.nats.name`                                  | Name of the service monitor                          | `truefoundry-nats`            |
+| `controlPlaneMonitors.nats.labels`                                | Labels for nats                                      | `{}`                          |
+| `controlPlaneMonitors.nats.annotations`                           | Annotations for nats                                 | `{}`                          |
+| `controlPlaneMonitors.nats.jobLabel`                              | Job label for nats                                   | `app.kubernetes.io/name`      |
+| `controlPlaneMonitors.nats.endpoints`                             | Endpoints for nats                                   | `[]`                          |
+| `controlPlaneMonitors.nats.serviceSelectorLabels`                 | Service selector labels for nats                     | `{}`                          |
+| `controlPlaneMonitors.nats.namespaceSelector`                     | Namespace selector for nats                          | `{}`                          |
 
 ### serviceMonitors Service monitors for prometheus
 
