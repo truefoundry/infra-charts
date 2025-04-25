@@ -713,7 +713,7 @@ Container rules annotations
 {{/*
   Otel Collector service monitor labels
 */}}
-{{- define "otelCollector.labels" -}}
+{{- define "tfyOtelCollector.labels" -}}
 {{- if .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
 {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
 {{- else if .Values.global.labels }}
@@ -726,7 +726,7 @@ Container rules annotations
 {{/*
   Otel Collector service monitor annotations
 */}}
-{{- define "otelCollector.annotations" -}}
+{{- define "tfyOtelCollector.annotations" -}}
 {{- if .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
 {{- else if .Values.global.annotations }}
@@ -740,8 +740,8 @@ Container rules annotations
   Altinity ClickHouse Operator service monitor labels
 */}}
 {{- define "clickhouseOperator.labels" -}}
-{{- if .Values.controlPlaneMonitors.altinityClickHouseOperator.labels }}
-{{- toYaml .Values.controlPlaneMonitors.altinityClickHouseOperator.labels }}
+{{- if .Values.controlPlaneMonitors.clickHouseOperator.labels }}
+{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
