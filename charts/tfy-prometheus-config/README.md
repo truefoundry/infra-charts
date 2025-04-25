@@ -63,7 +63,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                                                              | Description                                          | Value                         |
 | ----------------------------------------------------------------- | ---------------------------------------------------- | ----------------------------- |
-| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components | `true`                        |
+| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components | `false`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors    | `{}`                          |
 | `controlPlaneMonitors.clickHouseOperator.enabled`                 | Enable service monitor for ClickHouse operator       | `true`                        |
 | `controlPlaneMonitors.clickHouseOperator.name`                    | Name of the service monitor                          | `tfy-clickhouse-operator`     |
