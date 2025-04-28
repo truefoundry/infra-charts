@@ -127,9 +127,7 @@ alertManagers:
         - receiver: tfy-agent
           continue: true
           matchers:
-            - name: severity
-              matchType: regexp
-              value: "warning|critical"
+            - severity =~ "warning|critical"
           repeatInterval: 1h
     ## @param alertManagers.tfyAgent.receivers [array] Receivers for the alert manager
     receivers:
@@ -215,12 +213,8 @@ controlPlaneMonitors:
           - receiver: tfy-control-plane-alerts-receiver
             continue: true
             matchers:
-              - name: severity
-                matchType: regexp
-                value: "warning|critical"
-              - name: controlplane
-                matchType: regexp
-                value: "true"
+              - severity =~ "warning|critical"
+              - controlplane = "true"
             repeatInterval: 15m
       ## @param controlPlaneMonitors.alerts.alertManager.receivers [array] Receivers for the alert manager
       receivers:
