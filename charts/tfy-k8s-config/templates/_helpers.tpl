@@ -42,3 +42,12 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{/*
+Selector labels
+*/}}
+{{- define "tfy-k8s-config.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-k8s-config.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+

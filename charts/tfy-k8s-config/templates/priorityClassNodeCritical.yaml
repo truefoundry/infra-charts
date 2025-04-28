@@ -3,6 +3,10 @@ apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
   name: {{ .Values.priorityClassNodeCritical.name }}
+  labels:
+    {{- include "tfy-k8s-config.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-k8s-config.annotations" . | nindent 4 }}
 value: {{ .Values.priorityClassNodeCritical.value }}
 preemptionPolicy: {{ .Values.priorityClassNodeCritical.preemptionPolicy }}
 globalDefault: {{ .Values.priorityClassNodeCritical.globalDefault }}
