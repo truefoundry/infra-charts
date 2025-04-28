@@ -4,12 +4,12 @@ Tfy-k8s-config is a Helm chart that facilitates the PriorityClass and some globa
 
 ## Parameters
 
-### priorityClass Configuration for priorityClass `truefoundry-critical`
+### priorityClassNodeCritical Configuration for priorityClass `truefoundry-critical`
 
-| Name                             | Description                                                                | Value                  |
-| -------------------------------- | -------------------------------------------------------------------------- | ---------------------- |
-| `priorityClass.name`             | The name of the priority class.                                            | `truefoundry-critical` |
-| `priorityClass.enabled`          | Whether to enable the priority class.                                      | `true`                 |
-| `priorityClass.preemptionPolicy` | The preemption policy of the priority class. [PreemptLowerPriority, Never] | `PreemptLowerPriority` |
-| `priorityClass.value`            | The value of the priority class.                                           | `1000000`              |
-| `priorityClass.globalDefault`    | Whether to set the priority class as the global default.                   | `false`                |
+| Name                                         | Description                                                                | Value                  |
+| -------------------------------------------- | -------------------------------------------------------------------------- | ---------------------- |
+| `priorityClassNodeCritical.name`             | The name of the priority class.                                            | `truefoundry-critical` |
+| `priorityClassNodeCritical.enabled`          | Whether to enable the priority class.                                      | `true`                 |
+| `priorityClassNodeCritical.preemptionPolicy` | The preemption policy of the priority class. [PreemptLowerPriority, Never] | `PreemptLowerPriority` |
+| `priorityClassNodeCritical.value`            | The value of the priority class.                                           | `100000000`            |
+| `priorityClassNodeCritical.globalDefault`    | Whether to set the priority class as the global default.                   | `false`                |
