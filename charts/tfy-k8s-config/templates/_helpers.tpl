@@ -34,12 +34,16 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "tfy-k8s-config.labels" -}}
-helm.sh/chart: {{ include "tfy-k8s-config.chart" . }}
-{{ include "tfy-k8s-config.selectorLabels" . }}
+{{- $global := dict }}
+{{- $_ := set $global "helm.sh/chart" (include "tfy-k8s-config.chart" .) }}
+{{- $_ := set $global "app.kubernetes.io/name" (include "tfy-k8s-config.name" .) }}
+{{- $_ := set $global "app.kubernetes.io/instance" .Release.Name }}
 {{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- $_ := set $global "app.kubernetes.io/version" .Chart.AppVersion }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- $_ := set $global "app.kubernetes.io/managed-by" .Release.Service }}
+{{- $merged := merge $global (default dict .Values.priorityClassNodeCritical.labels) }}
+{{- toYaml $merged | nindent 0 }}
 {{- end }}
 
 {{/*
@@ -54,10 +58,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Common annotations
 */}}
 {{- define "tfy-k8s-config.annotations" -}}
-{{- if .Values.annotations }}
-{{- toYaml .Values.annotations | nindent 0 }}
+{{- $global := dict }}
+{{- $_ := set $global "app.kubernetes.io/managed-by" .Release.Service }}
+{{- $merged := merge $global (default dict .Values.priorityClassNodeCritical.annotations) }}
+{{- toYaml $merged | nindent 0 }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-
