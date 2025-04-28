@@ -44,7 +44,7 @@ spec:
             {{- include "tfy-k8s-controller.resources" . | indent 12 }}
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: {{ .Values.tfyK8sController.service.port }}
             periodSeconds: {{ .Values.tfyK8sController.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.tfyK8sController.livenessProbe.timeoutSeconds }}
