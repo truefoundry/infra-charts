@@ -31,19 +31,27 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common annotations
+*/}}
+{{- define "tfy-k8s-config.annotations" -}}
+{{- $annotations := merge (dict) (default (dict) .Values.annotations) }}
+{{- toYaml $annotations | nindent 8 }}
+{{- end }}
+
+{{/*
+Common labels (with support for user-supplied labels)
 */}}
 {{- define "tfy-k8s-config.labels" -}}
-{{- $global := dict }}
-{{- $_ := set $global "helm.sh/chart" (include "tfy-k8s-config.chart" .) }}
-{{- $_ := set $global "app.kubernetes.io/name" (include "tfy-k8s-config.name" .) }}
-{{- $_ := set $global "app.kubernetes.io/instance" .Release.Name }}
+{{- $labels := merge (dict
+  "helm.sh/chart" (include "tfy-k8s-config.chart" .)
+  "app.kubernetes.io/name" (include "tfy-k8s-config.name" .)
+  "app.kubernetes.io/instance" .Release.Name
+  "app.kubernetes.io/managed-by" .Release.Service
+  ) (default (dict) .Values.labels) }}
 {{- if .Chart.AppVersion }}
-{{- $_ := set $global "app.kubernetes.io/version" .Chart.AppVersion }}
+{{- $_ := set $labels "app.kubernetes.io/version" .Chart.AppVersion }}
 {{- end }}
-{{- $_ := set $global "app.kubernetes.io/managed-by" .Release.Service }}
-{{- $merged := merge $global (default dict .Values.priorityClassNodeCritical.labels) }}
-{{- toYaml $merged | nindent 0 }}
+{{- toYaml $labels | nindent 4 }}
 {{- end }}
 
 {{/*
@@ -55,11 +63,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Common annotations
+PriorityClassNodeCritical labels helper
 */}}
-{{- define "tfy-k8s-config.annotations" -}}
-{{- $global := dict }}
-{{- $_ := set $global "app.kubernetes.io/managed-by" .Release.Service }}
-{{- $merged := merge $global (default dict .Values.priorityClassNodeCritical.annotations) }}
-{{- toYaml $merged | nindent 0 }}
+{{- define "tfy-k8s-config.priorityClassNodeCritical.labels" -}}
+{{- $base := (include "tfy-k8s-config.labels" . | fromYaml) }}
+{{- $labels := merge $base (default (dict) .Values.priorityClassNodeCritical.labels) }}
+{{- toYaml $labels | nindent 4 }}
+{{- end }}
+
+{{/*
+PriorityClassNodeCritical annotations helper
+*/}}
+{{- define "tfy-k8s-config.priorityClassNodeCritical.annotations" -}}
+{{- $base := (include "tfy-k8s-config.annotations" . | fromYaml) }}
+{{- $annotations := merge $base (default (dict) .Values.priorityClassNodeCritical.annotations) }}
+{{- toYaml $annotations | nindent 4 }}
 {{- end }}
