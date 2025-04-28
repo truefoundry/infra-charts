@@ -50,4 +50,14 @@ app.kubernetes.io/name: {{ include "tfy-k8s-config.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Common annotations
+*/}}
+{{- define "tfy-k8s-config.annotations" -}}
+{{- if .Values.annotations }}
+{{- toYaml .Values.annotations | nindent 0 }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
 
