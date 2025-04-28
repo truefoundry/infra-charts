@@ -58,11 +58,11 @@ spec:
           non-running state for longer than 15 minutes.
             VALUE = {{`{{ $value }}`}}
     - for: 2m
-      expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[1m]) > 3
+      expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m]) > 0
       alert: PodCrashLooping
       labels:
         entity: pod
-        severity: warning
+        severity: critical
         controlplane: "true"
       annotations:
         summary: >-
