@@ -13,3 +13,5 @@ Tfy-k8s-config is a Helm chart that facilitates the PriorityClass and some globa
 | `priorityClassNodeCritical.preemptionPolicy` | The preemption policy of the priority class. [PreemptLowerPriority, Never] | `PreemptLowerPriority` |
 | `priorityClassNodeCritical.value`            | The value of the priority class.                                           | `100000000`            |
 | `priorityClassNodeCritical.globalDefault`    | Whether to set the priority class as the global default.                   | `false`                |
+| `priorityClassNodeCritical.labels`           | Labels to add to the priority class.                                       | `{}`                   |
+| `priorityClassNodeCritical.annotations`      | Annotations to add to the priority class.                                  | `{}`                   |
