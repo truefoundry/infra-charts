@@ -52,9 +52,9 @@ spec:
         control-plane: "true"
       annotations:
         summary: >-
-          Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: >-
-          Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
           non-running state for longer than 15 minutes.
             VALUE = {{`{{ $value }}`}}
     - for: 2m
@@ -66,9 +66,9 @@ spec:
         control-plane: "true"
       annotations:
         summary: >-
-          Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: |-
-          Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
             VALUE = {{`{{ $value }}`}}
     - for: 2m
       expr: >-
@@ -82,9 +82,9 @@ spec:
         control-plane: "true"
       annotations:
         summary: >-
-          Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
         description: |-
-          Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
           has been OOM killed in the last 5 minutes
     - for: 10m
       expr: >-
@@ -97,9 +97,9 @@ spec:
         control-plane: "true"
       annotations:
         summary: >-
-          Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
         description: |-
-          Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}}
+          [Tenant: {{ .Values.controlPlaneMonitors.tenantName }}] Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}}
           is using more than 90% of its capacity.
             VALUE = {{`{{ $value }}`}}%
 {{- end }}

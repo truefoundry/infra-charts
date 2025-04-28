@@ -768,11 +768,10 @@ Control Plane Alert Rules Labels
 {{- define "controlPlaneAlertRules.labels" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertRules.labels }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.labels }}
-{{- else }}
-{{- if .Values.global.labels }}
+{{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
-{}
+{{- toYaml (dict "release" "prometheus") }}
 {{- end }}
 {{- end }}
 
@@ -782,8 +781,7 @@ Control Plane Alert Rules Annotations
 {{- define "controlPlaneAlertRules.annotations" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
-{{- else }}
-{{- if .Values.global.annotations }}
+{{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
 {}
@@ -796,12 +794,10 @@ Control Plane Alert Manager Labels
 {{- define "controlPlaneAlertManager.labels" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertManager.labels }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.labels }}
-{{- else }}
-{{- if .Values.global.labels }}
+{{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
-{}
-{{- end }}
+{{- toYaml (dict "release" "prometheus") }}
 {{- end }}
 {{- end }}
 
@@ -811,11 +807,9 @@ Control Plane Alert Manager Annotations
 {{- define "controlPlaneAlertManager.annotations" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
-{{- else }}
-{{- if .Values.global.annotations }}
+{{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
 {}
-{{- end }}
 {{- end }}
 {{- end }}
