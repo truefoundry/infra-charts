@@ -208,11 +208,11 @@ limits:
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
-  {{- $defaultsYaml = include "tfy-controller.defaultResources.small" . }}
+  {{- $defaultsYaml = include "tfy-k8s-controller.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
-  {{- $defaultsYaml = include "tfy-controller.defaultResources.medium" . }}
+  {{- $defaultsYaml = include "tfy-k8s-controller.defaultResources.medium" . }}
 {{- else if eq $tier "large" }}
-  {{- $defaultsYaml = include "tfy-controller.defaultResources.large" . }}
+  {{- $defaultsYaml = include "tfy-k8s-controller.defaultResources.large" . }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}

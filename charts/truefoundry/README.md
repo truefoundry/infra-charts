@@ -5,26 +5,27 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 
 ### Global prameters for Truefoundry
 
-| Name                                            | Description                                                  | Value                                                                            |
-| ----------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `global.existingTruefoundryImagePullSecretName` | Name of the existing image pull secret                       | `""`                                                                             |
-| `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                            | `""`                                                                             |
-| `global.tenantName`                             | Name of the tenant                                           | `""`                                                                             |
-| `global.controlPlaneURL`                        | URL of the control plane                                     | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                               | `0.49.3`                                                                         |
-| `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                | `""`                                                                             |
-| `global.database.host`                          | Control plane database hostname when dev mode is not enabled | `""`                                                                             |
-| `global.database.name`                          | Control plane database name when dev mode is not enabled     | `""`                                                                             |
-| `global.database.username`                      | Control plane database username when dev mode is not enabled | `""`                                                                             |
-| `global.database.password`                      | Control plane database password when dev mode is not enabled | `""`                                                                             |
-| `global.tfyApiKey`                              | API key for truefoundry                                      | `""`                                                                             |
-| `global.affinity`                               | Affinity for all services                                    | `{}`                                                                             |
-| `global.labels`                                 | Labels for all services                                      | `{}`                                                                             |
-| `global.annotations`                            | Annotations for all services                                 | `{}`                                                                             |
-| `tags.llmGateway`                               | Bool to enable llmGateway infra                              | `false`                                                                          |
-| `tags.llmGatewayRequestLogging`                 | Bool to enable request logging feature in LLM gateway        | `false`                                                                          |
-| `tags.tracing`                                  | Bool to enable OTEL tracing feature                          | `false`                                                                          |
-| `devMode.enabled`                               | Bool to enable dev mode                                      | `false`                                                                          |
+| Name                                            | Description                                                                            | Value                                                                            |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `global.resourceTier`                           | Resource deployment tier for the control plane, either small, medium or large accepted | `medium`                                                                         |
+| `global.existingTruefoundryImagePullSecretName` | Name of the existing image pull secret                                                 | `""`                                                                             |
+| `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                                                      | `""`                                                                             |
+| `global.tenantName`                             | Name of the tenant                                                                     | `""`                                                                             |
+| `global.controlPlaneURL`                        | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                                                         | `0.49.2`                                                                         |
+| `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
+| `global.database.host`                          | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
+| `global.database.name`                          | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
+| `global.database.username`                      | Control plane database username when dev mode is not enabled                           | `""`                                                                             |
+| `global.database.password`                      | Control plane database password when dev mode is not enabled                           | `""`                                                                             |
+| `global.tfyApiKey`                              | API key for truefoundry                                                                | `""`                                                                             |
+| `global.affinity`                               | Affinity for all services                                                              | `{}`                                                                             |
+| `global.labels`                                 | Labels for all services                                                                | `{}`                                                                             |
+| `global.annotations`                            | Annotations for all services                                                           | `{}`                                                                             |
+| `tags.llmGateway`                               | Bool to enable llmGateway infra                                                        | `false`                                                                          |
+| `tags.llmGatewayRequestLogging`                 | Bool to enable request logging feature in LLM gateway                                  | `false`                                                                          |
+| `tags.tracing`                                  | Bool to enable OTEL tracing feature                                                    | `false`                                                                          |
+| `devMode.enabled`                               | Bool to enable dev mode                                                                | `false`                                                                          |
 
 ### Truefoundry bootstrap values
 
@@ -151,7 +152,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.tolerations`                         | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                         | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                    | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                           | Image tag for the servicefoundry server                         | `v0.49.1`                                               |
+| `servicefoundryServer.image.tag`                           | Image tag for the servicefoundry server                         | `v0.49.0`                                               |
 | `servicefoundryServer.environmentName`                     | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                       | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                     | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
