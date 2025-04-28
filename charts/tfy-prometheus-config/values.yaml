@@ -208,6 +208,16 @@ controlPlaneMonitors:
       annotations: {}
       ## @param controlPlaneMonitors.alerts.alertManager.name Name of the alert manager
       name: tfy-control-plane-alert-manager
+      ## @param controlPlaneMonitors.alerts.alertManager.secret [object] Secret for the alert manager
+      secret:
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.create Create a secret for the alert manager
+        create: true
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.name Name of the secret for the alert manager
+        name: tfy-control-plane-alert-manager-secret
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.data [object] Data for the secret for the alert manager
+        data: {}
+        # API_URL: <url>
+        # BOT_TOKEN: <token>
       ## @param controlPlaneMonitors.alerts.alertManager.route [object] Route for the alert manager
       route:
         receiver: tfy-control-plane-alerts-receiver
@@ -233,17 +243,23 @@ controlPlaneMonitors:
           # slackConfigs:
           #   - channel: "#alerts"
           #     iconEmoji: ":alert:"
-          #     apiURL: "<incoming-webhook-url>"
+          #     apiURL:
+          #       key: "API_URL"
+          #       name: tfy-control-plane-alert-manager-secret
           #     sendResolved: true
           # Slack configuration for alerts using Bot token
           # slackConfigs:
           #   - channel: "#alerts"
           #     iconEmoji: ":alert:"
-          #     api_url: "https://slack.com/api/chat.postMessage"
+          #     apiURL: 
+          #       key: "API_URL"
+          #       name: tfy-control-plane-alert-manager-secret
           #     sendResolved: true
-          #     http_config:
+          #     httpConfig:
           #       authorization:
-          #         credentials: "<bot-token>"
+          #         credentials:
+          #           key: "BOT_TOKEN"
+          #           name: tfy-control-plane-alert-manager-secret
   # controlPlaneMonitors.clickHouseOperator Service monitor for ClickHouse operator
   clickHouseOperator:
     ## @param controlPlaneMonitors.clickHouseOperator.enabled Enable service monitor for ClickHouse operator
