@@ -241,19 +241,41 @@ controlPlaneMonitors:
                 key: "API_URL"
                 name: tfy-control-plane-alert-manager-secret
               sendResolved: true
-          # Slack configuration for alerts using Bot token
-          # slackConfigs:
-          #   - channel: "#alerts"
-          #     iconEmoji: ":alert:"
-          #     apiURL: 
-          #       key: "API_URL"
-          #       name: tfy-control-plane-alert-manager-secret
-          #     sendResolved: true
-          #     httpConfig:
-          #       authorization:
-          #         credentials:
-          #           key: "BOT_TOKEN"
-          #           name: tfy-control-plane-alert-manager-secret
+              text: >-
+                {{ range .Alerts }} 
+
+                {{ if eq .Status "firing" }}:warning:{{ else
+                }}:white_check_mark:{{ end }} *Alert:* {{ .Annotations.summary
+                }} 
+
+                *Severity:* `{{ .Labels.severity }}` 
+
+                *Description:* {{ .Annotations.description }} 
+
+                *Details:* 
+
+                {{ range.Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+
+                {{ end }}
+              title: >-
+                {{ if eq .Status "firing" }} FIRING ({{ .Alerts.Firing | len
+                }}){{ else }} RESOLVED ({{ .Alerts.Resolved | len }}){{ end }}
+                Control Plane Alerts
+                  # Slack configuration for alerts using Bot token
+        # slackConfigs:
+        #   - channel: "#alerts"
+        #     iconEmoji: ":alert:"
+        #     apiURL: 
+        #       key: "API_URL"
+        #       name: tfy-control-plane-alert-manager-secret
+        #     sendResolved: true
+        #     httpConfig:
+        #       authorization:
+        #         credentials:
+        #           key: "BOT_TOKEN"
+        #           name: tfy-control-plane-alert-manager-secret
+
   # controlPlaneMonitors.clickHouseOperator Service monitor for ClickHouse operator
   clickHouseOperator:
     ## @param controlPlaneMonitors.clickHouseOperator.enabled Enable service monitor for ClickHouse operator
