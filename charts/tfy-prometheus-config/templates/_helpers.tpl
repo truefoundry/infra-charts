@@ -308,6 +308,33 @@ Container rules annotations
 {{- end }}
 {{- end }}
 
+
+{{/*
+  Container rules labels
+*/}}
+{{- define "envoyPortRules.labels" -}}
+{{- if .Values.prometheusRules.envoyPortRules.labels }}
+{{- toYaml .Values.prometheusRules.envoyPortRules.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+Container rules annotations
+*/}}
+{{- define "envoyPortRules.annotations" -}}
+{{- if .Values.prometheusRules.envoyPortRules.annotations }}
+{{- toYaml .Values.prometheusRules.envoyPortRules.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 {{/*
   Kubecost rules labels
 */}}
@@ -494,8 +521,8 @@ Container rules annotations
   LLM Gateway service monitor labels
 */}}
 {{- define "llmGateway.labels" -}}
-{{- if .Values.serviceMonitors.llmGateway.labels }}
-{{- toYaml .Values.serviceMonitors.llmGateway.labels }}
+{{- if .Values.controlPlaneMonitors.llmGateway.labels }}
+{{- toYaml .Values.controlPlaneMonitors.llmGateway.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -507,8 +534,8 @@ Container rules annotations
   LLM Gateway service monitor annotations
 */}}
 {{- define "llmGateway.annotations" -}}
-{{- if .Values.serviceMonitors.llmGateway.annotations }}
-{{- toYaml .Values.serviceMonitors.llmGateway.annotations }}
+{{- if .Values.controlPlaneMonitors.llmGateway.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.llmGateway.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -520,8 +547,8 @@ Container rules annotations
   Servicefoundry server service monitor labels
 */}}
 {{- define "servicefoundry.annotations" -}}
-{{- if .Values.serviceMonitors.servicefoundryServer.annotations }}
-{{- toYaml .Values.serviceMonitors.servicefoundryServer.annotations }}
+{{- if .Values.controlPlaneMonitors.servicefoundryServer.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.servicefoundryServer.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -533,8 +560,8 @@ Container rules annotations
   Servicefoundry server service monitor labels
 */}}
 {{- define "servicefoundry.labels" -}}
-{{- if .Values.serviceMonitors.servicefoundryServer.labels }}
-{{- toYaml .Values.serviceMonitors.servicefoundryServer.labels }}
+{{- if .Values.controlPlaneMonitors.servicefoundryServer.labels }}
+{{- toYaml .Values.controlPlaneMonitors.servicefoundryServer.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -546,8 +573,8 @@ Container rules annotations
   MLFoundry server service monitor labels
 */}}
 {{- define "mlfoundry.annotations" -}}
-{{- if .Values.serviceMonitors.mlfoundryServer.annotations }}
-{{- toYaml .Values.serviceMonitors.mlfoundryServer.annotations }}
+{{- if .Values.controlPlaneMonitors.mlfoundryServer.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -559,8 +586,8 @@ Container rules annotations
   MLFoundry server service monitor labels
 */}}
 {{- define "mlfoundry.labels" -}}
-{{- if .Values.serviceMonitors.mlfoundryServer.labels }}
-{{- toYaml .Values.serviceMonitors.mlfoundryServer.labels }}
+{{- if .Values.controlPlaneMonitors.mlfoundryServer.labels }}
+{{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -572,8 +599,8 @@ Container rules annotations
   Sfy-manifests service monitor labels
 */}}
 {{- define "sfyManifestService.labels" -}}
-{{- if .Values.serviceMonitors.sfyManifestService.labels }}
-{{- toYaml .Values.serviceMonitors.sfyManifestService.labels }}
+{{- if .Values.controlPlaneMonitors.sfyManifestService.labels }}
+{{- toYaml .Values.controlPlaneMonitors.sfyManifestService.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -585,8 +612,8 @@ Container rules annotations
   Sfy-manifests service monitor annotations
 */}}
 {{- define "sfyManifestService.annotations" -}}
-{{- if .Values.serviceMonitors.sfyManifestService.annotations }}
-{{- toYaml .Values.serviceMonitors.sfyManifestService.annotations }}
+{{- if .Values.controlPlaneMonitors.sfyManifestService.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.sfyManifestService.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -598,8 +625,8 @@ Container rules annotations
   NATS service monitor labels
 */}}
 {{- define "nats.labels" -}}
-{{- if .Values.serviceMonitors.nats.labels }}
-{{- toYaml .Values.serviceMonitors.nats.labels }}
+{{- if .Values.controlPlaneMonitors.nats.labels }}
+{{- toYaml .Values.controlPlaneMonitors.nats.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -611,8 +638,8 @@ Container rules annotations
   NATS service monitor annotations
 */}}
 {{- define "nats.annotations" -}}
-{{- if .Values.serviceMonitors.nats.annotations }}
-{{- toYaml .Values.serviceMonitors.nats.annotations }}
+{{- if .Values.controlPlaneMonitors.nats.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.nats.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -635,8 +662,8 @@ Container rules annotations
   TFY Controller service monitor labels
  */}}
 {{- define "tfyController.labels" -}}
-{{- if .Values.serviceMonitors.tfyController.labels }}
-{{- toYaml .Values.serviceMonitors.tfyController.labels }}
+{{- if .Values.controlPlaneMonitors.tfyController.labels }}
+{{- toYaml .Values.controlPlaneMonitors.tfyController.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -648,8 +675,8 @@ Container rules annotations
   TFY Controller service monitor annotations
   */}}
 {{- define "tfyController.annotations" -}}
-{{- if .Values.serviceMonitors.tfyController.annotations }}
-{{- toYaml .Values.serviceMonitors.tfyController.annotations }}
+{{- if .Values.controlPlaneMonitors.tfyController.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.tfyController.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -661,8 +688,8 @@ Container rules annotations
   TFY K8S Controller service monitor labels
  */}}
 {{- define "tfyK8sController.labels" -}}
-{{- if .Values.serviceMonitors.tfyK8sController.labels }}
-{{- toYaml .Values.serviceMonitors.tfyK8sController.labels }}
+{{- if .Values.controlPlaneMonitors.tfyK8sController.labels }}
+{{- toYaml .Values.controlPlaneMonitors.tfyK8sController.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -674,8 +701,8 @@ Container rules annotations
   TFY K8S Controller service monitor annotations
   */}}
 {{- define "tfyK8sController.annotations" -}}
-{{- if .Values.serviceMonitors.tfyK8sController.annotations }}
-{{- toYaml .Values.serviceMonitors.tfyK8sController.annotations }}
+{{- if .Values.controlPlaneMonitors.tfyK8sController.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.tfyK8sController.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -684,11 +711,11 @@ Container rules annotations
 {{- end }}
 
 {{/*
-  Otel Collector service monitor labels
+  TYF Otel Collector service monitor labels
 */}}
-{{- define "otelCollector.labels" -}}
-{{- if .Values.serviceMonitors.tfyOtelCollector.labels }}
-{{- toYaml .Values.serviceMonitors.tfyOtelCollector.labels }}
+{{- define "tfyOtelCollector.labels" -}}
+{{- if .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
+{{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -699,9 +726,9 @@ Container rules annotations
 {{/*
   Otel Collector service monitor annotations
 */}}
-{{- define "otelCollector.annotations" -}}
-{{- if .Values.serviceMonitors.tfyOtelCollector.annotations }}
-{{- toYaml .Values.serviceMonitors.tfyOtelCollector.annotations }}
+{{- define "tfyOtelCollector.annotations" -}}
+{{- if .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}
@@ -713,8 +740,8 @@ Container rules annotations
   Altinity ClickHouse Operator service monitor labels
 */}}
 {{- define "clickhouseOperator.labels" -}}
-{{- if .Values.serviceMonitors.altinityClickHouseOperator.labels }}
-{{- toYaml .Values.serviceMonitors.altinityClickHouseOperator.labels }}
+{{- if .Values.controlPlaneMonitors.clickHouseOperator.labels }}
+{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -726,8 +753,60 @@ Container rules annotations
   Altinity ClickHouse Operator service monitor annotations
 */}}
 {{- define "clickhouseOperator.annotations" -}}
-{{- if .Values.serviceMonitors.altinityClickHouseOperator.annotations }}
-{{- toYaml .Values.serviceMonitors.altinityClickHouseOperator.annotations }}
+{{- if .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Control Plane Alert Rules Labels
+*/}}
+{{- define "controlPlaneAlertRules.labels" -}}
+{{- if .Values.controlPlaneMonitors.alerts.alertRules.labels }}
+{{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+Control Plane Alert Rules Annotations
+*/}}
+{{- define "controlPlaneAlertRules.annotations" -}}
+{{- if .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Control Plane Alert Manager Labels
+*/}}
+{{- define "controlPlaneAlertManager.labels" -}}
+{{- if .Values.controlPlaneMonitors.alerts.alertManager.labels }}
+{{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml (dict "release" "prometheus") }}
+{{- end }}
+{{- end }}
+
+{{/*
+Control Plane Alert Manager Annotations
+*/}}
+{{- define "controlPlaneAlertManager.annotations" -}}
+{{- if .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}

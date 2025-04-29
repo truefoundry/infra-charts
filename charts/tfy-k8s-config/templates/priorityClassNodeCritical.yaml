@@ -1,0 +1,12 @@
+{{- if .Values.priorityClassNodeCritical.enabled }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: {{ .Values.priorityClassNodeCritical.name }}
+  labels:{{ include "tfy-k8s-config.priorityClassNodeCritical.labels" . | nindent 2 }}
+  annotations:{{ include "tfy-k8s-config.priorityClassNodeCritical.annotations" . | nindent 2 }}
+value: {{ .Values.priorityClassNodeCritical.value }}
+preemptionPolicy: {{ .Values.priorityClassNodeCritical.preemptionPolicy }}
+globalDefault: {{ .Values.priorityClassNodeCritical.globalDefault }}
+description: 'This priority class is used for critical TrueFoundry system components.'
+{{- end }}

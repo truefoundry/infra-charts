@@ -1,0 +1,19 @@
+{{- if and .Values.controlPlaneMonitors.tfyController.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.controlPlaneMonitors.tfyController.name }}
+  labels:
+    {{- include "tfyController.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfyController.annotations" . | indent 4 }}
+spec:
+  jobLabel: {{ .Values.controlPlaneMonitors.tfyController.jobLabel }}
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.tfyController.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.tfyController.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.tfyController.serviceSelectorLabels | nindent 6 }}
+{{- end -}}

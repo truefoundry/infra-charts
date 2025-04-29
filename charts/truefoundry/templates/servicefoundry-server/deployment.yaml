@@ -49,7 +49,7 @@ spec:
             successThreshold: {{ .Values.servicefoundryServer.livenessProbe.successThreshold }}
             timeoutSeconds: {{ .Values.servicefoundryServer.livenessProbe.timeoutSeconds }}
             httpGet:
-              path: /
+              path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
               scheme: HTTP
           readinessProbe:
@@ -59,7 +59,7 @@ spec:
             successThreshold: {{ .Values.servicefoundryServer.readinessProbe.successThreshold }}
             timeoutSeconds: {{ .Values.servicefoundryServer.readinessProbe.timeoutSeconds }}
             httpGet:
-              path: /
+              path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
               scheme: HTTP
           volumeMounts:
