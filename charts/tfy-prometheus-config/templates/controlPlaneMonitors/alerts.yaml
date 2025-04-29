@@ -15,10 +15,14 @@ metadata:
   {{- end }}
 spec:
   route:
-    receiver: "null"
+    receiver: default-receiver
     routes:
       {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.route.routes | nindent 6 }}
   receivers:
+    - name: default-receiver
+      webhookConfigs:
+        - sendResolved: true
+          url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
     {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.receivers | nindent 4 }}
 ---
 {{- end }}
