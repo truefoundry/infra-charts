@@ -45,7 +45,7 @@ spec:
     - for: 15m
       expr: >-
         sum by (namespace, pod)
-        (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) > 0
+        (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) > 0
       alert: PodNotHealthy
       labels:
         tenant: {{ .Values.controlPlaneMonitors.tenantName }}
