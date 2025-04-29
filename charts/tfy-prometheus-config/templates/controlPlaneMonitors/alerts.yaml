@@ -15,14 +15,10 @@ metadata:
   {{- end }}
 spec:
   route:
-    receiver: default-receiver
+    receiver: "null"
     routes:
       {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.route.routes | nindent 6 }}
   receivers:
-    - name: default-receiver
-      webhookConfigs:
-        - sendResolved: true
-          url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
     {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.receivers | nindent 4 }}
 ---
 {{- end }}
@@ -51,6 +47,7 @@ spec:
         (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) > 0
       alert: PodNotHealthy
       labels:
+        tenantName: {{ .Values.controlPlaneMonitors.tenantName }}
         entity: pod
         severity: critical
         controlplane: "true"
@@ -65,6 +62,7 @@ spec:
       expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m]) > 0
       alert: PodCrashLooping
       labels:
+        tenantName: {{ .Values.controlPlaneMonitors.tenantName }}
         entity: pod
         severity: critical
         controlplane: "true"
@@ -81,6 +79,7 @@ spec:
         max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m]) > 0)
       alert: ContainerOOMKilled
       labels:
+        tenantName: {{ .Values.controlPlaneMonitors.tenantName }}
         entity: container
         severity: critical
         controlplane: "true"
@@ -96,6 +95,7 @@ spec:
         sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) by (persistentvolumeclaim, namespace)) * 100 > 90
       alert: PersistentVolumeUsageHigh
       labels:
+        tenantName: {{ .Values.controlPlaneMonitors.tenantName }}
         entity: persistentVolume
         severity: critical
         controlplane: "true"
