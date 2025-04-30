@@ -212,7 +212,7 @@ controlPlaneMonitors:
       ## controlPlaneMonitors.alerts.alertManager.secret Secret for the alert manager
       secret:
         ## @param controlPlaneMonitors.alerts.alertManager.secret.create Create a secret for the alert manager
-        create: true
+        create: false
         ## @param controlPlaneMonitors.alerts.alertManager.secret.name Name of the secret for the alert manager
         name: tfy-control-plane-alert-manager-secret
         ## @param controlPlaneMonitors.alerts.alertManager.secret.data [object] Data for the secret for the alert manager
@@ -459,13 +459,11 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.nats.enabled Enable service monitor for nats
     enabled: true
     ## @param controlPlaneMonitors.nats.name Name of the service monitor
-    name: tfy-nats
+    name: truefoundry-tfy-nats
     ## @param controlPlaneMonitors.nats.labels [object] Labels for nats
     labels: {}
     ## @param controlPlaneMonitors.nats.annotations [object] Annotations for nats
     annotations: {}
-    ## @param controlPlaneMonitors.nats.jobLabel Job label for nats
-    jobLabel: app.kubernetes.io/component
     ## @param controlPlaneMonitors.nats.podMetricsEndpoints [array] Pod metrics endpoints for nats
     podMetricsEndpoints:
       - targetPort: 7777

@@ -77,7 +77,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.alerts.alertManager.labels`                 | Labels for control plane alert manager                | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertManager.annotations`            | Annotations for control plane alert manager           | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertManager.name`                   | Name of the alert manager                             | `tfy-control-plane-alert-manager`        |
-| `controlPlaneMonitors.alerts.alertManager.secret.create`          | Create a secret for the alert manager                 | `true`                                   |
+| `controlPlaneMonitors.alerts.alertManager.secret.create`          | Create a secret for the alert manager                 | `false`                                  |
 | `controlPlaneMonitors.alerts.alertManager.secret.name`            | Name of the secret for the alert manager              | `tfy-control-plane-alert-manager-secret` |
 | `controlPlaneMonitors.alerts.alertManager.secret.data`            | Data for the secret for the alert manager             | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertManager.route`                  | Route for the alert manager                           | `{}`                                     |
@@ -141,10 +141,9 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.llmGateway.namespaceSelector`               | Namespace selector for llm gateway                    | `{}`                                     |
 | `controlPlaneMonitors.llmGateway.serviceSelectorLabels`           | Service selector labels for llm gateway               | `{}`                                     |
 | `controlPlaneMonitors.nats.enabled`                               | Enable service monitor for nats                       | `true`                                   |
-| `controlPlaneMonitors.nats.name`                                  | Name of the service monitor                           | `tfy-nats`                               |
+| `controlPlaneMonitors.nats.name`                                  | Name of the service monitor                           | `truefoundry-tfy-nats`                   |
 | `controlPlaneMonitors.nats.labels`                                | Labels for nats                                       | `{}`                                     |
 | `controlPlaneMonitors.nats.annotations`                           | Annotations for nats                                  | `{}`                                     |
-| `controlPlaneMonitors.nats.jobLabel`                              | Job label for nats                                    | `app.kubernetes.io/component`            |
 | `controlPlaneMonitors.nats.podMetricsEndpoints`                   | Pod metrics endpoints for nats                        | `[]`                                     |
 | `controlPlaneMonitors.nats.podSelectorLabels`                     | Pod selector labels for nats                          | `{}`                                     |
 | `controlPlaneMonitors.nats.namespaceSelector`                     | Namespace selector for nats                           | `{}`                                     |
