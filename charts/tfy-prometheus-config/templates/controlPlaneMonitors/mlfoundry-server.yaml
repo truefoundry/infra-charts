@@ -8,12 +8,14 @@ metadata:
   annotations:
     {{- include "mlfoundry.annotations" . | indent 4 }}
 spec:
-  jobLabel: {{ .Values.controlPlaneMonitors.mlfoundryServer.jobLabel }}
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.endpoints | nindent 2 }}
   namespaceSelector:
     {{- toYaml (or .Values.controlPlaneMonitors.mlfoundryServer.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.mlfoundryServer.name }}
+      {{- if .Values.controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels }}
       {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
 {{- end -}}
