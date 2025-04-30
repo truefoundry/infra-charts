@@ -184,6 +184,8 @@ controlPlaneMonitors:
     matchNames:
       - truefoundry
 
+  serviceSelectorLabel: app.kubernetes.io/name
+
   # controlPlaneMonitors.alerts Alert configuration for control plane
   alerts:
     ## @param controlPlaneMonitors.alerts.enabled Enable alerts for control plane
@@ -314,16 +316,13 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.servicefoundryServer.annotations [object] Annotations for servicefoundry server
     annotations: {}
-    ## @param controlPlaneMonitors.servicefoundryServer.jobLabel Job label for servicefoundry server
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.servicefoundryServer.endpoints [array] Endpoints for servicefoundry server
     endpoints:
       - targetPort: 3000
         path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
-    serviceSelectorLabels:
-      app.kubernetes.io/name: servicefoundry-server
+    serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.servicefoundryServer.namespaceSelector [object] Namespace selector for servicefoundry server
     namespaceSelector:
       matchNames:
@@ -338,16 +337,13 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.mlfoundryServer.annotations [object] Annotations for mlfoundry server
     annotations: {}
-    ## @param controlPlaneMonitors.mlfoundryServer.jobLabel Job label for mlfoundry server
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
     endpoints:
       - targetPort: 5000
         path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
-    serviceSelectorLabels:
-      app.kubernetes.io/name: mlfoundry-server
+    serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
     namespaceSelector:
       matchNames:
@@ -362,16 +358,13 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.sfyManifestService.annotations [object] Annotations for sfy manifest service
     annotations: {}
-    ## @param controlPlaneMonitors.sfyManifestService.jobLabel Job label for sfy manifest service
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.sfyManifestService.endpoints [array] Endpoints for sfy manifest service
     endpoints:
       - targetPort: 8080
         path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
-    serviceSelectorLabels:
-      app.kubernetes.io/name: sfy-manifest-service
+    serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
     namespaceSelector:
       matchNames:
@@ -386,16 +379,13 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.tfyController.annotations [object] Annotations for tfy-controller
     annotations: {}
-    ## @param controlPlaneMonitors.tfyController.jobLabel Job label for tfy-controller
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.tfyController.endpoints [array] Endpoints for tfy-controller
     endpoints:
       - path: /metrics
         targetPort: 8123
         honorLabels: true
     ## @param controlPlaneMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-controller
+    serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.tfyController.namespaceSelector [object] Namespace selector for tfy-controller
     namespaceSelector:
       matchNames:
@@ -418,8 +408,7 @@ controlPlaneMonitors:
         targetPort: 3002
         honorLabels: true
     ## @param controlPlaneMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-k8s-controller
+    serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
     namespaceSelector:
       matchNames:
@@ -434,8 +423,6 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
     annotations: {}
-    ## @param controlPlaneMonitors.tfyOtelCollector.jobLabel Job label for otel collector
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
     endpoints:
       - honorLabels: true
@@ -446,8 +433,7 @@ controlPlaneMonitors:
       matchNames:
         - truefoundry
     ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-otel-collector
+    serviceSelectorLabels: {}
   # controlPlaneMonitors.llmGateway Service monitor for llm gateway
   llmGateway:
     ## @param controlPlaneMonitors.llmGateway.enabled Enable service monitor for llm gateway
@@ -458,8 +444,6 @@ controlPlaneMonitors:
     labels: {}
     ## @param controlPlaneMonitors.llmGateway.annotations [object] Annotations for llm gateway
     annotations: {}
-    ## @param controlPlaneMonitors.llmGateway.jobLabel Job label for llm gateway
-    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
     endpoints:
       - path: /metrics
@@ -470,8 +454,7 @@ controlPlaneMonitors:
       matchNames:
         - truefoundry
     ## @param controlPlaneMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
-    serviceSelectorLabels:
-      app.kubernetes.io/name: tfy-llm-gateway
+    serviceSelectorLabels: {}
   # controlPlaneMonitors.nats Service monitor for nats
   nats:
     ## @param controlPlaneMonitors.nats.enabled Enable service monitor for nats

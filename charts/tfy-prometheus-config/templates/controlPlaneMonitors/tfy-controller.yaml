@@ -8,12 +8,14 @@ metadata:
   annotations:
     {{- include "tfyController.annotations" . | indent 4 }}
 spec:
-  jobLabel: {{ .Values.controlPlaneMonitors.tfyController.jobLabel }}
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.tfyController.endpoints | nindent 2 }}
   namespaceSelector:
     {{- toYaml (or .Values.controlPlaneMonitors.tfyController.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.tfyController.name }}
+      {{- if .Values.controlPlaneMonitors.tfyController.serviceSelectorLabels }}
       {{- toYaml .Values.controlPlaneMonitors.tfyController.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
 {{- end -}}
