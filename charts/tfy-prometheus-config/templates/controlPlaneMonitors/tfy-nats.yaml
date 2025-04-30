@@ -8,9 +8,10 @@ metadata:
   annotations:
     {{- include "nats.annotations" . | indent 4 }}
 spec:
-  jobLabel: {{ .Values.controlPlaneMonitors.nats.jobLabel }}
   podMetricsEndpoints:
     {{- toYaml .Values.controlPlaneMonitors.nats.podMetricsEndpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.nats.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
   selector:
     matchLabels:
       {{- toYaml .Values.controlPlaneMonitors.nats.podSelectorLabels | nindent 6 }}
