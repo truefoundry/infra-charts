@@ -1,59 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "DS_EXPRESSION",
-      "label": "Expression",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "__expr__"
-    }
-  ],
-  "__elements": {},
-  "__requires": [
-    {
-      "type": "datasource",
-      "id": "__expr__",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "gauge",
-      "name": "Gauge",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "10.0.3"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -73,14 +18,13 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -159,7 +103,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(model_name) (rate(llm_gateway_first_token_latency_seconds_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(llm_gateway_first_token_latency_seconds_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -175,7 +119,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -254,7 +198,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(model_name) (rate(llm_gateway_request_processing_seconds_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(llm_gateway_request_processing_seconds_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -270,7 +214,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -349,7 +293,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(username) (rate(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -364,7 +308,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -443,7 +387,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(username) (rate(llm_gateway_request_processing_seconds_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -458,7 +402,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -493,7 +437,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -505,7 +451,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum((max_over_time(llm_gateway_request_processing_seconds_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_request_processing_seconds_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_request_processing_seconds_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
@@ -520,7 +466,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -599,7 +545,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(username) (rate(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -614,7 +560,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -627,8 +573,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -649,7 +594,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -661,7 +608,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum((max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_input_tokens_{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
@@ -676,7 +623,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -719,8 +666,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -754,7 +700,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by(error_code, exception_class) (rate(llm_gateway_request_model_inference_failure{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
@@ -769,7 +715,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -782,8 +728,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -804,7 +749,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -816,7 +763,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum((max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
@@ -831,7 +778,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
+        "uid": "${datasource}"
       },
       "description": "",
       "fieldConfig": {
@@ -852,8 +799,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -877,7 +823,9 @@
           "countRows": false,
           "enablePagination": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -893,7 +841,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by (username, model_name, tenant_name)((max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
@@ -905,7 +853,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
+            "uid": "${datasource}"
           },
           "editorMode": "code",
           "expr": "sum by (username, model_name, tenant_name) ((max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
@@ -974,10 +922,32 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${datasource}"
         },
         "definition": "label_values(model_name)",
         "hide": 0,
@@ -997,10 +967,14 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${datasource}"
         },
         "definition": "label_values(username)",
         "hide": 0,
@@ -1020,10 +994,14 @@
         "type": "query"
       },
       {
-        "current": {},
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
+          "uid": "${datasource}"
         },
         "definition": "label_values(tenant_name)",
         "hide": 0,
@@ -1045,13 +1023,13 @@
     ]
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "TrueFoundryLLM Gateway",
+  "title": "TrueFoundry LLM Gateway",
   "uid": "a9d2b7d4-ae37-4b6f-a3ef-7ea2fd4b2640",
-  "version": 13,
+  "version": 3,
   "weekStart": ""
 }
