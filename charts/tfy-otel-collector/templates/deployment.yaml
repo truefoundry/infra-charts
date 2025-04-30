@@ -42,6 +42,15 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            - name: grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+            - name: healthcheck
+              containerPort: 3000
+              protocol: TCP
           resources:
             {{- include "tfy-otel-collector.resources" . | nindent 12 }}
           {{- if .Values.healthcheck.enabled }}
