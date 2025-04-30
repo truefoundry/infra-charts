@@ -292,14 +292,18 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.clickHouseOperator.endpoints [array] Endpoints for ClickHouse operator
     endpoints:
       - path: /metrics
-        port: metrics
+        targetPort: 8888
+        honorLabels: true
+      - path: /metrics
+        targetPort: 9999
+        honorLabels: true
     ## @param controlPlaneMonitors.clickHouseOperator.namespaceSelector [object] Namespace selector for ClickHouse operator
     namespaceSelector:
       matchNames:
         - truefoundry
     ## @param controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels [object] Service selector labels for ClickHouse operator
     serviceSelectorLabels:
-      app.kubernetes.io/name: clickhouse-operator
+      app.kubernetes.io/name: altinity-clickhouse-operator
   # controlPlaneMonitors.servicefoundryServer Service monitor for servicefoundry server
   servicefoundryServer:
     ## @param controlPlaneMonitors.servicefoundryServer.enabled Enable service monitor for servicefoundry server
@@ -314,7 +318,8 @@ controlPlaneMonitors:
     jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.servicefoundryServer.endpoints [array] Endpoints for servicefoundry server
     endpoints:
-      - port: http
+      - targetPort: 3000
+        path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
     serviceSelectorLabels:
@@ -337,7 +342,8 @@ controlPlaneMonitors:
     jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
     endpoints:
-      - port: http
+      - targetPort: 5000
+        path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
     serviceSelectorLabels:
@@ -360,7 +366,8 @@ controlPlaneMonitors:
     jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.sfyManifestService.endpoints [array] Endpoints for sfy manifest service
     endpoints:
-      - port: http
+      - targetPort: 8080
+        path: /metrics
         honorLabels: true
     ## @param controlPlaneMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
     serviceSelectorLabels:
@@ -383,7 +390,8 @@ controlPlaneMonitors:
     jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.tfyController.endpoints [array] Endpoints for tfy-controller
     endpoints:
-      - port: port-8123
+      - path: /metrics
+        targetPort: 8123
         honorLabels: true
     ## @param controlPlaneMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
     serviceSelectorLabels:
@@ -407,7 +415,8 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.tfyK8sController.endpoints [array] Endpoints for tfy-k8s-controller
     endpoints:
       - path: /metrics
-        port: http-3002
+        targetPort: 3002
+        honorLabels: true
     ## @param controlPlaneMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
     serviceSelectorLabels:
       app.kubernetes.io/name: tfy-k8s-controller
@@ -426,18 +435,19 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
     annotations: {}
     ## @param controlPlaneMonitors.tfyOtelCollector.jobLabel Job label for otel collector
-    jobLabel: truefoundry.com/application
+    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
     endpoints:
-      - path: /metrics
-        port: http-8888
+      - honorLabels: true
+        path: /metrics
+        targetPort: 8888
     ## @param controlPlaneMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
     namespaceSelector:
       matchNames:
         - truefoundry
     ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
     serviceSelectorLabels:
-      truefoundry.com/application: tfy-otel-collector
+      app.kubernetes.io/name: tfy-otel-collector
   # controlPlaneMonitors.llmGateway Service monitor for llm gateway
   llmGateway:
     ## @param controlPlaneMonitors.llmGateway.enabled Enable service monitor for llm gateway
@@ -449,11 +459,12 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.llmGateway.annotations [object] Annotations for llm gateway
     annotations: {}
     ## @param controlPlaneMonitors.llmGateway.jobLabel Job label for llm gateway
-    jobLabel: truefoundry.com/application
+    jobLabel: app.kubernetes.io/name
     ## @param controlPlaneMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
     endpoints:
       - path: /metrics
-        port: http-8787
+        targetPort: 8787
+        honorLabels: true
     ## @param controlPlaneMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
     namespaceSelector:
       matchNames:
@@ -472,15 +483,14 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.nats.annotations [object] Annotations for nats
     annotations: {}
     ## @param controlPlaneMonitors.nats.jobLabel Job label for nats
-    jobLabel: app.kubernetes.io/name
+    jobLabel: app.kubernetes.io/component
     ## @param controlPlaneMonitors.nats.podMetricsEndpoints [array] Pod metrics endpoints for nats
     podMetricsEndpoints:
-      - port: prom-metrics
+      - targetPort: 7777
+        honorLabels: true
     ## @param controlPlaneMonitors.nats.serviceSelectorLabels [object] Service selector labels for nats
-    serviceSelectorLabels:
-      app.kubernetes.io/name: nats
+    podSelectorLabels:
       app.kubernetes.io/component: nats
-      app.kubernetes.io/instance: truefoundry
     ## @param controlPlaneMonitors.nats.namespaceSelector [object] Namespace selector for nats
     namespaceSelector:
       matchNames:
