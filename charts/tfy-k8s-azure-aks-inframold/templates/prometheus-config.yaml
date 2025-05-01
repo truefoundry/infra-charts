@@ -27,9 +27,11 @@ spec:
         {{ .Values.prometheus.config.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         serviceMonitors:
-        {{- if .Values.aws }}
           karpenter:
+        {{- if .Values.aws }}
             enabled: {{ .Values.aws.karpenter.enabled }}
+        {{- else }}
+            enabled: false
         {{- end }}
         {{- if .Values.truefoundry.enabled }}
         controlPlaneMonitors:
