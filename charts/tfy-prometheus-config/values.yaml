@@ -128,7 +128,7 @@ alertManagers:
           continue: true
           matchers:
             - name: severity
-              matchType: "=~"
+              matchType: =~
               value: "warning|critical"
           repeatInterval: 1h
     ## @param alertManagers.tfyAgent.receivers [array] Receivers for the alert manager
@@ -174,7 +174,7 @@ prometheusRules:
 ## @section controlPlaneMonitors service monitors for control plane components
 controlPlaneMonitors:
   ## @param controlPlaneMonitors.enabled Enable service monitors for control plane components
-  enabled: true
+  enabled: false
   ## @param controlPlaneMonitors.releaseNamespace Release namespace for the control plane
   releaseNamespace: truefoundry
   ## @param controlPlaneMonitors.tenantName Tenant name for the control plane
@@ -226,10 +226,10 @@ controlPlaneMonitors:
             continue: true
             matchers:
               - name: severity
-                matchType: "=~"
+                matchType: =~
                 value: "warning|critical"
               - name: controlplane
-                matchType: '='
+                matchType: =
                 value: "true"
             repeatInterval: 15m
       ## @param controlPlaneMonitors.alerts.alertManager.receivers [array] Receivers for the alert manager
