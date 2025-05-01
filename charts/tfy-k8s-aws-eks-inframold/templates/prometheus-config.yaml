@@ -19,7 +19,7 @@ spec:
       - CreateNamespace=false
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.2.2
+    targetRevision: 0.2.4
     chart: tfy-prometheus-config
     helm:
       values: |-
@@ -27,9 +27,29 @@ spec:
         {{ .Values.prometheus.config.valuesOverride | toYaml | nindent 8 }}
         {{- else }}
         serviceMonitors:
-        {{- if .Values.aws }}
           karpenter:
+        {{- if .Values.aws }}
             enabled: {{ .Values.aws.karpenter.enabled }}
+        {{- else }}
+            enabled: false
+        {{- end }}
+          keda:
+        {{- if .Values.keda.enabled }}
+            enabled: {{ .Values.keda.enabled }}
+        {{- else }}
+            enabled: false
+        {{- end }}
+          sshServer:
+        {{- if .Values.sshServer.enabled }}
+            enabled: {{ .Values.sshServer.enabled }}
+        {{- else }}
+            enabled: false
+        {{- end }}
+          tfyAgent:
+        {{- if .Values.tfyAgent.enabled }}
+            enabled: {{ .Values.tfyAgent.enabled }}
+        {{- else }}
+            enabled: false
         {{- end }}
         {{- if .Values.truefoundry.enabled }}
         controlPlaneMonitors:
