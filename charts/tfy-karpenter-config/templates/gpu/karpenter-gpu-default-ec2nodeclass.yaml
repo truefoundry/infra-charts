@@ -58,15 +58,29 @@ spec:
         encrypted: {{ .Values.karpenter.gpuDefaultNodeTemplate.encrypted }}
   {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
   {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
+  {{- if and .Values.karpenter.gpuDefaultNodeTemplate.enableSoci (not (eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket")) }}
   {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2" }}
-  userData: {{ .Files.Get "files/al2-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
+  userData: |
+  {{- .Files.Get "files/al2-soci-gpu-provisioner-userdata.sh" | nindent 4 }}
   {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2023" }}
-  userData: {{ .Files.Get "files/al2023-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
-  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
-  userData: {{ .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | toYaml | indent 2 }}
+  userData: |
+  {{- .Files.Get "files/al2023-soci-gpu-provisioner-userdata.sh" | nindent 4 }}
   {{- end }}
   {{- else }}
-  userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2" }}
+  userData: |
+  {{- .Files.Get "files/al2-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2023" }}
+  userData: |
+  {{- .Files.Get "files/al2023-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
+  userData: |
+  {{- .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+  userData: |
+  {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | nindent 4 }}
   {{- end }}
   {{- end }}
 {{- end }}
