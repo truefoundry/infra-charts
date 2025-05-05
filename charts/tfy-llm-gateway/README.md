@@ -14,7 +14,7 @@ LLM-Gateway Helm Chart
 | `global.tolerations`                            | Tolerations for pod scheduling on a node                     | `[]`                                              |
 | `global.nodeSelector`                           | Node selector                                                | `{}`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `54963a8d521fe7e4e32f67016da27e2e693beb38`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `ea6c91a788ba788f3c70958f8ebd9b6e8bb2b631`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
@@ -71,3 +71,6 @@ LLM-Gateway Helm Chart
 | `rollout.enabled`                               | Enable rollout (rolling update)                              | `true`                                            |
 | `rollout.maxUnavailable`                        | Maximum number of unavailable replicas during rolling update | `0`                                               |
 | `rollout.maxSurge`                              | Maximum number of surge replicas during rolling update       | `100%`                                            |
+| `serviceMonitor.enabled`                        | Enable service monitor                                       | `true`                                            |
+| `serviceMonitor.additionalLabels`               | Additional labels for the service monitor                    | `{}`                                              |
+| `serviceMonitor.additionalAnnotations`          | Additional annotations for the service monitor               | `{}`                                              |
