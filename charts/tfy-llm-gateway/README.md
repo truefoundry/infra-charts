@@ -71,3 +71,6 @@ LLM-Gateway Helm Chart
 | `rollout.enabled`                               | Enable rollout (rolling update)                              | `true`                                            |
 | `rollout.maxUnavailable`                        | Maximum number of unavailable replicas during rolling update | `0`                                               |
 | `rollout.maxSurge`                              | Maximum number of surge replicas during rolling update       | `100%`                                            |
+| `serviceMonitor.enabled`                        | Enable service monitor                                       | `true`                                            |
+| `serviceMonitor.additionalLabels`               | Additional labels for the service monitor                    | `{}`                                              |
+| `serviceMonitor.additionalAnnotations`          | Additional annotations for the service monitor               | `{}`                                              |
