@@ -128,7 +128,7 @@ alertManagers:
           continue: true
           matchers:
             - name: severity
-              matchType: =~
+              matchType: '=~'
               value: "warning|critical"
           repeatInterval: 1h
     ## @param alertManagers.tfyAgent.receivers [array] Receivers for the alert manager
@@ -188,7 +188,7 @@ controlPlaneMonitors:
   # controlPlaneMonitors.alerts Alert configuration for control plane
   alerts:
     ## @param controlPlaneMonitors.alerts.enabled Enable alerts for control plane
-    enabled: true
+    enabled: false
     # controlPlaneMonitors.alerts.alertRules Alert rules configuration
     alertRules:
       ## @param controlPlaneMonitors.alerts.alertRules.labels [object] Labels for control plane alert rules
@@ -226,10 +226,10 @@ controlPlaneMonitors:
             continue: true
             matchers:
               - name: severity
-                matchType: =~
+                matchType: '=~'
                 value: "warning|critical"
               - name: controlplane
-                matchType: =
+                matchType: '='
                 value: "true"
             repeatInterval: 15m
       ## @param controlPlaneMonitors.alerts.alertManager.receivers [array] Receivers for the alert manager
@@ -915,7 +915,7 @@ serviceMonitors:
       - path: /metrics
         port: http-web
         metricRelabelings:
-          - regex: prometheus_config_last_reload_successful|prometheus_tsdb_compaction_chunk_size_bytes_sum|prometheus_tsdb_compaction_chunk_samples_sum|prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered|prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_series|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total|prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max
+          - regex: prometheus_config_last_reload_successful|prometheus_tsdb_compaction_chunk_size_bytes_sum|prometheus_tsdb_compaction_chunk_samples_sum|prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered|prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_series|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total|prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_tsdb_lowest_timestamp_seconds
             action: keep
             sourceLabels:
               - __name__
