@@ -57,6 +57,7 @@ EOF
 curl --silent --location --fail --output /etc/systemd/system/soci-snapshotter.service https://raw.githubusercontent.com/awslabs/soci-snapshotter/v$version/soci-snapshotter.service
 systemctl daemon-reload
 systemctl enable --now soci-snapshotter
+systemctl status soci-snapshotter
 
 popd
 

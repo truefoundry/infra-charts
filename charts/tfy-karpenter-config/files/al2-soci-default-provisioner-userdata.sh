@@ -1,6 +1,7 @@
 #!/bin/bash
 set -ex
 
+function setup_soci() {
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
 VERSION="0.9.0"
 ARCHIVE="soci-snapshotter-$VERSION-linux-$ARCH.tar.gz"
@@ -29,6 +30,7 @@ curl -sSL -o /etc/systemd/system/soci-snapshotter.service "https://raw.githubuse
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now soci-snapshotter
+systemctl status soci-snapshotter
 
 # --- Configure containerd to use soci snapshotter ---
 cat <<EOF > /etc/containerd/config.d/soci.toml
@@ -50,3 +52,15 @@ EOF
 # --- Add kubelet imageServiceEndpoint ---
 jq '.imageServiceEndpoint="unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock"' "$KUBELET_CONFIG_FILEPATH" > "$KUBELET_CONFIG_FILEPATH.tmp"
 mv "$KUBELET_CONFIG_FILEPATH.tmp" "$KUBELET_CONFIG_FILEPATH"
+}
+
+# --- Check containerd version ---
+CONTAINERD_VERSION_OUTPUT="$(containerd --version)"
+IFS=" " read -a  CONTAINERD_VERSION_STRING <<< "${CONTAINERD_VERSION_OUTPUT}"
+CONTAINERD_VERSION=${CONTAINERD_VERSION_STRING[2]}
+
+if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && version_lt "$CONTAINERD_VERSION" "2.0"; then
+  setup_soci
+else
+  echo "CONTAINERD_VERSION is empty or not within the specified range or we could not find the sandbox image."
+fi
