@@ -199,7 +199,7 @@ def process_and_generate_chart_manifests(chart_info_list):
     for chart_info in chart_info_list:
         chart_details = chart_info['details']
         chart_name = chart_details['chart']
-        chart_version = chart_details['target_revision']
+        chart_version = chart_details['targetRevision']
         chart_values = chart_details.get('values','')
 
         logging.info(f"Processing chart {chart_name}@{chart_version}")
