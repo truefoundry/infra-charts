@@ -1,0 +1,27 @@
+{{- if and .Values.servicefoundryServer.enabled .Values.servicefoundryServer.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}
+  labels:
+    release: prometheus
+    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+  {{- with .Values.servicefoundryServer.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.servicefoundryServer.serviceMonitor.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - targetPort: 3000
+      path: /metrics
+      honorLabels: true
+{{- end -}}
