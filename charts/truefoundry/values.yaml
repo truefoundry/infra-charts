@@ -109,7 +109,7 @@ monitoring:
       create: false
       ## @param monitoring.alertManager.secret.name Name of the secret
       name: tfy-control-plane-alert-manager-secret
-      ## @param monitoring.alertManager.secret.data Data to be stored in secret
+      ## @param monitoring.alertManager.secret.data [object] Data to be stored in secret
       data:
         API_URL: ""
   ## monitoring.alertRules [object] Alert rules configuration
@@ -1587,8 +1587,10 @@ tfyNats:
       tag: "0.15.0"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
+    ## @param tfyNats.promExporter.podMonitor.enabled Bool to enable pod monitor
     podMonitor:
       enabled: true
+      ## @param tfyNats.promExporter.podMonitor.merge [object] Additional kustomize patches for the pod monitor
       merge:
         metadata:
           labels:
