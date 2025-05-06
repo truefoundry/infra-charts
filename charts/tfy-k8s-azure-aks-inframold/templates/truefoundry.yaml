@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.51.0
+    targetRevision: 0.52.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -56,6 +56,10 @@ spec:
           {{- end }}
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
+        {{- if .Values.truefoundry.tags }}
+        tags:
+          {{- toYaml .Values.truefoundry.tags | nindent 10 }}
+        {{- end }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
         servicefoundryServer:
