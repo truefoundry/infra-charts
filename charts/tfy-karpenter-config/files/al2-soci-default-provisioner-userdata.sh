@@ -33,10 +33,11 @@ systemctl enable --now soci-snapshotter
 systemctl status soci-snapshotter
 
 # --- Configure containerd to use soci snapshotter ---
-cat > /etc/containerd/config.d/soci.toml <<EOF
+cat <<EOF > /etc/containerd/config.d/soci.toml
 [plugins."io.containerd.grpc.v1.cri".containerd]
-default_runtime_name = "nvidia"
+default_runtime_name = "runc"
 discard_unpacked_layers = true
+## ENABLE SOCI SNAPSHOTTER
 snapshotter = "soci"
 disable_snapshot_annotations = false
 [proxy_plugins]
@@ -46,12 +47,6 @@ type = 'snapshot'
 
 [proxy_plugins.soci.exports]
 root = '/var/lib/soci-snapshotter-grpc'
-
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
-runtime_type = "io.containerd.runc.v2"
-
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-BinaryName = "/usr/bin/nvidia-container-runtime"
 EOF
 
 # --- Add kubelet imageServiceEndpoint ---
@@ -69,4 +64,3 @@ if [ -n "$CONTAINERD_VERSION" ] && version_lte "1.5.0" "$CONTAINERD_VERSION" && 
 else
   echo "CONTAINERD_VERSION is empty or not within the specified range or we could not find the sandbox image."
 fi
-

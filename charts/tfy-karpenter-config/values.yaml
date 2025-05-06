@@ -37,6 +37,8 @@ karpenter:
     - alias: al2023@latest
     ## @param karpenter.defaultNodeTemplate.userData User data to append in the default node template. Set this to "" to disable injection.
     userData: ""
+    ## @param karpenter.defaultNodeTemplate.enableSoci Enable SOCI for the default nodes.
+    enableSoci: false
     ## @param karpenter.defaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the default node template.
     # metadataOptions:
     #   httpEndpoint: enabled
@@ -117,8 +119,10 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @param karpenter.gpuDefaultNodeTemplate.userData User data script for GPU node template. Set this to "default" to let the chart automatically decide this. Set this to "" to disable this injection.
+    ## @param karpenter.gpuDefaultNodeTemplate.userData User data script for GPU node template. Set this to "default" to let the chart automatically decide this. Set this to "" to disable this injection. This will be used only when enableSoci is set to false.
     userData: "default"
+    ## @param karpenter.gpuDefaultNodeTemplate.enableSoci Enable SOCI for the GPU machines.
+    enableSoci: false
     ## @param karpenter.gpuDefaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the GPU node template.
     # metadataOptions:
     #   httpEndpoint: enabled
