@@ -52,7 +52,7 @@ def extract_chart_info(manifest_file):
                         "details": {
                             "chart": source.get('chart', ''),
                             "repoURL": normalize_repo_url(source.get('repoURL', '')),
-                            "target_revision": source.get('targetRevision', ''),
+                            "targetRevision": source.get('targetRevision', ''),
                             "values": source.get('helm', {}).get('values', '')
                         }
                     })
