@@ -20,27 +20,12 @@ spec:
       alert: ContainerHighCPUThrottleRate
       labels:
         entity: container
-        severity: warning
+        severity: critical
       annotations:
         summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
         description: |-
           Container is being throttled
             VALUE = {{`{{ $value }}`}}
-    - for: 5m
-      expr: >-
-        sum by (namespace, pod, container) (container_memory_working_set_bytes{container!="", pod!=""}) /
-        sum by (namespace, pod, container) (
-          kube_pod_container_resource_requests{resource="memory", container!="", pod!=""}
-        ) > 0.9
-      alert: ContainerMemoryUsageHigh
-      labels:
-        entity: container
-        severity: warning
-      annotations:
-        summary: Container memory usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
-        description: |-
-          Container ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}) is using more than 90% of its memory.
-            VALUE = {{`{{ $value }}`}}%
     - for: 5m
       expr: >-
         sum(
@@ -65,7 +50,7 @@ spec:
       alert: LowServiceRequestSuccessRate
       labels:
         entity: service
-        severity: warning
+        severity: critical
       annotations:
         summary: Low success rate ({{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}})
         description: |-
@@ -91,28 +76,13 @@ spec:
       alert: PodCrashLooping
       labels:
         entity: pod
-        severity: warning
+        severity: critical
       annotations:
         summary: >-
           Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: |-
           Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
             VALUE = {{`{{ $value }}`}}
-    - for: 2m
-      expr: >-
-        max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics"}[5m])) > 0
-        and
-        max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[5m]) > 0)
-      alert: ContainerOOMKilled
-      labels:
-        entity: container
-        severity: critical
-      annotations:
-        summary: >-
-          Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
-        description: |-
-          Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
-          has been OOM killed in the last 5 minutes
     - for: 10m
       expr: >-
         (sum(kubelet_volume_stats_used_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace) /
