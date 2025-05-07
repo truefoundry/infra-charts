@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "tfy-k8s-controller.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.tfyK8sController.replicaCount }}
+  replicas: {{- include "tfy-k8s-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
@@ -41,25 +41,25 @@ spec:
               containerPort: {{ .Values.tfyK8sController.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfyK8sController.resources | nindent 12 }}
+            {{- include "tfy-k8s-controller.resources" . | indent 12 }}
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: {{ .Values.tfyK8sController.service.port }}
-            periodSeconds: 10
-            timeoutSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 10
+            periodSeconds: {{ .Values.tfyK8sController.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyK8sController.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyK8sController.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyK8sController.livenessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyK8sController.livenessProbe.initialDelaySeconds }}
           readinessProbe:
             httpGet:
               path: /health
               port: {{ .Values.tfyK8sController.service.port }}
-            periodSeconds: 10
-            timeoutSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 15
+            periodSeconds: {{ .Values.tfyK8sController.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyK8sController.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyK8sController.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyK8sController.readinessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyK8sController.readinessProbe.initialDelaySeconds }}
           volumeMounts:
             {{- include "tfy-k8s-controller.volumeMounts" . | nindent 12 }}
       {{- with .Values.tfyK8sController.imagePullSecrets }}

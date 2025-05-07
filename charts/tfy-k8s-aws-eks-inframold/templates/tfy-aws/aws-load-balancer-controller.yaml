@@ -14,7 +14,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: "https://aws.github.io/eks-charts"
-    targetRevision: 1.11.0
+    targetRevision: 1.12.0
     chart: aws-load-balancer-controller
     helm:
       values: |-
@@ -26,6 +26,7 @@ spec:
         {{- $mergedTolerations = .Values.aws.awsLoadBalancerController.tolerations }}
         {{- end }}
 
+        configureDefaultAffinity: false
         {{- $mergedAffinity := .Values.affinity }}
         {{- if .Values.aws.awsLoadBalancerController.affinity }}
         {{- $mergedAffinity = .Values.aws.awsLoadBalancerController.affinity }}

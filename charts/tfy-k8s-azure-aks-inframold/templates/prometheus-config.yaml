@@ -19,7 +19,7 @@ spec:
       - CreateNamespace=false
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.13
+    targetRevision: 0.2.6
     chart: tfy-prometheus-config
     helm:
       values: |-
@@ -30,19 +30,10 @@ spec:
         {{- if .Values.aws }}
           karpenter:
             enabled: {{ .Values.aws.karpenter.enabled }}
+        {{- else }}
+          karpenter:
+            enabled: false
         {{- end }}
-          llmGateway:
-            enabled: {{ .Values.truefoundry.enabled }}
-          nats:
-            enabled: {{ .Values.truefoundry.enabled }}
-          servicefoundryServer:
-            enabled: {{ .Values.truefoundry.enabled }}
-          sfyManifestService:
-            enabled: {{ .Values.truefoundry.enabled }}
-          tfyController:
-            enabled: {{ .Values.truefoundry.enabled }}
-          tfyK8sController:
-            enabled: {{ .Values.truefoundry.enabled }}
         extraObjects: []
         {{- end }}
 {{- end }}

@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "servicefoundry-server.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.servicefoundryServer.replicaCount }}
+  replicas: {{- include "servicefoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
@@ -41,25 +41,25 @@ spec:
               containerPort: {{ .Values.servicefoundryServer.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.servicefoundryServer.resources | nindent 12 }}
+            {{- include "servicefoundry-server.resources" . | indent 12 }}
           livenessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
+            failureThreshold: {{ .Values.servicefoundryServer.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.servicefoundryServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servicefoundryServer.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.servicefoundryServer.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.servicefoundryServer.livenessProbe.timeoutSeconds }}
             httpGet:
-              path: /
+              path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
               scheme: HTTP
           readinessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
+            failureThreshold: {{ .Values.servicefoundryServer.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.servicefoundryServer.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.servicefoundryServer.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.servicefoundryServer.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.servicefoundryServer.readinessProbe.timeoutSeconds }}
             httpGet:
-              path: /
+              path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
               scheme: HTTP
           volumeMounts:

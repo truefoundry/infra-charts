@@ -12,9 +12,17 @@ spec:
     metadata:
       name: truefoundry-bootstrap-job
     spec:
+      {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+      securityContext:
+        {{- toYaml .Values.truefoundryBootstrap.securityContext.podSecurityContext | nindent 8 }}
+      {{- end }}
       serviceAccountName: truefoundry-bootstrap-job-sa
       containers:
       - name: truefoundry-bootstrap-job
+        {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+        securityContext:
+          {{- toYaml .Values.truefoundryBootstrap.securityContext.containerSecurityContext | nindent 10 }}
+        {{- end }}
         image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
         command: ["/truefoundry/truefoundry-bootstrap.sh"]
         env:
@@ -24,6 +32,8 @@ spec:
           value: "{{ .Release.Namespace }}"
         - name: INSTALL_TLS_CERTIFICATES
           value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
+        - name: CLICKHOUSE_ENABLED
+          value: "{{ or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing }}"
         {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
         - name: {{ $val.name }}
           value: {{ $val.value }}
@@ -42,7 +52,7 @@ spec:
       - name: truefoundry-bootstrap-script
         configMap:
           name: truefoundry-bootstrap-cm
-          defaultMode: 0700
+          defaultMode: 0755
       {{- if gt (len .Values.truefoundryBootstrap.extraVolumes) 0 }}
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}

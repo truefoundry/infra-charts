@@ -123,15 +123,14 @@ spec:
         {{- toYaml (index .Values "scheduler" "extension" "affinity") | nindent 8 }}
       containers:
         - name: scheduler-exp
-          image: {{ .Values.scheduler.extension.image }}
+          image: {{ .Values.scheduler.extension.image.repository }}:{{ .Values.scheduler.extension.image.tag }}
           resources:
             {{- toYaml (index .Values "scheduler" "extension" "resources") | nindent 12 }}
           env:
           - name: PORT
             value: "12345"
-
-# service.yaml            
 ---
+# service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -150,5 +149,5 @@ spec:
     targetPort: 12345
   selector:
     app: {{ .Release.Name }}-scheduler
-    component: scheduler-extension   
+    component: scheduler-extension
 {{- end }}

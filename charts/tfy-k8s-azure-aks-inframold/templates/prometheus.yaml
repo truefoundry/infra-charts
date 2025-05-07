@@ -44,7 +44,7 @@ spec:
         grafana:
           enabled: false
         kubelet:
-          enabled: true
+          enabled: false
         kubeEtcd:
           enabled: false
         kubeProxy:
@@ -83,20 +83,9 @@ spec:
           serviceMonitor:
             selfMonitor: false
         alertmanager:
-          config:
-            route:
-              receiver: tfy-agent
-              routes:
-                - continue: true
-                  matchers:
-                    - severity =~ "warning|critical"
-                  receiver: tfy-agent
-                  repeat_interval: 1h
-            receivers:
-              {{- with .Values.prometheus.alertmanager.config.receivers -}}
-              {{ toYaml . | nindent 12 }}
-              {{- end }}
           alertmanagerSpec:
+            alertmanagerConfigMatcherStrategy:
+              type: None
             resources:
               requests:
                 cpu: 200m
@@ -109,8 +98,6 @@ spec:
           enabled: true
           serviceMonitor:
             selfMonitor: false
-        nodeExporter:
-          enabled: true
         kubeApiServer:
           enabled: false
         kubeScheduler:
@@ -138,7 +125,7 @@ spec:
               enabled: false
           metricLabelsAllowlist:
             - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component,truefoundry.com/application-id]
-            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
+            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,kubernetes.azure.com/accelerator,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
         prometheusOperator:
           resources:
             limits:

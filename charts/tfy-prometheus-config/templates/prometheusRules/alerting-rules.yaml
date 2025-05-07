@@ -17,57 +17,72 @@ spec:
         by (pod, container, namespace) /
         sum(increase(container_cpu_cfs_periods_total{job="kubelet"}[5m])) by
         (pod, container, namespace) > ( 25 / 100 )
-      alert: ContainerHighThrottleRate
+      alert: ContainerHighCPUThrottleRate
       labels:
         entity: container
-        severity: warning
+        severity: critical
       annotations:
         summary: Container high throttle rate (instance {{ `{{ $labels.instance }}` }})
         description: |-
           Container is being throttled
             VALUE = {{`{{ $value }}`}}
+    - for: 5m
+      expr: >-
+        sum(
+          rate(istio_requests_total{job="envoy-stats", response_code!~"5.*"}[5m]) > 0
+          unless
+          label_replace(
+            istio_requests_total{job="envoy-stats", response_code!~"5.*"},
+            "namespace", "$1", "destination_service_namespace", "(.*)"
+          )
+        )
+        by (destination_service_namespace, destination_service_name)
+        /
+        sum(
+          rate(istio_requests_total{job="envoy-stats"}[5m]) > 0
+          unless
+          label_replace(
+            istio_requests_total{job="envoy-stats"},
+            "namespace", "$1", "destination_service_namespace", "(.*)"
+          )
+        )
+        by (destination_service_namespace, destination_service_name) < 0.95
+      alert: LowServiceRequestSuccessRate
+      labels:
+        entity: service
+        severity: critical
+      annotations:
+        summary: Low success rate ({{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}})
+        description: |-
+          Service {{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}} has a low success rate
+            VALUE = {{`{{ $value | humanize }}`}}%
     - for: 15m
       expr: >-
         sum by (namespace, pod)
         (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed"}) > 0
-      alert: KubernetesPodNotHealthy
+      alert: PodNotHealthy
       labels:
         entity: pod
         severity: critical
       annotations:
         summary: >-
-          Kubernetes Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+          Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: >-
           Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
           non-running state for longer than 15 minutes.
             VALUE = {{`{{ $value }}`}}
     - for: 2m
       expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics"}[1m]) > 3
-      alert: KubernetesPodCrashLooping
+      alert: PodCrashLooping
       labels:
         entity: pod
-        severity: warning
-      annotations:
-        summary: >-
-          Kubernetes pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
-        description: |-
-          Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
-            VALUE = {{`{{ $value }}`}}
-    - for: 2m
-      expr: >-
-        max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics"}[5m])) > 0
-        and
-        max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total[5m]) > 0)
-      alert: ContainerOOMKilled
-      labels:
-        entity: container
         severity: critical
       annotations:
         summary: >-
-          Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
+          Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
         description: |-
-          Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
-          has been OOM killed in the last 5 minutes
+          Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
+            VALUE = {{`{{ $value }}`}}
     - for: 10m
       expr: >-
         (sum(kubelet_volume_stats_used_bytes{job="kubelet"}) by (persistentvolumeclaim, namespace) /

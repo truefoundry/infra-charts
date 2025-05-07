@@ -56,17 +56,35 @@ spec:
         volumeType: gp3
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.gpuDefaultNodeTemplate.encrypted }}
-  {{- if not (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "") }}
-  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
-  {{- if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2" }}
-  userData: {{ .Files.Get "files/al2-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
-  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2023" }}
-  userData: {{ .Files.Get "files/al2023-gpu-provisioner-userdata.sh" | toYaml | indent 2 }}
-  {{- else if eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket" }}
-  userData: {{ .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | toYaml | indent 2 }}
+  {{- if (eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2") }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.enableSoci }}
+  userData: |
+  {{- .Files.Get "files/al2-soci-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else if (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default") }}
+  userData: |
+  {{- .Files.Get "files/al2-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else }}
+  userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
+
+  {{- else if (eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2023")  }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.enableSoci }}
+  userData: |
+  {{- .Files.Get "files/al2023-soci-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else if (eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default") }}
+  userData: |
+  {{- .Files.Get "files/al2023-gpu-provisioner-userdata.sh" | nindent 4 }}
+  {{- else }}
+  userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}
+
+  {{- else if (eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "bottlerocket") }}
+  {{- if eq .Values.karpenter.gpuDefaultNodeTemplate.userData "default" }}
+  userData: |
+  {{- .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | nindent 4 }}
   {{- else }}
   userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
   {{- end }}
+
 {{- end }}

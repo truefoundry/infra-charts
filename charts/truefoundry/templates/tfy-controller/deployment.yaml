@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "tfy-controller.annotations" . | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{- include "tfy-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-controller.selectorLabels" . | nindent 6 }}
@@ -41,9 +41,23 @@ spec:
               containerPort: {{ .Values.tfyController.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfyController.resources | nindent 12 }}
+            {{- include "tfy-controller.resources" . | indent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthy
+              port: {{ .Values.tfyController.service.port }}
+              scheme: HTTP
+            failureThreshold: {{ .Values.tfyController.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyController.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyController.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyController.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyController.livenessProbe.timeoutSeconds }}
           readinessProbe:
-            failureThreshold: 3
+            failureThreshold: {{ .Values.tfyController.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyController.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyController.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyController.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyController.readinessProbe.timeoutSeconds }}
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}

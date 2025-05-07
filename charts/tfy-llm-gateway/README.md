@@ -7,16 +7,15 @@ LLM-Gateway Helm Chart
 
 | Name                                            | Description                                                  | Value                                             |
 | ----------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| `global.resourceTier`                           | Resource deployment type                                     | `medium`                                          |
 | `global.controlPlaneURL`                        | Control plane URL                                            | `""`                                              |
-| `global.truefoundryReleaseName`                 | Truefoundry release name                                     | `truefoundry`                                     |
 | `global.existingTruefoundryImagePullSecretName` | Existing truefoundry image pull secret name                  | `""`                                              |
-| `global.llmGatewayInfra.enabled`                | Bool if llm gateway infra is enabled                         | `false`                                           |
-| `global.llmGatewayInfra.releaseName`            | Release name for the tfy-llm-gateway-infra                   | `tfy-llm-gateway-infra`                           |
-| `global.llmGatewayInfra.natsAdminPassword`      | NATS admin password                                          | `""`                                              |
+| `global.affinity`                               | Affinity rules for pod scheduling on a node                  | `{}`                                              |
+| `global.tolerations`                            | Tolerations for pod scheduling on a node                     | `[]`                                              |
+| `global.nodeSelector`                           | Node selector                                                | `{}`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `e647724aa7ea37b6e2127d59651e2f7832b539bf`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `ea6c91a788ba788f3c70958f8ebd9b6e8bb2b631`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
-| `replicaCount`                                  | Number of replicas                                           | `3`                                               |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
 | `imagePullPolicy`                               | Image pull policy                                            | `IfNotPresent`                                    |
@@ -29,19 +28,18 @@ LLM-Gateway Helm Chart
 | `healthcheck.enabled`                           | Enable healthcheck                                           | `true`                                            |
 | `healthcheck.readiness.port`                    | Port to probe                                                | `8787`                                            |
 | `healthcheck.readiness.path`                    | Path to probe                                                | `/`                                               |
-| `healthcheck.readiness.initialDelaySeconds`     | Initial delay in seconds                                     | `10`                                              |
+| `healthcheck.readiness.initialDelaySeconds`     | Initial delay in seconds                                     | `30`                                              |
 | `healthcheck.readiness.periodSeconds`           | Period in seconds                                            | `10`                                              |
-| `healthcheck.readiness.timeoutSeconds`          | Timeout in seconds                                           | `5`                                               |
+| `healthcheck.readiness.timeoutSeconds`          | Timeout in seconds                                           | `1`                                               |
 | `healthcheck.readiness.successThreshold`        | Success threshold                                            | `1`                                               |
 | `healthcheck.readiness.failureThreshold`        | Failure threshold                                            | `3`                                               |
 | `healthcheck.liveness.port`                     | Port to probe                                                | `8787`                                            |
 | `healthcheck.liveness.path`                     | Path to probe                                                | `/`                                               |
-| `resources.limits.cpu`                          | CPU limit                                                    | `2`                                               |
-| `resources.limits.memory`                       | Memory limit                                                 | `1024Mi`                                          |
-| `resources.limits.ephemeral-storage`            | Ephemeral storage limit                                      | `512Mi`                                           |
-| `resources.requests.cpu`                        | CPU request                                                  | `1`                                               |
-| `resources.requests.memory`                     | Memory request                                               | `512Mi`                                           |
-| `resources.requests.ephemeral-storage`          | Ephemeral storage request                                    | `256Mi`                                           |
+| `healthcheck.liveness.initialDelaySeconds`      | Initial delay in seconds                                     | `600`                                             |
+| `healthcheck.liveness.periodSeconds`            | Period in seconds                                            | `10`                                              |
+| `healthcheck.liveness.timeoutSeconds`           | Timeout in seconds                                           | `1`                                               |
+| `healthcheck.liveness.successThreshold`         | Success threshold                                            | `1`                                               |
+| `healthcheck.liveness.failureThreshold`         | Failure threshold                                            | `3`                                               |
 | `nodeSelector`                                  | Node selector                                                | `{}`                                              |
 | `tolerations`                                   | Tolerations                                                  | `{}`                                              |
 | `affinity`                                      | Affinity                                                     | `{}`                                              |
@@ -73,3 +71,6 @@ LLM-Gateway Helm Chart
 | `rollout.enabled`                               | Enable rollout (rolling update)                              | `true`                                            |
 | `rollout.maxUnavailable`                        | Maximum number of unavailable replicas during rolling update | `0`                                               |
 | `rollout.maxSurge`                              | Maximum number of surge replicas during rolling update       | `100%`                                            |
+| `serviceMonitor.enabled`                        | Enable service monitor                                       | `true`                                            |
+| `serviceMonitor.additionalLabels`               | Additional labels for the service monitor                    | `{}`                                              |
+| `serviceMonitor.additionalAnnotations`          | Additional annotations for the service monitor               | `{}`                                              |

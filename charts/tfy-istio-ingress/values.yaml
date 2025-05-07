@@ -1,41 +1,41 @@
-## @section gateway Configuration for the Gateway component.
+## @section ALB Configuration
+## Configuration for AWS Application Load Balancer
+##
+alb:
+  ## @param alb.ingress.enabled Enable ALB ingress
+  ##
+  ingress:
+    enabled: false
+    ## @param alb.ingress.ingressClassName Ingress class name for ALB
+    ##
+    ingressClassName: alb
+    ## @param alb.ingress.annotations Additional annotations for the ALB ingress
+    ##
+    annotations: {}
+## @section Gateway Configuration
+## Configuration for the Gateway component
 ##
 gateway:
-  ## @param gateway.autoscaling.minReplicas Minimum number of replicas for autoscaling the Gateway.
-  ##
   autoscaling:
+    ## @param gateway.autoscaling.minReplicas Minimum number of replicas for autoscaling the Gateway.
+    ##
     minReplicas: 3
-  ## Service configuration for the Gateway.
+    ## @param gateway.autoscaling.maxReplicas Maximum number of replicas for autoscaling the Gateway.
+    ##
+    maxReplicas: 100
+    ## @param gateway.autoscaling.targetCPUUtilizationPercentage CPU utilization percentage wrt requests for scaling gateway pods
+    ##
+    targetCPUUtilizationPercentage: 70
+
+  ## @param gateway.resources [object] Resource section for the gateway pods 
   ##
-  service:
-      ## @param gateway.service.ports[0].name Name of the port.
-      ## @param gateway.service.ports[0].port Port number for status-port.
-      ## @param gateway.service.ports[0].protocol Protocol of the port.
-      ## @param gateway.service.ports[0].targetPort Target port.
-      ##
-      ## @param gateway.service.ports[1].name Name of the port.
-      ## @param gateway.service.ports[1].port Port number for http.
-      ## @param gateway.service.ports[1].protocol Protocol of the port.
-      ## @param gateway.service.ports[1].targetPort Target port.
-      ##
-      ## @param gateway.service.ports[2].name Name of the port.
-      ## @param gateway.service.ports[2].port Port number for https.
-      ## @param gateway.service.ports[2].protocol Protocol of the port.
-      ## @param gateway.service.ports[2].targetPort Target port.
-      ##
-    ports:
-      - name: status-port
-        port: 15021
-        protocol: TCP
-        targetPort: 15021
-      - name: http2
-        port: 80
-        protocol: TCP
-        targetPort: 80
-      - name: https
-        port: 443
-        protocol: TCP
-        targetPort: 443
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1024Mi
 
 ## @section tfyGateway Configuration for the tfyGateway.
 ##

@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.42.2
+    targetRevision: 0.52.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -56,9 +56,12 @@ spec:
           {{- end }}
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
+        {{- if .Values.truefoundry.tags }}
+        tags:
+          {{- toYaml .Values.truefoundry.tags | nindent 10 }}
+        {{- end }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
-        # Cluster-specific IAM role configuration
         servicefoundryServer:
           serviceAccount:
             annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
@@ -99,19 +102,42 @@ spec:
               {{- end }}
               {{- end }}
 
-        nats:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
+        tfyNats:
+          podTemplate:
+            patch:
+              - op: add
+                path: /spec/volumes/-
+                value:
+                  name: resolver-volume
+                  configMap:
+                    name: tfy-nats-accounts
+                    defaultMode: 420
+              - op: add
+                path: /spec/imagePullSecrets
+                value: []
+              {{- if $mergedTolerations }}
+              - op: add
+                path: /spec/tolerations
+                value:
+                {{- toYaml $mergedTolerations | nindent 16 }}
+              {{- else }}
+              - op: add
+                path: /spec/tolerations
+                value: []
+              {{- end }}
+              {{- if $mergedAffinity }}
+              - op: add
+                path: /spec/affinity
+                value:
+                {{- toYaml $mergedAffinity | nindent 16 }}
+              {{- else }}
+              - op: add
+                path: /spec/affinity
+                value: {}
+              {{- end }}
+              - op: add
+                path: /spec/nodeSelector
+                value: {}
         tfy-buildkitd-service:
           {{- if $mergedTolerations }}
           tolerations:
@@ -125,6 +151,75 @@ spec:
           {{- else }}
           affinity: {}
           {{- end }}
+        tfy-llm-gateway:
+          serviceAccount:
+            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- else }}
+          tolerations: []
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- else }}
+          affinity: {}
+          {{- end }}
+        tfy-otel-collector:
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 12 }}
+          {{- else }}
+          tolerations: []
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- else }}
+          affinity: {}
+          {{- end }}
+        tfy-clickhouse:
+          clickhouse:
+            {{- if $mergedTolerations }}
+            tolerations:
+              {{- toYaml $mergedTolerations | nindent 12 }}
+            {{- else }}
+            tolerations: []
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+              {{- toYaml $mergedAffinity | nindent 12 }}
+            {{- else }}
+            affinity: {}
+            {{- end }}
+          altinity-clickhouse-operator:
+            {{- if $mergedTolerations }}
+            tolerations:
+              {{- toYaml $mergedTolerations | nindent 12 }}
+            {{- else }}
+            tolerations: []
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+              {{- toYaml $mergedAffinity | nindent 12 }}
+            {{- else }}
+            affinity: {}
+            {{- end }}
+          zookeeper:
+            {{- if $mergedTolerations }}
+            tolerations:
+              {{- toYaml $mergedTolerations | nindent 12 }}
+            {{- else }}
+            tolerations: []
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+              {{- toYaml $mergedAffinity | nindent 12 }}
+            {{- else }}
+            affinity: {}
+            {{- end }}
+
         {{- end }}
 
   syncPolicy:

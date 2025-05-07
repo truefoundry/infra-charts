@@ -1,6 +1,6 @@
 apiVersion: v2
 name: truefoundry
-version: 0.43.1
+version: 0.52.1
 description: "TrueFoundry Control Plane Components"
 maintainers:
   - name: truefoundry
@@ -9,10 +9,16 @@ dependencies:
     name: tfy-configs
     repository: https://truefoundry.github.io/infra-charts
     version: 0.1.13
-  - condition: nats.enabled
-    name: nats
-    repository: https://nats-io.github.io/k8s/helm/charts/
+  - condition: natsDeprecated.enabled
+    name: natsDeprecated
+    alias: natsDeprecated
+    repository: file://charts/natsDeprecated
     version: 0.19.1
+  - condition: tfyNats.enabled
+    name: nats
+    alias: tfyNats
+    repository: https://nats-io.github.io/k8s/helm/charts/
+    version: 1.2.10
   - condition: devMode.enabled
     name: postgresql
     repository: oci://tfy.jfrog.io/tfy-helm/bitnamicharts
@@ -20,4 +26,23 @@ dependencies:
   - condition: tfy-buildkitd-service.enabled
     name: tfy-buildkitd-service
     repository: https://truefoundry.github.io/infra-charts/
-    version: 0.2.1
+    version: 0.2.6
+  - name: tfy-llm-gateway
+    repository: https://truefoundry.github.io/infra-charts/
+    version: 0.39.0
+    condition: tfy-llm-gateway.enabled
+    tags:
+      - llmGateway
+  - name: tfy-otel-collector
+    repository: https://truefoundry.github.io/infra-charts/
+    version: 0.5.1
+    condition: tfy-otel-collector.enabled
+    tags:
+      - tracing
+  - name: tfy-clickhouse
+    repository: https://truefoundry.github.io/infra-charts/
+    version: 0.1.2
+    condition: tfy-clickhouse.enabled
+    tags:
+      - llmGatewayRequestLogging
+      - tracing

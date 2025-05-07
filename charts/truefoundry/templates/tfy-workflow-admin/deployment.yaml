@@ -8,7 +8,7 @@ metadata:
   annotations:
     {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
 spec:
-  replicas: {{ .Values.tfyWorkflowAdmin.replicaCount }}
+  replicas: {{- include "tfy-workflow-admin-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-workflow-admin.server.selectorLabels" . | nindent 6 }}
@@ -47,13 +47,23 @@ spec:
               containerPort: {{ .Values.tfyWorkflowAdmin.service.port }}
               protocol: TCP
           resources:
-            {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}
+            {{- include "tfy-workflow-admin-server.resources" . | indent 12 }}
           readinessProbe:
+            failureThreshold: {{ .Values.tfyWorkflowAdmin.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyWorkflowAdmin.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyWorkflowAdmin.readinessProbe.timeoutSeconds }}
             exec:
               command:
                 - /bin/grpc_health_probe
                 - '-addr=:{{ .Values.tfyWorkflowAdmin.service.port }}'
           livenessProbe:
+            failureThreshold: {{ .Values.tfyWorkflowAdmin.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyWorkflowAdmin.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyWorkflowAdmin.livenessProbe.timeoutSeconds }}
             exec:
               command:
                 - /bin/grpc_health_probe
@@ -111,7 +121,7 @@ metadata:
   annotations:
     {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{- include "tfy-workflow-admin-scheduler.replicas" . | indent 1 }}
   selector:
     matchLabels:
       {{- include "tfy-workflow-admin.scheduler.selectorLabels" . | nindent 6 }}
@@ -145,7 +155,7 @@ spec:
           image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           resources:
-            {{- toYaml .Values.tfyWorkflowAdmin.resources | nindent 12 }}
+            {{- include "tfy-workflow-admin-scheduler.resources" . | nindent 12 }}
           volumeMounts:
           - mountPath: /etc/config/flytescheduler-config.yaml
             name: {{ include "tfy-workflow-admin.fullname" . }}-config
