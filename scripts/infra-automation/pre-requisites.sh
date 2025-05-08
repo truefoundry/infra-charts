@@ -145,7 +145,6 @@ detect_system() {
         OS="darwin"
         tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
-        IS_ALPINE=false
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
     fi
