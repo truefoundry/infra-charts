@@ -1,0 +1,19 @@
+{{- if .Values.sparkHistoryServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "spark-history-server.fullname" . }}
+  labels:
+    {{- include "spark-history-server.labels" . | nindent 4 }}
+  annotations:
+    {{- include "spark-history-server.annotations" . | indent 4 }}
+spec:
+  type: {{ .Values.sparkHistoryServer.service.type }}
+  ports:
+    - port: {{ .Values.sparkHistoryServer.service.port }}
+      targetPort: {{ .Values.sparkHistoryServer.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "spark-history-server.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -12,7 +12,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                                                         | `0.52.1`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                                                         | `0.53.0-rc.1`                                                                    |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -22,6 +22,9 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.affinity`                               | Affinity for all services                                                              | `{}`                                                                             |
 | `global.labels`                                 | Labels for all services                                                                | `{}`                                                                             |
 | `global.annotations`                            | Annotations for all services                                                           | `{}`                                                                             |
+| `global.serviceAccount.create`                  | Bool to enable service account                                                         | `true`                                                                           |
+| `global.serviceAccount.name`                    | Name of the service account                                                            | `truefoundry`                                                                    |
+| `global.serviceAccount.annotations`             | Annotations for the service account                                                    | `{}`                                                                             |
 | `tags.llmGateway`                               | Bool to enable llmGateway infra                                                        | `false`                                                                          |
 | `tags.llmGatewayRequestLogging`                 | Bool to enable request logging feature in LLM gateway                                  | `false`                                                                          |
 | `tags.tracing`                                  | Bool to enable OTEL tracing feature                                                    | `false`                                                                          |
@@ -80,7 +83,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.tolerations`                        | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                        | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                   | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                          | Image tag for the frontend app                         | `v0.51.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                          | Image tag for the frontend app                         | `v0.53.0`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                      | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                    | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                       | Override name for the frontend app                     | `""`                                                                                       |
@@ -118,6 +121,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.istio.virtualservice.hosts`         | Hosts for the frontend app virtual service             | `[]`                                                                                       |
 | `truefoundryFrontendApp.servicefoundryServerHost`           | Servicefoundry server host for the frontend app        | `{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local`     |
 | `truefoundryFrontendApp.tfyWorkflowAdminHost`               | tfy workflow admin host for the frontend app           | `{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local` |
+| `truefoundryFrontendApp.s3proxyHost`                        | s3 proxy host for the frontend app                     | `{{ .Release.Name }}-s3proxy.{{ .Release.Namespace }}.svc.cluster.local`                   |
 | `truefoundryFrontendApp.llmGateway.external`                | Make LLMGateway external                               | `false`                                                                                    |
 | `truefoundryFrontendApp.llmGateway.backendHost`             | Backend Host for the LLM gateway                       | `{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local`           |
 | `truefoundryFrontendApp.llmGateway.backendPort`             | Backend Port for the LLM gateway                       | `8787`                                                                                     |
@@ -126,6 +130,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.extraVolumes`                       | Extra volumes for the frontend app                     | `[]`                                                                                       |
 | `truefoundryFrontendApp.extraVolumeMounts`                  | Extra volume mounts for the frontend app               | `[]`                                                                                       |
 | `truefoundryFrontendApp.imagePullSecrets`                   | Image pull secrets for the frontend app                | `[]`                                                                                       |
+| `truefoundryFrontendApp.env`                                | Environment variables for the frontend app             | `{}`                                                                                       |
 
 ### mlfoundryServer Truefoundry mlfoundry server values
 
@@ -166,6 +171,51 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `mlfoundryServer.imagePullSecrets`                   | Image pull credentials for mlfoundry server                | `[]`                                               |
 | `mlfoundryServer.extraVolumes`                       | Extra volumes for the mlfoundry server                     | `[]`                                               |
 | `mlfoundryServer.extraVolumeMounts`                  | Extra volume mounts for the mlfoundry server               | `[]`                                               |
+| `mlfoundryServer.env`                                | Environment variables for the mlfoundry server             | `{}`                                               |
+
+### sparkHistoryServer Truefoundry spark history server values
+
+| Name                                         | Description                                        | Value                                     |
+| -------------------------------------------- | -------------------------------------------------- | ----------------------------------------- |
+| `s3proxy.enabled`                            | Bool to enable the s3 proxy                        | `false`                                   |
+| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `{}`                                      |
+| `s3proxy.annotations`                        | Annotations for the s3 proxy                       | `{}`                                      |
+| `s3proxy.image.repository`                   | Image repository for the s3 proxy                  | `tfy.jfrog.io/tfy-private-images/s3proxy` |
+| `s3proxy.image.tag`                          | Image tag for the s3 proxy                         | `v0.1.0`                                  |
+| `s3proxy.environmentName`                    | Environment name for the s3 proxy                  | `default`                                 |
+| `s3proxy.envSecretName`                      | Secret name for the s3 proxy environment variables | `s3proxy-env-secret`                      |
+| `s3proxy.imagePullPolicy`                    | Image pull policy for the s3 proxy                 | `IfNotPresent`                            |
+| `s3proxy.nameOverride`                       | Override name for the s3 proxy                     | `""`                                      |
+| `s3proxy.fullnameOverride`                   | Full name override for the s3 proxy                | `""`                                      |
+| `s3proxy.podAnnotations`                     | Annotations for the s3 proxy pods                  | `{}`                                      |
+| `s3proxy.podSecurityContext`                 | Security context for the s3 proxy pods             | `{}`                                      |
+| `s3proxy.commonLabels`                       | Common labels for the s3 proxy pods                | `{}`                                      |
+| `s3proxy.securityContext`                    | Security context for the s3 proxy                  | `{}`                                      |
+| `s3proxy.livenessProbe.failureThreshold`     | Liveness probe failure threshold for s3 proxy      | `3`                                       |
+| `s3proxy.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for s3 proxy          | `600`                                     |
+| `s3proxy.livenessProbe.periodSeconds`        | Liveness probe period for s3 proxy                 | `10`                                      |
+| `s3proxy.livenessProbe.successThreshold`     | Liveness probe success threshold for s3 proxy      | `1`                                       |
+| `s3proxy.livenessProbe.timeoutSeconds`       | Liveness probe timeout for s3 proxy                | `1`                                       |
+| `s3proxy.readinessProbe.failureThreshold`    | Readiness probe failure threshold for s3 proxy     | `3`                                       |
+| `s3proxy.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for s3 proxy         | `30`                                      |
+| `s3proxy.readinessProbe.periodSeconds`       | Readiness probe period for s3 proxy                | `10`                                      |
+| `s3proxy.readinessProbe.successThreshold`    | Readiness probe success threshold for s3 proxy     | `1`                                       |
+| `s3proxy.readinessProbe.timeoutSeconds`      | Readiness probe timeout for s3 proxy               | `1`                                       |
+| `s3proxy.nodeSelector`                       | Node selector for the s3 proxy                     | `{}`                                      |
+| `s3proxy.affinity`                           | Affinity settings for the s3 proxy                 | `{}`                                      |
+| `s3proxy.topologySpreadConstraints`          | Topology spread constraints for the s3 proxy       | `{}`                                      |
+| `s3proxy.service.type`                       | Service type for the s3 proxy                      | `ClusterIP`                               |
+| `s3proxy.service.port`                       | Service port for the s3 proxy                      | `8080`                                    |
+| `s3proxy.service.annotations`                | Annotations for the s3 proxy service               | `{}`                                      |
+| `s3proxy.serviceAccount.create`              | Bool to create the s3 proxy service account        | `false`                                   |
+| `s3proxy.serviceAccount.name`                | Name of the s3 proxy service account               | `""`                                      |
+| `s3proxy.serviceAccount.annotations`         | Annotations for the s3 proxy service account       | `{}`                                      |
+| `s3proxy.extraVolumes`                       | Extra volumes for the s3 proxy                     | `[]`                                      |
+| `s3proxy.extraVolumeMounts`                  | Extra volume mounts for the s3 proxy               | `[]`                                      |
+| `s3proxy.imagePullSecrets`                   | Image pull credentials for s3 proxy                | `[]`                                      |
+| `s3proxy.config.jcloudsEndpoint`             | JClouds endpoint for the s3 proxy                  | `https://s3.us-east-1.amazonaws.com`      |
+| `s3proxy.config.jcloudsProvider`             | JClouds provider for the s3 proxy                  | `aws-s3`                                  |
+| `s3proxy.env`                                | Environment variables for the s3 proxy             | `{}`                                      |
 
 ### servicefoundryServer Truefoundry servicefoundry server values
 
@@ -175,7 +225,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.tolerations`                          | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                          | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                     | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.52.1`                                               |
+| `servicefoundryServer.image.tag`                            | Image tag for the servicefoundry server                         | `v0.53.0`                                               |
 | `servicefoundryServer.environmentName`                      | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                        | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                      | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -210,10 +260,54 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.serviceMonitor.enabled`               | Enable ServiceMonitor for the servicefoundry server             | `true`                                                  |
 | `servicefoundryServer.serviceMonitor.additionalLabels`      | Additional labels for the ServiceMonitor                        | `{}`                                                    |
 | `servicefoundryServer.serviceMonitor.additionalAnnotations` | Additional annotations for the ServiceMonitor                   | `{}`                                                    |
+| `servicefoundryServer.env`                                  | Environment variables for the servicefoundry server             | `{}`                                                    |
 | `servicefoundryServer.configs.cicdTemplates`                | CICD Template for servicefoundry server                         | `{{ .Release.Name }}-cicd-templates-cm`                 |
 | `servicefoundryServer.configs.workbenchImages`              | Workbench Images for workbench deployments                      | `{{ .Release.Name }}-workbench-images-cm`               |
 | `servicefoundryServer.configs.imageMutationPolicy`          | Image Mutations policy for workloads                            | `{{ .Release.Name }}-image-mutation-policy-cm`          |
 | `servicefoundryServer.configs.k8sManifestValidationPolicy`  | K8s Manifest Validation policy for workloads                    | `{{ .Release.Name }}-k8s-manifest-validation-policy-cm` |
+
+### sparkHistoryServer Truefoundry spark history server values
+
+| Name                                                    | Description                                                    | Value                                                  |
+| ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| `sparkHistoryServer.enabled`                            | Bool to enable the spark history server                        | `false`                                                |
+| `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `{}`                                                   |
+| `sparkHistoryServer.annotations`                        | Annotations for the spark history server                       | `{}`                                                   |
+| `sparkHistoryServer.image.repository`                   | Image repository for the spark history server                  | `tfy.jfrog.io/tfy-private-images/spark-history-server` |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.48.1`                                              |
+| `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                  | `default`                                              |
+| `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables | `spark-history-server-env-secret`                      |
+| `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                 | `IfNotPresent`                                         |
+| `sparkHistoryServer.nameOverride`                       | Override name for the spark history server                     | `""`                                                   |
+| `sparkHistoryServer.fullnameOverride`                   | Full name override for the spark history server                | `""`                                                   |
+| `sparkHistoryServer.podAnnotations`                     | Annotations for the spark history server pods                  | `{}`                                                   |
+| `sparkHistoryServer.podSecurityContext`                 | Security context for the spark history server pods             | `{}`                                                   |
+| `sparkHistoryServer.commonLabels`                       | Common labels for the spark history server pods                | `{}`                                                   |
+| `sparkHistoryServer.securityContext`                    | Security context for the spark history server                  | `{}`                                                   |
+| `sparkHistoryServer.livenessProbe.failureThreshold`     | Liveness probe failure threshold for spark history server      | `3`                                                    |
+| `sparkHistoryServer.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for spark history server          | `20`                                                   |
+| `sparkHistoryServer.livenessProbe.periodSeconds`        | Liveness probe period for spark history server                 | `10`                                                   |
+| `sparkHistoryServer.livenessProbe.successThreshold`     | Liveness probe success threshold for spark history server      | `1`                                                    |
+| `sparkHistoryServer.livenessProbe.timeoutSeconds`       | Liveness probe timeout for spark history server                | `1`                                                    |
+| `sparkHistoryServer.readinessProbe.failureThreshold`    | Readiness probe failure threshold for spark history server     | `3`                                                    |
+| `sparkHistoryServer.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for spark history server         | `10`                                                   |
+| `sparkHistoryServer.readinessProbe.periodSeconds`       | Readiness probe period for spark history server                | `10`                                                   |
+| `sparkHistoryServer.readinessProbe.successThreshold`    | Readiness probe success threshold for spark history server     | `1`                                                    |
+| `sparkHistoryServer.readinessProbe.timeoutSeconds`      | Readiness probe timeout for spark history server               | `1`                                                    |
+| `sparkHistoryServer.nodeSelector`                       | Node selector for the spark history server                     | `{}`                                                   |
+| `sparkHistoryServer.affinity`                           | Affinity settings for the spark history server                 | `{}`                                                   |
+| `sparkHistoryServer.topologySpreadConstraints`          | Topology spread constraints for the spark history server       | `{}`                                                   |
+| `sparkHistoryServer.service.type`                       | Service type for the spark history server                      | `ClusterIP`                                            |
+| `sparkHistoryServer.service.port`                       | Service port for the spark history server                      | `18080`                                                |
+| `sparkHistoryServer.service.annotations`                | Annotations for the spark history server service               | `{}`                                                   |
+| `sparkHistoryServer.serviceAccount.create`              | Bool to create the spark history server service account        | `false`                                                |
+| `sparkHistoryServer.serviceAccount.name`                | Name of the spark history server service account               | `""`                                                   |
+| `sparkHistoryServer.serviceAccount.annotations`         | Annotations for the spark history server service account       | `{}`                                                   |
+| `sparkHistoryServer.extraVolumes`                       | Extra volumes for the spark history server                     | `[]`                                                   |
+| `sparkHistoryServer.extraVolumeMounts`                  | Extra volume mounts for the spark history server               | `[]`                                                   |
+| `sparkHistoryServer.imagePullSecrets`                   | Image pull credentials for spark history server                | `[]`                                                   |
+| `sparkHistoryServer.rbac.enabled`                       | Enable RBAC for the spark history server                       | `true`                                                 |
+| `sparkHistoryServer.env`                                | Environment variables for the spark history server             | `{}`                                                   |
 
 ### tfyK8sController Truefoundry tfy k8s controller values
 
@@ -223,7 +317,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.tolerations`                          | Tolerations specific to the tfyK8sController               | `{}`                                                 |
 | `tfyK8sController.annotations`                          | Annotations for the tfyK8sController                       | `{}`                                                 |
 | `tfyK8sController.image.repository`                     | Image repository for the tfyK8sController                  | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.47.1`                                            |
+| `tfyK8sController.image.tag`                            | Image tag for the tfyK8sController                         | `v0.53.0`                                            |
 | `tfyK8sController.environmentName`                      | Environment name for tfyK8sController                      | `default`                                            |
 | `tfyK8sController.envSecretName`                        | Secret name for the tfyK8sController environment variables | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                      | Image pull policy for the tfyK8sController                 | `IfNotPresent`                                       |
@@ -257,6 +351,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.serviceMonitor.additionalLabels`      | Additional labels for the ServiceMonitor                   | `{}`                                                 |
 | `tfyK8sController.serviceMonitor.additionalAnnotations` | Additional annotations for the ServiceMonitor              | `{}`                                                 |
 | `tfyK8sController.imagePullSecrets`                     | Image pull secrets for the tfyK8sController                | `[]`                                                 |
+| `tfyK8sController.env`                                  | Environment variables for the tfyK8sController             | `{}`                                                 |
 
 ### sfyManifestService Truefoundry sfy manifest service values
 
@@ -266,7 +361,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.annotations`                          | Annotations for the sfy manifest service                       | `{}`                                                   |
 | `sfyManifestService.tolerations`                          | Tolerations specific to the sfy manifest service               | `{}`                                                   |
 | `sfyManifestService.image.repository`                     | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                            | Image tag for the sfy manifest service                         | `v0.45.0`                                              |
+| `sfyManifestService.image.tag`                            | Image tag for the sfy manifest service                         | `v0.53.0`                                              |
 | `sfyManifestService.environmentName`                      | Environment name for the sfy manifest service                  | `default`                                              |
 | `sfyManifestService.envSecretName`                        | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
 | `sfyManifestService.imagePullPolicy`                      | Image pull policy for the sfy manifest service                 | `IfNotPresent`                                         |
@@ -300,6 +395,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.extraVolumes`                         | Extra volumes for the sfy manifest service                     | `[]`                                                   |
 | `sfyManifestService.extraVolumeMounts`                    | Extra volume mounts for the sfy manifest service               | `[]`                                                   |
 | `sfyManifestService.imagePullSecrets`                     | Image pull credentials for the sfy manifest service            | `[]`                                                   |
+| `sfyManifestService.env`                                  | Environment variables for the sfy manifest service             | `{}`                                                   |
 
 ### tfyBuild Truefoundry tfy build settings
 
@@ -378,7 +474,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.enabled`                              | Bool to enable the tfyController                        | `true`                                           |
 | `tfyController.annotations`                          | Annotations for the tfyController                       | `{}`                                             |
 | `tfyController.image.repository`                     | Image repository for the tfyController                  | `tfy.jfrog.io/tfy-private-images/tfy-controller` |
-| `tfyController.image.tag`                            | Image tag for the tfyController                         | `v0.21.0`                                        |
+| `tfyController.image.tag`                            | Image tag for the tfyController                         | `v0.53.0`                                        |
 | `tfyController.environmentName`                      | Environment name for the tfyController                  | `default`                                        |
 | `tfyController.envSecretName`                        | Secret name for the tfyController environment variables | `sfy-manifest-service-env-secret`                |
 | `tfyController.imagePullPolicy`                      | Image pull policy for the tfyController                 | `IfNotPresent`                                   |
@@ -410,6 +506,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.service.port`                         | Service port for the tfyController                      | `8123`                                           |
 | `tfyController.service.annotations`                  | Annotations for the tfyController service               | `{}`                                             |
 | `tfyController.serviceAccount.annotations`           | Annotations for the tfyController service account       | `{}`                                             |
+| `tfyController.env`                                  | Environment variables for the tfyController             | `{}`                                             |
 
 ### tfyWorkflowAdmin Truefoundry tfy workflow admin settings
 
@@ -448,6 +545,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.service.annotations`                | Annotations for the tfyWorkflowAdmin service               | `{}`                                                 |
 | `tfyWorkflowAdmin.serviceAccount.annotations`         | Annotations for the tfyWorkflowAdmin service account       | `{}`                                                 |
 | `tfyWorkflowAdmin.storage`                            | Storage settings for the tfyWorkflowAdmin                  | `{}`                                                 |
+| `tfyWorkflowAdmin.env`                                | Environment variables for the tfyWorkflowAdmin             | `{}`                                                 |
 
 ### tfyNats Truefoundry NATS settings
 

@@ -1,0 +1,19 @@
+{{- if .Values.s3proxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "s3proxy.fullname" . }}
+  labels:
+    {{- include "s3proxy.labels" . | nindent 4 }}
+  annotations:
+    {{- include "s3proxy.annotations" . | indent 4 }}
+spec:
+  type: {{ .Values.s3proxy.service.type }}
+  ports:
+    - port: {{ .Values.s3proxy.service.port }}
+      targetPort: {{ .Values.s3proxy.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "s3proxy.selectorLabels" . | nindent 4 }}
+{{- end }}

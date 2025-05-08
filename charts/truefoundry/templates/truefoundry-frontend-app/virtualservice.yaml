@@ -62,6 +62,16 @@ spec:
             port:
               number: 8089
           weight: 100
+    - match:
+        - uri:
+            prefix: "/api/s3proxy/"
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.s3proxyHost . }}
+            port:
+              number: {{ .Values.s3proxy.service.port }}
     - route:
         - destination:
             host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local

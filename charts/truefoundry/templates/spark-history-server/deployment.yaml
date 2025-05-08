@@ -1,0 +1,98 @@
+{{- if .Values.sparkHistoryServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spark-history-server.fullname" . }}
+  labels:
+    {{- include "spark-history-server.labels" . | nindent 4 }}
+  annotations:
+    {{- include "spark-history-server.annotations" . | indent 4 }}
+spec:
+  replicas: {{- include "spark-history-server.replicas" . | indent 1 }}
+  selector:
+    matchLabels:
+      {{- include "spark-history-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.sparkHistoryServer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "spark-history-server.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "spark-history-server.serviceAccountName" . }}
+      {{- with .Values.sparkHistoryServer.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "spark-history-server"
+          {{- with .Values.sparkHistoryServer.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "spark-history-server.env" . | trim | nindent 12 }}
+          image: "{{ .Values.sparkHistoryServer.image.repository }}:{{ .Values.sparkHistoryServer.image.tag }}"
+          imagePullPolicy: {{ .Values.sparkHistoryServer.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.sparkHistoryServer.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "spark-history-server.resources" . | indent 12 }}
+          livenessProbe:
+            failureThreshold: {{ .Values.sparkHistoryServer.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.sparkHistoryServer.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sparkHistoryServer.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.sparkHistoryServer.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.sparkHistoryServer.livenessProbe.timeoutSeconds }}
+            httpGet:
+              path: /api/v1/version
+              port: {{ .Values.sparkHistoryServer.service.port }}
+              scheme: HTTP
+          readinessProbe:
+            failureThreshold: {{ .Values.sparkHistoryServer.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.sparkHistoryServer.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.sparkHistoryServer.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.sparkHistoryServer.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.sparkHistoryServer.readinessProbe.timeoutSeconds }}
+            httpGet:
+              path: /api/v1/version
+              port: {{ .Values.sparkHistoryServer.service.port }}
+              scheme: HTTP
+          volumeMounts:
+            {{- include "spark-history-server.volumeMounts" . | nindent 12 }}
+      {{- with .Values.sparkHistoryServer.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- include "spark-history-server.volumes" . | nindent 8 }}
+      {{- if .Values.sparkHistoryServer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.sparkHistoryServer.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.sparkHistoryServer.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.sparkHistoryServer.topologySpreadConstraints }}
+        {{- toYaml .Values.sparkHistoryServer.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "spark-history-server.name" . }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.sparkHistoryServer.tolerations }}
+        {{- .Values.sparkHistoryServer.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}
