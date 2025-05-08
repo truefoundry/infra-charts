@@ -17,10 +17,10 @@ spec:
     - name: {{ .Values.monitoring.alertRules.name }}
       rules:
         - alert: PodNotHealthy
-          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown|Failed", namespace=~"{{ .Release.Namespace }}"}) > 0
+          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ .Release.Namespace }}"}) > 0
           for: 5m
           labels:
-            severity: critical
+            severity: warning
             tenant: {{ .Values.global.tenantName }}
             controlplane: "true"
           annotations:

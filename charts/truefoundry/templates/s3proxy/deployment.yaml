@@ -1,0 +1,108 @@
+{{- if .Values.s3proxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "s3proxy.fullname" . }}
+  labels:
+    {{- include "s3proxy.labels" . | nindent 4 }}
+  annotations:
+    {{- include "s3proxy.annotations" . | indent 4 }}
+spec:
+  replicas: {{- include "s3proxy.replicas" . | indent 1 }}
+  selector:
+    matchLabels:
+      {{- include "s3proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.s3proxy.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "s3proxy.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "s3proxy.serviceAccountName" . }}
+      {{- with .Values.s3proxy.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "s3proxy"
+          command:
+          - /usr/bin/dumb-init 
+          - --
+          - java
+          - -Dtruefoundry.jwks-uri="$(SFY_SERVER_URL)/v1/keys/jwks"
+          - -jar
+          - ./s3proxy
+          - --properties
+          - ./config.properties
+          {{- with .Values.s3proxy.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "s3proxy.env" . | trim | nindent 12 }}
+          image: "{{ .Values.s3proxy.image.repository }}:{{ .Values.s3proxy.image.tag }}"
+          imagePullPolicy: {{ .Values.s3proxy.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.s3proxy.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "s3proxy.resources" . | indent 12 }}
+          # TODO: Add liveness and readiness probes, skipping for now as there's no health endpoint in s3proxy
+          # livenessProbe:
+          #   failureThreshold: {{ .Values.s3proxy.livenessProbe.failureThreshold }}
+          #   initialDelaySeconds: {{ .Values.s3proxy.livenessProbe.initialDelaySeconds }}
+          #   periodSeconds: {{ .Values.s3proxy.livenessProbe.periodSeconds }}
+          #   successThreshold: {{ .Values.s3proxy.livenessProbe.successThreshold }}
+          #   timeoutSeconds: {{ .Values.s3proxy.livenessProbe.timeoutSeconds }}
+          #   httpGet:
+          #     path: /api/v1/version
+          #     port: {{ .Values.s3proxy.service.port }}
+          #     scheme: HTTP
+          # readinessProbe:
+          #   failureThreshold: {{ .Values.s3proxy.readinessProbe.failureThreshold }}
+          #   initialDelaySeconds: {{ .Values.s3proxy.readinessProbe.initialDelaySeconds }}
+          #   periodSeconds: {{ .Values.s3proxy.readinessProbe.periodSeconds }}
+          #   successThreshold: {{ .Values.s3proxy.readinessProbe.successThreshold }}
+          #   timeoutSeconds: {{ .Values.s3proxy.readinessProbe.timeoutSeconds }}
+          #   httpGet:
+          #     path: /api/v1/version
+          #     port: {{ .Values.s3proxy.service.port }}
+          #     scheme: HTTP
+          volumeMounts:
+            {{- include "s3proxy.volumeMounts" . | nindent 12 }}
+      {{- with .Values.s3proxy.imagePullSecrets }}
+      imagePullSecrets:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- include "s3proxy.volumes" . | nindent 8 }}
+      {{- if .Values.s3proxy.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.s3proxy.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.s3proxy.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.s3proxy.topologySpreadConstraints }}
+        {{- toYaml .Values.s3proxy.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "s3proxy.name" . }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.s3proxy.tolerations }}
+        {{- .Values.s3proxy.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}
