@@ -73,8 +73,18 @@ jobs:
         run: |
           pip install -r scripts/upload-artifacts/requirements.txt
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
+          
+      - name: Check if truefoundry chart changed
+        id: check_truefoundry_chart_update
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q '^charts/truefoundry/Chart.yaml$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Copy the current artifacts manifest file to old-artifacts.json for changelog
+        if: steps.check_truefoundry_chart_update.outputs.changed == 'true'
         run: |
           cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
@@ -100,12 +110,14 @@ jobs:
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
 
       - name: Generate Changelog
+        if: steps.check_truefoundry_chart_update.outputs.changed == 'true'
         run: |
           python scripts/get-release-notes/chart_changes.py charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json --output charts/truefoundry/changelog.json
         env:
           TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
 
       - name: Configure AWS credentials for s3 uploads
+        if: steps.check_truefoundry_chart_update.outputs.changed == 'true'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
@@ -113,6 +125,7 @@ jobs:
 
       # Upload Changelog to S3
       - name: Upload Changelog to S3
+        if: steps.check_truefoundry_chart_update.outputs.changed == 'true'
         run: |
           changelog_path="charts/truefoundry/changelog.json"
           if [ -f "$changelog_path" ]; then
@@ -123,6 +136,7 @@ jobs:
           fi
 
       - name: Cleanup Old Artifacts Manifest and Changelog
+        if: steps.check_truefoundry_chart_update.outputs.changed == 'true'
         run: |
             rm -rf charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
             rm -rf charts/truefoundry/changelog.json
