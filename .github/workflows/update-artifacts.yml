@@ -76,11 +76,7 @@ jobs:
 
       - name: Copy the current artifacts manifest file to old-artifacts.json for changelog
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold")
-          for chart in "${charts_list[@]}"
-          do 
-            cp charts/$chart/artifacts-manifest.json charts/$chart/old-artifacts-manifest.json
-          done
+          cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
@@ -104,11 +100,7 @@ jobs:
 
       - name: Generate Changelog
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold")
-          for chart in "${charts_list[@]}";
-          do
-            python scripts/get-release-notes/chart_changes.py charts/$chart/old-artifacts-manifest.json charts/$chart/artifacts-manifest.json --output charts/$chart/changelog.json
-          done
+          python scripts/get-release-notes/chart_changes.py charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json --output charts/truefoundry/changelog.json
         env:
           TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
 
@@ -121,10 +113,9 @@ jobs:
       # Upload Changelog to S3
       - name: Upload Changelog to S3
         run: |
-          chart="tfy-k8s-aws-eks-inframold"
-          changelog_path="charts/$chart/changelog.json"
+          changelog_path="charts/truefoundry/changelog.json"
           if [ -f "$changelog_path" ]; then
-            version=$(grep version charts/$chart/Chart.yaml | awk '{print $2}')
+            version=$(grep version charts/truefoundry/Chart.yaml | awk '{print $2}')
             aws s3 cp "$changelog_path" s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
           else
             echo "changelog.json not found - skipping S3 upload."
@@ -132,12 +123,8 @@ jobs:
 
       - name: Cleanup Old Artifacts Manifest and Changelog
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold")
-          for chart in "${charts_list[@]}";
-          do
-            rm -rf charts/$chart/old-artifacts-manifest.json
-            rm -rf charts/$chart/changelog.json
-          done
+            rm -rf charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
+            rm -rf charts/truefoundry/changelog.json
 
       # Update the inframold artifacts manifest
       - name: Update Artifacts Manifest
