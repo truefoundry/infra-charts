@@ -35,7 +35,7 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.9.0" ;;
+        terraform) echo "1.11.0" ;;
         kubectl) echo "1.28.0" ;;
         helm) echo "3.16.0" ;;
         jq) echo "1.7.1" ;;
@@ -134,11 +134,9 @@ detect_system() {
 
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
-        for pm in apt-get yum dnf apk; do
+        for pm in tdnf apt-get yum dnf apk; do
             if tool_exists "$pm"; then
                 PACKAGE_MANAGER="$pm"
-                # Check if Alpine Linux to adjust some behaviors
-                [[ $pm == "apk" ]] && IS_ALPINE=true || IS_ALPINE=false
                 break
             fi
         done
@@ -147,7 +145,6 @@ detect_system() {
         OS="darwin"
         tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
-        IS_ALPINE=false
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
     fi
