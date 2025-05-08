@@ -84,7 +84,8 @@ jobs:
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}";
           do
-            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+            version=$(cat charts/$chart/Chart.yaml | awk '/^version:/ {print $2}')
+            
             python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
               $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
           done
