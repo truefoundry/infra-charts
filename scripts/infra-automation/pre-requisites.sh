@@ -35,7 +35,7 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.11.0" ;;
+        terraform) echo "1.11.4" ;;
         kubectl) echo "1.28.0" ;;
         helm) echo "3.16.0" ;;
         jq) echo "1.7.1" ;;
@@ -75,7 +75,7 @@ check_sudo() {
     HAS_SUDO=false
     if tool_exists sudo; then
         # Check if user has sudo privileges by attempting a harmless command
-        if sudo -n true 2>/dev/null; then
+        if sudo -v 2>/dev/null; then
             HAS_SUDO=true
             log_debug "Sudo access is available"
         else
@@ -223,7 +223,8 @@ verify_tool_version() {
 }
 
 install_tool() {
-    local tool=$1 tmp_dir="/tmp/tool-install"
+    local tool=$1 tmp_dir="$(mktemp -d)"
+    pushd "$tmp_dir" > /dev/null
     mkdir -p "$tmp_dir" && cd "$tmp_dir" || exit 1
     log_debug "Installing $tool in temporary directory: $tmp_dir"
     local version
@@ -231,9 +232,18 @@ install_tool() {
 
     case $tool in
         terraform)
-            log_debug "Downloading terraform version $version"
-            wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
-            unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
+            local terraform_path
+            if tool_exists terraform; then
+                terraform_path=$(which terraform)
+            fi
+            if [ $terraform_path == *"brew"* ]; then
+                log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
+                brew upgrade terraform
+            else
+                log_debug "Downloading terraform version $version"
+                wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
+                unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
+            fi
             ;;
         kubectl)
             log_debug "Downloading kubectl version $version"
@@ -346,7 +356,7 @@ install_tool() {
             ;;
     esac
 
-    cd - > /dev/null && rm -rf "$tmp_dir"
+    popd > /dev/null && rm -rf "$tmp_dir"
     log_debug "Finished installing $tool"
 }
 
@@ -371,13 +381,14 @@ enforce_terraform_version() {
 }
 
 verify_tools() {
+    log_debug "Verifying tools..."
     local cloud_provider=$1
     local missing_tools=()
     local install_failed=()
 
     # First, make sure Terraform is installed with the correct version
     enforce_terraform_version
-
+    log_debug "Terraform verification complete"
     # Check other common tools (skip terraform as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
         if [ "$tool" != "terraform" ]; then
@@ -427,6 +438,7 @@ install_cloud_tools() {
     for tool in "${tools[@]}"; do
         if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
+                log_info "Installing $tool"
                 install_tool "$tool"
             else
                 return $MISSING_TOOLS
@@ -700,10 +712,11 @@ main() {
 
     # Step 1: Detect system
     detect_system
+    log_info "System detection complete"
 
     # Step 2: Install essential utilities
     install_essential_utilities || log_error "Missing essential utilities may affect deployment"
-
+    log_info "Essential utilities installation complete"
     # Step 3: Verify and install required tools
     verify_tools "$cloud_provider"
     local verify_status=$?
@@ -713,7 +726,7 @@ main() {
     elif [ $verify_status -ne $SUCCESS ]; then
         exit $verify_status
     fi
-
+    log_info "Tool verification complete"
     # Step 4: Create backend (required for all providers)
     if [ -n "$config_file" ]; then
         log_info "Setting up backend storage for $cloud_provider"
