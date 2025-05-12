@@ -35,9 +35,9 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.11.4" ;;
-        kubectl) echo "1.28.0" ;;
-        helm) echo "3.16.0" ;;
+        terraform) echo "1.10.1" ;;
+        kubectl) echo "1.31.8" ;;
+        helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
         aws) echo "2.17.0" ;;
         gcloud) echo "500.0.0" ;;
@@ -103,10 +103,17 @@ confirm_installation() {
     [[ $response =~ ^[nN] ]] && { log_error "Skipping $1 installation"; return 1; } || return 0
 }
 
+# Function to compare versions, returns true if the current version is greater than or equal to the required version
 version_compare() {
     local v1=${1#v} v2=${2#v}
     log_debug "Comparing versions: $v1 >= $v2"
-    [ "$(echo "$v1" | awk -F. '{printf "%d%02d", $1, $2}')" -ge "$(echo "$v2" | awk -F. '{printf "%d%02d", $1, $2}')" ]
+    local current_version="$(echo "$v1" | awk -F. '{printf "%d%02d", $1, $2}')"
+    local required_version="$(echo "$v2" | awk -F. '{printf "%d%02d", $1, $2}')"
+    if [ "$current_version" -ge "$required_version" ]; then
+        true
+    else
+        false
+    fi
 }
 
 get_cloud_tools() {
@@ -200,7 +207,7 @@ get_tool_version() {
     case $1 in
         terraform) version=$(terraform version | head -n1 | cut -d'v' -f2) ;;
         kubectl) version=$(kubectl version --client -o json | jq -r '.clientVersion.gitVersion' | cut -d'v' -f2) ;;
-        helm) version=$(helm version --short | cut -d'v' -f2) ;;
+        helm) version=$(helm version --short | cut -d'+' -f1) ;;
         aws) version=$(aws --version 2>&1 | cut -d'/' -f2) ;;
         gcloud) version=$(gcloud version 2>/dev/null | grep "Google Cloud SDK" | awk '{print $4}') ;;
         az) version=$(az version | jq -r '."azure-cli"') ;;
@@ -210,7 +217,8 @@ get_tool_version() {
     echo "$version"
 }
 
-verify_tool_version() {
+# Function to check if upgrade is needed for a tool
+upgrade_tool_version() {
     local tool=$1
     local required_version
     local current_version
@@ -218,8 +226,12 @@ verify_tool_version() {
     required_version=$(get_tool_required_version "$tool")
     current_version=$(get_tool_version "$tool")
 
-    version_compare "$current_version" "$required_version" || \
+    if ! version_compare "$current_version" "$required_version"; then
         log_error "$tool version $current_version found. Version $required_version or higher required"
+        true
+    else
+        false
+    fi
 }
 
 install_tool() {
@@ -236,7 +248,7 @@ install_tool() {
             if tool_exists terraform; then
                 terraform_path=$(which terraform)
             fi
-            if [ $terraform_path == *"brew"* ]; then
+            if [[ $terraform_path == *"homebrew"* ]]; then
                 log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
                 brew upgrade terraform
             else
@@ -246,9 +258,18 @@ install_tool() {
             fi
             ;;
         kubectl)
-            log_debug "Downloading kubectl version $version"
-            wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
-            chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
+            local kubectl_path
+            if tool_exists kubectl; then
+                kubectl_path=$(which kubectl)
+            fi
+            if [[ $kubectl_path == *"homebrew"* ]]; then
+                log_debug "Kubectl is installed via brew. Using brew to upgrade kubectl..."
+                brew upgrade kubectl
+            else
+                log_debug "Downloading kubectl version $version"
+                wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
+                chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
+            fi
             ;;
         helm)
             log_debug "Downloading helm version $version"
@@ -398,8 +419,8 @@ verify_tools() {
                 else
                     missing_tools+=("$tool")
                 fi
-            elif ! verify_tool_version "$tool"; then
-                return $VERSION_ERROR
+            elif upgrade_tool_version "$tool"; then
+                install_tool "$tool" || install_failed+=("$tool")
             fi
         fi
     done
@@ -413,8 +434,8 @@ verify_tools() {
             else
                 missing_tools+=("$tool")
             fi
-        elif ! verify_tool_version "$tool"; then
-            return $VERSION_ERROR
+        elif upgrade_tool_version "$tool"; then
+            install_tool "$tool" || install_failed+=("$tool")
         fi
     done
 
@@ -477,7 +498,7 @@ create_backend() {
                 export AWS_PROFILE="$profile"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
-                    log_error "AWS authentication failed. Please run 'aws sso login' or check your credentials"
+                    log_error "AWS authentication failed. Please run 'aws sso login' or check your aws profile '$profile'export"
                     exit 1
                 fi
                 log_success "AWS authentication successful using profile: $profile"
