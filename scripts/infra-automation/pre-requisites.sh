@@ -459,7 +459,7 @@ install_cloud_tools() {
     for tool in "${tools[@]}"; do
         if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
-                log_info "Installing $tool"
+                log_debug "Installing $tool"
                 install_tool "$tool"
             else
                 return $MISSING_TOOLS
