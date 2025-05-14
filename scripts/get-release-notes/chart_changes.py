@@ -70,7 +70,7 @@ def get_commits(repo: str, old_tag: str, new_tag: str) -> List[dict]:
 
 
 def extract_pr_number(message: str) -> Optional[str]:
-    match = re.search(r"\(#(\d+)\)", message)
+    match = re.search(r"\(#(\d+)\)|(?:Merge pull request #(\d+) from)", message)
     return match.group(1) if match else None
 
 
@@ -89,7 +89,6 @@ def enrich_commit(commit: dict, repo: str) -> Dict:
 
 def generate_changelog(changes: List[Dict[str, str]]) -> Dict[str, List[Dict]]:
     changelog = {}
-    commits_with_pr = []
     for entry in changes:
         repo = entry["image"]
         old_tag = entry["old_tag"]
@@ -98,12 +97,8 @@ def generate_changelog(changes: List[Dict[str, str]]) -> Dict[str, List[Dict]]:
         print(f"🔍 Fetching commits for {repo}: {old_tag} → {new_tag}")
         commits = get_commits(repo, old_tag, new_tag)
 
-        for commit in commits:
-            info = enrich_commit(commit, repo)
-            if info["pull_request"]:
-                commits_with_pr.append(info)
+        changelog[repo] = [enrich_commit(commit, repo) for commit in commits]
 
-        changelog[repo] = commits_with_pr
     return changelog
 
 
