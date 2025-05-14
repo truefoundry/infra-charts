@@ -71,7 +71,7 @@ def get_commits(repo: str, old_tag: str, new_tag: str) -> List[dict]:
 
 def extract_pr_number(message: str) -> Optional[str]:
     match = re.search(r"\(#(\d+)\)|(?:Merge pull request #(\d+) from)", message)
-    return match.group(1) if match else None
+    return match.group(1) or match.group(2) if match else None
 
 
 def enrich_commit(commit: dict, repo: str) -> Dict:
