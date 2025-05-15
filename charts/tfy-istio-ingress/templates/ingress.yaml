@@ -21,11 +21,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.alb.ingress.ingressClassName }}
   rules:
-    - {{- $host := default "*" (index (index .Values.tfyGateway.spec.servers 0).hosts 0) }}
-      {{- if ne $host "*" }}
-      host: {{ $host | quote }}
-      {{- end }}
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
