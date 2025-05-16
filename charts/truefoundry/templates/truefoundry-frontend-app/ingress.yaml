@@ -54,6 +54,13 @@ spec:
                 name: {{ $.Release.Name }}-s3proxy
                 port:
                   number: 8080
+          - path: /api/otel/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-otel-collector
+                port:
+                  number: 4318
           - path: /
             pathType: Prefix
             backend:
