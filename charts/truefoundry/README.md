@@ -275,7 +275,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `{}`                                                   |
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                       | `{}`                                                   |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server                  | `tfy.jfrog.io/tfy-private-images/spark-history-server` |
-| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.55.0-rc.1`                                         |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.55.0`                                              |
 | `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                  | `default`                                              |
 | `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables | `spark-history-server-env-secret`                      |
 | `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                 | `IfNotPresent`                                         |
