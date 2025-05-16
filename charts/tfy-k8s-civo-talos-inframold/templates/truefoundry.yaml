@@ -14,7 +14,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.53.0
+    targetRevision: 0.55.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -151,6 +151,10 @@ spec:
           {{- else }}
           affinity: {}
           {{- end }}
+        s3proxy:
+          enabled: {{ .Values.truefoundry.s3proxy.enabled }}
+        sparkHistoryServer:
+          enabled: {{ .Values.truefoundry.sparkHistoryServer.enabled }}
         tfy-llm-gateway:
           serviceAccount:
             annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
