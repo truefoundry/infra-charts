@@ -72,6 +72,16 @@ spec:
             host: {{ tpl .Values.truefoundryFrontendApp.s3proxyHost . }}
             port:
               number: {{ .Values.s3proxy.service.port }}
+    - match:
+        - uri:
+            prefix: "/api/otel/"
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ tpl .Values.truefoundryFrontendApp.tfyOtelCollectorHost . }}
+            port:
+              number: 4318
     - route:
         - destination:
             host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
