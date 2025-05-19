@@ -288,7 +288,7 @@ Tolerations for tfy-llm-gateway deployment
 {{- else if .Values.global.tolerations -}}
 {{- toYaml .Values.global.tolerations }}
 {{- else -}}
-{}
+[]
 {{- end }}
 {{- end }}
 
