@@ -91,17 +91,20 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 
 ### database. Can be left empty if using the dev mode parameters
 
-| Name                                               | Description                                                | Value |
-| -------------------------------------------------- | ---------------------------------------------------------- | ----- |
-| `truefoundry.database.host`                        | Hostname of the database                                   | `""`  |
-| `truefoundry.database.name`                        | Name of the database                                       | `""`  |
-| `truefoundry.database.username`                    | Username of the database                                   | `""`  |
-| `truefoundry.database.password`                    | Password of the database                                   | `""`  |
-| `truefoundry.tfyApiKey`                            | API Key for TrueFoundry                                    | `""`  |
-| `truefoundry.truefoundryImagePullConfigJSON`       | Json config for authenticating to the TrueFoundry registry | `""`  |
-| `truefoundry.truefoundry_iam_role_arn_annotations` | IAM role annotations for service accounts                  | `{}`  |
-| `truefoundry.tolerations`                          | Tolerations for the truefoundry components                 | `[]`  |
-| `truefoundry.affinity`                             | Affinity for the truefoundry components                    | `{}`  |
+| Name                                               | Description                                                | Value   |
+| -------------------------------------------------- | ---------------------------------------------------------- | ------- |
+| `truefoundry.database.host`                        | Hostname of the database                                   | `""`    |
+| `truefoundry.database.name`                        | Name of the database                                       | `""`    |
+| `truefoundry.database.username`                    | Username of the database                                   | `""`    |
+| `truefoundry.database.password`                    | Password of the database                                   | `""`    |
+| `truefoundry.tfyApiKey`                            | API Key for TrueFoundry                                    | `""`    |
+| `truefoundry.truefoundryImagePullConfigJSON`       | Json config for authenticating to the TrueFoundry registry | `""`    |
+| `truefoundry.truefoundry_iam_role_arn_annotations` | IAM role annotations for service accounts                  | `{}`    |
+| `truefoundry.s3proxy.enabled`                      | Flag to enable S3 Proxy                                    | `false` |
+| `truefoundry.sparkHistoryServer.enabled`           | Flag to enable Spark History Server                        | `false` |
+| `truefoundry.tfyWorkflowAdmin.enabled`             | Flag to enable Tfy Workflow Admin                          | `false` |
+| `truefoundry.tolerations`                          | Tolerations for the truefoundry components                 | `[]`    |
+| `truefoundry.affinity`                             | Affinity for the truefoundry components                    | `{}`    |
 
 ### loki parameters
 
