@@ -79,5 +79,4 @@ spec:
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      tolerations:
-        {{- include "tfy-llm-gateway.tolerations" . | nindent 8 | default "[]" }}
+      tolerations: {{ include "tfy-llm-gateway.tolerations" . | default "[]" | nindent 8 }}
