@@ -41,7 +41,7 @@ LLM-Gateway Helm Chart
 | `healthcheck.liveness.successThreshold`         | Success threshold                                            | `1`                                               |
 | `healthcheck.liveness.failureThreshold`         | Failure threshold                                            | `3`                                               |
 | `nodeSelector`                                  | Node selector                                                | `{}`                                              |
-| `tolerations`                                   | Tolerations                                                  | `{}`                                              |
+| `tolerations`                                   | Tolerations                                                  | `[]`                                              |
 | `affinity`                                      | Affinity                                                     | `{}`                                              |
 | `topologySpreadConstraints`                     | Topology spread constraints                                  | `{}`                                              |
 | `terminationGracePeriodSeconds`                 | Termination grace period in seconds                          | `120`                                             |
