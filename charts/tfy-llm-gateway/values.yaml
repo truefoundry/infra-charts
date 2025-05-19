@@ -175,11 +175,11 @@ rollout:
 
 ## @skip env Environment variables for the llmGateway
 env:
-  SERVICEFOUNDRY_SERVER_URL: https://internal.devtest.truefoundry.cloud/api/svc
-  CONTROL_PLANE_NATS_URL: wss://internal.devtest.truefoundry.cloud:443
+  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   LOG_LEVEL: info
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
+  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
 
