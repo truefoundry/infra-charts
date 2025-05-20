@@ -12,7 +12,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`         | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                             | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                        | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`               | Version of control-plane chart                                                         | `0.55.1`                                                                         |
+| `global.controlPlaneChartVersion`               | Version of control-plane chart                                                         | `0.55.2`                                                                         |
 | `global.existingTruefoundryCredsSecret`         | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                          | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                          | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -275,7 +275,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `{}`                                                   |
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                       | `{}`                                                   |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server                  | `tfy.jfrog.io/tfy-private-images/spark-history-server` |
-| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.55.0-rc.1`                                         |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.55.0`                                              |
 | `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                  | `default`                                              |
 | `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables | `spark-history-server-env-secret`                      |
 | `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                 | `IfNotPresent`                                         |
