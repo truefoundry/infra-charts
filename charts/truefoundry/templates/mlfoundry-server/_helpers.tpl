@@ -151,11 +151,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "mlfoundry-server.defaultResources.small" }}
 requests:
-  cpu: 500m
+  cpu: 100m
   memory: 512Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 1000m
+  cpu: 200m
   memory: 1024Mi
   ephemeral-storage: 256Mi
 {{- end }}
