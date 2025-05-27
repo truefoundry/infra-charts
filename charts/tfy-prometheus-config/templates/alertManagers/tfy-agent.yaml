@@ -9,6 +9,8 @@ metadata:
     {{- include "alertManagers.annotations" . | nindent 4 }}
 spec:
   route:
+    groupBy:
+      {{- toYaml .Values.alertManagers.tfyAgent.route.groupBy | nindent 4 }}
     receiver: {{ .Values.alertManagers.tfyAgent.route.receiver }}
     routes:
       {{- toYaml .Values.alertManagers.tfyAgent.route.routes | nindent 4 }}
