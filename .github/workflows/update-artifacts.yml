@@ -110,7 +110,7 @@ jobs:
           new_rev=$(jq -r '.[] | select(.details.chart=="truefoundry") | .details.targetRevision' charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json)
 
           if [ "$old_rev" != "$new_rev" ]; then
-            echo truefoundry chart version has changed from $old_rev to $new_rev, generating changelog"
+            echo "truefoundry chart version has changed from $old_rev to $new_rev, generating changelog"
             python scripts/get-release-notes/chart_changes.py \
               charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json \
               charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
