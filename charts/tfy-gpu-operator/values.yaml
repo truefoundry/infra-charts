@@ -690,7 +690,7 @@ gcp-gke-standard-gpu-operator:
   ## Toolkit configuration.
   toolkit:
     ## @param gcp-gke-standard-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
-    enabled: true
+    enabled: false
     ## @param gcp-gke-standard-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.17.4-ubuntu20.04
     ## @param gcp-gke-standard-gpu-operator.toolkit.installDir Directory for toolkit installation
@@ -709,6 +709,48 @@ gcp-gke-standard-gpu-operator:
       limits:
         cpu: 50m
         memory: 300Mi
+
+   ## Fake Toolkit Ready Daemonset
+  fakeToolkitReady:
+    image:
+      ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
+      repository: "alpine"
+      ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.tag Tag for the fake toolkit ready container.
+      tag: "3.20"
+    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
+    imagePullSecrets: []
+    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
+    resources:
+      requests:
+        cpu: 5m
+        memory: 10Mi
+      limits:
+        cpu: 10m
+        memory: 50Mi
+    ## @skip gcp-gke-standard-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: cloud.google.com/gke-accelerator
+                  operator: Exists
+                - key: cloud.google.com/machine-family
+                  operator: In
+                  values:
+                    - n1
+                    - g2
+                    - a2
+                    - a3
+    ## @skip gcp-gke-standard-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      - key: cloud.google.com/gke-spot
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
 
   ## Device Plugin configuration.
   devicePlugin:
