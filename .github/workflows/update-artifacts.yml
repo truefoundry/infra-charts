@@ -101,7 +101,7 @@ jobs:
           charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
 
-
+      # Generate changelog step is run on only tfy-k8s-aws-eks-inframold chart
       - name: Generate Changelog
         id: generate_changelog
         run: |
@@ -109,10 +109,8 @@ jobs:
           old_rev=$(jq -r '.[] | select(.details.chart=="truefoundry") | .details.targetRevision' charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json)
           new_rev=$(jq -r '.[] | select(.details.chart=="truefoundry") | .details.targetRevision' charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json)
 
-          echo "truefoundry chart versions -> old: $old_rev, new: $new_rev"
-
           if [ "$old_rev" != "$new_rev" ]; then
-            echo "truefoundry chart has changed, generating changelog"
+            echo truefoundry chart version has changed from $old_rev to $new_rev, generating changelog"
             python scripts/get-release-notes/chart_changes.py \
               charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json \
               charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
