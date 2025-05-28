@@ -77,7 +77,7 @@ jobs:
       - name: Check if truefoundry chart changed
         id: check_truefoundry_chart_update
         run: |
-          if git diff --name-only origin/main...HEAD | grep -q '^charts/truefoundry/Chart.yaml$'; then
+          if git diff origin/main...HEAD -- tfy-k8s-aws-eks-inframold/artifacts-manifest.json | grep -q '"targetRevision":'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
