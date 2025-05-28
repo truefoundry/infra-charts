@@ -558,9 +558,9 @@ gcp-gke-standard-gpu-operator:
         operator: Exists
         effect: NoSchedule
       - key: cloud.google.com/gke-spot
-        operator: In
-        values:
-          - 'true'
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
 
   ## Node Feature Discovery configuration.
   node-feature-discovery:
@@ -584,9 +584,9 @@ gcp-gke-standard-gpu-operator:
           operator: Equal
           effect: NoSchedule
         - key: cloud.google.com/gke-spot
-          operator: In
-          values:
-            - 'true'
+          operator: Equal
+          value: 'true'
+          effect: NoSchedule
     worker:
       ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
       resources:
@@ -616,9 +616,9 @@ gcp-gke-standard-gpu-operator:
           operator: Exists
           effect: NoSchedule
         - key: cloud.google.com/gke-spot
-          operator: In
-          values:
-            - 'true'
+          operator: Equal
+          value: 'true'
+          effect: NoSchedule
     gc:
       ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
       enable: true
@@ -645,9 +645,9 @@ gcp-gke-standard-gpu-operator:
           operator: Exists
           effect: NoSchedule
         - key: cloud.google.com/gke-spot
-          operator: In
-          values:
-            - 'true'
+          operator: Equal
+          value: 'true'
+          effect: NoSchedule
 
   ## Daemonsets configuration
   daemonsets:
@@ -664,9 +664,9 @@ gcp-gke-standard-gpu-operator:
         operator: Exists
         effect: NoSchedule
       - key: cloud.google.com/gke-spot
-        operator: In
-        values:
-          - 'true'
+        operator: Equal
+        value: 'true'
+        effect: NoSchedule
 
   cdi:
     enabled: true
