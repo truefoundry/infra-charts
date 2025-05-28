@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'changelog-workflow-update'
     paths:
       - '.github/workflows/update-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
@@ -82,6 +81,7 @@ jobs:
           cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
 
+      # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
         run: |
           charts_list=(
@@ -92,7 +92,8 @@ jobs:
             "tfy-k8s-generic-inframold"
           )
           for chart in "${charts_list[@]}"; do
-            version=$(grep '^version:' charts/$chart/Chart.yaml | awk '{print $2}')
+            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+          
             python scripts/generate-artifacts-manifest/artifacts_template_generator.py \
               $chart https://truefoundry.github.io/infra-charts/ \
               $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json \
@@ -101,7 +102,8 @@ jobs:
         env:
           MODE: 'local'
 
-      - name: Check Multi-Arch Support
+      # Check if truefoundry chart images support amd64 and arm64 using AWS chart
+      - name: Check if Truefoundry Chart Images Support Multiple Architectures
         run: |
           python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
             charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
@@ -181,6 +183,6 @@ jobs:
             echo "Nothing to commit"
           else
             git commit -am "[CI] Update charts artifacts manifest files" --signoff
-            git pull --rebase
+            git pull origin --rebase
             git push
           fi
