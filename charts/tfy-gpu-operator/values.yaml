@@ -596,6 +596,7 @@ gcp-gke-standard-gpu-operator:
         limits:
           cpu: 50m
           memory: 300Mi
+      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.worker.affinity [object] Affinity for the NFD worker
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -668,11 +669,16 @@ gcp-gke-standard-gpu-operator:
         value: 'true'
         effect: NoSchedule
 
+  ## CDI configuration
   cdi:
+    ## @param gcp-gke-standard-gpu-operator.cdi.enabled Enable/Disable CDI
     enabled: true
+    ## @param gcp-gke-standard-gpu-operator.cdi.default Set as default CDI
     default: true
 
+  ## Host paths configuration
   hostPaths:
+    ## @param gcp-gke-standard-gpu-operator.hostPaths.driverInstallDir Directory for driver installation
     driverInstallDir: /home/kubernetes/bin/nvidia
 
   ## Driver configuration
@@ -686,8 +692,9 @@ gcp-gke-standard-gpu-operator:
     enabled: true
     ## @param gcp-gke-standard-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.17.4-ubuntu20.04
-    ## @skip gcp-gke-standard-gpu-operator.toolkit.env
+    ## @param gcp-gke-standard-gpu-operator.toolkit.installDir Directory for toolkit installation
     installDir: /home/kubernetes/bin/nvidia
+    ## @skip gcp-gke-standard-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
         value: "false"
