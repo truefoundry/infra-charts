@@ -683,7 +683,7 @@ gcp-gke-standard-gpu-operator:
   ## Toolkit configuration.
   toolkit:
     ## @param gcp-gke-standard-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
-    enabled: false
+    enabled: true
     ## @param gcp-gke-standard-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.17.4-ubuntu20.04
     ## @skip gcp-gke-standard-gpu-operator.toolkit.env
@@ -795,7 +795,7 @@ gcp-gke-standard-gpu-operator:
         cpu: 100m
         memory: 1000Mi
     ## @param gcp-gke-standard-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
-    args: ["-c", "5000"]
+    args: ["-c", '"5000"', "--kubernetes-gpu-id-type", "device-name"]
 
   ## MIG Configuration
   mig:
