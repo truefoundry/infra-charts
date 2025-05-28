@@ -1,16 +1,13 @@
 ## @section Upstream Loki configurations
 ##
-deploymentMode: SingleBinary
 
 loki:
-
   ## @param loki.enabled Enable loki
   enabled: true
   loki:
     deploymentMode: SingleBinary
     singleBinary:
-      replicas: 2
-
+      replicas: 1
     ## @param loki.loki.auth_enabled Enables authentication through the X-Scope-OrgID header
     auth_enabled: false
     ## @skip loki.loki.commonConfig.replication_factor
@@ -55,63 +52,63 @@ loki:
       max_streams_per_user: 10000
       max_label_names_per_series: 30
       max_line_size: 51
-  ## @skip loki.test.enabled
-  test:
-    enabled: false
-  ## @skip loki.gateway.enabled
-  gateway:
-    enabled: false
-  ## @skip loki.monitoring
-  monitoring:
-    rules:
+    ## @skip loki.test.enabled
+    test:
       enabled: false
-    dashboards:
+    ## @skip loki.gateway.enabled
+    gateway:
       enabled: false
+    ## @skip loki.monitoring
+    monitoring:
+      rules:
+        enabled: false
+      dashboards:
+        enabled: false
+      lokiCanary:
+        enabled: false
+      selfMonitoring:
+        enabled: false
+        grafanaAgent:
+          installOperator: false
+      serviceMonitor:
+        enabled: false
+    singleBinary:
+      ## @param loki.singleBinary.replicas Number of replicas for the single binary
+      replicas: 1
+      ## @param loki.singleBinary.resources.requests.cpu CPU requests for promtail container
+      ## @param loki.singleBinary.resources.requests.memory Memory requests for promtail container
+      ## @param loki.singleBinary.resources.limits.cpu CPU limits for promtail container
+      ## @param loki.singleBinary.resources.limits.memory Memory limits for promtail container
+      resources:
+        requests:
+          cpu: 0.2
+          memory: 810Mi
+        limits:
+          cpu: 0.4
+          memory: 1620Mi
+      ## @param loki.singleBinary.persistence.size Size of persistent disk
+      ## @param loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC Enable StatefulSetAutoDeletePVC feature
+      persistence:
+        enableStatefulSetAutoDeletePVC: false
+        size: 50Gi
+    write:
+      replicas: 0
+    read:
+      replicas: 0
+    backend:
+      replicas: 0
+    
+    resultsCache:
+      enabled: false
+
+    memcachedExporter:
+      enabled: false
+
     lokiCanary:
       enabled: false
-    selfMonitoring:
+
+    chunksCache:
       enabled: false
-      grafanaAgent:
-        installOperator: false
-    serviceMonitor:
-      enabled: false
-  singleBinary:
-    ## @param loki.singleBinary.replicas Number of replicas for the single binary
-    replicas: 1
-    ## @param loki.singleBinary.resources.requests.cpu CPU requests for promtail container
-    ## @param loki.singleBinary.resources.requests.memory Memory requests for promtail container
-    ## @param loki.singleBinary.resources.limits.cpu CPU limits for promtail container
-    ## @param loki.singleBinary.resources.limits.memory Memory limits for promtail container
-    resources:
-      requests:
-        cpu: 0.2
-        memory: 810Mi
-      limits:
-        cpu: 0.4
-        memory: 1620Mi
-    ## @param loki.singleBinary.persistence.size Size of persistent disk
-    ## @param loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC Enable StatefulSetAutoDeletePVC feature
-    persistence:
-      enableStatefulSetAutoDeletePVC: false
-      size: 50Gi
-  write:
-    replicas: 0
-  read:
-    replicas: 0
-  backend:
-    replicas: 0
-  
-  resultsCache:
-    enabled: false
-
-  memcachedExporter:
-    enabled: false
-
-  lokiCanary:
-    enabled: false
-
-  chunksCache:
-    enabled: false
 
 
 promtail:
