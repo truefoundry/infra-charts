@@ -50,7 +50,7 @@ Common Annotations
 app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.commonLabels }}
+{{- range $name, $value := .Values.podLabels }}
 {{ $name }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
@@ -61,9 +61,7 @@ Common labels
 {{- define "buildkitd-service.labels" -}}
 {{- include "buildkitd-service.podLabels" . }}
 helm.sh/chart: {{ include "buildkitd-service.chart" . }}
-{{- if .Values.commonLabels }}
-{{ toYaml .Values.commonLabels }}
-{{- else if .Values.labels }}
+{{- if .Values.labels }}
 {{ toYaml .Values.labels }}
 {{- end }}
 {{- end }}
