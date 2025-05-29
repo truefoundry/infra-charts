@@ -69,7 +69,7 @@ global:
     name: truefoundry
     ## @param global.serviceAccount.annotations Annotations for the service account
     annotations: {}
-  automountServiceAccountToken: true
+    automountServiceAccountToken: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -316,6 +316,7 @@ truefoundryFrontendApp:
   serviceAccount:
     ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
     annotations: {}
+    automountServiceAccountToken: true
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -751,6 +752,7 @@ servicefoundryServer:
   serviceAccount:
     ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
     annotations: {}
+    automountServiceAccountToken: true
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
   extraVolumes: []
   ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
@@ -1048,6 +1050,7 @@ tfyK8sController:
   serviceAccount:
     ## @param tfyK8sController.serviceAccount.annotations Annotations for the tfyK8sController service account
     annotations: {}
+    automountServiceAccountToken: true
   ## @param tfyK8sController.extraVolumes Extra volumes for the tfyK8sController
   extraVolumes: []
   ## @param tfyK8sController.extraVolumeMounts Extra volume mounts for the tfyK8sController
@@ -1184,6 +1187,7 @@ sfyManifestService:
   serviceAccount:
     ## @param sfyManifestService.serviceAccount.annotations Annotations for the sfy manifest service service account
     annotations: {}
+    automountServiceAccountToken: true
   ## @param sfyManifestService.extraVolumes Extra volumes for the sfy manifest service
   extraVolumes: []
   ## @param sfyManifestService.extraVolumeMounts Extra volume mounts for the sfy manifest service
@@ -1467,6 +1471,9 @@ tfyBuild:
 tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: true
+
+  serviceAccount:
+    automountServiceAccountToken: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
   service:
     ## @param tfy-buildkitd-service.service.port port number for the tfy-buildkitd service
@@ -1622,6 +1629,7 @@ tfyController:
   serviceAccount:
     ## @param tfyController.serviceAccount.annotations Annotations for the tfyController service account
     annotations: {}
+    automountServiceAccountToken: true
   ## @param tfyController.env [object] Environment variables for the tfyController
   env:
     GIN_MODE: release
