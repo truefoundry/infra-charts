@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.56.0
+  controlPlaneChartVersion: 0.57.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -69,7 +69,6 @@ global:
     name: truefoundry
     ## @param global.serviceAccount.annotations Annotations for the service account
     annotations: {}
-    automountServiceAccountToken: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -139,9 +138,6 @@ monitoring:
 truefoundryBootstrap:
   ## @param truefoundryBootstrap.enabled Bool to enable truefoundry bootstrap
   enabled: true
-
-  serviceAccount:
-    automountServiceAccountToken: true
   ## securityContext Security context for the bootstrap container
   securityContext:
     ## @param truefoundryBootstrap.securityContext.enabled Bool to enable security context for the bootstrap container
@@ -198,7 +194,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -316,7 +312,6 @@ truefoundryFrontendApp:
   serviceAccount:
     ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -421,8 +416,6 @@ truefoundryFrontendApp:
     VITE_ENABLE_GUARDRAILS: "false"
     VITE_GUARDRAILS_ENABLED_TENANTS: ""
     VITE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
-  # If set, overrides global.automountServiceAccountToken for truefoundryFrontendApp
-  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### MLfoundry Server ##########################################################
 ###################################################################################################################
@@ -439,7 +432,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -513,7 +506,6 @@ mlfoundryServer:
   serviceAccount:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -542,8 +534,6 @@ mlfoundryServer:
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     ENVIRONMENT: production
-  # If set, overrides global.automountServiceAccountToken for mlfoundryServer
-  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -563,7 +553,7 @@ s3proxy:
     ## @param s3proxy.image.repository Image repository for the s3 proxy
     repository: "tfy.jfrog.io/tfy-private-images/s3proxy"
     ## @param s3proxy.image.tag Image tag for the s3 proxy
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @param s3proxy.environmentName Environment name for the s3 proxy
   environmentName: default
   ## @param s3proxy.envSecretName Secret name for the s3 proxy environment variables
@@ -660,8 +650,6 @@ s3proxy:
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-  # If set, overrides global.automountServiceAccountToken for s3proxy
-  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
@@ -680,7 +668,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -752,7 +740,6 @@ servicefoundryServer:
   serviceAccount:
     ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
   extraVolumes: []
   ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
@@ -791,6 +778,7 @@ servicefoundryServer:
     DB_SSL_MODE: ""
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     TFY_BUILD_LOGS_URL: "{{ .Values.global.controlPlaneURL }}/api/svc"
     TFY_BUILD_WS_URL: "{{ .Values.global.controlPlaneURL }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
@@ -839,8 +827,6 @@ servicefoundryServer:
     imageMutationPolicy: '{{ .Release.Name }}-image-mutation-policy-cm'
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
     k8sManifestValidationPolicy: '{{ .Release.Name }}-k8s-manifest-validation-policy-cm'
-  # If set, overrides global.automountServiceAccountToken for servicefoundryServer
-  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -860,7 +846,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server
     repository: "tfy.jfrog.io/tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.55.0"
+    tag: "v0.57.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -976,7 +962,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1050,7 +1036,6 @@ tfyK8sController:
   serviceAccount:
     ## @param tfyK8sController.serviceAccount.annotations Annotations for the tfyK8sController service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param tfyK8sController.extraVolumes Extra volumes for the tfyK8sController
   extraVolumes: []
   ## @param tfyK8sController.extraVolumeMounts Extra volume mounts for the tfyK8sController
@@ -1078,16 +1063,13 @@ tfyK8sController:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     NODE_ENV: production
-    DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe,delete_application
-    DISABLE_WORKBENCH_RECOMMENDER_RECOMMENDATION_TYPES: delete_application
+    DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe
     ENABLE_AUTOPILOT_DIAGNOSIS: "false"
     SENTRY_ENABLED: "true"
     CLICKHOUSE_ENABLED: "{{ .Values.tags.llmGatewayRequestLogging }}"
     CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
     CLICKHOUSE_USER: user
     CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
-  # If set, overrides global.automountServiceAccountToken for tfyK8sController
-  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1105,7 +1087,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.56.0"
+    tag: "v0.57.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1187,7 +1169,6 @@ sfyManifestService:
   serviceAccount:
     ## @param sfyManifestService.serviceAccount.annotations Annotations for the sfy manifest service service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param sfyManifestService.extraVolumes Extra volumes for the sfy manifest service
   extraVolumes: []
   ## @param sfyManifestService.extraVolumeMounts Extra volume mounts for the sfy manifest service
@@ -1316,8 +1297,6 @@ tfyBuild:
   serviceAccount:
     ## @param tfyBuild.serviceAccount.annotations Annotations for the tfyBuild server service account
     annotations: {}
-    ## @param tfyBuild.serviceAccount.automountServiceAccountToken Automount service account token for the tfyBuild server
-    automountServiceAccountToken: true
   ## tfyBuild.preemptibleDeployment Preemptible deployment settings for the tfyBuild server
   preemptibleDeployment:
     ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
@@ -1462,8 +1441,6 @@ tfyBuild:
       extraVolumeMounts: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes
       extraVolumes: []
-  # If set, overrides global.automountServiceAccountToken for tfyBuild
-  automountServiceAccountToken: true
 ###################################################################################################################
 ######################################## Tfy Buildkitd Service ####################################################
 ###################################################################################################################
@@ -1471,9 +1448,6 @@ tfyBuild:
 tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: true
-
-  serviceAccount:
-    automountServiceAccountToken: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
   service:
     ## @param tfy-buildkitd-service.service.port port number for the tfy-buildkitd service
@@ -1499,6 +1473,8 @@ tfy-buildkitd-service:
 # During cleanup, make sure to remove any stray pvc that might be created.
 ## postgresql Settings corresponding to the postgresql database
 postgresql:
+  serviceAccount:
+    automountServiceAccountToken: false
   ## postgresql.auth PostgreSQL authentication configuration
   auth:
     ## @param postgresql.auth.existingSecret Name of the existing secret for PostgreSQL authentication
@@ -1544,7 +1520,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController
     repository: tfy.jfrog.io/tfy-private-images/tfy-controller
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.56.0
+    tag: v0.57.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1629,7 +1605,6 @@ tfyController:
   serviceAccount:
     ## @param tfyController.serviceAccount.annotations Annotations for the tfyController service account
     annotations: {}
-    automountServiceAccountToken: true
   ## @param tfyController.env [object] Environment variables for the tfyController
   env:
     GIN_MODE: release
@@ -1649,8 +1624,6 @@ tfyController:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
-  # If set, overrides global.automountServiceAccountToken for tfyController
-  automountServiceAccountToken: true
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
 ###################################################################################################################
@@ -1667,7 +1640,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.55.0
+    tag: v0.57.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -1791,8 +1764,6 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-  # If set, overrides global.automountServiceAccountToken for tfyWorkflowAdmin
-  automountServiceAccountToken: true
 ###################################################################################################################
 ################################################# Tfy Nats  #######################################################
 ###################################################################################################################
@@ -1849,14 +1820,6 @@ tfyNats:
   natsBox:
     ## @param tfyNats.natsBox.enabled Bool to enable NATS Box
     enabled: false
-    ## tfyNats.serviceAccount Service account settings for the tfyNats
-    serviceAccount:
-      ## @param tfyNats.serviceAccount.create Bool to create the service account
-      create: false
-      ## @param tfyNats.serviceAccount.annotations Annotations for the service account
-      annotations: {}
-      ## @param tfyNats.serviceAccount.name Name of the service account
-      name: "tfy-natsbox"
   ## tfyNats.reloader Config reloader configuration
   reloader:
     ## tfyNats.reloader.image Reloader image configuration
@@ -1937,13 +1900,3 @@ tfyNats:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
         whenUnsatisfiable: ScheduleAnyway
-  serviceAccount:
-    # Specifies whether a service account should be created
-    create: true
-    # Annotations to add to the service account
-    annotations: {}
-    # The name of the service account to use.
-    # If not set and create is true, a name is generated using the fullname template
-    name: "tfy-nats"
-  # If set, overrides global.automountServiceAccountToken for tfyNats
-  automountServiceAccountToken: false
