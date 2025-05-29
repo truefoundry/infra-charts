@@ -1772,7 +1772,12 @@ tfyNats:
   ## @param tfyNats.enabled Bool to enable the NATS server
   enabled: true
   serviceAccount:
-    create: true
+    enabled: true
+    # merge or patch the service account
+    # https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#serviceaccount-v1-core
+    merge: {}
+    patch: []
+    # defaults to "{{ include "nats.fullname" $ }}"
     name: tfy-nats
   ## tfyNats.config NATS server configuration
   config:
