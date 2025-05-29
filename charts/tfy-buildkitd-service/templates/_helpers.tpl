@@ -42,17 +42,29 @@ Common Annotations
 {{- end }}
 
 {{/*
+  Pod Labels
+  */}}
+{{- define "buildkitd-service.podLabels" -}}
+{{ include "buildkitd-service.selectorLabels" . }}
+{{- if .Values.image.tag }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- range $name, $value := .Values.commonLabels }}
+{{ $name }}: {{ tpl $value $ | quote }}
+{{- end }}
+{{- end }}
+
+{{/*
 Common labels
 */}}
 {{- define "buildkitd-service.labels" -}}
+{{- include "buildkitd-service.podLabels" . }}
 helm.sh/chart: {{ include "buildkitd-service.chart" . }}
-{{ include "buildkitd-service.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.labels }}
-{{ toYaml . }}
+{{- if .Values.commonLabels }}
+{{ toYaml .Values.commonLabels }}
+{{- else if .Values.labels }}
+{{ toYaml .Values.labels }}
 {{- end }}
 {{- end }}
 
