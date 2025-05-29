@@ -38,8 +38,20 @@ zookeeper:
     tag: 3.8.1-debian-11-r0
     pullSecrets: []
   serviceAccount:
+    ## @param serviceAccount.create Enable creation of ServiceAccount for ZooKeeper pod
+    ##
     create: true
+    ## @param serviceAccount.name The name of the ServiceAccount to use.
+    ## If not set and create is true, a name is generated using the common.names.fullname template
+    ##
     name: tfy-zookeeper
+    ## @param serviceAccount.automountServiceAccountToken Allows auto mount of ServiceAccountToken on the serviceAccount created
+    ## Can be set to false if pods using this serviceAccount do not need to use K8s API
+    ##
+    automountServiceAccountToken: false
+    ## @param serviceAccount.labels Additional custom labels for the ServiceAccount
+    ##
+  labels: {}
 
 ## @param clickhouse [object] clickhouse config
 clickhouse:
