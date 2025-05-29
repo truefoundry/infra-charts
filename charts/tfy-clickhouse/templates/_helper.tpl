@@ -94,7 +94,7 @@ limits:
 
 {{- define "clickhouse.storageSize" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.clickhouse.storage.size }}
+{{- if .Values.clickhouse.storage.size -}}
 {{ .Values.clickhouse.storage.size }}
 {{- else if eq $tier "small" -}}
 100Gi
