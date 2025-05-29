@@ -543,8 +543,8 @@ gcp-gke-standard-gpu-operator:
     upgradeCRD: true
     ## @param gcp-gke-standard-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
-    ## @param gcp-gke-standard-gpu-operator.operator.runtimeClass Runtime class for the operator. We are using GKE's patched runc that already knows how to handle GPU devices.
-    runtimeClass: runc
+    ## @param gcp-gke-standard-gpu-operator.operator.runtimeClass Runtime class for the operator. This needs to be `runc` if we disable toolkit.
+    runtimeClass: nvidia
     ## @param gcp-gke-standard-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
@@ -695,7 +695,7 @@ gcp-gke-standard-gpu-operator:
   ## Toolkit configuration.
   toolkit:
     ## @param gcp-gke-standard-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
-    enabled: false
+    enabled: true
     ## @param gcp-gke-standard-gpu-operator.toolkit.version Version of the toolkit.
     version: v1.17.4-ubuntu20.04
     ## @param gcp-gke-standard-gpu-operator.toolkit.installDir Directory for toolkit installation
@@ -718,7 +718,7 @@ gcp-gke-standard-gpu-operator:
    ## Fake Toolkit Ready Daemonset
   fakeToolkitReady:
     ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
-    enabled: true
+    enabled: false
     image:
       ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
