@@ -69,6 +69,7 @@ global:
     name: truefoundry
     ## @param global.serviceAccount.annotations Annotations for the service account
     annotations: {}
+  automountServiceAccountToken: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -416,6 +417,8 @@ truefoundryFrontendApp:
     VITE_ENABLE_GUARDRAILS: "false"
     VITE_GUARDRAILS_ENABLED_TENANTS: ""
     VITE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
+  # If set, overrides global.automountServiceAccountToken for truefoundryFrontendApp
+  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### MLfoundry Server ##########################################################
 ###################################################################################################################
@@ -534,6 +537,8 @@ mlfoundryServer:
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     ENVIRONMENT: production
+  # If set, overrides global.automountServiceAccountToken for mlfoundryServer
+  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -650,6 +655,8 @@ s3proxy:
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  # If set, overrides global.automountServiceAccountToken for s3proxy
+  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
@@ -826,6 +833,8 @@ servicefoundryServer:
     imageMutationPolicy: '{{ .Release.Name }}-image-mutation-policy-cm'
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
     k8sManifestValidationPolicy: '{{ .Release.Name }}-k8s-manifest-validation-policy-cm'
+  # If set, overrides global.automountServiceAccountToken for servicefoundryServer
+  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -1070,6 +1079,8 @@ tfyK8sController:
     CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
     CLICKHOUSE_USER: user
     CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
+  # If set, overrides global.automountServiceAccountToken for tfyK8sController
+  automountServiceAccountToken: true
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1297,6 +1308,8 @@ tfyBuild:
   serviceAccount:
     ## @param tfyBuild.serviceAccount.annotations Annotations for the tfyBuild server service account
     annotations: {}
+    ## @param tfyBuild.serviceAccount.automountServiceAccountToken Automount service account token for the tfyBuild server
+    automountServiceAccountToken: true
   ## tfyBuild.preemptibleDeployment Preemptible deployment settings for the tfyBuild server
   preemptibleDeployment:
     ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
@@ -1441,6 +1454,8 @@ tfyBuild:
       extraVolumeMounts: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumes
       extraVolumes: []
+  # If set, overrides global.automountServiceAccountToken for tfyBuild
+  automountServiceAccountToken: true
 ###################################################################################################################
 ######################################## Tfy Buildkitd Service ####################################################
 ###################################################################################################################
@@ -1622,6 +1637,8 @@ tfyController:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  # If set, overrides global.automountServiceAccountToken for tfyController
+  automountServiceAccountToken: true
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
 ###################################################################################################################
@@ -1762,6 +1779,8 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  # If set, overrides global.automountServiceAccountToken for tfyWorkflowAdmin
+  automountServiceAccountToken: true
 ###################################################################################################################
 ################################################# Tfy Nats  #######################################################
 ###################################################################################################################
@@ -1818,6 +1837,14 @@ tfyNats:
   natsBox:
     ## @param tfyNats.natsBox.enabled Bool to enable NATS Box
     enabled: false
+    ## tfyNats.serviceAccount Service account settings for the tfyNats
+    serviceAccount:
+      ## @param tfyNats.serviceAccount.create Bool to create the service account
+      create: false
+      ## @param tfyNats.serviceAccount.annotations Annotations for the service account
+      annotations: {}
+      ## @param tfyNats.serviceAccount.name Name of the service account
+      name: "tfy-natsbox"
   ## tfyNats.reloader Config reloader configuration
   reloader:
     ## tfyNats.reloader.image Reloader image configuration
@@ -1898,3 +1925,13 @@ tfyNats:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
         whenUnsatisfiable: ScheduleAnyway
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: "tfy-nats"
+  # If set, overrides global.automountServiceAccountToken for tfyNats
+  automountServiceAccountToken: false
