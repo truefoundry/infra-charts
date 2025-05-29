@@ -367,6 +367,8 @@ aws-eks-gpu-operator:
 
   ## Fake Toolkit Ready Daemonset
   fakeToolkitReady:
+    ## @param aws-eks-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+    enabled: true
     image:
       ## @param aws-eks-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -541,6 +543,8 @@ gcp-gke-standard-gpu-operator:
     upgradeCRD: true
     ## @param gcp-gke-standard-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
     cleanupCRD: true
+    ## @param gcp-gke-standard-gpu-operator.operator.runtimeClass Runtime class for the operator. We are using GKE's patched runc that already knows how to handle GPU devices.
+    runtimeClass: runc
     ## @param gcp-gke-standard-gpu-operator.operator.resources [object] Resources for the operator.
     resources:
       requests:
@@ -713,6 +717,8 @@ gcp-gke-standard-gpu-operator:
 
    ## Fake Toolkit Ready Daemonset
   fakeToolkitReady:
+    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+    enabled: true
     image:
       ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -1464,6 +1470,8 @@ civo-talos-gpu-operator:
         memory: 300Mi
 
   fakeToolkitReady:
+    ## @param civo-talos-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+    enabled: true
     image:
       ## @param civo-talos-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
