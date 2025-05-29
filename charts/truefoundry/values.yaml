@@ -69,6 +69,8 @@ global:
     name: truefoundry
     ## @param global.serviceAccount.annotations Annotations for the service account
     annotations: {}
+  ## @param global.automountServiceAccountToken Set to false to disable automountServiceAccountToken for all service accounts
+  automountServiceAccountToken: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -312,6 +314,8 @@ truefoundryFrontendApp:
   serviceAccount:
     ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
     annotations: {}
+    ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Set to true/false to override global automountServiceAccountToken for this service account
+    automountServiceAccountToken: null
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -740,6 +744,8 @@ servicefoundryServer:
   serviceAccount:
     ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
     annotations: {}
+    ## @param servicefoundryServer.serviceAccount.automountServiceAccountToken Set to true/false to override global automountServiceAccountToken for this service account
+    automountServiceAccountToken: null
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
   extraVolumes: []
   ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
@@ -1279,7 +1285,7 @@ natsDeprecated:
         name: nats-accounts
         key: resolver.conf
 ###################################################################################################################
-######################################### Tfy Build ###############################################################
+######################################## Tfy Build ###############################################################
 ###################################################################################################################
 ## @section tfyBuild Truefoundry tfy build settings
 tfyBuild:
