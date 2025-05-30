@@ -34,12 +34,13 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### alertManagers Alert managers for prometheus
 
-| Name                               | Description                        | Value                     |
-| ---------------------------------- | ---------------------------------- | ------------------------- |
-| `alertManagers.tfyAgent.enabled`   | Enable alert manager for tfy-agent | `true`                    |
-| `alertManagers.tfyAgent.name`      | Name of the alert manager          | `tfy-alertmanager-config` |
-| `alertManagers.tfyAgent.route`     | Route for the alert manager        | `{}`                      |
-| `alertManagers.tfyAgent.receivers` | Receivers for the alert manager    | `[]`                      |
+| Name                                   | Description                        | Value                     |
+| -------------------------------------- | ---------------------------------- | ------------------------- |
+| `alertManagers.tfyAgent.enabled`       | Enable alert manager for tfy-agent | `true`                    |
+| `alertManagers.tfyAgent.name`          | Name of the alert manager          | `tfy-alertmanager-config` |
+| `alertManagers.tfyAgent.route`         | Route for the alert manager        | `{}`                      |
+| `alertManagers.tfyAgent.route.groupBy` | Group by for the alert manager     | `[]`                      |
+| `alertManagers.tfyAgent.receivers`     | Receivers for the alert manager    | `[]`                      |
 
 ### prometheusRules Prometheus rules for prometheus
 
