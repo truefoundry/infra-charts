@@ -2,9 +2,6 @@
 
 ## Global Config
 global:
-  security:
-    allowInsecureImages: true
-
   ## @param global.resourceTier Resource deployment type
   resourceTier: "medium"
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -27,6 +24,10 @@ altinity-clickhouse-operator:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/clickhouse-operator
   imagePullSecrets: []
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
 
 ## @skip zookeeper [object] zookeper config
 zookeeper:
