@@ -1,14 +1,16 @@
-{{- if or .Values.clusterType.awsEks .Values.clusterType.civoTalos  }}
+{{- if (or .Values.clusterType.awsEks .Values.clusterType.gcpGkeStandard .Values.clusterType.civoTalos) }}
 
 {{- $fakeToolkitReady := dict }}
 
 {{- if .Values.clusterType.awsEks }}
 {{- $fakeToolkitReady = (index .Values "aws-eks-gpu-operator" "fakeToolkitReady") }}
+{{- else if .Values.clusterType.gcpGkeStandard }}
+{{- $fakeToolkitReady = (index .Values "gcp-gke-standard-gpu-operator" "fakeToolkitReady") }}
 {{- else if .Values.clusterType.civoTalos }}
 {{- $fakeToolkitReady = (index .Values "civo-talos-gpu-operator" "fakeToolkitReady") }}
 {{- end }}
 
-{{- if $fakeToolkitReady }}
+{{- if $fakeToolkitReady.enabled }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
