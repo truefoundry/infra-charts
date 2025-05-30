@@ -31,19 +31,27 @@ altinity-clickhouse-operator:
     create: true
     automountServiceAccountToken: false
 
-## @skip zookeeper [object] zookeper config
+## @param zookeeper [object] zookeper config
 zookeeper:
+  ## @param zookeeper.enabled Enable zookeeper
   enabled: true
+  ## @param zookeeper.replicaCount Number of zookeeper replicas
   replicaCount: 1
+  ## @param zookeeper.image [object] zookeeper image
   image:
     registry: "tfy.jfrog.io/tfy-mirror"
     repository: bitnami/zookeeper
     tag: 3.8.1-debian-11-r0
     pullSecrets: []
+  ## @param zookeeper.serviceAccount [object] zookeeper service account
   serviceAccount:
+    ## @param zookeeper.serviceAccount.create Enable creation of ServiceAccount for ZooKeeper pod
     create: true
+    ## @param zookeeper.serviceAccount.name The name of the ServiceAccount to use.
     name: truefoundry-zookeeper
+    ## @param zookeeper.serviceAccount.automountServiceAccountToken Automount service account token
     automountServiceAccountToken: false
+  ## @param zookeeper.automountServiceAccountToken Automount service account token
   automountServiceAccountToken: false
 
 ## @param clickhouse [object] clickhouse config
@@ -67,7 +75,6 @@ clickhouse:
   podSecurityContext: {}
   containerSecurityContext: {}
   serviceAccount:
-    enabled: true
     create: true
     name: truefoundry-clickhouse
     automountServiceAccountToken: false

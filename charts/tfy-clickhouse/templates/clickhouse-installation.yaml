@@ -73,10 +73,8 @@ spec:
     podTemplates:
       - name: clickhouse-stable
         spec:
-          {{- if .Values.clickhouse.serviceAccount.enabled }}
-          serviceAccountName: {{ .Values.clickhouse.serviceAccount.name }}
-          automountServiceAccountToken: {{ .Values.clickhouse.serviceAccount.automountServiceAccountToken }}
-          {{- end }}
+          serviceAccountName: {{ .Values.clickhouse.serviceAccount.name | default "default" }}
+          automountServiceAccountToken: {{ .Values.clickhouse.serviceAccount.automountServiceAccountToken | default false }}
           nodeSelector:
             {{- include "clickhouse.nodeSelector" . | nindent 12 }}
           tolerations:
