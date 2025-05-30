@@ -112,7 +112,6 @@ Tfy-buildkitd-service is a Helm chart provided by TrueFoundry that facilitates t
 | `tls.buildkitDaemonCertsSecretName` | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
 | `tls.buildkitClientCertsSecretName` | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
 | `tls.enabled`                       | Enable TLS for buildkitd                                                                                          | `false`                     |
-####################################### Parameters for tfyBuildkitdService
 
 | Name                                | Description                                                                                                       | Value                       |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
