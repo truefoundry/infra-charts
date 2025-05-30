@@ -14,6 +14,9 @@ global:
 ## @param altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
+  rbac:
+    create: true
+    namespaceScoped: true
   metrics:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/metrics-exporter
@@ -24,7 +27,7 @@ altinity-clickhouse-operator:
       tag: 0.23.7
   imagePullSecrets: []
   serviceMonitor:
-    enabled: true
+    enabled: false
     additionalLabels:
       release: prometheus
   serviceAccount:
