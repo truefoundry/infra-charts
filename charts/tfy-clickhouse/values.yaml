@@ -30,6 +30,9 @@ altinity-clickhouse-operator:
     enabled: false
     additionalLabels:
       release: prometheus
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
 
 ## @skip zookeeper [object] zookeper config
 zookeeper:
@@ -40,8 +43,13 @@ zookeeper:
     repository: bitnami/zookeeper
     tag: 3.8.1-debian-11-r0
     pullSecrets: []
+  serviceAccount:
+    create: true
+    name: truefoundry-zookeeper
+    automountServiceAccountToken: false
+  automountServiceAccountToken: false
 
-## @param clickhouse [object] clickhouse config
+## @skip clickhouse [object] clickhouse config
 clickhouse:
   enabled: true
   clusterName: clickhouse
@@ -61,6 +69,10 @@ clickhouse:
   imagePullSecrets: []
   podSecurityContext: {}
   containerSecurityContext: {}
+  serviceAccount:
+    create: true
+    name: truefoundry-clickhouse
+    automountServiceAccountToken: false
 #  resources:
 #    requests:
 #      memory: 4Gi
