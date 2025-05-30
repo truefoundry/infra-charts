@@ -15,6 +15,11 @@ GITHUB_API_HEADERS = {
     "Authorization": f"Bearer {TFY_GITHUB_TOKEN}"
 }
 
+image_repo_mapping = {
+    "tfy-workflow-admin": "tfy-flyte",
+    "spark-history-server": "spark",
+}
+
 
 def extract_truefoundry_images(manifest: List[dict]) -> List[str]:
     for item in manifest:
@@ -93,6 +98,9 @@ def generate_changelog(changes: List[Dict[str, str]]) -> Dict[str, List[Dict]]:
         repo = entry["image"]
         old_tag = entry["old_tag"]
         new_tag = entry["new_tag"]
+
+        if repo in image_repo_mapping:
+            repo = image_repo_mapping[repo]
 
         print(f"🔍 Fetching commits for {repo}: {old_tag} → {new_tag}")
         commits = get_commits(repo, old_tag, new_tag)
