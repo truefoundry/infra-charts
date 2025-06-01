@@ -14,6 +14,9 @@ global:
 ## @param altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
   enabled: true
+  rbac:
+    create: true
+    namespaceScoped: true
   metrics:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/metrics-exporter
@@ -38,9 +41,12 @@ altinity-clickhouse-operator:
         cpu: 400m
   imagePullSecrets: []
   serviceMonitor:
-    enabled: true
+    enabled: false
     additionalLabels:
       release: prometheus
+  serviceAccount:
+    create: true
+    automountServiceAccountToken: false
 
 ## @skip zookeeper [object] zookeper config
 zookeeper:
@@ -58,8 +64,13 @@ zookeeper:
     limits:
       memory: 1024Mi
       cpu: 200m
+  serviceAccount:
+    create: true
+    name: truefoundry-zookeeper
+    automountServiceAccountToken: false
+  automountServiceAccountToken: false
 
-## @param clickhouse [object] clickhouse config
+## @skip clickhouse [object] clickhouse config
 clickhouse:
   enabled: true
   clusterName: clickhouse
@@ -79,6 +90,10 @@ clickhouse:
   imagePullSecrets: []
   podSecurityContext: {}
   containerSecurityContext: {}
+  serviceAccount:
+    create: true
+    name: truefoundry-clickhouse
+    automountServiceAccountToken: false
 #  resources:
 #    requests:
 #      memory: 4Gi

@@ -61,6 +61,7 @@ LLM-Gateway Helm Chart
 | `serviceAccount.create`                         | Create service account                                       | `true`                                            |
 | `serviceAccount.annotations`                    | Service account annotations                                  | `{}`                                              |
 | `serviceAccount.name`                           | Service account name                                         | `tfy-llm-gateway`                                 |
+| `serviceAccount.automountServiceAccountToken`   | Automount service account token                              | `true`                                            |
 | `extraVolumes`                                  | Extra volumes                                                | `[]`                                              |
 | `extraVolumeMounts`                             | Extra volume mounts                                          | `[]`                                              |
 | `rbac.enabled`                                  | Enable rbac                                                  | `true`                                            |
