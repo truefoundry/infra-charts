@@ -138,11 +138,10 @@ jobs:
           version=${{ steps.generate_changelog.outputs.version }}
           changelog_path="s3://$CHANGELOG_S3_BUCKET/$version/changelog.json"
           if aws s3 ls "$changelog_path" > /dev/null 2>&1; then
-            echo "exists=false" >> $GITHUB_OUTPUT
-          else
             echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
           fi
-
 
       - name: Upload Changelog to S3
         if: steps.check_changelog_uploaded.outputs.exists == 'false'
@@ -150,15 +149,11 @@ jobs:
           version=${{ steps.generate_changelog.outputs.version }}
           aws s3 cp charts/tfy-k8s-aws-eks-inframold/changelog.json s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
 
-      
-
       - name: Cleanup Old Manifest & Changelog
         if: steps.generate_changelog.outputs.changed == 'true'
         run: |
           rm -f charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
           rm -f charts/tfy-k8s-aws-eks-inframold/changelog.json
-
-      
 
       - name: Commit & Push Updates
         if: steps.generate_changelog.outputs.changed == 'true'
