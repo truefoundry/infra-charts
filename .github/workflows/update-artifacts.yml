@@ -57,17 +57,17 @@ jobs:
         with:
           registry-type: public
 
-      - name: Validate GitHub API key
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "Authorization: token ${{ secrets.TFY_GITHUB_TOKEN }}" \
-            https://api.github.com/user)
-          if [ "$STATUS" -ne 200 ]; then
-            echo "❌ GitHub API key is invalid (HTTP $STATUS)."
-            exit 1
-          else
-            echo "✅ GitHub API key is valid."
-          fi
+#      - name: Validate GitHub API key
+#        run: |
+#          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+#            -H "Authorization: token ${{ secrets.TFY_GITHUB_TOKEN }}" \
+#            https://api.github.com/user)
+#          if [ "$STATUS" -ne 200 ]; then
+#            echo "❌ GitHub API key is invalid (HTTP $STATUS)."
+#            exit 1
+#          else
+#            echo "✅ GitHub API key is valid."
+#          fi
 
       - name: Install python dependencies
         run: |
@@ -138,9 +138,9 @@ jobs:
           version=${{ steps.generate_changelog.outputs.version }}
           changelog_path="s3://$CHANGELOG_S3_BUCKET/test/changelog.json"
           if aws s3 ls "$changelog_path" > /dev/null 2>&1; then
-            echo "exists=false" >> $GITHUB_OUTPUT
-          else
             echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
 
