@@ -57,6 +57,18 @@ jobs:
         with:
           registry-type: public
 
+      - name: Validate GitHub API key
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.TFY_GITHUB_TOKEN }}" \
+            https://api.github.com/user)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ GitHub API key is invalid (HTTP $STATUS)."
+            exit 1
+          else
+            echo "✅ GitHub API key is valid."
+          fi
+
       - name: Install python dependencies
         run: |
           pip install -r scripts/upload-artifacts/requirements.txt
@@ -69,18 +81,18 @@ jobs:
 #          cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
 
-      # Generate artifacts manifest for inframold charts
-      - name: Generate Artifacts Manifest for Each Chart
-        run: |
-          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
-          for chart in "${charts_list[@]}"; do
-            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-          
-            python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-              $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
-          done
-        env:
-          MODE: 'local'
+#      # Generate artifacts manifest for inframold charts
+#      - name: Generate Artifacts Manifest for Each Chart
+#        run: |
+#          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
+#          for chart in "${charts_list[@]}"; do
+#            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+#
+#            python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
+#              $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
+#          done
+#        env:
+#          MODE: 'local'
 
       # Check if truefoundry chart images support amd64 and arm64 using AWS chart
       - name: Check if Truefoundry Chart Images Support Multiple Architectures
