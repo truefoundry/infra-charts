@@ -1,19 +1,7 @@
 name: Generate Inframold Charts Artifacts Manifest
 
 on:
-  pull_request:
-    branches:
-      - 'main'
-    paths:
-      - '.github/workflows/update-artifacts.yml'
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
-      - 'scripts/get-release-notes/**'
+  push
 
 jobs:
   update-artifacts:
@@ -75,10 +63,10 @@ jobs:
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
 
-      - name: Copy current manifest for changelog
-        if: always()
-        run: |
-          cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
+#      - name: Copy current manifest for changelog
+#        if: always()
+#        run: |
+#          cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
 
       # Generate artifacts manifest for inframold charts
@@ -114,7 +102,7 @@ jobs:
             python scripts/get-release-notes/chart_changes.py \
               charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json \
               charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
-              --version $new_rev \
+              --version test \
               --output charts/tfy-k8s-aws-eks-inframold/changelog.json
             echo "changed=true" >> $GITHUB_OUTPUT
           else
@@ -136,7 +124,7 @@ jobs:
         if: steps.generate_changelog.outputs.changed == 'true'
         run: |
           version=${{ steps.generate_changelog.outputs.version }}
-          changelog_path="s3://$CHANGELOG_S3_BUCKET/$version/changelog.json"
+          changelog_path="s3://$CHANGELOG_S3_BUCKET/test/changelog.json"
           if aws s3 ls "$changelog_path" > /dev/null 2>&1; then
             echo "exists=false" >> $GITHUB_OUTPUT
           else
@@ -148,7 +136,7 @@ jobs:
         if: steps.check_changelog_uploaded.outputs.exists == 'false'
         run: |
           version=${{ steps.generate_changelog.outputs.version }}
-          aws s3 cp charts/tfy-k8s-aws-eks-inframold/changelog.json s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
+          aws s3 cp charts/tfy-k8s-aws-eks-inframold/changelog.json s3://$CHANGELOG_S3_BUCKET/test/changelog.json
 
       
 
