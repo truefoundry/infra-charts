@@ -10,11 +10,14 @@ loki:
       configs:
         - from: "2024-04-01"
           store: tsdb
-          object_store: s3
+          object_store: filesystem
           schema: v13
           index:
             prefix: loki_index_
             period: 24h
+    storage_config:
+      filesystem:
+        directory: /tmp/loki/
     pattern_ingester:
         enabled: true
     limits_config:
@@ -24,7 +27,7 @@ loki:
       enable_api: true
 
   minio:
-    enabled: true
+    enabled: false
         
   deploymentMode: SingleBinary
 
