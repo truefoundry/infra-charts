@@ -21,10 +21,24 @@ altinity-clickhouse-operator:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/metrics-exporter
       tag: 0.23.7
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 200m
+      limits:
+        memory: 512Mi
+        cpu: 400m
   operator:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/clickhouse-operator
       tag: 0.23.7
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 200m
+      limits:
+        memory: 512Mi
+        cpu: 400m
   imagePullSecrets: []
   serviceMonitor:
     enabled: false
@@ -43,6 +57,13 @@ zookeeper:
     repository: bitnami/zookeeper
     tag: 3.8.1-debian-11-r0
     pullSecrets: []
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 100m
+    limits:
+      memory: 1024Mi
+      cpu: 200m
   serviceAccount:
     create: true
     name: truefoundry-zookeeper
