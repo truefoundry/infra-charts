@@ -4,7 +4,6 @@ loki:
   ## @param loki.enabled Enable loki
   enabled: true
   loki:
-    auth_enabled: false
     commonConfig:
       replication_factor: 1
     schemaConfig:
@@ -69,8 +68,16 @@ loki:
     replicas: 0
   bloomCompactor:
     replicas: 0
-  bloomGateway:
-    replicas: 0
+  bloom_gateway:
+    enabled: false
+  auth_enabled: false
+  memcached: 
+    chunk_cache.enabled: false
+  chunksCache:
+    enabled: false
+  resultsCache:
+    enabled: false
+
 promtail:
   ## @param promtail.enabled Enable promtail
   enabled: false
