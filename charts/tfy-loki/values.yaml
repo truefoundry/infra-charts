@@ -31,13 +31,19 @@ loki:
         ruler: ""
         admin: ""
 
+  lokiCanary:
+    enabled: false
+
   minio:
     enabled: false
-        
+
   deploymentMode: SingleBinary
 
   singleBinary:
     replicas: 1
+    
+  test:
+    enabled: false
 
   # Zero out replica counts of other deployment modes
   backend:
@@ -67,10 +73,7 @@ loki:
     replicas: 0
 promtail:
   ## @param promtail.enabled Enable promtail
-  enabled: true
-  ## @skip promtail.image
-  image:
-    tag: 2.9.10
+  enabled: false
   ## @param promtail.priorityClassName Priority class name for promtail DaemonSet
   priorityClassName: system-node-critical
   config:
@@ -113,3 +116,58 @@ promtail:
     ## @skip promtail.tolerations[4]
     - effect: NoExecute
       operator: Exists
+alloy:
+  enabled: true
+  configMap:
+    content: |-
+      logging {
+        level = "debug"
+        format = "logfmt"
+      }
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_label_app_kubernetes_io_name", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          target_label  = "deployment_name"
+          action        = "replace"
+        }
+      }
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.process.process.receiver]
+      }
+      loki.process "process" {
+        forward_to = [loki.write.loki.receiver]
+
+        stage.drop {
+          older_than          = "1h"
+          drop_counter_reason = "too old"
+        }
+        stage.match { 
+          selector = "{instance=~\".*\"}"
+          stage.json {
+            expressions = {
+              level = "\"level\"",
+            }
+          }
+          stage.labels {
+            values = { 
+              level = "level",
+            }
+          }
+        }
+        stage.label_drop {
+          values = [ "job", "service_name" ]
+        }
+      }
+      loki.write "loki" {
+        endpoint {
+          url = "http://loki-write:3100/loki/api/v1/push"
+        }
+      }
+      loki.echo "example" { }
