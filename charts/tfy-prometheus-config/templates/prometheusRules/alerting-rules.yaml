@@ -134,7 +134,7 @@ spec:
         description: |-
           Node {{`{{ $labels.instance }}`}} is experiencing CPU pressure.
             VALUE = {{`{{ $value }}`}}%
-    - for: 5m
+    - for: 10m
       expr: kube_node_status_condition{job="kube-state-metrics", condition="Ready", status="true"} == 0
       alert: NodeNotReady
       labels:
