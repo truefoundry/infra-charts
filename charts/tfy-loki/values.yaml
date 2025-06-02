@@ -1,9 +1,11 @@
 ## @section Upstream Loki configurations
 ##
+
 loki:
   ## @param loki.enabled Enable loki
   enabled: true
   loki:
+    deploymentMode: SingleBinary
     ## @skip loki.loki.schemaConfig
     schemaConfig:
       configs:
@@ -15,11 +17,15 @@ loki:
             prefix: loki_index_
             period: 24h
     ## @skip loki.loki.image
-    image:
-      tag: 2.9.10
+    # image:
+    #   tag: 2.9.10
     storage:
       ## @param loki.loki.storage.type Method to use for storage
       type: filesystem
+      filesystem:
+        chunks_directory: /var/loki/chunks
+        rules_directory: /var/loki/rules
+        admin_api_directory: /var/loki/admin
     compactor:
       ## @param loki.loki.compactor.shared_store The shared store used for storing boltdb files.
       shared_store: filesystem
@@ -59,52 +65,35 @@ loki:
           installOperator: false
       serviceMonitor:
         enabled: false
+
     singleBinary:
       ## @param loki.singleBinary.replicas Number of replicas for the single binary
       replicas: 1
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: class.truefoundry.com/component
-                    operator: In
-                    values:
-                      - critical
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                app.kubernetes.io/component: single-binary
-            topologyKey: kubernetes.io/hostname
-      extraEnv:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-      extraArgs:
-        - -print-config-stderr
-        - -config.expand-env=true
+      ## @param loki.singleBinary.resources.requests.cpu CPU requests for promtail container
+      ## @param loki.singleBinary.resources.requests.memory Memory requests for promtail container
+      ## @param loki.singleBinary.resources.limits.cpu CPU limits for promtail container
+      ## @param loki.singleBinary.resources.limits.memory Memory limits for promtail container
       resources:
-        limits:
-          cpu: '0.1'
-          memory: 600Mi
-          ephemeral-storage: 512Mi
         requests:
-          cpu: '0.01'
-          memory: 300Mi
-          ephemeral-storage: 256Mi
-      tolerations:
-        - key: class.truefoundry.com/component
-          value: critical
-          effect: NoSchedule
+          cpu: 0.2
+          memory: 810Mi
+        limits:
+          cpu: 0.4
+          memory: 1620Mi
+      ## @param loki.singleBinary.persistence.size Size of persistent disk
+      ## @param loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC Enable StatefulSetAutoDeletePVC feature
       persistence:
-        enableStatefulSetAutoDeletePVC: false
-        size: 50Gi
         enabled: true
-    # storageClass: null  # Uncomment and set if you have a specific storage class
-    # simpleScalable:
-    #   replicas: 0
+        size: 50Gi
+        enableStatefulSetAutoDeletePVC: false
+
+    # Remove or set replicas: 0 for write, read, backend, etc.
+    write:
+      replicas: 0
+    read:
+      replicas: 0
+    backend:
+      replicas: 0
 
 promtail:
   ## @param promtail.enabled Enable promtail
@@ -129,17 +118,26 @@ promtail:
   ## @param promtail.resources.limits.cpu CPU limits for promtail container
   ## @param promtail.resources.limits.memory Memory limits for promtail container
   resources:
-    limits:
-      cpu: '0.1'
-      memory: 400Mi
-      ephemeral-storage: 256Mi
     requests:
-      cpu: '0.01'
-      memory: 80Mi
-      ephemeral-storage: 128Mi
+      cpu: 100m
+      memory: 512Mi
+      ephemeral-storage: 256Mi
+    limits:
+      cpu: 200m
+      memory: 1024Mi
   tolerations:
-    - key: class.truefoundry.com/component
-      value: critical
+    ## @skip promtail.tolerations[0]
+    - key: node-role.kubernetes.io/master
       effect: NoSchedule
-  serviceMonitor:
-    enabled: false
+    ## @skip promtail.tolerations[1]
+    - key: node-role.kubernetes.io/control-plane
+      effect: NoSchedule
+    ## @skip promtail.tolerations[2]
+    - effect: NoSchedule
+      operator: Exists
+    ## @skip promtail.tolerations[3]
+    - key: CriticalAddonsOnly
+      operator: Exists
+    ## @skip promtail.tolerations[4]
+    - effect: NoExecute
+      operator: Exists
