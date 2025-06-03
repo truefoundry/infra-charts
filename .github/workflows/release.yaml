@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cr-v1.7.0
   workflow_dispatch:
 
 jobs:
@@ -39,7 +40,7 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: helm/chart-releaser-action@v1.7.0
         env:
           CR_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
           CR_SKIP_EXISTING: true
