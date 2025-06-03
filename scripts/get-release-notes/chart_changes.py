@@ -15,6 +15,11 @@ GITHUB_API_HEADERS = {
     "Authorization": f"Bearer {TFY_GITHUB_TOKEN}"
 }
 
+image_repo_mapping = {
+    "tfy-workflow-admin": "tfy-flyte",
+    "spark-history-server": "spark",
+}
+
 
 def extract_truefoundry_images(manifest: List[dict]) -> List[str]:
     for item in manifest:
@@ -24,7 +29,7 @@ def extract_truefoundry_images(manifest: List[dict]) -> List[str]:
 
 
 def map_images_by_name(images: List[str]) -> Dict[str, str]:
-    image_map = {}
+    image_map: Dict[str, str] = {}
     for image in images:
         if ":" not in image:
             print(f"⚠️ Skipping malformed image: {image}")
@@ -46,7 +51,7 @@ def compare_image_tags(old_json_path: str, new_json_path: str) -> List[Dict[str,
     old_map = map_images_by_name(old_images)
     new_map = map_images_by_name(new_images)
 
-    changes = []
+    changes: List[Dict[str, str]] = []
     for name, new_tag in new_map.items():
         old_tag = old_map.get(name)
         if old_tag and old_tag != new_tag:
@@ -88,11 +93,14 @@ def enrich_commit(commit: dict, repo: str) -> Dict:
 
 
 def generate_changelog(changes: List[Dict[str, str]]) -> Dict[str, List[Dict]]:
-    changelog = {}
+    changelog: Dict[str, List[Dict]] = {}
     for entry in changes:
         repo = entry["image"]
         old_tag = entry["old_tag"]
         new_tag = entry["new_tag"]
+
+        if repo in image_repo_mapping:
+            repo = image_repo_mapping[repo]
 
         print(f"🔍 Fetching commits for {repo}: {old_tag} → {new_tag}")
         commits = get_commits(repo, old_tag, new_tag)
@@ -109,10 +117,13 @@ def write_json(data: dict, filename: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Compare image tags and get changelogs from truefoundry manifests.")
+    parser = argparse.ArgumentParser(
+        description="Compare image tags and get changelogs from truefoundry manifests."
+    )
     parser.add_argument("old_manifest", help="Path to old artifacts-manifest.json")
     parser.add_argument("new_manifest", help="Path to new artifacts-manifest.json")
     parser.add_argument("--output", default="changelog.json", help="Output changelog JSON file (default: changelog.json)")
+    parser.add_argument("--version", "-v", required=True, help="Version key to wrap the changelog JSON under")
 
     args = parser.parse_args()
 
@@ -121,4 +132,6 @@ if __name__ == "__main__":
     print(json.dumps(image_changes, indent=2))
 
     changelog = generate_changelog(image_changes)
-    write_json(changelog, args.output)
+    # Wrap the result under the version key
+    output_data = {args.version: changelog}
+    write_json(output_data, args.output)

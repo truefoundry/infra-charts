@@ -14,7 +14,7 @@ LLM-Gateway Helm Chart
 | `global.tolerations`                            | Tolerations for pod scheduling on a node                     | `[]`                                              |
 | `global.nodeSelector`                           | Node selector                                                | `{}`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `cce51615d8d9dd4b8b5e7f1ca959f6a28ed5c68f`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `037d9bfc8b4172542bc05c24ad6f48ce9129dd77`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
@@ -61,6 +61,7 @@ LLM-Gateway Helm Chart
 | `serviceAccount.create`                         | Create service account                                       | `true`                                            |
 | `serviceAccount.annotations`                    | Service account annotations                                  | `{}`                                              |
 | `serviceAccount.name`                           | Service account name                                         | `tfy-llm-gateway`                                 |
+| `serviceAccount.automountServiceAccountToken`   | Automount service account token                              | `true`                                            |
 | `extraVolumes`                                  | Extra volumes                                                | `[]`                                              |
 | `extraVolumeMounts`                             | Extra volume mounts                                          | `[]`                                              |
 | `rbac.enabled`                                  | Enable rbac                                                  | `true`                                            |
