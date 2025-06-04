@@ -11,9 +11,22 @@ data:
     extensions:
       tfyauth: # Custom authorisation 
         base_url: ${env:AUTH_BASE_URL}
+        project_base_url: ${env:PROJECT_BASE_URL}
         cache_ttl: 5m
-      health_check:
-        endpoint: 0.0.0.0:3000
+      healthcheckv2:
+        use_v2: true
+        component_health:
+          include_permanent_errors: true
+          include_recoverable_errors: true
+          recovery_duration: 60s
+        http:
+          endpoint: "0.0.0.0:3000"
+          status:
+            enabled: true
+            path: "/health/status"
+          config:
+            enabled: true
+            path: "/health/config"
 
     receivers:
       otlp:
@@ -41,19 +54,44 @@ data:
           initial_interval: 5s
           max_interval: 30s
           max_elapsed_time: 300s
+        fallback:
+          nats_baseurl: ${env:NATS_BASE_URL}
+          sfy_server_url: ${env:SFY_SERVER_URL}
+          tfy_api_key: ${env:TFY_API_KEY}
+          wait_time_between_pulls: 30s
+          nats_stream: "tfyotelcollector"
+          nats_subject: "tfyotelcollector.traces"
+          nats_consumer: "tyf-otel-collector-worker"    
     processors:
       batch:
         timeout: 5s
         send_batch_size: 5000
       resource: # trace level attributes
         attributes:
+          - key: tfycreatedbysubject
+            from_context: auth.tfysubject
+            action: upsert    
           - key: tfytenantid
             from_context: auth.tfytenant
             action: upsert
+          - key: tfyproject
+            from_context: auth.tfyproject
+            action: upsert    
+          - key: service.name
+            from_context: auth.tfyServiceName
+            action: upsert    
     service:
+      telemetry:
+        metrics:
+          readers:
+            - pull:
+                exporter:
+                  prometheus:
+                    host: '0.0.0.0'
+                    port: 8888
       extensions:
         - tfyauth
-        - health_check
+        - healthcheckv2
       pipelines:
         traces:
           receivers: [otlp]

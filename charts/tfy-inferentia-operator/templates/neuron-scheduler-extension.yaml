@@ -123,7 +123,7 @@ spec:
         {{- toYaml (index .Values "scheduler" "extension" "affinity") | nindent 8 }}
       containers:
         - name: scheduler-exp
-          image: {{ .Values.scheduler.extension.image }}
+          image: {{ .Values.scheduler.extension.image.repository }}:{{ .Values.scheduler.extension.image.tag }}
           resources:
             {{- toYaml (index .Values "scheduler" "extension" "resources") | nindent 12 }}
           env:

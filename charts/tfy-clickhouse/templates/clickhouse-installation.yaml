@@ -18,7 +18,7 @@ spec:
       - name: {{ .Values.clickhouse.clusterName }}
         layout:
           shardsCount: {{ .Values.clickhouse.shardsCount }}
-          replicasCount: {{ .Values.clickhouse.replicasCount }}
+          replicasCount: {{ include "clickhouse.replicas" . }}
         templates:
           podTemplate: clickhouse-stable
           dataVolumeClaimTemplate: clickhouse-data-volume
@@ -73,22 +73,18 @@ spec:
     podTemplates:
       - name: clickhouse-stable
         spec:
-          {{- with .Values.nodeSelector }}
+          serviceAccountName: {{ .Values.clickhouse.serviceAccount.name | default "default" }}
+          automountServiceAccountToken: {{ .Values.clickhouse.serviceAccount.automountServiceAccountToken | default false }}
           nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.tolerations }}
+            {{- include "clickhouse.nodeSelector" . | nindent 12 }}
           tolerations:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.clickhouse.tolerrations }}
+            {{- include "clickhouse.tolerations" . | nindent 12 }}
+          {{- with .Values.clickhouse.topologySpreadConstraints }}
           topologySpreadConstraints:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.clickhouse.affinity }}
           affinity:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- include "clickhouse.affinity" . | nindent 12 }}
           {{- with .Values.clickhouse.imagePullSecrets }}
           imagePullSecrets:
               {{- toYaml . | nindent 12 }}
@@ -107,14 +103,7 @@ spec:
                       name: {{ .Values.clickhouse.auth.secretName }}
                       key: {{ .Values.clickhouse.auth.passwordKey }}
               resources:
-                requests:
-                  memory: {{ .Values.clickhouse.resources.requests.memory }}
-                  cpu: {{ .Values.clickhouse.resources.requests.cpu }}
-                  ephemeral-storage: {{ .Values.clickhouse.resources.requests.ephemeralStorage }}
-                limits:
-                  memory: {{ .Values.clickhouse.resources.limits.memory }}
-                  cpu: {{ .Values.clickhouse.resources.limits.cpu }}
-                  ephemeral-storage: {{ .Values.clickhouse.resources.limits.ephemeralStorage }}
+                {{- include "clickhouse.resources" . | nindent 16 }}
               {{- with .Values.clickhouse.containerSecurityContext }}
               securityContext:
                 {{- toYaml . | nindent 16 }}
@@ -127,5 +116,5 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: {{ .Values.clickhouse.storage.size }}
+              storage: {{ include "clickhouse.storageSize" . }}
 {{- end }}

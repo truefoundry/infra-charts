@@ -37,6 +37,8 @@ karpenter:
     - alias: al2023@latest
     ## @param karpenter.defaultNodeTemplate.userData User data to append in the default node template. Set this to "" to disable injection.
     userData: ""
+    ## @param karpenter.defaultNodeTemplate.enableSoci Enable SOCI for the default nodes.
+    enableSoci: false
     ## @param karpenter.defaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the default node template.
     # metadataOptions:
     #   httpEndpoint: enabled
@@ -117,8 +119,10 @@ karpenter:
     # - id: ami-123
     amiSelectorTerms:
     - alias: al2023@latest
-    ## @param karpenter.gpuDefaultNodeTemplate.userData User data script for GPU node template. Set this to "default" to let the chart automatically decide this. Set this to "" to disable this injection.
+    ## @param karpenter.gpuDefaultNodeTemplate.userData User data script for GPU node template. Set this to "default" to let the chart automatically decide this. Set this to "" to disable this injection. This will be used only when enableSoci is set to false.
     userData: "default"
+    ## @param karpenter.gpuDefaultNodeTemplate.enableSoci Enable SOCI for the GPU machines.
+    enableSoci: false
     ## @param karpenter.gpuDefaultNodeTemplate.metadataOptions [object] Metadata options to be passed to the GPU node template.
     # metadataOptions:
     #   httpEndpoint: enabled
@@ -407,7 +411,7 @@ karpenter:
       ## @param karpenter.critical.instanceSizes.allowed [array] Allowed instance sizes for the critical node pool
       allowed: []
       ## @param karpenter.critical.instanceSizes.notAllowed [array] Not allowed instance sizes for the critical node pool
-      notAllowed: ["nano", "micro", "small", "medium", "large", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
+      notAllowed: ["nano", "micro", "small", "medium", "12xlarge", "16xlarge", "24xlarge", "32xlarge", "metal", "metal-16xl", "metal-24xl", "metal-48xl"]
     ## @param karpenter.critical.limits [object] compute limits for the critical node pool
     limits: {}
     ## @param karpenter.critical.additionalRequirements [array] List of additional requirements for critical node pool

@@ -173,3 +173,114 @@ Deployment VolumeMounts
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- end }}
+
+{{- define "tfy-otel-collector.resources" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.small" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.medium" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "tfy-otel-collector.defaultResources.large" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.small" }}
+requests:
+  cpu: 50m
+  memory: 128Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 100m
+  memory: 256Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.medium" }}
+requests:
+  cpu: 100m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 200m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.defaultResources.large" }}
+requests:
+  cpu: 200m
+  memory: 256Mi
+  ephemeral-storage: 256Mi
+limits:
+  cpu: 400m
+  memory: 512Mi
+  ephemeral-storage: 512Mi
+{{- end }}
+
+{{- define "tfy-otel-collector.replicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.replicaCount -}}
+{{ .Values.replicaCount }}
+{{- else if eq $tier "small" -}}
+2
+{{- else if eq $tier "medium" -}}
+2
+{{- else if eq $tier "large" -}}
+3
+{{- end }}
+{{- end }}
+
+{{/*
+Affinity rules for Otel-collector
+*/}}
+{{- define "tfy-otel-collector.affinity" -}}
+{{- if .Values.affinity -}}
+{{ toYaml .Values.affinity }}
+{{- else if .Values.global.affinity -}}
+{{ toYaml .Values.global.affinity }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations for Otel-collector
+*/}}
+{{- define "tfy-otel-collector.tolerations" -}}
+{{- if .Values.tolerations -}}
+{{ toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{ toYaml .Values.global.tolerations }}
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
+
+{{/*
+Node Selector for tfy-otel-collector deployment
+*/}}
+{{- define "tfy-otel-collector.nodeSelector" -}}
+{{- if .Values.nodeSelector -}}
+{{- toYaml .Values.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}

@@ -35,9 +35,9 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.9.0" ;;
-        kubectl) echo "1.28.0" ;;
-        helm) echo "3.16.0" ;;
+        terraform) echo "1.10.1" ;;
+        kubectl) echo "1.31.8" ;;
+        helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
         aws) echo "2.17.0" ;;
         gcloud) echo "500.0.0" ;;
@@ -75,7 +75,7 @@ check_sudo() {
     HAS_SUDO=false
     if tool_exists sudo; then
         # Check if user has sudo privileges by attempting a harmless command
-        if sudo -n true 2>/dev/null; then
+        if sudo -v 2>/dev/null; then
             HAS_SUDO=true
             log_debug "Sudo access is available"
         else
@@ -103,10 +103,17 @@ confirm_installation() {
     [[ $response =~ ^[nN] ]] && { log_error "Skipping $1 installation"; return 1; } || return 0
 }
 
+# Function to compare versions, returns true if the current version is greater than or equal to the required version
 version_compare() {
     local v1=${1#v} v2=${2#v}
     log_debug "Comparing versions: $v1 >= $v2"
-    [ "$(echo "$v1" | awk -F. '{printf "%d%02d", $1, $2}')" -ge "$(echo "$v2" | awk -F. '{printf "%d%02d", $1, $2}')" ]
+    local current_version="$(echo "$v1" | awk -F. '{printf "%d%02d", $1, $2}')"
+    local required_version="$(echo "$v2" | awk -F. '{printf "%d%02d", $1, $2}')"
+    if [ "$current_version" -ge "$required_version" ]; then
+        true
+    else
+        false
+    fi
 }
 
 get_cloud_tools() {
@@ -134,11 +141,9 @@ detect_system() {
 
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
-        for pm in apt-get yum dnf apk; do
+        for pm in tdnf apt-get yum dnf apk; do
             if tool_exists "$pm"; then
                 PACKAGE_MANAGER="$pm"
-                # Check if Alpine Linux to adjust some behaviors
-                [[ $pm == "apk" ]] && IS_ALPINE=true || IS_ALPINE=false
                 break
             fi
         done
@@ -147,7 +152,6 @@ detect_system() {
         OS="darwin"
         tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         PACKAGE_MANAGER="brew"
-        IS_ALPINE=false
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
     fi
@@ -203,7 +207,7 @@ get_tool_version() {
     case $1 in
         terraform) version=$(terraform version | head -n1 | cut -d'v' -f2) ;;
         kubectl) version=$(kubectl version --client -o json | jq -r '.clientVersion.gitVersion' | cut -d'v' -f2) ;;
-        helm) version=$(helm version --short | cut -d'v' -f2) ;;
+        helm) version=$(helm version --short | cut -d'+' -f1) ;;
         aws) version=$(aws --version 2>&1 | cut -d'/' -f2) ;;
         gcloud) version=$(gcloud version 2>/dev/null | grep "Google Cloud SDK" | awk '{print $4}') ;;
         az) version=$(az version | jq -r '."azure-cli"') ;;
@@ -213,7 +217,8 @@ get_tool_version() {
     echo "$version"
 }
 
-verify_tool_version() {
+# Function to check if upgrade is needed for a tool
+upgrade_tool_version() {
     local tool=$1
     local required_version
     local current_version
@@ -221,12 +226,17 @@ verify_tool_version() {
     required_version=$(get_tool_required_version "$tool")
     current_version=$(get_tool_version "$tool")
 
-    version_compare "$current_version" "$required_version" || \
+    if ! version_compare "$current_version" "$required_version"; then
         log_error "$tool version $current_version found. Version $required_version or higher required"
+        true
+    else
+        false
+    fi
 }
 
 install_tool() {
-    local tool=$1 tmp_dir="/tmp/tool-install"
+    local tool=$1 tmp_dir="$(mktemp -d)"
+    pushd "$tmp_dir" > /dev/null
     mkdir -p "$tmp_dir" && cd "$tmp_dir" || exit 1
     log_debug "Installing $tool in temporary directory: $tmp_dir"
     local version
@@ -234,14 +244,32 @@ install_tool() {
 
     case $tool in
         terraform)
-            log_debug "Downloading terraform version $version"
-            wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
-            unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
+            local terraform_path
+            if tool_exists terraform; then
+                terraform_path=$(which terraform)
+            fi
+            if [[ $terraform_path == *"homebrew"* ]]; then
+                log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
+                brew upgrade terraform
+            else
+                log_debug "Downloading terraform version $version"
+                wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
+                unzip -q terraform.zip && run_with_sudo mv terraform /usr/local/bin/
+            fi
             ;;
         kubectl)
-            log_debug "Downloading kubectl version $version"
-            wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
-            chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
+            local kubectl_path
+            if tool_exists kubectl; then
+                kubectl_path=$(which kubectl)
+            fi
+            if [[ $kubectl_path == *"homebrew"* ]]; then
+                log_debug "Kubectl is installed via brew. Using brew to upgrade kubectl..."
+                brew upgrade kubectl
+            else
+                log_debug "Downloading kubectl version $version"
+                wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
+                chmod +x kubectl && run_with_sudo mv kubectl /usr/local/bin/
+            fi
             ;;
         helm)
             log_debug "Downloading helm version $version"
@@ -349,7 +377,7 @@ install_tool() {
             ;;
     esac
 
-    cd - > /dev/null && rm -rf "$tmp_dir"
+    popd > /dev/null && rm -rf "$tmp_dir"
     log_debug "Finished installing $tool"
 }
 
@@ -374,13 +402,14 @@ enforce_terraform_version() {
 }
 
 verify_tools() {
+    log_debug "Verifying tools..."
     local cloud_provider=$1
     local missing_tools=()
     local install_failed=()
 
     # First, make sure Terraform is installed with the correct version
     enforce_terraform_version
-
+    log_debug "Terraform verification complete"
     # Check other common tools (skip terraform as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
         if [ "$tool" != "terraform" ]; then
@@ -390,8 +419,8 @@ verify_tools() {
                 else
                     missing_tools+=("$tool")
                 fi
-            elif ! verify_tool_version "$tool"; then
-                return $VERSION_ERROR
+            elif upgrade_tool_version "$tool"; then
+                install_tool "$tool" || install_failed+=("$tool")
             fi
         fi
     done
@@ -405,8 +434,8 @@ verify_tools() {
             else
                 missing_tools+=("$tool")
             fi
-        elif ! verify_tool_version "$tool"; then
-            return $VERSION_ERROR
+        elif upgrade_tool_version "$tool"; then
+            install_tool "$tool" || install_failed+=("$tool")
         fi
     done
 
@@ -430,6 +459,7 @@ install_cloud_tools() {
     for tool in "${tools[@]}"; do
         if ! tool_exists "$tool"; then
             if confirm_installation "$tool"; then
+                log_debug "Installing $tool"
                 install_tool "$tool"
             else
                 return $MISSING_TOOLS
@@ -468,7 +498,7 @@ create_backend() {
                 export AWS_PROFILE="$profile"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
-                    log_error "AWS authentication failed. Please run 'aws sso login' or check your credentials"
+                    log_error "AWS authentication failed. Please run 'aws sso login' or check your aws profile '$profile'export"
                     exit 1
                 fi
                 log_success "AWS authentication successful using profile: $profile"
@@ -703,10 +733,11 @@ main() {
 
     # Step 1: Detect system
     detect_system
+    log_info "System detection complete"
 
     # Step 2: Install essential utilities
     install_essential_utilities || log_error "Missing essential utilities may affect deployment"
-
+    log_info "Essential utilities installation complete"
     # Step 3: Verify and install required tools
     verify_tools "$cloud_provider"
     local verify_status=$?
@@ -716,7 +747,7 @@ main() {
     elif [ $verify_status -ne $SUCCESS ]; then
         exit $verify_status
     fi
-
+    log_info "Tool verification complete"
     # Step 4: Create backend (required for all providers)
     if [ -n "$config_file" ]; then
         log_info "Setting up backend storage for $cloud_provider"

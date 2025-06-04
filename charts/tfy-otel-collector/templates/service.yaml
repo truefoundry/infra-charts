@@ -13,5 +13,17 @@ spec:
       targetPort: {{ .Values.service.port }}
       protocol: TCP
       name: http
+    - port: 4317
+      targetPort: 4317
+      protocol: TCP
+      name: grpc
+    - port: 8888
+      targetPort: 8888
+      protocol: TCP
+      name: metrics
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: healthcheck
   selector:
     {{- include "tfy-otel-collector.selectorLabels" . | nindent 4 }}

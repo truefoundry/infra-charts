@@ -1,18 +1,36 @@
 ## @section Configuration values for tfy-otel-collector
 
+## Global Config
+global:
+  ## @param global.resourceTier [string] Resource deployment type
+  resourceTier: "medium"
+  ## @param global.affinity [object] Affinity rules for pod scheduling on a node
+  affinity: {}
+  ## @param global.tolerations [array] Tolerations for pod scheduling on a node
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector
+  nodeSelector: {}
+
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
   CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
   AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
+  PROJECT_BASE_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
+  NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000/v1/x/tfy-otel-collector/nats-creds
+  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
+  TENANT_NAME: "{{ .Values.global.tenantName }}"
+  SENTRY_ENABLED: "true"
 
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 416fc71c5d729be2613a9b197e203cd5fdc1d8d4
+  tag: 83c9ef6dfffb10404ad0c80b3596569bd1e7e35f
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -20,8 +38,9 @@ imagePullSecrets: []
 ## @param fullnameOverride Full name override for the tfy-otel-collector
 fullnameOverride: ""
 
-## @param replicaCount Number of replicas
-replicaCount: 2
+## @skip replicaCount Number of replicas
+# replicaCount: 2
+
 ## @param environmentName The environment name
 environmentName: default
 ## @param envSecretName The environment secret name
@@ -49,13 +68,13 @@ healthcheck:
     ## @param healthcheck.readiness.port Port to probe
     port: 3000
     ## @param healthcheck.readiness.path Path to probe
-    path: /
+    path: /health/status
     ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
-    initialDelaySeconds: 10
+    initialDelaySeconds: 30
     ## @param healthcheck.readiness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 5
+    timeoutSeconds: 1
     ## @param healthcheck.readiness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
@@ -65,25 +84,27 @@ healthcheck:
     ## @param healthcheck.liveness.port Port to probe
     port: 3000
     ## @param healthcheck.liveness.path Path to probe
-    path: /
-## Resource configuration
-resources:
-  ## resources.limits Resource limits
-  limits:
-    ## @param resources.limits.cpu CPU limit
-    cpu: 1
-    ## @param resources.limits.memory Memory limit
-    memory: 512Mi
-    ## @param resources.limits.ephemeral-storage Ephemeral storage limit
-    ephemeral-storage: 512Mi
-  ## resources.requests Resource requests
-  requests:
-    ## @param resources.requests.cpu CPU request
-    cpu: 0.5
-    ## @param resources.requests.memory Memory request
-    memory: 256Mi
-    ## @param resources.requests.ephemeral-storage Ephemeral storage request
-    ephemeral-storage: 256Mi
+    path: /health/status
+    ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 600
+    ## @param healthcheck.liveness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 1
+    ## @param healthcheck.liveness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.liveness.failureThreshold Failure threshold
+    failureThreshold: 3
+## @skip resources [object] Resource configuration
+#resources:
+#  limits:
+#      cpu: 200m
+#      ephemeral-storage: 512Mi
+#      memory: 512Mi
+#  requests:
+#      cpu: 100m
+#      ephemeral-storage: 256Mi
+#      memory: 256Mi
 ## @param nodeSelector Node selector
 nodeSelector: {}
 ## @param tolerations Tolerations
@@ -110,6 +131,8 @@ serviceAccount:
   annotations: {}
   ## @param serviceAccount.name Service account name
   name: ""
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token
+  automountServiceAccountToken: true
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts
@@ -123,3 +146,12 @@ rollout:
   maxUnavailable: 1
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 50%
+
+## serviceMonitor [object] Service monitor configuration
+serviceMonitor:
+  ## @param serviceMonitor.enabled Enable service monitor
+  enabled: true
+  ## @param serviceMonitor.additionalLabels Additional labels for the service monitor
+  additionalLabels: {}
+  ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
+  additionalAnnotations: {}

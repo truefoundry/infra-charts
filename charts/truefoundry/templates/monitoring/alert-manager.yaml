@@ -1,0 +1,65 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.alertManager.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1alpha1") }}
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: {{ .Values.monitoring.alertManager.name }}
+  labels:
+    release: prometheus
+  {{- with .Values.monitoring.alertManager.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.monitoring.alertManager.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  route:
+    receiver: "null"
+    routes:
+        - receiver: tfy-control-plane-alerts-receiver
+          continue: true
+          matchers:
+            - name: severity
+              matchType: '=~'
+              value: "warning|critical"
+            - name: controlplane
+              matchType: '='
+              value: "true"
+          repeatInterval: 15m
+  receivers:
+    - name: "null"
+    - name: tfy-control-plane-alerts-receiver
+      {{- if .Values.monitoring.alertManager.slackConfigs.enabled }}
+      slackConfigs:
+        - channel: "{{ .Values.monitoring.alertManager.slackConfigs.channel }}"
+          iconEmoji: ":alert:"
+          apiURL: 
+            {{- toYaml .Values.monitoring.alertManager.slackConfigs.apiURL | nindent 12 }}
+          sendResolved: true
+          text: >-
+            {{`{{ range .Alerts }}`}} 
+
+            {{`{{ if eq .Status "firing" }}`}}:warning:{{`{{ else }}`}}:white_check_mark:{{`{{ end }}`}} *Alert:* {{`{{ .Annotations.summary }}`}} 
+
+            *Severity:* {{`{{ .Labels.severity }}`}}
+
+            *Description:* {{`{{ .Annotations.description }}`}} 
+
+            *Details:* 
+
+            {{`{{ range.Labels.SortedPairs }}`}}
+            • *{{`{{ .Name }}`}}:* {{`{{ .Value }}`}}
+            {{`{{ end }}`}}
+
+            {{`{{ end }}`}}
+          title: >-
+            {{`{{ if eq .Status "firing" }}`}} FIRING ({{`{{ .Alerts.Firing | len }}`}}){{`{{ else }}`}} RESOLVED ({{`{{ .Alerts.Resolved | len }}`}}){{`{{ end }}`}}
+            Control Plane Alerts
+        {{- if .Values.monitoring.alertManager.slackConfigs.additionalSlackConfigs }}
+          {{- toYaml .Values.monitoring.alertManager.slackConfigs.additionalSlackConfigs | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.monitoring.alertManager.additionalReceivers }}
+        {{- toYaml .Values.monitoring.alertManager.additionalReceivers | nindent 6 }}
+      {{- end }}
+{{- end }}

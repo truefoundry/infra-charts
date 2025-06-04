@@ -1,8 +1,18 @@
 ## @section Parameters for tfyBuildkitdService
 
-## @param replicaCount Number of replicas of  Value kept for future use, kept 1
-##
-replicaCount: 1
+## Global Config
+global:
+  ## @param global.resourceTier [string] Resource deployment type
+  resourceTier: "medium"
+  ## @param global.affinity [object] Affinity rules for pod scheduling on a node
+  affinity: {}
+  ## @param global.tolerations [array] Tolerations for pod scheduling on a node
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector
+  nodeSelector: {}
+
+## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
+# replicaCount: 1
 
 ## Image of tfyBuildkitdService
 ##
@@ -57,8 +67,8 @@ storage:
     - ReadWriteOnce
   ## @param storage.storageClassName Storage class name for tfyBuildkitdService
   storageClassName: ""
-  ## @param storage.size Size of the storage for tfyBuildkitdService
-  size: 200Gi
+  ## @skip storage.size Size of the storage for tfyBuildkitdService
+  # size: 200Gi
 
 ## @param imagePullSecrets Secrets to pull images
 ##
@@ -83,9 +93,16 @@ serviceAccount:
   ##
   annotations: {}
 
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token
+  ##
+  automountServiceAccountToken: true
   ## @param serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
   ##
   name: ""
+
+## @param podLabels Labels to be added to the tfyBuildkitdService pod
+##
+podLabels: {}
 
 ## @param podAnnotations Annotations to be added to the pod
 ##
@@ -120,22 +137,16 @@ service:
 ## customized resource limits are very general in nature and must be kept the same
 ## decreasing the resource might make the service UNAVAILABLE
 
-## @param resources.limits.cpu CPU resource limits for tfyBuildkitdService container.
-## @param resources.limits.memory Memory Resource limits for tfyBuildkitdService container.
-## @param resources.limits.ephemeral-storage Ephemeral Storage limits for tfyBuildkitdService container.
-## @param resources.requests.cpu CPU resource requests for tfyBuildkitdService container.
-## @param resources.requests.memory Memory Resource requests for tfyBuildkitdService container.
-## @param resources.requests.ephemeral-storage Ephemeral Storage requests for tfyBuildkitdService container.
-##
-resources:
-  limits:
-    cpu: 2500m
-    memory: 8Gi
-    ephemeral-storage: 100Mi
-  requests:
-    cpu: 2500m
-    memory: 8Gi
-    ephemeral-storage: 100Mi
+## @skip resources [object] Resource requests and limits for tfyBuildkitdService
+#resources:
+#  limits:
+#      cpu: 1000m
+#      ephemeral-storage: 256Mi
+#      memory: 1024Mi
+#  requests:
+#      cpu: 500m
+#      ephemeral-storage: 128Mi
+#      memory: 512Mi
 
 ## @param extraVolumes List of Volumes to attach to tfyBuildkitdService container
 ## @param extraVolumeMounts List of Volume Mounts to attach to tfyBuildkitdService container

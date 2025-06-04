@@ -13,6 +13,7 @@ on:
       - 'charts/tfy-k8s-generic-inframold/**'
       - 'scripts/generate-artifacts-manifest/**'
       - 'scripts/upload-artifacts/**'
+      - 'scripts/get-release-notes/**'
 
 jobs:
   update-artifacts:
@@ -25,6 +26,8 @@ jobs:
       ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+      CHANGELOG_S3_BUCKET: "tfy-euwe1-production-control-plane-changelog"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -33,7 +36,6 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Setup Kubectl
-        id: install-kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'v1.28.0'
@@ -72,13 +74,20 @@ jobs:
           pip install -r scripts/upload-artifacts/requirements.txt
           pip install -r scripts/generate-artifacts-manifest/requirements.txt
 
+
+      - name: Copy current manifest for changelog
+        if: always()
+        run: |
+          cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
+
+
       # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
-          for chart in "${charts_list[@]}";
-          do
+          for chart in "${charts_list[@]}"; do
             version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+          
             python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
               $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
           done
@@ -92,15 +101,69 @@ jobs:
           charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
 
-      # Update the inframold artifacts manifest
-      - name: Update Artifacts Manifest
+      # Generate changelog step is run on only tfy-k8s-aws-eks-inframold chart
+      - name: Generate Changelog
+        id: generate_changelog
+        run: |
+          # extract old/new truefoundry revisions
+          old_rev=$(jq -r '.[] | select(.details.chart=="truefoundry") | .details.targetRevision' charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json)
+          new_rev=$(jq -r '.[] | select(.details.chart=="truefoundry") | .details.targetRevision' charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json)
+
+          if [ "$old_rev" != "$new_rev" ]; then
+            echo "truefoundry chart version has changed from $old_rev to $new_rev, generating changelog"
+            python scripts/get-release-notes/chart_changes.py \
+              charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json \
+              charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+              --version $new_rev \
+              --output charts/tfy-k8s-aws-eks-inframold/changelog.json
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+          echo "version=$new_rev" >> $GITHUB_OUTPUT
+        env:
+          TFY_GITHUB_TOKEN: ${{ secrets.TFY_GITHUB_TOKEN }}
+
+      - name: Configure AWS credentials for s3 uploads
+        if: steps.generate_changelog.outputs.changed == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.S3_IAM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Check if Changelog Exists in S3
+        id: check_changelog_uploaded
+        if: steps.generate_changelog.outputs.changed == 'true'
+        run: |
+          version=${{ steps.generate_changelog.outputs.version }}
+          changelog_path="s3://$CHANGELOG_S3_BUCKET/$version/changelog.json"
+          if aws s3 ls "$changelog_path" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Changelog to S3
+        if: steps.check_changelog_uploaded.outputs.exists == 'false'
+        run: |
+          version=${{ steps.generate_changelog.outputs.version }}
+          aws s3 cp charts/tfy-k8s-aws-eks-inframold/changelog.json s3://$CHANGELOG_S3_BUCKET/$version/changelog.json
+
+      - name: Cleanup Old Manifest & Changelog
+        if: steps.generate_changelog.outputs.changed == 'true'
+        run: |
+          rm -f charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
+          rm -f charts/tfy-k8s-aws-eks-inframold/changelog.json
+
+      - name: Commit & Push Updates
+        if: steps.generate_changelog.outputs.changed == 'true'
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git add .
           if git diff --cached --quiet; then
-            echo "Nothing to commit for now"
-          else  
+            echo "Nothing to commit"
+          else
             git commit -am "[CI] Update charts artifacts manifest files" --signoff
             git pull origin --rebase
             git push

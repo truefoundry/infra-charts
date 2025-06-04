@@ -1,0 +1,28 @@
+{{- if and .Values.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  labels:
+    release: prometheus
+    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+  {{- with .Values.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.serviceMonitor.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - targetPort: 8888
+      path: /metrics
+      honorLabels: true
+      interval: 10s
+{{- end -}}

@@ -8,7 +8,7 @@ metadata:
     {{- include "buildkitd-service.annotations" . | nindent 4 }}
 spec:
   serviceName: {{ include "buildkitd-service.fullname" . }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ include "buildkitd-service.replicas" . }}
   selector:
     matchLabels:
       {{- include "buildkitd-service.selectorLabels" . | nindent 6 }}
@@ -17,7 +17,7 @@ spec:
       annotations:
         {{- include "buildkitd-service.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "buildkitd-service.selectorLabels" . | nindent 8 }}
+        {{- include "buildkitd-service.podLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -97,7 +97,7 @@ spec:
                 - debug
                 - workers
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- include "buildkitd-service.resources" . | indent 12 }}
             
           volumeMounts:
           {{- if .Values.storage.enabled }}
@@ -133,14 +133,10 @@ spec:
       {{- end }}
       nodeSelector:
         {{- include "buildkitd-service.nodeSelector" . | nindent 8 }}
-      {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
+        {{- include "buildkitd-service.affinity" . | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "buildkitd-service.tolerations" . | nindent 8 }}
   {{- if .Values.storage.enabled }}
   volumeClaimTemplates:
     - metadata:
@@ -152,6 +148,6 @@ spec:
         {{- end }}
         resources:
           requests:
-            storage: {{ .Values.storage.size }}
+            storage: {{ include "buildkitd-service.storageSize" . }}
         storageClassName: {{ .Values.storage.storageClassName }}
   {{- end }}

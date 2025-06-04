@@ -7,7 +7,7 @@ metadata:
   annotations:
     {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ include "tfy-otel-collector.replicas" . }}
   selector:
     matchLabels:
       {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
@@ -42,20 +42,34 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            - name: grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+            - name: healthcheck
+              containerPort: 3000
+              protocol: TCP
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- include "tfy-otel-collector.resources" . | nindent 12 }}
           {{- if .Values.healthcheck.enabled }}
           livenessProbe:
             httpGet:
               path: {{ .Values.healthcheck.liveness.path }}
               port: {{ .Values.healthcheck.liveness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.liveness.failureThreshold | default 3 }}
           readinessProbe:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
               port: {{ .Values.healthcheck.readiness.port }}
             initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
-            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 5 }}
+            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 1 }}
             successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
             failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
           {{- end }}
@@ -63,19 +77,13 @@ spec:
           {{- include "tfy-otel-collector.volumeMounts" . | nindent 12 }}
       volumes:
       {{- include "tfy-otel-collector.volumes" . | nindent 8 }}
-      {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
+        {{- include "tfy-otel-collector.nodeSelector" . | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-otel-collector.affinity" . | nindent 8 }}
       {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-otel-collector.tolerations" . | nindent 8 }}

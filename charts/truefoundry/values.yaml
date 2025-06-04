@@ -3,6 +3,12 @@
 ###################################################################################################################
 ## @section Global prameters for Truefoundry
 global:
+  # Resource deployment tier for the control plane, there are 3 tiers available
+  # 1. small - for dev and testing purposes
+  # 2. medium - for small production workloads
+  # 3. large - for large production workloads
+  ## @param global.resourceTier Resource deployment tier for the control plane, either small, medium or large accepted
+  resourceTier: "medium"
   # The below are installation secrets that will be provided as is.
   # These are customised for your account. Please use the provided values as is.
   # If you have an existing imagepullsecret, set this to its name
@@ -15,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.48.4
+  controlPlaneChartVersion: 0.58.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -55,6 +61,16 @@ global:
       value: spot
       effect: NoSchedule
       operator: Equal
+  ## global.serviceAccount [object] Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.create Bool to enable service account
+    create: true
+    ## @param global.serviceAccount.name Name of the service account
+    name: truefoundry
+    ## @param global.serviceAccount.annotations Annotations for the service account
+    annotations: {}
+    ## @param global.serviceAccount.automountServiceAccountToken Automount service account token for the service account
+    automountServiceAccountToken: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -68,6 +84,55 @@ devMode:
   ## @param devMode.enabled Bool to enable dev mode
   enabled: false
 ###################################################################################################################
+####################################### Monitoring Config ##########################################################
+###################################################################################################################
+## @section Monitoring Config values
+monitoring:
+  ## @param monitoring.enabled Bool to enable monitoring for the control plane
+  enabled: false
+  ## monitoring.alertManager [object] Alert manager configuration
+  alertManager:
+    ## @param monitoring.alertManager.enabled Bool to enable alert manager
+    enabled: true
+    ## @param monitoring.alertManager.name Name of the alert manager configuration
+    name: tfy-control-plane-alert-manager
+    ## @param monitoring.alertManager.additionalLabels Additional labels for alert manager
+    additionalLabels: {}
+    ## @param monitoring.alertManager.additionalAnnotations Additional annotations for alert manager
+    additionalAnnotations: {}
+    slackConfigs:
+      ## @param monitoring.alertManager.slackConfigs.enabled Bool to enable Slack notifications
+      enabled: true
+      ## @param monitoring.alertManager.slackConfigs.channel Slack channel to send alerts to
+      channel: "#customer-cp-alerts"
+      apiURL:
+        ## @param monitoring.alertManager.slackConfigs.apiURL.name Name of secret containing Slack API URL
+        name: tfy-control-plane-alert-manager-secret
+        ## @param monitoring.alertManager.slackConfigs.apiURL.key Key in secret containing Slack API URL
+        key: API_URL
+      ## @param monitoring.alertManager.slackConfigs.additionalSlackConfigs Additional Slack configurations
+      additionalSlackConfigs: []
+    ## @param monitoring.alertManager.additionalReceivers Additional alert receivers
+    additionalReceivers: []
+    secret:
+      ## @param monitoring.alertManager.secret.create Bool to create secret for alert manager
+      create: false
+      ## @param monitoring.alertManager.secret.name Name of the secret
+      name: tfy-control-plane-alert-manager-secret
+      ## @param monitoring.alertManager.secret.data [object] Data to be stored in secret
+      data:
+        API_URL: ""
+  ## monitoring.alertRules [object] Alert rules configuration
+  alertRules:
+    ## @param monitoring.alertRules.enabled Bool to enable alert rules
+    enabled: true
+    ## @param monitoring.alertRules.name Name of the alert rules configuration
+    name: tfy-control-plane-alert-rules
+    ## @param monitoring.alertRules.additionalLabels Additional labels for alert rules
+    additionalLabels: {}
+    ## @param monitoring.alertRules.additionalAnnotations Additional annotations for alert rules
+    additionalAnnotations: {}
+###################################################################################################################
 ####################################### Truefoundry bootstrap script ##############################################
 ###################################################################################################################
 ## @section Truefoundry bootstrap values
@@ -75,6 +140,17 @@ devMode:
 truefoundryBootstrap:
   ## @param truefoundryBootstrap.enabled Bool to enable truefoundry bootstrap
   enabled: true
+  ## @param truefoundryBootstrap.serviceAccount.automountServiceAccountToken Automount service account token for the bootstrap container
+  serviceAccount:
+    automountServiceAccountToken: true
+  ## securityContext Security context for the bootstrap container
+  securityContext:
+    ## @param truefoundryBootstrap.securityContext.enabled Bool to enable security context for the bootstrap container
+    enabled: false
+    ## @param truefoundryBootstrap.securityContext.podSecurityContext Pod security context for the bootstrap container
+    podSecurityContext: {}
+    ## @param truefoundryBootstrap.securityContext.containerSecurityContext Container security context for the bootstrap container
+    containerSecurityContext: {}
   ## truefoundryBootstrap.image Truefoundry base bootstrap image
   image:
     ## @param truefoundryBootstrap.image.repository Truefoundry bootstrap image repository
@@ -114,8 +190,8 @@ truefoundryFrontendApp:
   enabled: true
   ## @param truefoundryFrontendApp.tolerations Tolerations specific to the frontend app
   tolerations: {}
-  ## @param truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
-  replicaCount: 1
+  ## @skip truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
+  #  replicaCount: 1
   ## @param truefoundryFrontendApp.annotations [object] Annotations for the frontend app
   annotations: {}
   ## truefoundryFrontendApp.image Image for the frontend app
@@ -123,7 +199,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.47.2"
+    tag: "v0.58.1"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -140,24 +216,17 @@ truefoundryFrontendApp:
   commonLabels: {}
   ## @param truefoundryFrontendApp.securityContext Security context for the frontend app
   securityContext: {}
-  ## truefoundryFrontendApp.resources Resource requests and limits for the frontend app
-  resources:
-    ## truefoundryFrontendApp.resources.limits Resource limits for the frontend app
-    limits:
-      ## @param truefoundryFrontendApp.resources.limits.cpu CPU limit for the frontend app
-      cpu: 200m
-      ## @param truefoundryFrontendApp.resources.limits.memory Memory limit for the frontend app
-      memory: 512Mi
-      ## @param truefoundryFrontendApp.resources.limits.ephemeral-storage Ephemeral storage limit for the frontend app
-      ephemeral-storage: 256Mi
-    ## truefoundryFrontendApp.resources.requests Resource requests for the frontend app
-    requests:
-      ## @param truefoundryFrontendApp.resources.requests.cpu CPU request for the frontend app
-      cpu: 50m
-      ## @param truefoundryFrontendApp.resources.requests.memory Memory request for the frontend app
-      memory: 256Mi
-      ## @param truefoundryFrontendApp.resources.requests.ephemeral-storage Ephemeral storage request for the frontend app
-      ephemeral-storage: 128Mi
+  ## @param truefoundryFrontendApp.resources Resource requests and limits for the frontend app
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 200m
+  #    memory: 512Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 50m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
   ## truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
   livenessProbe:
     ## @param truefoundryFrontendApp.livenessProbe.initialDelaySeconds Initial delay seconds for the liveness probe
@@ -228,6 +297,12 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.tfyWorkflowAdminHost tfy workflow admin host for the frontend app
   tfyWorkflowAdminHost: >-
     {{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local
+  ## @param truefoundryFrontendApp.s3proxyHost s3 proxy host for the frontend app
+  s3proxyHost: >-
+    {{ .Release.Name }}-s3proxy.{{ .Release.Namespace }}.svc.cluster.local
+  ## @param truefoundryFrontendApp.tfyOtelCollectorHost otel collector host for the frontend app
+  tfyOtelCollectorHost: >-
+    {{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local
   ## truefoundryFrontendApp.llmGateway LLM gateway settings for the frontend app
   llmGateway:
     ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
@@ -242,6 +317,8 @@ truefoundryFrontendApp:
   serviceAccount:
     ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
     annotations: {}
+    ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Automount service account token for the frontend app
+    automountServiceAccountToken: true
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -249,7 +326,7 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.imagePullSecrets Image pull secrets for the frontend app
   ##
   imagePullSecrets: []
-  ## @skip truefoundryFrontendApp.env Environment variables for the frontend app
+  ## @param truefoundryFrontendApp.env [object] Environment variables for the frontend app
   env:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     NATS_URL: ws://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:8080
@@ -259,6 +336,7 @@ truefoundryFrontendApp:
     DEBUGGING_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
     TFY_OTEL_COLLECTOR_URL: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318
     TRT_ENGINE_BUILDER_BASE_URL: https://tfy-trt-llm-engine-builder.tfy-ctl-euwe1-production.production.truefoundry.com
+    SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ .Release.Namespace }}.svc.cluster.local:18080
     VITE_AUTHSERVER_URL: /api/auth
     VITE_MLFOUNDRY_URL: /api/ml
     VITE_SVCFOUNDRY_URL: /api/svc
@@ -277,15 +355,8 @@ truefoundryFrontendApp:
     VITE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
     VITE_COST_ENABLED_TENANTS: ""
     VITE_ENABLE_WORKFLOWS: "true"
-    VITE_ENABLE_RECOMMENDATION_INFOBAR: "true"
-    VITE_ENABLE_AUTOPILOT: "false"
-    VITE_AUTOPILOT_ENABLED_TENANTS: ""
-    VITE_ENABLE_POLICY_FLOW: "false"
-    VITE_POLICY_FLOW_ENABLED_TENANTS: ""
     VITE_ENABLE_DEPLOYMENT_ASSISTANT: "false"
     VITE_DEPLOYMENT_ASSISTANT_ENABLED_TENANTS: ""
-    VITE_ENABLE_ENVIRONMENT_YAML: "false"
-    VITE_ENVIRONMENT_YAML_ENABLED_TENANTS: ""
     VITE_ENABLE_WHATSNEW: "false"
     VITE_WHATSNEW_ENABLED_TENANTS: ""
     VITE_ENABLE_TROUBLESHOOT: "false"
@@ -293,27 +364,20 @@ truefoundryFrontendApp:
     VITE_ENABLE_RSTUDIO: "false"
     VITE_DATA_DIRECTORY_ENABLED_TENANTS: ""
     VITE_ENABLE_DATA_DIRECTORY: "false"
-    VITE_ENABLE_EVENTS_GRAPHS: "true"
-    VITE_ENABLE_CLUSTER_METRICS: "true"
     VITE_ENABLE_SPARK_JOBS: "false"
     VITE_SPARK_JOBS_ENABLED_TENANTS: ""
     VITE_ENABLE_REPORT_WEBVITALS: "false"
     VITE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
-    VITE_ENABLE_NEW_DELETE_FLOW: "false"
-    VITE_NEW_DELETE_ENABLED_TENANTS: ""
     VITE_ENABLE_LLM_GATEWAY_REQUEST_LOGS: "true"
     VITE_LLM_GATEWAY_REQUEST_LOGS_ENABLED_TENANTS: ""
     VITE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
     VITE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
-    VITE_ENABLE_ALERT_INFOBAR: "false"
-    VITE_ALERT_INFOBAR_ENABLED_TENANTS: ""
-    VITE_ENABLE_ALERTS_TAB: "false"
-    VITE_ALERTS_TAB_ENABLED_TENANTS: ""
+    VITE_ENABLE_TRACES: "{{ .Values.tags.tracing }}"
+    VITE_TRACES_ENABLED_TENANTS: ""
     VITE_STRIPE_PUBLISHABLE_KEY: ""
     VITE_CREDIT_CARD_REQUIRED_DOMAINS: ""
     VITE_TENANT_BASE_DOMAIN: ""
     VITE_MANAGED_CLUSTER_ONBOARDING_ENABLED: "false"
-    VITE_ENABLE_CLUSTER_LAST_SYNC_ISSUES: "false"
     VITE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
     VITE_CIVO_RESOURCES_STRING: ""
     VITE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
@@ -342,6 +406,7 @@ truefoundryFrontendApp:
     VITE_ENABLE_SUPERFLOW: "false"
     VITE_ENABLE_GUARDRAILS: "false"
     VITE_GUARDRAILS_ENABLED_TENANTS: ""
+    VITE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
 ###################################################################################################################
 ####################################### MLfoundry Server ##########################################################
 ###################################################################################################################
@@ -358,9 +423,9 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.40.0"
-  ## @param mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
-  replicaCount: 1
+    tag: "v0.58.0"
+  ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
+  # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
   environmentName: default
   ## @param mlfoundryServer.envSecretName Secret name for the mlfoundry server environment variables
@@ -379,24 +444,17 @@ mlfoundryServer:
   commonLabels: {}
   ## @param mlfoundryServer.securityContext Security context for the mlfoundry server
   securityContext: {}
-  ## mlfoundryServer.resources Resource requests and limits for the mlfoundry server
-  resources:
-    ## mlfoundryServer.resources.limits Resource limits for the mlfoundry server
-    limits:
-      ## @param mlfoundryServer.resources.limits.cpu CPU limit for the mlfoundry server
-      cpu: 1200m
-      ## @param mlfoundryServer.resources.limits.memory Memory limit for the mlfoundry server
-      memory: 2048Mi
-      ## @param mlfoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the mlfoundry server
-      ephemeral-storage: 256Mi
-    ## mlfoundryServer.resources.requests Resource requests for the mlfoundry server
-    requests:
-      ## @param mlfoundryServer.resources.requests.cpu CPU request for the mlfoundry server
-      cpu: 600m
-      ## @param mlfoundryServer.resources.requests.memory Memory request for the mlfoundry server
-      memory: 1024Mi
-      ## @param mlfoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the mlfoundry server
-      ephemeral-storage: 128Mi
+  ## @param mlfoundryServer.resources [object] Resource requests and limits for the mlfoundry server
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 1200m
+  #    memory: 2048Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 600m
+  #    memory: 1024Mi
+  #    ephemeral-storage: 128Mi
   ## mlfoundryServer.livenessProbe Liveness probe settings for the mlfoundry server
   livenessProbe:
     ## @param mlfoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for mlfoundry server
@@ -439,13 +497,15 @@ mlfoundryServer:
   serviceAccount:
     ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
     annotations: {}
+    ## @param mlfoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the mlfoundry server
+    automountServiceAccountToken: true
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
   extraVolumes: []
   ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
   extraVolumeMounts: []
-  ## @skip mlfoundryServer.env Environment variables for the mlfoundry server
+  ## @param mlfoundryServer.env [object] Environment variables for the mlfoundry server
   env:
     NUM_APP_WORKERS: "2"
     PROMETHEUS_FASTAPI_INSTRUMENTATOR: "1"
@@ -468,6 +528,122 @@ mlfoundryServer:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     ENVIRONMENT: production
 ###################################################################################################################
+####################################### Spark History Server #######################################################
+###################################################################################################################
+## @section sparkHistoryServer Truefoundry spark history server values
+s3proxy:
+  ## @param s3proxy.enabled Bool to enable the s3 proxy
+  enabled: false
+  ## @param s3proxy.tolerations Tolerations specific to the s3 proxy
+  tolerations: {}
+  ## @skip s3proxy.replicaCount Number of replicas for the s3 proxy
+  # replicaCount: 1
+  ## @param s3proxy.annotations [object] Annotations for the s3 proxy
+  annotations: {}
+  ## s3proxy.image Image for the s3 proxy
+  image:
+    # Set suitable values for the image repository and tag
+    ## @param s3proxy.image.repository Image repository for the s3 proxy
+    repository: "tfy.jfrog.io/tfy-private-images/s3proxy"
+    ## @param s3proxy.image.tag Image tag for the s3 proxy
+    tag: "v0.57.0"
+  ## @param s3proxy.environmentName Environment name for the s3 proxy
+  environmentName: default
+  ## @param s3proxy.envSecretName Secret name for the s3 proxy environment variables
+  envSecretName: s3proxy-env-secret
+  ## @param s3proxy.imagePullPolicy Image pull policy for the s3 proxy
+  imagePullPolicy: IfNotPresent
+  ## @param s3proxy.nameOverride Override name for the s3 proxy
+  nameOverride: ''
+  ## @param s3proxy.fullnameOverride Full name override for the s3 proxy
+  fullnameOverride: ''
+  ## @param s3proxy.podAnnotations Annotations for the s3 proxy pods
+  podAnnotations: {}
+  ## @param s3proxy.podSecurityContext Security context for the s3 proxy pods
+  podSecurityContext: {}
+  ## @param s3proxy.commonLabels Common labels for the s3 proxy pods
+  commonLabels: {}
+  ## @param s3proxy.securityContext Security context for the s3 proxy
+  securityContext: {}
+  ## @skip s3proxy.resources [object] Resource requests and limits for the s3 proxy
+  # resources:
+  #  ## s3proxy.resources.limits Resource limits for the s3 proxy
+  #  limits:
+  #    ## @param s3proxy.resources.limits.cpu CPU limit for the s3 proxy
+  #    cpu: 600m
+  #    ## @param s3proxy.resources.limits.memory Memory limit for the s3 proxy
+  #    memory: 1600Mi
+  #    ## @param s3proxy.resources.limits.ephemeral-storage Ephemeral storage limit for the s3 proxy
+  #    ephemeral-storage: 256Mi
+  #  ## s3proxy.resources.requests Resource requests for the s3 proxy
+  #  requests:
+  #    ## @param s3proxy.resources.requests.cpu CPU request for the s3 proxy
+  #    cpu: 400m
+  #    ## @param s3proxy.resources.requests.memory Memory request for the s3 proxy
+  #    memory: 800Mi
+  #    ## @param s3proxy.resources.requests.ephemeral-storage Ephemeral storage request for the s3 proxy
+  #    ephemeral-storage: 128Mi
+  ## s3proxy.livenessProbe Liveness probe settings for the s3 proxy
+  livenessProbe:
+    ## @param s3proxy.livenessProbe.failureThreshold Liveness probe failure threshold for s3 proxy
+    failureThreshold: 3
+    ## @param s3proxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for s3 proxy
+    initialDelaySeconds: 600
+    ## @param s3proxy.livenessProbe.periodSeconds Liveness probe period for s3 proxy
+    periodSeconds: 10
+    ## @param s3proxy.livenessProbe.successThreshold Liveness probe success threshold for s3 proxy
+    successThreshold: 1
+    ## @param s3proxy.livenessProbe.timeoutSeconds Liveness probe timeout for s3 proxy
+    timeoutSeconds: 1
+  ## s3proxy.readinessProbe Readiness probe settings for the s3 proxy
+  readinessProbe:
+    ## @param s3proxy.readinessProbe.failureThreshold Readiness probe failure threshold for s3 proxy
+    failureThreshold: 3
+    ## @param s3proxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for s3 proxy
+    initialDelaySeconds: 30
+    ## @param s3proxy.readinessProbe.periodSeconds Readiness probe period for s3 proxy
+    periodSeconds: 10
+    ## @param s3proxy.readinessProbe.successThreshold Readiness probe success threshold for s3 proxy
+    successThreshold: 1
+    ## @param s3proxy.readinessProbe.timeoutSeconds Readiness probe timeout for s3 proxy
+    timeoutSeconds: 1
+  ## @param s3proxy.nodeSelector Node selector for the s3 proxy
+  nodeSelector: {}
+  ## @param s3proxy.affinity Affinity settings for the s3 proxy
+  affinity: {}
+  ## @param s3proxy.topologySpreadConstraints Topology spread constraints for the s3 proxy
+  topologySpreadConstraints: {}
+  ## s3proxy.service Service settings for the s3 proxy
+  service:
+    ## @param s3proxy.service.type Service type for the s3 proxy
+    type: ClusterIP
+    ## @param s3proxy.service.port Service port for the s3 proxy
+    port: 8080
+    ## @param s3proxy.service.annotations Annotations for the s3 proxy service
+    annotations: {}
+    ## s3proxy.serviceAccount Service account settings for the s3 proxy
+  serviceAccount:
+    ## @param s3proxy.serviceAccount.create Bool to create the s3 proxy service account
+    create: false
+    ## @param s3proxy.serviceAccount.name Name of the s3 proxy service account
+    name: ""
+    ## @param s3proxy.serviceAccount.annotations Annotations for the s3 proxy service account
+    annotations: {}
+  ## @param s3proxy.extraVolumes Extra volumes for the s3 proxy
+  extraVolumes: []
+  ## @param s3proxy.extraVolumeMounts Extra volume mounts for the s3 proxy
+  extraVolumeMounts: []
+  ## @param s3proxy.imagePullSecrets Image pull credentials for s3 proxy
+  imagePullSecrets: []
+  config:
+    ## @param s3proxy.config.jcloudsEndpoint JClouds endpoint for the s3 proxy
+    jcloudsEndpoint: https://s3.us-east-1.amazonaws.com
+    ## @param s3proxy.config.jcloudsProvider JClouds provider for the s3 proxy
+    jcloudsProvider: aws-s3
+  ## @param s3proxy.env [object] Environment variables for the s3 proxy
+  env:
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
 ## @section servicefoundryServer Truefoundry servicefoundry server values
@@ -476,8 +652,8 @@ servicefoundryServer:
   enabled: true
   ## @param servicefoundryServer.tolerations Tolerations specific to the servicefoundry server
   tolerations: {}
-  ## @param servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
-  replicaCount: 1
+  ## @skip servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
+  # replicaCount: 1
   ## @param servicefoundryServer.annotations [object] Annotations for the mlfoundry server
   annotations: {}
   ## servicefoundryServer.image Image for the servicefoundry server
@@ -485,7 +661,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.48.1"
+    tag: "v0.58.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -504,24 +680,17 @@ servicefoundryServer:
   commonLabels: {}
   ## @param servicefoundryServer.securityContext Security context for the servicefoundry server
   securityContext: {}
-  ## servicefoundryServer.resources Resource requests and limits for the servicefoundry server
-  resources:
-    ## servicefoundryServer.resources.limits Resource limits for the servicefoundry server
-    limits:
-      ## @param servicefoundryServer.resources.limits.cpu CPU limit for the servicefoundry server
-      cpu: 600m
-      ## @param servicefoundryServer.resources.limits.memory Memory limit for the servicefoundry server
-      memory: 1600Mi
-      ## @param servicefoundryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the servicefoundry server
-      ephemeral-storage: 256Mi
-    ## servicefoundryServer.resources.requests Resource requests for the servicefoundry server
-    requests:
-      ## @param servicefoundryServer.resources.requests.cpu CPU request for the servicefoundry server
-      cpu: 400m
-      ## @param servicefoundryServer.resources.requests.memory Memory request for the servicefoundry server
-      memory: 800Mi
-      ## @param servicefoundryServer.resources.requests.ephemeral-storage Ephemeral storage request for the servicefoundry server
-      ephemeral-storage: 128Mi
+  ## @param servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 600m
+  #    memory: 1600Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 400m
+  #    memory: 800Mi
+  #    ephemeral-storage: 128Mi
   ## servicefoundryServer.livenessProbe Liveness probe settings for the servicefoundry server
   livenessProbe:
     ## @param servicefoundryServer.livenessProbe.failureThreshold Liveness probe failure threshold for servicefoundry server
@@ -560,10 +729,12 @@ servicefoundryServer:
     port: 3000
     ## @param servicefoundryServer.service.annotations Annotations for the servicefoundry server service
     annotations: {}
-    ## servicefoundryServer.serviceAccount Service account settings for the servicefoundry server
+  ## servicefoundryServer.serviceAccount Service account settings for the servicefoundry server
   serviceAccount:
     ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
     annotations: {}
+    ## @param servicefoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the servicefoundry server
+    automountServiceAccountToken: true
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
   extraVolumes: []
   ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
@@ -574,7 +745,15 @@ servicefoundryServer:
   rbac:
     ## @param servicefoundryServer.rbac.enabled Enable RBAC for the servicefoundry server
     enabled: true
-  ## @skip servicefoundryServer.env Environment variables for the servicefoundry server
+  ## servicefoundryServer.serviceMonitor ServiceMonitor settings for the servicefoundry server
+  serviceMonitor:
+    ## @param servicefoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the servicefoundry server
+    enabled: true
+    ## @param servicefoundryServer.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param servicefoundryServer.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
+  ## @param servicefoundryServer.env [object] Environment variables for the servicefoundry server
   env:
     DEFAULT_CLOUD_PROVIDER: ""
     S3_BUCKET_NAME: ""
@@ -594,6 +773,7 @@ servicefoundryServer:
     DB_SSL_MODE: ""
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     TFY_BUILD_LOGS_URL: "{{ .Values.global.controlPlaneURL }}/api/svc"
     TFY_BUILD_WS_URL: "{{ .Values.global.controlPlaneURL }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
@@ -631,6 +811,77 @@ servicefoundryServer:
     EXTERNAL_OAUTH_CLIENT_ID: ""
     EXTERNAL_OAUTH_CLIENT_SECRET: ""
     NODE_OPTIONS: --no-node-snapshot
+    SPARK_JOB_EVENT_LOG_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/s3proxy"
+    SPARK_JOB_EVENT_LOG_BASE_DIR: sparkjob-events
+    FE_AUTHSERVER_URL: /api/auth
+    FE_MLFOUNDRY_URL: /api/ml
+    FE_DEBUGGING_AGENT_URL: /api/agent
+    FE_SVCFOUNDRY_URL: /api/svc
+    FE_LLM_GATEWAY_URL: /api/llm
+    FE_LIVE_DEMO_TOKEN_VENDOR_URL: /api/live-demo-token-vendor
+    FE_TRT_ENGINE_BUILDER_URL: /api/trt-engine-builder
+    FE_SOCKET_URL: ""
+    FE_NATS_URL: ""
+    FE_FUSIONAUTH_URL: https://login.truefoundry.com
+    FE_MULTITENANT_ENABLED: "false"
+    FE_TENANT_NAME: "{{ .Values.global.tenantName }}"
+    FE_EXPORT_AS_HELM_TYPES: service,volume,helm,job
+    FE_CREATE_AS_APPLICATION_SET: service,helm,job
+    FE_ENABLE_COMPANY_REGISTRATION: "false"
+    FE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
+    FE_COST_ENABLED_TENANTS: ""
+    FE_ENABLE_WORKFLOWS: "true"
+    FE_ENABLE_DEPLOYMENT_ASSISTANT: "false"
+    FE_DEPLOYMENT_ASSISTANT_ENABLED_TENANTS: ""
+    FE_ENABLE_WHATSNEW: "false"
+    FE_WHATSNEW_ENABLED_TENANTS: ""
+    FE_ENABLE_TROUBLESHOOT: "false"
+    FE_TROUBLESHOOT_ENABLED_TENANTS: ""
+    FE_ENABLE_RSTUDIO: "false"
+    FE_DATA_DIRECTORY_ENABLED_TENANTS: ""
+    FE_ENABLE_DATA_DIRECTORY: "false"
+    FE_ENABLE_SPARK_JOBS: "false"
+    FE_SPARK_JOBS_ENABLED_TENANTS: ""
+    FE_ENABLE_REPORT_WEBVITALS: "false"
+    FE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
+    FE_ENABLE_LLM_GATEWAY_REQUEST_LOGS: "true"
+    FE_LLM_GATEWAY_REQUEST_LOGS_ENABLED_TENANTS: ""
+    FE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
+    FE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
+    FE_ENABLE_TRACES: "false"
+    FE_TRACES_ENABLED_TENANTS: ""
+    FE_STRIPE_PUBLISHABLE_KEY: ""
+    FE_CREDIT_CARD_REQUIRED_DOMAINS: ""
+    FE_TENANT_BASE_DOMAIN: ""
+    FE_MANAGED_CLUSTER_ONBOARDING_ENABLED: "false"
+    FE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
+    FE_CIVO_RESOURCES_STRING: ""
+    FE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
+    FE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
+    FE_LLM_GATEWAY_PATH: llm-gateway
+    FE_ENABLE_SENTRY: "true"
+    FE_ENABLE_TOOLS_AGENTS: "false"
+    FE_ENABLE_READ_ONLY_INTERACTIVE_MODE: "false"
+    FE_AGENT_ENABLED_TENANTS: ""
+    FE_BRAINFISH_WIDGET_ENABLED_TENANTS: ""
+    FE_SENTRY_DSN: ""
+    FE_APEX_DOMAIN: http://truefoundry.com/
+    FE_ITERATE_AI_KEY: ""
+    FE_BRAINFISH_WIDGET_KEY: ""
+    FE_DATAGRID_LICENSE_KEY: 1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
+    FE_ENABLE_GOOGLE_ANALYTICS: "false"
+    FE_ENABLE_PAGESENSE: "false"
+    FE_ENABLE_MIXPANEL: "false"
+    FE_ENABLE_SCHEMA_VISUALISER: "false"
+    FE_ENABLE_MARKDOWN_VISUALISER: "false"
+    FE_SENTRY_ENVIRONMENT: production
+    FE_MIXPANEL_TOKEN: ""
+    FE_CHAMELEON_TOKEN: ""
+    FE_CRISP_WEBSITE_ID: ""
+    FE_ENABLE_SUPERFLOW: "false"
+    FE_ENABLE_GUARDRAILS: "false"
+    FE_GUARDRAILS_ENABLED_TENANTS: ""
+    FE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
@@ -641,6 +892,123 @@ servicefoundryServer:
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
     k8sManifestValidationPolicy: '{{ .Release.Name }}-k8s-manifest-validation-policy-cm'
 ###################################################################################################################
+####################################### Spark History Server #######################################################
+###################################################################################################################
+## @section sparkHistoryServer Truefoundry spark history server values
+sparkHistoryServer:
+  ## @param sparkHistoryServer.enabled Bool to enable the spark history server
+  enabled: false
+  ## @param sparkHistoryServer.tolerations Tolerations specific to the spark history server
+  tolerations: {}
+  ## @skip sparkHistoryServer.replicaCount Number of replicas for the spark history server
+  # replicaCount: 1
+  ## @param sparkHistoryServer.annotations [object] Annotations for the spark history server
+  annotations: {}
+  ## sparkHistoryServer.image Image for the spark history server
+  image:
+    # Set suitable values for the image repository and tag
+    ## @param sparkHistoryServer.image.repository Image repository for the spark history server
+    repository: "tfy.jfrog.io/tfy-private-images/spark-history-server"
+    ## @param sparkHistoryServer.image.tag Image tag for the spark history server
+    tag: "v0.57.0"
+  ## @param sparkHistoryServer.environmentName Environment name for the spark history server
+  environmentName: default
+  ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
+  envSecretName: spark-history-server-env-secret
+  ## @param sparkHistoryServer.imagePullPolicy Image pull policy for the spark history server
+  imagePullPolicy: IfNotPresent
+  ## @param sparkHistoryServer.nameOverride Override name for the spark history server
+  nameOverride: ''
+  ## @param sparkHistoryServer.fullnameOverride Full name override for the spark history server
+  fullnameOverride: ''
+  ## @param sparkHistoryServer.podAnnotations Annotations for the spark history server pods
+  podAnnotations: {}
+  ## @param sparkHistoryServer.podSecurityContext Security context for the spark history server pods
+  podSecurityContext: {}
+  ## @param sparkHistoryServer.commonLabels Common labels for the spark history server pods
+  commonLabels: {}
+  ## @param sparkHistoryServer.securityContext Security context for the spark history server
+  securityContext: {}
+  ## @skip sparkHistoryServer.resources [object] Resource requests and limits for the spark history server
+  # resources:
+  #  ## sparkHistoryServer.resources.limits Resource limits for the spark history server
+  #  limits:
+  #    ## @param sparkHistoryServer.resources.limits.cpu CPU limit for the spark history server
+  #    cpu: 600m
+  #    ## @param sparkHistoryServer.resources.limits.memory Memory limit for the spark history server
+  #    memory: 1600Mi
+  #    ## @param sparkHistoryServer.resources.limits.ephemeral-storage Ephemeral storage limit for the spark history server
+  #    ephemeral-storage: 256Mi
+  #  ## sparkHistoryServer.resources.requests Resource requests for the spark history server
+  #  requests:
+  #    ## @param sparkHistoryServer.resources.requests.cpu CPU request for the spark history server
+  #    cpu: 400m
+  #    ## @param sparkHistoryServer.resources.requests.memory Memory request for the spark history server
+  #    memory: 800Mi
+  #    ## @param sparkHistoryServer.resources.requests.ephemeral-storage Ephemeral storage request for the spark history server
+  #    ephemeral-storage: 128Mi
+  ## sparkHistoryServer.livenessProbe Liveness probe settings for the spark history server
+  livenessProbe:
+    ## @param sparkHistoryServer.livenessProbe.failureThreshold Liveness probe failure threshold for spark history server
+    failureThreshold: 3
+    ## @param sparkHistoryServer.livenessProbe.initialDelaySeconds Liveness probe initial delay for spark history server
+    initialDelaySeconds: 20
+    ## @param sparkHistoryServer.livenessProbe.periodSeconds Liveness probe period for spark history server
+    periodSeconds: 10
+    ## @param sparkHistoryServer.livenessProbe.successThreshold Liveness probe success threshold for spark history server
+    successThreshold: 1
+    ## @param sparkHistoryServer.livenessProbe.timeoutSeconds Liveness probe timeout for spark history server
+    timeoutSeconds: 1
+  ## sparkHistoryServer.readinessProbe Readiness probe settings for the spark history server
+  readinessProbe:
+    ## @param sparkHistoryServer.readinessProbe.failureThreshold Readiness probe failure threshold for spark history server
+    failureThreshold: 3
+    ## @param sparkHistoryServer.readinessProbe.initialDelaySeconds Readiness probe initial delay for spark history server
+    initialDelaySeconds: 10
+    ## @param sparkHistoryServer.readinessProbe.periodSeconds Readiness probe period for spark history server
+    periodSeconds: 10
+    ## @param sparkHistoryServer.readinessProbe.successThreshold Readiness probe success threshold for spark history server
+    successThreshold: 1
+    ## @param sparkHistoryServer.readinessProbe.timeoutSeconds Readiness probe timeout for spark history server
+    timeoutSeconds: 1
+  ## @param sparkHistoryServer.nodeSelector Node selector for the spark history server
+  nodeSelector: {}
+  ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
+  affinity: {}
+  ## @param sparkHistoryServer.topologySpreadConstraints Topology spread constraints for the spark history server
+  topologySpreadConstraints: {}
+  ## sparkHistoryServer.service Service settings for the spark history server
+  service:
+    ## @param sparkHistoryServer.service.type Service type for the spark history server
+    type: ClusterIP
+    ## @param sparkHistoryServer.service.port Service port for the spark history server
+    port: 18080
+    ## @param sparkHistoryServer.service.annotations Annotations for the spark history server service
+    annotations: {}
+    ## sparkHistoryServer.serviceAccount Service account settings for the spark history server
+  serviceAccount:
+    ## @param sparkHistoryServer.serviceAccount.create Bool to create the spark history server service account
+    create: false
+    ## @param sparkHistoryServer.serviceAccount.name Name of the spark history server service account
+    name: ""
+    ## @param sparkHistoryServer.serviceAccount.annotations Annotations for the spark history server service account
+    annotations: {}
+  ## @param sparkHistoryServer.extraVolumes Extra volumes for the spark history server
+  extraVolumes: []
+  ## @param sparkHistoryServer.extraVolumeMounts Extra volume mounts for the spark history server
+  extraVolumeMounts: []
+  ## @param sparkHistoryServer.imagePullSecrets Image pull credentials for spark history server
+  imagePullSecrets: []
+  ## sparkHistoryServer.rbac RBAC settings for the spark history server
+  rbac:
+    ## @param sparkHistoryServer.rbac.enabled Enable RBAC for the spark history server
+    enabled: true
+  ## @param sparkHistoryServer.env [object] Environment variables for the spark history server
+  env:
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    SPARK_HISTORY_OPTS: -Dspark.jars.ivy=/tmp/ivy -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem -Dspark.history.fs.logDirectory=s3a://{{ .Values.servicefoundryServer.env.S3_BUCKET_NAME }}/{{ .Values.servicefoundryServer.env.SPARK_JOB_EVENT_LOG_BASE_DIR }} -Dspark.history.store.serializer=PROTOBUF -Dspark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider -Dspark.history.fs.createHistoryDirIfNecessary=true -Dspark.history.fs.inProgressOptimization.enabled=true -Dspark.ui.proxyRedirectUri={{ .Values.global.controlPlaneURL }} -Dspark.ui.proxyBase=/api/spark-ui -Dspark.history.store.path=/opt/spark/cache -Dspark.history.store.maxDiskUsage=5g
+    SPARK_UI_PATH_PREFIX: /
+###################################################################################################################
 ####################################### Tfy K8s Controller #######################################################
 ###################################################################################################################
 ## @section tfyK8sController Truefoundry tfy k8s controller values
@@ -649,8 +1017,8 @@ tfyK8sController:
   enabled: true
   ## @param tfyK8sController.tolerations Tolerations specific to the tfyK8sController
   tolerations: {}
-  ## @param tfyK8sController.replicaCount Number of replicas for the tfyK8sController
-  replicaCount: 1
+  ## @skip tfyK8sController.replicaCount Number of replicas for the tfyK8sController
+  # replicaCount: 1
   ## @param tfyK8sController.annotations [object] Annotations for the tfyK8sController
   annotations: {}
   ## tfyK8sController.image Image for the tfyK8sController
@@ -658,7 +1026,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.43.0"
+    tag: "v0.58.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -670,31 +1038,26 @@ tfyK8sController:
   ## @param tfyK8sController.fullnameOverride Full name override for the tfyK8sController
   fullnameOverride: ''
   ## @param tfyK8sController.podAnnotations [object] Annotations for the tfyK8sController pods
-  podAnnotations: {}
+  podAnnotations:
+    karpenter.sh/do-not-disrupt: "true"
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
   ## @param tfyK8sController.podSecurityContext Security context for the tfyK8sController pods
   podSecurityContext: {}
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
   ## @param tfyK8sController.securityContext Security context for the tfyK8sController
   securityContext: {}
-  ## tfyK8sController.resources Resource requests and limits for the tfyK8sController
-  resources:
-    ## tfyK8sController.resources.limits Resource limits for the tfyK8sController
-    limits:
-      ## @param tfyK8sController.resources.limits.cpu CPU limit for the tfyK8sController
-      cpu: 400m
-      ## @param tfyK8sController.resources.limits.memory Memory limit for the tfyK8sController
-      memory: 512Mi
-      ## @param tfyK8sController.resources.limits.ephemeral-storage Ephemeral storage limit for the tfyK8sController
-      ephemeral-storage: 256Mi
-    ## tfyK8sController.resources.requests Resource requests for the tfyK8sController
-    requests:
-      ## @param tfyK8sController.resources.requests.cpu CPU request for the tfyK8sController
-      cpu: 200m
-      ## @param tfyK8sController.resources.requests.memory Memory request for the tfyK8sController
-      memory: 256Mi
-      ## @param tfyK8sController.resources.requests.ephemeral-storage Ephemeral storage request for the tfyK8sController
-      ephemeral-storage: 128Mi
+  ## @param tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 400m
+  #    memory: 512Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 200m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
   ## tfyK8sController.livenessProbe Liveness probe settings for the tfyK8sController
   livenessProbe:
     ## @param tfyK8sController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyK8sController
@@ -737,14 +1100,24 @@ tfyK8sController:
   serviceAccount:
     ## @param tfyK8sController.serviceAccount.annotations Annotations for the tfyK8sController service account
     annotations: {}
+    ## @param tfyK8sController.serviceAccount.automountServiceAccountToken Automount service account token for the tfyK8sController service account
+    automountServiceAccountToken: true
   ## @param tfyK8sController.extraVolumes Extra volumes for the tfyK8sController
   extraVolumes: []
   ## @param tfyK8sController.extraVolumeMounts Extra volume mounts for the tfyK8sController
   extraVolumeMounts: []
+  ## tfyK8sController.serviceMonitor ServiceMonitor settings for the tfyK8sController
+  serviceMonitor:
+    ## @param tfyK8sController.serviceMonitor.enabled Enable ServiceMonitor for the tfyK8sController
+    enabled: true
+    ## @param tfyK8sController.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param tfyK8sController.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
   ## @param tfyK8sController.imagePullSecrets Image pull secrets for the tfyK8sController
   ##
   imagePullSecrets: []
-  ## @skip tfyK8sController.env Environment variables for the tfyK8sController
+  ## @param tfyK8sController.env [object] Environment variables for the tfyK8sController
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
@@ -757,7 +1130,6 @@ tfyK8sController:
     ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     NODE_ENV: production
     DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe
-    TFY_LLM_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
     ENABLE_AUTOPILOT_DIAGNOSIS: "false"
     SENTRY_ENABLED: "true"
     CLICKHOUSE_ENABLED: "{{ .Values.tags.llmGatewayRequestLogging }}"
@@ -781,9 +1153,9 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
     repository: "tfy.jfrog.io/tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.41.1"
-  ## @param sfyManifestService.replicaCount Number of replicas for the sfy manifest service
-  replicaCount: 1
+    tag: "v0.58.0"
+  ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
+  # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
   environmentName: default
   ## @param sfyManifestService.envSecretName Secret name for the sfy manifest service environment variables
@@ -802,24 +1174,17 @@ sfyManifestService:
   commonLabels: {}
   ## @param sfyManifestService.securityContext Security context for the sfy manifest service
   securityContext: {}
-  ## sfyManifestService.resources Resource requests and limits for the sfy manifest service
-  resources:
-    ## sfyManifestService.resources.limits Resource limits for the sfy manifest service
-    limits:
-      ## @param sfyManifestService.resources.limits.cpu CPU limit for the sfy manifest service
-      cpu: 200m
-      ## @param sfyManifestService.resources.limits.memory Memory limit for the sfy manifest service
-      memory: 512Mi
-      ## @param sfyManifestService.resources.limits.ephemeral-storage Ephemeral storage limit for the sfy manifest service
-      ephemeral-storage: 256Mi
-    ## sfyManifestService.resources.requests Resource requests for the sfy manifest service
-    requests:
-      ## @param sfyManifestService.resources.requests.cpu CPU request for the sfy manifest service
-      cpu: 100m
-      ## @param sfyManifestService.resources.requests.memory Memory request for the sfy manifest service
-      memory: 256Mi
-      ## @param sfyManifestService.resources.requests.ephemeral-storage Ephemeral storage request for the sfy manifest service
-      ephemeral-storage: 128Mi
+  ## @param sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 200m
+  #    memory: 512Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 100m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
   ## sfyManifestService.livenessProbe Liveness probe settings for the sfy manifest service
   livenessProbe:
     ## @param sfyManifestService.livenessProbe.failureThreshold Liveness probe failure threshold for sfy manifest service
@@ -850,6 +1215,14 @@ sfyManifestService:
   affinity: {}
   ## @param sfyManifestService.topologySpreadConstraints Topology spread constraints for the sfy manifest service
   topologySpreadConstraints: {}
+  ## sfyManifestService.serviceMonitor ServiceMonitor settings for the sfy manifest service
+  serviceMonitor:
+    ## @param sfyManifestService.serviceMonitor.enabled Enable ServiceMonitor for the sfy manifest service
+    enabled: true
+    ## @param sfyManifestService.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param sfyManifestService.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
   ## sfyManifestService.service Service settings for the sfy manifest service
   service:
     ## @param sfyManifestService.service.type Service type for the sfy manifest service
@@ -862,13 +1235,15 @@ sfyManifestService:
   serviceAccount:
     ## @param sfyManifestService.serviceAccount.annotations Annotations for the sfy manifest service service account
     annotations: {}
+    ## @param sfyManifestService.serviceAccount.automountServiceAccountToken Automount service account token for the sfy manifest service
+    automountServiceAccountToken: true
   ## @param sfyManifestService.extraVolumes Extra volumes for the sfy manifest service
   extraVolumes: []
   ## @param sfyManifestService.extraVolumeMounts Extra volume mounts for the sfy manifest service
   extraVolumeMounts: []
   ## @param sfyManifestService.imagePullSecrets Image pull credentials for the sfy manifest service
   imagePullSecrets: []
-  ## @skip sfyManifestService.env Environment variables for the sfy manifest service
+  ## @param sfyManifestService.env [object] Environment variables for the sfy manifest service
   env:
     GIN_MODE: release
     PORT: "8080"
@@ -990,6 +1365,8 @@ tfyBuild:
   serviceAccount:
     ## @param tfyBuild.serviceAccount.annotations Annotations for the tfyBuild server service account
     annotations: {}
+    ## @param tfyBuild.serviceAccount.automountServiceAccountToken Automount service account token for the tfyBuild server
+    automountServiceAccountToken: true
   ## tfyBuild.preemptibleDeployment Preemptible deployment settings for the tfyBuild server
   preemptibleDeployment:
     ## @param tfyBuild.preemptibleDeployment.enabled Bool to enable preemptible deployment for the tfyBuild server
@@ -1141,6 +1518,9 @@ tfyBuild:
 tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: true
+  serviceAccount:
+    ## @param tfy-buildkitd-service.serviceAccount.automountServiceAccountToken Automount service account token for the tfy-buildkitd service
+    automountServiceAccountToken: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
   service:
     ## @param tfy-buildkitd-service.service.port port number for the tfy-buildkitd service
@@ -1211,7 +1591,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController
     repository: tfy.jfrog.io/tfy-private-images/tfy-controller
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.19.0
+    tag: v0.57.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1235,16 +1615,25 @@ tfyController:
   ## @param tfyController.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
-  ## @skip tfyController.resources Resource requests and limits for the tfyController
-  resources:
-    limits:
-      cpu: 400m
-      memory: 1024Mi
-      ephemeral-storage: 256Mi
-    requests:
-      cpu: 200m
-      memory: 512Mi
-      ephemeral-storage: 128Mi
+  ## tfyController.serviceMonitor ServiceMonitor settings for the tfyController
+  serviceMonitor:
+    ## @param tfyController.serviceMonitor.enabled Enable ServiceMonitor for the tfyController
+    enabled: true
+    ## @param tfyController.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param tfyController.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
+  ## @param tfyController.resources [object] Resource requests and limits for the tfyController
+  resources: {}
+  # resources:
+  #   limits:
+  #     cpu: 400m
+  #     memory: 1024Mi
+  #     ephemeral-storage: 256Mi
+  #   requests:
+  #     cpu: 200m
+  #     memory: 512Mi
+  #     ephemeral-storage: 128Mi
   ## tfyController.livenessProbe Liveness probe settings for the tfyController
   livenessProbe:
     ## @param tfyController.livenessProbe.failureThreshold Liveness probe failure threshold for tfyController
@@ -1287,7 +1676,9 @@ tfyController:
   serviceAccount:
     ## @param tfyController.serviceAccount.annotations Annotations for the tfyController service account
     annotations: {}
-  ## @skip tfyController.env Environment variables for the tfyController
+    ## @param tfyController.serviceAccount.automountServiceAccountToken Automount service account token for the tfyController service account
+    automountServiceAccountToken: true
+  ## @param tfyController.env [object] Environment variables for the tfyController
   env:
     GIN_MODE: release
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
@@ -1297,6 +1688,7 @@ tfyController:
     PROXY_SERVER_ENABLED: "true"
     DEPLOYMENT_CONTROLLER_ENABLED: "true"
     JOB_RUNS_CONTROLLER_ENABLED: "true"
+    SENTRY_ENABLED: "true"
     MIGRATION_CONTROLLER_ENABLED: "false"
     MIGRATION_CONTROLLER_INTERVAL_MINUTES: "60"
     MIGRATION_CONTROLLER_APPLICATION_HEALTH_CHECK_TIMEOUT_MINUTES: "5"
@@ -1321,9 +1713,9 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin
     repository: tfy.jfrog.io/tfy-private-images/tfy-workflow-admin
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.15.0
-  ## @param tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
-  replicaCount: 1
+    tag: v0.57.0
+  ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
+  # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
   environmentName: default
   ## @param tfyWorkflowAdmin.envSecretName Secret name for the tfyWorkflowAdmin environment variables
@@ -1345,16 +1737,17 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
-  ## @skip tfyWorkflowAdmin.resources Resource requests and limits for the tfyWorkflowAdmin
-  resources:
-    limits:
-      cpu: 100m
-      memory: 256Mi
-      ephemeral-storage: 256Mi
-    requests:
-      cpu: 50m
-      memory: 256Mi
-      ephemeral-storage: 128Mi
+  ## @param tfyWorkflowAdmin.resources [object] Resource requests and limits for the tfyWorkflowAdmin
+  resources: {}
+  # resources:
+  #   limits:
+  #     cpu: 100m
+  #     memory: 256Mi
+  #     ephemeral-storage: 256Mi
+  #   requests:
+  #     cpu: 50m
+  #     memory: 256Mi
+  #     ephemeral-storage: 128Mi
   ## tfyWorkflowAdmin.livenessProbe Liveness probe settings for the tfyWorkflowAdmin
   livenessProbe:
     ## @param tfyWorkflowAdmin.livenessProbe.failureThreshold Liveness probe failure threshold for tfyWorkflowAdmin
@@ -1431,7 +1824,7 @@ tfyWorkflowAdmin:
   ## enable-multicontainer: true
   ## limits:
   ##   maxDownloadMBs: 2
-  ## @skip tfyWorkflowAdmin.env Environment variables for the tfyWorkflowAdmin
+  ## @param tfyWorkflowAdmin.env [object] Environment variables for the tfyWorkflowAdmin
   env:
     DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
     DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
@@ -1510,6 +1903,17 @@ tfyNats:
       tag: "0.14.3"
     ## @param tfyNats.reloader.enabled Bool to enable config reloader
     enabled: true
+    ## @param tfyNats.reloader.patch [array] Nats Reloader patches
+    patch:
+      - op: add
+        path: /resources
+        value:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
   ## tfyNats.promExporter Prometheus exporter configuration
   promExporter:
     ## tfyNats.promExporter.image Exporter image configuration
@@ -1520,6 +1924,25 @@ tfyNats:
       tag: "0.15.0"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
+    ## @param tfyNats.promExporter.patch [array] Nats Prom Exporter patches
+    patch:
+      - op: add
+        path: /resources
+        value:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+    ## @param tfyNats.promExporter.podMonitor.enabled Bool to enable pod monitor
+    podMonitor:
+      enabled: true
+      ## @param tfyNats.promExporter.podMonitor.merge [object] Additional kustomize patches for the pod monitor
+      merge:
+        metadata:
+          labels:
+            release: prometheus
   ## tfyNats.container Container configuration
   container:
     ## tfyNats.container.image Container image configuration
@@ -1572,3 +1995,12 @@ tfyNats:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname
         whenUnsatisfiable: ScheduleAnyway
+  ## tfyNats.serviceAccount [object] Service account settings for the tfyNats
+  serviceAccount:
+    ## @param tfyNats.serviceAccount.enabled Specifies whether a service account should be created
+    enabled: true
+    ## @param tfyNats.serviceAccount.annotations Annotations to add to the service account
+    annotations: {}
+    ## @param tfyNats.serviceAccount.name The name of the service account to use.
+    ## If not set and create is true, a name is generated using the fullname template
+    name: "truefoundry-tfy-nats"

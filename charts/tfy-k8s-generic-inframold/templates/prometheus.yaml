@@ -83,20 +83,9 @@ spec:
           serviceMonitor:
             selfMonitor: false
         alertmanager:
-          config:
-            route:
-              receiver: tfy-agent
-              routes:
-                - continue: true
-                  matchers:
-                    - severity =~ "warning|critical"
-                  receiver: tfy-agent
-                  repeat_interval: 1h
-            receivers:
-              {{- with .Values.prometheus.alertmanager.config.receivers -}}
-              {{ toYaml . | nindent 12 }}
-              {{- end }}
           alertmanagerSpec:
+            alertmanagerConfigMatcherStrategy:
+              type: None
             resources:
               requests:
                 cpu: 200m

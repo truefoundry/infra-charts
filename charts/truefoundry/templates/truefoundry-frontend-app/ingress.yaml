@@ -2,79 +2,70 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "truefoundry-frontend-app.fullname" . }}-be
+  name: {{ include "truefoundry-frontend-app.fullname" . }}-ingress
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
     {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
-  rules:
-    {{- range $host := .Values.truefoundryFrontendApp.ingress.hosts }}
-    - host: {{ $host }}
-      http:
-        paths:
-          - path: /api/svc/socket\.io(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ tpl $.Values.truefoundryFrontendApp.servicefoundryServerHost $ }}
-                port:
-                  number: 3000
-          - path: /api/llm(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ tpl $.Values.truefoundryFrontendApp.llmGateway.backendHost $ }}
-                port:
-                  number: {{ $.Values.truefoundryFrontendApp.llmGateway.backendPort }}
-          - path: /api/proxy-server(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ tpl $.Values.truefoundryFrontendApp.proxyServerHost $ }}
-                port:
-                  number: 8123
-          - path: /flyteidl\.service\.AdminService(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ tpl $.Values.truefoundryFrontendApp.tfyWorkflowAdminHost $ }}
-                port:
-                  number: 8089
-    {{- end }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "truefoundry-frontend-app.fullname" . }}-fe
-  labels:
-    {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
-spec:
-  ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
   {{- if .Values.truefoundryFrontendApp.ingress.tls }}
   tls:
     {{- toYaml .Values.truefoundryFrontendApp.ingress.tls | nindent 4 }}
   {{- end }}
+  ingressClassName: {{ .Values.truefoundryFrontendApp.ingress.ingressClassName }}
   rules:
     {{- range $host := .Values.truefoundryFrontendApp.ingress.hosts }}
     - host: {{ $host }}
       http:
         paths:
-          - path: /
-            pathType: ImplementationSpecific
+          - path: /api/svc/socket.io/
+            pathType: Prefix
             backend:
               service:
-                name: {{ include "truefoundry-frontend-app.fullname" $ }}.{{ $.Release.Namespace }}.svc.cluster.local
+                name: {{ $.Release.Name }}-servicefoundry-server
+                port:
+                  number: 3000
+          - path: /api/llm/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-llm-gateway
+                port:
+                  number: {{ $.Values.truefoundryFrontendApp.llmGateway.backendPort }}
+          - path: /api/proxy-server/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-controller
+                port:
+                  number: 8123
+          - path: /flyteidl.service.AdminService/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-workflow-admin-server
+                port:
+                  number: 8089
+          - path: /api/s3proxy/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-s3proxy
+                port:
+                  number: 8080
+          - path: /api/otel/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-otel-collector
+                port:
+                  number: 4318
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "truefoundry-frontend-app.fullname" $ }}
                 port:
                   number: 5000
     {{- end }}

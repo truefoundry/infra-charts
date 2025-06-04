@@ -1,0 +1,28 @@
+{{- if and .Values.sfyManifestService.enabled .Values.sfyManifestService.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "sfy-manifest-service.fullname" . }}
+  labels:
+    release: prometheus
+    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+  {{- with .Values.sfyManifestService.serviceMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.sfyManifestService.serviceMonitor.additionalAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - targetPort: 8080
+      path: /metrics
+      honorLabels: true
+      interval: 10s
+{{- end -}}
