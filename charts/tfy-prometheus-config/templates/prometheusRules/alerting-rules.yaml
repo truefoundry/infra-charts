@@ -51,6 +51,8 @@ spec:
       labels:
         entity: service
         severity: critical
+      annotations:
+        summary: Low success rate ({{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}})
     - for: 15m
       expr: >-
         sum by (namespace, pod)
