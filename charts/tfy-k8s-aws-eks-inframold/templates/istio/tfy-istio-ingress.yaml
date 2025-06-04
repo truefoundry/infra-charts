@@ -53,15 +53,19 @@ spec:
               istio: 'tfy-istio-ingress'
             servers:
               - hosts:
-                - "*"
+                {{- range .Values.istio.tfyGateway.domains }}
+                - {{ . | quote}}
+                {{- end }}
                 port:
                   name: http-tfy-wildcard
                   number: 80
                   protocol: HTTP
                 tls:
                   httpsRedirect: {{ .Values.istio.tfyGateway.httpsRedirect }}
-              - hosts: 
-                - "*"
+              - hosts:
+                {{- range .Values.istio.tfyGateway.domains }}
+                - {{ . | quote}}
+                {{- end }}
                 port:
                   name: https-tfy-wildcard
                   number: 443

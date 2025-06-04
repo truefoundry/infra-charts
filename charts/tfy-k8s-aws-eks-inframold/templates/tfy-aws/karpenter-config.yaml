@@ -30,11 +30,15 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          defaultNodeTemplate:
+            enableSoci: true
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          gpuDefaultNodeTemplate:
+            enableSoci: true
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
