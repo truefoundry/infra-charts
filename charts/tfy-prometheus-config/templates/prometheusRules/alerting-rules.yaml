@@ -53,6 +53,9 @@ spec:
         severity: critical
       annotations:
         summary: Low success rate ({{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}})
+        description: |-
+          Service {{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}} has a low success rate
+           VALUE = {{`{{ printf "%.2f" (mul 100 $value) }}`}}%
     - for: 15m
       expr: >-
         sum by (namespace, pod)
