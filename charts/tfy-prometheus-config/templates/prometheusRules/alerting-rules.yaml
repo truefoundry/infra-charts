@@ -26,6 +26,31 @@ spec:
         description: |-
           Container is being throttled
             VALUE = {{`{{ $value }}`}}
+    - for: 5m
+      expr: >-
+        sum(
+          rate(istio_requests_total{job="envoy-stats", response_code!~"5.*"}[5m]) > 0
+          unless
+          label_replace(
+            istio_requests_total{job="envoy-stats", response_code!~"5.*"},
+            "namespace", "$1", "destination_service_namespace", "(.*)"
+          )
+        )
+        by (destination_service_namespace, destination_service_name)
+        /
+        sum(
+          rate(istio_requests_total{job="envoy-stats"}[5m]) > 0
+          unless
+          label_replace(
+            istio_requests_total{job="envoy-stats"},
+            "namespace", "$1", "destination_service_namespace", "(.*)"
+          )
+        )
+        by (destination_service_namespace, destination_service_name) < 0.95
+      alert: LowServiceRequestSuccessRate
+      labels:
+        entity: service
+        severity: critical
     - for: 15m
       expr: >-
         sum by (namespace, pod)
