@@ -185,8 +185,8 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.sshServer.namespaceSelector`              | Namespace selector for ssh server               | `{}`                                      |
 | `serviceMonitors.gpu.labels`                               | Labels for gpu                                  | `{}`                                      |
 | `serviceMonitors.gpu.annotations`                          | Annotations for gpu                             | `{}`                                      |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `true`                                    |
 | `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
 | `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `app`                                     |
 | `serviceMonitors.gpu.operator.endpoints`                   | Endpoints for gpu                               | `[]`                                      |
