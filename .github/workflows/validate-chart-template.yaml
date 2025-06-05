@@ -32,9 +32,15 @@ jobs:
         run: |
           changed_charts=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
           if [[ -n "$changed_charts" ]]; then
-            echo "changed-charts=$changed_charts" >> "$GITHUB_OUTPUT"
+            # Use the EOF syntax so that newlines are preserved
+            {
+              echo "changed-charts<<EOF"
+              echo "$changed_charts"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+      
             echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+            fi
 
 #      - name: Run chart-testing (lint)
 #        if: steps.list-changed.outputs.changed == 'true'
