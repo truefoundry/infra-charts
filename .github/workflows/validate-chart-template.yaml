@@ -56,10 +56,14 @@ jobs:
         run: |
           changed="${{ steps.list-changed.outputs.changed-charts }}"
           echo "🛠️  Validating Helm chart templates for: $changed"
+
           for chart in $changed; do
             if [ -d "$chart" ]; then
-              echo "🛠️  Validating chart directory: $chart"
-              helm template "$chart"   # (no --output-dir, so simply check for errors)
+              echo "🛠️  Building dependencies for chart: $chart"
+              helm dependency build "$chart"
+
+              echo "🛠️  Rendering chart templates for: $chart"
+              helm template "$chart"
               if [ $? -ne 0 ]; then
                 echo "❌ helm template failed for $chart."
                 exit 1
