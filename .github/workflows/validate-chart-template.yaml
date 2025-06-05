@@ -1,14 +1,14 @@
 name: Validate Chart Template
 
 on:
-  push:
-    branches:
-      - 'add-validate-chart-temp-workflow'
   pull_request:
     branches:
       - 'main'
     paths:
       - 'charts/**'
+  push:
+    branches:
+      - 'add-validate-chart-temp-workflow'   # if you still want that behavior
 
 jobs:
   validate-chart-template:
@@ -30,42 +30,37 @@ jobs:
       - name: Run chart-testing (list-changed)
         id: list-changed
         run: |
-          changed-charts=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "$changed-charts" ]]; then
-            echo "changed-charts=${changed-charts}" >> "$GITHUB_OUTPUT"
+          changed_charts=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed_charts" ]]; then
+            echo "changed-charts=$changed_charts" >> "$GITHUB_OUTPUT"
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+        run: |
+          ct lint --target-branch ${{ github.event.repository.default_branch }}
 
-      - name: Echo changed charts
+      - name: Echo Changed Charts
         run: |
           echo "Changed charts: ${{ steps.list-changed.outputs.changed-charts }}"
-          changed="${{ steps.list-changed.outputs.changed-charts }}"
-          if [[ -z "$changed" ]]; then
-            echo "No charts changed."
-            exit 0
-          fi
 
       - name: Validate Chart Templates
-        env:
-          TEMP_FILE: '${{ runner.temp }}/pr-${{ github.event.number }}.diff'
+        if: steps.list-changed.outputs.changed == 'true'
         run: |
-          echo "🛠️  Validating Helm chart templates..."
-          for chart in ${changed}; do
-            if [ -d "${chart}" ]; then
-              echo "🛠️  Validating chart directory: ${chart}"
-
-              helm template "${chart}" --output-dir "${outdir}"
+          changed="${{ steps.list-changed.outputs.changed-charts }}"
+          echo "🛠️  Validating Helm chart templates for: $changed"
+          for chart in $changed; do
+            if [ -d "$chart" ]; then
+              echo "🛠️  Validating chart directory: $chart"
+              helm template "$chart"   # (no --output-dir, so simply check for errors)
               if [ $? -ne 0 ]; then
-                echo "❌ helm template failed for ${chart}."
+                echo "❌ helm template failed for $chart."
                 exit 1
               else
-                echo "✅ Chart template succeeded for ${chart}."
+                echo "✅ Chart template succeeded for $chart."
               fi
             else
-              echo "⚠️ Skipping validation for ${chart}: not a directory."
+              echo "⚠️ Skipping validation for $chart: not a directory."
             fi
           done
