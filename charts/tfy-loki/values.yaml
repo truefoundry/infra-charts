@@ -130,43 +130,35 @@ alloy:
   alloy:
     configMap:
       content: |-
-        loki.write "local" {
+        server {
+          log_level = "info"
+          http_listen_port = 12345
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        loki.source.kubernetes "pod_logs" {
+          targets    = discovery.kubernetes.pods.targets
+          forward_to = [loki.process.k8s_labels.out]
+        }
+
+        loki.process "k8s_labels" {
+          stage {
+            labels {
+              values = {
+                "namespace" = "namespace",
+                "pod"       = "pod_name",
+                "container" = "container"
+              }
+            }
+          }
+          forward_to = [loki.write.default.out]
+        }
+
+        loki.write "default" {
           endpoint {
-            url = "http://loki.hl-test.svc.cluster.local.:3100/loki/api/v1/push"
-          }
-        }
-
-        loki.relabel "journal" {
-          forward_to = []
-
-          rule {
-            source_labels = ["__journal__systemd_unit"]
-            target_label  = "unit"
-          }
-          rule {
-            source_labels = ["__journal__boot_id"]
-            target_label  = "boot_id"
-          }
-          rule {
-            source_labels = ["__journal__transport"]
-            target_label  = "transport"
-          }
-          rule {
-            source_labels = ["__journal_priority_keyword"]
-            target_label  = "level"
-          }
-          rule {
-            source_labels = ["__journal__hostname"]
-            target_label  = "instance"
-          }
-        }
-
-        loki.source.journal "read" {
-          forward_to = [
-            loki.write.local.receiver,
-          ]
-          relabel_rules = loki.relabel.journal.rules
-          labels = {
-            "job" = "integrations/node_exporter",
+            url = "http://loki:3100/loki/api/v1/push"
           }
         }
