@@ -56,6 +56,8 @@ jobs:
         run: |
           changed="${{ steps.list-changed.outputs.changed-charts }}"
           echo "🛠️  Validating Helm chart templates for: $changed"
+          
+          helm repo update
 
           for chart in $changed; do
             if [ -d "$chart" ]; then
