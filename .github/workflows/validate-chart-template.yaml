@@ -72,7 +72,7 @@ jobs:
               helm dependency build "$chart"
 
               echo "🛠️  Rendering chart templates for: $chart"
-              helm template "$chart"
+              helm template "$chart" --output-dir ./output --include-crds --debug
               if [ $? -ne 0 ]; then
                 echo "❌ helm template failed for $chart."
                 exit 1
