@@ -68,7 +68,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `controlPlaneMonitors.tenantName`                                 | Tenant name for the control plane                     | `<to_be_provided>`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors     | `{}`                                     |
 | `controlPlaneMonitors.serviceSelectorLabel`                       | Service selector label for the control plane monitors | `app.kubernetes.io/name`                 |
-| `controlPlaneMonitors.alerts.enabled`                             | Enable alerts for control plane                       | `false`                                  |
+| `controlPlaneMonitors.alerts.enabled`                             | Enable alerts for control plane                       | `true`                                   |
 | `controlPlaneMonitors.alerts.alertRules.labels`                   | Labels for control plane alert rules                  | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertRules.annotations`              | Annotations for control plane alert rules             | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertRules.enabled`                  | Enable alert rules for control plane                  | `true`                                   |
