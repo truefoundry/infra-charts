@@ -31,7 +31,7 @@ jobs:
         id: list-changed
         run: |
           changed-charts=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "changed-charts" ]]; then
+          if [[ -n "$changed-charts" ]]; then
             echo "changed-charts=${changed-charts}" >> "$GITHUB_OUTPUT"
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
