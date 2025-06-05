@@ -1,0 +1,68 @@
+name: Validate Chart Template
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - 'charts/**'
+
+jobs:
+  validate-chart-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.15.1
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.7.0
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed-charts=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "changed-charts" ]]; then
+            echo "changed-charts=${changed-charts}" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+
+      - name: Echo changed charts
+        run: |
+          echo "Changed charts: ${{ steps.list-changed.outputs.changed-charts }}"
+          changed="${{ steps.list-changed.outputs.changed-charts }}"
+          if [[ -z "$changed" ]]; then
+            echo "No charts changed."
+            exit 0
+          fi
+
+      - name: Validate Chart Templates
+        env:
+          TEMP_FILE: '${{ runner.temp }}/pr-${{ github.event.number }}.diff'
+        run: |
+          echo "🛠️  Validating Helm chart templates..."
+          for chart in ${changed}; do
+            if [ -d "${chart}" ]; then
+              echo "🛠️  Validating chart directory: ${chart}"
+
+              helm template "${chart}" --output-dir "${outdir}"
+              if [ $? -ne 0 ]; then
+                echo "❌ helm template failed for ${chart}."
+                exit 1
+              else
+                echo "✅ Chart template succeeded for ${chart}."
+              fi
+            else
+              echo "⚠️ Skipping validation for ${chart}: not a directory."
+            fi
+          done
