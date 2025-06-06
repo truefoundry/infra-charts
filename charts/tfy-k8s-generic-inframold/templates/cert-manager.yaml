@@ -16,7 +16,7 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: v1.15.5
+    targetRevision: v1.17.2
     helm:
       values: |-
         {{- if .Values.certManager.valuesOverride }}
@@ -31,7 +31,8 @@ spec:
         {{- if .Values.certManager.affinity }}
         {{- $mergedAffinity = .Values.certManager.affinity }}
         {{- end }}
-        installCRDs: true
+        crds:
+          enabled: true
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}
@@ -41,14 +42,15 @@ spec:
           {{- toYaml $mergedAffinity | nindent 14 }}
         {{- end }}
         webhook:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-            ephemeral-storage: 64Mi
-          limits:
-            cpu: 100m
-            memory: 256Mi
-            ephemeral-storage: 256Mi
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
@@ -67,14 +69,15 @@ spec:
             memory: 256Mi
             ephemeral-storage: 256Mi
         cainjector:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-            ephemeral-storage: 64Mi
-          limits:
-            cpu: 100m
-            memory: 256Mi
-            ephemeral-storage: 256Mi
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
