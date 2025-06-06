@@ -57,6 +57,7 @@ jobs:
           helm repo add truefoundry https://truefoundry.github.io/infra-charts
           helm repo add nats https://nats-io.github.io/k8s/helm/charts/
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add istio https://istio-release.storage.googleapis.com/charts
           helm repo update
 
       - name: Validate Chart Templates
@@ -64,7 +65,7 @@ jobs:
         run: |
           changed="${{ steps.list-changed.outputs.changed_charts }}"
           echo "🛠️  Validating Helm chart templates for: $changed"
-          
+
           for chart in $changed; do
             if [ -d "$chart" ]; then
               echo "🛠️  Building dependencies for chart: $chart"
