@@ -12,7 +12,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`              | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                  | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                             | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.58.1`                                                                         |
+| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.59.0-rc.1`                                                                    |
 | `global.existingTruefoundryCredsSecret`              | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                               | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                               | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -85,7 +85,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.58.1`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.59.0`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -144,7 +144,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `{}`                                               |
 | `mlfoundryServer.annotations`                                 | Annotations for the mlfoundry server                       | `{}`                                               |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.58.0`                                          |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.59.0`                                          |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                  | `default`                                          |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
@@ -230,7 +230,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.58.1`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.59.0`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -323,7 +323,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `{}`                                                 |
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController                                | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.58.1`                                            |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.59.0`                                            |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                    | `default`                                            |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables               | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                               | `IfNotPresent`                                       |
@@ -368,7 +368,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.annotations`                                 | Annotations for the sfy manifest service                       | `{}`                                                   |
 | `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service               | `{}`                                                   |
 | `sfyManifestService.image.repository`                            | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                         | `v0.58.0`                                              |
+| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                         | `v0.59.0`                                              |
 | `sfyManifestService.environmentName`                             | Environment name for the sfy manifest service                  | `default`                                              |
 | `sfyManifestService.envSecretName`                               | Secret name for the sfy manifest service environment variables | `sfy-manifest-service-env-secret`                      |
 | `sfyManifestService.imagePullPolicy`                             | Image pull policy for the sfy manifest service                 | `IfNotPresent`                                         |
