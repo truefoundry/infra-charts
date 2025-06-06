@@ -430,11 +430,16 @@ istio:
     ## @param istio.discovery.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
-  ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
+  ## @section istio tfyGateway parameters
   tfyGateway:
+    ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
     
     httpsRedirect: true
     
+    ## @param istio.tfyGateway.domains [array] Domains for the gateway pods
+    ##
+    domains: ["*"]
+
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -599,7 +604,7 @@ tfyAgent:
 ## @param elasti.enabled Flag to enable Elasti
 ##
 elasti:
-  enabled: false
+  enabled: true
   ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
