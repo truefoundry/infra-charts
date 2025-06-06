@@ -75,3 +75,5 @@ LLM-Gateway Helm Chart
 | `serviceMonitor.enabled`                        | Enable service monitor                                       | `true`                                            |
 | `serviceMonitor.additionalLabels`               | Additional labels for the service monitor                    | `{}`                                              |
 | `serviceMonitor.additionalAnnotations`          | Additional annotations for the service monitor               | `{}`                                              |
+| `oidc.enabled`                                  | Enable OIDC configuration                                    | `false`                                           |
+| `oidc.config`                                   | OIDC configuration                                           | `{}`                                              |
