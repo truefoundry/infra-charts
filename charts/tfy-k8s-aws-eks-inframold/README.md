@@ -167,13 +167,19 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### istio discovery parameters
 
-| Name                             | Description                                     | Value                  |
-| -------------------------------- | ----------------------------------------------- | ---------------------- |
-| `istio.discovery.hub`            | Hub for the istio image                         | `gcr.io/istio-release` |
-| `istio.discovery.tolerations`    | Tolerations for Istio Discovery                 | `[]`                   |
-| `istio.discovery.affinity`       | Affinity for Istio Discovery                    | `{}`                   |
-| `istio.discovery.valuesOverride` | Config override from default config values      | `{}`                   |
-| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true`                 |
+| Name                             | Description                                | Value                  |
+| -------------------------------- | ------------------------------------------ | ---------------------- |
+| `istio.discovery.hub`            | Hub for the istio image                    | `gcr.io/istio-release` |
+| `istio.discovery.tolerations`    | Tolerations for Istio Discovery            | `[]`                   |
+| `istio.discovery.affinity`       | Affinity for Istio Discovery               | `{}`                   |
+| `istio.discovery.valuesOverride` | Config override from default config values | `{}`                   |
+
+### istio tfyGateway parameters
+
+| Name                             | Description                                     | Value  |
+| -------------------------------- | ----------------------------------------------- | ------ |
+| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true` |
+| `istio.tfyGateway.domains`       | Domains for the gateway pods                    | `[]`   |
 
 ### keda parameters
 
@@ -238,10 +244,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### elasti parameters
 
-| Name                    | Description                                | Value   |
-| ----------------------- | ------------------------------------------ | ------- |
-| `elasti.enabled`        | Flag to enable Elasti                      | `false` |
-| `elasti.valuesOverride` | Config override from default config values | `{}`    |
+| Name                    | Description                                | Value  |
+| ----------------------- | ------------------------------------------ | ------ |
+| `elasti.enabled`        | Flag to enable Elasti                      | `true` |
+| `elasti.valuesOverride` | Config override from default config values | `{}`   |
 
 ### jspolicy parameters
 
