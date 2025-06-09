@@ -72,6 +72,9 @@ spec:
           type: ClusterIP
     podTemplates:
       - name: clickhouse-stable
+        metadata:
+          labels:
+            {{- include "clickhouse.labels" . | nindent 12 }}
         spec:
           serviceAccountName: {{ .Values.clickhouse.serviceAccount.name | default "default" }}
           automountServiceAccountToken: {{ .Values.clickhouse.serviceAccount.automountServiceAccountToken | default false }}
