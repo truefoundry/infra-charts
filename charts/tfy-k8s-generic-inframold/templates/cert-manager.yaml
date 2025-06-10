@@ -31,15 +31,23 @@ spec:
         {{- if .Values.certManager.affinity }}
         {{- $mergedAffinity = .Values.certManager.affinity }}
         {{- end }}
+        extraArgs:
+        - --issuer-ambient-credentials
+        podLabels:
+          {{- toYaml .Values.certManager.podLabels | nindent 10 }}
+        serviceAccount:
+          create: true
+          labels:
+            {{- toYaml .Values.certManager.podLabels | nindent 12 }}
         crds:
           enabled: true
         {{- if $mergedTolerations }}
         tolerations:
-          {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- toYaml $mergedTolerations | nindent 10 }}
         {{- end }}
         {{- if $mergedAffinity }}
         affinity:
-          {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- toYaml $mergedAffinity | nindent 10 }}
         {{- end }}
         webhook:
           resources:
@@ -53,11 +61,11 @@ spec:
               ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         resources:
           requests:
@@ -80,21 +88,21 @@ spec:
               ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         startupapicheck:
           enabled: true
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         {{- end }}
   syncPolicy:
