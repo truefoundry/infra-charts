@@ -6,11 +6,13 @@ metadata:
   annotations:
     {{- include "bootstrap-annotations" (dict "hookWeight" "-1" "syncWave" "-1" "annotations" .Values.truefoundryBootstrap.annotations "globalAnnotations" .Values.global.annotations) | nindent 4 }}
   labels:
-    {{- include "bootstrap-labels" . | indent 4 }}
+    {{- include "bootstrap-labels" . | nindent 4 }}
 spec:
   template:
     metadata:
       name: truefoundry-bootstrap-job
+      labels:
+        {{- include "bootstrap-labels" . | nindent 8 }}
     spec:
       {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
       securityContext:
@@ -24,6 +26,8 @@ spec:
           {{- toYaml .Values.truefoundryBootstrap.securityContext.containerSecurityContext | nindent 10 }}
         {{- end }}
         image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
+        resources:
+          {{- include "bootstrap.resources" . | nindent 10 }}
         command: ["/truefoundry/truefoundry-bootstrap.sh"]
         env:
         - name: TRUEFOUNDRY_NATS_CONFIGMAP
@@ -41,6 +45,8 @@ spec:
         volumeMounts:
         - name: truefoundry-bootstrap-script
           mountPath: "/truefoundry"
+        - name: workdir
+          mountPath: "/tmp/workdir"
         {{- if gt (len .Values.truefoundryBootstrap.extraVolumeMounts) 0 }}
         {{- toYaml .Values.truefoundryBootstrap.extraVolumeMounts | nindent 8 }}
         {{- end }}
@@ -53,6 +59,8 @@ spec:
         configMap:
           name: truefoundry-bootstrap-cm
           defaultMode: 0755
+      - name: workdir
+        emptyDir: {}
       {{- if gt (len .Values.truefoundryBootstrap.extraVolumes) 0 }}
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}

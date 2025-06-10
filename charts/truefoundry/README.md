@@ -12,7 +12,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `global.truefoundryImagePullConfigJSON`              | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                  | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                             | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.60.0`                                                                         |
+| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.60.1`                                                                         |
 | `global.existingTruefoundryCredsSecret`              | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                               | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                               | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -56,26 +56,26 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 
 ### Truefoundry bootstrap values
 
-| Name                                                               | Description                                                 | Value                                           |
-| ------------------------------------------------------------------ | ----------------------------------------------------------- | ----------------------------------------------- |
-| `truefoundryBootstrap.enabled`                                     | Bool to enable truefoundry bootstrap                        | `true`                                          |
-| `truefoundryBootstrap.serviceAccount.automountServiceAccountToken` | Automount service account token for the bootstrap container | `true`                                          |
-| `truefoundryBootstrap.securityContext.enabled`                     | Bool to enable security context for the bootstrap container | `false`                                         |
-| `truefoundryBootstrap.securityContext.podSecurityContext`          | Pod security context for the bootstrap container            | `{}`                                            |
-| `truefoundryBootstrap.securityContext.containerSecurityContext`    | Container security context for the bootstrap container      | `{}`                                            |
-| `truefoundryBootstrap.image.repository`                            | Truefoundry bootstrap image repository                      | `tfy.jfrog.io/tfy-images/truefoundry-bootstrap` |
-| `truefoundryBootstrap.image.tag`                                   | Truefoundry bootstrap image tag                             | `0.1.3`                                         |
-| `truefoundryBootstrap.natsConfigmapName`                           | Truefoundry nats configmap name                             | `tfy-nats-accounts`                             |
-| `truefoundryBootstrap.annotations`                                 | Annotations for the bootstrap job                           | `{}`                                            |
-| `truefoundryBootstrap.labels`                                      | Labels for the bootstrap job                                | `{}`                                            |
-| `truefoundryBootstrap.extraEnvVars`                                | Extra environment variables for the bootstrap container     | `[]`                                            |
-| `truefoundryBootstrap.extraVolumeMounts`                           | Extra volume mounts for the bootstrap container             | `[]`                                            |
-| `truefoundryBootstrap.extraVolumes`                                | Extra volumes for the bootstrap container                   | `[]`                                            |
-| `truefoundryBootstrap.affinity`                                    | Affinity for the bootstrap container                        | `{}`                                            |
-| `truefoundryBootstrap.nodeSelector`                                | Node selector for the bootstrap container                   | `{}`                                            |
-| `truefoundryBootstrap.tolerations`                                 | Tolerations specific to the bootstrap container             | `{}`                                            |
-| `truefoundryBootstrap.imagePullSecrets`                            | Image pull secrets for the bootstrap container              | `[]`                                            |
-| `truefoundryBootstrap.createdBuildkitServiceTlsCerts`              | Bool to install TLS certificates                            | `true`                                          |
+| Name                                                                                   | Description                                                 | Value                                           |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
+| `truefoundryBootstrap.enabled`                                                         | Bool to enable truefoundry bootstrap                        | `true`                                          |
+| `truefoundryBootstrap.serviceAccount.automountServiceAccountToken`                     | Automount service account token for the bootstrap container | `true`                                          |
+| `truefoundryBootstrap.securityContext.enabled`                                         | Bool to enable security context for the bootstrap container | `true`                                          |
+| `truefoundryBootstrap.securityContext.podSecurityContext`                              | Pod security context for the bootstrap container            | `{}`                                            |
+| `truefoundryBootstrap.securityContext.containerSecurityContext.readOnlyRootFilesystem` | Read only root filesystem for the bootstrap container       | `false`                                         |
+| `truefoundryBootstrap.image.repository`                                                | Truefoundry bootstrap image repository                      | `tfy.jfrog.io/tfy-images/truefoundry-bootstrap` |
+| `truefoundryBootstrap.image.tag`                                                       | Truefoundry bootstrap image tag                             | `0.1.3`                                         |
+| `truefoundryBootstrap.natsConfigmapName`                                               | Truefoundry nats configmap name                             | `tfy-nats-accounts`                             |
+| `truefoundryBootstrap.annotations`                                                     | Annotations for the bootstrap job                           | `{}`                                            |
+| `truefoundryBootstrap.labels`                                                          | Labels for the bootstrap job                                | `{}`                                            |
+| `truefoundryBootstrap.extraEnvVars`                                                    | Extra environment variables for the bootstrap container     | `[]`                                            |
+| `truefoundryBootstrap.extraVolumeMounts`                                               | Extra volume mounts for the bootstrap container             | `[]`                                            |
+| `truefoundryBootstrap.extraVolumes`                                                    | Extra volumes for the bootstrap container                   | `[]`                                            |
+| `truefoundryBootstrap.affinity`                                                        | Affinity for the bootstrap container                        | `{}`                                            |
+| `truefoundryBootstrap.nodeSelector`                                                    | Node selector for the bootstrap container                   | `{}`                                            |
+| `truefoundryBootstrap.tolerations`                                                     | Tolerations specific to the bootstrap container             | `{}`                                            |
+| `truefoundryBootstrap.imagePullSecrets`                                                | Image pull secrets for the bootstrap container              | `[]`                                            |
+| `truefoundryBootstrap.createdBuildkitServiceTlsCerts`                                  | Bool to install TLS certificates                            | `true`                                          |
 
 ### Truefoundry Frontend App values
 
@@ -85,7 +85,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.60.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.60.1`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -93,7 +93,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `truefoundryFrontendApp.podAnnotations`                              | Annotations for the frontend app pods                  | `{}`                                                                                       |
 | `truefoundryFrontendApp.podSecurityContext`                          | Security context for the frontend app pods             | `{}`                                                                                       |
 | `truefoundryFrontendApp.commonLabels`                                | Common labels for the frontend app pods                | `{}`                                                                                       |
-| `truefoundryFrontendApp.securityContext`                             | Security context for the frontend app                  | `{}`                                                                                       |
+| `truefoundryFrontendApp.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the frontend app         | `false`                                                                                    |
 | `truefoundryFrontendApp.resources`                                   | Resource requests and limits for the frontend app      | `{}`                                                                                       |
 | `truefoundryFrontendApp.livenessProbe.initialDelaySeconds`           | Initial delay seconds for the liveness probe           | `600`                                                                                      |
 | `truefoundryFrontendApp.livenessProbe.periodSeconds`                 | Period seconds for the liveness probe                  | `30`                                                                                       |
@@ -153,7 +153,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `mlfoundryServer.podAnnotations`                              | Annotations for the mlfoundry server pods                  | `{}`                                               |
 | `mlfoundryServer.podSecurityContext`                          | Security context for the mlfoundry server pods             | `{}`                                               |
 | `mlfoundryServer.commonLabels`                                | Common labels for the mlfoundry server pods                | `{}`                                               |
-| `mlfoundryServer.securityContext`                             | Security context for the mlfoundry server                  | `{}`                                               |
+| `mlfoundryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the mlfoundry server         | `false`                                            |
 | `mlfoundryServer.resources`                                   | Resource requests and limits for the mlfoundry server      | `{}`                                               |
 | `mlfoundryServer.livenessProbe.failureThreshold`              | Liveness probe failure threshold for mlfoundry server      | `3`                                                |
 | `mlfoundryServer.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for mlfoundry server          | `600`                                              |
@@ -230,7 +230,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.60.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.60.1`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -239,7 +239,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `servicefoundryServer.podAnnotations`                              | Annotations for the servicefoundry server pods                  | `{}`                                                    |
 | `servicefoundryServer.podSecurityContext`                          | Security context for the servicefoundry server pods             | `{}`                                                    |
 | `servicefoundryServer.commonLabels`                                | Common labels for the servicefoundry server pods                | `{}`                                                    |
-| `servicefoundryServer.securityContext`                             | Security context for the servicefoundry server                  | `{}`                                                    |
+| `servicefoundryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the servicefoundry server         | `false`                                                 |
 | `servicefoundryServer.resources`                                   | Resource requests and limits for the servicefoundry server      | `{}`                                                    |
 | `servicefoundryServer.livenessProbe.failureThreshold`              | Liveness probe failure threshold for servicefoundry server      | `3`                                                     |
 | `servicefoundryServer.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for servicefoundry server          | `600`                                                   |
@@ -332,7 +332,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `tfyK8sController.podAnnotations`                              | Annotations for the tfyK8sController pods                                | `{}`                                                 |
 | `tfyK8sController.podSecurityContext`                          | Security context for the tfyK8sController pods                           | `{}`                                                 |
 | `tfyK8sController.commonLabels`                                | Common labels for the tfyK8sController pods                              | `{}`                                                 |
-| `tfyK8sController.securityContext`                             | Security context for the tfyK8sController                                | `{}`                                                 |
+| `tfyK8sController.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the tfyK8sController                       | `false`                                              |
 | `tfyK8sController.resources`                                   | Resource requests and limits for the tfyK8sController                    | `{}`                                                 |
 | `tfyK8sController.livenessProbe.failureThreshold`              | Liveness probe failure threshold for tfyK8sController                    | `3`                                                  |
 | `tfyK8sController.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyK8sController                        | `600`                                                |
@@ -377,7 +377,7 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 | `sfyManifestService.podAnnotations`                              | Annotations for the sfy manifest service pods                  | `{}`                                                   |
 | `sfyManifestService.podSecurityContext`                          | Security context for the sfy manifest service pods             | `{}`                                                   |
 | `sfyManifestService.commonLabels`                                | Common labels for the sfy manifest service pods                | `{}`                                                   |
-| `sfyManifestService.securityContext`                             | Security context for the sfy manifest service                  | `{}`                                                   |
+| `sfyManifestService.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the sfy manifest service         | `false`                                                |
 | `sfyManifestService.resources`                                   | Resource requests and limits for the sfy manifest service      | `{}`                                                   |
 | `sfyManifestService.livenessProbe.failureThreshold`              | Liveness probe failure threshold for sfy manifest service      | `3`                                                    |
 | `sfyManifestService.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for sfy manifest service          | `600`                                                  |
@@ -493,7 +493,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.podAnnotations`                              | Annotations for the tfyController pods                                | `{}`                                             |
 | `tfyController.podSecurityContext`                          | Security context for the tfyController pods                           | `{}`                                             |
 | `tfyController.commonLabels`                                | Common labels for the tfyController pods                              | `{}`                                             |
-| `tfyController.securityContext`                             | Security context for the tfyController                                | `{}`                                             |
+| `tfyController.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the tfyController                       | `false`                                          |
 | `tfyController.imagePullSecrets`                            | Image pull secrets for the tfycontroller                              | `[]`                                             |
 | `tfyController.serviceMonitor.enabled`                      | Enable ServiceMonitor for the tfyController                           | `true`                                           |
 | `tfyController.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                              | `{}`                                             |
@@ -593,3 +593,4 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.serviceAccount.enabled`                 | Specifies whether a service account should be created | `true`                                                       |
 | `tfyNats.serviceAccount.annotations`             | Annotations to add to the service account             | `{}`                                                         |
 | `tfyNats.serviceAccount.name`                    | The name of the service account to use.               | `truefoundry-tfy-nats`                                       |
+| `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
