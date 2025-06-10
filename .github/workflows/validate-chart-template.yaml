@@ -37,18 +37,7 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             fi
 
-      - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed_charts
-        run: |
-          ct lint --target-branch ${{ github.event.pull_request.base.ref }}
-
-      - name: Echo Changed Charts
-        if: steps.list-changed.outputs.changed_charts
-        run: |
-          echo "Changed charts: ${{ steps.list-changed.outputs.changed_charts }}"
-
       - name: Add helm repositories
-        if: steps.list-changed.outputs.changed_charts
         run: |
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo add clickhouse-operator https://docs.altinity.com/clickhouse-operator
@@ -60,6 +49,16 @@ jobs:
           helm repo add istio https://istio-release.storage.googleapis.com/charts
           helm repo add altinity-clickhouse-operator https://docs.altinity.com/clickhouse-operator/
           helm repo update
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed_charts
+        run: |
+          ct lint --target-branch ${{ github.event.pull_request.base.ref }}
+
+      - name: Echo Changed Charts
+        if: steps.list-changed.outputs.changed_charts
+        run: |
+          echo "Changed charts: ${{ steps.list-changed.outputs.changed_charts }}"
 
       - name: Validate Chart Templates
         if: steps.list-changed.outputs.changed_charts

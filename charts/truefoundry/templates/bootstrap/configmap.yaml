@@ -12,11 +12,16 @@ data:
     #!/bin/bash
     # This script will output one set of creds in the current directory.
     # The script creates a nats resolver config file called resolver.conf
+
+    WORKDIR="/tmp/workdir"
+    cd "$WORKDIR"
+
     TRUEFOUNDRY_NATS_SECRET_NAME=truefoundry-tfy-nats-secret
     TRUEFOUNDRY_NATS_DIR_SECRET_NAME=truefoundry-tfy-nsc-dir-secret
     TRUEFOUNDRY_CREDS_SECRET_NAME=truefoundry-creds
     TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME=truefoundry-clickhouse-secret
     OLD_TRUEFOUNDRY_CLICKHOUSE_SECRET_NAME=tfy-llm-gateway-infra-auth
+
     print_green() {
         echo "$(tput setaf 2)$1$(tput sgr0)"
     }
@@ -30,14 +35,19 @@ data:
     create_tfy_buildkit_tls_certificates_and_secrets(){
       (
         set -eu
+        INSTALL_TLS_CERTIFICATES="${INSTALL_TLS_CERTIFICATES:-false}"
+
         if [[ "$INSTALL_TLS_CERTIFICATES" != "true" ]]; then
             print_yellow "Skipping TLS certificate generation"
             return 0
         fi
+
         PRODUCT=tfy-buildkit
-        DIR=./.certs
+        DIR="$WORKDIR/.certs"
         EXPIRATION_DAYS=36500  # 100 years expiration
-        if kubectl get secret ${PRODUCT}-daemon-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null && kubectl get secret ${PRODUCT}-client-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null; then
+
+        if kubectl get secret ${PRODUCT}-daemon-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null && \
+           kubectl get secret ${PRODUCT}-client-certs -n "$TRUEFOUNDRY_NAMESPACE" &> /dev/null; then
             print_green "Secrets already exist. Exiting..."
             return 0
         fi
@@ -150,34 +160,32 @@ data:
       exit 0
     fi
     print_yellow "$TRUEFOUNDRY_NATS_CONFIGMAP not found. Creating NATS account and configmap..."
-
     # Setup NSC env
     NSC_ROOT=$(pwd)/nsc
     export NKEYS_PATH=$NSC_ROOT/nkeys
     export NSC_HOME=$NSC_ROOT/accounts
-    nsc env -s "${NSC_HOME}/nats"
-    nsc env
+    nsc env -H "${NSC_HOME}/nats" 
 
     # Create Operator
-    nsc add operator --sys --name truefoundry
+    nsc -H "${NSC_HOME}/nats" add operator --sys --name truefoundry
 
     # Create tfy-controlplane account. The seed for this account is provided as an environment variable
     # to servicefoundry-server
-    nsc add account --name tfy-controlplane
+    nsc -H "${NSC_HOME}/nats" add account --name tfy-controlplane
     # enable JS - by setting js-disk-storage or js-mem-storage
     # Note: -1 means unlimited making it configurable in server side
-    nsc edit account --name tfy-controlplane --js-disk-storage -1 --js-mem-storage -1
+    nsc -H "${NSC_HOME}/nats" edit account --name tfy-controlplane --js-disk-storage -1 --js-mem-storage -1
 
     # Create user to create a stream.
-    nsc add user --account tfy-controlplane --name js-creator
-    nsc generate creds > "${NSC_ROOT}/user.creds"
+    nsc -H "${NSC_HOME}/nats" add user --account tfy-controlplane --name js-creator
+    nsc -H "${NSC_HOME}/nats" generate creds > "${NSC_ROOT}/user.creds"
 
     # Store account info.
-    nsc generate config --mem-resolver --config-file "${NSC_ROOT}/resolver.conf"
+    nsc -H "${NSC_HOME}/nats" generate config --mem-resolver --config-file "${NSC_ROOT}/resolver.conf"
 
     # Get seed of the account
     NKEYS_EXPORT_DIR=$NSC_ROOT/exported-keys
-    nsc export keys --account tfy-controlplane --accounts --dir "${NKEYS_EXPORT_DIR}"
+    nsc -H "${NSC_HOME}/nats" export keys --account tfy-controlplane --accounts --dir "${NKEYS_EXPORT_DIR}"
     NKEYS_FILE_NAME=$(ls "${NKEYS_EXPORT_DIR}" | grep "A*.nk" | head -1)
     NKEYS_PATH="${NKEYS_EXPORT_DIR}/${NKEYS_FILE_NAME}"
     NATS_SEED=$(cat "${NKEYS_PATH}")
