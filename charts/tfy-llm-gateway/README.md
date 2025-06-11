@@ -14,7 +14,7 @@ LLM-Gateway Helm Chart
 | `global.tolerations`                            | Tolerations for pod scheduling on a node                     | `[]`                                              |
 | `global.nodeSelector`                           | Node selector                                                | `{}`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                           | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `d3a861efd9cf5f5ce03cf7ba57c09afd35c4f861`        |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                              | `38b0866fe5b8790a4f688270ac1abcfb8ad5d3b1`        |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                   | `""`                                              |
 | `environmentName`                               | The environment name                                         | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                  | `tfy-llm-gateway-env-secret`                      |
