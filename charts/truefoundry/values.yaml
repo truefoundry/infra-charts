@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.61.3
+  controlPlaneChartVersion: 0.61.4
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -143,16 +143,12 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.serviceAccount.automountServiceAccountToken Automount service account token for the bootstrap container
   serviceAccount:
     automountServiceAccountToken: true
-  ## truefoundryBootstrap.securityContext Security context for the bootstrap container
+  ## @param truefoundryBootstrap.podSecurityContext Pod security context for the bootstrap container
+  podSecurityContext: {}
+  ## securityContext Security context for the bootstrap container
   securityContext:
-    ## @param truefoundryBootstrap.securityContext.enabled Bool to enable security context for the bootstrap container
-    enabled: true
-    ## @param truefoundryBootstrap.securityContext.podSecurityContext Pod security context for the bootstrap container
-    podSecurityContext: {}
-    ## truefoundryBootstrap.securityContext.containerSecurityContext Container security context for the bootstrap container
-    containerSecurityContext:
-      ## @param truefoundryBootstrap.securityContext.containerSecurityContext.readOnlyRootFilesystem Read only root filesystem for the bootstrap container
-      readOnlyRootFilesystem: false
+    ## @param truefoundryBootstrap.securityContext.readOnlyRootFilesystem Read only root filesystem for the bootstrap container
+    readOnlyRootFilesystem: true
   ## truefoundryBootstrap.image Truefoundry base bootstrap image
   image:
     ## @param truefoundryBootstrap.image.repository Truefoundry bootstrap image repository
@@ -163,8 +159,8 @@ truefoundryBootstrap:
   natsConfigmapName: "tfy-nats-accounts"
   ## @param truefoundryBootstrap.annotations [object] Annotations for the bootstrap job
   annotations: {}
-  ## @param truefoundryBootstrap.labels [object] Labels for the bootstrap job
-  labels: {}
+  ## @param truefoundryBootstrap.commonLabels [object] Common labels for the bootstrap job
+  commonLabels: {}
   ## @param truefoundryBootstrap.extraEnvVars Extra environment variables for the bootstrap container
   extraEnvVars: []
   ## @param truefoundryBootstrap.extraVolumeMounts Extra volume mounts for the bootstrap container
@@ -219,7 +215,7 @@ truefoundryFrontendApp:
   ## truefoundryFrontendApp.securityContext Security context for the frontend app
   securityContext:
     ## @param truefoundryFrontendApp.securityContext.readOnlyRootFilesystem Read only root filesystem for the frontend app
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param truefoundryFrontendApp.resources Resource requests and limits for the frontend app
   resources: {}
   # resources:
@@ -379,7 +375,7 @@ mlfoundryServer:
   ## mlfoundryServer.securityContext Security context for the mlfoundry server
   securityContext:
     ## @param mlfoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the mlfoundry server
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param mlfoundryServer.resources [object] Resource requests and limits for the mlfoundry server
   resources: {}
   # resources:
@@ -617,7 +613,7 @@ servicefoundryServer:
   ## servicefoundryServer.securityContext Security context for the servicefoundry server
   securityContext:
     ## @param servicefoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the servicefoundry server
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
   resources: {}
   # resources:
@@ -986,7 +982,7 @@ tfyK8sController:
   ## tfyK8sController.securityContext Security context for the tfyK8sController
   securityContext:
     ## @param tfyK8sController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyK8sController
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
   resources: {}
   # resources:
@@ -1115,7 +1111,7 @@ sfyManifestService:
   ## sfyManifestService.securityContext Security context for the sfy manifest service
   securityContext:
     ## @param sfyManifestService.securityContext.readOnlyRootFilesystem Read only root filesystem for the sfy manifest service
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
   resources: {}
   # resources:
@@ -1555,7 +1551,7 @@ tfyController:
   ## tfyController.securityContext Security context for the tfyController
   securityContext:
     ## @param tfyController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyController
-    readOnlyRootFilesystem: false
+    readOnlyRootFilesystem: true
   ## @param tfyController.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []

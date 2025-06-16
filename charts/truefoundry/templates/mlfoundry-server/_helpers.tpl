@@ -207,3 +207,17 @@ limits:
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
 {{- end }}
+
+{{- define "mlfoundry-server.volumes" -}}
+{{- $required := dict "name" "truefoundry-tmpdir" "emptyDir" (dict) -}}
+{{- $userVolumes := .Values.mlfoundryServer.extraVolumes | default (list) -}}
+{{- $final := prepend $userVolumes $required }}
+{{- toYaml $final }}
+{{- end }}
+
+{{- define "mlfoundry-server.volumeMounts" -}}
+{{- $required := dict "name" "truefoundry-tmpdir" "mountPath" "/tmp" -}}
+{{- $userMounts := .Values.mlfoundryServer.extraVolumeMounts | default (list) -}}
+{{- $final := prepend $userMounts $required }}
+{{- toYaml $final }}
+{{- end }}

@@ -63,13 +63,13 @@ spec:
               port: {{ .Values.mlfoundryServer.service.port }}
               scheme: HTTP
           volumeMounts:
-          {{- toYaml .Values.mlfoundryServer.extraVolumeMounts | nindent 12 }}
+            {{- include "mlfoundry-server.volumeMounts" . | nindent 12 }}
       {{- with .Values.mlfoundryServer.imagePullSecrets }}
       imagePullSecrets:
         {{- tpl (toYaml .) $ | nindent 8 }}
       {{- end }}
       volumes:
-      {{- toYaml .Values.mlfoundryServer.extraVolumes | nindent 8 }}
+        {{- include "mlfoundry-server.volumes" . | nindent 8 }}
       {{- if .Values.mlfoundryServer.nodeSelector }}
       nodeSelector:
         {{- toYaml .Values.mlfoundryServer.nodeSelector | nindent 8 }}

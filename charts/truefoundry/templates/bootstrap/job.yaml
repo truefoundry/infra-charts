@@ -14,16 +14,16 @@ spec:
       labels:
         {{- include "bootstrap-labels" . | nindent 8 }}
     spec:
-      {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+      {{- with .Values.truefoundryBootstrap.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.truefoundryBootstrap.securityContext.podSecurityContext | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: truefoundry-bootstrap-job-sa
       containers:
       - name: truefoundry-bootstrap-job
-        {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+        {{- with .Values.truefoundryBootstrap.securityContext }}
         securityContext:
-          {{- toYaml .Values.truefoundryBootstrap.securityContext.containerSecurityContext | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
         image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
         resources:

@@ -19,8 +19,8 @@ argocd.argoproj.io/hook-delete-policy: "BeforeHookCreation"
   bootstrap labels
 */}}
 {{- define "bootstrap-labels" -}}
-{{- if .Values.truefoundryBootstrap.labels }}
-{{ toYaml .Values.truefoundryBootstrap.labels }}
+{{- if .Values.truefoundryBootstrap.commonLabels }}
+{{ toYaml .Values.truefoundryBootstrap.commonLabels }}
 {{- else if .Values.global.labels }}
 {{ toYaml .Values.global.labels }}
 {{- else }}
