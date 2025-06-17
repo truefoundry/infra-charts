@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-workbench-images-cm
   namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- include "tfy-configs.annotations" . | nindent 4 }}
 data:
   workbench-images.yaml: |-
     {{- if eq .Values.configs.workbenchImages "default" }}

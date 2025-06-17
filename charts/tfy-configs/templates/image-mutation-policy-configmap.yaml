@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-image-mutation-policy-cm
   namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- include "tfy-configs.annotations" . | nindent 4 }}
 data:
   image-mutation-policy.yaml: |-
     {{- if not .Values.configs.imageMutationPolicyOverride }}
