@@ -1,3 +1,23 @@
+## @section eks-node-monitoring-agent configurations
+##
+eks-node-monitoring-agent:
+  dcgmAgent:
+    ## @param eks-node-monitoring-agent.dcgmAgent.resources [object] Resources for eks-node-monitoring-agent
+    ##
+    resources:
+      requests:
+        cpu: 10m
+        memory: 30Mi
+      limits:
+        cpu: 250m
+        memory: 100Mi
+    ## @param eks-node-monitoring-agent.dcgmAgent.tolerations [array] Tolerations for eks-node-monitoring-agent
+    ##
+    tolerations:
+      - effect: NoSchedule
+        key: nvidia.com/gpu
+        operator: Exists
+
 ## @section Upstream karpenter configurations
 ##
 karpenter:
