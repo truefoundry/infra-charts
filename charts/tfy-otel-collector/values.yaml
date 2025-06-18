@@ -21,16 +21,13 @@ env:
   NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
   SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000/v1/x/tfy-otel-collector/nats-creds
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-  SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
-  TENANT_NAME: "{{ .Values.global.tenantName }}"
-  SENTRY_ENABLED: "true"
 
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 83c9ef6dfffb10404ad0c80b3596569bd1e7e35f
+  tag: cb790d028f3d1fcf98a96f2ed22b612c738effca
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
