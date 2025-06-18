@@ -3,6 +3,13 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 
 ## Parameters
 
+### eks-node-monitoring-agent configurations
+
+| Name                                              | Description                               | Value |
+| ------------------------------------------------- | ----------------------------------------- | ----- |
+| `eks-node-monitoring-agent.dcgmAgent.resources`   | Resources for eks-node-monitoring-agent   | `{}`  |
+| `eks-node-monitoring-agent.dcgmAgent.tolerations` | Tolerations for eks-node-monitoring-agent | `[]`  |
+
 ### Upstream karpenter configurations
 
 | Name                                                              | Description                                       | Value    |
