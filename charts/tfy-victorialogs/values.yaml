@@ -1,4 +1,3 @@
-
 ## @section Upstream VictoriaLogs configurations
 ##
 victoria-logs-single:
@@ -18,6 +17,7 @@ victoria-logs-single:
       enabled: true
       ## @param victoria-logs-single.server.serviceMonitor.extraLabels Extra labels to be added to the service monitor
       extraLabels:
+        ## @param victoria-logs-single.server.serviceMonitor.extraLabels.release Release label for service monitor
         release: prometheus
     ## @param victoria-logs-single.server.retentionPeriod Retention period
     retentionPeriod: 7d
@@ -48,7 +48,7 @@ victoria-logs-single:
     enabled: true
     ## @param victoria-logs-single.vector.affinity Affinity
     affinity: {}
-    ## @param victoria-logs-single.vector.tolerations Tolerations
+    ## @param victoria-logs-single.vector.tolerations [array] Tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
