@@ -1,3 +1,9 @@
+## @section Global parameters
+##
+global:
+  ## @param global.resourceTier Resource deployment tier for the control plane, either small, medium or large accepted
+  resourceTier: "medium"
+
 ## @section Upstream VictoriaLogs configurations
 ##
 victoria-logs-single:
@@ -11,25 +17,48 @@ victoria-logs-single:
   server:
     image:
       registry: tfy.jfrog.io/tfy-mirror
-    resources:
-      limits:
-        cpu: "2"
-        memory: 4000M
-      requests:
-        cpu: "2"
-        memory: 4000M
     serviceMonitor:
       enabled: true
       extraLabels:
         release: prometheus
     retentionPeriod: 7d
     persistentVolume:
-      size: 500Gi
-  
+      size: 50Gi
+    resources:
+      requests:
+        cpu: 2000m
+        memory: 4000Mi
+      limits:
+        cpu: 2000m
+        memory: 4000Mi
   vector:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
     image:
       repository: tfy.jfrog.io/tfy-mirror/timberio/vector
     enabled: true
+    # resources: will be managed by resourceTier via _helpers.tpl
+    affinity: {}
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+    priorityClassName: system-node-critical
+    nodeSelector: {}
     customConfig:
       transforms:
         parser:
