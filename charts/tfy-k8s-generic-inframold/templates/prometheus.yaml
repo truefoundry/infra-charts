@@ -61,6 +61,24 @@ spec:
                 cpu: "1.9"
                 memory: 2Gi
             retention: 30d
+            containers:
+            - name: config-reloader
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 20Mi
+                limits:
+                  cpu: 20m
+                  memory: 40Mi
+            initContainers:
+            - name: init-config-reloader
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 20Mi
+                limits:
+                  cpu: 20m
+                  memory: 40Mi
             storageSpec:
               volumeClaimTemplate:
                 spec:
@@ -86,6 +104,24 @@ spec:
           alertmanagerSpec:
             alertmanagerConfigMatcherStrategy:
               type: None
+            containers:
+            - name: config-reloader
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 20Mi
+                limits:
+                  cpu: 20m
+                  memory: 40Mi
+            initContainers:
+            - name: init-config-reloader
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 20Mi
+                limits:
+                  cpu: 20m
+                  memory: 40Mi
             resources:
               requests:
                 cpu: 200m
@@ -155,6 +191,13 @@ spec:
               affinity:
                 {{ toYaml . | nindent 14 }}
               {{- end }}
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 40Mi
+                limits:
+                  cpu: 100m
+                  memory: 400Mi
           serviceMonitor:
             selfMonitor: false
         kubeControllerManager:

@@ -48,6 +48,38 @@ spec:
             prometheusScrape: false
         forecasting:
           enabled: false
+        kubecostFrontend:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 55Mi
+        kubecostAggregator:
+          cloudCost:
+            resources:
+              limits:
+                cpu: 200m
+                memory: 512Mi
+              requests:
+                cpu: 50m
+                memory: 128Mi
+          resources:
+            limits:
+              cpu: 800m
+              memory: 4Gi
+            requests:
+              cpu: 200m
+              memory: 3Gi
+        kubecostModel:
+          resources:
+            limits:
+              cpu: 256m
+              memory: 1024Mi
+            requests:
+              cpu: 128m
+              memory: 512Mi
         server:
           {{- if $mergedTolerations }}
           tolerations:
