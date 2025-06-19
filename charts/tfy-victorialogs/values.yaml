@@ -1,29 +1,30 @@
-## @section Global parameters
-##
-global:
-  ## @param global.resourceTier Resource deployment tier for the control plane, either small, medium or large accepted
-  resourceTier: "medium"
 
 ## @section Upstream VictoriaLogs configurations
 ##
 victoria-logs-single:
   ## @param victoria-logs-single.enabled Enable victoria-logs-single
   enabled: true
-  
   global:
     image:
+      ## @param victoria-logs-single.global.image.registry Image registry
       registry: tfy.jfrog.io/tfy-mirror
   
   server:
     image:
+      ## @param victoria-logs-single.server.image.registry Image registry
       registry: tfy.jfrog.io/tfy-mirror
     serviceMonitor:
+      ## @param victoria-logs-single.server.serviceMonitor.enabled Enable service monitor
       enabled: true
+      ## @param victoria-logs-single.server.serviceMonitor.extraLabels Extra labels to be added to the service monitor
       extraLabels:
         release: prometheus
+    ## @param victoria-logs-single.server.retentionPeriod Retention period
     retentionPeriod: 7d
     persistentVolume:
+      ## @param victoria-logs-single.server.persistentVolume.size Persistent volume size
       size: 50Gi
+    ## @param victoria-logs-single.server.resources [object] Resources
     resources:
       requests:
         cpu: 2000m
@@ -32,6 +33,7 @@ victoria-logs-single:
         cpu: 2000m
         memory: 4000Mi
   vector:
+    ## @param victoria-logs-single.vector.resources [object] Resources
     resources:
       requests:
         cpu: 100m
@@ -40,10 +42,13 @@ victoria-logs-single:
         cpu: 200m
         memory: 200Mi
     image:
+      ## @param victoria-logs-single.vector.image.repository Image repository
       repository: tfy.jfrog.io/tfy-mirror/timberio/vector
+    ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
-    # resources: will be managed by resourceTier via _helpers.tpl
+    ## @param victoria-logs-single.vector.affinity Affinity
     affinity: {}
+    ## @param victoria-logs-single.vector.tolerations Tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
@@ -57,8 +62,11 @@ victoria-logs-single:
         operator: Exists
       - effect: NoExecute
         operator: Exists
+    ## @param victoria-logs-single.vector.priorityClassName Priority class name for vector
     priorityClassName: system-node-critical
+    ## @param victoria-logs-single.vector.nodeSelector Node selector
     nodeSelector: {}
+    ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
       transforms:
         parser:
