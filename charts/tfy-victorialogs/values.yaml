@@ -1,0 +1,82 @@
+## @section Upstream VictoriaLogs configurations
+##
+victoria-logs-single:
+  ## @param victoria-logs-single.enabled Enable victoria-logs-single
+  enabled: true
+  
+  global:
+    image:
+      registry: tfy.jfrog.io/tfy-mirror
+  
+  server:
+    image:
+      registry: tfy.jfrog.io/tfy-mirror
+    resources:
+      limits:
+        cpu: "2"
+        memory: 4000M
+      requests:
+        cpu: "2"
+        memory: 4000M
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        release: prometheus
+    retentionPeriod: 7d
+    persistentVolume:
+      size: 500Gi
+  
+  vector:
+    image:
+      repository: tfy.jfrog.io/tfy-mirror/timberio/vector
+    enabled: true
+    customConfig:
+      transforms:
+        parser:
+          type: remap
+          inputs:
+            - k8s
+          source: >
+            # Parse JSON log if possible, otherwise keep as message
+
+            .log = parse_json(.message) ?? {"message": .message}
+
+
+            # Extract basic pod information
+
+            .service = .kubernetes.container_name
+
+            .container = .kubernetes.container_name
+
+            .app = .kubernetes.container_name
+
+            .pod = .kubernetes.pod_name
+
+            .node = .kubernetes.pod_node_name
+
+            .namespace = .kubernetes.pod_namespace
+
+            .job_name = .kubernetes.job_name
+
+
+            # Extract ALL pod labels dynamically using for_each
+
+            pod_labels = object(.kubernetes.pod_labels) ?? {}
+
+
+            # Iterate through all pod labels and add them with a prefix
+
+            for_each(pod_labels) -> |key, value| {
+              label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
+              . = set!(., [label_key], string(value) ?? "")
+            }
+
+
+
+            # Clean up kubernetes metadata
+
+            del(.kubernetes)
+
+            del(.file)
+
+            del(.message) 
