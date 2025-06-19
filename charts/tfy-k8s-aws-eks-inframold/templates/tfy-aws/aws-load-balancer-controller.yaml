@@ -32,6 +32,13 @@ spec:
         {{- $mergedAffinity = .Values.aws.awsLoadBalancerController.affinity }}
         {{- end }}
         clusterName: {{ .Values.clusterName | quote }}
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+          limits:
+            cpu: 100m
+            memory: 400Mi
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}
