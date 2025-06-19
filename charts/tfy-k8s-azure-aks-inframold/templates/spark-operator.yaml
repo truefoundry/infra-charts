@@ -30,8 +30,8 @@ spec:
         {{- if .Values.sparkOperator.affinity }}
         {{- $mergedAffinity = .Values.sparkOperator.affinity }}
         {{- end }}
-        resources:
-          operator:
+        controller:
+          resources:
             requests:
               cpu: 200m
               memory: 256Mi
@@ -40,6 +40,30 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
+        webhook:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 300Mi
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
         spark:
           jobNamespaces:
             - ""
