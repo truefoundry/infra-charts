@@ -35,7 +35,7 @@ Clickhouse resoures
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
 {{- $defaultsRequests := $defaults.requests | default dict }}
 {{- $defaultsLimits := $defaults.limits | default dict }}
-{{- $overrides := .Values.resources | default dict }}
+{{- $overrides := .Values.clickhouse.resources | default dict }}
 {{- $overridesRequests := $overrides.requests | default dict }}
 {{- $overridesLimits := $overrides.limits | default dict }}
 
