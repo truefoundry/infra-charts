@@ -35,7 +35,30 @@ spec:
         {{- end }}
         node:
           tolerateAllTaints: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 40Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
+        sidecars:
+          snapshotter:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 40Mi
+              limits:
+                cpu: 100m
+                memory: 400Mi
         controller:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 40Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
           serviceAccount:
             name: ebs-csi-controller-sa
             annotations:
