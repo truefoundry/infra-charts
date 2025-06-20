@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-k8s-manifest-validation-policy-cm
   namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- include "tfy-configs.annotations" . | nindent 4 }}
 data:
   k8s-manifest-validation-policy.yaml: |-
     {{- if not .Values.configs.k8sManifestValidationPolicyOverride }}

@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-cicd-templates-cm
   namespace: {{ .Release.Namespace }}
+  annotations:
+    {{- include "tfy-configs.annotations" . | nindent 4 }}
 data:
 {{- if .Values.configs.cicdTemplates }}
   {{- range $key, $value := .Values.configs.cicdTemplates }}
