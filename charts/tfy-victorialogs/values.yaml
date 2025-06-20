@@ -7,12 +7,12 @@ victoria-logs-single:
     image:
       ## @param victoria-logs-single.global.image.registry Image registry
       registry: tfy.jfrog.io/tfy-mirror
-  
+
   server:
     image:
       ## @param victoria-logs-single.server.image.registry Image registry
       registry: tfy.jfrog.io/tfy-mirror
-      ## @skip victoria-logs-single.server.serviceMonitor 
+      ## @skip victoria-logs-single.server.serviceMonitor
     serviceMonitor:
       enabled: true
       extraLabels:
@@ -76,7 +76,6 @@ victoria-logs-single:
 
             .log = parse_json(.message) ?? {"message": .message}
 
-
             # Extract basic pod information
 
             .service = .kubernetes.container_name
@@ -93,11 +92,9 @@ victoria-logs-single:
 
             .job_name = .kubernetes.job_name
 
-
             # Extract ALL pod labels dynamically using for_each
 
             pod_labels = object(.kubernetes.pod_labels) ?? {}
-
 
             # Iterate through all pod labels and add them with a prefix
 
@@ -105,13 +102,7 @@ victoria-logs-single:
               label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
               . = set!(., [label_key], string(value) ?? "")
             }
-
-
-
             # Clean up kubernetes metadata
-
             del(.kubernetes)
-
             del(.file)
-
-            del(.message) 
+            del(.message)
