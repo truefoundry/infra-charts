@@ -7,7 +7,6 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "karpenter-config"
-    truefoundry.com/infra-migration-tag: "1002"
 spec:
   destination:
     namespace: kube-system
@@ -15,7 +14,7 @@ spec:
   source:
     chart: tfy-karpenter-config
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.44
+    targetRevision: 0.1.45
     helm:
       values: |-
         {{- if .Values.aws.karpenter.config.valuesOverride }}

@@ -78,7 +78,6 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.karpenter.defaultZones`                   | Default zones list for Karpenter            | `[]`    |
 | `aws.karpenter.affinity`                       | Affinity for Karpenter                      | `{}`    |
 | `aws.karpenter.tolerations`                    | Tolerations for Karpenter                   | `[]`    |
-| `aws.karpenter.webhook.enabled`                | Flag to enable Karpenter webhook            | `true`  |
 | `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
 | `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
 | `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
