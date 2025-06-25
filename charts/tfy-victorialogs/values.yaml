@@ -86,7 +86,6 @@ victoria-logs-single:
           inputs:
             - k8s
           source: >
-            
             if .message == "" {
               .message = " "
             }
@@ -110,6 +109,7 @@ victoria-logs-single:
             .job_name = .kubernetes.job_name
 
             # Extract ALL pod labels dynamically using for_each
+
             pod_labels = object(.kubernetes.pod_labels) ?? {}
 
             # Iterate through all pod labels and add them with a prefix
@@ -122,5 +122,7 @@ victoria-logs-single:
             # Clean up kubernetes metadata
 
             del(.kubernetes)
+
             del(.file)
+
             del(.message)
