@@ -7,7 +7,7 @@
 | `victoria-logs-single.enabled`                      | Enable victoria-logs-single    | `true`                                    |
 | `victoria-logs-single.global.image.registry`        | Image registry                 | `tfy.jfrog.io/tfy-mirror`                 |
 | `victoria-logs-single.server.image.registry`        | Image registry                 | `tfy.jfrog.io/tfy-mirror`                 |
-| `victoria-logs-single.server.retentionPeriod`       | Retention period               | `7d`                                      |
+| `victoria-logs-single.server.retentionPeriod`       | Retention period               | `15d`                                     |
 | `victoria-logs-single.server.persistentVolume.size` | Persistent volume size         | `50Gi`                                    |
 | `victoria-logs-single.server.resources`             | Resources                      | `{}`                                      |
 | `victoria-logs-single.vector.resources`             | Resources                      | `{}`                                      |
