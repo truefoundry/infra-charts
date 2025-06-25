@@ -85,7 +85,7 @@ def get_image_details(image_name):
         logging.info(f"[skip] using cached platforms for {image_name}")
         return previous_platform_data.get(image_name, [])
     
-    if image_name.startswith(('auto', 'cos-nvidia-installer')):
+    if image_name.startswith(('auto', 'cos-nvidia-installer', '602401143452.dkr.ecr.us-west-2.amazonaws.com/eks/')):
         logging.info(f"Skipping image {image_name}")
         return []
     
