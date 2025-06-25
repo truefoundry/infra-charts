@@ -18,7 +18,7 @@ victoria-logs-single:
       extraLabels:
         release: prometheus
     ## @param victoria-logs-single.server.retentionPeriod Retention period
-    retentionPeriod: 7d
+    retentionPeriod: 15d
     persistentVolume:
       ## @param victoria-logs-single.server.persistentVolume.size Persistent volume size
       size: 50Gi
@@ -66,13 +66,32 @@ victoria-logs-single:
     nodeSelector: {}
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
+      sinks:
+        vlogs:
+          type: elasticsearch
+          batch:
+            timeout_secs: 0.1
+          query:
+            _time_field: timestamp
+            _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_deployment_version,truefoundry_com_component_type,truefoundry_com_retry_number,job_name,sparkoperator_k8s_io_app_name,truefoundry_com_buildName
+          inputs:
+            - parser
+          # endpoints:
+          #   - http://victorialogs-victoria-logs-single-server.hl-test.svc.cluster.local:9428/insert/elasticsearch/
+          api_version: v8
+          compression: gzip
+          healthcheck:
+            enabled: false
       transforms:
         parser:
           type: remap
           inputs:
             - k8s
           source: >
-            # Parse JSON log if possible, otherwise keep as message
+            
+            if .message == "" {
+              .message = " "
+            }
 
             .log = parse_json(.message) ?? {"message": .message}
 
@@ -93,7 +112,6 @@ victoria-logs-single:
             .job_name = .kubernetes.job_name
 
             # Extract ALL pod labels dynamically using for_each
-
             pod_labels = object(.kubernetes.pod_labels) ?? {}
 
             # Iterate through all pod labels and add them with a prefix
@@ -102,7 +120,9 @@ victoria-logs-single:
               label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
               . = set!(., [label_key], string(value) ?? "")
             }
+
             # Clean up kubernetes metadata
+
             del(.kubernetes)
             del(.file)
             del(.message)
