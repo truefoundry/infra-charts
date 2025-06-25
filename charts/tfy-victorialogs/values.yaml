@@ -1,0 +1,126 @@
+## @section Upstream VictoriaLogs configurations
+##
+victoria-logs-single:
+  ## @param victoria-logs-single.enabled Enable victoria-logs-single
+  enabled: true
+  global:
+    image:
+      ## @param victoria-logs-single.global.image.registry Image registry
+      registry: tfy.jfrog.io/tfy-mirror
+
+  server:
+    image:
+      ## @param victoria-logs-single.server.image.registry Image registry
+      registry: tfy.jfrog.io/tfy-mirror
+      ## @skip victoria-logs-single.server.serviceMonitor
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        release: prometheus
+    ## @param victoria-logs-single.server.retentionPeriod Retention period
+    retentionPeriod: 15d
+    persistentVolume:
+      ## @param victoria-logs-single.server.persistentVolume.size Persistent volume size
+      size: 50Gi
+    ## @param victoria-logs-single.server.resources [object] Resources
+    resources:
+      requests:
+        cpu: 2000m
+        memory: 4000Mi
+      limits:
+        cpu: 2000m
+        memory: 4000Mi
+  vector:
+    ## @param victoria-logs-single.vector.resources [object] Resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
+    image:
+      ## @param victoria-logs-single.vector.image.repository Image repository
+      repository: tfy.jfrog.io/tfy-mirror/timberio/vector
+    ## @param victoria-logs-single.vector.enabled Enable vector
+    enabled: true
+    ## @param victoria-logs-single.vector.affinity Affinity
+    affinity: {}
+    ## @param victoria-logs-single.vector.tolerations [array] Tolerations
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+    ## @param victoria-logs-single.vector.priorityClassName Priority class name for vector
+    priorityClassName: system-node-critical
+    ## @param victoria-logs-single.vector.nodeSelector Node selector
+    nodeSelector: {}
+    ## @param victoria-logs-single.vector.customConfig [object] Custom config
+    customConfig:
+      sinks:
+        vlogs:
+          type: elasticsearch
+          batch:
+            timeout_secs: 0.1
+          query:
+            _time_field: timestamp
+            _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_deployment_version,truefoundry_com_component_type,truefoundry_com_retry_number,job_name,sparkoperator_k8s_io_app_name,truefoundry_com_buildName
+          inputs:
+            - parser
+          api_version: v8
+          compression: gzip
+          healthcheck:
+            enabled: false
+      transforms:
+        parser:
+          type: remap
+          inputs:
+            - k8s
+          source: >
+            
+            if .message == "" {
+              .message = " "
+            }
+
+            .log = parse_json(.message) ?? {"message": .message}
+
+            # Extract basic pod information
+
+            .service = .kubernetes.container_name
+
+            .container = .kubernetes.container_name
+
+            .app = .kubernetes.container_name
+
+            .pod = .kubernetes.pod_name
+
+            .node = .kubernetes.pod_node_name
+
+            .namespace = .kubernetes.pod_namespace
+
+            .job_name = .kubernetes.job_name
+
+            # Extract ALL pod labels dynamically using for_each
+            pod_labels = object(.kubernetes.pod_labels) ?? {}
+
+            # Iterate through all pod labels and add them with a prefix
+
+            for_each(pod_labels) -> |key, value| {
+              label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
+              . = set!(., [label_key], string(value) ?? "")
+            }
+
+            # Clean up kubernetes metadata
+
+            del(.kubernetes)
+            del(.file)
+            del(.message)
