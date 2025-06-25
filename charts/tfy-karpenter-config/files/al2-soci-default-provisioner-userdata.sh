@@ -1,6 +1,13 @@
 #!/bin/bash
 set -ex
 
+function version_lte() {
+    printf '%s\n' "$1" "$2" | sort -C -V
+}
+function version_lt() {
+    ! version_lte "$2" "$1"
+}
+
 function setup_soci() {
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
 VERSION="0.9.0"
