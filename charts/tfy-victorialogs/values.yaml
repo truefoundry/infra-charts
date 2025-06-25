@@ -110,6 +110,7 @@ victoria-logs-single:
             .job_name = .kubernetes.job_name
 
             # Extract ALL pod labels dynamically using for_each
+            
             pod_labels = object(.kubernetes.pod_labels) ?? {}
 
             # Iterate through all pod labels and add them with a prefix
@@ -124,5 +125,5 @@ victoria-logs-single:
             del(.kubernetes)
 
             del(.file)
-            
+
             del(.message)
