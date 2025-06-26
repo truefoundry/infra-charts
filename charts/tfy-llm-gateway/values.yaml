@@ -19,7 +19,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.64.0
+  tag: v0.65.0-rc.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -184,6 +184,7 @@ env:
   CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
+  ENABLE_OTEL_TRACING: "false"
 
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
