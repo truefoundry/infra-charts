@@ -1,3 +1,30 @@
+## Truefoundry Logs 
+This Helm chart deploys a centralized logging solution for Truefoundry using VictoriaLogs as the backend storage and Vector as the log collection agent.
+
+### Overview
+
+The `tfy-logs` chart provides:
+
+- Centralized log collection from all Kubernetes pods
+- Log storage with configurable retention period
+- Log parsing and structured storage
+- Efficient log querying capabilities
+
+### Architecture
+
+The solution consists of two main components:
+
+1. **VictoriaLogs Server**: A high-performance, cost-effective log storage and search system
+2. **Vector Agents**: DaemonSet that collects logs from all nodes and forwards them to VictoriaLogs
+
+### Prerequisites
+
+- Kubernetes 1.30+
+- Helm 3.1.0+
+- PV provisioner support in the underlying infrastructure
+
+### Installation
+
 ## Parameters
 
 ### Upstream VictoriaLogs configurations
