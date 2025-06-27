@@ -1,0 +1,88 @@
+name: Maintain spec in Git and build and deploy via Truefoundry
+cicd_provider_id: jenkins
+enabled: true
+description: "The application spec will be stored in the source code as a separate YAML file (truefoundry.yaml). You will need to change the truefoundry.yaml to make any changes to the application. Changes done from UI will be overriden with every git push. Choose this approach if you want to only change application via Git pull requests."
+deployment_mode: deploy
+build_source: git
+recommended_environment: prod
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Jenkins Credentials
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Jenkins instance, navigate to **Manage Jenkins > Credentials > System > Global credentials**.
+        Add a new secret text credential with ID `TFY_API_KEY` and set the generated api key as value
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create Jenkins Pipeline
+    icon: null
+    usage: |
+      Add the below pipeline as `Jenkinsfile` in the root of your project directory.
+      Following Jenkins pipeline will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```groovy
+        pipeline {
+            agent any
+            
+            environment {
+                TFY_HOST = '{{ TRUEFOUNDRY_TFY_HOST }}'
+                WORKSPACE_FQN = '{{ TRUEFOUNDRY_WORKSPACE_FQN }}'
+            }
+            
+            options {
+                timeout(time: 30, unit: 'MINUTES')
+            }
+            
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
+                
+                stage('Setup Python') {
+                    steps {
+                        sh '''
+                            python3 --version
+                            pip3 --version
+                        '''
+                    }
+                }
+                
+                stage('Install Dependencies') {
+                    steps {
+                        sh 'pip3 install "truefoundry<1.0.0"'
+                    }
+                }
+                
+                stage('Deploy to TrueFoundry') {
+                    steps {
+                        withCredentials([string(credentialsId: 'TFY_API_KEY', variable: 'TFY_API_KEY')]) {
+                            sh '''
+                                export TFY_API_KEY="$TFY_API_KEY"
+                                tfy patch -f truefoundry.yaml --filter '.image.build_source.ref = "${GIT_COMMIT}" | .image.build_source.branch_name = "${GIT_BRANCH}"' -o truefoundry-patched.yaml
+                                tfy deploy -f truefoundry-patched.yaml -w "${WORKSPACE_FQN}" --no-wait
+                            '''
+                        }
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    cleanWs()
+                }
+            }
+        }
+        ```

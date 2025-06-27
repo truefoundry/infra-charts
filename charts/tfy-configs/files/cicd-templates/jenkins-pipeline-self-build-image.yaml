@@ -1,0 +1,154 @@
+name: Deploy docker image on TrueFoundry with spec in Git repository
+cicd_provider_id: jenkins
+enabled: true
+description: "The application spec will be stored in the source code as a separate YAML file (truefoundry.yaml). The docker image is built in your CI pipeline and then the docker image is deployed to truefoundry by updating the spec with the image uri."
+deployment_mode: deploy
+build_source: local
+recommended_environment: prod
+image_builder: self
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Jenkins Credentials
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Jenkins instance, navigate to **Manage Jenkins > Credentials > System > Global credentials**.
+        Add a new secret text credential with ID `TFY_API_KEY` and set the generated api key as value.
+        
+        Also add Docker registry credentials with ID `DOCKER_REGISTRY_CREDENTIALS` containing your registry username and password.
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create Jenkins Pipeline
+    icon: null
+    usage: |
+      Add the below pipeline as `Jenkinsfile` in your repository root.
+      Following Jenkins pipeline will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        > **Note:** Please read through the `environment` section and `Build Image` stage and update them for your registry and repo.
+        
+        
+        ```groovy
+        pipeline {
+            agent any
+            
+            environment {
+                TFY_HOST = '{{ TRUEFOUNDRY_TFY_HOST }}'
+                TFY_API_KEY = credentials('TFY_API_KEY')
+                WORKSPACE_FQN = '{{ TRUEFOUNDRY_WORKSPACE_FQN }}'
+                
+                // Update these with your Docker Registry and Repository
+                DOCKER_REGISTRY = 'docker.io'
+                DOCKER_REPO_NAME = env.JOB_NAME
+                
+                DOCKER_IMAGE_REPO = "${DOCKER_REGISTRY}/${DOCKER_REPO_NAME}"
+                DOCKER_IMAGE_TAG = sh(
+                    script: 'git rev-parse HEAD',
+                    returnStdout: true
+                ).trim()
+                DOCKER_IMAGE_URI = "${DOCKER_IMAGE_REPO}:${DOCKER_IMAGE_TAG}"
+            }
+            
+            triggers {
+                pollSCM('H/5 * * * *')  // Poll SCM every 5 minutes
+            }
+            
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
+                
+                stage('Build Image') {
+                    steps {
+                        script {
+                            // Login to Docker registry
+                            withCredentials([usernamePassword(
+                                credentialsId: 'DOCKER_REGISTRY_CREDENTIALS',
+                                usernameVariable: 'DOCKER_USERNAME',
+                                passwordVariable: 'DOCKER_PASSWORD'
+                            )]) {
+                                sh """
+                                    echo "\$DOCKER_PASSWORD" | docker login \$DOCKER_REGISTRY --username \$DOCKER_USERNAME --password-stdin
+                                """
+                            }
+                            
+                            // Build and push Docker image
+                            sh """
+                                docker buildx build \
+                                    --cache-from type=registry,ref=\$DOCKER_IMAGE_REPO:buildcache \
+                                    --cache-to mode=max,image-manifest=true,type=registry,ref=\$DOCKER_IMAGE_REPO:buildcache \
+                                    --tag \$DOCKER_IMAGE_URI \
+                                    --push .
+                            """
+                        }
+                    }
+                }
+                
+                stage('Setup Python') {
+                    steps {
+                        script {
+                            // Use Python 3.11 if available, otherwise use system Python
+                            def pythonVersion = '3.11'
+                            try {
+                                sh "python${pythonVersion} --version"
+                                env.PYTHON_CMD = "python${pythonVersion}"
+                            } catch (Exception e) {
+                                echo "Python ${pythonVersion} not found, using system Python"
+                                env.PYTHON_CMD = "python3"
+                            }
+                        }
+                    }
+                }
+                
+                stage('Install Dependencies') {
+                    steps {
+                        sh "${env.PYTHON_CMD} -m pip install 'truefoundry<1.0.0'"
+                    }
+                }
+                
+                stage('Deploy to Workspace') {
+                    steps {
+                        script {
+                            // Patch the truefoundry.yaml with the new image URI
+                            sh """
+                                ${env.PYTHON_CMD} -m tfy patch \
+                                    -f truefoundry.yaml \
+                                    --filter ".image.image_uri = \\"${env.DOCKER_IMAGE_URI}\\"" \
+                                    -o truefoundry-patched.yaml
+                            """
+                            
+                            // Deploy the patched configuration
+                            sh """
+                                ${env.PYTHON_CMD} -m tfy deploy \
+                                    -f truefoundry-patched.yaml \
+                                    -w "${env.WORKSPACE_FQN}" \
+                                    --no-wait
+                            """
+                        }
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    cleanWs()
+                }
+                success {
+                    echo 'Build and deployment completed successfully!'
+                }
+                failure {
+                    echo 'Build or deployment failed!'
+                }
+            }
+        }
+        ```
