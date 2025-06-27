@@ -1,0 +1,103 @@
+name: Build and deploy latest commit without maintaining spec in Git
+cicd_provider_id: jenkins
+enabled: true
+description: "The application spec will be stored and maintained from TrueFoundry UI. On each trigger (e.g., push to main), the latest commit id will be built and deployed by Truefoundry. For changing other spec parameters like cpu, memory or autoscaling, you will need to do it from the UI."
+deployment_mode: patch-application
+build_source: git
+recommended_environment: dev
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Jenkins Credentials
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Jenkins instance, navigate to **Manage Jenkins > Credentials > System > Global credentials**.
+        Add a new secret text credential with ID `TFY_API_KEY` and set the generated api key as value
+  - label: Create Jenkins Pipeline
+    icon: null
+    usage: |
+      Add the below pipeline as `Jenkinsfile` in your repository root.
+      Following Jenkins pipeline will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```groovy
+        pipeline {
+            agent any
+            
+            environment {
+                TFY_HOST = '{{ TRUEFOUNDRY_TFY_HOST }}'
+                TFY_API_KEY = credentials('TFY_API_KEY')
+                APPLICATION_FQN = '{{ TRUEFOUNDRY_APPLICATION_FQN }}'
+            }
+            
+            triggers {
+                pollSCM('H/5 * * * *')  // Poll SCM every 5 minutes
+            }
+            
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
+                
+                stage('Setup Python') {
+                    steps {
+                        script {
+                            // Use Python 3.11 if available, otherwise use system Python
+                            def pythonVersion = '3.11'
+                            try {
+                                sh "python${pythonVersion} --version"
+                                env.PYTHON_CMD = "python${pythonVersion}"
+                            } catch (Exception e) {
+                                echo "Python ${pythonVersion} not found, using system Python"
+                                env.PYTHON_CMD = "python3"
+                            }
+                        }
+                    }
+                }
+                
+                stage('Install Dependencies') {
+                    steps {
+                        sh "${env.PYTHON_CMD} -m pip install 'truefoundry<1.0.0'"
+                    }
+                }
+                
+                stage('Patch Application') {
+                    steps {
+                        script {
+                            def commitSha = sh(
+                                script: 'git rev-parse HEAD',
+                                returnStdout: true
+                            ).trim()
+                            
+                            sh """
+                                ${env.PYTHON_CMD} -m tfy patch-application \
+                                    --application-fqn ${env.APPLICATION_FQN} \
+                                    --patch='{"image": {"build_source": {"ref": "${commitSha}"}}}'
+                            """
+                        }
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    cleanWs()
+                }
+                success {
+                    echo 'Deployment completed successfully!'
+                }
+                failure {
+                    echo 'Deployment failed!'
+                }
+            }
+        }
+        ```
