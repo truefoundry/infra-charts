@@ -1,0 +1,63 @@
+{{- if .Values.tfyLogs.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-logs
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-logs"
+spec:
+  destination:
+    namespace: tfy-logs
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: https://truefoundry.github.io/infra-charts/
+    targetRevision: 0.1.2
+    chart: tfy-logs
+    helm:
+      values: |-
+        {{- if .Values.tfyLogs.valuesOverride }}
+        {{ .Values.tfyLogs.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        {{- $mergedTolerations := .Values.tolerations }}
+        {{- if .Values.tfyLogs.tolerations }}
+        {{- $mergedTolerations = .Values.tfyLogs.tolerations }}
+        {{- end }}
+
+        {{- $mergedAffinity := .Values.affinity }}
+        {{- if .Values.tfyLogs.affinity }}
+        {{- $mergedAffinity = .Values.tfyLogs.affinity }}
+        {{- end }}
+        victoria-logs-single:
+          enabled: true
+          server:
+            retentionPeriod: 15d
+            persistentVolume:
+              size: 50Gi
+            resources:
+              requests:
+                cpu: 2000m
+                memory: 4000Mi
+              limits:
+                cpu: 2000m
+                memory: 4000Mi
+            {{- if $mergedTolerations }}
+            tolerations:
+            {{- toYaml $mergedTolerations | nindent 12 }}
+            {{- end }}
+            {{- if $mergedAffinity }}
+            affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
+            {{- end }}
+          vector:
+            enabled: true
+        {{- end }}
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
