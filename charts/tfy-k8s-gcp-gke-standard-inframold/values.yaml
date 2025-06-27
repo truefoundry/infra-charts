@@ -241,6 +241,35 @@ loki:
       value: "critical"
       effect: "NoSchedule"
 
+
+## @section tfyLogs parameters
+## @param tfyLogs.enabled Flag to enable Tfy Logs
+##
+tfyLogs:
+  enabled: true
+  ## @param tfyLogs.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## @param tfyLogs.affinity [object] Affinity for tfyLogs statefulset pod
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: class.truefoundry.com/component
+                operator: In
+                values:
+                  - critical
+
+  ## @param tfyLogs.tolerations [array] Tolerations for tfyLogs statefulset pod
+  ##
+  tolerations:
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
+
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
 ##

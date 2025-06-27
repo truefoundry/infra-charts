@@ -116,6 +116,15 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | `loki.affinity`       | Affinity for loki statefulset pod          | `{}`   |
 | `loki.tolerations`    | Tolerations for loki statefulset pod       | `[]`   |
 
+### tfyLogs parameters
+
+| Name                     | Description                                | Value  |
+| ------------------------ | ------------------------------------------ | ------ |
+| `tfyLogs.enabled`        | Flag to enable Tfy Logs                    | `true` |
+| `tfyLogs.valuesOverride` | Config override from default config values | `{}`   |
+| `tfyLogs.affinity`       | Affinity for tfyLogs statefulset pod       | `{}`   |
+| `tfyLogs.tolerations`    | Tolerations for tfyLogs statefulset pod    | `[]`   |
+
 ### istio parameters
 
 | Name                           | Description                                | Value  |
