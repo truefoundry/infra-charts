@@ -74,6 +74,15 @@ Annotations
 {{- end }}
 {{- end }}
 
+
+{{/*
+  Deployment annotations This is used to maintain the order of deployment with the parent chart Truefoundry
+  */}}
+{{- define "tfy-llm-gateway.DeploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "tfy-llm-gateway.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
 {{/*
   Selector labels
   */}}
