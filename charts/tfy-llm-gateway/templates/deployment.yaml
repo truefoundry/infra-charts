@@ -7,7 +7,9 @@ metadata:
   annotations:
     {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ include "tfy-llm-gateway.replicas" . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
