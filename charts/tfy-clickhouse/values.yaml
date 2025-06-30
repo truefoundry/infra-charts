@@ -17,6 +17,8 @@ altinity-clickhouse-operator:
   rbac:
     create: true
     namespaceScoped: true
+  secret:
+    create: false
   metrics:
     image:
       repository: tfy.jfrog.io/tfy-mirror/altinity/metrics-exporter
@@ -85,7 +87,7 @@ clickhouse:
   zookeeperHost: "{{ .Release.Name }}-zookeeper-headless"
   zookeeperPort: '2181'
   labels: {}
-  image: 
+  image:
     repository: tfy.jfrog.io/tfy-mirror/clickhouse/clickhouse-server
     tag: 24.7.3.42-alpine
   annotations: {}
