@@ -71,6 +71,14 @@ helm.sh/chart: {{ include "truefoundry-frontend-app.chart" . }}
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "truefoundry-frontend-app.deploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "truefoundry-frontend-app.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
   Service Account Annotations
   */}}
 {{- define "truefoundry-frontend-app.serviceAccountAnnotations" -}}

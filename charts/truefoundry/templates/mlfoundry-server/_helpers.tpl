@@ -71,6 +71,14 @@ helm.sh/chart: {{ include "mlfoundry-server.chart" . }}
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "mlfoundry-server.deploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "mlfoundry-server.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
   Selector labels
   */}}
 {{- define "mlfoundry-server.selectorLabels" -}}

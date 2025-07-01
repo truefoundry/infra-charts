@@ -87,6 +87,14 @@ app.kubernetes.io/workflow-component: scheduler
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-workflow-admin.deploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "tfy-workflow-admin.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
   ConfigMap annotations
   */}}
 {{- define "tfy-workflow-admin.configMap.annotations" -}}
