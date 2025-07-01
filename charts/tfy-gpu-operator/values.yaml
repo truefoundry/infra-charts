@@ -1646,6 +1646,31 @@ generic-gpu-operator:
   driver:
     ## @param generic-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: true
+    ## @param generic-gpu-operator.driver.version Version of the driver.
+    version: "570.148.08"
+    ## @param generic-gpu-operator.driver.usePrecompiled Use precompiled driver.
+    usePrecompiled: true
+    ## @param generic-gpu-operator.driver.kernelModuleType Kernel module type.
+    kernelModuleType: "auto"
+    nvidiaDriverCRD:
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.enabled Enable/Disable nvidia driver CRD installation.
+      enabled: true
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.deployDefaultCR Deploy default CR.
+      deployDefaultCR: true
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.nodeSelector Node selector.
+      nodeSelector: {}
+    upgradePolicy:
+      ## @param generic-gpu-operator.driver.upgradePolicy.autoUpgrade Enable/Disable auto upgrade.
+      autoUpgrade: true
+      ## @param generic-gpu-operator.driver.upgradePolicy.maxParallelUpgrades Max number of upgrades that can run in parallel.
+      maxParallelUpgrades: 1
+      gpuPodDeletion:
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.force Force GPU pod deletion.
+        force: false
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.timeoutSeconds Timeout for GPU pod deletion.
+        timeoutSeconds: 600
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.deleteEmptyDir Delete empty dir.
+        deleteEmptyDir: true
 
   ## Toolkit configuration.
   toolkit:
