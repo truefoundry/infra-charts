@@ -71,6 +71,14 @@ helm.sh/chart: {{ include "s3proxy.chart" . }}
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "s3proxy.deploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "s3proxy.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
   Selector labels
   */}}
 {{- define "s3proxy.selectorLabels" -}}
