@@ -503,11 +503,11 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfy-buildkitd-service.replicaCount`                                            | Number of replicas Value kept for future use, kept 1          | `1`                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `tfy-buildkitd-service.tls.enabled`                                             | Enable TLS for the tfy-buildkitd service                      | `true`                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `tfy-buildkitd-service.tls.buildkitClientCertsSecretName`                       | Name of the secret containing the TLS certificate             | `tfy-buildkit-client-certs`                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `postgresql.auth.existingSecret`                                                | Name of the existing secret for PostgreSQL authentication     | `truefoundry-postgresql-auth-secret`                                                                                                                                                                                                                                                                                                                                                                                             |
+| `postgresql.auth.existingSecret`                                                | Name of the existing secret for PostgreSQL authentication     | `truefoundry-creds`                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `postgresql.auth.database`                                                      | Name of the database for PostgreSQL                           | `truefoundry`                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `postgresql.image.registry`                                                     |                                                               | `tfy.jfrog.io/tfy-mirror`                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `postgresql.image.repository`                                                   |                                                               | `bitnami/postgresql`                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `postgresql.image.tag`                                                          |                                                               | `16.2.0-debian-12-r12`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `postgresql.image.tag`                                                          |                                                               | `16.6.0-debian-12-r2`                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 ### tfyController Truefoundry tfy controller settings
 
@@ -611,19 +611,94 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.config.websocket.enabled`               | Bool to enable websocket                              | `true`                                                       |
 | `tfyNats.natsBox.enabled`                        | Bool to enable NATS Box                               | `false`                                                      |
 | `tfyNats.reloader.image.repository`              | Reloader image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader` |
-| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.14.3`                                                     |
+| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.17.2`                                                     |
 | `tfyNats.reloader.enabled`                       | Bool to enable config reloader                        | `true`                                                       |
 | `tfyNats.reloader.patch`                         | Nats Reloader patches                                 | `[]`                                                         |
 | `tfyNats.promExporter.image.repository`          | Exporter image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter`    |
-| `tfyNats.promExporter.image.tag`                 | Exporter image tag                                    | `0.15.0`                                                     |
+| `tfyNats.promExporter.image.tag`                 | Exporter image tag                                    | `0.17.3`                                                     |
 | `tfyNats.promExporter.enabled`                   | Bool to enable Prometheus exporter                    | `true`                                                       |
 | `tfyNats.promExporter.patch`                     | Nats Prom Exporter patches                            | `[]`                                                         |
 | `tfyNats.promExporter.podMonitor.enabled`        | Bool to enable pod monitor                            | `true`                                                       |
 | `tfyNats.promExporter.podMonitor.merge`          | Additional kustomize patches for the pod monitor      | `{}`                                                         |
-| `tfyNats.container.image.tag`                    | Container image tag                                   | `2.10.24-alpine3.21`                                         |
+| `tfyNats.container.image.tag`                    | Container image tag                                   | `2.11.5-alpine`                                              |
 | `tfyNats.container.image.repository`             | Container image repository                            | `tfy.jfrog.io/tfy-mirror/nats`                               |
 | `tfyNats.serviceAccount.enabled`                 | Specifies whether a service account should be created | `true`                                                       |
 | `tfyNats.serviceAccount.annotations`             | Annotations to add to the service account             | `{}`                                                         |
 | `tfyNats.serviceAccount.name`                    | The name of the service account to use.               | `truefoundry-tfy-nats`                                       |
 | `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                   | `{}`                                                         |
+
+
+## Install TrueFoundry with External Secret Manager
+
+### Step 1: Create the secrets using an external secret manager
+
+```yaml
+apiVersion: v1
+stringData:
+  CLICKHOUSE_PASSWORD: <random_password>
+kind: Secret
+metadata:
+  name: truefoundry-clickhouse-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  .dockerconfigjson: <to_be_provided_by_truefoundry>
+kind: Secret
+metadata:
+  name: truefoundry-image-pull-secret
+type: kubernetes.io/dockerconfigjson
+---
+apiVersion: v1
+data:
+  DB_HOST: <Release.Name>-postgresql.<Release.Namespace>.svc.cluster.local
+  DB_NAME: truefoundry
+  DB_PASSWORD: <random_password>
+  DB_USERNAME: truefoundry
+  TFY_API_KEY: <to_be_provided_by_truefoundry>
+kind: Secret
+metadata:
+  name: truefoundry-creds
+type: Opaque
+---
+apiVersion: v1
+data:
+  NATS_CONTROLPLANE_ACCOUNT_SEED: <to_be_provided_by_truefoundry>
+kind: Secret
+metadata:
+  name: truefoundry-tfy-nats-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  resolver.conf: <to_be_provided_by_truefoundry>
+kind: Secret
+metadata:
+  name: tfy-nats-accounts
+type: Opaque
+```
+
+Note: Replace <random_password> placeholders with a strong password string, `Release.Name` and `Release.Namespace` with helm release name and namespace, and replace all <to_be_provided_by_truefoundry> with values provided by the TrueFoundry team.
+
+### Step 2: Patch to values
+
+Apply following patch to your values file:
+
+```yaml
+global:
+  existingTruefoundryCredsSecret: truefoundry-creds
+  existingTruefoundryImagePullSecretName: truefoundry-image-pull-secret
+truefoundryBootstrap:
+  enabled: false
+tfyNats:
+  podTemplate:
+    patch:
+      - op: add
+        path: /spec/volumes/-
+        value:
+          name: resolver-volume
+          secret:
+            secretName: tfy-nats-accounts
+            defaultMode: 420
+```

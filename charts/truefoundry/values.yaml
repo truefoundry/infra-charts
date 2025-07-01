@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.66.0
+  controlPlaneChartVersion: 0.66.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -1494,9 +1494,14 @@ postgresql:
   ## postgresql.auth PostgreSQL authentication configuration
   auth:
     ## @param postgresql.auth.existingSecret Name of the existing secret for PostgreSQL authentication
-    existingSecret: "truefoundry-postgresql-auth-secret"
+    existingSecret: "truefoundry-creds"
     ## @param postgresql.auth.database Name of the database for PostgreSQL
     database: "truefoundry"
+    ## @skip postgresql.auth.secretKeys Secret keys for PostgreSQL authentication
+    secretKeys:
+      userPasswordKey: DB_PASSWORD
+      adminPasswordKey: DB_PASSWORD
+      replicationPasswordKey: DB_PASSWORD
   ## postgresql.image Image for PostgreSQL
   image:
     ## @param postgresql.image.registry
@@ -1504,7 +1509,7 @@ postgresql:
     ## @param postgresql.image.repository
     repository: bitnami/postgresql
     ## @param postgresql.image.tag
-    tag: 16.2.0-debian-12-r12
+    tag: 16.6.0-debian-12-r2
   ## postgresql.primary Primary PostgreSQL settings
   primary:
     ## @skip postgresql.primary.tolerations Tolerations for the primary PostgreSQL pod
@@ -1847,7 +1852,7 @@ tfyNats:
       ## @param tfyNats.reloader.image.repository Reloader image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader
       ## @param tfyNats.reloader.image.tag Reloader image tag
-      tag: "0.14.3"
+      tag: "0.17.2"
     ## @param tfyNats.reloader.enabled Bool to enable config reloader
     enabled: true
     ## @param tfyNats.reloader.patch [array] Nats Reloader patches
@@ -1872,7 +1877,7 @@ tfyNats:
       ## @param tfyNats.promExporter.image.repository Exporter image repository
       repository: tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter
       ## @param tfyNats.promExporter.image.tag Exporter image tag
-      tag: "0.15.0"
+      tag: "0.17.3"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
     ## @param tfyNats.promExporter.patch [array] Nats Prom Exporter patches
@@ -1903,7 +1908,7 @@ tfyNats:
     ## tfyNats.container.image Container image configuration
     image:
       ## @param tfyNats.container.image.tag Container image tag
-      tag: 2.10.24-alpine3.21
+      tag: 2.11.5-alpine
       ## @param tfyNats.container.image.repository Container image repository
       repository: tfy.jfrog.io/tfy-mirror/nats
     ## @skip tfyNats.container.patch Container patches
