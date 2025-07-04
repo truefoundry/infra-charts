@@ -43,13 +43,13 @@ spec:
             password: {{ .Values.truefoundry.database.password }}
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- else }}
           tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- else }}
           affinity: {}
           {{- end }}
@@ -72,13 +72,13 @@ spec:
           primary:
             {{- if $mergedTolerations }}
             tolerations:
-              {{- toYaml $mergedTolerations | nindent 16 }}
+              {{- toYaml $mergedTolerations | nindent 14 }}
             {{- else }}
             tolerations: []
             {{- end }}
             {{- if $mergedAffinity }}
             affinity:
-              {{- toYaml $mergedAffinity | nindent 16 }}
+              {{- toYaml $mergedAffinity | nindent 14 }}
             {{- else }}
             affinity: {}
             {{- end }}
@@ -118,7 +118,7 @@ spec:
               - op: add
                 path: /spec/tolerations
                 value:
-                {{- toYaml $mergedTolerations | nindent 18 }}
+                  {{- toYaml $mergedTolerations | nindent 18 }}
               {{- else }}
               - op: add
                 path: /spec/tolerations
@@ -128,7 +128,7 @@ spec:
               - op: add
                 path: /spec/affinity
                 value:
-                {{- toYaml $mergedAffinity | nindent 18 }}
+                  {{- toYaml $mergedAffinity | nindent 18 }}
               {{- else }}
               - op: add
                 path: /spec/affinity
@@ -140,13 +140,13 @@ spec:
         tfy-buildkitd-service:
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- else }}
           tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- else }}
           affinity: {}
           {{- end }}
@@ -161,13 +161,13 @@ spec:
             annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 12 }}
           {{- else }}
           tolerations: []
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- else }}
           affinity: {}
           {{- end }}
