@@ -13,7 +13,7 @@ AUTO_CONFIRM=false
 
 # Display usage information
 show_help() {
-    cat << EOF
+    cat <"< EOF"
 Usage: $0 [PROVIDER] [CONFIG_FILE] [OPTIONS]
 
 PROVIDER:
@@ -856,6 +856,38 @@ main() {
             ;;
     esac
 
+    # Early authentication check - fail fast if not authenticated
+    log_info "Step 0: Checking cloud provider authentication..."
+    case $cloud_provider in
+        aws)
+            if ! aws sts get-caller-identity >/dev/null 2>&1; then
+                log_error "CRITICAL: AWS authentication required."
+                log_error "Please run one of the following:"
+                log_error "  - aws configure (for access keys)"
+                log_error "  - aws sso login --profile <profile> (for SSO)"
+                log_error "  - Use appropriate IAM role (for EC2/Lambda)"
+                exit 1
+            fi
+            log_success "AWS authentication verified"
+            ;;
+        gcp)
+            if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | head -n1 >/dev/null 2>&1; then
+                log_error "CRITICAL: GCP authentication required."
+                log_error "Please run: gcloud auth login"
+                exit 1
+            fi
+            log_success "GCP authentication verified"
+            ;;
+        azure)
+            if ! az account show >/dev/null 2>&1; then
+                log_error "CRITICAL: Azure authentication required."
+                log_error "Please run: az login"
+                exit 1
+            fi
+            log_success "Azure authentication verified"
+            ;;
+    esac
+
     # Step 1: Detect system
     log_info "Step 1: Detecting system configuration..."
     detect_system
@@ -885,6 +917,7 @@ main() {
         if ! create_backend "$cloud_provider" "$config_file"; then
             log_error "Failed to create backend storage. Deployment may fail."
             exit 1
+            return 1
         fi
         log_success "Backend storage setup complete"
     else
