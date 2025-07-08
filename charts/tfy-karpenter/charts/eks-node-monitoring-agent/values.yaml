@@ -2,38 +2,62 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# -- Docker registry pull secrets
+## @section Global parameters
+## @param imagePullSecrets [array] Image pull secret
+##
 imagePullSecrets: []
-# -- A name override for the chart
+## @param nameOverride Name override for the chart
+##
 nameOverride: "eks-node-monitoring-agent"
-# -- A fullname override for the chart
+## @param fullnameOverride Fullname override for the chart
+##
 fullnameOverride: "eks-node-monitoring-agent"
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  ## @param serviceAccount.create Create the service account
+  ##
   create: true
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  ## @param serviceAccount.name Name of the service account
+  ##
   name:
+  ## @param serviceAccount.annotations [object] Annotations for the service account
+  ##
   annotations: {}
 
+## @param updateStrategy [object] Update strategy for all daemon sets
+##
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: "10%"
+
+## @section Node agent parameters
+##
 nodeAgent:
   image:
-    # -- Image tag for the eks-node-monitoring-agent
+    ## @param nodeAgent.image.tag Tag for the image
+    ##
     tag: v1.2.0-eksbuild.1
-    # -- ECR repository domain for the eks-node-monitoring-agent
+    ## @param nodeAgent.image.domain Domain for the image
+    ##
     domain: amazonaws.com
-    # -- ECR repository region for the eks-node-monitoring-agent
+    ## @param nodeAgent.image.region Region for the image
+    ##
     region: us-west-2
-    # -- ECR repository endpoint for the eks-node-monitoring-agent
+    ## @param nodeAgent.image.endpoint Endpoint for the image
+    ##
     endpoint: ecr
-    # -- ECR repository account number for the eks-node-monitoring-agent
+    ## @param nodeAgent.image.account Account for the image
+    ##
     account: "602401143452"
-    # -- Container pull policyfor the eks-node-monitoring-agent
+    ## @param nodeAgent.image.pullPolicy Pull policy for the image
+    ##
     pullPolicy: IfNotPresent
-  # -- List of addittional container arguments for the eks-node-monitoring-agent
+  ## @param nodeAgent.additionalArgs [array] Additional arguments for the image
+  ##
   additionalArgs: []
-  # -- Map of pod affinities for the eks-node-monitoring-agent
+  ## @param nodeAgent.affinity [object] Affinity for the image
+  ##
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -57,7 +81,8 @@ nodeAgent:
               values:
                 - amd64
                 - arm64
-  # -- Container resources for the eks-node-monitoring-agent
+  ## @param nodeAgent.resources [object] Resources for the eks-node-monitoring-agent
+  ##
   resources:
     requests:
       cpu: 10m
@@ -65,31 +90,42 @@ nodeAgent:
     limits:
       cpu: 250m
       memory: 100Mi
-  # -- Container Security context for the eks-node-monitoring-agent
+  ## @param nodeAgent.securityContext [object] Security context for the eks-node-monitoring-agent
+  ##
   securityContext:
     privileged: true
     capabilities:
       add:
         - NET_ADMIN
-  # -- Deployment tolerations for the eks-node-monitoring-agent
+  ## @param nodeAgent.tolerations [array] Tolerations for the eks-node-monitoring-agent
+  ##
   tolerations:
     - operator: Exists
 
+## @section DCGM agent parameters
+##
 dcgmAgent:
   image:
-    # -- Image tag for the dcgm-exporter
+    ## @param dcgmAgent.image.tag Tag for the image
+    ##
     tag: 3.3.7-3.5.0-ubuntu22.04
-    # -- ECR repository domain for the dcgm-exporter
+    ## @param dcgmAgent.image.domain Domain for the image
+    ##
     domain: amazonaws.com
-    # -- ECR repository region for the dcgm-exporter
+    ## @param dcgmAgent.image.region Region for the image
+    ##
     region: us-west-2
-    # -- ECR repository endpoint for the dcgm-exporter
+    ## @param dcgmAgent.image.endpoint Endpoint for the image
+    ##
     endpoint: ecr
-    # -- ECR repository account number for the dcgm-exporter
+    ## @param dcgmAgent.image.account Account for the image
+    ##
     account: "602401143452"
-    # -- Container pull policy for the dcgm-exporter
+    ## @param dcgmAgent.image.pullPolicy Pull policy for the image
+    ##
     pullPolicy: IfNotPresent
-  # -- Map of dcgm pod affinities
+  ## @param dcgmAgent.affinity [object] Affinity for the dcgm-exporter
+  ##
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -116,13 +152,9 @@ dcgmAgent:
             operator: In
             values:
               - amd64
-  # -- Container resources for the dcgm deployment
+  ## @param dcgmAgent.resources [object] Resources for the dcgm-exporter
+  ##
   resources: {}
-  # -- Deployment tolerations for the dcgm
+  ## @param dcgmAgent.tolerations [array] Tolerations for the dcgm-exporter
+  ##
   tolerations: []
-
-# -- Update strategy for all daemon sets
-updateStrategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxUnavailable: "10%"
