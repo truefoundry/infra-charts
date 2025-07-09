@@ -238,11 +238,11 @@ limits:
 {{- if .Values.replicaCount -}}
 {{ .Values.replicaCount }}
 {{- else if eq $tier "small" -}}
-2
+1
 {{- else if eq $tier "medium" -}}
-2
-{{- else if eq $tier "large" -}}
 3
+{{- else if eq $tier "large" -}}
+5
 {{- end }}
 {{- end }}
 
