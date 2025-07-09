@@ -35,7 +35,7 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.10.1" ;;
+        terraform) echo "1.12.2" ;;
         kubectl) echo "1.31.8" ;;
         helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
@@ -48,7 +48,7 @@ get_tool_required_version() {
 }
 
 # System information
-declare OS PACKAGE_MANAGER ARCH
+declare OS PACKAGE_MANAGER ARCH HAS_SUDO
 
 # Logging functions
 log() {
@@ -70,52 +70,28 @@ log_error() { log "$RED" "$1"; }
 # Utility functions
 tool_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# Function to check if sudo is available and can be used (only when needed)
-check_sudo_if_needed() {
-    # Skip sudo check on macOS for brew-installed tools
-    if [[ "$OS" == "darwin" ]] && [[ "$PACKAGE_MANAGER" == "brew" ]]; then
-        return 0
-    fi
-    
+# Function to check if sudo is available and can be used
+check_sudo() {
+    HAS_SUDO=false
     if tool_exists sudo; then
-        # Check if user has sudo privileges by attempting a harmless command
-        if sudo -v 2>/dev/null; then
-            log_debug "Sudo access is available"
-            return 0
-        else
-            log_debug "Sudo access check failed"
-            return 1
-        fi
+        # Just check if sudo command exists, don't validate credentials yet
+        HAS_SUDO=true
+        log_debug "Sudo command is available"
     else
         log_debug "Sudo command not found"
-        return 1
     fi
 }
 
-# Function to check if a tool is installed via brew on macOS
-is_brew_installed() {
-    local tool=$1
-    if [[ "$OS" == "darwin" ]] && tool_exists brew; then
-        brew list "$tool" &>/dev/null
-    else
-        return 1
-    fi
-}
-
-# Function to run command with sudo if available and needed
+# Function to run command with sudo if available
 run_with_sudo() {
-    # On macOS with brew, don't use sudo
-    if [[ "$OS" == "darwin" ]] && [[ "$PACKAGE_MANAGER" == "brew" ]]; then
-        "$@"
-        return $?
-    fi
-    
-    # Check sudo only when we need it
-    if check_sudo_if_needed; then
+    if [ "$HAS_SUDO" = true ]; then
+        # Only prompt for sudo password when actually needed
+        if ! sudo -n true 2>/dev/null; then
+            log_info "Administrator privileges required for: $*"
+        fi
         sudo "$@"
     else
-        log_error "Root/sudo access required for this operation"
-        return 1
+        "$@"
     fi
 }
 
@@ -160,6 +136,9 @@ get_essential_tools() {
 
 # System detection
 detect_system() {
+    check_sudo
+    log_debug "System check: sudo=$HAS_SUDO"
+
     if [[ "$OSTYPE" == "linux-gnu"* || "$OSTYPE" == "linux-musl"* ]]; then
         OS="linux"
         for pm in tdnf apt-get yum dnf apk; do
@@ -172,10 +151,12 @@ detect_system() {
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="darwin"
         if ! tool_exists brew; then
-            log_info "Homebrew not found. Installing Homebrew..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            # Add homebrew to PATH for current session
-            eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null
+            if confirm_installation "Homebrew"; then
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            else
+                log_error "Homebrew is required for macOS. Exiting."
+                exit 1
+            fi
         fi
         PACKAGE_MANAGER="brew"
     else
@@ -201,7 +182,6 @@ install_essential_utilities() {
     for tool in $tools_list; do
         tool_exists "$tool" || missing_tools+=("$tool")
     done
-    
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_info "Missing utilities: ${missing_tools[*]}"
         if [ "$AUTO_CONFIRM" = true ]; then
@@ -213,51 +193,20 @@ install_essential_utilities() {
                 return 1
             fi
         fi
-        
         log_debug "Installing utilities... ${missing_tools[*]}"
         case $PACKAGE_MANAGER in
             apt-get)
-                if ! run_with_sudo apt-get update 2>&1; then
-                    log_error "Failed to update package lists"
-                    return 1
-                fi
-                if ! run_with_sudo apt-get install -y "${missing_tools[@]}" 2>&1; then
-                    log_error "Failed to install utilities"
-                    return 1
-                fi
+                run_with_sudo apt-get update 2>&1
+                run_with_sudo apt-get install -y "${missing_tools[@]}" 2>&1
                 ;;
-            yum|dnf) 
-                if ! run_with_sudo "$PACKAGE_MANAGER" update -y 2>&1; then
-                    log_error "Failed to update package lists"
-                    return 1
-                fi
-                if ! run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" 2>&1; then
-                    log_error "Failed to install utilities"
-                    return 1
-                fi
-                ;;
-            apk) 
-                if ! run_with_sudo apk update 2>&1; then
-                    log_error "Failed to update package lists"
-                    return 1
-                fi
-                if ! run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}"; then
-                    log_error "Failed to install utilities"
-                    return 1
-                fi
-                ;;
-            brew) 
-                if ! brew install --quiet "${missing_tools[@]}" 2>&1; then
-                    log_error "Failed to install utilities"
-                    return 1
-                fi
-                ;;
+            yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y -q "${missing_tools[@]}" 2>&1 ;;
+            apk) run_with_sudo apk update 2>&1 && run_with_sudo apk add --no-cache --quiet "${missing_tools[@]}" ;;
+            brew) brew install --quiet "${missing_tools[@]}" 2>&1 ;;
         esac
         log_success "Utilities installed successfully"
     else
         log_success "All required utilities are installed"
     fi
-    return 0
 }
 
 get_tool_version() {
@@ -302,15 +251,13 @@ install_tool() {
 
     case $tool in
         terraform)
-            # On macOS, prefer brew installation
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed terraform; then
-                    log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
-                    brew upgrade terraform || brew install terraform
-                else
-                    log_debug "Installing terraform via brew..."
-                    brew install terraform
-                fi
+            local terraform_path
+            if tool_exists terraform; then
+                terraform_path=$(which terraform)
+            fi
+            if [[ $terraform_path == *"homebrew"* ]]; then
+                log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
+                brew upgrade terraform
             else
                 log_debug "Downloading terraform version $version"
                 wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
@@ -318,15 +265,13 @@ install_tool() {
             fi
             ;;
         kubectl)
-            # On macOS, prefer brew installation
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed kubernetes-cli; then
-                    log_debug "Kubectl is installed via brew. Using brew to upgrade kubectl..."
-                    brew upgrade kubernetes-cli || brew install kubernetes-cli
-                else
-                    log_debug "Installing kubectl via brew..."
-                    brew install kubernetes-cli
-                fi
+            local kubectl_path
+            if tool_exists kubectl; then
+                kubectl_path=$(which kubectl)
+            fi
+            if [[ $kubectl_path == *"homebrew"* ]]; then
+                log_debug "Kubectl is installed via brew. Using brew to upgrade kubectl..."
+                brew upgrade kubectl
             else
                 log_debug "Downloading kubectl version $version"
                 wget -q "https://dl.k8s.io/release/v${version}/bin/${OS}/${ARCH}/kubectl" -O kubectl
@@ -334,145 +279,104 @@ install_tool() {
             fi
             ;;
         helm)
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed helm; then
-                    log_debug "Helm is installed via brew. Using brew to upgrade helm..."
-                    brew upgrade helm || brew install helm
-                else
-                    log_debug "Installing helm via brew..."
-                    brew install helm
-                fi
-            else
-                log_debug "Downloading helm version $version"
-                wget -q "https://get.helm.sh/helm-v${version}-${OS}-${ARCH}.tar.gz" -O helm.tar.gz
-                tar -zxf helm.tar.gz && run_with_sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
-            fi
+            log_debug "Downloading helm version $version"
+            wget -q "https://get.helm.sh/helm-v${version}-${OS}-${ARCH}.tar.gz" -O helm.tar.gz
+            tar -zxf helm.tar.gz && run_with_sudo mv "${OS}-${ARCH}/helm" /usr/local/bin/
             ;;
         aws)
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed awscli; then
-                    log_debug "AWS CLI is installed via brew. Using brew to upgrade awscli..."
-                    brew upgrade awscli || brew install awscli
-                else
-                    log_debug "Installing AWS CLI via brew..."
-                    brew install awscli
-                fi
-            else
-                case $OS in
-                    linux)
-                        if [[ "$ARCH" == "arm64" ]]; then
-                            curl -s "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-                        else
-                            curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                        fi
-                        unzip -q awscliv2.zip && run_with_sudo ./aws/install --update
-                        rm -rf aws awscliv2.zip
-                        ;;
-                esac
-            fi
+            case $OS in
+                linux)
+                    if [[ "$ARCH" == "arm64" ]]; then
+                        curl -s "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+                    else
+                        curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    fi
+                    unzip -q awscliv2.zip && run_with_sudo ./aws/install --update
+                    rm -rf aws awscliv2.zip
+                    ;;
+                darwin)
+                    curl -s "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+                    run_with_sudo installer -pkg AWSCLIV2.pkg -target /
+                    rm -f AWSCLIV2.pkg
+                    ;;
+            esac
             ;;
         gcloud)
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed google-cloud-sdk; then
-                    log_debug "Google Cloud SDK is installed via brew. Using brew to upgrade..."
-                    brew upgrade google-cloud-sdk || brew install google-cloud-sdk
-                else
-                    log_debug "Installing Google Cloud SDK via brew..."
-                    brew install google-cloud-sdk
-                fi
-            else
-                case $OS in
-                    linux|darwin)
-                        # Download and install from archive
-                        local gcloud_archive install_dir
-                        install_dir="$HOME/.google-cloud-sdk"
+            case $OS in
+                linux|darwin)
+                    # Download and install from archive
+                    local gcloud_archive install_dir
+                    install_dir="$HOME/.google-cloud-sdk"
 
-                        if [[ "$ARCH" == "arm64" ]]; then
-                            gcloud_archive="google-cloud-cli-${OS}-arm.tar.gz"
-                        else
-                            gcloud_archive="google-cloud-cli-${OS}-x86_64.tar.gz"
-                        fi
+                    if [[ "$ARCH" == "arm64" ]]; then
+                        gcloud_archive="google-cloud-cli-${OS}-arm.tar.gz"
+                    else
+                        gcloud_archive="google-cloud-cli-${OS}-x86_64.tar.gz"
+                    fi
 
-                        log_debug "Downloading gcloud archive: $gcloud_archive"
-                        curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${gcloud_archive}"
-                        tar -xf "$gcloud_archive"
-                        rm -f "$gcloud_archive"
+                    log_debug "Downloading gcloud archive: $gcloud_archive"
+                    curl -O "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/${gcloud_archive}"
+                    tar -xf "$gcloud_archive"
+                    rm -f "$gcloud_archive"
 
-                        # Move to install directory if it doesn't exist
-                        if [[ ! -d "$install_dir" ]]; then
-                            mv google-cloud-sdk "$install_dir"
-                        else
-                            rm -rf google-cloud-sdk
-                        fi
+                    # Move to install directory if it doesn't exist
+                    if [[ ! -d "$install_dir" ]]; then
+                        mv google-cloud-sdk "$install_dir"
+                    else
+                        rm -rf google-cloud-sdk
+                    fi
 
-                        # Run install script with appropriate flags
-                        "$install_dir/install.sh" --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.$(basename "$SHELL")rc"
+                    # Run install script with appropriate flags
+                    "$install_dir/install.sh" --quiet --command-completion true --path-update true --usage-reporting false --rc-path "$HOME/.$(basename "$SHELL")rc"
 
-                        # Add to PATH for immediate use
-                        export PATH="$install_dir/bin:$PATH"
+                    # Add to PATH for immediate use
+                    export PATH="$install_dir/bin:$PATH"
 
-                        log_info "The installer has updated your shell configuration. You may need to restart your shell or source your rc file."
-                        ;;
-                esac
-            fi
+                    log_info "The installer has updated your shell configuration. You may need to restart your shell or source your rc file."
+                    ;;
+            esac
             # Skip initialization as it requires user interaction
             log_debug "Skipping gcloud init as it requires user interaction. Please run 'gcloud init' manually after installation."
             ;;
         az)
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed azure-cli; then
-                    log_debug "Azure CLI is installed via brew. Using brew to upgrade..."
-                    brew upgrade azure-cli || brew install azure-cli
-                else
-                    log_debug "Installing Azure CLI via brew..."
+            case $OS in
+                linux)
+                    case $PACKAGE_MANAGER in
+                        apt-get)
+                            curl -sL https://aka.ms/InstallAzureCLIDeb | run_with_sudo bash
+                            ;;
+                        yum|dnf)
+                            # Import Microsoft repository key
+                            run_with_sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+
+                            # Add Azure CLI repository
+                            run_with_sudo dnf install -y https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
+
+                            # Install Azure CLI
+                            run_with_sudo "$PACKAGE_MANAGER" install -y azure-cli
+                            ;;
+                        *)
+                            log_error "Unsupported package manager for Azure CLI installation"
+                            return 1
+                            ;;
+                    esac
+                    ;;
+                darwin)
                     brew install azure-cli
-                fi
-            else
-                case $OS in
-                    linux)
-                        case $PACKAGE_MANAGER in
-                            apt-get)
-                                curl -sL https://aka.ms/InstallAzureCLIDeb | run_with_sudo bash
-                                ;;
-                            yum|dnf)
-                                # Import Microsoft repository key
-                                run_with_sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-
-                                # Add Azure CLI repository
-                                run_with_sudo dnf install -y https://packages.microsoft.com/config/rhel/8/packages-microsoft-prod.rpm
-
-                                # Install Azure CLI
-                                run_with_sudo "$PACKAGE_MANAGER" install -y azure-cli
-                                ;;
-                            *)
-                                log_error "Unsupported package manager for Azure CLI installation"
-                                return 1
-                                ;;
-                        esac
-                        ;;
-                esac
-            fi
+                    ;;
+            esac
             ;;
         jq)
-            if [[ "$OS" == "darwin" ]]; then
-                if is_brew_installed jq; then
-                    log_debug "jq is installed via brew. Using brew to upgrade..."
-                    brew upgrade jq || brew install jq
-                else
-                    log_debug "Installing jq via brew..."
-                    brew install jq
-                fi
-            else
-                case $OS in
-                    linux)
-                        case $PACKAGE_MANAGER in
-                            apt-get) run_with_sudo apt-get update && run_with_sudo apt-get install -y jq ;;
-                            yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y jq ;;
-                            apk) run_with_sudo apk add --no-cache jq ;;
-                        esac
-                        ;;
-                esac
-            fi
+            case $OS in
+                linux)
+                    case $PACKAGE_MANAGER in
+                        apt-get) run_with_sudo apt-get update && run_with_sudo apt-get install -y jq ;;
+                        yum|dnf) run_with_sudo "$PACKAGE_MANAGER" install -y jq ;;
+                        apk) run_with_sudo apk add --no-cache jq ;;
+                    esac
+                    ;;
+                darwin) brew install jq ;;
+            esac
             ;;
         gke-gcloud-auth-plugin)
             tool_exists gcloud || { log_error "gcloud must be installed first"; return 1; }
@@ -484,22 +388,47 @@ install_tool() {
     log_debug "Finished installing $tool"
 }
 
-# Simple function to verify and install tools (checks first, then installs if needed)
+# Function to check and enforce Terraform version
+enforce_terraform_version() {
+    local required_version current_version
+    required_version=$(get_tool_required_version "terraform")
+
+    if ! tool_exists terraform; then
+        log_info "Terraform not found. Installing version $required_version..."
+        install_tool "terraform"
+        return
+    fi
+
+    current_version=$(get_tool_version "terraform")
+    if ! version_compare "$current_version" "$required_version"; then
+        log_info "Terraform $current_version found. Required version is $required_version. Upgrading..."
+        install_tool "terraform"
+    else
+        log_success "Terraform $current_version is already installed and meets the minimum required version"
+    fi
+}
+
 verify_tools() {
     log_debug "Verifying tools..."
     local cloud_provider=$1
     local missing_tools=()
     local install_failed=()
 
-    # Step 1: Check what's missing (NO SUDO)
-    log_info "Checking tool requirements..."
-    
-    # Check common tools
+    # First, make sure Terraform is installed with the correct version
+    enforce_terraform_version
+    log_debug "Terraform verification complete"
+    # Check other common tools (skip terraform as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
-        if ! tool_exists "$tool"; then
-            missing_tools+=("$tool")
-        elif upgrade_tool_version "$tool"; then
-            missing_tools+=("$tool")
+        if [ "$tool" != "terraform" ]; then
+            if ! tool_exists "$tool"; then
+                if confirm_installation "$tool"; then
+                    install_tool "$tool" || install_failed+=("$tool")
+                else
+                    missing_tools+=("$tool")
+                fi
+            elif upgrade_tool_version "$tool"; then
+                install_tool "$tool" || install_failed+=("$tool")
+            fi
         fi
     done
 
@@ -507,52 +436,49 @@ verify_tools() {
     read -r -a cloud_tools <<< "$(get_cloud_tools "$cloud_provider")"
     for tool in "${cloud_tools[@]}"; do
         if ! tool_exists "$tool"; then
-            missing_tools+=("$tool")
+            if confirm_installation "$tool"; then
+                install_tool "$tool" || install_failed+=("$tool")
+            else
+                missing_tools+=("$tool")
+            fi
         elif upgrade_tool_version "$tool"; then
-            missing_tools+=("$tool")
+            install_tool "$tool" || install_failed+=("$tool")
         fi
     done
 
-    # Step 2: Install if needed (SUDO only when installing)
-    if [ ${#missing_tools[@]} -ne 0 ]; then
-        log_info "Tools need installation/upgrade: ${missing_tools[*]}"
-        
-        for tool in "${missing_tools[@]}"; do
-            if confirm_installation "$tool"; then
-                log_info "Installing/upgrading $tool..."
-                if ! install_tool "$tool"; then
-                    log_error "Failed to install $tool"
-                    install_failed+=("$tool")
-                fi
-            else
-                log_error "Skipping $tool installation"
-                install_failed+=("$tool")
-            fi
-        done
-    else
-        log_success "All required tools are already installed and up to date"
-    fi
-
-    # Check for failures
-    if [ ${#install_failed[@]} -ne 0 ]; then
-        log_error "Failed to install tools: ${install_failed[*]}"
-        log_error "Cannot proceed without these tools."
+    [ ${#missing_tools[@]} -ne 0 ] && {
+        log_error "Tools not installed (skipped): ${missing_tools[*]}"
         return $MISSING_TOOLS
-    fi
+    }
 
-    log_success "All tools verified and installed"
+    [ ${#install_failed[@]} -ne 0 ] && {
+        log_error "Tools failed to install: ${install_failed[*]}"
+        return $MISSING_TOOLS
+    }
+
     return $SUCCESS
 }
 
+install_cloud_tools() {
+    local cloud_provider=$1
+    read -r -a tools <<< "$(get_cloud_tools "$cloud_provider")"
 
+    for tool in "${tools[@]}"; do
+        if ! tool_exists "$tool"; then
+            if confirm_installation "$tool"; then
+                log_debug "Installing $tool"
+                install_tool "$tool"
+            else
+                return $MISSING_TOOLS
+            fi
+        fi
+    done
+}
 
 create_backend() {
     local cloud_provider=$1
     local manifest_inputs
-    if ! manifest_inputs=$(cat "$2"); then
-        log_error "Failed to read config file: $2"
-        return 1
-    fi
+    manifest_inputs=$(cat "$2")
     log_debug "Processing backend configuration from: $2"
     log_info "Creating backend infrastructure for $cloud_provider"
 
@@ -572,25 +498,11 @@ create_backend() {
             log_debug "  DynamoDB Table: $dynamodb_table"
 
             log_info "Configuring AWS authentication"
-            
-            # Check if we already have working AWS credentials (e.g., CloudShell, EC2 instance role)
-            if aws sts get-caller-identity >/dev/null 2>&1; then
-                local caller_identity
-                caller_identity=$(aws sts get-caller-identity --output text --query 'Arn' 2>/dev/null)
-                log_success "AWS credentials already available: $caller_identity"
-                log_info "Skipping profile configuration (using existing credentials)"
-            elif [[ $auth_type == "profile" ]]; then
+            if [[ $auth_type == "profile" ]]; then
                 local profile
                 profile=$(echo "$manifest_inputs" | jq -r '.manifest.auth.profile')
-                
-                # Handle case where profile might be null/empty but we want to try anyway
-                if [[ -z "$profile" || "$profile" == "null" ]]; then
-                    log_debug "No profile specified, attempting default credentials"
-                else
-                    log_debug "Using AWS profile: $profile"
-                    export AWS_PROFILE="$profile"
-                fi
-                
+                log_debug "Using AWS profile: $profile"
+                export AWS_PROFILE="$profile"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
                     log_error "AWS authentication failed with profile '${profile:-default}'."
@@ -598,7 +510,7 @@ create_backend() {
                     log_error "  1. Profile exists: aws configure list-profiles"
                     log_error "  2. If using SSO: aws sso login --profile '${profile:-default}'"
                     log_error "  3. Profile configuration: aws configure list"
-                    return 1
+                    exit 1
                 fi
                 log_success "AWS authentication successful using profile: ${profile:-default}"
             else
@@ -610,27 +522,32 @@ create_backend() {
                 export AWS_SECRET_ACCESS_KEY="$secret_key"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
-                    log_error "AWS authentication failed. Please check your access key and secret"
-                    return 1
+                    log_error "AWS authentication failed using access key credentials."
+                    log_error "Please check:"
+                    log_error "  1. Access key ID is correct and active"
+                    log_error "  2. Secret access key matches the access key ID"
+                    log_error "  3. IAM user has necessary permissions (sts:GetCallerIdentity)"
+                    log_error "  4. No typos in the credentials"
+                    exit 1
                 fi
                 log_success "AWS authentication successful using access key"
             fi
 
             log_info "Creating S3 bucket for Terraform state"
             log_info "Checking if bucket exists $bucket_name"
-            log_debug "Running: aws s3api head-bucket --bucket $bucket_name --region $region"
+            log_info "Running: aws s3api head-bucket --bucket $bucket_name --region $region"
             if ! aws s3api head-bucket --bucket "$bucket_name" --region "$region" 2>/dev/null; then
-                log_info "Creating S3 bucket: $bucket_name"
+                log_info "Running: aws s3api create-bucket --bucket $bucket_name --region $region"
                 if [[ $region == "us-east-1" ]]; then
                     if ! aws s3api create-bucket --bucket "$bucket_name" --region "$region"; then
                         log_error "Failed to create S3 bucket"
-                        return 1
+                        exit 1
                     fi
                 else
                     if ! aws s3api create-bucket --bucket "$bucket_name" --region "$region" \
                         --create-bucket-configuration LocationConstraint="$region"; then
                         log_error "Failed to create S3 bucket"
-                        return 1
+                        exit 1
                     fi
                 fi
                 log_success "Created S3 bucket: $bucket_name"
@@ -641,7 +558,7 @@ create_backend() {
             if [[ $dynamodb_table != "null" ]]; then
                 log_info "Creating DynamoDB table for state locking"
                 if ! aws dynamodb describe-table --table-name "$dynamodb_table" --region "$region" >/dev/null 2>&1; then
-                    log_info "Creating DynamoDB table: $dynamodb_table"
+                    log_info "Running: aws dynamodb create-table --table-name $dynamodb_table --region $region"
                     if ! aws dynamodb create-table \
                         --table-name "$dynamodb_table" \
                         --attribute-definitions AttributeName=LockID,AttributeType=S \
@@ -649,7 +566,7 @@ create_backend() {
                         --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
                         --region "$region"; then
                         log_error "Failed to create DynamoDB table $dynamodb_table in region $region"
-                        return 1
+                        exit 1
                     fi
                     log_success "Created DynamoDB table: $dynamodb_table"
                 else
@@ -665,14 +582,8 @@ create_backend() {
             log_debug "  Bucket: $bucket_name"
             log_debug "  Region: $region"
             if ! gcloud storage buckets describe "gs://$bucket_name" >/dev/null 2>&1; then
-                log_info "Creating GCS bucket $bucket_name"
-                if ! gcloud storage buckets create "gs://$bucket_name" --location="$region"; then
-                    log_error "Failed to create GCS bucket"
-                    return 1
-                fi
-                log_success "Created GCS bucket: $bucket_name"
-            else
-                log_info "GCS bucket already exists: $bucket_name"
+                log_debug "Creating GCS bucket $bucket_name"
+                gcloud storage buckets create "gs://$bucket_name" --location="$region"
             fi
             ;;
         azure)
@@ -686,49 +597,29 @@ create_backend() {
             log_debug "  Storage Account: $storage_account"
             log_debug "  Container: $container_name"
             log_debug "  Location: $location"
-            
             # Create resource group if needed
             if ! az group show --name "$resource_group" >/dev/null 2>&1; then
-                log_info "Creating resource group $resource_group"
-                if ! az group create --name "$resource_group" --location "$location"; then
-                    log_error "Failed to create resource group"
-                    return 1
-                fi
-                log_success "Created resource group: $resource_group"
-            else
-                log_info "Resource group already exists: $resource_group"
+                log_debug "Creating resource group $resource_group"
+                az group create --name "$resource_group" --location "$location"
             fi
 
             # Create storage account if needed
             if ! az storage account show --name "$storage_account" --resource-group "$resource_group" >/dev/null 2>&1; then
-                log_info "Creating storage account $storage_account"
-                if ! az storage account create \
+                log_debug "Creating storage account $storage_account"
+                az storage account create \
                     --name "$storage_account" \
                     --resource-group "$resource_group" \
                     --location "$location" \
-                    --sku Standard_LRS; then
-                    log_error "Failed to create storage account"
-                    return 1
-                fi
-                log_success "Created storage account: $storage_account"
-            else
-                log_info "Storage account already exists: $storage_account"
+                    --sku Standard_LRS
             fi
 
             # Create container if needed
             if ! az storage container show --name "$container_name" --account-name "$storage_account" >/dev/null 2>&1; then
-                log_info "Creating storage container $container_name"
-                if ! az storage container create --name "$container_name" --account-name "$storage_account"; then
-                    log_error "Failed to create storage container"
-                    return 1
-                fi
-                log_success "Created storage container: $container_name"
-            else
-                log_info "Storage container already exists: $container_name"
+                log_debug "Creating storage container $container_name"
+                az storage container create --name "$container_name" --account-name "$storage_account"
             fi
             ;;
     esac
-    return 0
 }
 
 display_installed_versions() {
@@ -857,37 +748,26 @@ main() {
     esac
 
     # Step 1: Detect system
-    log_info "Step 1: Detecting system configuration..."
     detect_system
-    log_success "System detection complete"
+    log_info "System detection complete"
 
     # Step 2: Install essential utilities
-    log_info "Step 2: Installing essential utilities..."
-    if ! install_essential_utilities; then
-        log_error "Failed to install essential utilities. Cannot proceed."
-        exit $MISSING_TOOLS
-    fi
-    log_success "Essential utilities installation complete"
-
-    # Step 3: Verify tools (checks first, then installs if needed)
-    log_info "Step 3: Verifying required tools..."
+    install_essential_utilities || log_error "Missing essential utilities may affect deployment"
+    log_info "Essential utilities installation complete"
+    # Step 3: Verify and install required tools
     verify_tools "$cloud_provider"
     local verify_status=$?
-    if [ $verify_status -ne $SUCCESS ]; then
-        log_error "Tool verification failed. Cannot proceed to backend setup."
+    if [ $verify_status -eq $MISSING_TOOLS ]; then
+        log_info "Installing missing tools..."
+        install_cloud_tools "$cloud_provider"
+    elif [ $verify_status -ne $SUCCESS ]; then
         exit $verify_status
     fi
-    log_success "Tool verification complete"
-
+    log_info "Tool verification complete"
     # Step 4: Create backend (required for all providers)
     if [ -n "$config_file" ]; then
-        log_info "Step 4: Setting up backend storage for $cloud_provider..."
-        if ! create_backend "$cloud_provider" "$config_file"; then
-            log_error "Failed to create backend storage. Deployment may fail."
-            exit 1
-            return 1
-        fi
-        log_success "Backend storage setup complete"
+        log_info "Setting up backend storage for $cloud_provider"
+        create_backend "$cloud_provider" "$config_file"
     else
         log_error "Config file is required for backend setup"
         exit $INVALID_PROVIDER
