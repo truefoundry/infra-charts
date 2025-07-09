@@ -3,7 +3,7 @@ set -e
 
 readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' NC='\033[0m'
 # Colors and Exit codes
-readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
+readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 
 
 # Tool configurations
 declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
@@ -74,13 +74,9 @@ tool_exists() { command -v "$1" >/dev/null 2>&1; }
 check_sudo() {
     HAS_SUDO=false
     if tool_exists sudo; then
-        # Check if user has sudo privileges by attempting a harmless command
-        if sudo -v 2>/dev/null; then
-            HAS_SUDO=true
-            log_debug "Sudo access is available"
-        else
-            log_debug "Sudo access check failed"
-        fi
+        # Just check if sudo command exists, don't validate credentials yet
+        HAS_SUDO=true
+        log_debug "Sudo command is available"
     else
         log_debug "Sudo command not found"
     fi
@@ -89,6 +85,10 @@ check_sudo() {
 # Function to run command with sudo if available
 run_with_sudo() {
     if [ "$HAS_SUDO" = true ]; then
+        # Only prompt for sudo password when actually needed
+        if ! sudo -n true 2>/dev/null; then
+            log_info "Administrator privileges required for: $*"
+        fi
         sudo "$@"
     else
         "$@"
@@ -150,7 +150,14 @@ detect_system() {
         [[ -z $PACKAGE_MANAGER ]] && { log_error "No supported package manager found"; exit 1; }
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         OS="darwin"
-        tool_exists brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        if ! tool_exists brew; then
+            if confirm_installation "Homebrew"; then
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            else
+                log_error "Homebrew is required for macOS. Exiting."
+                exit 1
+            fi
+        fi
         PACKAGE_MANAGER="brew"
     else
         log_error "Unsupported OS: $OSTYPE"; exit 1
@@ -498,10 +505,14 @@ create_backend() {
                 export AWS_PROFILE="$profile"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
-                    log_error "AWS authentication failed. Please run 'aws sso login' or check your aws profile '$profile'export"
+                    log_error "AWS authentication failed with profile '${profile:-default}'."
+                    log_error "Please check:"
+                    log_error "  1. Profile exists: aws configure list-profiles"
+                    log_error "  2. If using SSO: aws sso login --profile '${profile:-default}'"
+                    log_error "  3. Profile configuration: aws configure list"
                     exit 1
                 fi
-                log_success "AWS authentication successful using profile: $profile"
+                log_success "AWS authentication successful using profile: ${profile:-default}"
             else
                 log_debug "Using AWS access key authentication"
                 local access_key secret_key
@@ -511,7 +522,12 @@ create_backend() {
                 export AWS_SECRET_ACCESS_KEY="$secret_key"
                 # Verify AWS credentials
                 if ! aws sts get-caller-identity >/dev/null 2>&1; then
-                    log_error "AWS authentication failed. Please check your access key and secret"
+                    log_error "AWS authentication failed using access key credentials."
+                    log_error "Please check:"
+                    log_error "  1. Access key ID is correct and active"
+                    log_error "  2. Secret access key matches the access key ID"
+                    log_error "  3. IAM user has necessary permissions (sts:GetCallerIdentity)"
+                    log_error "  4. No typos in the credentials"
                     exit 1
                 fi
                 log_success "AWS authentication successful using access key"
