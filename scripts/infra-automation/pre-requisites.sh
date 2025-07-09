@@ -35,7 +35,7 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.12.2" ;;
+        terraform) echo "1.11.3" ;;
         kubectl) echo "1.31.8" ;;
         helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
