@@ -239,17 +239,17 @@ controlPlaneMonitors:
                 name: tfy-control-plane-alert-manager-secret
               sendResolved: true
               text: >-
-                {{ range .Alerts }} 
+                {{ range .Alerts }}
 
                 {{ if eq .Status "firing" }}:warning:{{ else
                 }}:white_check_mark:{{ end }} *Alert:* {{ .Annotations.summary
-                }} 
+                }}
 
-                *Severity:* `{{ .Labels.severity }}` 
+                *Severity:* `{{ .Labels.severity }}`
 
-                *Description:* {{ .Annotations.description }} 
+                *Description:* {{ .Annotations.description }}
 
-                *Details:* 
+                *Details:*
 
                 {{ range.Labels.SortedPairs }}
                 • *{{ .Name }}:* `{{ .Value }}`
@@ -264,7 +264,7 @@ controlPlaneMonitors:
         # slackConfigs:
         #   - channel: "#alerts"
         #     iconEmoji: ":alert:"
-        #     apiURL: 
+        #     apiURL:
         #       key: "API_URL"
         #       name: tfy-control-plane-alert-manager-secret
         #     sendResolved: true
