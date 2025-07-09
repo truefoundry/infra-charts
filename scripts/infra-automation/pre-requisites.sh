@@ -3,7 +3,7 @@ set -e
 
 readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34m' NC='\033[0m'
 # Colors and Exit codes
-readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 VERSION_ERROR=4
+readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 
 
 # Tool configurations
 declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
@@ -35,7 +35,7 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.11.3" ;;
+        terraform) echo "1.10.1" ;;
         kubectl) echo "1.31.8" ;;
         helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
