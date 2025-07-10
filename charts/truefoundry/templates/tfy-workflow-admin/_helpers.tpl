@@ -195,9 +195,9 @@ app.kubernetes.io/workflow-component: scheduler
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
+3
 {{- else if eq $tier "large" -}}
-2
+5
 {{- end }}
 {{- end }}
 
