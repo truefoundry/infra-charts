@@ -516,11 +516,11 @@ gcp-gke-standard-gpu-operator:
   ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
   fakeToolkitReady:
     enabled: false
-  
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
 gcp-gke-standard-dcgm-exporter:
+  ## @param gcp-gke-standard-dcgm-exporter.fullnameOverride Fullname override for the DCGM Exporter.
   fullnameOverride: nvidia-dcgm-exporter
   ## Docker image tag for the DCGM Exporter.
   ##
@@ -603,6 +603,7 @@ gcp-gke-standard-dcgm-exporter:
     ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[2]
     - name: DCGM_EXPORTER_COLLECTORS
       value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[3]
     - name: LD_LIBRARY_PATH
       value: /usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64
   ## Additional host volumes for the DCGM Exporter.
