@@ -511,380 +511,120 @@ gcp-gke-standard-driver:
         ##
         tag: "3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
 
-## @section gcp-gke-standard-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.generic is set to true.
-gcp-gke-standard-gpu-operator:
-  ## Node Feature Discovery enabled/disable configuration.
-  nfd:
-    ## @param gcp-gke-standard-gpu-operator.nfd.enabled Enable/Disable node feature discovery.
-    enabled: true
+## @section gcp-gke-standard-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.gcpGkeStandard is set to true.
+gcp-gke-standard-gpu-operator: {}
 
-  ## GPU Feature Discovery configuration.
-  gfd:
-    ## @param gcp-gke-standard-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
-    enabled: true
-    ## @skip gcp-gke-standard-gpu-operator.gfd.env
-    env:
-      - name: GFD_SLEEP_INTERVAL
-        value: 60s
-      - name: GFD_FAIL_ON_INIT_ERROR
-        value: "true"
-    ## @param gcp-gke-standard-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 100Mi
-      limits:
-        cpu: 50m
-        memory: 300Mi
-
-  ## Operator configuration.
-  operator:
-    ## @param gcp-gke-standard-gpu-operator.operator.upgradeCRD upgrade CRD on chart upgrade
-    upgradeCRD: true
-    ## @param gcp-gke-standard-gpu-operator.operator.cleanupCRD cleanup CRD on chart uninstall
-    cleanupCRD: true
-    ## @param gcp-gke-standard-gpu-operator.operator.runtimeClass Runtime class for the operator. This needs to be `runc` if we disable toolkit.
-    runtimeClass: nvidia
-    ## @param gcp-gke-standard-gpu-operator.operator.resources [object] Resources for the operator.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 300Mi
-      limits:
-        cpu: 50m
-        memory: 300Mi
-    ## @skip gcp-gke-standard-gpu-operator.operator.tolerations
-    tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
-      - key: cloud.google.com/gke-spot
-        operator: Equal
-        value: 'true'
-        effect: NoSchedule
-
-  ## Node Feature Discovery configuration.
-  node-feature-discovery:
-    ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.enableNodeFeatureApi Enable/Disable node feature api in node-feature-discovery.
-    enableNodeFeatureApi: true
-    master:
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.master.resources [object] Resources for the NFD master
-      resources:
-        requests:
-          cpu: 100m
-          memory: 200Mi
-        limits:
-          cpu: 500m
-          memory: 500Mi
-      ## @skip gcp-gke-standard-gpu-operator.node-feature-discovery.master.tolerations
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          operator: Equal
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/control-plane
-          operator: Equal
-          effect: NoSchedule
-        - key: cloud.google.com/gke-spot
-          operator: Equal
-          value: 'true'
-          effect: NoSchedule
-    worker:
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.worker.resources [object] Resources for the NFD worker
-      resources:
-        requests:
-          cpu: 10m
-          memory: 100Mi
-        limits:
-          cpu: 50m
-          memory: 300Mi
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.worker.affinity [object] Affinity for the NFD worker
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: cloud.google.com/gke-accelerator
-                    operator: Exists
-                  - key: cloud.google.com/machine-family
-                    operator: In
-                    values:
-                      - n1
-                      - g2
-                      - a2
-                      - a3
-                      - a4
-      ## @skip gcp-gke-standard-gpu-operator.node-feature-discovery.worker.tolerations
-      tolerations:
-        - key: nvidia.com/gpu
-          operator: Exists
-          effect: NoSchedule
-        - key: cloud.google.com/gke-spot
-          operator: Equal
-          value: 'true'
-          effect: NoSchedule
-    gc:
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.gc.enable Enable node feature discovery garbage collector.
-      enable: true
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.gc.interval Interval between two garbage collection runs.
-      interval: 30m
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.gc.resources [object] Resources for the NFD Garbage Collector.
-      resources:
-        requests:
-          cpu: 10m
-          memory: 100Mi
-        limits:
-          cpu: 50m
-          memory: 300Mi
-      ## @param gcp-gke-standard-gpu-operator.node-feature-discovery.gc.affinity [object] Affinity for the NFD Garbage Collector
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: cloud.google.com/gke-accelerator
-                    operator: DoesNotExist
-      ## @skip gcp-gke-standard-gpu-operator.node-feature-discovery.gc.tolerations
-      tolerations:
-        - key: nvidia.com/gpu
-          operator: Exists
-          effect: NoSchedule
-        - key: cloud.google.com/gke-spot
-          operator: Equal
-          value: 'true'
-          effect: NoSchedule
-
-  ## Daemonsets configuration
-  daemonsets:
-    ## @param gcp-gke-standard-gpu-operator.daemonsets.updateStrategy Update Strategy for Daemonsets - one of ["OnDelete", "RollingUpdate"]
-    # We would also like to use `daemonsets.rollingUpdate.maxSurge: 1` which is not supported yet
-    updateStrategy: RollingUpdate
-    ## @param gcp-gke-standard-gpu-operator.daemonsets.priorityClassName Priority class for Daemonsets
-    priorityClassName: system-node-critical
-    ## @skip gcp-gke-standard-gpu-operator.daemonsets.tolerations
-    tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
-      - key: cloud.google.com/gke-spot
-        operator: Equal
-        value: 'true'
-        effect: NoSchedule
-
-  ## CDI configuration
-  cdi:
-    ## @param gcp-gke-standard-gpu-operator.cdi.enabled Enable/Disable CDI
-    enabled: true
-    ## @param gcp-gke-standard-gpu-operator.cdi.default Set as default CDI
-    default: true
-
-  ## Host paths configuration
-  hostPaths:
-    ## @param gcp-gke-standard-gpu-operator.hostPaths.driverInstallDir Directory for driver installation
-    driverInstallDir: /home/kubernetes/bin/nvidia
-
-  ## Driver configuration
-  driver:
-    ## @param gcp-gke-standard-gpu-operator.driver.enabled Enable/Disable driver installation.
+## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
+##
+gcp-gke-standard-dcgm-exporter:
+  fullnameOverride: nvidia-dcgm-exporter
+  ## Docker image tag for the DCGM Exporter.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
+  ##
+  arguments:
+    [
+      "-c",
+      '"5000"',
+      "-f",
+      "/etc/dcgm-exporter/dcp-metrics-included.csv",
+      "--kubernetes-gpu-id-type",
+      "device-name",
+    ]
+  ## Resource configuration for DCGM Exporter requests and limits.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.resources [object] Requests and limits for the DCGM Exporter.
+  resources:
+    requests:
+      cpu: 10m
+      memory: 100Mi
+    limits:
+      cpu: 100m
+      memory: 1000Mi
+  ## ServiceMonitor configuration for Prometheus monitoring.
+  ##
+  serviceMonitor:
+    ## @param gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
     enabled: false
-
-  ## Toolkit configuration.
-  toolkit:
-    ## @param gcp-gke-standard-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
-    enabled: true
-    ## @param gcp-gke-standard-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.17.8-ubuntu20.04
-    ## @param gcp-gke-standard-gpu-operator.toolkit.installDir Directory for toolkit installation
-    installDir: /home/kubernetes/bin/nvidia
-    ## @skip gcp-gke-standard-gpu-operator.toolkit.env
-    env:
-      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
-        value: "false"
-      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: "true"
-    ## @param gcp-gke-standard-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 100Mi
-      limits:
-        cpu: 50m
-        memory: 300Mi
-
-   ## Fake Toolkit Ready Daemonset
-  fakeToolkitReady:
-    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
-    enabled: false
-    image:
-      ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
-      repository: "alpine"
-      ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.image.tag Tag for the fake toolkit ready container.
-      tag: "3.20"
-    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.imagePullSecrets Image pull secrets for the fake toolkit ready container.
-    imagePullSecrets: []
-    ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.resources [object] Resources for the fake toolkit ready container.
-    resources:
-      requests:
-        cpu: 5m
-        memory: 10Mi
-      limits:
-        cpu: 10m
-        memory: 50Mi
-    ## @skip gcp-gke-standard-gpu-operator.fakeToolkitReady.affinity [object] Affinity for the fake toolkit ready container.
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: cloud.google.com/gke-accelerator
-                  operator: Exists
-                - key: cloud.google.com/machine-family
-                  operator: In
-                  values:
-                    - n1
-                    - g2
-                    - a2
-                    - a3
-                    - a4
-    ## @skip gcp-gke-standard-gpu-operator.fakeToolkitReady.tolerations [array] Tolerations for the fake toolkit ready container.
-    tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
-      - key: cloud.google.com/gke-spot
-        operator: Equal
-        value: 'true'
-        effect: NoSchedule
-
-  ## Device Plugin configuration.
-  devicePlugin:
-    ## @param gcp-gke-standard-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
-    enabled: false
-    ## @skip gcp-gke-standard-gpu-operator.devicePlugin.env
-    env:
-      - name: PASS_DEVICE_SPECS
-        value: "true"
-      - name: DEVICE_LIST_STRATEGY
-        value: volume-mounts
-      - name: DEVICE_ID_STRATEGY
-        value: index
-    ## @skip gcp-gke-standard-gpu-operator.devicePlugin.config
-    config:
-      data:
-        all: ""
-        time-sliced-10: |-
-          version: v1
-          sharing:
-            timeSlicing:
-              renameByDefault: true
-              resources:
-              - name: nvidia.com/gpu
-                replicas: 10
-      name: ""
-      create: false
-      default: ""
-    ## @param gcp-gke-standard-gpu-operator.devicePlugin.resources [object] Resources for the device plugin.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 100Mi
-      limits:
-        cpu: 50m
-        memory: 300Mi
-
-  ## DCGM configuration
-  dcgm:
-    ## @param gcp-gke-standard-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
-    enabled: false
-    ## @param gcp-gke-standard-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 4.2.3-1-ubuntu22.04
-    ## @param gcp-gke-standard-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 100Mi
-      limits:
-        cpu: 50m
-        memory: 400Mi
-
-  ## DCGM Exporter configuration.
-  dcgmExporter:
-    ## @param gcp-gke-standard-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
-    enabled: true
-    ## @param gcp-gke-standard-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 4.2.3-4.1.3-ubuntu22.04
-    serviceMonitor:
-      ## @param gcp-gke-standard-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-      enabled: false
-      ## @skip gcp-gke-standard-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
-      honorLabels: true
-      ## @skip gcp-gke-standard-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
-      additionalLabels:
-        release: prometheus
-      ## @skip gcp-gke-standard-gpu-operator.dcgmExporter.serviceMonitor.relabelings
-      relabelings:
-        - action: replace
-          sourceLabels:
-            - __meta_kubernetes_pod_node_name
-          targetLabel: kubernetes_node
-        - action: replace
-          targetLabel: job
-          replacement: gpu-metrics
-    ## @skip gcp-gke-standard-gpu-operator.dcgmExporter.env
-    env:
-      - name: DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE
-        value: uid
-      - name: DCGM_EXPORTER_LISTEN
-        value: :9400
-      - name: DCGM_EXPORTER_KUBERNETES
-        value: "true"
-      - name: DCGM_EXPORTER_COLLECTORS
-        value: /etc/dcgm-exporter/dcp-metrics-included.csv
-    ## @param gcp-gke-standard-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 100Mi
-      limits:
-        cpu: 100m
-        memory: 1000Mi
-    ## @param gcp-gke-standard-gpu-operator.dcgmExporter.args Arguments for the DCGM Exporter.
-    args: ["-c", "5000", "--kubernetes-gpu-id-type", "device-name"]
-
-  ## MIG Configuration
-  mig:
-    ## @param gcp-gke-standard-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
-
-  ## MIG Manager configuration.
-  migManager:
-    ## @skip gcp-gke-standard-gpu-operator.migManager.enabled
-    enabled: false
-
-  ## Validator configuration.
-  validator:
-    cuda:
-      ## @skip gcp-gke-standard-gpu-operator.validator.cuda.env
-      env:
-        - name: WITH_WORKLOAD
-          value: "false"
-    plugin:
-      ## @skip gcp-gke-standard-gpu-operator.validator.plugin.env
-      env:
-        - name: WITH_WORKLOAD
-          value: "false"
-    ## @param gcp-gke-standard-gpu-operator.validator.resources [object] Resources for the gpu validators.
-    resources:
-      requests:
-        cpu: 10m
-        memory: 50Mi
-      limits:
-        cpu: 50m
-        memory: 300Mi
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.honorLabels
+    honorLabels: true
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.additionalLabels
+    additionalLabels:
+      release: prometheus
+    ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.relabelings
+    relabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: kubernetes_node
+      - action: replace
+        targetLabel: job
+        replacement: gpu-metrics
+  ## Node affinity configuration for worker nodes with GKE accelerators.
+  ##
+  affinity:
+    ## @skip gcp-gke-standard-dcgm-exporter.affinity.nodeAffinity
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: cloud.google.com/gke-accelerator
+                operator: Exists
+  ## @skip gcp-gke-standard-dcgm-exporter.tolerations[0]
+  ##
+  tolerations:
+    - operator: "Exists"
+  ## @param gcp-gke-standard-dcgm-exporter.mapPodsMetrics Enable mapping of pod metrics.
+  ##
+  mapPodsMetrics: true
+  ## Security context configuration.
+  ##
+  ## @param gcp-gke-standard-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
+  ##
+  securityContext:
+    privileged: true
+  ## @param gcp-gke-standard-dcgm-exporter.priorityClassName Priority class name for the DCGM Exporter.
+  ##
+  priorityClassName: ""
+  ## Additional environment variables for the DCGM Exporter.
+  ##
+  extraEnv:
+    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].name Name for the additional environment variable for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraEnv[0].value Value for the additional environment variable for the DCGM Exporter.
+    - name: NVIDIA_INSTALL_DIR_HOST
+      value: /home/kubernetes/bin/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[1]
+    - name: NVIDIA_INSTALL_DIR_CONTAINER
+      value: /usr/local/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[2]
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  ## Additional host volumes for the DCGM Exporter.
+  ##
+  extraHostVolumes:
+    ## @param gcp-gke-standard-dcgm-exporter.extraHostVolumes[0].name Name for the additional host volume for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraHostVolumes[0].hostPath Host Path for the additional host volume for the DCGM Exporter.
+    - name: dev
+      hostPath: "/dev"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraHostVolumes[1]
+    - name: nvidia-install-dir-host
+      hostPath: "/home/kubernetes/bin/nvidia"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraHostVolumes[2]
+    - name: nvidia-config
+      hostPath: "/etc/nvidia"
+  ## Additional volume mounts for the DCGM Exporter.
+  ##
+  extraVolumeMounts:
+    ## @param gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].name Name for the additional volume mounts for the DCGM Exporter.
+    ## @param gcp-gke-standard-dcgm-exporter.extraVolumeMounts[0].mountPath Mount Path for the additional volume mounts for the DCGM Exporter.
+    - name: dev
+      mountPath: /dev
+    ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[1]
+    - name: nvidia-install-dir-host
+      mountPath: /usr/local/nvidia
+    ## @skip gcp-gke-standard-dcgm-exporter.extraVolumeMounts[2]
+    - name: nvidia-config
+      mountPath: /etc/nvidia
 
 ## @section azure-aks-gpu-operator Configuration for the Azure AKS GPU operator. This section will only be used when clusterType.azureAks is set to true.
 ##
