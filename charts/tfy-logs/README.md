@@ -41,7 +41,7 @@ The solution consists of two main components:
 | `victoria-logs-single.server.affinity`                | Affinity                                                                              | `{}`                                      |
 | `victoria-logs-single.server.tolerations`             | Tolerations                                                                           | `[]`                                      |
 | `victoria-logs-single.vector.resources`               | Resources                                                                             | `{}`                                      |
-| `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-cluster-critical`                 |
+| `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`                    |
 | `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `tfy.jfrog.io/tfy-mirror/timberio/vector` |
 | `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                                    |
 | `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                                      |
@@ -51,9 +51,9 @@ The solution consists of two main components:
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 
-| Name                            | Description                             | Value                         |
-| ------------------------------- | --------------------------------------- | ----------------------------- |
-| `resourceQuota.enabled`         | Create the ResourceQuota.               | `true`                        |
-| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota | `{}`                          |
-| `resourceQuota.labels`          | Labels to add to the ResourceQuota      | `{}`                          |
-| `resourceQuota.priorityClasses` | PriorityClasses to enable.              | `["system-cluster-critical"]` |
+| Name                            | Description                             | Value                      |
+| ------------------------------- | --------------------------------------- | -------------------------- |
+| `resourceQuota.enabled`         | Create the ResourceQuota.               | `true`                     |
+| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota | `{}`                       |
+| `resourceQuota.labels`          | Labels to add to the ResourceQuota      | `{}`                       |
+| `resourceQuota.priorityClasses` | PriorityClasses to enable.              | `["system-node-critical"]` |
