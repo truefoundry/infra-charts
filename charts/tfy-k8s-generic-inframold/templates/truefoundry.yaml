@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.67.1
+    targetRevision: 0.68.0
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -118,7 +118,7 @@ spec:
               - op: add
                 path: /spec/tolerations
                 value:
-                {{- toYaml $mergedTolerations | nindent 16 }}
+                  {{- toYaml $mergedTolerations | nindent 18 }}
               {{- else }}
               - op: add
                 path: /spec/tolerations
@@ -128,7 +128,7 @@ spec:
               - op: add
                 path: /spec/affinity
                 value:
-                {{- toYaml $mergedAffinity | nindent 16 }}
+                  {{- toYaml $mergedAffinity | nindent 18 }}
               {{- else }}
               - op: add
                 path: /spec/affinity
@@ -188,39 +188,39 @@ spec:
           clickhouse:
             {{- if $mergedTolerations }}
             tolerations:
-              {{- toYaml $mergedTolerations | nindent 12 }}
+              {{- toYaml $mergedTolerations | nindent 14 }}
             {{- else }}
             tolerations: []
             {{- end }}
             {{- if $mergedAffinity }}
             affinity:
-              {{- toYaml $mergedAffinity | nindent 12 }}
+              {{- toYaml $mergedAffinity | nindent 14 }}
             {{- else }}
             affinity: {}
             {{- end }}
           altinity-clickhouse-operator:
             {{- if $mergedTolerations }}
             tolerations:
-              {{- toYaml $mergedTolerations | nindent 12 }}
+              {{- toYaml $mergedTolerations | nindent 14 }}
             {{- else }}
             tolerations: []
             {{- end }}
             {{- if $mergedAffinity }}
             affinity:
-              {{- toYaml $mergedAffinity | nindent 12 }}
+              {{- toYaml $mergedAffinity | nindent 14 }}
             {{- else }}
             affinity: {}
             {{- end }}
           zookeeper:
             {{- if $mergedTolerations }}
             tolerations:
-              {{- toYaml $mergedTolerations | nindent 12 }}
+              {{- toYaml $mergedTolerations | nindent 14 }}
             {{- else }}
             tolerations: []
             {{- end }}
             {{- if $mergedAffinity }}
             affinity:
-              {{- toYaml $mergedAffinity | nindent 12 }}
+              {{- toYaml $mergedAffinity | nindent 14 }}
             {{- else }}
             affinity: {}
             {{- end }}
