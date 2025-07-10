@@ -196,35 +196,35 @@ prometheus.io/port: "8787"
 
 {{- define "tfy-llm-gateway.defaultResources.small" }}
 requests:
-  cpu: 100m
+  cpu: 200m
   memory: 256Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 200m
+  cpu: 400m
   memory: 512Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "tfy-llm-gateway.defaultResources.medium" }}
 requests:
-  cpu: 500m
-  memory: 512Mi
-  ephemeral-storage: 128Mi
-limits:
   cpu: 1000m
   memory: 1024Mi
   ephemeral-storage: 256Mi
+limits:
+  cpu: 2000m
+  memory: 2048Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "tfy-llm-gateway.defaultResources.large" }}
 requests:
   cpu: 1000m
   memory: 1024Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
   memory: 2048Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "tfy-llm-gateway.resources" }}
@@ -262,7 +262,7 @@ limits:
 {{- else if eq $tier "medium" -}}
 3
 {{- else if eq $tier "large" -}}
-3
+10
 {{- end }}
 {{- end }}
 
