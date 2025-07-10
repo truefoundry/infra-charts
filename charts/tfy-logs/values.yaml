@@ -45,6 +45,7 @@ victoria-logs-single:
       limits:
         cpu: 200m
         memory: 200Mi
+    podPriorityClass: system-cluster-critical
     image:
       ## @param victoria-logs-single.vector.image.repository Image repository
       repository: tfy.jfrog.io/tfy-mirror/timberio/vector
@@ -128,3 +129,19 @@ victoria-logs-single:
             del(.file)
 
             del(.message)
+
+## @section resourceQuota Add a ResourceQuota to enable priority class in a namespace.
+##
+
+resourceQuota:
+  ## @param resourceQuota.enabled Create the ResourceQuota.
+  enabled: true
+  ## @param resourceQuota.annotations Annotations to add to the ResourceQuota
+  ##
+  annotations: {}
+  ## @param resourceQuota.labels Labels to add to the ResourceQuota
+  ##
+  labels: {}
+  ## @param resourceQuota.priorityClasses PriorityClasses to enable.
+  priorityClasses:
+    - system-cluster-critical
