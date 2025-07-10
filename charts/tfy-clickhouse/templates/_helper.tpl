@@ -81,8 +81,8 @@ limits:
 
 {{- define "clickhouse.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.clickhouse.replicasCount -}}
-{{ .Values.clickhouse.replicasCount }}
+{{- if .Values.clickhouse.replicaCount -}}
+{{ .Values.clickhouse.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
