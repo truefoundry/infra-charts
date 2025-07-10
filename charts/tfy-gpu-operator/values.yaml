@@ -511,11 +511,12 @@ gcp-gke-standard-driver:
         ##
         tag: "3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
 
-## @section gcp-gke-standard-gpu-operator Configuration for the GPU Operator. This section will only be used when clusterType.gcpGkeStandard is set to true.
+## @section gcp-gke-standard-gpu-operator Configuration for the GPU Operator. Unused - Reserved for future use.
 gcp-gke-standard-gpu-operator:
   ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
   fakeToolkitReady:
     enabled: false
+  
 
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
@@ -911,6 +912,8 @@ azure-aks-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
+      - name: LD_LIBRARY_PATH
+        value: /usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64
     ## @param azure-aks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
