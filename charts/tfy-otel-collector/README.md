@@ -14,7 +14,7 @@ Tfy-Otel_collector Helm Chart
 | `global.nodeSelector`                         | Node selector                                                | `{}`                                                 |
 | `env`                                         | Environment variables for the tfyOtelCollector               | `{}`                                                 |
 | `image.repository`                            | Image repository for tfyOTELCollector                        | `tfy.jfrog.io/tfy-private-images/tfy-otel-collector` |
-| `image.tag`                                   | Image tag for the tfyOTELCollector                           | `f6945e489c0c808481c503c069bd1c247ff7ad0e`           |
+| `image.tag`                                   | Image tag for the tfyOTELCollector                           | `aa2b28d00dd4a77993647f65222a9b129ef70fff`           |
 | `imagePullSecrets`                            | List of secrets to pull images                               | `[]`                                                 |
 | `fullnameOverride`                            | Full name override for the tfy-otel-collector                | `""`                                                 |
 | `environmentName`                             | The environment name                                         | `default`                                            |

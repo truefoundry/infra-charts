@@ -51,7 +51,11 @@ jobs:
 
       - name: Run trigger-vul-scan script
         run: |
-          python scripts/release-updater/trigger-vul-scan.py
+          curl -v "${TFY_HOST}/api/svc/v1/jobs/trigger" \
+            -H "Authorization: Bearer ${TFY_API_KEY}" \
+            -H 'content-type: application/json' \
+            --data-raw '{"applicationId":"cmclxkvga4kqj01teeq5l3vre","componentName":"inframold-vulnerability-scanner","input":{"command":"python main.py --inframold_chart_name _all"}}'
+
 
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
