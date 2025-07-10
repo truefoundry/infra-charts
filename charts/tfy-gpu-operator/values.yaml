@@ -603,6 +603,8 @@ gcp-gke-standard-dcgm-exporter:
     ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[2]
     - name: DCGM_EXPORTER_COLLECTORS
       value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+    - name: LD_LIBRARY_PATH
+      value: /usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64
   ## Additional host volumes for the DCGM Exporter.
   ##
   extraHostVolumes:
@@ -912,8 +914,6 @@ azure-aks-gpu-operator:
         value: "true"
       - name: DCGM_EXPORTER_COLLECTORS
         value: /etc/dcgm-exporter/dcp-metrics-included.csv
-      - name: LD_LIBRARY_PATH
-        value: /usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64
     ## @param azure-aks-gpu-operator.dcgmExporter.resources [object] Resources for the DCGM Exporter.
     resources:
       requests:
