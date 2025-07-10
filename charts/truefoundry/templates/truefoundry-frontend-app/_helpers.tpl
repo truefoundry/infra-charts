@@ -197,9 +197,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
-{{- else if eq $tier "large" -}}
 3
+{{- else if eq $tier "large" -}}
+5
 {{- end }}
 {{- end }}
 
@@ -217,22 +217,22 @@ limits:
 {{- define "truefoundry-frontend-app.defaultResources.medium" }}
 requests:
   cpu: 100m
-  memory: 200Mi
+  memory: 400Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 200m
-  memory: 400Mi
+  memory: 800Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "truefoundry-frontend-app.defaultResources.large" }}
 requests:
   cpu: 300m
-  memory: 400Mi
+  memory: 800Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 600m
-  memory: 800Mi
+  memory: 1600Mi
   ephemeral-storage: 256Mi
 {{- end }}
 

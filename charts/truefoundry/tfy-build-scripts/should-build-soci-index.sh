@@ -11,8 +11,8 @@ IMAGE=$REGISTRY/$REPOSITORY:$TAG
 IMAGE_SIZE_THRESHOLD=$(printf '%.0f' "$(echo "$SIZE_THRESHOLD")")
 
 echo Registry is "$REGISTRY"
-if [[ $REGISTRY != *"amazonaws.com"* ]]; then
-echo Registry is not from ECR. Skipping SOCI index creation.
+if [[ $REGISTRY != *"amazonaws.com"* && $REGISTRY != *"jfrog.io"* ]]; then
+echo Registry is not from ECR or JFrog. Skipping SOCI index creation.
 echo -n "false" > /tmp/result
 exit 0
 fi

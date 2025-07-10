@@ -151,9 +151,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
-{{- else if eq $tier "large" -}}
 3
+{{- else if eq $tier "large" -}}
+5
 {{- end }}
 {{- end }}
 
@@ -171,22 +171,22 @@ limits:
 {{- define "mlfoundry-server.defaultResources.medium" }}
 requests:
   cpu: 200m
-  memory: 800Mi
+  memory: 1024Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 400m
-  memory: 1600Mi
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "mlfoundry-server.defaultResources.large" }}
 requests:
   cpu: 600m
-  memory: 1024Mi
+  memory: 1536Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 1200m
-  memory: 2048Mi
+  memory: 3072Mi
   ephemeral-storage: 256Mi
 {{- end }}
 

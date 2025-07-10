@@ -255,9 +255,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
-{{- else if eq $tier "large" -}}
 3
+{{- else if eq $tier "large" -}}
+5
 {{- end }}
 {{- end }}
 
