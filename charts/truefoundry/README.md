@@ -117,7 +117,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.69.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.69.1`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -262,7 +262,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.69.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.69.1`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
