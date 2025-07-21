@@ -100,6 +100,8 @@ victoria-logs-single:
               .message = " "
             }
 
+            .log = parse_json(.message) ?? {"message": .message}
+
             # Extract basic pod information
 
             .service = .kubernetes.container_name
@@ -132,7 +134,7 @@ victoria-logs-single:
             del(.kubernetes)
 
             del(.message)
-            
+
             del(.file)
             
 
