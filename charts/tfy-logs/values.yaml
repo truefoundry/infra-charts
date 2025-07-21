@@ -94,8 +94,6 @@ victoria-logs-single:
               .message = " "
             }
 
-            .log = parse_json(.message) ?? {"message": .message}
-
             # Extract basic pod information
 
             .service = .kubernetes.container_name
@@ -126,9 +124,7 @@ victoria-logs-single:
             # Clean up kubernetes metadata
 
             del(.kubernetes)
-
             del(.file)
-            del(.message)
 
 ## @section resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 ##
