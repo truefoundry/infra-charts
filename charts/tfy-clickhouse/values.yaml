@@ -94,8 +94,19 @@ clickhouse:
     tag: 24.7.3.42-alpine
   annotations: {}
   imagePullSecrets: []
-  podSecurityContext: {}
-  containerSecurityContext: {}
+  podSecurityContext:
+      capabilities:
+        add:
+          - CAP_NICE
+          - CAP_IPC_LOCK
+  containerSecurityContext:
+      capabilities:
+        drop:
+          - ALL
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      allowPrivilegeEscalation: false
   serviceAccount:
     create: true
     name: truefoundry-clickhouse
