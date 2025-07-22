@@ -611,7 +611,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.config.websocket.enabled`               | Bool to enable websocket                              | `true`                                                       |
 | `tfyNats.natsBox.enabled`                        | Bool to enable NATS Box                               | `false`                                                      |
 | `tfyNats.reloader.image.repository`              | Reloader image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader` |
-| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.17.2`                                                     |
+| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.18.2`                                                     |
 | `tfyNats.reloader.enabled`                       | Bool to enable config reloader                        | `true`                                                       |
 | `tfyNats.reloader.patch`                         | Nats Reloader patches                                 | `[]`                                                         |
 | `tfyNats.promExporter.image.repository`          | Exporter image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter`    |
