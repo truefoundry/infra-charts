@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.71.3
+  controlPlaneChartVersion: 0.71.4
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -71,6 +71,28 @@ global:
     annotations: {}
     ## @param global.serviceAccount.automountServiceAccountToken Automount service account token for the service account
     automountServiceAccountToken: true
+  config:
+    ## @param global.config.defaultcloudProvider Default cloud provider
+    defaultcloudProvider: ''
+    storageConfiguration:
+      ## @param global.config.storageConfiguration.awsS3BucketName AWS S3 bucket name
+      awsS3BucketName: ''
+      ## @param global.config.storageConfiguration.awsRegion AWS region
+      awsRegion: ''
+      ## @param global.config.storageConfiguration.awsAssumeRoleArn AWS assume role ARN
+      awsAssumeRoleArn: ''
+      ## @param global.config.storageConfiguration.azureBlobUri Azure blob URI
+      azureBlobUri: ''
+      ## @param global.config.storageConfiguration.azureBlobConnectionString Azure blob connection string
+      ## For passing it as a secret, use the following format:
+      ## azureBlobConnectionString: ${k8s-secret/truefoundry-creds/AZURE_BLOB_CONNECTION_STRING}
+      azureBlobConnectionString: ''
+      ## @param global.config.storageConfiguration.googleCloudProjectId Google cloud project ID
+      googleCloudProjectId: ''
+      ## @param global.config.storageConfiguration.googleCloudStorageBucketName Google cloud storage bucket name
+      googleCloudStorageBucketName: ''
+      ## @param global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent Google cloud service account key file content
+      googleCloudServiceAccountKeyFileContent: ''
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -451,9 +473,6 @@ mlfoundryServer:
     DB_PORT: "5432"
     DB_DIALECT: postgresql+psycopg2
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    ARTIFACT_ROOT: s3://{{ .Values.mlfoundryServer.env.S3_BUCKET_NAME }}
-    MLFLOW_S3_ENDPOINT_URL: "{{ .Values.mlfoundryServer.env.S3_ENDPOINT_URL }}"
-    S3_ENDPOINT_URL: ""
     MULTITENANT: "false"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
@@ -569,7 +588,7 @@ s3proxy:
   imagePullSecrets: []
   config:
     ## @param s3proxy.config.jcloudsEndpoint JClouds endpoint for the s3 proxy
-    jcloudsEndpoint: https://s3.us-east-1.amazonaws.com
+    jcloudsEndpoint: https://s3.{{ .Values.global.config.storageConfiguration.awsRegion }}.amazonaws.com
     ## @param s3proxy.config.jcloudsProvider JClouds provider for the s3 proxy
     jcloudsProvider: aws-s3
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
@@ -593,7 +612,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.71.3"
+    tag: "v0.71.4"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -689,13 +708,15 @@ servicefoundryServer:
     additionalAnnotations: {}
   ## @param servicefoundryServer.env [object] Environment variables for the servicefoundry server
   env:
-    DEFAULT_CLOUD_PROVIDER: ""
-    S3_BUCKET_NAME: ""
-    AWS_REGION: ""
-    AWS_ASSUME_ROLE_ARN: ""
-    GS_BUCKET_NAME: ""
-    AZURE_BLOB_URI: ""
-    AZURE_BLOB_CONNECTION_STRING: ""
+    DEFAULT_CLOUD_PROVIDER: "{{ .Values.global.config.defaultcloudProvider }}"
+    S3_BUCKET_NAME: "{{ .Values.global.config.storageConfiguration.awsS3BucketName }}"
+    AWS_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
+    AWS_ASSUME_ROLE_ARN: "{{ .Values.global.config.storageConfiguration.awsAssumeRoleArn }}"
+    AZURE_BLOB_URI: "{{ .Values.global.config.storageConfiguration.azureBlobUri }}"
+    AZURE_BLOB_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
+    GS_BUCKET_NAME: "{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}"
+    GCP_PROJECT_ID: "{{ .Values.global.config.storageConfiguration.googleCloudProjectId }}"
+    GCP_SERVICE_ACCOUNT_KEY_FILE_CONTENT: "{{ .Values.global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent }}"
     DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
     DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
     DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
@@ -945,7 +966,7 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.env [object] Environment variables for the spark history server
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-    SPARK_HISTORY_OPTS: -Dspark.jars.ivy=/tmp/ivy -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem -Dspark.history.fs.logDirectory=s3a://{{ .Values.servicefoundryServer.env.S3_BUCKET_NAME }}/{{ .Values.servicefoundryServer.env.SPARK_JOB_EVENT_LOG_BASE_DIR }} -Dspark.history.store.serializer=PROTOBUF -Dspark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider -Dspark.history.fs.createHistoryDirIfNecessary=true -Dspark.history.fs.inProgressOptimization.enabled=true -Dspark.ui.proxyRedirectUri={{ .Values.global.controlPlaneURL }} -Dspark.ui.proxyBase=/api/spark-ui -Dspark.history.store.path=/opt/spark/cache -Dspark.history.store.maxDiskUsage=5g
+    SPARK_HISTORY_OPTS: -Dspark.jars.ivy=/tmp/ivy -Dspark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem -Dspark.history.fs.logDirectory=s3a://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}/{{ .Values.servicefoundryServer.env.SPARK_JOB_EVENT_LOG_BASE_DIR }} -Dspark.history.store.serializer=PROTOBUF -Dspark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider -Dspark.history.fs.createHistoryDirIfNecessary=true -Dspark.history.fs.inProgressOptimization.enabled=true -Dspark.ui.proxyRedirectUri={{ .Values.global.controlPlaneURL }} -Dspark.ui.proxyBase=/api/spark-ui -Dspark.history.store.path=/opt/spark/cache -Dspark.history.store.maxDiskUsage=5g
     SPARK_UI_PATH_PREFIX: /
 ###################################################################################################################
 ####################################### Tfy K8s Controller #######################################################
@@ -1408,9 +1429,10 @@ tfy-buildkitd-service:
     enabled: true
     ## @param tfy-buildkitd-service.tls.buildkitClientCertsSecretName Name of the secret containing the TLS certificate
     buildkitClientCertsSecretName: "tfy-buildkit-client-certs"
-# To further configure the local postgres installation use the following section.
-# During cleanup, make sure to remove any stray pvc that might be created.
-## postgresql Settings corresponding to the postgresql database
+###################################################################################################################
+######################################## PostgreSQL ##############################################################
+###################################################################################################################
+## postgresql Settings corresponding to the postgresql database. During cleanup, make sure to remove any stray pvc that might be created.
 postgresql:
   ## postgresql.auth PostgreSQL authentication configuration
   auth:
@@ -1903,137 +1925,135 @@ tfy-llm-gateway:
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
-## @section tfyDeltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
-tfyDeltaFusionIngestor:
-  ## @param tfyDeltaFusionIngestor.enabled Bool to enable the DeltaFusion Ingestor
+## @section deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
+deltaFusionIngestor:
+  ## @param deltaFusionIngestor.enabled Bool to enable the DeltaFusion Ingestor
   enabled: false
-  ## @skip tfyDeltaFusionIngestor.replicaCount Number of replicas for the DeltaFusion Ingestor
+  ## @skip deltaFusionIngestor.replicaCount Number of replicas for the DeltaFusion Ingestor
   #  replicaCount: 2
 
-  ## tfyDeltaFusionIngestor.image Image settings for the DeltaFusion Ingestor
+  ## deltaFusionIngestor.image Image settings for the DeltaFusion Ingestor
   image:
-    ## @param tfyDeltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor
+    ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor
     repository: "tfy.jfrog.io/tfy-private-images/deltafusion-ingestor"
-    ## @param tfyDeltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
+    ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
     tag: "v0.0.1"
-    ## @param tfyDeltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
+    ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
     pullPolicy: IfNotPresent
-  ## @param tfyDeltaFusionIngestor.labels Labels to apply to the DeltaFusion Ingestor resources
+  ## @param deltaFusionIngestor.labels Labels to apply to the DeltaFusion Ingestor resources
   labels: {}
-  ## @param tfyDeltaFusionIngestor.annotations Annotations to apply to the DeltaFusion Ingestor resources
+  ## @param deltaFusionIngestor.annotations Annotations to apply to the DeltaFusion Ingestor resources
   annotations: {}
-  ## @param tfyDeltaFusionIngestor.envSecretName Name of the secret containing environment variables for the DeltaFusion Ingestor
+  ## @param deltaFusionIngestor.envSecretName Name of the secret containing environment variables for the DeltaFusion Ingestor
   envSecretName: deltafusion-ingestor-service-env-secret
-  ## tfyDeltaFusionIngestor.healthcheck Health check settings
+  ## deltaFusionIngestor.healthcheck Health check settings
   healthcheck:
-    ## @param tfyDeltaFusionIngestor.healthcheck.enabled Bool to enable health checks
+    ## @param deltaFusionIngestor.healthcheck.enabled Bool to enable health checks
     enabled: true
-    ## tfyDeltaFusionIngestor.healthcheck.readiness Readiness probe settings
+    ## deltaFusionIngestor.healthcheck.readiness Readiness probe settings
     readiness:
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.port Readiness probe port
+      ## @param deltaFusionIngestor.healthcheck.readiness.port Readiness probe port
       port: 8000
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.path Readiness probe path
+      ## @param deltaFusionIngestor.healthcheck.readiness.path Readiness probe path
       path: /health
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.initialDelaySeconds Initial delay seconds
+      ## @param deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds Initial delay seconds
       initialDelaySeconds: 30
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.periodSeconds Period seconds
+      ## @param deltaFusionIngestor.healthcheck.readiness.periodSeconds Period seconds
       periodSeconds: 10
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.timeoutSeconds Timeout seconds
+      ## @param deltaFusionIngestor.healthcheck.readiness.timeoutSeconds Timeout seconds
       timeoutSeconds: 2
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.successThreshold Success threshold
+      ## @param deltaFusionIngestor.healthcheck.readiness.successThreshold Success threshold
       successThreshold: 1
-      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
+      ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 3
-    ## tfyDeltaFusionIngestor.healthcheck.liveness Liveness probe settings
+    ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.port Liveness probe port
+      ## @param deltaFusionIngestor.healthcheck.liveness.port Liveness probe port
       port: 8000
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.path Liveness probe path
+      ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
       path: /health
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.initialDelaySeconds Initial delay seconds
+      ## @param deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds Initial delay seconds
       initialDelaySeconds: 10
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.periodSeconds Period seconds
+      ## @param deltaFusionIngestor.healthcheck.liveness.periodSeconds Period seconds
       periodSeconds: 10
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.timeoutSeconds Timeout seconds
+      ## @param deltaFusionIngestor.healthcheck.liveness.timeoutSeconds Timeout seconds
       timeoutSeconds: 2
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.successThreshold Success threshold
+      ## @param deltaFusionIngestor.healthcheck.liveness.successThreshold Success threshold
       successThreshold: 1
-      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
+      ## @param deltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
-  ## tfyDeltaFusionIngestor.storage Persistent volume claim settings
+  ## deltaFusionIngestor.storage Persistent volume claim settings
   storage:
-    ## @param tfyDeltaFusionIngestor.storage.enabled Bool to enable storage
+    ## @param deltaFusionIngestor.storage.enabled Bool to enable storage
     enabled: true
-    ## @param tfyDeltaFusionIngestor.storage.accessModes Access modes
+    ## @param deltaFusionIngestor.storage.accessModes Access modes
     accessModes:
       - ReadWriteOnce
-    ## @param tfyDeltaFusionIngestor.storage.storageClassName Storage class name
+    ## @param deltaFusionIngestor.storage.storageClassName Storage class name
     storageClassName: "gp3"
-    ## @param tfyDeltaFusionIngestor.storage.size Storage size
+    ## @param deltaFusionIngestor.storage.size Storage size
     size: 5Gi
-    ## @param tfyDeltaFusionIngestor.storage.mountPath Mount path
+    ## @param deltaFusionIngestor.storage.mountPath Mount path
     mountPath: /spans_dataset
-  ## @param tfyDeltaFusionIngestor.imagePullSecrets Image pull secrets
+  ## @param deltaFusionIngestor.imagePullSecrets Image pull secrets
   imagePullSecrets: []
-  ## @param tfyDeltaFusionIngestor.imagePullPolicy Image pull policy override
+  ## @param deltaFusionIngestor.imagePullPolicy Image pull policy override
   imagePullPolicy: IfNotPresent
-  ## @param tfyDeltaFusionIngestor.nameOverride Name override
+  ## @param deltaFusionIngestor.nameOverride Name override
   nameOverride: ""
-  ## @param tfyDeltaFusionIngestor.fullnameOverride Full name override
+  ## @param deltaFusionIngestor.fullnameOverride Full name override
   fullnameOverride: ""
-  ## @param tfyDeltaFusionIngestor.podLabels Pod-level labels
+  ## @param deltaFusionIngestor.podLabels Pod-level labels
   podLabels: {}
-  ## @param tfyDeltaFusionIngestor.podAnnotations Pod-level annotations
+  ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
   podAnnotations: {}
   podSecurityContext:
-    ## @skip tfyDeltaFusionIngestor.podSecurityContext.fsGroup
+    ## @skip deltaFusionIngestor.podSecurityContext.fsGroup
     fsGroup: 100
-    ## @skip tfyDeltaFusionIngestor.podSecurityContext.runAsGroup
-    runAsGroup: 100
-  ## tfyDeltaFusionIngestor.securityContext Security context for the container
+  ## deltaFusionIngestor.securityContext Security context for the container
   securityContext:
-    ## @param tfyDeltaFusionIngestor.securityContext.privileged Bool to run the container in privileged mode
+    ## @param deltaFusionIngestor.securityContext.privileged Bool to run the container in privileged mode
     privileged: false
-  ## tfyDeltaFusionIngestor.service Service settings
+  ## deltaFusionIngestor.service Service settings
   service:
-    ## @param tfyDeltaFusionIngestor.service.type Service type
+    ## @param deltaFusionIngestor.service.type Service type
     type: ClusterIP
-    ## @param tfyDeltaFusionIngestor.service.port Service port
+    ## @param deltaFusionIngestor.service.port Service port
     port: 8000
-    ## @param tfyDeltaFusionIngestor.service.annotations Service annotations
+    ## @param deltaFusionIngestor.service.annotations Service annotations
     annotations: {}
-  ## tfyDeltaFusionIngestor.serviceAccount Service account settings
+  ## deltaFusionIngestor.serviceAccount Service account settings
   serviceAccount:
-    ## @param tfyDeltaFusionIngestor.serviceAccount.create Bool to create a service account
+    ## @param deltaFusionIngestor.serviceAccount.create Bool to create a service account
     create: true
-    ## @param tfyDeltaFusionIngestor.serviceAccount.annotations Service account annotations
+    ## @param deltaFusionIngestor.serviceAccount.annotations Service account annotations
     annotations: {}
-    ## @param tfyDeltaFusionIngestor.serviceAccount.name Service account name
+    ## @param deltaFusionIngestor.serviceAccount.name Service account name
     name: ""
-    ## @param tfyDeltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
+    ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
     automountServiceAccountToken: false
-  ## @skip tfyDeltaFusionIngestor.resources Resource requests and limits
+  ## @skip deltaFusionIngestor.resources Resource requests and limits
   # resources: {}
-  ## @param tfyDeltaFusionIngestor.extraVolumes Extra volumes
+  ## @param deltaFusionIngestor.extraVolumes Extra volumes
   extraVolumes: []
-  ## @param tfyDeltaFusionIngestor.extraVolumeMounts Extra volume mounts
+  ## @param deltaFusionIngestor.extraVolumeMounts Extra volume mounts
   extraVolumeMounts: []
-  ## @param tfyDeltaFusionIngestor.commonLabels [object] Common labels for the bootstrap job
+  ## @param deltaFusionIngestor.commonLabels [object] Common labels for the bootstrap job
   commonLabels: {}
-  ## @param tfyDeltaFusionIngestor.extraEnvs Extra environment variables
+  ## @param deltaFusionIngestor.extraEnvs Extra environment variables
   extraEnvs: []
-  ## @param tfyDeltaFusionIngestor.nodeSelector Node selector
+  ## @param deltaFusionIngestor.nodeSelector Node selector
   nodeSelector: {}
-  ## @param tfyDeltaFusionIngestor.tolerations Tolerations
+  ## @param deltaFusionIngestor.tolerations Tolerations
   tolerations: []
-  ## @param tfyDeltaFusionIngestor.affinity Affinity
+  ## @param deltaFusionIngestor.affinity Affinity
   affinity: {}
-  ## @param tfyDeltaFusionIngestor.topologySpreadConstraints Topology spread constraints
+  ## @param deltaFusionIngestor.topologySpreadConstraints Topology spread constraints
   topologySpreadConstraints: {}
-  ## @param tfyDeltaFusionIngestor.env [object] Additional environment variables
+  ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
-    CLOUD_PROVIDER: ""
-    S3_PATH: "s3://{{ .Values.servicefoundryServer.env.S3_BUCKET_NAME }}"
+    CLOUD_PROVIDER: "{{ .Values.global.config.defaultcloudProvider }}"
+    S3_PATH: "s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}"
     RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PAYLOAD_SIZE_LIMIT: "104857600"

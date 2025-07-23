@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "deltafusion-ingestor.name" -}}
-{{- default "tfy-deltafusion-ingestor" .Values.tfyDeltaFusionIngestor.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default "deltafusion-ingestor" .Values.deltaFusionIngestor.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -11,10 +11,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "deltafusion-ingestor.fullname" -}}
-{{- if .Values.tfyDeltaFusionIngestor.fullnameOverride }}
-{{- .Values.tfyDeltaFusionIngestor.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- if .Values.deltaFusionIngestor.fullnameOverride }}
+{{- .Values.deltaFusionIngestor.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default "tfy-deltafusion-ingestor" .Values.tfyDeltaFusionIngestor.nameOverride }}
+{{- $name := default "deltafusion-ingestor" .Values.deltaFusionIngestor.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -34,8 +34,8 @@ Create chart name and version as used by the chart label.
 Common Annotations
 */}}
 {{- define "deltafusion-ingestor.annotations" -}}
-{{- if .Values.tfyDeltaFusionIngestor.annotations }}
-{{ toYaml .Values.tfyDeltaFusionIngestor.annotations }}
+{{- if .Values.deltaFusionIngestor.annotations }}
+{{ toYaml .Values.deltaFusionIngestor.annotations }}
 {{- else if .Values.global.annotations }}
 {{ toYaml .Values.global.annotations }}
 {{- else -}}
@@ -48,11 +48,11 @@ Pod Labels
 */}}
 {{- define "deltafusion-ingestor.podLabels" -}}
 {{ include "deltafusion-ingestor.selectorLabels" . }}
-{{- if .Values.tfyDeltaFusionIngestor.image.tag }}
-app.kubernetes.io/version: {{ .Values.tfyDeltaFusionIngestor.image.tag | quote }}
+{{- if .Values.deltaFusionIngestor.image.tag }}
+app.kubernetes.io/version: {{ .Values.deltaFusionIngestor.image.tag | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.tfyDeltaFusionIngestor.commonLabels }}
+{{- range $name, $value := .Values.deltaFusionIngestor.commonLabels }}
 {{ $name }}: {{ tpl $value $ | quote }}
 {{- end }}
 {{- end }}
@@ -63,8 +63,8 @@ Common labels
 {{- define "deltafusion-ingestor.labels" -}}
 {{- include "deltafusion-ingestor.podLabels" . }}
 helm.sh/chart: {{ include "deltafusion-ingestor.chart" . }}
-{{- if .Values.tfyDeltaFusionIngestor.commonLabels }}
-{{ toYaml .Values.tfyDeltaFusionIngestor.commonLabels }}
+{{- if .Values.deltaFusionIngestor.commonLabels }}
+{{ toYaml .Values.deltaFusionIngestor.commonLabels }}
 {{- else if .Values.global.labels }}
 {{ toYaml .Values.global.labels }}
 {{- end }}
@@ -82,8 +82,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "deltafusion-ingestor.serviceAccountName" -}}
-{{- if .Values.tfyDeltaFusionIngestor.serviceAccount.create }}
-{{- .Values.tfyDeltaFusionIngestor.serviceAccount.name }}
+{{- if .Values.deltaFusionIngestor.serviceAccount.create }}
+{{- .Values.deltaFusionIngestor.serviceAccount.name }}
 {{- else }}
 {{- .Values.global.serviceAccount.name }}
 {{- end }}
@@ -93,10 +93,10 @@ Create the name of the service account to use
 ServiceAccount annotations
 */}}
 {{- define "deltafusion-ingestor.serviceAccountAnnotations" -}}
-{{- if .Values.tfyDeltaFusionIngestor.serviceAccount.annotations }}
-{{ toYaml .Values.tfyDeltaFusionIngestor.serviceAccount.annotations }}
-{{- else if .Values.tfyDeltaFusionIngestor.annotations }}
-{{ toYaml .Values.tfyDeltaFusionIngestor.annotations }}
+{{- if .Values.deltaFusionIngestor.serviceAccount.annotations }}
+{{ toYaml .Values.deltaFusionIngestor.serviceAccount.annotations }}
+{{- else if .Values.deltaFusionIngestor.annotations }}
+{{ toYaml .Values.deltaFusionIngestor.annotations }}
 {{- else if .Values.global.annotations }}
 {{ toYaml .Values.global.annotations }}
 {{- else }}
@@ -166,21 +166,13 @@ limits:
 {{- define "deltafusion-ingestor.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount -}}
-{{ .Values.tfyDeltaFusionIngestor.replicaCount }}
+{{ .Values.deltaFusionIngestor.replicaCount }}
 {{- else if eq $tier "small" -}}
 2
 {{- else if eq $tier "medium" -}}
 2
 {{- else if eq $tier "large" -}}
 2
-{{- end }}
-{{- end }}
-
-{{- define "deltafusion-ingestor.storageSize" }}
-{{- if .Values.tfyDeltaFusionIngestor.storage.size -}}
-{{ .Values.tfyDeltaFusionIngestor.storage.size }}
-{{- else -}}
-50Gi
 {{- end }}
 {{- end }}
 
@@ -205,8 +197,8 @@ NodeSelector merge logic
 Affinity for the deltafusion-ingestor service
 */}}
 {{- define "deltafusion-ingestor.affinity" -}}
-{{- if .Values.tfyDeltaFusionIngestor.affinity -}}
-{{ toYaml .Values.tfyDeltaFusionIngestor.affinity }}
+{{- if .Values.deltaFusionIngestor.affinity -}}
+{{ toYaml .Values.deltaFusionIngestor.affinity }}
 {{- else if .Values.global.affinity -}}
 {{ toYaml .Values.global.affinity }}
 {{- else -}}
@@ -231,9 +223,9 @@ Tolerations for the deltafusion-ingestor service
   Parse env from template
   */}}
 {{- define "deltafusion-ingestor.parseEnv" -}}
-SPANS_DATASET_PATH: {{ .Values.tfyDeltaFusionIngestor.storage.mountPath }}
-PORT: "{{ .Values.tfyDeltaFusionIngestor.service.port }}"
-{{ tpl (.Values.tfyDeltaFusionIngestor.env | toYaml) . }}
+SPANS_DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
+PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
+{{ tpl (.Values.deltaFusionIngestor.env | toYaml) . }}
 {{- end }}
 
 {{/*
@@ -246,7 +238,7 @@ PORT: "{{ .Values.tfyDeltaFusionIngestor.service.port }}"
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
-      name: {{ $.Values.tfyDeltaFusionIngestor.envSecretName }}
+      name: {{ $.Values.deltaFusionIngestor.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
@@ -266,8 +258,8 @@ PORT: "{{ .Values.tfyDeltaFusionIngestor.service.port }}"
 
 {{- define "deltafusion-ingestor.volumes" -}}
 {{- $volumes := list -}}
-{{- if .Values.tfyDeltaFusionIngestor.extraVolumes }}
-  {{- range .Values.tfyDeltaFusionIngestor.extraVolumes }}
+{{- if .Values.deltaFusionIngestor.extraVolumes }}
+  {{- range .Values.deltaFusionIngestor.extraVolumes }}
     {{- $volumes = append $volumes . }}
   {{- end }}
 {{- end }}
@@ -277,8 +269,8 @@ PORT: "{{ .Values.tfyDeltaFusionIngestor.service.port }}"
 
 {{- define "deltafusion-ingestor.volumeMounts" -}}
 - name: data
-  mountPath: {{ .Values.tfyDeltaFusionIngestor.storage.mountPath }}
-{{- with .Values.tfyDeltaFusionIngestor.extraVolumeMounts }}
+  mountPath: {{ .Values.deltaFusionIngestor.storage.mountPath }}
+{{- with .Values.deltaFusionIngestor.extraVolumeMounts }}
 {{- toYaml . | nindent 0 }}
 {{- end -}}
 {{- end -}}
