@@ -45,7 +45,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `global.truefoundryImagePullConfigJSON`              | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                  | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                             | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.71.0`                                                                         |
+| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.71.3`                                                                         |
 | `global.existingTruefoundryCredsSecret`              | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                               | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                               | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -117,7 +117,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.71.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.71.2`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -262,7 +262,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.71.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.71.3`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -355,7 +355,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `{}`                                                 |
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController                                | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.71.0`                                            |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.71.1`                                            |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                    | `default`                                            |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables               | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                               | `IfNotPresent`                                       |
@@ -627,6 +627,61 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.serviceAccount.name`                    | The name of the service account to use.               | `truefoundry-tfy-nats`                                       |
 | `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                   | `{}`                                                         |
+
+### tfyDeltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
+
+| Name                                                                 | Description                                                                      | Value                                                  |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `tfyDeltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                          | `false`                                                |
+| `tfyDeltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor                                    | `tfy.jfrog.io/tfy-private-images/deltafusion-ingestor` |
+| `tfyDeltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                           | `v0.0.1`                                               |
+| `tfyDeltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                   | `IfNotPresent`                                         |
+| `tfyDeltaFusionIngestor.labels`                                      | Labels to apply to the DeltaFusion Ingestor resources                            | `{}`                                                   |
+| `tfyDeltaFusionIngestor.annotations`                                 | Annotations to apply to the DeltaFusion Ingestor resources                       | `{}`                                                   |
+| `tfyDeltaFusionIngestor.envSecretName`                               | Name of the secret containing environment variables for the DeltaFusion Ingestor | `deltafusion-ingestor-service-env-secret`              |
+| `tfyDeltaFusionIngestor.healthcheck.enabled`                         | Bool to enable health checks                                                     | `true`                                                 |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.port`                  | Readiness probe port                                                             | `8000`                                                 |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.path`                  | Readiness probe path                                                             | `/health`                                              |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                            | `30`                                                   |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                   | `10`                                                   |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                  | `2`                                                    |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.successThreshold`      | Success threshold                                                                | `1`                                                    |
+| `tfyDeltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                | `3`                                                    |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.port`                   | Liveness probe port                                                              | `8000`                                                 |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.path`                   | Liveness probe path                                                              | `/health`                                              |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                            | `10`                                                   |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                   | `10`                                                   |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.timeoutSeconds`         | Timeout seconds                                                                  | `2`                                                    |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.successThreshold`       | Success threshold                                                                | `1`                                                    |
+| `tfyDeltaFusionIngestor.healthcheck.liveness.failureThreshold`       | Failure threshold                                                                | `3`                                                    |
+| `tfyDeltaFusionIngestor.storage.enabled`                             | Bool to enable storage                                                           | `true`                                                 |
+| `tfyDeltaFusionIngestor.storage.accessModes`                         | Access modes                                                                     | `["ReadWriteOnce"]`                                    |
+| `tfyDeltaFusionIngestor.storage.storageClassName`                    | Storage class name                                                               | `gp3`                                                  |
+| `tfyDeltaFusionIngestor.storage.size`                                | Storage size                                                                     | `5Gi`                                                  |
+| `tfyDeltaFusionIngestor.storage.mountPath`                           | Mount path                                                                       | `/spans_dataset`                                       |
+| `tfyDeltaFusionIngestor.imagePullSecrets`                            | Image pull secrets                                                               | `[]`                                                   |
+| `tfyDeltaFusionIngestor.imagePullPolicy`                             | Image pull policy override                                                       | `IfNotPresent`                                         |
+| `tfyDeltaFusionIngestor.nameOverride`                                | Name override                                                                    | `""`                                                   |
+| `tfyDeltaFusionIngestor.fullnameOverride`                            | Full name override                                                               | `""`                                                   |
+| `tfyDeltaFusionIngestor.podLabels`                                   | Pod-level labels                                                                 | `{}`                                                   |
+| `tfyDeltaFusionIngestor.podAnnotations`                              | Pod-level annotations                                                            | `{}`                                                   |
+| `tfyDeltaFusionIngestor.securityContext.privileged`                  | Bool to run the container in privileged mode                                     | `false`                                                |
+| `tfyDeltaFusionIngestor.service.type`                                | Service type                                                                     | `ClusterIP`                                            |
+| `tfyDeltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
+| `tfyDeltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
+| `tfyDeltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `true`                                                 |
+| `tfyDeltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
+| `tfyDeltaFusionIngestor.serviceAccount.name`                         | Service account name                                                             | `""`                                                   |
+| `tfyDeltaFusionIngestor.serviceAccount.automountServiceAccountToken` | Automount token                                                                  | `false`                                                |
+| `tfyDeltaFusionIngestor.extraVolumes`                                | Extra volumes                                                                    | `[]`                                                   |
+| `tfyDeltaFusionIngestor.extraVolumeMounts`                           | Extra volume mounts                                                              | `[]`                                                   |
+| `tfyDeltaFusionIngestor.commonLabels`                                | Common labels for the bootstrap job                                              | `{}`                                                   |
+| `tfyDeltaFusionIngestor.extraEnvs`                                   | Extra environment variables                                                      | `[]`                                                   |
+| `tfyDeltaFusionIngestor.nodeSelector`                                | Node selector                                                                    | `{}`                                                   |
+| `tfyDeltaFusionIngestor.tolerations`                                 | Tolerations                                                                      | `[]`                                                   |
+| `tfyDeltaFusionIngestor.affinity`                                    | Affinity                                                                         | `{}`                                                   |
+| `tfyDeltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                      | `{}`                                                   |
+| `tfyDeltaFusionIngestor.env`                                         | Additional environment variables                                                 | `{}`                                                   |
 
 
 ## Install TrueFoundry with External Secret Manager
