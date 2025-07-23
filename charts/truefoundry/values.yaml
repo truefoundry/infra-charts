@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.71.0
+  controlPlaneChartVersion: 0.71.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -197,7 +197,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.71.0"
+    tag: "v0.71.2"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -593,7 +593,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.71.0"
+    tag: "v0.71.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -819,8 +819,8 @@ servicefoundryServer:
     FE_ENABLE_SUPERFLOW: "false"
     FE_ENABLE_GUARDRAILS: "true"
     FE_GUARDRAILS_ENABLED_TENANTS: ""
-    FE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
-    FE_MODEL_CONFIG_PATH: /llm-gateway/ai-models-prod.json
+    FE_MODEL_CONFIG_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod-v2.json
+    FE_MODEL_CONFIG_PATH: /llm-gateway/ai-models-prod-v2.json
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
@@ -965,7 +965,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.71.0"
+    tag: "v0.71.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1077,7 +1077,7 @@ tfyK8sController:
     CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
     CLICKHOUSE_USER: user
     CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
-    MODEL_JSON_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod.json
+    MODEL_JSON_URL: https://assets.production.truefoundry.com/llm-gateway/ai-models-prod-v2.json
     RUN_MODEL_COST_SYNC_CRON: "true"
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
@@ -1900,3 +1900,142 @@ tfy-llm-gateway:
   ## @param tfy-llm-gateway.commonAnnotations [object] Annotations for the tfy-llm-gateway
   commonAnnotations:
     argocd.argoproj.io/sync-wave: "2"
+###################################################################################################################
+######################################## Tfy DeltaFusion Ingestor #################################################
+###################################################################################################################
+## @section tfyDeltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
+tfyDeltaFusionIngestor:
+  ## @param tfyDeltaFusionIngestor.enabled Bool to enable the DeltaFusion Ingestor
+  enabled: false
+  ## @skip tfyDeltaFusionIngestor.replicaCount Number of replicas for the DeltaFusion Ingestor
+  #  replicaCount: 2
+
+  ## tfyDeltaFusionIngestor.image Image settings for the DeltaFusion Ingestor
+  image:
+    ## @param tfyDeltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor
+    repository: "tfy.jfrog.io/tfy-private-images/deltafusion-ingestor"
+    ## @param tfyDeltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
+    tag: "v0.0.1"
+    ## @param tfyDeltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
+    pullPolicy: IfNotPresent
+  ## @param tfyDeltaFusionIngestor.labels Labels to apply to the DeltaFusion Ingestor resources
+  labels: {}
+  ## @param tfyDeltaFusionIngestor.annotations Annotations to apply to the DeltaFusion Ingestor resources
+  annotations: {}
+  ## @param tfyDeltaFusionIngestor.envSecretName Name of the secret containing environment variables for the DeltaFusion Ingestor
+  envSecretName: deltafusion-ingestor-service-env-secret
+  ## tfyDeltaFusionIngestor.healthcheck Health check settings
+  healthcheck:
+    ## @param tfyDeltaFusionIngestor.healthcheck.enabled Bool to enable health checks
+    enabled: true
+    ## tfyDeltaFusionIngestor.healthcheck.readiness Readiness probe settings
+    readiness:
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.port Readiness probe port
+      port: 8000
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.path Readiness probe path
+      path: /health
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.initialDelaySeconds Initial delay seconds
+      initialDelaySeconds: 30
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.periodSeconds Period seconds
+      periodSeconds: 10
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.timeoutSeconds Timeout seconds
+      timeoutSeconds: 2
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.successThreshold Success threshold
+      successThreshold: 1
+      ## @param tfyDeltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
+      failureThreshold: 3
+    ## tfyDeltaFusionIngestor.healthcheck.liveness Liveness probe settings
+    liveness:
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.port Liveness probe port
+      port: 8000
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.path Liveness probe path
+      path: /health
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.initialDelaySeconds Initial delay seconds
+      initialDelaySeconds: 10
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.periodSeconds Period seconds
+      periodSeconds: 10
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.timeoutSeconds Timeout seconds
+      timeoutSeconds: 2
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.successThreshold Success threshold
+      successThreshold: 1
+      ## @param tfyDeltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
+      failureThreshold: 3
+  ## tfyDeltaFusionIngestor.storage Persistent volume claim settings
+  storage:
+    ## @param tfyDeltaFusionIngestor.storage.enabled Bool to enable storage
+    enabled: true
+    ## @param tfyDeltaFusionIngestor.storage.accessModes Access modes
+    accessModes:
+      - ReadWriteOnce
+    ## @param tfyDeltaFusionIngestor.storage.storageClassName Storage class name
+    storageClassName: "gp3"
+    ## @param tfyDeltaFusionIngestor.storage.size Storage size
+    size: 5Gi
+    ## @param tfyDeltaFusionIngestor.storage.mountPath Mount path
+    mountPath: /spans_dataset
+  ## @param tfyDeltaFusionIngestor.imagePullSecrets Image pull secrets
+  imagePullSecrets: []
+  ## @param tfyDeltaFusionIngestor.imagePullPolicy Image pull policy override
+  imagePullPolicy: IfNotPresent
+  ## @param tfyDeltaFusionIngestor.nameOverride Name override
+  nameOverride: ""
+  ## @param tfyDeltaFusionIngestor.fullnameOverride Full name override
+  fullnameOverride: ""
+  ## @param tfyDeltaFusionIngestor.podLabels Pod-level labels
+  podLabels: {}
+  ## @param tfyDeltaFusionIngestor.podAnnotations Pod-level annotations
+  podAnnotations: {}
+  podSecurityContext:
+    ## @skip tfyDeltaFusionIngestor.podSecurityContext.fsGroup
+    fsGroup: 100
+    ## @skip tfyDeltaFusionIngestor.podSecurityContext.runAsGroup
+    runAsGroup: 100
+  ## tfyDeltaFusionIngestor.securityContext Security context for the container
+  securityContext:
+    ## @param tfyDeltaFusionIngestor.securityContext.privileged Bool to run the container in privileged mode
+    privileged: false
+  ## tfyDeltaFusionIngestor.service Service settings
+  service:
+    ## @param tfyDeltaFusionIngestor.service.type Service type
+    type: ClusterIP
+    ## @param tfyDeltaFusionIngestor.service.port Service port
+    port: 8000
+    ## @param tfyDeltaFusionIngestor.service.annotations Service annotations
+    annotations: {}
+  ## tfyDeltaFusionIngestor.serviceAccount Service account settings
+  serviceAccount:
+    ## @param tfyDeltaFusionIngestor.serviceAccount.create Bool to create a service account
+    create: true
+    ## @param tfyDeltaFusionIngestor.serviceAccount.annotations Service account annotations
+    annotations: {}
+    ## @param tfyDeltaFusionIngestor.serviceAccount.name Service account name
+    name: ""
+    ## @param tfyDeltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
+    automountServiceAccountToken: false
+  ## @skip tfyDeltaFusionIngestor.resources Resource requests and limits
+  # resources: {}
+  ## @param tfyDeltaFusionIngestor.extraVolumes Extra volumes
+  extraVolumes: []
+  ## @param tfyDeltaFusionIngestor.extraVolumeMounts Extra volume mounts
+  extraVolumeMounts: []
+  ## @param tfyDeltaFusionIngestor.commonLabels [object] Common labels for the bootstrap job
+  commonLabels: {}
+  ## @param tfyDeltaFusionIngestor.extraEnvs Extra environment variables
+  extraEnvs: []
+  ## @param tfyDeltaFusionIngestor.nodeSelector Node selector
+  nodeSelector: {}
+  ## @param tfyDeltaFusionIngestor.tolerations Tolerations
+  tolerations: []
+  ## @param tfyDeltaFusionIngestor.affinity Affinity
+  affinity: {}
+  ## @param tfyDeltaFusionIngestor.topologySpreadConstraints Topology spread constraints
+  topologySpreadConstraints: {}
+  ## @param tfyDeltaFusionIngestor.env [object] Additional environment variables
+  env:
+    CLOUD_PROVIDER: ""
+    S3_PATH: "s3://{{ .Values.servicefoundryServer.env.S3_BUCKET_NAME }}"
+    RUST_LOG: info
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    PAYLOAD_SIZE_LIMIT: "104857600"
+    SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    AWS_EC2_METADATA_DISABLED: "true"
