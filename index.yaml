@@ -17530,6 +17530,53 @@ entries:
     version: 0.0.1
   truefoundry:
   - apiVersion: v2
+    created: "2025-07-23T12:46:19.820102213Z"
+    dependencies:
+    - condition: servicefoundryServer.enabled
+      name: tfy-configs
+      repository: https://truefoundry.github.io/infra-charts
+      version: 0.1.17
+    - alias: tfyNats
+      condition: tfyNats.enabled
+      name: nats
+      repository: https://nats-io.github.io/k8s/helm/charts/
+      version: 1.3.8
+    - condition: devMode.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 15.5.38
+    - condition: tfy-buildkitd-service.enabled
+      name: tfy-buildkitd-service
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.7
+    - condition: tfy-llm-gateway.enabled
+      name: tfy-llm-gateway
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGateway
+      version: 0.71.1
+    - condition: tfy-otel-collector.enabled
+      name: tfy-otel-collector
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - tracing
+      version: 0.69.0
+    - condition: tfy-clickhouse.enabled
+      name: tfy-clickhouse
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGatewayRequestLogging
+      - tracing
+      version: 0.1.9
+    description: TrueFoundry Control Plane Components
+    digest: 91bcc036a3553733d96821ac9125d3909d1f36d96dfb9270e97de1fc18bebc39
+    maintainers:
+    - name: truefoundry
+    name: truefoundry
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.71.3/truefoundry-0.71.3.tgz
+    version: 0.71.3
+  - apiVersion: v2
     created: "2025-07-22T07:44:04.212218458Z"
     dependencies:
     - condition: servicefoundryServer.enabled
@@ -23048,4 +23095,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-configs-0.1.0-rc.1/truefoundry-configs-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2025-07-23T06:57:25.795209738Z"
+generated: "2025-07-23T12:46:19.822208679Z"
