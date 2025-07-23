@@ -38,31 +38,40 @@ The TrueFoundry Helm chart components are installed in the following order:
 
 ### Global prameters for Truefoundry
 
-| Name                                                 | Description                                                                            | Value                                                                            |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `global.resourceTier`                                | Resource deployment tier for the control plane, either small, medium or large accepted | `medium`                                                                         |
-| `global.existingTruefoundryImagePullSecretName`      | Name of the existing image pull secret                                                 | `""`                                                                             |
-| `global.truefoundryImagePullConfigJSON`              | JSON config for image pull secret                                                      | `""`                                                                             |
-| `global.tenantName`                                  | Name of the tenant                                                                     | `""`                                                                             |
-| `global.controlPlaneURL`                             | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                    | Version of control-plane chart                                                         | `0.71.3`                                                                         |
-| `global.existingTruefoundryCredsSecret`              | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
-| `global.database.host`                               | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
-| `global.database.name`                               | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
-| `global.database.username`                           | Control plane database username when dev mode is not enabled                           | `""`                                                                             |
-| `global.database.password`                           | Control plane database password when dev mode is not enabled                           | `""`                                                                             |
-| `global.tfyApiKey`                                   | API key for truefoundry                                                                | `""`                                                                             |
-| `global.affinity`                                    | Affinity for all services                                                              | `{}`                                                                             |
-| `global.labels`                                      | Labels for all services                                                                | `{}`                                                                             |
-| `global.annotations`                                 | Annotations for all services                                                           | `{}`                                                                             |
-| `global.serviceAccount.create`                       | Bool to enable service account                                                         | `true`                                                                           |
-| `global.serviceAccount.name`                         | Name of the service account                                                            | `truefoundry`                                                                    |
-| `global.serviceAccount.annotations`                  | Annotations for the service account                                                    | `{}`                                                                             |
-| `global.serviceAccount.automountServiceAccountToken` | Automount service account token for the service account                                | `true`                                                                           |
-| `tags.llmGateway`                                    | Bool to enable llmGateway infra                                                        | `false`                                                                          |
-| `tags.llmGatewayRequestLogging`                      | Bool to enable request logging feature in LLM gateway                                  | `false`                                                                          |
-| `tags.tracing`                                       | Bool to enable OTEL tracing feature                                                    | `false`                                                                          |
-| `devMode.enabled`                                    | Bool to enable dev mode                                                                | `false`                                                                          |
+| Name                                                                         | Description                                                                            | Value                                                                            |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `global.resourceTier`                                                        | Resource deployment tier for the control plane, either small, medium or large accepted | `medium`                                                                         |
+| `global.existingTruefoundryImagePullSecretName`                              | Name of the existing image pull secret                                                 | `""`                                                                             |
+| `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
+| `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
+| `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.71.4`                                                                         |
+| `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
+| `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
+| `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
+| `global.database.username`                                                   | Control plane database username when dev mode is not enabled                           | `""`                                                                             |
+| `global.database.password`                                                   | Control plane database password when dev mode is not enabled                           | `""`                                                                             |
+| `global.tfyApiKey`                                                           | API key for truefoundry                                                                | `""`                                                                             |
+| `global.affinity`                                                            | Affinity for all services                                                              | `{}`                                                                             |
+| `global.labels`                                                              | Labels for all services                                                                | `{}`                                                                             |
+| `global.annotations`                                                         | Annotations for all services                                                           | `{}`                                                                             |
+| `global.serviceAccount.create`                                               | Bool to enable service account                                                         | `true`                                                                           |
+| `global.serviceAccount.name`                                                 | Name of the service account                                                            | `truefoundry`                                                                    |
+| `global.serviceAccount.annotations`                                          | Annotations for the service account                                                    | `{}`                                                                             |
+| `global.serviceAccount.automountServiceAccountToken`                         | Automount service account token for the service account                                | `true`                                                                           |
+| `global.config.defaultcloudProvider`                                         | Default cloud provider                                                                 | `""`                                                                             |
+| `global.config.storageConfiguration.awsS3BucketName`                         | AWS S3 bucket name                                                                     | `""`                                                                             |
+| `global.config.storageConfiguration.awsRegion`                               | AWS region                                                                             | `""`                                                                             |
+| `global.config.storageConfiguration.awsAssumeRoleArn`                        | AWS assume role ARN                                                                    | `""`                                                                             |
+| `global.config.storageConfiguration.azureBlobUri`                            | Azure blob URI                                                                         | `""`                                                                             |
+| `global.config.storageConfiguration.azureBlobConnectionString`               | Azure blob connection string                                                           | `""`                                                                             |
+| `global.config.storageConfiguration.googleCloudProjectId`                    | Google cloud project ID                                                                | `""`                                                                             |
+| `global.config.storageConfiguration.googleCloudStorageBucketName`            | Google cloud storage bucket name                                                       | `""`                                                                             |
+| `global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent` | Google cloud service account key file content                                          | `""`                                                                             |
+| `tags.llmGateway`                                                            | Bool to enable llmGateway infra                                                        | `false`                                                                          |
+| `tags.llmGatewayRequestLogging`                                              | Bool to enable request logging feature in LLM gateway                                  | `false`                                                                          |
+| `tags.tracing`                                                               | Bool to enable OTEL tracing feature                                                    | `false`                                                                          |
+| `devMode.enabled`                                                            | Bool to enable dev mode                                                                | `false`                                                                          |
 
 ### Monitoring Config values
 
@@ -212,47 +221,47 @@ The TrueFoundry Helm chart components are installed in the following order:
 
 ### sparkHistoryServer Truefoundry spark history server values
 
-| Name                                         | Description                                        | Value                                     |
-| -------------------------------------------- | -------------------------------------------------- | ----------------------------------------- |
-| `s3proxy.enabled`                            | Bool to enable the s3 proxy                        | `false`                                   |
-| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `{}`                                      |
-| `s3proxy.annotations`                        | Annotations for the s3 proxy                       | `{}`                                      |
-| `s3proxy.image.repository`                   | Image repository for the s3 proxy                  | `tfy.jfrog.io/tfy-private-images/s3proxy` |
-| `s3proxy.image.tag`                          | Image tag for the s3 proxy                         | `v0.57.0`                                 |
-| `s3proxy.environmentName`                    | Environment name for the s3 proxy                  | `default`                                 |
-| `s3proxy.envSecretName`                      | Secret name for the s3 proxy environment variables | `s3proxy-env-secret`                      |
-| `s3proxy.imagePullPolicy`                    | Image pull policy for the s3 proxy                 | `IfNotPresent`                            |
-| `s3proxy.nameOverride`                       | Override name for the s3 proxy                     | `""`                                      |
-| `s3proxy.fullnameOverride`                   | Full name override for the s3 proxy                | `""`                                      |
-| `s3proxy.podAnnotations`                     | Annotations for the s3 proxy pods                  | `{}`                                      |
-| `s3proxy.podSecurityContext`                 | Security context for the s3 proxy pods             | `{}`                                      |
-| `s3proxy.commonLabels`                       | Common labels for the s3 proxy pods                | `{}`                                      |
-| `s3proxy.securityContext`                    | Security context for the s3 proxy                  | `{}`                                      |
-| `s3proxy.livenessProbe.failureThreshold`     | Liveness probe failure threshold for s3 proxy      | `3`                                       |
-| `s3proxy.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for s3 proxy          | `600`                                     |
-| `s3proxy.livenessProbe.periodSeconds`        | Liveness probe period for s3 proxy                 | `10`                                      |
-| `s3proxy.livenessProbe.successThreshold`     | Liveness probe success threshold for s3 proxy      | `1`                                       |
-| `s3proxy.livenessProbe.timeoutSeconds`       | Liveness probe timeout for s3 proxy                | `1`                                       |
-| `s3proxy.readinessProbe.failureThreshold`    | Readiness probe failure threshold for s3 proxy     | `3`                                       |
-| `s3proxy.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for s3 proxy         | `30`                                      |
-| `s3proxy.readinessProbe.periodSeconds`       | Readiness probe period for s3 proxy                | `10`                                      |
-| `s3proxy.readinessProbe.successThreshold`    | Readiness probe success threshold for s3 proxy     | `1`                                       |
-| `s3proxy.readinessProbe.timeoutSeconds`      | Readiness probe timeout for s3 proxy               | `1`                                       |
-| `s3proxy.nodeSelector`                       | Node selector for the s3 proxy                     | `{}`                                      |
-| `s3proxy.affinity`                           | Affinity settings for the s3 proxy                 | `{}`                                      |
-| `s3proxy.topologySpreadConstraints`          | Topology spread constraints for the s3 proxy       | `{}`                                      |
-| `s3proxy.service.type`                       | Service type for the s3 proxy                      | `ClusterIP`                               |
-| `s3proxy.service.port`                       | Service port for the s3 proxy                      | `8080`                                    |
-| `s3proxy.service.annotations`                | Annotations for the s3 proxy service               | `{}`                                      |
-| `s3proxy.serviceAccount.create`              | Bool to create the s3 proxy service account        | `false`                                   |
-| `s3proxy.serviceAccount.name`                | Name of the s3 proxy service account               | `""`                                      |
-| `s3proxy.serviceAccount.annotations`         | Annotations for the s3 proxy service account       | `{}`                                      |
-| `s3proxy.extraVolumes`                       | Extra volumes for the s3 proxy                     | `[]`                                      |
-| `s3proxy.extraVolumeMounts`                  | Extra volume mounts for the s3 proxy               | `[]`                                      |
-| `s3proxy.imagePullSecrets`                   | Image pull credentials for s3 proxy                | `[]`                                      |
-| `s3proxy.config.jcloudsEndpoint`             | JClouds endpoint for the s3 proxy                  | `https://s3.us-east-1.amazonaws.com`      |
-| `s3proxy.config.jcloudsProvider`             | JClouds provider for the s3 proxy                  | `aws-s3`                                  |
-| `s3proxy.env`                                | Environment variables for the s3 proxy             | `{}`                                      |
+| Name                                         | Description                                        | Value                                                                                 |
+| -------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `s3proxy.enabled`                            | Bool to enable the s3 proxy                        | `false`                                                                               |
+| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `{}`                                                                                  |
+| `s3proxy.annotations`                        | Annotations for the s3 proxy                       | `{}`                                                                                  |
+| `s3proxy.image.repository`                   | Image repository for the s3 proxy                  | `tfy.jfrog.io/tfy-private-images/s3proxy`                                             |
+| `s3proxy.image.tag`                          | Image tag for the s3 proxy                         | `v0.57.0`                                                                             |
+| `s3proxy.environmentName`                    | Environment name for the s3 proxy                  | `default`                                                                             |
+| `s3proxy.envSecretName`                      | Secret name for the s3 proxy environment variables | `s3proxy-env-secret`                                                                  |
+| `s3proxy.imagePullPolicy`                    | Image pull policy for the s3 proxy                 | `IfNotPresent`                                                                        |
+| `s3proxy.nameOverride`                       | Override name for the s3 proxy                     | `""`                                                                                  |
+| `s3proxy.fullnameOverride`                   | Full name override for the s3 proxy                | `""`                                                                                  |
+| `s3proxy.podAnnotations`                     | Annotations for the s3 proxy pods                  | `{}`                                                                                  |
+| `s3proxy.podSecurityContext`                 | Security context for the s3 proxy pods             | `{}`                                                                                  |
+| `s3proxy.commonLabels`                       | Common labels for the s3 proxy pods                | `{}`                                                                                  |
+| `s3proxy.securityContext`                    | Security context for the s3 proxy                  | `{}`                                                                                  |
+| `s3proxy.livenessProbe.failureThreshold`     | Liveness probe failure threshold for s3 proxy      | `3`                                                                                   |
+| `s3proxy.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for s3 proxy          | `600`                                                                                 |
+| `s3proxy.livenessProbe.periodSeconds`        | Liveness probe period for s3 proxy                 | `10`                                                                                  |
+| `s3proxy.livenessProbe.successThreshold`     | Liveness probe success threshold for s3 proxy      | `1`                                                                                   |
+| `s3proxy.livenessProbe.timeoutSeconds`       | Liveness probe timeout for s3 proxy                | `1`                                                                                   |
+| `s3proxy.readinessProbe.failureThreshold`    | Readiness probe failure threshold for s3 proxy     | `3`                                                                                   |
+| `s3proxy.readinessProbe.initialDelaySeconds` | Readiness probe initial delay for s3 proxy         | `30`                                                                                  |
+| `s3proxy.readinessProbe.periodSeconds`       | Readiness probe period for s3 proxy                | `10`                                                                                  |
+| `s3proxy.readinessProbe.successThreshold`    | Readiness probe success threshold for s3 proxy     | `1`                                                                                   |
+| `s3proxy.readinessProbe.timeoutSeconds`      | Readiness probe timeout for s3 proxy               | `1`                                                                                   |
+| `s3proxy.nodeSelector`                       | Node selector for the s3 proxy                     | `{}`                                                                                  |
+| `s3proxy.affinity`                           | Affinity settings for the s3 proxy                 | `{}`                                                                                  |
+| `s3proxy.topologySpreadConstraints`          | Topology spread constraints for the s3 proxy       | `{}`                                                                                  |
+| `s3proxy.service.type`                       | Service type for the s3 proxy                      | `ClusterIP`                                                                           |
+| `s3proxy.service.port`                       | Service port for the s3 proxy                      | `8080`                                                                                |
+| `s3proxy.service.annotations`                | Annotations for the s3 proxy service               | `{}`                                                                                  |
+| `s3proxy.serviceAccount.create`              | Bool to create the s3 proxy service account        | `false`                                                                               |
+| `s3proxy.serviceAccount.name`                | Name of the s3 proxy service account               | `""`                                                                                  |
+| `s3proxy.serviceAccount.annotations`         | Annotations for the s3 proxy service account       | `{}`                                                                                  |
+| `s3proxy.extraVolumes`                       | Extra volumes for the s3 proxy                     | `[]`                                                                                  |
+| `s3proxy.extraVolumeMounts`                  | Extra volume mounts for the s3 proxy               | `[]`                                                                                  |
+| `s3proxy.imagePullSecrets`                   | Image pull credentials for s3 proxy                | `[]`                                                                                  |
+| `s3proxy.config.jcloudsEndpoint`             | JClouds endpoint for the s3 proxy                  | `https://s3.{{ .Values.global.config.storageConfiguration.awsRegion }}.amazonaws.com` |
+| `s3proxy.config.jcloudsProvider`             | JClouds provider for the s3 proxy                  | `aws-s3`                                                                              |
+| `s3proxy.env`                                | Environment variables for the s3 proxy             | `{}`                                                                                  |
 
 ### servicefoundryServer Truefoundry servicefoundry server values
 
@@ -262,7 +271,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.71.3`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.71.4`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -628,60 +637,60 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                   | `{}`                                                         |
 
-### tfyDeltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
+### deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 
-| Name                                                                 | Description                                                                      | Value                                                  |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `tfyDeltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                          | `false`                                                |
-| `tfyDeltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor                                    | `tfy.jfrog.io/tfy-private-images/deltafusion-ingestor` |
-| `tfyDeltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                           | `v0.0.1`                                               |
-| `tfyDeltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                   | `IfNotPresent`                                         |
-| `tfyDeltaFusionIngestor.labels`                                      | Labels to apply to the DeltaFusion Ingestor resources                            | `{}`                                                   |
-| `tfyDeltaFusionIngestor.annotations`                                 | Annotations to apply to the DeltaFusion Ingestor resources                       | `{}`                                                   |
-| `tfyDeltaFusionIngestor.envSecretName`                               | Name of the secret containing environment variables for the DeltaFusion Ingestor | `deltafusion-ingestor-service-env-secret`              |
-| `tfyDeltaFusionIngestor.healthcheck.enabled`                         | Bool to enable health checks                                                     | `true`                                                 |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.port`                  | Readiness probe port                                                             | `8000`                                                 |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.path`                  | Readiness probe path                                                             | `/health`                                              |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                            | `30`                                                   |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                   | `10`                                                   |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                  | `2`                                                    |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.successThreshold`      | Success threshold                                                                | `1`                                                    |
-| `tfyDeltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                | `3`                                                    |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.port`                   | Liveness probe port                                                              | `8000`                                                 |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.path`                   | Liveness probe path                                                              | `/health`                                              |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                            | `10`                                                   |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                   | `10`                                                   |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.timeoutSeconds`         | Timeout seconds                                                                  | `2`                                                    |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.successThreshold`       | Success threshold                                                                | `1`                                                    |
-| `tfyDeltaFusionIngestor.healthcheck.liveness.failureThreshold`       | Failure threshold                                                                | `3`                                                    |
-| `tfyDeltaFusionIngestor.storage.enabled`                             | Bool to enable storage                                                           | `true`                                                 |
-| `tfyDeltaFusionIngestor.storage.accessModes`                         | Access modes                                                                     | `["ReadWriteOnce"]`                                    |
-| `tfyDeltaFusionIngestor.storage.storageClassName`                    | Storage class name                                                               | `gp3`                                                  |
-| `tfyDeltaFusionIngestor.storage.size`                                | Storage size                                                                     | `5Gi`                                                  |
-| `tfyDeltaFusionIngestor.storage.mountPath`                           | Mount path                                                                       | `/spans_dataset`                                       |
-| `tfyDeltaFusionIngestor.imagePullSecrets`                            | Image pull secrets                                                               | `[]`                                                   |
-| `tfyDeltaFusionIngestor.imagePullPolicy`                             | Image pull policy override                                                       | `IfNotPresent`                                         |
-| `tfyDeltaFusionIngestor.nameOverride`                                | Name override                                                                    | `""`                                                   |
-| `tfyDeltaFusionIngestor.fullnameOverride`                            | Full name override                                                               | `""`                                                   |
-| `tfyDeltaFusionIngestor.podLabels`                                   | Pod-level labels                                                                 | `{}`                                                   |
-| `tfyDeltaFusionIngestor.podAnnotations`                              | Pod-level annotations                                                            | `{}`                                                   |
-| `tfyDeltaFusionIngestor.securityContext.privileged`                  | Bool to run the container in privileged mode                                     | `false`                                                |
-| `tfyDeltaFusionIngestor.service.type`                                | Service type                                                                     | `ClusterIP`                                            |
-| `tfyDeltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
-| `tfyDeltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
-| `tfyDeltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `true`                                                 |
-| `tfyDeltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
-| `tfyDeltaFusionIngestor.serviceAccount.name`                         | Service account name                                                             | `""`                                                   |
-| `tfyDeltaFusionIngestor.serviceAccount.automountServiceAccountToken` | Automount token                                                                  | `false`                                                |
-| `tfyDeltaFusionIngestor.extraVolumes`                                | Extra volumes                                                                    | `[]`                                                   |
-| `tfyDeltaFusionIngestor.extraVolumeMounts`                           | Extra volume mounts                                                              | `[]`                                                   |
-| `tfyDeltaFusionIngestor.commonLabels`                                | Common labels for the bootstrap job                                              | `{}`                                                   |
-| `tfyDeltaFusionIngestor.extraEnvs`                                   | Extra environment variables                                                      | `[]`                                                   |
-| `tfyDeltaFusionIngestor.nodeSelector`                                | Node selector                                                                    | `{}`                                                   |
-| `tfyDeltaFusionIngestor.tolerations`                                 | Tolerations                                                                      | `[]`                                                   |
-| `tfyDeltaFusionIngestor.affinity`                                    | Affinity                                                                         | `{}`                                                   |
-| `tfyDeltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                      | `{}`                                                   |
-| `tfyDeltaFusionIngestor.env`                                         | Additional environment variables                                                 | `{}`                                                   |
+| Name                                                              | Description                                                                      | Value                                                  |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                          | `false`                                                |
+| `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor                                    | `tfy.jfrog.io/tfy-private-images/deltafusion-ingestor` |
+| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                           | `v0.0.1`                                               |
+| `deltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                   | `IfNotPresent`                                         |
+| `deltaFusionIngestor.labels`                                      | Labels to apply to the DeltaFusion Ingestor resources                            | `{}`                                                   |
+| `deltaFusionIngestor.annotations`                                 | Annotations to apply to the DeltaFusion Ingestor resources                       | `{}`                                                   |
+| `deltaFusionIngestor.envSecretName`                               | Name of the secret containing environment variables for the DeltaFusion Ingestor | `deltafusion-ingestor-service-env-secret`              |
+| `deltaFusionIngestor.healthcheck.enabled`                         | Bool to enable health checks                                                     | `true`                                                 |
+| `deltaFusionIngestor.healthcheck.readiness.port`                  | Readiness probe port                                                             | `8000`                                                 |
+| `deltaFusionIngestor.healthcheck.readiness.path`                  | Readiness probe path                                                             | `/health`                                              |
+| `deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                            | `30`                                                   |
+| `deltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                   | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                  | `2`                                                    |
+| `deltaFusionIngestor.healthcheck.readiness.successThreshold`      | Success threshold                                                                | `1`                                                    |
+| `deltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                | `3`                                                    |
+| `deltaFusionIngestor.healthcheck.liveness.port`                   | Liveness probe port                                                              | `8000`                                                 |
+| `deltaFusionIngestor.healthcheck.liveness.path`                   | Liveness probe path                                                              | `/health`                                              |
+| `deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                            | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                   | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.liveness.timeoutSeconds`         | Timeout seconds                                                                  | `2`                                                    |
+| `deltaFusionIngestor.healthcheck.liveness.successThreshold`       | Success threshold                                                                | `1`                                                    |
+| `deltaFusionIngestor.healthcheck.liveness.failureThreshold`       | Failure threshold                                                                | `3`                                                    |
+| `deltaFusionIngestor.storage.enabled`                             | Bool to enable storage                                                           | `true`                                                 |
+| `deltaFusionIngestor.storage.accessModes`                         | Access modes                                                                     | `["ReadWriteOnce"]`                                    |
+| `deltaFusionIngestor.storage.storageClassName`                    | Storage class name                                                               | `gp3`                                                  |
+| `deltaFusionIngestor.storage.size`                                | Storage size                                                                     | `5Gi`                                                  |
+| `deltaFusionIngestor.storage.mountPath`                           | Mount path                                                                       | `/spans_dataset`                                       |
+| `deltaFusionIngestor.imagePullSecrets`                            | Image pull secrets                                                               | `[]`                                                   |
+| `deltaFusionIngestor.imagePullPolicy`                             | Image pull policy override                                                       | `IfNotPresent`                                         |
+| `deltaFusionIngestor.nameOverride`                                | Name override                                                                    | `""`                                                   |
+| `deltaFusionIngestor.fullnameOverride`                            | Full name override                                                               | `""`                                                   |
+| `deltaFusionIngestor.podLabels`                                   | Pod-level labels                                                                 | `{}`                                                   |
+| `deltaFusionIngestor.podAnnotations`                              | Pod-level annotations                                                            | `{}`                                                   |
+| `deltaFusionIngestor.securityContext.privileged`                  | Bool to run the container in privileged mode                                     | `false`                                                |
+| `deltaFusionIngestor.service.type`                                | Service type                                                                     | `ClusterIP`                                            |
+| `deltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
+| `deltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
+| `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `true`                                                 |
+| `deltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
+| `deltaFusionIngestor.serviceAccount.name`                         | Service account name                                                             | `""`                                                   |
+| `deltaFusionIngestor.serviceAccount.automountServiceAccountToken` | Automount token                                                                  | `false`                                                |
+| `deltaFusionIngestor.extraVolumes`                                | Extra volumes                                                                    | `[]`                                                   |
+| `deltaFusionIngestor.extraVolumeMounts`                           | Extra volume mounts                                                              | `[]`                                                   |
+| `deltaFusionIngestor.commonLabels`                                | Common labels for the bootstrap job                                              | `{}`                                                   |
+| `deltaFusionIngestor.extraEnvs`                                   | Extra environment variables                                                      | `[]`                                                   |
+| `deltaFusionIngestor.nodeSelector`                                | Node selector                                                                    | `{}`                                                   |
+| `deltaFusionIngestor.tolerations`                                 | Tolerations                                                                      | `[]`                                                   |
+| `deltaFusionIngestor.affinity`                                    | Affinity                                                                         | `{}`                                                   |
+| `deltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                      | `{}`                                                   |
+| `deltaFusionIngestor.env`                                         | Additional environment variables                                                 | `{}`                                                   |
 
 
 ## Install TrueFoundry with External Secret Manager

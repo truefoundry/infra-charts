@@ -1,4 +1,4 @@
-{{- if .Values.tfyDeltaFusionIngestor.enabled }}
+{{- if .Values.deltaFusionIngestor.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -6,12 +6,12 @@ metadata:
   labels:
     {{- include "deltafusion-ingestor.labels" . | nindent 4 }}
   annotations:
-    {{- toYaml .Values.tfyDeltaFusionIngestor.service.annotations | nindent 4 }}
+    {{- toYaml .Values.deltaFusionIngestor.service.annotations | nindent 4 }}
 spec:
-  type: {{ .Values.tfyDeltaFusionIngestor.service.type }}
+  type: {{ .Values.deltaFusionIngestor.service.type }}
   ports:
-    - port: {{ .Values.tfyDeltaFusionIngestor.service.port }}
-      targetPort: {{ .Values.tfyDeltaFusionIngestor.service.port }}
+    - port: {{ .Values.deltaFusionIngestor.service.port }}
+      targetPort: {{ .Values.deltaFusionIngestor.service.port }}
       protocol: TCP
       name: http
   selector:
