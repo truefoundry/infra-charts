@@ -34,7 +34,11 @@ spec:
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
+          {{- if .Values.deltaFusionQueryServer.image.optimized }}
+          image: "{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
+          {{- else }}
           image: "{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}"
+          {{- end }}
           imagePullPolicy: {{ .Values.deltaFusionQueryServer.imagePullPolicy }}
           ports:
             - name: http
