@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "tfy-k8s-controller.chart" . }}
   Deployment annotations
   */}}
 {{- define "tfy-k8s-controller.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "tfy-k8s-controller.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-k8s-controller.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 

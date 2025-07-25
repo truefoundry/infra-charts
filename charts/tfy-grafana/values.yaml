@@ -12,6 +12,8 @@ gateway: "istio-system/tfy-wildcard"
 
 ## @section grafana Configuration for Grafana deployment.
 grafana:
+  image:
+    registry: mirror.gcr.io
   grafana.ini:
     server:
       ## @param grafana.ini.server.domain Domain for Grafana.
@@ -26,7 +28,11 @@ grafana:
     - name: server-config
       mountPath: /etc/server-configs
       configMap: tfy-grafana-server-config
-  
+
+  ## @param grafana.plugins VictoriaLogs plugin for Grafana.
+  plugins:
+  - victoriametrics-logs-datasource
+
   ## @param grafana.replicas StatefulSet configuration for Grafana.
   ## @param grafana.useStatefulSet Replicas configuration for Grafana.
   #
@@ -61,6 +67,8 @@ grafana:
   ## @param grafana.initChownData.resources.requests.memory Memory request for initializing chown data.
   ##
   initChownData:
+    image:
+      registry: mirror.gcr.io
     resources:
       limits:
         cpu: 100m
@@ -116,6 +124,10 @@ grafana:
       - name: Loki
         type: loki
         url: http://loki.loki.svc.cluster.local:3100
+        access: proxy
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        url: http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428
         access: proxy
   ## Persistence configuration for Grafana.
   ##

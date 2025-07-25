@@ -33,6 +33,14 @@ spec:
           karpenter:
             enabled: false
         {{- end }}
+        {{- if eq .Values.gpu.clusterType "gcpGkeStandard" }}
+          gpu:
+            dcgmExporter:
+              serviceSelectorLabels:
+                app.kubernetes.io/component: gcp-gke-standard-dcgm-exporter
+                app.kubernetes.io/instance: tfy-gpu-operator
+                app.kubernetes.io/name: gcp-gke-standard-dcgm-exporter
+        {{- end }}
         extraObjects: []
         {{- end }}
 {{- end }}
