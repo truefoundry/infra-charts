@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "deltafusion-ingestor.fullname" . }}
   labels:
-    {{- include "deltafusion-ingestor.labels" . | nindent 4 }}
+    {{- include "deltafusion-ingestor.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml .Values.deltaFusionIngestor.service.annotations | nindent 4 }}
+    {{- include "deltafusion-ingestor.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.deltaFusionIngestor.service.type }}
   ports:
