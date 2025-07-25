@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "spark-history-server.chart" . }}
   Deployment annotations
   */}}
 {{- define "spark-history-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "spark-history-server.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "spark-history-server.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 

@@ -33,41 +33,50 @@ Create chart name and version as used by the chart label.
 {{/*
 Common Annotations
 */}}
-{{- define "deltafusion-ingestor.annotations" -}}
-{{- if .Values.deltaFusionIngestor.annotations }}
-{{ toYaml .Values.deltaFusionIngestor.annotations }}
+{{- define "deltafusion-ingestor.inputCommonAnnotations" -}}
+{{- if .Values.deltaFusionIngestor.commonAnnotations }}
+{{ toYaml .Values.deltaFusionIngestor.commonAnnotations }}
 {{- else if .Values.global.annotations }}
 {{ toYaml .Values.global.annotations }}
-{{- else -}}
-{}
 {{- end }}
 {{- end }}
 
+{{- define "deltafusion-ingestor.commonAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "1") (include "deltafusion-ingestor.inputCommonAnnotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+
 {{/*
-Pod Labels
+Pod Annotations
 */}}
-{{- define "deltafusion-ingestor.podLabels" -}}
-{{ include "deltafusion-ingestor.selectorLabels" . }}
-{{- if .Values.deltaFusionIngestor.image.tag }}
-app.kubernetes.io/version: {{ .Values.deltaFusionIngestor.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.deltaFusionIngestor.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
+{{- define "deltafusion-ingestor.podAnnotations" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.podAnnotations) }}
+{{- toYaml $merged }}
 {{- end }}
 
 {{/*
-Common labels
+ServiceAccount annotations
 */}}
-{{- define "deltafusion-ingestor.labels" -}}
-{{- include "deltafusion-ingestor.podLabels" . }}
-helm.sh/chart: {{ include "deltafusion-ingestor.chart" . }}
-{{- if .Values.deltaFusionIngestor.commonLabels }}
-{{ toYaml .Values.deltaFusionIngestor.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- define "deltafusion-ingestor.serviceAccountAnnotations" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceAccount.annotations) }}
+{{- toYaml $merged }}
 {{- end }}
+
+{{/*
+Service Annotations
+*/}}
+{{- define "deltafusion-ingestor.serviceAnnotations" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.service.annotations) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
+Statefulset Annotations
+*/}}
+{{- define "deltafusion-ingestor.statefulsetAnnotations" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.statefulsetAnnotations) }}
+{{- toYaml $merged }}
 {{- end }}
 
 {{/*
@@ -79,6 +88,53 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Common labels
+*/}}
+{{- define "deltafusion-ingestor.commonLabels" -}}
+helm.sh/chart: {{ include "deltafusion-ingestor.chart" . }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/version: {{ .Values.deltaFusionIngestor.image.tag | quote }}
+{{- if .Values.deltaFusionIngestor.commonLabels }}
+{{ toYaml .Values.deltaFusionIngestor.commonLabels }}
+{{- else if .Values.global.labels }}
+{{ toYaml .Values.global.labels }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Labels
+*/}}
+{{- define "deltafusion-ingestor.podLabels" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.podLabels) }}
+{{- $merged = merge $merged (include "deltafusion-ingestor.selectorLabels" . | fromYaml) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+Service Labels
+*/}}
+{{- define "deltafusion-ingestor.serviceLabels" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.service.labels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+ServiceAccount Labels
+*/}}
+{{- define "deltafusion-ingestor.serviceAccountLabels" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceAccount.labels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+Statefulset Labels
+*/}}
+{{- define "deltafusion-ingestor.statefulsetLabels" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.statefulsetLabels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "deltafusion-ingestor.serviceAccountName" -}}
@@ -86,21 +142,6 @@ Create the name of the service account to use
 {{- .Values.deltaFusionIngestor.serviceAccount.name }}
 {{- else }}
 {{- .Values.global.serviceAccount.name }}
-{{- end }}
-{{- end }}
-
-{{/*
-ServiceAccount annotations
-*/}}
-{{- define "deltafusion-ingestor.serviceAccountAnnotations" -}}
-{{- if .Values.deltaFusionIngestor.serviceAccount.annotations }}
-{{ toYaml .Values.deltaFusionIngestor.serviceAccount.annotations }}
-{{- else if .Values.deltaFusionIngestor.annotations }}
-{{ toYaml .Values.deltaFusionIngestor.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
 {{- end }}
 {{- end }}
 
@@ -166,7 +207,7 @@ limits:
 {{- define "deltafusion-ingestor.replicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.replicaCount -}}
-{{ .Values.deltaFusionIngestor.replicaCount }}
+2
 {{- else if eq $tier "small" -}}
 2
 {{- else if eq $tier "medium" -}}
@@ -180,27 +221,10 @@ limits:
 NodeSelector merge logic
 */}}
 {{- define "deltafusion-ingestor.nodeSelector" -}}
-{{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- if .Values.nodeSelector -}}
-{{- $mergedNodeSelector := merge .Values.nodeSelector $defaultNodeSelector }}
-{{- toYaml $mergedNodeSelector }}
+{{- if .Values.deltaFusionIngestor.nodeSelector -}}
+{{- toYaml .Values.deltaFusionIngestor.nodeSelector }}
 {{- else if .Values.global.nodeSelector -}}
-{{- $mergedNodeSelector := merge .Values.global.nodeSelector $defaultNodeSelector }}
-{{- toYaml $mergedNodeSelector }}
-{{- else -}}
-{{- $mergedNodeSelector := $defaultNodeSelector }}
-{{- toYaml $mergedNodeSelector }}
-{{- end }}
-{{- end }}
-
-{{/*
-Affinity for the deltafusion-ingestor service
-*/}}
-{{- define "deltafusion-ingestor.affinity" -}}
-{{- if .Values.deltaFusionIngestor.affinity -}}
-{{ toYaml .Values.deltaFusionIngestor.affinity }}
-{{- else if .Values.global.affinity -}}
-{{ toYaml .Values.global.affinity }}
+{{- toYaml .Values.global.nodeSelector }}
 {{- else -}}
 {}
 {{- end }}
@@ -210,8 +234,8 @@ Affinity for the deltafusion-ingestor service
 Tolerations for the deltafusion-ingestor service
 */}}
 {{- define "deltafusion-ingestor.tolerations" -}}
-{{- if .Values.tolerations }}
-{{ toYaml .Values.tolerations }}
+{{- if .Values.deltaFusionIngestor.tolerations }}
+{{ toYaml .Values.deltaFusionIngestor.tolerations }}
 {{- else if .Values.global.tolerations -}}
 {{ toYaml .Values.global.tolerations -}}
 {{- else -}}

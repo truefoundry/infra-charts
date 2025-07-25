@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "sfy-manifest-service.chart" . }}
   Deployment annotations
   */}}
 {{- define "sfy-manifest-service.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "sfy-manifest-service.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "sfy-manifest-service.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
