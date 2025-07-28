@@ -72,6 +72,14 @@ Service Annotations
 {{- end }}
 
 {{/*
+ServiceMonitor Annotations
+*/}}
+{{- define "deltafusion-query-server.serviceMonitorAnnotations" -}}
+{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.serviceMonitor.additionalAnnotations) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
 Statefulset Annotations
 */}}
 {{- define "deltafusion-query-server.deploymentAnnotations" -}}
@@ -80,20 +88,28 @@ Statefulset Annotations
 {{- end }}
 
 {{/*
+App name and instance Labels
+*/}}
+{{- define "deltafusion-query-server.appNameAndInstanceLabels" -}}
+app.kubernetes.io/name: {{ include "deltafusion-query-server.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "deltafusion-query-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "deltafusion-query-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "deltafusion-query-server.appNameAndInstanceLabels" . }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
 {{- define "deltafusion-query-server.commonLabels" -}}
-helm.sh/chart: {{ include "deltafusion-query-server.chart" . }}
+{{ include "deltafusion-query-server.appNameAndInstanceLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/version: {{ .Values.deltaFusionQueryServer.image.tag | quote }}
+helm.sh/chart: {{ include "deltafusion-query-server.chart" . }}
 {{- if .Values.deltaFusionQueryServer.commonLabels }}
 {{ toYaml .Values.deltaFusionQueryServer.commonLabels }}
 {{- else if .Values.global.labels }}
@@ -115,6 +131,15 @@ Service Labels
 */}}
 {{- define "deltafusion-query-server.serviceLabels" -}}
 {{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.service.labels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+ServiceMonitor Labels
+*/}}
+{{- define "deltafusion-query-server.serviceMonitorLabels" -}}
+release: prometheus
+{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.serviceMonitor.additionalLabels) }}
 {{ toYaml $merged }}
 {{- end }}
 
