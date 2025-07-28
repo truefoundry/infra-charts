@@ -96,7 +96,7 @@ servicefoundryServer:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.72.2`                                                                         |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.73.0-rc.1`                                                                    |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -178,7 +178,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.72.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.72.1`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -237,7 +237,7 @@ servicefoundryServer:
 | `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `{}`                                               |
 | `mlfoundryServer.annotations`                                 | Annotations for the mlfoundry server                       | `{}`                                               |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.72.0`                                          |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.73.0-rc.1`                                     |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                  | `default`                                          |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
@@ -323,7 +323,7 @@ servicefoundryServer:
 | `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.72.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.73.0-rc.1`                                          |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -416,7 +416,7 @@ servicefoundryServer:
 | `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `{}`                                                 |
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController                                | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.72.0`                                            |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.73.0-rc.1`                                       |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                    | `default`                                            |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables               | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                               | `IfNotPresent`                                       |
@@ -728,7 +728,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
 | `deltaFusionIngestor.service.labels`                              | Service labels                                                                   | `{}`                                                   |
 | `deltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
-| `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `true`                                                 |
+| `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `false`                                                |
 | `deltaFusionIngestor.serviceAccount.labels`                       | Service account labels                                                           | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.name`                         | Service account name                                                             | `""`                                                   |
@@ -766,9 +766,6 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.commonAnnotations`                           | Common annotations for the deltaFusionQueryServer pods                         | `{}`                                                       |
 | `deltaFusionQueryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the deltaFusionQueryServer                       | `true`                                                     |
 | `deltaFusionQueryServer.imagePullSecrets`                            | Image pull secrets for the deltaFusionQueryServer                              | `[]`                                                       |
-| `deltaFusionQueryServer.serviceMonitor.enabled`                      | Enable ServiceMonitor for the deltaFusionQueryServer                           | `true`                                                     |
-| `deltaFusionQueryServer.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                       | `{}`                                                       |
-| `deltaFusionQueryServer.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                  | `{}`                                                       |
 | `deltaFusionQueryServer.resources`                                   | Resource requests and limits for the deltaFusionQueryServer                    | `{}`                                                       |
 | `deltaFusionQueryServer.healthcheck.liveness.path`                   | Liveness probe path                                                            | `/health`                                                  |
 | `deltaFusionQueryServer.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                          | `10`                                                       |
