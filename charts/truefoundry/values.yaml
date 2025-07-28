@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.72.4
+  controlPlaneChartVersion: 0.73.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -197,7 +197,7 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.nodeSelector Node selector for the bootstrap container
   nodeSelector: {}
   ## @param truefoundryBootstrap.tolerations Tolerations specific to the bootstrap container
-  tolerations: {}
+  tolerations: []
   ## Image pull secrets for the bootstrap container
   ## @param truefoundryBootstrap.imagePullSecrets Image pull secrets for the bootstrap container
   ##
@@ -212,7 +212,7 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.enabled Bool to enable the frontend app
   enabled: true
   ## @param truefoundryFrontendApp.tolerations Tolerations specific to the frontend app
-  tolerations: {}
+  tolerations: []
   ## @skip truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
   #  replicaCount: 1
   ## @param truefoundryFrontendApp.annotations [object] Annotations for the frontend app
@@ -222,7 +222,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.72.1"
+    tag: "v0.73.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -361,7 +361,6 @@ truefoundryFrontendApp:
     DEBUGGING_AGENT_URL: http://tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local:8080
     TFY_OTEL_COLLECTOR_URL: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318
     TRT_ENGINE_BUILDER_BASE_URL: https://tfy-trt-llm-engine-builder.tfy-ctl-euwe1-production.production.truefoundry.com
-    SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ .Release.Namespace }}.svc.cluster.local:18080
 ###################################################################################################################
 ####################################### MLfoundry Server ##########################################################
 ###################################################################################################################
@@ -370,7 +369,7 @@ mlfoundryServer:
   ## @param mlfoundryServer.enabled Bool to enable the mlfoundry server
   enabled: true
   ## @param mlfoundryServer.tolerations Tolerations specific to the mlfoundry server
-  tolerations: {}
+  tolerations: []
   ## @param mlfoundryServer.annotations [object] Annotations for the mlfoundry server
   annotations: {}
   ## mlfoundryServer.image Image for the mlfoundry server
@@ -378,7 +377,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.73.0-rc.1"
+    tag: "v0.73.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -489,7 +488,7 @@ s3proxy:
   ## @param s3proxy.enabled Bool to enable the s3 proxy
   enabled: false
   ## @param s3proxy.tolerations Tolerations specific to the s3 proxy
-  tolerations: {}
+  tolerations: []
   ## @skip s3proxy.replicaCount Number of replicas for the s3 proxy
   # replicaCount: 1
   ## @param s3proxy.annotations [object] Annotations for the s3 proxy
@@ -605,7 +604,7 @@ servicefoundryServer:
   ## @param servicefoundryServer.enabled Bool to enable the servicefoundry server
   enabled: true
   ## @param servicefoundryServer.tolerations Tolerations specific to the servicefoundry server
-  tolerations: {}
+  tolerations: []
   ## @skip servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
   # replicaCount: 1
   ## @param servicefoundryServer.annotations [object] Annotations for the mlfoundry server
@@ -615,7 +614,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.73.0-rc.1"
+    tag: "v0.73.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -807,7 +806,7 @@ servicefoundryServer:
     FE_LLM_GATEWAY_REQUEST_LOGS_ENABLED_TENANTS: ""
     FE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
     FE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
-    FE_ENABLE_TRACES: "{{ .Values.tags.tracing }}"
+    FE_ENABLE_TRACES: "false"
     FE_TRACES_ENABLED_TENANTS: ""
     FE_STRIPE_PUBLISHABLE_KEY: ""
     FE_CREDIT_CARD_REQUIRED_DOMAINS: ""
@@ -866,7 +865,7 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.enabled Bool to enable the spark history server
   enabled: false
   ## @param sparkHistoryServer.tolerations Tolerations specific to the spark history server
-  tolerations: {}
+  tolerations: []
   ## @skip sparkHistoryServer.replicaCount Number of replicas for the spark history server
   # replicaCount: 1
   ## @param sparkHistoryServer.annotations [object] Annotations for the spark history server
@@ -983,7 +982,7 @@ tfyK8sController:
   ## @param tfyK8sController.enabled Bool to enable the tfyK8sController
   enabled: true
   ## @param tfyK8sController.tolerations Tolerations specific to the tfyK8sController
-  tolerations: {}
+  tolerations: []
   ## @skip tfyK8sController.replicaCount Number of replicas for the tfyK8sController
   # replicaCount: 1
   ## @param tfyK8sController.annotations [object] Annotations for the tfyK8sController
@@ -993,7 +992,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.73.0-rc.1"
+    tag: "v0.73.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1119,7 +1118,7 @@ sfyManifestService:
   ## @param sfyManifestService.annotations [object] Annotations for the sfy manifest service
   annotations: {}
   ## @param sfyManifestService.tolerations Tolerations specific to the sfy manifest service
-  tolerations: {}
+  tolerations: []
   ## sfyManifestService.image Image for the sfy manifest service
   image:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service
@@ -1484,7 +1483,7 @@ tfyController:
   ## @param tfyController.enabled Bool to enable the tfyController
   enabled: true
   ## @skip tfyController.tolerations Tolerations specific to the tfyController
-  tolerations: {}
+  tolerations: []
   ## @param tfyController.annotations Annotations for the tfyController
   annotations: {}
   ## tfyController.image Image for the tfyController
@@ -1610,7 +1609,7 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.enabled Bool to enable the tfyWorkflowAdmin
   enabled: false
   ## @skip tfyWorkflowAdmin.tolerations Tolerations specific to the tfyWorkflowAdmin
-  tolerations: {}
+  tolerations: []
   ## @param tfyWorkflowAdmin.annotations Annotations for the tfyWorkflowAdmin
   annotations: {}
   ## tfyWorkflowAdmin.image Image for the tfyWorkflowAdmin
@@ -1932,6 +1931,14 @@ tfy-llm-gateway:
   commonAnnotations:
     argocd.argoproj.io/sync-wave: "3"
 ###################################################################################################################
+####################################### TrueFoundry OTel Collector ################################################
+###################################################################################################################
+## @section tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
+tfy-otel-collector:
+  ## @skip tfy-otel-collector.commonAnnotations Common annotations for the tfy-otel-collector
+  commonAnnotations:
+    argocd.argoproj.io/sync-wave: "3"
+###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
 ## @section deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
@@ -2027,6 +2034,18 @@ deltaFusionIngestor:
     labels: {}
     ## @param deltaFusionIngestor.service.annotations Service annotations
     annotations: {}
+  ## deltaFusionIngestor.serviceMonitor ServiceMonitor settings for the deltaFusionIngestor
+  serviceMonitor:
+    ## @param deltaFusionIngestor.serviceMonitor.enabled Enable ServiceMonitor for the deltaFusionIngestor
+    enabled: true
+    ## @param deltaFusionIngestor.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
+    ## @param deltaFusionIngestor.serviceMonitor.path Path for the ServiceMonitor
+    path: /metrics
+    ## @param deltaFusionIngestor.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param deltaFusionIngestor.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
   ## deltaFusionIngestor.serviceAccount Service account settings
   serviceAccount:
     ## @param deltaFusionIngestor.serviceAccount.create Bool to create a service account
@@ -2075,7 +2094,7 @@ deltaFusionQueryServer:
   ## @skip deltaFusionQueryServer.replicaCount Number of replicas for the DeltaFusion Query
   #  replicaCount: 2
   ## @skip deltaFusionQueryServer.tolerations Tolerations specific to the deltaFusionQueryServer
-  tolerations: {}
+  tolerations: []
   ## @param deltaFusionQueryServer.deploymentLabels Labels for the deltaFusionQueryServer deployment
   deploymentLabels: {}
   ## @param deltaFusionQueryServer.deploymentAnnotations Annotations for the deltaFusionQueryServer deployment
@@ -2164,6 +2183,18 @@ deltaFusionQueryServer:
     labels: {}
     ## @param deltaFusionQueryServer.service.annotations Annotations for the deltaFusionQueryServer service
     annotations: {}
+  ## deltaFusionQueryServer.serviceMonitor ServiceMonitor settings for the deltaFusionQueryServer
+  serviceMonitor:
+    ## @param deltaFusionQueryServer.serviceMonitor.enabled Enable ServiceMonitor for the deltaFusionQueryServer
+    enabled: true
+    ## @param deltaFusionQueryServer.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
+    ## @param deltaFusionQueryServer.serviceMonitor.path Path for the ServiceMonitor
+    path: /metrics
+    ## @param deltaFusionQueryServer.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param deltaFusionQueryServer.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
   ## deltaFusionQueryServer.serviceAccount Service account settings for the deltaFusionQueryServer
   serviceAccount:
     ## @param deltaFusionQueryServer.serviceAccount.create Bool to create a service account for the deltaFusionQueryServer

@@ -166,7 +166,7 @@ servicefoundryServer:
 | `truefoundryBootstrap.extraVolumes`                                | Extra volumes for the bootstrap container                   | `[]`                                            |
 | `truefoundryBootstrap.affinity`                                    | Affinity for the bootstrap container                        | `{}`                                            |
 | `truefoundryBootstrap.nodeSelector`                                | Node selector for the bootstrap container                   | `{}`                                            |
-| `truefoundryBootstrap.tolerations`                                 | Tolerations specific to the bootstrap container             | `{}`                                            |
+| `truefoundryBootstrap.tolerations`                                 | Tolerations specific to the bootstrap container             | `[]`                                            |
 | `truefoundryBootstrap.imagePullSecrets`                            | Image pull secrets for the bootstrap container              | `[]`                                            |
 | `truefoundryBootstrap.createdBuildkitServiceTlsCerts`              | Bool to install TLS certificates                            | `true`                                          |
 
@@ -175,10 +175,10 @@ servicefoundryServer:
 | Name                                                                 | Description                                            | Value                                                                                      |
 | -------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `truefoundryFrontendApp.enabled`                                     | Bool to enable the frontend app                        | `true`                                                                                     |
-| `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
+| `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `[]`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.72.1`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.73.0`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -234,10 +234,10 @@ servicefoundryServer:
 | Name                                                          | Description                                                | Value                                              |
 | ------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
 | `mlfoundryServer.enabled`                                     | Bool to enable the mlfoundry server                        | `true`                                             |
-| `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `{}`                                               |
+| `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `[]`                                               |
 | `mlfoundryServer.annotations`                                 | Annotations for the mlfoundry server                       | `{}`                                               |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.73.0-rc.1`                                     |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.73.0`                                          |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                  | `default`                                          |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
@@ -276,7 +276,7 @@ servicefoundryServer:
 | Name                                         | Description                                        | Value                                                                                 |
 | -------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `s3proxy.enabled`                            | Bool to enable the s3 proxy                        | `false`                                                                               |
-| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `{}`                                                                                  |
+| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `[]`                                                                                  |
 | `s3proxy.annotations`                        | Annotations for the s3 proxy                       | `{}`                                                                                  |
 | `s3proxy.image.repository`                   | Image repository for the s3 proxy                  | `tfy.jfrog.io/tfy-private-images/s3proxy`                                             |
 | `s3proxy.image.tag`                          | Image tag for the s3 proxy                         | `v0.57.0`                                                                             |
@@ -320,10 +320,10 @@ servicefoundryServer:
 | Name                                                               | Description                                                     | Value                                                   |
 | ------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------- |
 | `servicefoundryServer.enabled`                                     | Bool to enable the servicefoundry server                        | `true`                                                  |
-| `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
+| `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `[]`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.73.0-rc.1`                                          |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.73.0`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -370,7 +370,7 @@ servicefoundryServer:
 | Name                                                    | Description                                                    | Value                                                  |
 | ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `sparkHistoryServer.enabled`                            | Bool to enable the spark history server                        | `false`                                                |
-| `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `{}`                                                   |
+| `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `[]`                                                   |
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                       | `{}`                                                   |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server                  | `tfy.jfrog.io/tfy-private-images/spark-history-server` |
 | `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.57.0`                                              |
@@ -413,10 +413,10 @@ servicefoundryServer:
 | Name                                                           | Description                                                              | Value                                                |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `tfyK8sController.enabled`                                     | Bool to enable the tfyK8sController                                      | `true`                                               |
-| `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `{}`                                                 |
+| `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `[]`                                                 |
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController                                | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.73.0-rc.1`                                       |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.73.0`                                            |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                    | `default`                                            |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables               | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                               | `IfNotPresent`                                       |
@@ -459,7 +459,7 @@ servicefoundryServer:
 | ---------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `sfyManifestService.enabled`                                     | Bool to enable the sfy manifest service                        | `true`                                                 |
 | `sfyManifestService.annotations`                                 | Annotations for the sfy manifest service                       | `{}`                                                   |
-| `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service               | `{}`                                                   |
+| `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service               | `[]`                                                   |
 | `sfyManifestService.image.repository`                            | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
 | `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                         | `v0.69.0`                                              |
 | `sfyManifestService.environmentName`                             | Environment name for the sfy manifest service                  | `default`                                              |
@@ -689,6 +689,9 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                   | `{}`                                                         |
 
+### tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
+
+
 ### deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 
 | Name                                                              | Description                                                                      | Value                                                  |
@@ -728,6 +731,11 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
 | `deltaFusionIngestor.service.labels`                              | Service labels                                                                   | `{}`                                                   |
 | `deltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
+| `deltaFusionIngestor.serviceMonitor.enabled`                      | Enable ServiceMonitor for the deltaFusionIngestor                                | `true`                                                 |
+| `deltaFusionIngestor.serviceMonitor.interval`                     | Interval for the ServiceMonitor                                                  | `10s`                                                  |
+| `deltaFusionIngestor.serviceMonitor.path`                         | Path for the ServiceMonitor                                                      | `/metrics`                                             |
+| `deltaFusionIngestor.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                         | `{}`                                                   |
+| `deltaFusionIngestor.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                    | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `false`                                                |
 | `deltaFusionIngestor.serviceAccount.labels`                       | Service account labels                                                           | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
@@ -786,6 +794,11 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.service.port`                                | Service port for the deltaFusionQueryServer                                    | `8080`                                                     |
 | `deltaFusionQueryServer.service.labels`                              | Labels for the deltaFusionQueryServer service                                  | `{}`                                                       |
 | `deltaFusionQueryServer.service.annotations`                         | Annotations for the deltaFusionQueryServer service                             | `{}`                                                       |
+| `deltaFusionQueryServer.serviceMonitor.enabled`                      | Enable ServiceMonitor for the deltaFusionQueryServer                           | `true`                                                     |
+| `deltaFusionQueryServer.serviceMonitor.interval`                     | Interval for the ServiceMonitor                                                | `10s`                                                      |
+| `deltaFusionQueryServer.serviceMonitor.path`                         | Path for the ServiceMonitor                                                    | `/metrics`                                                 |
+| `deltaFusionQueryServer.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                       | `{}`                                                       |
+| `deltaFusionQueryServer.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                  | `{}`                                                       |
 | `deltaFusionQueryServer.serviceAccount.create`                       | Bool to create a service account for the deltaFusionQueryServer                | `false`                                                    |
 | `deltaFusionQueryServer.serviceAccount.labels`                       | Labels for the deltaFusionQueryServer service account                          | `{}`                                                       |
 | `deltaFusionQueryServer.serviceAccount.annotations`                  | Annotations for the deltaFusionQueryServer service account                     | `{}`                                                       |

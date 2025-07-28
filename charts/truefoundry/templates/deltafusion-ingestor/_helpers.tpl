@@ -72,6 +72,14 @@ Service Annotations
 {{- end }}
 
 {{/*
+ServiceMonitor Annotations
+*/}}
+{{- define "deltafusion-ingestor.serviceMonitorAnnotations" -}}
+{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalAnnotations) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
 Statefulset Annotations
 */}}
 {{- define "deltafusion-ingestor.statefulsetAnnotations" -}}
@@ -80,17 +88,25 @@ Statefulset Annotations
 {{- end }}
 
 {{/*
+App name and instance Labels
+*/}}
+{{- define "deltafusion-ingestor.appNameAndInstanceLabels" -}}
+app.kubernetes.io/name: {{ include "deltafusion-ingestor.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "deltafusion-ingestor.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "deltafusion-ingestor.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "deltafusion-ingestor.appNameAndInstanceLabels" . }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
 {{- define "deltafusion-ingestor.commonLabels" -}}
+{{ include "deltafusion-ingestor.appNameAndInstanceLabels" . }}
 helm.sh/chart: {{ include "deltafusion-ingestor.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/version: {{ .Values.deltaFusionIngestor.image.tag | quote }}
@@ -115,6 +131,15 @@ Service Labels
 */}}
 {{- define "deltafusion-ingestor.serviceLabels" -}}
 {{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.service.labels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+ServiceMonitor Labels
+*/}}
+{{- define "deltafusion-ingestor.serviceMonitorLabels" -}}
+release: prometheus
+{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalLabels) }}
 {{ toYaml $merged }}
 {{- end }}
 
