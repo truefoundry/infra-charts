@@ -304,3 +304,14 @@ Node Selector for tfy-llm-gateway deployment
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+Image Pull Secret for tfy-llm-gateway
+*/}}
+{{- define "tfy-llm-gateway.imagePullSecret" -}}
+{{- if .Values.global.existingTruefoundryImagePullSecretName -}}
+{{ .Values.global.existingTruefoundryImagePullSecretName }}
+{{- else -}}
+truefoundry-image-pull-secret
+{{- end }}
+{{- end }}

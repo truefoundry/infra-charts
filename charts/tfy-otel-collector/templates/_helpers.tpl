@@ -284,3 +284,14 @@ Node Selector for tfy-otel-collector deployment
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+Image Pull Secret for tfy-otel-collector
+*/}}
+{{- define "tfy-otel-collector.imagePullSecret" -}}
+{{- if .Values.global.existingTruefoundryImagePullSecretName -}}
+{{ .Values.global.existingTruefoundryImagePullSecretName }}
+{{- else -}}
+truefoundry-image-pull-secret
+{{- end }}
+{{- end }}

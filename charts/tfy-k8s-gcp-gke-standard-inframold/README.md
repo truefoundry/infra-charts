@@ -99,7 +99,7 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | `truefoundry.database.username`                    | Username of the database                                   | `""`    |
 | `truefoundry.database.password`                    | Password of the database                                   | `""`    |
 | `truefoundry.tfyApiKey`                            | API Key for TrueFoundry                                    | `""`    |
-| `truefoundry.truefoundryImagePullConfigJSON`       | Json config for authenticating to the TrueFoundry registry | `""`    |
+| `truefoundry.truefoundryImagePullConfigBase64`       | Json config for authenticating to the TrueFoundry registry | `""`    |
 | `truefoundry.truefoundry_iam_role_arn_annotations` | IAM role annotations for service accounts                  | `{}`    |
 | `truefoundry.s3proxy.enabled`                      | Flag to enable S3 Proxy                                    | `false` |
 | `truefoundry.sparkHistoryServer.enabled`           | Flag to enable Spark History Server                        | `false` |
