@@ -525,3 +525,46 @@ jspolicy:
   ##
   config:
     valuesOverride: {}
+
+## @section tfy-workflow-propeller parameters
+## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
+##
+tfyWorkflowPropeller:
+  enabled: false
+  ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## tfyWorkflowPropeller.flyteCore configuration
+  flyteCore:
+    ## @skip tfyWorkflowPropeller.flyteCore.storage [object] Storage configuration for flyteCore
+    ##
+    storage:
+      type: gcs
+      bucketName: <to_be_provided>
+      gcs:
+        projectId: <to_be_provided>
+    ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
+    ##
+    configmap:
+      core:
+        propeller:
+          metadata-prefix: "<to_be_provided>"
+          rawoutput-prefix: "<to_be_provided>"
+      k8s:
+        plugins:
+          k8s:
+            default-env-vars:
+              - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
+    ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
+    ##
+    flytepropeller:
+      serviceAccount:
+        annotations:
+          iam.gke.io/gcp-service-account: "<to_be_provided>"
+  ## @skip tfyWorkflowPropeller.tfySignedURLServer [object] TfySignedURLServer configuration for flyteCore
+  ##
+  tfySignedURLServer:
+    enabled: true
+    env:
+      DEFAULT_CLOUD_PROVIDER: gcp
