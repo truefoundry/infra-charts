@@ -268,3 +268,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `jspolicy.affinity`              | Affinity for jspolicy                                    | `{}`    |
 | `jspolicy.tolerations`           | Tolerations for jspolicy                                 | `[]`    |
 | `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
+
+### tfy-workflow-propeller parameters
+
+| Name                                  | Description                                | Value   |
+| ------------------------------------- | ------------------------------------------ | ------- |
+| `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.         | `false` |
+| `tfyWorkflowPropeller.valuesOverride` | Config override from default config values | `{}`    |

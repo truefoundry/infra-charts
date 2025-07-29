@@ -526,3 +526,45 @@ jspolicy:
   ##
   config:
     valuesOverride: {}
+
+## @section tfy-workflow-propeller parameters
+## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
+##
+tfyWorkflowPropeller:
+  enabled: false
+  ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## tfyWorkflowPropeller.flyteCore configuration
+  flyteCore:
+    ## @skip tfyWorkflowPropeller.flyteCore.storage [object] Storage configuration for flyteCore
+    ##
+    storage:
+      type: custom
+      custom:
+        stow:
+          kind: azure
+          config:
+            account: <to_be_provided>
+            key: <to_be_provided>
+        container: <to_be_provided>
+    ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
+    ##
+    configmap:
+      core:
+        propeller:
+          metadata-prefix: "<to_be_provided>"
+          rawoutput-prefix: "<to_be_provided>"
+      k8s:
+        plugins:
+          k8s:
+            default-env-vars:
+              - AZURE_STORAGE_ACCOUNT_NAME: "<to_be_provided>"
+              - AZURE_STORAGE_ACCOUNT_KEY: "<to_be_provided>"
+    ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
+    ##
+    flytepropeller:
+      serviceAccount:
+        annotations:
+          {}
