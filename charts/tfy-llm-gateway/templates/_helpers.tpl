@@ -308,10 +308,18 @@ Node Selector for tfy-llm-gateway deployment
 {{/*
 Image Pull Secret for tfy-llm-gateway
 */}}
-{{- define "tfy-llm-gateway.imagePullSecret" -}}
-{{- if .Values.global.existingTruefoundryImagePullSecretName -}}
-{{ .Values.global.existingTruefoundryImagePullSecretName }}
-{{- else -}}
-truefoundry-image-pull-secret
+{{/*
+  Image Pull Secrets
+  Only include image pull secrets if:
+  1. existingTruefoundryImagePullSecretName is provided, OR
+  2. truefoundryImagePullConfigJSON is provided (which will create the secret)
+*/}}
+{{- define "global-imagePullSecrets" -}}
+{{- if .Values.global.existingTruefoundryImagePullSecretName }}
+imagePullSecrets:
+  - name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON }}
+imagePullSecrets:
+  - name: truefoundry-image-pull-secret
 {{- end }}
 {{- end }}
