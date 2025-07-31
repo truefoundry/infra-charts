@@ -82,9 +82,9 @@ Create the name of the service account to use
 */}}
 {{- define "buildkitd-service.serviceAccountName" -}}
 {{- if .Values.serviceAccount.name }}
-{{- .Values.serviceAccount.name }}
+{{- .Values.serviceAccount.name -}}
 {{- else }}
-{{- .Values.global.serviceAccount.name }}
+{{- .Values.global.serviceAccount.name -}}
 {{- end }}
 {{- end }}
 
