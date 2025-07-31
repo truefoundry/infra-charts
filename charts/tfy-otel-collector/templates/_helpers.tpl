@@ -68,10 +68,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-otel-collector.serviceAccountName" -}}
-{{- if .Values.serviceAccount.name }}
-{{- .Values.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
+{{- if .Values.serviceAccount.name -}}
+{{- .Values.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
 {{- end }}
 {{- end }}
 
@@ -300,9 +300,9 @@ Node Selector for tfy-otel-collector deployment
   2. truefoundryImagePullConfigJSON is provided (which will create the secret)
 */}}
 {{- define "global.imagePullSecrets" -}}
-{{- if .Values.global.existingTruefoundryImagePullSecretName }}
-- name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
-{{- else if .Values.global.truefoundryImagePullConfigJSON }}
+{{- if .Values.global.existingTruefoundryImagePullSecretName -}}
+- name: {{ .Values.global.existingTruefoundryImagePullSecretName -}}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
 - name: truefoundry-image-pull-secret
 {{- end }}
 {{- end }}

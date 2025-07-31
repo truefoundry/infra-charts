@@ -86,10 +86,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-llm-gateway.serviceAccountName" -}}
-{{- if .Values.serviceAccount.name }}
-{{- .Values.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
+{{- if .Values.serviceAccount.name -}}
+{{- .Values.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
 {{- end }}
 {{- end }}
 
