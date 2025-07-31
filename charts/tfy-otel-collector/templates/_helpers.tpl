@@ -124,6 +124,14 @@ ServiceAccount Annotation
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-otel-collector.deploymentAnnotations" -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-otel-collector.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
 Service Annotations
 */}}
 {{- define "tfy-otel-collector.service.annotations" -}}
