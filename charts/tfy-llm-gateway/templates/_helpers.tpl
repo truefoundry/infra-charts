@@ -314,12 +314,10 @@ Image Pull Secret for tfy-llm-gateway
   1. existingTruefoundryImagePullSecretName is provided, OR
   2. truefoundryImagePullConfigJSON is provided (which will create the secret)
 */}}
-{{- define "global-imagePullSecrets" -}}
+{{- define "global.imagePullSecrets" -}}
 {{- if .Values.global.existingTruefoundryImagePullSecretName }}
-imagePullSecrets:
-  - name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
+- name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
 {{- else if .Values.global.truefoundryImagePullConfigJSON }}
-imagePullSecrets:
-  - name: truefoundry-image-pull-secret
+- name: truefoundry-image-pull-secret
 {{- end }}
 {{- end }}
