@@ -13,9 +13,9 @@ LLM-Gateway Helm Chart
 | `global.affinity`                               | Affinity rules for pod scheduling on a node                              | `{}`                                              |
 | `global.tolerations`                            | Tolerations for pod scheduling on a node                                 | `[]`                                              |
 | `global.nodeSelector`                           | Node selector                                                            | `{}`                                              |
-| `global.serviceAccount.name`                    | Service account name                                                     | `truefoundry`                                     |
+| `global.serviceAccount.name`                    | Service account name                                                     | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                                       | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                                          | `v0.73.0`                                         |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                                          | `v0.74.0-rc.1`                                    |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                               | `""`                                              |
 | `environmentName`                               | The environment name                                                     | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                              | `tfy-llm-gateway-env-secret`                      |
