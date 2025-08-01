@@ -272,7 +272,9 @@ Tolerations for the deltafusion-ingestor service
   Parse env from template
   */}}
 {{- define "deltafusion-ingestor.parseEnv" -}}
+{{/*SPANS_DATASET_PATH is Deprecated*/}}
 SPANS_DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
+DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
 PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{ tpl (.Values.deltaFusionIngestor.env | toYaml) . }}
 {{- end }}
