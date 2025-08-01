@@ -163,12 +163,12 @@ Statefulset Labels
 Create the name of the service account to use
 */}}
 {{- define "deltafusion-ingestor.serviceAccountName" -}}
-{{- if .Values.deltaFusionIngestor.serviceAccount.create }}
-{{- .Values.deltaFusionIngestor.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- if .Values.deltaFusionIngestor.serviceAccount.name -}}
+{{- .Values.deltaFusionIngestor.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
 
 {{- define "deltafusion-ingestor.resources" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
@@ -185,7 +185,7 @@ Create the name of the service account to use
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
 {{- $defaultsRequests := $defaults.requests | default dict }}
 {{- $defaultsLimits := $defaults.limits | default dict }}
-{{- $overrides := .Values.resources | default dict }}
+{{- $overrides := .Values.deltaFusionIngestor.resources | default dict }}
 {{- $overridesRequests := $overrides.requests | default dict }}
 {{- $overridesLimits := $overrides.limits | default dict }}
 
