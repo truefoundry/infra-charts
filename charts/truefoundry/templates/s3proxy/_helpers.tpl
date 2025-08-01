@@ -90,11 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "s3proxy.serviceAccountName" -}}
-{{- if .Values.s3proxy.serviceAccount.create }}
-{{- .Values.s3proxy.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
+{{- if .Values.s3proxy.serviceAccount.name -}}
+{{- .Values.s3proxy.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*
