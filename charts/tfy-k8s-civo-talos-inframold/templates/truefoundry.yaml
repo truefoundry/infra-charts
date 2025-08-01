@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.74.2
+    targetRevision: 0.73.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -53,15 +53,6 @@ spec:
           {{- else }}
           affinity: {}
           {{- end }}
-          {{- if .Values.truefoundry.truefoundry_iam_role_arn_annotations }}
-          serviceAccount:
-            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
-          {{- end }}
-          config:
-            defaultCloudProvider: {{ .Values.truefoundry.defaultCloudProvider }}
-            storageConfiguration:
-              {{- toYaml .Values.truefoundry.storageConfiguration | nindent 14 }}
-
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
         {{- if .Values.truefoundry.tags }}
@@ -70,14 +61,12 @@ spec:
         {{- end }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
-        {{- if .Values.truefoundry.truefoundry_iam_role_arn_annotations }}
         servicefoundryServer:
           serviceAccount:
             annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
         mlfoundryServer:
           serviceAccount:
             annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
-        {{- end }}
         {{- if .Values.truefoundry.devMode.enabled }}
         postgresql:
           primary:
