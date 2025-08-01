@@ -86,10 +86,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-llm-gateway.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "tfy-llm-gateway.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- if .Values.serviceAccount.name -}}
+{{- .Values.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
 {{- end }}
 {{- end }}
 
@@ -302,5 +302,22 @@ Node Selector for tfy-llm-gateway deployment
 {{- toYaml .Values.global.nodeSelector }}
 {{- else -}}
 {}
+{{- end }}
+{{- end }}
+
+{{/*
+Image Pull Secret for tfy-llm-gateway
+*/}}
+{{/*
+  Image Pull Secrets
+  Only include image pull secrets if:
+  1. existingTruefoundryImagePullSecretName is provided, OR
+  2. truefoundryImagePullConfigJSON is provided (which will create the secret)
+*/}}
+{{- define "global.imagePullSecrets" -}}
+{{- if .Values.global.existingTruefoundryImagePullSecretName }}
+- name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON }}
+- name: truefoundry-image-pull-secret
 {{- end }}
 {{- end }}

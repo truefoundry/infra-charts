@@ -163,41 +163,26 @@ Deployment Labels
 Create the name of the service account to use
 */}}
 {{- define "deltafusion-query-server.serviceAccountName" -}}
-{{- if .Values.deltaFusionQueryServer.serviceAccount.create -}}
-{{- default (include "deltafusion-query-server.fullname" .) "deltafusion-query-server" }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- if .Values.deltaFusionQueryServer.serviceAccount.name -}}
+{{- .Values.deltaFusionQueryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
 
-{{- define "deltafusion-query-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
-
-{{- $defaultsYaml := "" }}
-{{- if eq $tier "small" }}
-  {{- $defaultsYaml = include "deltafusion-query-server.defaultResources.small" . }}
-{{- else if eq $tier "medium" }}
-  {{- $defaultsYaml = include "deltafusion-query-server.defaultResources.medium" . }}
-{{- else if eq $tier "large" }}
-  {{- $defaultsYaml = include "deltafusion-query-server.defaultResources.large" . }}
+{{/*
+Resource Tier
+*/}}
+{{- define "deltafusion-query-server.resourceTier" }}
+{{- $tier := .Values.deltaFusionQueryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
 {{- end }}
 
-{{- $defaults := fromYaml $defaultsYaml | default dict }}
-{{- $defaultsRequests := $defaults.requests | default dict }}
-{{- $defaultsLimits := $defaults.limits | default dict }}
-{{- $overrides := .Values.resources | default dict }}
-{{- $overridesRequests := $overrides.requests | default dict }}
-{{- $overridesLimits := $overrides.limits | default dict }}
-
-{{- $requests := merge $overridesRequests $defaultsRequests }}
-{{- $limits := merge $overridesLimits $defaultsLimits }}
-
-{{- $merged := dict "requests" $requests "limits" $limits }}
-{{ toYaml $merged }}
-{{- end }}
-
+{{/*
+Ephemeral Storage Limit
+*/}}
 {{- define  "deltafusion-query-server.ephemeralStorage.limit" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "deltafusion-query-server.resourceTier" . }}
 {{- if eq $tier "small" -}}
 10000M
 {{- else if eq $tier "medium" -}}
@@ -207,6 +192,9 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
+{{/*
+Default Resources
+*/}}
 {{- define "deltafusion-query-server.defaultResources.small" }}
 requests:
   cpu: 1
@@ -245,29 +233,60 @@ limits:
 Resource Tied Envs
 cache is 60% of memory limit
 query is 40% of memory limit
-spill is ??% of ephemeral storage requests
+spill is 40% of ephemeral storage requests
 */}}
 {{- define "deltafusion-query-server.resourceTiedEnvs" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "deltafusion-query-server.resourceTier" . }}
 {{- if eq $tier "small" }}
 DATAFUSION_EXECUTION_TARGET_PARTITIONS: "1"
+DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "4800"
 QUERY_MEMORY_POOL_MB: "3200"
-QUERY_SPILL_DISK_SIZE_MB: "5000"
+QUERY_SPILL_DISK_SIZE_MB: "2000"
 {{- else if eq $tier "medium" }}
 DATAFUSION_EXECUTION_TARGET_PARTITIONS: "3"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "9600"
 QUERY_MEMORY_POOL_MB: "6400"
-QUERY_SPILL_DISK_SIZE_MB: "20000"
+QUERY_SPILL_DISK_SIZE_MB: "8000"
 {{- else if eq $tier "large" }}
 DATAFUSION_EXECUTION_TARGET_PARTITIONS: "8"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "19200"
 QUERY_MEMORY_POOL_MB: "12800"
-QUERY_SPILL_DISK_SIZE_MB: "40000"
+QUERY_SPILL_DISK_SIZE_MB: "16000"
 {{- end }}
 {{- end }}
+
+{{/*
+Resources
+*/}}
+{{- define "deltafusion-query-server.resources" }}
+{{- $tier := include "deltafusion-query-server.resourceTier" . }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+{{- $defaultsYaml = include "deltafusion-query-server.defaultResources.small" . }}
+{{- else if eq $tier "medium" }}
+{{- $defaultsYaml = include "deltafusion-query-server.defaultResources.medium" . }}
+{{- else if eq $tier "large" }}
+{{- $defaultsYaml = include "deltafusion-query-server.defaultResources.large" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.deltaFusionQueryServer.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
 
 {{/*
   Parse env from template

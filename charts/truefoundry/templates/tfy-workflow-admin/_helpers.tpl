@@ -149,8 +149,11 @@ app.kubernetes.io/workflow-component: scheduler
   Create the name of the service account to use
   */}}
 {{- define "tfy-workflow-admin.serviceAccountName" -}}
-{{- default (include "tfy-workflow-admin.fullname" .) "tfy-workflow-admin"}}
-
+{{- if .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*

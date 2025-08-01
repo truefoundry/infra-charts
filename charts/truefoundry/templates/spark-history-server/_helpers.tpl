@@ -90,11 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "spark-history-server.serviceAccountName" -}}
-{{- if .Values.sparkHistoryServer.serviceAccount.create }}
-{{- .Values.sparkHistoryServer.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
+{{- if .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 {{/*
   Service Account Annotations
