@@ -108,6 +108,7 @@ def get_image_details(image_name):
         logging.warning(f"Skipping image due to inspection error: {image_name}")
         previously_processed_image_urls.add(image_name)
         previous_platform_data[image_name] = []  # Cache as empty to avoid retries
+        return []
 
     try:
         manifest = json.loads(result)
