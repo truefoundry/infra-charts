@@ -58,6 +58,18 @@ def extract_chart_info(manifest_file):
                     })
     return chart_info_list
 
+# Recursively replace all `enabled: false` with `enabled: true` in dict or list
+def enable_all_features(data):
+    if isinstance(data, dict):
+        return {
+            key: (True if key == "enabled" and value is False else enable_all_features(value))
+            for key, value in data.items()
+        }
+    elif isinstance(data, list):
+        return [enable_all_features(item) for item in data]
+    else:
+        return data
+
 # function to save final chart information to a file
 def save_chart_info(chart_info_list, output_file):
     with open(output_file, 'w') as f:
@@ -99,7 +111,9 @@ def get_image_details(image_name):
     try:
         manifest = json.loads(result)
     except json.JSONDecodeError as e:
-        logging.error(f"Failed to parse JSON from manifest inspect for {image_name}: {e}")
+        logging.error(f"Failed to parse JSON for {image_name}: {e}")
+        previously_processed_image_urls.add(image_name)
+        previous_platform_data[image_name] = []
         return []
     
     platforms = []
@@ -115,7 +129,9 @@ def get_image_details(image_name):
         architecture = manifest.get('architecture')
         if image_os and architecture:
             platforms.append({"os": image_os, "architecture": architecture})
-    
+
+    previously_processed_image_urls.add(image_name)
+    previous_platform_data[image_name] = platforms
     return platforms
 
 # function to extract images from Kubernetes manifests
@@ -209,8 +225,13 @@ def process_and_generate_chart_manifests(chart_info_list):
 
         values_file_path = f"{temp_dir}/charts/{chart_name}-values.yaml"
         os.makedirs(os.path.dirname(values_file_path), exist_ok=True)
+
+        # Parse values YAML, enable all `enabled: false` entries
+        values_data = yaml.safe_load(chart_values)
+        patched_values = enable_all_features(values_data)
+
         with open(values_file_path,'w') as f:
-            f.write(chart_values)
+            yaml.dump(patched_values, f)
         template_command = f"helm template {chart_name}/{chart_name}" if urlparse(chart_details['repoURL']).scheme!='oci' else f"helm template {chart_details['repoURL']}/{chart_name}"
 
         run_command(f"helm repo add --force-update {chart_name} {chart_details['repoURL']}" if urlparse(chart_details['repoURL']).scheme!='oci' else '')
