@@ -105,7 +105,9 @@ def get_image_details(image_name):
     try:
         result = run_command(f'docker manifest inspect {image_name}')
     except Exception as e:
-        logging.error(f"Error inspecting image {image_name}: {e}")
+        logging.warning(f"Skipping image {image_name} due to access or parsing error.")
+        previously_processed_image_urls.add(image_name)
+        previous_platform_data[image_name] = []
         return []
     
     try:
