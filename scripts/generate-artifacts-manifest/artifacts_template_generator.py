@@ -58,6 +58,18 @@ def extract_chart_info(manifest_file):
                     })
     return chart_info_list
 
+# Recursively replace all `enabled: false` with `enabled: true` in dict or list
+def enable_all_features(data):
+    if isinstance(data, dict):
+        return {
+            key: (True if key == "enabled" and value is False else enable_all_features(value))
+            for key, value in data.items()
+        }
+    elif isinstance(data, list):
+        return [enable_all_features(item) for item in data]
+    else:
+        return data
+
 # function to save final chart information to a file
 def save_chart_info(chart_info_list, output_file):
     with open(output_file, 'w') as f:
@@ -80,28 +92,32 @@ def get_image_details(image_name):
        dict: A JSON-formatted dictionary containing the image type, details, and supported platforms.
    """
     global previously_processed_image_urls, previous_platform_data
-    
+
     if image_name in previously_processed_image_urls:
         logging.info(f"[skip] using cached platforms for {image_name}")
         return previous_platform_data.get(image_name, [])
-    
+
     if image_name.startswith(('auto', 'cos-nvidia-installer', '602401143452.dkr.ecr.us-west-2.amazonaws.com/eks/')):
         logging.info(f"Skipping image {image_name}")
         return []
-    
+
     logging.info(f"Inspecting image manifest for {image_name}")
     try:
         result = run_command(f'docker manifest inspect {image_name}')
-    except Exception as e:
-        logging.error(f"Error inspecting image {image_name}: {e}")
+    except SystemExit:
+        logging.warning(f"Skipping image due to inspection error: {image_name}")
+        previously_processed_image_urls.add(image_name)
+        previous_platform_data[image_name] = []  # Cache as empty to avoid retries
         return []
-    
+
     try:
         manifest = json.loads(result)
     except json.JSONDecodeError as e:
-        logging.error(f"Failed to parse JSON from manifest inspect for {image_name}: {e}")
+        logging.error(f"Failed to parse JSON for {image_name}: {e}")
+        previously_processed_image_urls.add(image_name)
+        previous_platform_data[image_name] = []
         return []
-    
+
     platforms = []
     if 'manifests' in manifest:
         for manifest_entry in manifest['manifests']:
@@ -115,14 +131,16 @@ def get_image_details(image_name):
         architecture = manifest.get('architecture')
         if image_os and architecture:
             platforms.append({"os": image_os, "architecture": architecture})
-    
+
+    previously_processed_image_urls.add(image_name)
+    previous_platform_data[image_name] = platforms
     return platforms
 
 # function to extract images from Kubernetes manifests
 def extract_images_from_k8s_manifests(yaml_content):
     resources_with_containers = ['Deployment','StatefulSet','DaemonSet','Job','CronJob','Pod','ReplicaSet']
     image_info_list = []
-    
+
     try:
         manifests = yaml.safe_load_all(yaml_content)
         for doc in manifests:
@@ -131,7 +149,7 @@ def extract_images_from_k8s_manifests(yaml_content):
             kind = doc['kind']; spec = doc['spec']
             if kind in ['Alertmanager','Prometheus']:
                 image = spec.get('image','')
-                
+
                 # Check if image is already known before calling get_image_details
                 if image in previous_platform_data:
                     platforms = previous_platform_data[image]
@@ -144,7 +162,7 @@ def extract_images_from_k8s_manifests(yaml_content):
                 inits = target.get('initContainers',[]) or []
                 for container in containers + inits:
                     container_image = container.get('image','')
-                    
+
                     # Check if container image is already known before calling get_image_details
                     if container_image in previous_platform_data:
                         platforms = previous_platform_data[container_image]
@@ -159,7 +177,7 @@ def extract_images_from_k8s_manifests(yaml_content):
 def generate_manifests(chart_name, repo_url, version, values_file):
     parsed_url = urlparse(repo_url)
     chart_dir_path = os.path.join(temp_dir, chart_name)
-    
+
     if parsed_url.scheme == 'oci':
         logging.info(f"OCI registry for {chart_name}")
         run_command(f"helm pull {repo_url}/{chart_name} --version {version} --untar --untardir {temp_dir}")
@@ -167,11 +185,11 @@ def generate_manifests(chart_name, repo_url, version, values_file):
         run_command(f"helm repo add --force-update {chart_name} {repo_url}")
         run_command("helm repo update")
         run_command(f"helm pull {chart_name}/{chart_name} --version {version} --untar --untardir {temp_dir}")
-    
+
     # Update dependencies to ensure we process all dependent charts and their images
     logging.info(f"Updating dependencies for {chart_name}")
     run_command(f"helm dependency update {chart_dir_path}")
-    
+
     manifest_file_path = os.path.join(temp_dir,'generated-manifest.yaml')
     run_command(f"helm template my-release -f {values_file} {os.path.join(temp_dir,chart_name)} > {manifest_file_path}")
     return manifest_file_path
@@ -179,11 +197,11 @@ def generate_manifests(chart_name, repo_url, version, values_file):
 # Generate manifests for local chart
 def generate_manifests_local(chart_name, values_file):
     chart_dir_path = f"charts/{chart_name}"
-    
+
     # Update dependencies to ensure we process all dependent charts and their images
     logging.info(f"Updating dependencies for {chart_name}")
     run_command(f"helm dependency update {chart_dir_path}")
-    
+
     manifest_file_path = os.path.join(temp_dir,'generated-manifest.yaml')
     run_command(f"helm template {chart_name} -f {values_file} {chart_dir_path} > {manifest_file_path}")
     return manifest_file_path
@@ -191,11 +209,11 @@ def generate_manifests_local(chart_name, values_file):
 # Process charts and gather images
 def process_and_generate_chart_manifests(chart_info_list):
     all_processed_images = []
-    
+
     known_image_registry_urls = set(previous_platform_data.keys())
-    
+
     logging.info(f"Total known images: {len(known_image_registry_urls)} (including {len(previously_processed_image_urls)} with platforms)")
-    
+
     for chart_info in chart_info_list:
         chart_details = chart_info['details']
         chart_name = chart_details['chart']
@@ -209,8 +227,13 @@ def process_and_generate_chart_manifests(chart_info_list):
 
         values_file_path = f"{temp_dir}/charts/{chart_name}-values.yaml"
         os.makedirs(os.path.dirname(values_file_path), exist_ok=True)
+
+        # Parse values YAML, enable all `enabled: false` entries
+        values_data = yaml.safe_load(chart_values)
+        patched_values = enable_all_features(values_data)
+
         with open(values_file_path,'w') as f:
-            f.write(chart_values)
+            yaml.dump(patched_values, f)
         template_command = f"helm template {chart_name}/{chart_name}" if urlparse(chart_details['repoURL']).scheme!='oci' else f"helm template {chart_details['repoURL']}/{chart_name}"
 
         run_command(f"helm repo add --force-update {chart_name} {chart_details['repoURL']}" if urlparse(chart_details['repoURL']).scheme!='oci' else '')
@@ -218,16 +241,16 @@ def process_and_generate_chart_manifests(chart_info_list):
 
         # Get raw images from the manifest
         chart_raw_images = make_image_list_unique(extract_images_from_k8s_manifests(open(f"{temp_dir}/charts/{chart_name}.yaml").read()))
-        
+
         # Process each image, setting platform info from previous_platform_data if already known
         chart_processed_images = []
         for image_entry in chart_raw_images:
             image_registry_url = image_entry['details']['registryURL']
-            
+
             if image_registry_url.startswith(('auto', 'cos-nvidia-installer')):
                 chart_processed_images.append(image_entry)
                 continue
-                
+
             # If the image is already seen before, use that platform info even if empty
             if image_registry_url in known_image_registry_urls:
                 # Reuse the existing platform info, even if empty
@@ -236,22 +259,22 @@ def process_and_generate_chart_manifests(chart_info_list):
             else:
                 # This is truly a new image, add it to be processed
                 chart_processed_images.append(image_entry)
-        
+
         # Log a summary
         image_urls = [img['details']['registryURL'] for img in chart_processed_images]
         previously_known_count = len([url for url in image_urls if url in known_image_registry_urls])
         new_image_count = len(image_urls) - previously_known_count
-        
+
         logging.info(f"Chart {chart_name}@{chart_version} images: {len(image_urls)}")
         logging.info(f" -> {previously_known_count} already-known images")
         logging.info(f" -> {new_image_count} new images to inspect")
-        
+
         # Store the list of image URLs in the chart details
         chart_info['details']['images'] = image_urls
-        
+
         # Add all processed images to the result list
         all_processed_images.extend(chart_processed_images)
-        
+
     return all_processed_images
 
 # Cleanup and tmp dir
@@ -274,7 +297,7 @@ if __name__ == '__main__':
 
     # Load existing image entries for skip logic and cache details
     existing_images = []
-    
+
     # First load from output_file to prioritize its platform info
     if args.output_file_path and os.path.exists(args.output_file_path):
         logging.info(f"Loading images from output file: {args.output_file_path}")
@@ -285,17 +308,17 @@ if __name__ == '__main__':
                 if image_item.get('type') == 'image':
                     registry_url = image_item['details']['registryURL']
                     platform_info = image_item['details'].get('platforms', [])
-                    
+
                     # Add to existing_images
                     existing_images.append(image_item)
-                    
+
                     # Cache platform info (even if empty)
                     previous_platform_data[registry_url] = platform_info
-            
+
             logging.info(f"Loaded {len(existing_images)-before_count} images from output file")
         except Exception as e:
             logging.warning(f"Could not load images from output file: {e}")
-    
+
     # Then load from extra_file, but don't overwrite platform info that came from output_file
     if args.extra_file_path and os.path.exists(args.extra_file_path):
         logging.info(f"Loading images from extra file: {args.extra_file_path}")
@@ -306,33 +329,33 @@ if __name__ == '__main__':
                 if image_item.get('type') == 'image':
                     registry_url = image_item['details']['registryURL']
                     extra_platform_info = image_item['details'].get('platforms', [])
-                    
+
                     # Check if we already have this image from output_file
                     existing_image = None
                     for idx, img in enumerate(existing_images):
                         if img['details']['registryURL'] == registry_url:
                             existing_image = img
                             break
-                    
+
                     if existing_image is None:
                         # Image not found in existing_images, add it
                         image_item['details']['platforms'] = extra_platform_info  # Ensure platforms array exists
                         existing_images.append(image_item)
-                        
+
                         # Only add to previous_platform_data if not already there from output_file
                         if registry_url not in previous_platform_data:
                             previous_platform_data[registry_url] = extra_platform_info
-            
+
             logging.info(f"Loaded {len(existing_images)-before_count} additional images from extra file")
         except Exception as e:
             logging.warning(f"Could not load images from extra file: {e}")
-    
+
     # Build previously_processed_image_urls set
     previously_processed_image_urls = {
         registry_url for registry_url, platform_info in previous_platform_data.items()
         if platform_info
     }
-    
+
     logging.info(f"Total previously_processed_image_urls: {len(previously_processed_image_urls)}; sample: {list(previously_processed_image_urls)[:10]}{'...' if len(previously_processed_image_urls)>10 else ''}")
 
     # Manifest generation
@@ -347,7 +370,7 @@ if __name__ == '__main__':
     # Inject images with empty platforms from output_file into new_images
     images_to_inject = []
     logging.info("Checking for images with empty platforms to inject")
-    
+
     # First build a map of all images in output_file with their platform info
     output_file_image_map = {}
     if args.output_file_path and os.path.exists(args.output_file_path):
@@ -360,7 +383,7 @@ if __name__ == '__main__':
                     output_file_image_map[reg_url] = platforms
         except Exception as e:
             logging.warning(f"Could not load images from output file for mapping: {e}")
-    
+
     # Build a map of images from extra file - we'll use this to avoid redundant inspections
     extra_file_image_urls = set()
     if args.extra_file_path and os.path.exists(args.extra_file_path):
@@ -372,7 +395,7 @@ if __name__ == '__main__':
                     extra_file_image_urls.add(reg_url)
         except Exception as e:
             logging.warning(f"Could not load images from extra file for mapping: {e}")
-    
+
     # Find images that need inspection - only inject images that:
     # 1. Have empty platforms in output file
     # 2. Are NOT present in extra file (to avoid re-inspecting them)
@@ -383,29 +406,29 @@ if __name__ == '__main__':
                 for itm in data:
                     if itm.get('type') == 'image':
                         reg_url = itm['details']['registryURL']
-                        
+
                         # Skip auto or cos-nvidia-installer images
                         if reg_url.startswith(('auto', 'cos-nvidia-installer')):
                             logging.info(f"Skipping special image: {reg_url}")
                             continue
-                        
+
                         # Skip if image is both in output file and extra file
                         # Only inject if it's new (not in output file)
                         if reg_url in output_file_image_map:
                             # Image is in both files - don't reinspect even if platforms are empty
                             # logging.info(f"Skipping image already in both files: {reg_url}")
                             continue
-                            
+
                         # Check if the image has platforms in output file
                         output_platforms = output_file_image_map.get(reg_url, [])
-                        
+
                         # If image is not in output file, inject it
                         already_in_new = False
                         for img in new_chart_images:
                             if img['details']['registryURL'] == reg_url:
                                 already_in_new = True
                                 break
-                        
+
                         if not already_in_new:
                             logging.info(f"Adding image with empty platforms to be inspected: {reg_url}")
                             images_to_inject.append({
@@ -417,7 +440,7 @@ if __name__ == '__main__':
                             })
             except Exception as e:
                 logging.warning(f"Could not load images from {src} for injection: {e}")
-    
+
     # Add injected images to new_images list
     if images_to_inject:
         logging.info(f"Injecting {len(images_to_inject)} images with empty platforms into new_images")
@@ -435,25 +458,25 @@ if __name__ == '__main__':
         if image_registry_url in previous_platform_data:
             # Explicitly set to the known platform info, even if empty
             image_entry['details']['platforms'] = previous_platform_data[image_registry_url]
-    
+
     # Now continue with regular post-processing
     logging.info(f"Post-processing {len(new_chart_images)} new images")
-    
+
     # Track which images are actually inspected in this run
     newly_inspected_count = 0
-    
+
     for image_entry in new_chart_images:
         image_registry_url = image_entry['details']['registryURL']
-        
+
         # Skip if already has platforms (from output file or otherwise)
         if image_entry['details'].get('platforms') or image_registry_url in previous_platform_data:
             continue
-        
+
         # Only inspect truly new images
         logging.info(f"[post‐extra] inspecting {image_registry_url}")
         image_entry['details']['platforms'] = get_image_details(image_registry_url)
         newly_inspected_count += 1
-    
+
     if newly_inspected_count > 0:
         logging.info(f"Inspected {newly_inspected_count} new images in this run")
     else:
@@ -475,16 +498,16 @@ if __name__ == '__main__':
                     current_extra_image_urls.add(registry_url)
         except Exception as e:
             logging.warning(f"Could not load current extra images: {e}")
-    
+
     # Get all images from current charts
     current_chart_image_urls = set()
     for chart in chart_list:
         chart_images = chart['details'].get('images', [])
         current_chart_image_urls.update(chart_images)
-    
+
     # All current valid images are either from charts or extra.json
     all_current_valid_image_urls = current_chart_image_urls.union(current_extra_image_urls)
-    
+
     # Log image counts
     logging.info(f"Current chart images: {len(current_chart_image_urls)}")
     logging.info(f"Current extra images: {len(current_extra_image_urls)}")
@@ -493,24 +516,24 @@ if __name__ == '__main__':
     # Deduplicate image entries by registryURL and only keep current images
     logging.info(f"Starting deduplication process with {len(existing_images)} existing and {len(new_chart_images)} new images")
     deduplicated_image_map = {}
-    
+
     # First process new images (so chart info takes precedence)
     for image_entry in new_chart_images:
         registry_url = image_entry['details']['registryURL']
         # Only include images that are in the current set
         if registry_url in all_current_valid_image_urls:
             deduplicated_image_map[registry_url] = image_entry
-    
+
     # Then add existing images if they're not already in the map and are in the current set
     for image_entry in existing_images:
         registry_url = image_entry['details']['registryURL']
         if registry_url in all_current_valid_image_urls and registry_url not in deduplicated_image_map:
             deduplicated_image_map[registry_url] = image_entry
-    
+
     # Create final list of images
     deduplicated_images = list(deduplicated_image_map.values())
     logging.info(f"Final image count after deduplication: {len(deduplicated_images)}")
-    
+
     # Check if any images were removed
     removed_image_count = len(all_current_valid_image_urls) - len(deduplicated_images)
     if removed_image_count > 0:
