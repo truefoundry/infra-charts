@@ -89,7 +89,7 @@ jobs:
             version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
           
             python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-              $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
+              $version charts/$chart/values-ci.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
           done
         env:
           MODE: 'local'
