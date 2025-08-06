@@ -23,6 +23,9 @@ The solution consists of two main components:
 - Helm 3.1.0+
 - PV provisioner support in the underlying infrastructure
 
+### Upgrade Notes
+- When upgrading the chart version, ensure that the timberio vector image has been pushed to public.ecr.aws/truefoundrycloud/timberio/vector:<version>
+
 ### Installation
 
 ## Parameters
