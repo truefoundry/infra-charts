@@ -64,5 +64,14 @@ spec:
               number: 80
         path: /flyteidl.service.AdminService
         pathType: Prefix
+      {{- range .Values.alb.ingress.additionalHttp2Paths }}
+      - backend:
+          service:
+            name: {{ .serviceName | default $.Release.Name }}
+            port:
+              number: {{ .servicePort | default 80 }}
+        path: {{ .path }}
+        pathType: {{ .pathType }}
+      {{- end }}
 {{- end }}
 {{- end }}
