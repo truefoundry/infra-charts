@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "servicefoundry-server.chart" . }}
   Deployment annotations
   */}}
 {{- define "servicefoundry-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "1") (include "servicefoundry-server.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "servicefoundry-server.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
@@ -90,7 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "servicefoundry-server.serviceAccountName" -}}
-{{- default (include "servicefoundry-server.fullname" .) "servicefoundry-server" }}
+{{- if .Values.servicefoundryServer.serviceAccount.name -}}
+{{- .Values.servicefoundryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*

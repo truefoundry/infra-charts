@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "spark-history-server.chart" . }}
   Deployment annotations
   */}}
 {{- define "spark-history-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "spark-history-server.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "spark-history-server.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
@@ -90,11 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "spark-history-server.serviceAccountName" -}}
-{{- if .Values.sparkHistoryServer.serviceAccount.create }}
-{{- .Values.sparkHistoryServer.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
+{{- if .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 {{/*
   Service Account Annotations

@@ -13,13 +13,16 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## @param global.serviceAccount.name Service account name
+  serviceAccount:
+    name: ""
 
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.72.0-rc.1
+  tag: v0.76.0-rc.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -139,13 +142,13 @@ service:
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
-  create: true
+  create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
   ## @param serviceAccount.name Service account name
-  name: tfy-llm-gateway
-  ## @param serviceAccount.automountServiceAccountToken Automount service account token
-  automountServiceAccountToken: true
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
+  automountServiceAccountToken: false
 ## @param extraVolumes Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
@@ -185,6 +188,7 @@ env:
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   ENABLE_OTEL_TRACING: "false"
+  OTEL_ATTRIBUTE_COUNT_LIMIT: "512"
 
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:

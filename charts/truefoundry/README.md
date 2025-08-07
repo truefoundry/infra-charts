@@ -1,4 +1,5 @@
 # truefoundry helm chart packaged by TrueFoundry
+
 truefoundry is an applications that gets deployed on the kubernetes cluster to spin up the TrueFoundry Control plane
 
 ## Order of Installation
@@ -6,12 +7,14 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 The TrueFoundry Helm chart components are installed in the following order:
 
 1. **Bootstrap Resources**
+
    - ConfigMap
    - ServiceAccount
    - Role
    - RoleBinding
 
 2. **Sync-wave: 0**
+
    - All stateful dependencies and non-Deployment resources including:
      - Namespace
      - ServiceAccount
@@ -24,6 +27,7 @@ The TrueFoundry Helm chart components are installed in the following order:
      - Any component without a defined sync-wave
 
 3. **Sync-wave: 1**
+
    - Deployment of servicefoundry-server
 
 4. **Sync-wave: 2**
@@ -33,6 +37,53 @@ The TrueFoundry Helm chart components are installed in the following order:
      - tfy-llm-gateway
      - s3proxy
      - Additional control plane services
+
+## Using K8s secret for required fields
+
+For control plane installation, you need to provide licence key and DB credentials in the values. This can be done either by adding the values as plain text in the values file or using a externally created K8s secret in the same namespace.
+
+Following are the K8s secrets that are required for the TrueFoundry installation.
+
+1. `truefoundry-creds` secret containing the following keys:
+   - TFY_API_KEY - Licence key provided by TrueFoundry team
+   - DB_HOST - Hostname of the database
+   - DB_NAME - Name of the database
+   - DB_USERNAME - Username of the database
+   - DB_PASSWORD - Password of the database
+2. `truefoundry-image-pull-secret` secret of type `kubernetes.io/dockerconfigjson` containing the following key:
+   - .dockerconfigjson - Docker config json for the TrueFoundry images
+
+In order to use these secrets in the TrueFoundry installation, you need to pass the secret name in the values file as follows:
+
+```yaml
+global:
+  existingTruefoundryCredsSecret: "truefoundry-creds"
+  existingTruefoundryImagePullSecretName: "truefoundry-image-pull-secret"
+```
+
+## Using K8s secret for additional fields
+
+In case, you would like to use secret for some additional field in the values, please pass the secret name and key in the values file in following format:
+`${k8s-secret/<K8S_SECRET_NAME>/<KEY_NAME>}`
+
+For example,
+
+1. to pass the `awsAccessKeyId` under `global.config.storageConfiguration.awsAccessKeyId` from the `my-truefoundry-secrets` secret, you can use the following format:
+
+```yaml
+global:
+  config:
+    storageConfiguration:
+      awsAccessKeyId: ${k8s-secret/my-truefoundry-secrets/awsAccessKeyId}
+```
+
+2. to pass `GITHUB_PRIVATE_KEY` env under `servicefoundryServer.env.GITHUB_PRIVATE_KEY` from the `my-truefoundry-secrets` secret, you can use the following format:
+
+```yaml
+servicefoundryServer:
+  env:
+    GITHUB_PRIVATE_KEY: ${k8s-secret/my-truefoundry-secrets/GITHUB_PRIVATE_KEY}
+```
 
 ## Parameters
 
@@ -45,13 +96,14 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.71.4`                                                                         |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.75.3`                                                                         |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
 | `global.database.username`                                                   | Control plane database username when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.password`                                                   | Control plane database password when dev mode is not enabled                           | `""`                                                                             |
 | `global.tfyApiKey`                                                           | API key for truefoundry                                                                | `""`                                                                             |
+| `global.nodeSelector`                                                        | Node selector for all services                                                         | `{}`                                                                             |
 | `global.affinity`                                                            | Affinity for all services                                                              | `{}`                                                                             |
 | `global.labels`                                                              | Labels for all services                                                                | `{}`                                                                             |
 | `global.annotations`                                                         | Annotations for all services                                                           | `{}`                                                                             |
@@ -59,7 +111,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `global.serviceAccount.name`                                                 | Name of the service account                                                            | `truefoundry`                                                                    |
 | `global.serviceAccount.annotations`                                          | Annotations for the service account                                                    | `{}`                                                                             |
 | `global.serviceAccount.automountServiceAccountToken`                         | Automount service account token for the service account                                | `true`                                                                           |
-| `global.config.defaultcloudProvider`                                         | Default cloud provider                                                                 | `""`                                                                             |
+| `global.config.defaultCloudProvider`                                         | Default Cloud provider                                                                 | `""`                                                                             |
 | `global.config.storageConfiguration.awsS3BucketName`                         | AWS S3 bucket name                                                                     | `""`                                                                             |
 | `global.config.storageConfiguration.awsRegion`                               | AWS region                                                                             | `""`                                                                             |
 | `global.config.storageConfiguration.awsAssumeRoleArn`                        | AWS assume role ARN                                                                    | `""`                                                                             |
@@ -78,6 +130,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                          | Description                                     | Value                                    |
 | ------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
 | `monitoring.enabled`                                          | Bool to enable monitoring for the control plane | `false`                                  |
+| `monitoring.tenantNameOverride`                               | Override tenant name for the monitoring         | `""`                                     |
 | `monitoring.alertManager.enabled`                             | Bool to enable alert manager                    | `true`                                   |
 | `monitoring.alertManager.name`                                | Name of the alert manager configuration         | `tfy-control-plane-alert-manager`        |
 | `monitoring.alertManager.additionalLabels`                    | Additional labels for alert manager             | `{}`                                     |
@@ -114,7 +167,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `truefoundryBootstrap.extraVolumes`                                | Extra volumes for the bootstrap container                   | `[]`                                            |
 | `truefoundryBootstrap.affinity`                                    | Affinity for the bootstrap container                        | `{}`                                            |
 | `truefoundryBootstrap.nodeSelector`                                | Node selector for the bootstrap container                   | `{}`                                            |
-| `truefoundryBootstrap.tolerations`                                 | Tolerations specific to the bootstrap container             | `{}`                                            |
+| `truefoundryBootstrap.tolerations`                                 | Tolerations specific to the bootstrap container             | `[]`                                            |
 | `truefoundryBootstrap.imagePullSecrets`                            | Image pull secrets for the bootstrap container              | `[]`                                            |
 | `truefoundryBootstrap.createdBuildkitServiceTlsCerts`              | Bool to install TLS certificates                            | `true`                                          |
 
@@ -123,10 +176,10 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                                 | Description                                            | Value                                                                                      |
 | -------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `truefoundryFrontendApp.enabled`                                     | Bool to enable the frontend app                        | `true`                                                                                     |
-| `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `{}`                                                                                       |
+| `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app               | `[]`                                                                                       |
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                       | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app                  | `tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app`                                 |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.71.2`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                         | `v0.75.2`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                 | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                     | `""`                                                                                       |
@@ -182,10 +235,10 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                          | Description                                                | Value                                              |
 | ------------------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
 | `mlfoundryServer.enabled`                                     | Bool to enable the mlfoundry server                        | `true`                                             |
-| `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `{}`                                               |
+| `mlfoundryServer.tolerations`                                 | Tolerations specific to the mlfoundry server               | `[]`                                               |
 | `mlfoundryServer.annotations`                                 | Annotations for the mlfoundry server                       | `{}`                                               |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server                  | `tfy.jfrog.io/tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.71.0`                                          |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                         | `v0.74.0`                                          |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                  | `default`                                          |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables | `mlfoundry-server-env-secret`                      |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                 | `IfNotPresent`                                     |
@@ -212,6 +265,8 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `mlfoundryServer.service.type`                                | Service type for the mlfoundry server                      | `ClusterIP`                                        |
 | `mlfoundryServer.service.port`                                | Service port for the mlfoundry server                      | `5000`                                             |
 | `mlfoundryServer.service.annotations`                         | Annotations for the mlfoundry server service               | `{}`                                               |
+| `mlfoundryServer.serviceAccount.create`                       | Bool to create a service account for the mlfoundry server  | `false`                                            |
+| `mlfoundryServer.serviceAccount.name`                         | Name of the mlfoundry server service account               | `""`                                               |
 | `mlfoundryServer.serviceAccount.annotations`                  | Annotations for the mlfoundry server service account       | `{}`                                               |
 | `mlfoundryServer.serviceAccount.automountServiceAccountToken` | Automount service account token for the mlfoundry server   | `true`                                             |
 | `mlfoundryServer.imagePullSecrets`                            | Image pull credentials for mlfoundry server                | `[]`                                               |
@@ -224,7 +279,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                         | Description                                        | Value                                                                                 |
 | -------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `s3proxy.enabled`                            | Bool to enable the s3 proxy                        | `false`                                                                               |
-| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `{}`                                                                                  |
+| `s3proxy.tolerations`                        | Tolerations specific to the s3 proxy               | `[]`                                                                                  |
 | `s3proxy.annotations`                        | Annotations for the s3 proxy                       | `{}`                                                                                  |
 | `s3proxy.image.repository`                   | Image repository for the s3 proxy                  | `tfy.jfrog.io/tfy-private-images/s3proxy`                                             |
 | `s3proxy.image.tag`                          | Image tag for the s3 proxy                         | `v0.57.0`                                                                             |
@@ -268,10 +323,10 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                               | Description                                                     | Value                                                   |
 | ------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------- |
 | `servicefoundryServer.enabled`                                     | Bool to enable the servicefoundry server                        | `true`                                                  |
-| `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `{}`                                                    |
+| `servicefoundryServer.tolerations`                                 | Tolerations specific to the servicefoundry server               | `[]`                                                    |
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                            | `{}`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server                  | `tfy.jfrog.io/tfy-private-images/servicefoundry-server` |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.71.4`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                         | `v0.75.2`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                  | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                 | `IfNotPresent`                                          |
@@ -298,6 +353,8 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `servicefoundryServer.service.type`                                | Service type for the servicefoundry server                      | `ClusterIP`                                             |
 | `servicefoundryServer.service.port`                                | Service port for the servicefoundry server                      | `3000`                                                  |
 | `servicefoundryServer.service.annotations`                         | Annotations for the servicefoundry server service               | `{}`                                                    |
+| `servicefoundryServer.serviceAccount.create`                       | Bool to create a service account for the servicefoundry server  | `false`                                                 |
+| `servicefoundryServer.serviceAccount.name`                         | Name of the servicefoundry server service account               | `""`                                                    |
 | `servicefoundryServer.serviceAccount.annotations`                  | Annotations for the servicefoundry server service account       | `{}`                                                    |
 | `servicefoundryServer.serviceAccount.automountServiceAccountToken` | Automount service account token for the servicefoundry server   | `true`                                                  |
 | `servicefoundryServer.extraVolumes`                                | Extra volumes for the servicefoundry server                     | `[]`                                                    |
@@ -318,10 +375,10 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                    | Description                                                    | Value                                                  |
 | ------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `sparkHistoryServer.enabled`                            | Bool to enable the spark history server                        | `false`                                                |
-| `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `{}`                                                   |
+| `sparkHistoryServer.tolerations`                        | Tolerations specific to the spark history server               | `[]`                                                   |
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                       | `{}`                                                   |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server                  | `tfy.jfrog.io/tfy-private-images/spark-history-server` |
-| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.57.0`                                              |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                         | `v0.75.0`                                              |
 | `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                  | `default`                                              |
 | `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables | `spark-history-server-env-secret`                      |
 | `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                 | `IfNotPresent`                                         |
@@ -361,10 +418,10 @@ The TrueFoundry Helm chart components are installed in the following order:
 | Name                                                           | Description                                                              | Value                                                |
 | -------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
 | `tfyK8sController.enabled`                                     | Bool to enable the tfyK8sController                                      | `true`                                               |
-| `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `{}`                                                 |
+| `tfyK8sController.tolerations`                                 | Tolerations specific to the tfyK8sController                             | `[]`                                                 |
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                     | `{}`                                                 |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController                                | `tfy.jfrog.io/tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.71.1`                                            |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                       | `v0.75.0`                                            |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                    | `default`                                            |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables               | `tfy-k8s-controller-env-secret`                      |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                               | `IfNotPresent`                                       |
@@ -407,7 +464,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | ---------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `sfyManifestService.enabled`                                     | Bool to enable the sfy manifest service                        | `true`                                                 |
 | `sfyManifestService.annotations`                                 | Annotations for the sfy manifest service                       | `{}`                                                   |
-| `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service               | `{}`                                                   |
+| `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service               | `[]`                                                   |
 | `sfyManifestService.image.repository`                            | Image repository for the sfy manifest service                  | `tfy.jfrog.io/tfy-private-images/sfy-manifest-service` |
 | `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                         | `v0.69.0`                                              |
 | `sfyManifestService.environmentName`                             | Environment name for the sfy manifest service                  | `default`                                              |
@@ -455,6 +512,8 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `tfyBuild.labels`                                                               | Labels for the tfyBuild server                                | `{}`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.nameOverride`                                                         | Override name for the tfyBuild server                         | `""`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.fullnameOverride`                                                     | Full name override for the tfyBuild server                    | `""`                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `tfyBuild.serviceAccount.create`                                                | Bool to create a service account for the tfyBuild server      | `false`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `tfyBuild.serviceAccount.name`                                                  | Name of the tfyBuild server service account                   | `""`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.serviceAccount.annotations`                                           | Annotations for the tfyBuild server service account           | `{}`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.serviceAccount.automountServiceAccountToken`                          | Automount service account token for the tfyBuild server       | `true`                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `tfyBuild.preemptibleDeployment.enabled`                                        | Bool to enable preemptible deployment for the tfyBuild server | `false`                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -467,7 +526,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 | `tfyBuild.preemptibleDeployment.extraVolumes`                                   | Extra volumes for the tfyBuild server                         | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs`                            | Extra environment variables for sfyBuilder                    | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository`                     | Repository for the sfyBuilder                                 | `tfy.jfrog.io/tfy-images/sfy-builder`                                                                                                                                                                                                                                                                                                                                                                                            |
-| `tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag`                            | Tag for the sfyBuilder                                        | `v0.8.16`                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag`                            | Tag for the sfyBuilder                                        | `v0.8.17`                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets`                     | Image pull secrets for the sfyBuilder                         | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret`                  | baseImagePullSecret for the docker config                     | `truefoundry-image-pull-secret`                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `tfyBuild.truefoundryWorkflows.sfyBuilder.script`                               | script for the sfyBuilder to be executed                      | `# Code will be downloaded in the directory set by the SOURCE_CODE_DOWNLOAD_PATH environment variable
@@ -497,9 +556,9 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyBuild.truefoundryWorkflows.logMarkers.clientPrefix`                         | Client prefix for the tfyBuild server                         | `["TFY-CLIENT"]`                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `tfyBuild.truefoundryWorkflows.logMarkers.supportSlack`                         | Slack support URL for the tfyBuild server                     | `https://join.slack.com/t/truefoundry/shared_invite/zt-11ht512jq-nDJq~HJMqc6wBw90JVlo7g`                                                                                                                                                                                                                                                                                                                                         |
 | `tfyBuild.truefoundryWorkflows.logMarkers.serviceFoundryUiUrl`                  | Service foundry UI URL                                        | `https://app.truefoundry.com/workspace`                                                                                                                                                                                                                                                                                                                                                                                          |
-| `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.enabled`                   | Bool to enable SOCI index build and push                      | `false`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.enabled`                   | Bool to enable SOCI index build and push                      | `true`                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository`          | Repository for the SOCI index build and push                  | `tfy.jfrog.io/tfy-images/sfy-builder`                                                                                                                                                                                                                                                                                                                                                                                            |
-| `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag`                 | Tag for the SOCI index build and push                         | `v0.8.13`                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag`                 | Tag for the SOCI index build and push                         | `v0.8.17`                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets`          | Image pull secrets for the sociIndexBuildAndPush              | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes`   | Image size threshold for the SOCI index build and push        | `419430400`                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs`                 | Extra environment variables for the SOCI index build and push | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -525,7 +584,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.enabled`                                     | Bool to enable the tfyController                                      | `true`                                           |
 | `tfyController.annotations`                                 | Annotations for the tfyController                                     | `{}`                                             |
 | `tfyController.image.repository`                            | Image repository for the tfyController                                | `tfy.jfrog.io/tfy-private-images/tfy-controller` |
-| `tfyController.image.tag`                                   | Image tag for the tfyController                                       | `v0.70.0`                                        |
+| `tfyController.image.tag`                                   | Image tag for the tfyController                                       | `v0.72.0`                                        |
 | `tfyController.environmentName`                             | Environment name for the tfyController                                | `default`                                        |
 | `tfyController.envSecretName`                               | Secret name for the tfyController environment variables               | `sfy-manifest-service-env-secret`                |
 | `tfyController.imagePullPolicy`                             | Image pull policy for the tfyController                               | `IfNotPresent`                                   |
@@ -567,7 +626,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.enabled`                            | Bool to enable the tfyWorkflowAdmin                        | `false`                                              |
 | `tfyWorkflowAdmin.annotations`                        | Annotations for the tfyWorkflowAdmin                       | `{}`                                                 |
 | `tfyWorkflowAdmin.image.repository`                   | Image repository for the tfyWorkflowAdmin                  | `tfy.jfrog.io/tfy-private-images/tfy-workflow-admin` |
-| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                         | `v0.69.0`                                            |
+| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                         | `v0.74.0`                                            |
 | `tfyWorkflowAdmin.environmentName`                    | Environment name for the tfyWorkflowAdmin                  | `default`                                            |
 | `tfyWorkflowAdmin.envSecretName`                      | Secret name for the tfyWorkflowAdmin environment variables | `tfy-workflow-admin-env-secret`                      |
 | `tfyWorkflowAdmin.imagePullPolicy`                    | Image pull policy for the tfyWorkflowAdmin                 | `IfNotPresent`                                       |
@@ -595,6 +654,8 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.service.type`                       | Service type for the tfyWorkflowAdmin                      | `ClusterIP`                                          |
 | `tfyWorkflowAdmin.service.port`                       | Service port for the tfyWorkflowAdmin                      | `8089`                                               |
 | `tfyWorkflowAdmin.service.annotations`                | Annotations for the tfyWorkflowAdmin service               | `{}`                                                 |
+| `tfyWorkflowAdmin.serviceAccount.create`              | Bool to create a service account for the tfyWorkflowAdmin  | `false`                                              |
+| `tfyWorkflowAdmin.serviceAccount.name`                | Name of the tfyWorkflowAdmin service account               | `""`                                                 |
 | `tfyWorkflowAdmin.serviceAccount.annotations`         | Annotations for the tfyWorkflowAdmin service account       | `{}`                                                 |
 | `tfyWorkflowAdmin.storage`                            | Storage settings for the tfyWorkflowAdmin                  | `{}`                                                 |
 | `tfyWorkflowAdmin.env`                                | Environment variables for the tfyWorkflowAdmin             | `{}`                                                 |
@@ -620,7 +681,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.config.websocket.enabled`               | Bool to enable websocket                              | `true`                                                       |
 | `tfyNats.natsBox.enabled`                        | Bool to enable NATS Box                               | `false`                                                      |
 | `tfyNats.reloader.image.repository`              | Reloader image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/nats-server-config-reloader` |
-| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.17.2`                                                     |
+| `tfyNats.reloader.image.tag`                     | Reloader image tag                                    | `0.18.2`                                                     |
 | `tfyNats.reloader.enabled`                       | Bool to enable config reloader                        | `true`                                                       |
 | `tfyNats.reloader.patch`                         | Nats Reloader patches                                 | `[]`                                                         |
 | `tfyNats.promExporter.image.repository`          | Exporter image repository                             | `tfy.jfrog.io/tfy-mirror/natsio/prometheus-nats-exporter`    |
@@ -629,7 +690,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.promExporter.patch`                     | Nats Prom Exporter patches                            | `[]`                                                         |
 | `tfyNats.promExporter.podMonitor.enabled`        | Bool to enable pod monitor                            | `true`                                                       |
 | `tfyNats.promExporter.podMonitor.merge`          | Additional kustomize patches for the pod monitor      | `{}`                                                         |
-| `tfyNats.container.image.tag`                    | Container image tag                                   | `2.11.5-alpine`                                              |
+| `tfyNats.container.image.tag`                    | Container image tag                                   | `2.11.6-alpine`                                              |
 | `tfyNats.container.image.repository`             | Container image repository                            | `tfy.jfrog.io/tfy-mirror/nats`                               |
 | `tfyNats.serviceAccount.enabled`                 | Specifies whether a service account should be created | `true`                                                       |
 | `tfyNats.serviceAccount.annotations`             | Annotations to add to the service account             | `{}`                                                         |
@@ -637,29 +698,29 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNats.serviceAccount.patch`                   | Service account patches                               | `[]`                                                         |
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                   | `{}`                                                         |
 
+### tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
+
+
 ### deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 
 | Name                                                              | Description                                                                      | Value                                                  |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                          | `false`                                                |
 | `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor                                    | `tfy.jfrog.io/tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                           | `v0.0.1`                                               |
+| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                           | `v0.1.0`                                               |
 | `deltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                   | `IfNotPresent`                                         |
-| `deltaFusionIngestor.labels`                                      | Labels to apply to the DeltaFusion Ingestor resources                            | `{}`                                                   |
-| `deltaFusionIngestor.annotations`                                 | Annotations to apply to the DeltaFusion Ingestor resources                       | `{}`                                                   |
+| `deltaFusionIngestor.statefulsetLabels`                           | Labels to apply to the DeltaFusion Ingestor statefulset                          | `{}`                                                   |
+| `deltaFusionIngestor.statefulsetAnnotations`                      | Annotations to apply to the DeltaFusion Ingestor statefulset                     | `{}`                                                   |
 | `deltaFusionIngestor.envSecretName`                               | Name of the secret containing environment variables for the DeltaFusion Ingestor | `deltafusion-ingestor-service-env-secret`              |
-| `deltaFusionIngestor.healthcheck.enabled`                         | Bool to enable health checks                                                     | `true`                                                 |
-| `deltaFusionIngestor.healthcheck.readiness.port`                  | Readiness probe port                                                             | `8000`                                                 |
 | `deltaFusionIngestor.healthcheck.readiness.path`                  | Readiness probe path                                                             | `/health`                                              |
-| `deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                            | `30`                                                   |
-| `deltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                   | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                            | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                   | `5`                                                    |
 | `deltaFusionIngestor.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                  | `2`                                                    |
 | `deltaFusionIngestor.healthcheck.readiness.successThreshold`      | Success threshold                                                                | `1`                                                    |
 | `deltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                | `3`                                                    |
-| `deltaFusionIngestor.healthcheck.liveness.port`                   | Liveness probe port                                                              | `8000`                                                 |
 | `deltaFusionIngestor.healthcheck.liveness.path`                   | Liveness probe path                                                              | `/health`                                              |
 | `deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                            | `10`                                                   |
-| `deltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                   | `10`                                                   |
+| `deltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                   | `5`                                                    |
 | `deltaFusionIngestor.healthcheck.liveness.timeoutSeconds`         | Timeout seconds                                                                  | `2`                                                    |
 | `deltaFusionIngestor.healthcheck.liveness.successThreshold`       | Success threshold                                                                | `1`                                                    |
 | `deltaFusionIngestor.healthcheck.liveness.failureThreshold`       | Failure threshold                                                                | `3`                                                    |
@@ -677,14 +738,22 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.securityContext.privileged`                  | Bool to run the container in privileged mode                                     | `false`                                                |
 | `deltaFusionIngestor.service.type`                                | Service type                                                                     | `ClusterIP`                                            |
 | `deltaFusionIngestor.service.port`                                | Service port                                                                     | `8000`                                                 |
+| `deltaFusionIngestor.service.labels`                              | Service labels                                                                   | `{}`                                                   |
 | `deltaFusionIngestor.service.annotations`                         | Service annotations                                                              | `{}`                                                   |
-| `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `true`                                                 |
+| `deltaFusionIngestor.serviceMonitor.enabled`                      | Enable ServiceMonitor for the deltaFusionIngestor                                | `true`                                                 |
+| `deltaFusionIngestor.serviceMonitor.interval`                     | Interval for the ServiceMonitor                                                  | `10s`                                                  |
+| `deltaFusionIngestor.serviceMonitor.path`                         | Path for the ServiceMonitor                                                      | `/metrics`                                             |
+| `deltaFusionIngestor.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                         | `{}`                                                   |
+| `deltaFusionIngestor.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                    | `{}`                                                   |
+| `deltaFusionIngestor.serviceAccount.create`                       | Bool to create a service account                                                 | `false`                                                |
+| `deltaFusionIngestor.serviceAccount.labels`                       | Service account labels                                                           | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                      | `{}`                                                   |
 | `deltaFusionIngestor.serviceAccount.name`                         | Service account name                                                             | `""`                                                   |
 | `deltaFusionIngestor.serviceAccount.automountServiceAccountToken` | Automount token                                                                  | `false`                                                |
 | `deltaFusionIngestor.extraVolumes`                                | Extra volumes                                                                    | `[]`                                                   |
 | `deltaFusionIngestor.extraVolumeMounts`                           | Extra volume mounts                                                              | `[]`                                                   |
 | `deltaFusionIngestor.commonLabels`                                | Common labels for the bootstrap job                                              | `{}`                                                   |
+| `deltaFusionIngestor.commonAnnotations`                           | Common annotations for the DeltaFusion Ingestor statefulset                      | `{}`                                                   |
 | `deltaFusionIngestor.extraEnvs`                                   | Extra environment variables                                                      | `[]`                                                   |
 | `deltaFusionIngestor.nodeSelector`                                | Node selector                                                                    | `{}`                                                   |
 | `deltaFusionIngestor.tolerations`                                 | Tolerations                                                                      | `[]`                                                   |
@@ -692,6 +761,69 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                      | `{}`                                                   |
 | `deltaFusionIngestor.env`                                         | Additional environment variables                                                 | `{}`                                                   |
 
+### deltaFusionQueryServer Truefoundry DeltaFusion Query
+
+| Name                                                                 | Description                                                                    | Value                                                      |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| `deltaFusionQueryServer.enabled`                                     | Bool to enable the deltaFusionQueryServer                                      | `false`                                                    |
+| `deltaFusionQueryServer.deploymentLabels`                            | Labels for the deltaFusionQueryServer deployment                               | `{}`                                                       |
+| `deltaFusionQueryServer.deploymentAnnotations`                       | Annotations for the deltaFusionQueryServer deployment                          | `{}`                                                       |
+| `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer                                | `tfy.jfrog.io/tfy-private-images/deltafusion-query-server` |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                       | `v0.1.0`                                                   |
+| `deltaFusionQueryServer.image.optimized`                             | Optimized image tag for the deltaFusionQueryServer                             | `false`                                                    |
+| `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                | `default`                                                  |
+| `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables               | `deltafusion-query-env-secret`                             |
+| `deltaFusionQueryServer.imagePullPolicy`                             | Image pull policy for the deltaFusionQueryServer                               | `IfNotPresent`                                             |
+| `deltaFusionQueryServer.nameOverride`                                | Override name for the deltaFusionQueryServer                                   | `""`                                                       |
+| `deltaFusionQueryServer.fullnameOverride`                            | Full name override for the deltaFusionQueryServer                              | `""`                                                       |
+| `deltaFusionQueryServer.podLabels`                                   | Labels for the deltaFusionQueryServer pods                                     | `{}`                                                       |
+| `deltaFusionQueryServer.podAnnotations`                              | Annotations for the deltaFusionQueryServer pods                                | `{}`                                                       |
+| `deltaFusionQueryServer.podSecurityContext`                          | Security context for the deltaFusionQueryServer pods                           | `{}`                                                       |
+| `deltaFusionQueryServer.commonLabels`                                | Common labels for the deltaFusionQueryServer pods                              | `{}`                                                       |
+| `deltaFusionQueryServer.commonAnnotations`                           | Common annotations for the deltaFusionQueryServer pods                         | `{}`                                                       |
+| `deltaFusionQueryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the deltaFusionQueryServer                       | `true`                                                     |
+| `deltaFusionQueryServer.imagePullSecrets`                            | Image pull secrets for the deltaFusionQueryServer                              | `[]`                                                       |
+| `deltaFusionQueryServer.resourceTierOverride`                        | Resource tier override for the deltaFusionQueryServer                          | `""`                                                       |
+| `deltaFusionQueryServer.resources`                                   | Resource requests and limits for the deltaFusionQueryServer                    | `{}`                                                       |
+| `deltaFusionQueryServer.healthcheck.liveness.path`                   | Liveness probe path                                                            | `/health`                                                  |
+| `deltaFusionQueryServer.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                          | `10`                                                       |
+| `deltaFusionQueryServer.healthcheck.liveness.periodSeconds`          | Period seconds                                                                 | `5`                                                        |
+| `deltaFusionQueryServer.healthcheck.liveness.timeoutSeconds`         | Timeout seconds                                                                | `2`                                                        |
+| `deltaFusionQueryServer.healthcheck.liveness.successThreshold`       | Success threshold                                                              | `1`                                                        |
+| `deltaFusionQueryServer.healthcheck.liveness.failureThreshold`       | Failure threshold                                                              | `3`                                                        |
+| `deltaFusionQueryServer.healthcheck.readiness.path`                  | Readiness probe path                                                           | `/health`                                                  |
+| `deltaFusionQueryServer.healthcheck.readiness.initialDelaySeconds`   | Initial delay seconds                                                          | `10`                                                       |
+| `deltaFusionQueryServer.healthcheck.readiness.periodSeconds`         | Period seconds                                                                 | `5`                                                        |
+| `deltaFusionQueryServer.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                | `2`                                                        |
+| `deltaFusionQueryServer.healthcheck.readiness.successThreshold`      | Success threshold                                                              | `1`                                                        |
+| `deltaFusionQueryServer.healthcheck.readiness.failureThreshold`      | Failure threshold                                                              | `3`                                                        |
+| `deltaFusionQueryServer.nodeSelector`                                | Node selector for the deltaFusionQueryServer                                   | `{}`                                                       |
+| `deltaFusionQueryServer.affinity`                                    | Affinity settings for the deltaFusionQueryServer                               | `{}`                                                       |
+| `deltaFusionQueryServer.topologySpreadConstraints`                   | Topology spread constraints for the deltaFusionQueryServer                     | `{}`                                                       |
+| `deltaFusionQueryServer.service.type`                                | Service type for the deltaFusionQueryServer                                    | `ClusterIP`                                                |
+| `deltaFusionQueryServer.service.port`                                | Service port for the deltaFusionQueryServer                                    | `8080`                                                     |
+| `deltaFusionQueryServer.service.labels`                              | Labels for the deltaFusionQueryServer service                                  | `{}`                                                       |
+| `deltaFusionQueryServer.service.annotations`                         | Annotations for the deltaFusionQueryServer service                             | `{}`                                                       |
+| `deltaFusionQueryServer.serviceMonitor.enabled`                      | Enable ServiceMonitor for the deltaFusionQueryServer                           | `true`                                                     |
+| `deltaFusionQueryServer.serviceMonitor.interval`                     | Interval for the ServiceMonitor                                                | `10s`                                                      |
+| `deltaFusionQueryServer.serviceMonitor.path`                         | Path for the ServiceMonitor                                                    | `/metrics`                                                 |
+| `deltaFusionQueryServer.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                       | `{}`                                                       |
+| `deltaFusionQueryServer.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                  | `{}`                                                       |
+| `deltaFusionQueryServer.serviceAccount.create`                       | Bool to create a service account for the deltaFusionQueryServer                | `false`                                                    |
+| `deltaFusionQueryServer.serviceAccount.name`                         | Service account name                                                           | `""`                                                       |
+| `deltaFusionQueryServer.serviceAccount.labels`                       | Labels for the deltaFusionQueryServer service account                          | `{}`                                                       |
+| `deltaFusionQueryServer.serviceAccount.annotations`                  | Annotations for the deltaFusionQueryServer service account                     | `{}`                                                       |
+| `deltaFusionQueryServer.serviceAccount.automountServiceAccountToken` | Automount service account token for the deltaFusionQueryServer service account | `true`                                                     |
+| `deltaFusionQueryServer.extraVolumeMounts`                           | Extra volume mounts for the deltaFusionQueryServer server                      | `[]`                                                       |
+| `deltaFusionQueryServer.extraVolumes`                                | Extra volumes for the deltaFusionQueryServer server                            | `[]`                                                       |
+| `deltaFusionQueryServer.env`                                         | Environment variables for the deltaFusionQueryServer                           | `{}`                                                       |
+
+### extraResources Extra Resources to deploy along with the TrueFoundry Control Plane
+
+| Name                       | Description                         | Value   |
+| -------------------------- | ----------------------------------- | ------- |
+| `extraResources.enabled`   | Bool to enable the extraResources   | `false` |
+| `extraResources.manifests` | Kubernetes manifests to be deployed | `[]`    |
 
 ## Install TrueFoundry with External Secret Manager
 

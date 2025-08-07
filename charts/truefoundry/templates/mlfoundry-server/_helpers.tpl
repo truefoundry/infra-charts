@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "mlfoundry-server.chart" . }}
   Deployment annotations
   */}}
 {{- define "mlfoundry-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "mlfoundry-server.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "mlfoundry-server.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
@@ -90,7 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "mlfoundry-server.serviceAccountName" -}}
-{{- default (include "mlfoundry-server.fullname" .) "mlfoundry-server" }}
+{{- if .Values.mlfoundryServer.serviceAccount.name -}}
+{{- .Values.mlfoundryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*

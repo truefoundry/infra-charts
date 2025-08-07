@@ -172,6 +172,11 @@ truefoundry:
   truefoundry_iam_role_arn_annotations:
     {}
 
+  ## @param truefoundry.defaultCloudProvider Default cloud provider
+  defaultCloudProvider: "generic"
+  ## @param truefoundry.storageConfiguration Storage class for the storage configuration
+  storageConfiguration: {}
+
   ## @param truefoundry.s3proxy.enabled Flag to enable S3 Proxy
   s3proxy:
     enabled: false
@@ -436,3 +441,50 @@ jspolicy:
   ##
   config:
     valuesOverride: {}
+
+## @section tfy-workflow-propeller parameters
+## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
+##
+tfyWorkflowPropeller:
+  enabled: false
+  ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## tfyWorkflowPropeller.flyteCore configuration
+  flyteCore:
+    ## @skip tfyWorkflowPropeller.flyteCore.storage [object] Storage configuration for flyteCore
+    ##
+    storage:
+      type: custom
+      custom:
+        type: minio
+        container: <to_be_provided>
+        stow:
+          kind: s3
+          config:
+            auth_type: accesskey
+            region: <to_be_provided>
+            endpoint: <to_be_provided>
+            access_key_id: <to_be_provided>
+            secret_key: <to_be_provided>
+    ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
+    ##
+    configmap:
+      core:
+        propeller:
+          metadata-prefix: "<to_be_provided>"
+          rawoutput-prefix: "<to_be_provided>"
+      k8s:
+        plugins:
+          k8s:
+            default-env-vars:
+              - FLYTE_AWS_ENDPOINT: "<to_be_provided>"
+              - FLYTE_AWS_ACCESS_KEY_ID: "<to_be_provided>"
+              - FLYTE_AWS_SECRET_ACCESS_KEY: "<to_be_provided>"
+    ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
+    ##
+    flytepropeller:
+      serviceAccount:
+        annotations:
+          {}

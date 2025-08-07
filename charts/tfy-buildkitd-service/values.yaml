@@ -10,6 +10,10 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## @param global.existingTruefoundryImagePullSecretName [string] Existing truefoundry image pull secret name
+  ## @param global.serviceAccount.name [string] Service account name
+  serviceAccount:
+    name: "truefoundry"
 
 ## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
 # replicaCount: 1
@@ -25,7 +29,7 @@ image:
   pullPolicy: IfNotPresent
   ## @param image.tag Image tag whose default is the chart appVersion.
   ##
-  tag: "v0.17.0"
+  tag: "v0.23.2"
 
 ## @param labels Labels to be added to the tfyBuildkitdService
 ##
@@ -63,7 +67,7 @@ storage:
   ## @param storage.enabled Bool to enable storage for tfyBuildkitdService
   enabled: true
   ## @param storage.accessModes Access mode for tfyBuildkitdService
-  accessModes: 
+  accessModes:
     - ReadWriteOnce
   ## @param storage.storageClassName Storage class name for tfyBuildkitdService
   storageClassName: ""
@@ -85,9 +89,9 @@ fullnameOverride: ""
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
 serviceAccount:
-  ## @param serviceAccount.create Bool to enable serviceAccount creation 
+  ## @param serviceAccount.create Bool to enable serviceAccount creation
   ##
-  create: true
+  create: false
 
   ## @param serviceAccount.annotations Annotations to add to the serviceAccount
   ##
@@ -95,7 +99,7 @@ serviceAccount:
 
   ## @param serviceAccount.automountServiceAccountToken Automount service account token
   ##
-  automountServiceAccountToken: true
+  automountServiceAccountToken: false
   ## @param serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
   ##
   name: ""
@@ -138,7 +142,7 @@ service:
 ## decreasing the resource might make the service UNAVAILABLE
 
 ## @skip resources [object] Resource requests and limits for tfyBuildkitdService
-#resources:
+# resources:
 #  limits:
 #      cpu: 1000m
 #      ephemeral-storage: 256Mi
@@ -168,7 +172,7 @@ nodeSelector: {}
 ## @param tolerations Taints that pod can tolerate
 ##
 tolerations: []
- # - key: "key"
+  # - key: "key"
   #   operator: "Equal"
   #   value: "value"
   #   effect: "NoSchedule"
@@ -177,7 +181,7 @@ tolerations: []
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 ##
 ## @param affinity Affinity rules for pod scheduling on a node
-## 
+##
 affinity: {}
 # nodeAffinity:
 #   requiredDuringSchedulingIgnoredDuringExecution:
@@ -191,7 +195,7 @@ affinity: {}
 
 ## TLS configuration for tfyBuildkitdService
 ##
-tls: 
+tls:
   ## @param tls.buildkitDaemonCertsSecretName Name of secret containing the buildkit daemon certs
   buildkitDaemonCertsSecretName: tfy-buildkit-daemon-certs
 

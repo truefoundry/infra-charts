@@ -76,7 +76,7 @@ loki:
     ## @param loki.singleBinary.persistence.size Size of persistent disk
     ## @param loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC Enable StatefulSetAutoDeletePVC feature
     persistence:
-      enableStatefulSetAutoDeletePVC: false
+      enableStatefulSetAutoDeletePVC: true
       size: 50Gi
 
 promtail:
@@ -85,8 +85,6 @@ promtail:
   ## @skip promtail.image
   image:
     tag: 2.9.10
-  ## @param promtail.priorityClassName Priority class name for promtail DaemonSet
-  priorityClassName: system-node-critical
   config:
     clients:
       ## @param promtail.config.clients[0].url Loki push API URL

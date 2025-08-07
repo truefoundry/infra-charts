@@ -29,9 +29,8 @@ https://github.com/grafana/helm-charts/tree/8b9ca8240e4e412f72af2df42f833c94142a
 | `loki.singleBinary.resources.limits.cpu`                       | CPU limits for promtail container                                                                   | `0.4`                               |
 | `loki.singleBinary.resources.limits.memory`                    | Memory limits for promtail container                                                                | `1620Mi`                            |
 | `loki.singleBinary.persistence.size`                           | Size of persistent disk                                                                             | `50Gi`                              |
-| `loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC` | Enable StatefulSetAutoDeletePVC feature                                                             | `false`                             |
+| `loki.singleBinary.persistence.enableStatefulSetAutoDeletePVC` | Enable StatefulSetAutoDeletePVC feature                                                             | `true`                              |
 | `promtail.enabled`                                             | Enable promtail                                                                                     | `true`                              |
-| `promtail.priorityClassName`                                   | Priority class name for promtail DaemonSet                                                          | `system-node-critical`              |
 | `promtail.config.clients[0].url`                               | Loki push API URL                                                                                   | `http://loki:3100/loki/api/v1/push` |
 | `promtail.resources.requests.cpu`                              | CPU requests for promtail container                                                                 | `100m`                              |
 | `promtail.resources.requests.memory`                           | Memory requests for promtail container                                                              | `512Mi`                             |

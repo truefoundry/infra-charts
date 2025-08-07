@@ -10,27 +10,32 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## @param global.serviceAccount.name Service account name
+  serviceAccount:
+    name: "truefoundry"
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
   CLICKHOUSE_USER: user
   CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
-  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
   CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
-  PROJECT_BASE_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
   NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
-  SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000/v1/x/tfy-otel-collector/nats-creds
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: "true"
+  DELTAFUSION_INGESTER_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
+  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  DELTAFUSION_INGESTER_PATH: /spans/ingest
+  SFY_SERVER_REQUEST_TIMEOUT: 30s
+  DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 30s
 
 ## Image configuration for llm-gateway
 image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 86bd5a0a025b63b9304cd07df1ef93387d49534c
+  tag: 8b3e3b61f9e098897460802cb92170cb192ba7df
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -126,13 +131,13 @@ service:
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
-  create: true
+  create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
   ## @param serviceAccount.name Service account name
   name: ""
-  ## @param serviceAccount.automountServiceAccountToken Automount service account token
-  automountServiceAccountToken: true
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
+  automountServiceAccountToken: false
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts

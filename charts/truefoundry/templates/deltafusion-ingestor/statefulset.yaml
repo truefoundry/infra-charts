@@ -4,9 +4,9 @@ kind: StatefulSet
 metadata:
   name: {{ include "deltafusion-ingestor.fullname" . }}
   labels: 
-    {{- include "deltafusion-ingestor.labels" . | nindent 4 }}
+    {{- include "deltafusion-ingestor.statefulsetLabels" . | nindent 4 }}
   annotations:
-    {{- include "deltafusion-ingestor.annotations" . | nindent 4 }}
+    {{- include "deltafusion-ingestor.statefulsetAnnotations" . | nindent 4 }}
 spec:
   serviceName: {{ include "deltafusion-ingestor.fullname" . }}
   replicas: {{- include "deltafusion-ingestor.replicas" . | indent 1 }}
@@ -48,7 +48,8 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ .Values.deltaFusionIngestor.healthcheck.readiness.path }}
-              port: {{ .Values.deltaFusionIngestor.healthcheck.readiness.port }}
+              port: {{ .Values.deltaFusionIngestor.service.port }}
+              scheme: HTTP
             initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.timeoutSeconds }}
@@ -57,7 +58,8 @@ spec:
           livenessProbe:
             httpGet:
               path: {{ .Values.deltaFusionIngestor.healthcheck.liveness.path }}
-              port: {{ .Values.deltaFusionIngestor.healthcheck.liveness.port }}
+              port: {{ .Values.deltaFusionIngestor.service.port }}
+              scheme: HTTP
             initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.timeoutSeconds }}

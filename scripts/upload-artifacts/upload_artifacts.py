@@ -95,10 +95,6 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
         # Skip if image URL is empty
         if not image_url:
             continue
-        # These images can only be pulled within an EC2 machine - hence skipping it
-        elif "/eks/" in image_url or "/eks-distro/" in image_url:
-            logging.info(f"Skipping system EKS image: {image_url}")
-            continue
         elif image_url == "auto":
             logging.info("Skipping auto")
             continue

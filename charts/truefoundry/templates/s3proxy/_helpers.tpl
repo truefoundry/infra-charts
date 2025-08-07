@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "s3proxy.chart" . }}
   Deployment annotations
   */}}
 {{- define "s3proxy.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "s3proxy.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "s3proxy.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
@@ -90,11 +90,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "s3proxy.serviceAccountName" -}}
-{{- if .Values.s3proxy.serviceAccount.create }}
-{{- .Values.s3proxy.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
+{{- if .Values.s3proxy.serviceAccount.name -}}
+{{- .Values.s3proxy.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*

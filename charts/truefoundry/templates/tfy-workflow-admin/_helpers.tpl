@@ -90,7 +90,7 @@ app.kubernetes.io/workflow-component: scheduler
   Deployment annotations
   */}}
 {{- define "tfy-workflow-admin.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "tfy-workflow-admin.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-workflow-admin.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
@@ -149,8 +149,11 @@ app.kubernetes.io/workflow-component: scheduler
   Create the name of the service account to use
   */}}
 {{- define "tfy-workflow-admin.serviceAccountName" -}}
-{{- default (include "tfy-workflow-admin.fullname" .) "tfy-workflow-admin"}}
-
+{{- if .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*
