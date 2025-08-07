@@ -10,6 +10,7 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `alb.ingress.enabled`          | Enable ALB ingress                         | `false` |
 | `alb.ingress.ingressClassName` | Ingress class name for ALB                 | `alb`   |
 | `alb.ingress.annotations`      | Additional annotations for the ALB ingress | `{}`    |
+| `alb.ingress.flyte.enabled`    | Enable Flyte ingress                       | `true`  |
 
 ### Gateway Configuration
 
