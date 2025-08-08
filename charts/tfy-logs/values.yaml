@@ -73,12 +73,6 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
       sinks:
-        console:
-          type: console
-          inputs:
-            - parser
-          encoding:
-            codec: json
         vlogs:
           type: elasticsearch
           query:
@@ -97,8 +91,6 @@ victoria-logs-single:
             if .message == "" {
               .message = " "
             }
-
-            .debug_timestamp = now()
 
             # Extract basic pod information
 
