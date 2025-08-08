@@ -23,9 +23,9 @@ def main():
         src = item["from"].strip()
         dst = item["to"].strip()
 
-        # 1) Copy all platforms/variants with skopeo
-        #    (ensures blobs exist at destination)
-        run(f"skopeo copy --all docker://{shlex.quote(src)} docker://{shlex.quote(dst)}")
+        # # 1) Copy all platforms/variants with skopeo
+        # #    (ensures blobs exist at destination)
+        # run(f"skopeo copy --all docker://{shlex.quote(src)} docker://{shlex.quote(dst)}")
 
         # 2) Recreate a multi-arch manifest tag using buildx imagetools
         #    new_tag = dst, old_tag = src  (as requested)
