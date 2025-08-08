@@ -86,13 +86,8 @@ victoria-logs-single:
             _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_deployment_version,truefoundry_com_component_type,truefoundry_com_retry_number,job_name,sparkoperator_k8s_io_app_name,truefoundry_com_buildName
           inputs:
             - parser
-          api_version: v8
-          compression: gzip
-          healthcheck:
-            enabled: false
           batch:
-            max_bytes: 1024
-            timeout_secs: 0.2
+            timeout_secs: 2
       transforms:
         parser:
           type: remap
