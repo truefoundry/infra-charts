@@ -1,15 +1,15 @@
 name: Sync container images
 
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - main
       - image-sync-workflow
-
     paths:
-      - '.github/scripts/images*'
+      - 'scripts/sync-images/**'
       - '.github/workflows/sync-image.yaml'
-  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -57,9 +57,6 @@ jobs:
         with:
           registry-type: public
 
-      - name: Enable docker buildx
-        run: docker buildx ls || docker buildx create --use
-
       - name: Run sync script
         run: |
-          python .github/scripts/images_sync.py --file .github/scripts/images.yaml
+          python scripts/sync-images/images_sync.py --file scripts/sync-images/images.yaml
