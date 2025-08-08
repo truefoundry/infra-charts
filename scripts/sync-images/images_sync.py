@@ -36,7 +36,7 @@ def main():
         src = item["from"].strip()
         dst = item["to"].strip()
 
-        run(f"skopeo copy --all docker://{shlex.quote(src)} docker://{shlex.quote(dst)}")
+        run(f"docker buildx imagetools create -t {shlex.quote(dst)} {shlex.quote(src)}")
     logging.info("Done.")
     return 0
 
