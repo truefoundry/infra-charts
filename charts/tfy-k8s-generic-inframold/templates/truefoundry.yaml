@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.75.4
+    targetRevision: 0.76.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -70,14 +70,6 @@ spec:
         {{- end }}
         truefoundryBootstrap:
           enabled: {{ .Values.truefoundry.truefoundryBootstrap.enabled }}
-        {{- if .Values.truefoundry.truefoundry_iam_role_arn_annotations }}
-        servicefoundryServer:
-          serviceAccount:
-            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
-        mlfoundryServer:
-          serviceAccount:
-            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
-        {{- end }}
         {{- if .Values.truefoundry.devMode.enabled }}
         postgresql:
           primary:
@@ -168,8 +160,6 @@ spec:
         tfyWorkflowAdmin:
           enabled: {{ .Values.truefoundry.tfyWorkflowAdmin.enabled }}
         tfy-llm-gateway:
-          serviceAccount:
-            annotations: {{ toYaml .Values.truefoundry.truefoundry_iam_role_arn_annotations | nindent 14 }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
