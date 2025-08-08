@@ -1,9 +1,15 @@
-import argparse, subprocess, sys, yaml, shlex
+import sys
+import yaml
+import shlex
+import argparse
+import subprocess
+import logging
 
 def run(cmd):
-    print(f"+ {cmd}", flush=True)
+    logging.info(f"Running: {cmd}")
     proc = subprocess.run(cmd, shell=True)
     if proc.returncode != 0:
+        logging.error(f"Command failed with return code {proc.returncode}: {cmd}")
         raise SystemExit(proc.returncode)
 
 def main():
@@ -16,7 +22,7 @@ def main():
 
     images = data.get("images", [])
     if not images:
-        print("No images found in images.yaml", file=sys.stderr)
+        logging.warning(f"No images found in ${args.file}.")
         return 0
 
     for item in images:
@@ -24,7 +30,7 @@ def main():
         dst = item["to"].strip()
 
         run(f"skopeo copy --all docker://{shlex.quote(src)} docker://{shlex.quote(dst)}")
-    print("Done.")
+    logging.info("Done.")
     return 0
 
 if __name__ == "__main__":
