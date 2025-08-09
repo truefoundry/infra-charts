@@ -55,7 +55,7 @@ additional_options=""
 if [ "${CLUSTER_TYPE}" = "aws-eks" ]; then
     additional_options="--set aws.karpenter.defaultZones={\"\"}"
 fi
-helm template inframold -n argocd -f "./charts/${INFRAMOLD_NAME}/values-helm.yaml" -f "./charts/${INFRAMOLD_NAME}/values-ocli.yaml" "./charts/${INFRAMOLD_NAME}" ${additional_options} --output-dir catalogues
+helm template inframold -n argocd -f "./charts/${INFRAMOLD_NAME}/values-artifact-manifest.yaml" "./charts/${INFRAMOLD_NAME}" ${additional_options} --output-dir catalogues
 
 # Get the version of the truefoundry helm chart
 cp_chart_version=$(yq e '.spec.source.targetRevision' "./catalogues/${INFRAMOLD_NAME}/templates/truefoundry.yaml")

@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.75.0
+  controlPlaneChartVersion: 0.76.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -224,7 +224,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app
     repository: "tfy.jfrog.io/tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.75.0"
+    tag: "v0.76.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -379,7 +379,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server
     repository: "tfy.jfrog.io/tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.74.0"
+    tag: "v0.76.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -620,7 +620,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server
     repository: "tfy.jfrog.io/tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.75.0"
+    tag: "v0.76.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -777,6 +777,9 @@ servicefoundryServer:
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
     EXTERNAL_OAUTH_CLIENT_SECRET: ""
+    OAUTH2_JWKS_URI: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/keys/jwks"
+    OAUTH2_TOKEN_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/oauth2-proxy/token"
+    OAUTH2_AUTHORIZATION_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/oauth2-proxy/authorize"
     NODE_OPTIONS: --no-node-snapshot
     SPARK_JOB_EVENT_LOG_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/s3proxy"
     SPARK_JOB_EVENT_LOG_BASE_DIR: sparkjob-events
@@ -806,6 +809,7 @@ servicefoundryServer:
     FE_ENABLE_TROUBLESHOOT: "false"
     FE_TROUBLESHOOT_ENABLED_TENANTS: ""
     FE_ENABLE_RSTUDIO: "false"
+    FE_ENABLE_AGENT_APPS: "false"
     FE_DATA_DIRECTORY_ENABLED_TENANTS: ""
     FE_ENABLE_DATA_DIRECTORY: "false"
     FE_ENABLE_SPARK_JOBS: "false"
@@ -888,7 +892,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server
     repository: "tfy.jfrog.io/tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.75.0"
+    tag: "v0.76.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1002,7 +1006,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController
     repository: "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.75.0"
+    tag: "v0.76.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -2099,12 +2103,15 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
-    S3_PATH: s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}
-    RUST_LOG: info
-    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
+    RUST_LOG: "info"
+    TFY_API_KEY: "${k8s-secret/truefoundry-creds/TFY_API_KEY}"
     PAYLOAD_SIZE_LIMIT: "104857600"
-    SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_API_URL: "http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000"
     AWS_EC2_METADATA_DISABLED: "true"
+    AZURE_STORAGE_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
+    GOOGLE_SERVICE_ACCOUNT_KEY: "{{ .Values.global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent }}"
+    S3_PATH: "s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}"
 ## @section deltaFusionQueryServer Truefoundry DeltaFusion Query
 deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.enabled Bool to enable the deltaFusionQueryServer
