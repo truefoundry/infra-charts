@@ -13,6 +13,7 @@ data:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
         cache_ttl: 5m
+        tfy_api_key: ${env:TFY_API_KEY}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -88,6 +89,9 @@ data:
             action: upsert    
           - key: tfyservicename
             from_context: auth.tfyservicename
+            action: upsert
+          - key: istfyllmgateway
+            from_context: auth.istfyllmgateway
             action: upsert
     service:
       telemetry:
