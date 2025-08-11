@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 --input <input_file> --source-user <source_username> --source-pass <source_password> --destination <destination_registry> --dest-user <dest_username> --dest-pass <dest_password>"
+    echo ""
+    echo "Arguments:"
+    echo "  --input, -i              Input file containing Docker images (required)"
+    echo "  --source-user, -su       Source registry username (required)"
+    echo "  --source-pass, -sp       Source registry password (required)"
+    echo "  --destination, -d        Destination registry URL (required)"
+    echo "  --dest-user, -du         Destination registry username (required)"
+    echo "  --dest-pass, -dp         Destination registry password (required)"
+    echo "  --help, -h               Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --input images.txt --source-user srcuser --source-pass srcpass --destination my-registry.com --dest-user destuser --dest-pass destpass"
+    echo "  $0 -i images.txt -su myuser -sp mypass -d my-registry.com -du myuser -dp mypass"
+}
+
 # Function to parse image URL and extract image name and tag
 parse_image_url() {
     local image_url="$1"
@@ -43,18 +61,78 @@ parse_image_url() {
     echo "$new_image_url"
 }
 
-input_file="$1"
-source_registry_username="$2"
-source_registry_password="$3"
-destination_registry="$4"
-destination_registry_username="$5"
-destination_registry_password="$6"
+# Parse command line arguments
+input_file=""
+source_registry_username=""
+source_registry_password=""
+destination_registry=""
+destination_registry_username=""
+destination_registry_password=""
+
+show_usage() {
+    echo "Usage: $0 --input <input_file> --src-username <source_username> --src-password <source_password> --dest-registry <destination_registry> --dest-username <dest_username> --dest-password <dest_password>"
+    echo ""
+    echo "Arguments:"
+    echo "  --input, -i              Input file containing Docker images (required)"
+    echo "  --src-username, -su       Source registry username (optional)"
+    echo "  --src-password, -sp       Source registry password (optional)"
+    echo "  --dest-registry, -d        Destination registry URL (required)"
+    echo "  --dest-username, -du         Destination registry username (optional)"
+    echo "  --dest-password, -dp         Destination registry password (optional)"
+    echo "  --help, -h               Show this help message"
+    echo ""
+    echo "Examples:"
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --input|-i)
+            input_file="$2"
+            shift 2
+            ;;
+        --src-username|-su)
+            source_registry_username="$2"
+            shift 2
+            ;;
+        --src-password|-sp)
+            source_registry_password="$2"
+            shift 2
+            ;;
+        --dest-registry|-d)
+            destination_registry="$2"
+            shift 2
+            ;;
+        --dest-username|-du)
+            destination_registry_username="$2"
+            shift 2
+            ;;
+        --dest-password|-dp)
+            destination_registry_password="$2"
+            shift 2
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Validate required arguments
+if [ -z "$input_file" ] || [ -z "$source_registry_username" ] || [ -z "$source_registry_password" ] || [ -z "$destination_registry" ] || [ -z "$destination_registry_username" ] || [ -z "$destination_registry_password" ]; then
+    echo "ERROR: Missing required arguments"
+    show_usage
+    exit 1
+fi
 
 # Check if input file exists
 if [ ! -f "$input_file" ]; then
     echo "ERROR: Input file '$input_file' not found"
-    echo "Usage: $0 <input_file> <source_registry_username> <source_registry_password> <destination_registry> <destination_registry_username> <destination_registry_password>"
-    echo "Example: $0 images.txt myuser mypass my-registry.com myuser mypass"
+    show_usage
     exit 1
 fi
 
