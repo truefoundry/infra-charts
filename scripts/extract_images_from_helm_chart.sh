@@ -1,19 +1,72 @@
 #!/bin/bash
-# Get command line arguments
-repo=$1
-chart_name=$2
-version=$3
-values_file=$4
 
+# Function to show usage
+show_usage() {
+    echo "Usage: $0 --repo <repo_url|repo_name> --chart <chart_name> --version <version> [--values <values_file>]"
+    echo ""
+    echo "Arguments:"
+    echo "  --repo, -r     Repository URL or name (required)"
+    echo "  --chart, -c    Chart name (required)"
+    echo "  --version, -v  Chart version (required)"
+    echo "  --values, -f   Values file path (optional)"
+    echo "  --help, -h     Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --repo oci://tfy.jfrog.io/tfy-helm --chart truefoundry --version 1.0.0 --values values.yaml"
+    echo "  $0 -r infra-charts -c tfy-agent -v 1.0.0 -f values.yaml"
+    echo "  $0 --repo infra-charts --chart tfy-agent --version 1.0.0"
+}
+
+# Parse command line arguments
+repo=""
+chart_name=""
+version=""
+values_file=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --repo|-r)
+            repo="$2"
+            shift 2
+            ;;
+        --chart|-c)
+            chart_name="$2"
+            shift 2
+            ;;
+        --version|-v)
+            version="$2"
+            shift 2
+            ;;
+        --values|-f)
+            values_file="$2"
+            shift 2
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Validate required arguments
 if [ -z "$repo" ] || [ -z "$chart_name" ] || [ -z "$version" ]; then
-    echo "Usage: $0 <repo_url|repo_name> <chart_name> <version> [values_file]"
-    echo "Example: $0 oci://tfy.jfrog.io/tfy-helm truefoundry 1.0.0 values.yaml"
-    echo "Example: $0 infra-charts tfy-agent 1.0.0 values.yaml"
+    echo "ERROR: Missing required arguments"
+    show_usage
     exit 1
 fi
 
 echo "Pulling chart $repo/$chart_name --version $version"
-helm pull "$repo/$chart_name" --version "$version"
+if helm pull "$repo/$chart_name" --version "$version"; then
+    echo "Chart pulled successfully"
+else
+    echo "ERROR: Failed to pull chart"
+    exit 1
+fi
 
 echo "extracting images..."
 
