@@ -188,7 +188,7 @@ for image_url in $images; do
     
     echo "Pushing image: $new_image_url"
 
-    skopeo_cmd="skopeo copy"
+    skopeo_cmd="skopeo copy --multi-arch index-only"
     if [ -n "$source_creds" ]; then
         skopeo_cmd="$skopeo_cmd --src-creds=$source_creds"
     fi
