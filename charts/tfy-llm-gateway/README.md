@@ -15,7 +15,7 @@ LLM-Gateway Helm Chart
 | `global.nodeSelector`                           | Node selector                                                            | `{}`                                              |
 | `global.serviceAccount.name`                    | Service account name                                                     | `""`                                              |
 | `image.repository`                              | Image repository for tfyLLMGateway                                       | `tfy.jfrog.io/tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                     | Image tag for the tfyLLMGateway                                          | `v0.77.0-rc.1`                                    |
+| `image.tag`                                     | Image tag for the tfyLLMGateway                                          | `v0.77.0`                                         |
 | `fullnameOverride`                              | Full name override for the tfy-llm-gateway                               | `""`                                              |
 | `environmentName`                               | The environment name                                                     | `default`                                         |
 | `envSecretName`                                 | The environment secret name                                              | `tfy-llm-gateway-env-secret`                      |
