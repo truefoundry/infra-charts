@@ -123,7 +123,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate required arguments
-if [ -z "$input_file" ] || [ -z "$source_registry_username" ] || [ -z "$source_registry_password" ] || [ -z "$destination_registry" ] || [ -z "$destination_registry_username" ] || [ -z "$destination_registry_password" ]; then
+if [ -z "$input_file" ] || [ -z "$destination_registry" ]; then
     echo "ERROR: Missing required arguments"
     show_usage
     exit 1
