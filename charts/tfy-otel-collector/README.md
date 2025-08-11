@@ -13,8 +13,8 @@ Tfy-Otel_collector Helm Chart
 | `global.tolerations`                          | Tolerations for pod scheduling on a node                                           | `[]`                                       |
 | `global.nodeSelector`                         | Node selector                                                                      | `{}`                                       |
 | `global.serviceAccount.name`                  | Service account name                                                               | `truefoundry`                              |
-| `global.image.registry`                       | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                             |
-| `env`                                         | Environment variables for the tfyOTELCollector                                     | `{}`                                       |
+| `global.image.registry`                       | Image registry for tfyOtelCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                             |
+| `env`                                         | Environment variables for the tfyOtelCollector                                     | `{}`                                       |
 | `image.registry`                              | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                       |
 | `image.repository`                            | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector`    |
 | `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `1eabfc6a32c1b7a8959bbf8ac0412c5901389673` |
