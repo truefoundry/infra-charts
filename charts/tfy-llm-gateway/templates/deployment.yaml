@@ -37,7 +37,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - name: http

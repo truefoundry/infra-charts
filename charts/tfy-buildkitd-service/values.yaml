@@ -14,6 +14,9 @@ global:
   ## @param global.serviceAccount.name [string] Service account name
   serviceAccount:
     name: "truefoundry"
+  ## @param global.image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
+  image:
+    registry: "tfy.jfrog.io"
 
 ## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
 # replicaCount: 1
@@ -21,9 +24,10 @@ global:
 ## Image of tfyBuildkitdService
 ##
 image:
+  ## @param image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
+  registry: ""
   ## @param image.repository tfyBuildkitdService repository
-  ##
-  repository: moby/buildkit
+  repository: tfy-mirror/moby/buildkit
   ## @param image.pullPolicy Pull policy for tfyBuildkitdService
   ##
   pullPolicy: IfNotPresent

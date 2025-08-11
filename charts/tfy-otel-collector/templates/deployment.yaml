@@ -36,7 +36,7 @@ spec:
           env:
             {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
           command: ["./main", "--config", "/data/config.yaml"]
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - name: http
