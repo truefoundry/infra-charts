@@ -10,6 +10,9 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## @param global.image.registry Image registry for tfyClickhouse (defaults to global.image.registry if not set)
+  image:
+    registry: "tfy.jfrog.io"
 
 ## @param altinity-clickhouse-operator [object] altinity operator
 altinity-clickhouse-operator:
@@ -58,8 +61,8 @@ zookeeper:
   enabled: true
   replicaCount: 1
   image:
-    registry: "tfy.jfrog.io/tfy-mirror"
-    repository: bitnami/zookeeper
+    registry: "tfy.jfrog.io"
+    repository: tfy-mirror/bitnami/zookeeper
     pullSecrets: []
   resources:
     requests:
@@ -90,7 +93,7 @@ clickhouse:
   zookeeperPort: '2181'
   labels: {}
   image:
-    repository: tfy.jfrog.io/tfy-mirror/clickhouse/clickhouse-server
+    repository: tfy-mirror/clickhouse/clickhouse-server
     tag: 24.7.3.42-alpine
   annotations: {}
   imagePullSecrets: []

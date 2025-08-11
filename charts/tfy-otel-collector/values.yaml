@@ -13,8 +13,11 @@ global:
   ## @param global.serviceAccount.name Service account name
   serviceAccount:
     name: "truefoundry"
+  ## @param global.image.registry Image registry for tfyOTELCollector (defaults to global.image.registry if not set)
+  image:
+    registry: "tfy.jfrog.io"
 
-## @param env [object] Environment variables for the tfyOtelCollector
+## @param env [object] Environment variables for the tfyOTELCollector
 env:
   CLICKHOUSE_USER: user
   CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
@@ -30,10 +33,12 @@ env:
   SFY_SERVER_REQUEST_TIMEOUT: 30s
   DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 30s
 
-## Image configuration for llm-gateway
+## Image configuration for otel-collector
 image:
+  ## @param image.registry Image registry for tfyOTELCollector (defaults to global.image.registry if not set)
+  registry: ""
   ## @param image.repository Image repository for tfyOTELCollector
-  repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
+  repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
   tag: 1eabfc6a32c1b7a8959bbf8ac0412c5901389673
 
