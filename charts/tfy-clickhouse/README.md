@@ -5,11 +5,12 @@ TFY-Clickhouse is a helm chart for deploying Clickhouse on Kubernetes. It is des
 
 ### tfyClickhouse parameters
 
-| Name                           | Description                                 | Value    |
-| ------------------------------ | ------------------------------------------- | -------- |
-| `global.resourceTier`          | Resource deployment type                    | `medium` |
-| `global.affinity`              | Affinity rules for pod scheduling on a node | `{}`     |
-| `global.tolerations`           | Tolerations for pod scheduling on a node    | `[]`     |
-| `global.nodeSelector`          | Node selector                               | `{}`     |
-| `altinity-clickhouse-operator` | altinity operator                           | `{}`     |
+| Name                           | Description                                                                     | Value          |
+| ------------------------------ | ------------------------------------------------------------------------------- | -------------- |
+| `global.resourceTier`          | Resource deployment type                                                        | `medium`       |
+| `global.affinity`              | Affinity rules for pod scheduling on a node                                     | `{}`           |
+| `global.tolerations`           | Tolerations for pod scheduling on a node                                        | `[]`           |
+| `global.nodeSelector`          | Node selector                                                                   | `{}`           |
+| `global.image.registry`        | Image registry for tfyClickhouse (defaults to global.image.registry if not set) | `tfy.jfrog.io` |
+| `altinity-clickhouse-operator` | altinity operator                                                               | `{}`           |
 
