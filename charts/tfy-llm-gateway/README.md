@@ -45,7 +45,7 @@ LLM-Gateway Helm Chart
 | `tolerations`                                   | Tolerations                                                              | `[]`                                              |
 | `affinity`                                      | Affinity                                                                 | `{}`                                              |
 | `topologySpreadConstraints`                     | Topology spread constraints                                              | `{}`                                              |
-| `terminationGracePeriodSeconds`                 | Termination grace period in seconds                                      | `120`                                             |
+| `terminationGracePeriodSeconds`                 | Termination grace period in seconds                                      | `300`                                             |
 | `ingress.enabled`                               | Enable ingress configuration                                             | `false`                                           |
 | `ingress.annotations`                           | Ingress annotations                                                      | `{}`                                              |
 | `ingress.labels`                                | Ingress labels                                                           | `{}`                                              |
