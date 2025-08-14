@@ -29,6 +29,14 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @skip aws-eks-gpu-operator.gfd.env
+    env:
+      - name: GFD_SLEEP_INTERVAL
+        value: "60s"
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param aws-eks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -91,6 +99,8 @@ aws-eks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip aws-eks-gpu-operator.devicePlugin.config
     config:
       data:
@@ -358,7 +368,7 @@ aws-eks-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param aws-eks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:
@@ -651,6 +661,8 @@ azure-aks-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param azure-aks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -829,7 +841,7 @@ azure-aks-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## Device Plugin configuration.
   devicePlugin:
@@ -843,6 +855,8 @@ azure-aks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip azure-aks-gpu-operator.devicePlugin.config
     config:
       data:
@@ -964,6 +978,14 @@ civo-talos-gpu-operator:
   gfd:
     ## @param civo-talos-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @skip civo-talos-gpu-operator.gfd.env
+    env:
+      - name: GFD_SLEEP_INTERVAL
+        value: "60s"
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param civo-talos-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -1102,6 +1124,8 @@ civo-talos-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip civo-talos-gpu-operator.devicePlugin.config
     config:
       data:
@@ -1188,7 +1212,7 @@ civo-talos-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param civo-talos-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:
@@ -1280,6 +1304,8 @@ generic-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param generic-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -1452,6 +1478,8 @@ generic-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip generic-gpu-operator.devicePlugin.config
     config:
       data:
@@ -1538,7 +1566,7 @@ generic-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param generic-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:
