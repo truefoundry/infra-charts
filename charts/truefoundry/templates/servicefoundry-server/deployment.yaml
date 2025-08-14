@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
+          image: "{{ .Values.servicefoundryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.servicefoundryServer.imagePullPolicy }}
           ports:
             - name: http

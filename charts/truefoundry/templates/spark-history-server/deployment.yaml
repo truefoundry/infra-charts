@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "spark-history-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.sparkHistoryServer.image.repository }}:{{ .Values.sparkHistoryServer.image.tag }}"
+          image: "{{ .Values.sparkHistoryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.sparkHistoryServer.image.repository }}:{{ .Values.sparkHistoryServer.image.tag }}"
           imagePullPolicy: {{ .Values.sparkHistoryServer.imagePullPolicy }}
           ports:
             - name: http
