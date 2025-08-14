@@ -40,7 +40,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           ports:
             - name: http
@@ -152,7 +152,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           resources:
             {{- include "tfy-workflow-admin-scheduler.resources" . | nindent 12 }}

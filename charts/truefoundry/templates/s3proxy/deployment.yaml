@@ -43,7 +43,7 @@ spec:
           {{- end }}
           env:
             {{- include "s3proxy.env" . | trim | nindent 12 }}
-          image: "{{ .Values.s3proxy.image.repository }}:{{ .Values.s3proxy.image.tag }}"
+          image: "{{ .Values.s3proxy.image.registry | default .Values.global.image.registry }}/{{ .Values.s3proxy.image.repository }}:{{ .Values.s3proxy.image.tag }}"
           imagePullPolicy: {{ .Values.s3proxy.imagePullPolicy }}
           ports:
             - name: http

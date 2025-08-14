@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-controller.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyController.image.repository }}:{{ .Values.tfyController.image.tag }}"
+          image: "{{ .Values.tfyController.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyController.image.repository }}:{{ .Values.tfyController.image.tag }}"
           imagePullPolicy: {{ .Values.tfyController.imagePullPolicy }}
           ports:
             - name: port-{{ .Values.tfyController.service.port }}

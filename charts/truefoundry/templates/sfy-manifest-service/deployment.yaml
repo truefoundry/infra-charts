@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
-          image: "{{ .Values.sfyManifestService.image.repository }}:{{ .Values.sfyManifestService.image.tag }}"
+          image: "{{ .Values.sfyManifestService.image.registry | default .Values.global.image.registry }}/{{ .Values.sfyManifestService.image.repository }}:{{ .Values.sfyManifestService.image.tag }}"
           imagePullPolicy: {{ .Values.sfyManifestService.imagePullPolicy }}
           ports:
             - name: http

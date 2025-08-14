@@ -25,7 +25,7 @@ spec:
         securityContext:
           {{- toYaml . | nindent 10 }}
         {{- end }}
-        image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
+        image: {{ .Values.truefoundryBootstrap.image.registry | default .Values.global.image.registry }}/{{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
         resources:
           {{- include "bootstrap.resources" . | nindent 10 }}
         command: ["/truefoundry/truefoundry-bootstrap.sh"]

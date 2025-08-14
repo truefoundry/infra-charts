@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
         - name: alpine
-          image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+          image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
           command: ["tail", "-f", "/dev/null"]
           {{- with .Values.tfyBuild.preemptibleDeployment.extraEnvs }}
           env:
