@@ -26,6 +26,10 @@ spec:
         - operator: Exists
       nodeSelector:
         {{- toYaml .Values.windowsVector.nodeSelector | nindent 8 }}
+      {{- if .Values.windowsVector.affinity }}
+      affinity:
+        {{- toYaml .Values.windowsVector.affinity | nindent 8 }}
+      {{- end }}
       {{- if .Values.podPriorityClassName }}
       priorityClassName: {{ .Values.podPriorityClassName }}
       {{- end }}

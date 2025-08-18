@@ -55,11 +55,11 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.affinity Affinity
     affinity:
       nodeAffinity:
-        required:
+        requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
             - matchExpressions:
                 - key: kubernetes.io/os
-                  operator: In
+                  operator: In 
                   values:
                     - linux
     ## @param victoria-logs-single.vector.tolerations [array] Tolerations
@@ -150,6 +150,16 @@ windowsVector:
     pullPolicy: IfNotPresent
   nodeSelector:
     kubernetes.io/os: windows
+  ## @param windowsVector.affinity Affinity configuration for Windows Vector pods
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                  - windows
 
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.
