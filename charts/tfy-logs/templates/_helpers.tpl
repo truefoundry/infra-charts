@@ -31,6 +31,28 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+Common labels
+*/}}
+{{- define "tfy-logs.labels" -}}
+helm.sh/chart: {{ include "tfy-logs.chart" . }}
+{{ include "tfy-logs.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "tfy-logs.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-logs.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+
+
+{{/*
 Labels for resource quotas
 */}}
 {{- define "resource-quotas.labels" -}}

@@ -1,0 +1,63 @@
+{{- if .Values.windowsVector.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "tfy-logs.fullname" . }}-windows
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-logs.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vector-windows
+spec:
+  selector:
+    matchLabels:
+      {{- include "tfy-logs.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: vector-windows
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        {{- include "tfy-logs.labels" . | nindent 8 }}
+        app.kubernetes.io/component: vector-windows
+    spec:
+      tolerations:
+        - operator: Exists
+      nodeSelector:
+        kubernetes.io/os: windows
+      priorityClassName: system-node-critical
+      containers:
+        - name: vector
+          image: tfy.jfrog.io/tfy-mirror/djboris/vector-windows:0.46.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config-dir
+            - /etc/vector/
+          env:
+            - name: VECTOR_SELF_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: 50m
+              memory: 80Mi
+            limits:
+              cpu: 200m
+              memory: 200Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/vector
+              readOnly: true
+            - name: var-log
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-victoria-logs-single-vector
+        - name: var-log
+          hostPath:
+            path: /var/log
+{{- end }}
