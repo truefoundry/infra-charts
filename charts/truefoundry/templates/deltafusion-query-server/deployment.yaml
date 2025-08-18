@@ -35,9 +35,9 @@ spec:
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
           {{- if .Values.deltaFusionQueryServer.image.optimized }}
-          image: "{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
+          image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
           {{- else }}
-          image: "{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}"
+          image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}"
           {{- end }}
           imagePullPolicy: {{ .Values.deltaFusionQueryServer.imagePullPolicy }}
           ports:
