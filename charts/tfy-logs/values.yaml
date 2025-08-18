@@ -53,7 +53,14 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
     ## @param victoria-logs-single.vector.affinity Affinity
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        required:
+          nodeSelectorTerm:
+            matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values: ["linux"]
     ## @param victoria-logs-single.vector.tolerations [array] Tolerations
     tolerations:
       - key: node-role.kubernetes.io/master
