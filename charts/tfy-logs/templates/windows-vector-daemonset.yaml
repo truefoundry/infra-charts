@@ -53,13 +53,17 @@ spec:
               mountPath: /etc/vector
               readOnly: true
             - name: var-log
-              mountPath: /var/log
+              mountPath: C:\var\log
               readOnly: true
+            - name: data
+              mountPath: C:\vector-data
       volumes:
         - name: config
           configMap:
             name: vl-config
         - name: var-log
           hostPath:
-            path: /var/log
+            path: C:\var\log
+        - name: data
+          emptyDir: {}
 {{- end }}
