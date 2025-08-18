@@ -26,3 +26,4 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 | `karpenter.controller.resources.requests.memory`                  | Memory requests for karpenter container           | `2000Mi`       |
 | `karpenter.controller.resources.limits.cpu`                       | CPU limits for karpenter container                | `1`            |
 | `karpenter.controller.resources.limits.memory`                    | Memory requests for karpenter container           | `4000Mi`       |
+| `karpenter.serviceMonitor.enabled`                                | Enable service monitor for karpenter              | `true`         |

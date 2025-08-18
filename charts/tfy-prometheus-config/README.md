@@ -153,14 +153,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | Name                                                       | Description                                     | Value                                     |
 | ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
 | `serviceMonitors.enabled`                                  | Enable service monitors for prometheus          | `true`                                    |
-| `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `true`                                    |
+| `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `false`                                   |
 | `serviceMonitors.alertManager.name`                        | Name of the service monitor                     | `prometheus-kube-prometheus-alertmanager` |
 | `serviceMonitors.alertManager.labels`                      | Labels for alert manager                        | `{}`                                      |
 | `serviceMonitors.alertManager.annotations`                 | Annotations for alert manager                   | `{}`                                      |
 | `serviceMonitors.alertManager.endpoints`                   | Endpoints for alert manager                     | `[]`                                      |
 | `serviceMonitors.alertManager.serviceSelectorLabels`       | Service selector labels for alert manager       | `{}`                                      |
 | `serviceMonitors.alertManager.namespaceSelector`           | Namespace selector for alert manager            | `{}`                                      |
-| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows            | `true`                                    |
+| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows            | `false`                                   |
 | `serviceMonitors.workflows.name`                           | Name of the service monitor                     | `argo-workflows`                          |
 | `serviceMonitors.workflows.annotations`                    | Annotations for workflows                       | `{}`                                      |
 | `serviceMonitors.workflows.labels`                         | Labels for workflows                            | `{}`                                      |
@@ -168,7 +168,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.workflows.endpoints`                      | Endpoints for workflows                         | `[]`                                      |
 | `serviceMonitors.workflows.serviceSelectorLabels`          | Service selector labels for workflows           | `{}`                                      |
 | `serviceMonitors.workflows.namespaceSelector`              | Namespace selector for workflows                | `{}`                                      |
-| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                 | `true`                                    |
+| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                 | `false`                                   |
 | `serviceMonitors.keda.name`                                | Name of the service monitor                     | `keda`                                    |
 | `serviceMonitors.keda.labels`                              | Labels for keda                                 | `{}`                                      |
 | `serviceMonitors.keda.annotations`                         | Annotations for keda                            | `{}`                                      |
@@ -206,7 +206,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                | `{}`                                      |
 | `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                         | `[]`                                      |
 | `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter           | `{}`                                      |
-| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `true`                                    |
+| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `false`                                   |
 | `serviceMonitors.kubecost.name`                            | Name of the service monitor                     | `kubecost`                                |
 | `serviceMonitors.kubecost.labels`                          | Labels for kubecost                             | `{}`                                      |
 | `serviceMonitors.kubecost.annotations`                     | Annotations for kubecost                        | `{}`                                      |
@@ -214,7 +214,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.kubecost.endpoints`                       | Endpoints for kubecost                          | `[]`                                      |
 | `serviceMonitors.kubecost.serviceSelectorLabels`           | Service selector labels for kubecost            | `{}`                                      |
 | `serviceMonitors.kubecost.namespaceSelector`               | Namespace selector for kubecost                 | `{}`                                      |
-| `serviceMonitors.kubelet.enabled`                          | Enable service monitor for kubelet              | `true`                                    |
+| `serviceMonitors.kubelet.enabled`                          | Enable service monitor for kubelet              | `false`                                   |
 | `serviceMonitors.kubelet.name`                             | Name of the service monitor                     | `prometheus-kube-prometheus-kubelet`      |
 | `serviceMonitors.kubelet.labels`                           | Labels for kubelet                              | `{}`                                      |
 | `serviceMonitors.kubelet.annotations`                      | Annotations for kubelet                         | `{}`                                      |
@@ -230,14 +230,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.nodeExporter.endpoints`                   | Endpoints for node exporter                     | `[]`                                      |
 | `serviceMonitors.nodeExporter.serviceSelectorLabels`       | Service selector labels for node exporter       | `{}`                                      |
 | `serviceMonitors.nodeExporter.namespaceSelector`           | Namespace selector for node exporter            | `{}`                                      |
-| `serviceMonitors.kubeStateMetrics.enabled`                 | Enable service monitor for kube state metrics   | `true`                                    |
+| `serviceMonitors.kubeStateMetrics.enabled`                 | Enable service monitor for kube state metrics   | `false`                                   |
 | `serviceMonitors.kubeStateMetrics.name`                    | Name of the service monitor                     | `prometheus-kube-state-metrics`           |
 | `serviceMonitors.kubeStateMetrics.labels`                  | Labels for kube state metrics                   | `{}`                                      |
 | `serviceMonitors.kubeStateMetrics.annotations`             | Annotations for kube state metrics              | `{}`                                      |
 | `serviceMonitors.kubeStateMetrics.jobLabel`                | Job label for kube state metrics                | `app.kubernetes.io/name`                  |
 | `serviceMonitors.kubeStateMetrics.endpoints`               | Endpoints for kube state metrics                | `[]`                                      |
 | `serviceMonitors.kubeStateMetrics.serviceSelectorLabels`   | Service selector labels for kube state metrics  | `{}`                                      |
-| `serviceMonitors.prometheus.enabled`                       | Enable service monitor for prometheus           | `true`                                    |
+| `serviceMonitors.prometheus.enabled`                       | Enable service monitor for prometheus           | `false`                                   |
 | `serviceMonitors.prometheus.name`                          | Name of the service monitor                     | `prometheus`                              |
 | `serviceMonitors.prometheus.labels`                        | Labels for prometheus                           | `{}`                                      |
 | `serviceMonitors.prometheus.annotations`                   | Annotations for prometheus                      | `{}`                                      |
@@ -245,14 +245,14 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheus.endpoints`                     | Endpoints for prometheus                        | `[]`                                      |
 | `serviceMonitors.prometheus.serviceSelectorLabels`         | Service selector labels for prometheus          | `{}`                                      |
 | `serviceMonitors.prometheus.namespaceSelector`             | Namespace selector for prometheus               | `{}`                                      |
-| `serviceMonitors.prometheusOperator.enabled`               | Enable service monitor for prometheus operator  | `true`                                    |
+| `serviceMonitors.prometheusOperator.enabled`               | Enable service monitor for prometheus operator  | `false`                                   |
 | `serviceMonitors.prometheusOperator.name`                  | Name of the service monitor                     | `prometheus-kube-prometheus-admission`    |
 | `serviceMonitors.prometheusOperator.labels`                | Labels for prometheus operator                  | `{}`                                      |
 | `serviceMonitors.prometheusOperator.annotations`           | Annotations for prometheus operator             | `{}`                                      |
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `serviceMonitors.loki.enabled`                             | Enable service monitor for loki                 | `true`                                    |
+| `serviceMonitors.loki.enabled`                             | Enable service monitor for loki                 | `false`                                   |
 | `serviceMonitors.loki.name`                                | Name of the service monitor                     | `loki`                                    |
 | `serviceMonitors.loki.labels`                              | Labels for loki                                 | `{}`                                      |
 | `serviceMonitors.loki.annotations`                         | Annotations for loki                            | `{}`                                      |
