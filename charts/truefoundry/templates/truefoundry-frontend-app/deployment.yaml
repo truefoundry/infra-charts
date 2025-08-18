@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "truefoundry-frontend-app.env" . | trim | nindent 12 }}
-          image: "{{ .Values.truefoundryFrontendApp.image.repository }}:{{ .Values.truefoundryFrontendApp.image.tag }}"
+          image: "{{ .Values.truefoundryFrontendApp.image.registry | default .Values.global.image.registry }}/{{ .Values.truefoundryFrontendApp.image.repository }}:{{ .Values.truefoundryFrontendApp.image.tag }}"
           imagePullPolicy: {{ .Values.truefoundryFrontendApp.imagePullPolicy }}
           ports:
             - name: http

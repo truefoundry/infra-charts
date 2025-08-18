@@ -37,7 +37,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}"
+          image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}"
           imagePullPolicy: {{ .Values.deltaFusionIngestor.imagePullPolicy }}
           env:
             {{- include "deltafusion-ingestor.env" . | trim | nindent 12 }}
