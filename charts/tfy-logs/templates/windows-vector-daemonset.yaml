@@ -34,11 +34,9 @@ spec:
           image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
           imagePullPolicy: IfNotPresent
           args:
-            - --config-dir
-            - C:\vector-config
+            - "--config"
+            - "C:\\Program Files\\Vector\\config\\vector.yaml"
           env:
-            - name: VECTOR_DATA_DIR
-              value: "C:\\vector-data"
             - name: VECTOR_SELF_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -51,14 +49,12 @@ spec:
               cpu: 200m
               memory: 200Mi
           volumeMounts:
-            - name: config
-              mountPath: C:\vector-config
-              readOnly: true
-            - name: var-log
-              mountPath: C:\var\log
-              readOnly: true
+            - name: vl-config
+              mountPath: "C:\\Program Files\\Vector\\config"
             - name: data
               mountPath: C:\vector-data
+            - name: var-log
+              mountPath: C:\var\log
       volumes:
         - name: config
           configMap:
