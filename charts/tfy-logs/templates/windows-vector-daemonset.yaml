@@ -29,6 +29,8 @@ spec:
       {{- if .Values.podPriorityClassName }}
       priorityClassName: {{ .Values.podPriorityClassName }}
       {{- end }}
+      serviceAccount: {{ include "tfy-logs.fullname" . }}-vector
+      serviceAccountName: {{ include "tfy-logs.fullname" . }}-vector
       containers:
         - name: vector
           image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
