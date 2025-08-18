@@ -134,7 +134,14 @@ victoria-logs-single:
 ##
 windowsVector:
   ## @param windowsVector.enabled Enable Windows Vector daemon set for Windows node log collection
-  enabled: false
+  enabled: true
+  image:
+    registry: tfy.jfrog.io/tfy-mirror
+    repository: djboris/vector-windows
+    tag: 0.46.1
+    pullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/os: windows
 
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.

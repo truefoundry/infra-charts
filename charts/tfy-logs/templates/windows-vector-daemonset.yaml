@@ -25,11 +25,13 @@ spec:
       tolerations:
         - operator: Exists
       nodeSelector:
-        kubernetes.io/os: windows
-      priorityClassName: system-node-critical
+        {{- toYaml .Values.windowsVector.nodeSelector | nindent 8 }}
+      {{- if .Values.podPriorityClassName }}
+      priorityClassName: {{ .Values.podPriorityClassName }}
+      {{- end }}
       containers:
         - name: vector
-          image: tfy.jfrog.io/tfy-mirror/djboris/vector-windows:0.46.1
+          image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
           imagePullPolicy: IfNotPresent
           args:
             - --config-dir
