@@ -28,11 +28,23 @@ spec:
       }
     }
     const excludedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.excludeNamespaces | toYaml | nindent 4 }}`);
-    let includedNamespaces = undefined;
-    if (parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`) === "*") {
-      includedNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    let includedNamespaces = [];
+    let filteredNamespaces = [];
+    const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    const inputNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`)
+    if (inputNamespaces === "*") {
+      includedNamespaces = allNamespaces;
     } else {
-      includedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`);
+      for (let i in inputNamespaces) {
+        if (inputNamespaces[i].includes("*")) {
+          const regex = new RegExp(inputNamespaces[i]);
+          filteredNamespaces = allNamespaces.filter(namespace => regex.test(namespace));
+          includedNamespaces = [...includedNamespaces, ...filteredNamespaces];
+        } else {
+          includedNamespaces.push(inputNamespaces[i]);
+        }
+      }
+    }
     }
     const mountDetails = parseYamlString(`{{ .Values.podVolumeMounts.mountDetails | toYaml | nindent 4 }}`);
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || mountDetails.length < 0) {

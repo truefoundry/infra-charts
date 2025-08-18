@@ -20,13 +20,6 @@ spec:
   javascript: |
     import { load } from 'js-yaml';
 
-    const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
-    const includedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
-    const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
-    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
-      exit()
-    }
-
     function parseYamlString(yamlString) {
       try {
         return load(yamlString);
@@ -34,6 +27,29 @@ spec:
         console.log("Error parsing YAML string:", e);
         return null;
       }
+    }
+
+    const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
+    let includedNamespaces = [];
+    let filteredNamespaces = [];
+    const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+    const inputNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
+    if (inputNamespaces === "*") {
+      includedNamespaces = allNamespaces;
+    } else {
+      for (let i in inputNamespaces) {
+        if (inputNamespaces[i].includes("*")) {
+          const regex = new RegExp(inputNamespaces[i]);
+          filteredNamespaces = allNamespaces.filter(namespace => regex.test(namespace));
+          includedNamespaces = [...includedNamespaces, ...filteredNamespaces];
+        } else {
+          includedNamespaces.push(inputNamespaces[i]);
+        }
+      }
+    }
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+      exit()
     }
 
     function getNewRegistry(protocol, hostname) {
