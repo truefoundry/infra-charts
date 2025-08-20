@@ -46,7 +46,6 @@ spec:
           namespaceList.push(inputNamespace[i]);
         }
       }
-      console.log("namespaceList", namespaceList);
       return namespaceList;
     }
 
@@ -54,6 +53,8 @@ spec:
     const inputInlcudedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`)
     const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
     const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
+    print("includedNamespaces", includedNamespaces);
+    print("excludedNamespaces", excludedNamespaces);
     const mountDetails = parseYamlString(`{{ .Values.podVolumeMounts.mountDetails | toYaml | nindent 4 }}`);
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || mountDetails.length < 0) {
       exit()
