@@ -33,6 +33,10 @@ spec:
       let filteredNamespaces = [];
       const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
       for (let i in inputNamespace) {
+        if (inputNamespace[i] === "*") {
+          namespaceList = allNamespaces;
+          break;
+        }
         if (inputNamespace[i].includes("*")) {
           const regex = new RegExp(inputNamespace[i]);
           filteredNamespaces = allNamespaces.filter(namespace => regex.test(namespace));
