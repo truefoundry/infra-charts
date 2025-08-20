@@ -34,7 +34,7 @@ spec:
           {{- end }}
           env:
             {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.mlfoundryServer.image.repository }}:{{ .Values.mlfoundryServer.image.tag }}"
+          image: "{{ .Values.mlfoundryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.mlfoundryServer.image.repository }}:{{ .Values.mlfoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.mlfoundryServer.imagePullPolicy }}
           ports:
             - name: http
