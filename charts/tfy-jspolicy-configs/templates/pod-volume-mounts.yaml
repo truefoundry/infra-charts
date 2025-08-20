@@ -50,8 +50,8 @@ spec:
     }
 
     const inputExcludedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.excludeNamespaces | toYaml | nindent 4 }}`);
-    const inputNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`)
-    const includedNamespaces = getNamespaces(inputNamespaces);
+    const inputInlcudedNamespaces = parseYamlString(`{{ .Values.podVolumeMounts.includeNamespaces | toYaml | nindent 4 }}`)
+    const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
     const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
     const mountDetails = parseYamlString(`{{ .Values.podVolumeMounts.mountDetails | toYaml | nindent 4 }}`);
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || mountDetails.length < 0) {

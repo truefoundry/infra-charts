@@ -49,8 +49,8 @@ spec:
     }
 
     const inputExcludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml | nindent 4 }}`)
-    const inputNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml | nindent 4 }}`)
-    const includedNamespaces = getNamespaces(inputNamespaces);
+    const inputInlcudedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml | nindent 4 }}`)
+    const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
     const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
     const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml | nindent 4 }}`)
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
