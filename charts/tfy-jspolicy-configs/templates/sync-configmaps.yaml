@@ -52,9 +52,9 @@ spec:
     const excludedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.excludeNamespaces | toYaml | nindent 4 }}`);
     const inputNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.includeNamespaces | toYaml | nindent 4 }}`);
     const includedNamespaces = getNamespaces(inputNamespaces);
-    const excludedNamespacesList = getNamespaces(excludedNamespaces);
+    const excludedNamespaces = getNamespaces(excludedNamespaces);
     const configMapNames = parseYamlString(`{{ .Values.syncConfigMaps.configMapNames | toYaml | nindent 4 }}`);
-    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespacesList.includes(request.namespace) || configMapNames.length < 0) {
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || configMapNames.length < 0) {
       exit();
     }
 
