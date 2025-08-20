@@ -50,10 +50,10 @@ spec:
       return namespaceList;
     }
 
-    const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
+    const inputExcludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
     const inputNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
     const includedNamespaces = getNamespaces(inputNamespaces);
-    const excludedNamespaces = getNamespaces(excludedNamespaces);
+    const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
     const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
       exit()

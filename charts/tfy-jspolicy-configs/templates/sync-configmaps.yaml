@@ -49,10 +49,10 @@ spec:
       return namespaceList;
     }
 
-    const excludedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.excludeNamespaces | toYaml | nindent 4 }}`);
+    const inputExcludedNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.excludeNamespaces | toYaml | nindent 4 }}`);
     const inputNamespaces = parseYamlString(`{{ .Values.syncConfigMaps.includeNamespaces | toYaml | nindent 4 }}`);
     const includedNamespaces = getNamespaces(inputNamespaces);
-    const excludedNamespaces = getNamespaces(excludedNamespaces);
+    const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
     const configMapNames = parseYamlString(`{{ .Values.syncConfigMaps.configMapNames | toYaml | nindent 4 }}`);
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || configMapNames.length < 0) {
       exit();
