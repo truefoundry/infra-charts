@@ -50,11 +50,14 @@ spec:
 
     const inputExcludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml | nindent 4 }}`)
     const inputInlcudedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml | nindent 4 }}`)
+    const excludeRegistries = parseYamlString(`{{ .Values.replaceImageRegistry.excludeRegistries | toYaml | nindent 4 }}`)
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml | nindent 4 }}`)
     const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
     const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
     print("includedNamespaces", includedNamespaces);
     print("excludedNamespaces", excludedNamespaces);
-    const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml | nindent 4 }}`)
+    print("inputExcludeRegistries", inputExcludeRegistries);
+    print("registryReplacementMap", registryReplacementMap);
     if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
       exit()
     }
@@ -122,10 +125,10 @@ spec:
       }
     }
     
-    function get_new_image_uri(initialImageUri, registryReplacementMap) {
+    function get_new_image_uri(initialImageUri, registryReplacementMap, excludeRegistries) {
       const result = image_normalize(initialImageUri)
-      const registry = result[0]
-      const imageUri = result[1]
+      const registry = result[0] // docker.io ["tfy.jfrog.io"] *: "tfy.jfrog.io"
+      const imageUri = result[1] // docker.io/library/nginx:latest
       print (initialImageUri, registry, imageUri)
       let newImageUri = imageUri;
       let registryReplacement = registryReplacementMap[registry];
@@ -136,19 +139,19 @@ spec:
         registryReplacement = registryReplacementMap['*'];
       }
 
-      // This is to avoid replacing the registry if it's already replaced
-      if (imageUri.startsWith(registryReplacement)) {
+      // This is to avoid replacing the registry if it's already replaced or if it's in the excludeRegistries list
+      if (imageUri.startsWith(registryReplacement) && excludeRegistries.includes(registryReplacement)) {
         return imageUri;
       }
       newImageUri = imageUri.replace(registry, registryReplacement);
       return newImageUri
     }
     for (var container of (request.object.spec.containers || [])) {
-      container.image = get_new_image_uri(container.image, registryReplacementMap)
+      container.image = get_new_image_uri(container.image, registryReplacementMap, excludeRegistries)
     }
 
     for (var container of (request.object.spec.initContainers || [])) {
-      container.image = get_new_image_uri(container.image, registryReplacementMap)
+      container.image = get_new_image_uri(container.image, registryReplacementMap, excludeRegistries)
     }
     
     mutate(request.object);
