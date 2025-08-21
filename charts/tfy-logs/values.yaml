@@ -52,7 +52,7 @@ victoria-logs-single:
       repository: public.ecr.aws/truefoundrycloud/timberio/vector
     ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
-    ## @param victoria-logs-single.vector.affinity Affinity
+    ## @param victoria-logs-single.vector.affinity [object] Affinity
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -76,7 +76,7 @@ victoria-logs-single:
         operator: Exists
       - effect: NoExecute
         operator: Exists
-    ## @param victoria-logs-single.vector.nodeSelector Node selector
+    ## @param victoria-logs-single.vector.nodeSelector [object] Node selector
     nodeSelector: {}
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
@@ -143,12 +143,17 @@ victoria-logs-single:
 windowsVector:
   ## @param windowsVector.enabled Enable Windows Vector daemon set for Windows node log collection
   enabled: false
+  ## @param windowsVector.image [object] Image configuration for Windows Vector pods
   image:
+    ## @param windowsVector.image.registry Image registry
     registry: tfy.jfrog.io/tfy-mirror
+    ## @param windowsVector.image.repository Image repository
     repository: djboris/vector-windows
+    ## @param windowsVector.image.tag Image tag
     tag: 0.46.1
+    ## @param windowsVector.image.pullPolicy Image pull policy
     pullPolicy: IfNotPresent
-  ## @param windowsVector.nodeSelector [object]Node selector
+  ## @param windowsVector.nodeSelector [object] Node selector
   nodeSelector:
     kubernetes.io/os: windows
   ## @param windowsVector.affinity [object] Affinity configuration for Windows Vector pods
