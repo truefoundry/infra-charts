@@ -54,9 +54,16 @@ The solution consists of two main components:
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 
-| Name                            | Description                             | Value                      |
-| ------------------------------- | --------------------------------------- | -------------------------- |
-| `resourceQuota.enabled`         | Create the ResourceQuota.               | `true`                     |
-| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota | `{}`                       |
-| `resourceQuota.labels`          | Labels to add to the ResourceQuota      | `{}`                       |
-| `resourceQuota.priorityClasses` | PriorityClasses to enable.              | `["system-node-critical"]` |
+
+### Windows Vector configurations
+
+| Name                            | Description                                                      | Value                      |
+| ------------------------------- | ---------------------------------------------------------------- | -------------------------- |
+| `windowsVector.enabled`         | Enable Windows Vector daemon set for Windows node log collection | `false`                    |
+| `windowsVector.image`           | Image configuration for Windows Vector pods                      | `{}`                       |
+| `windowsVector.nodeSelector`    | Node selector                                                    | `{}`                       |
+| `windowsVector.affinity`        | Affinity configuration for Windows Vector pods                   | `{}`                       |
+| `resourceQuota.enabled`         | Create the ResourceQuota.                                        | `true`                     |
+| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota                          | `{}`                       |
+| `resourceQuota.labels`          | Labels to add to the ResourceQuota                               | `{}`                       |
+| `resourceQuota.priorityClasses` | PriorityClasses to enable.                                       | `["system-node-critical"]` |
