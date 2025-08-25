@@ -29,8 +29,8 @@ spec:
       affinity:
         {{- toYaml .Values.windowsVector.affinity | nindent 8 }}
       {{- end }}
-      {{- if .Values.podPriorityClassName }}
-      priorityClassName: {{ .Values.podPriorityClassName }}
+      {{- if .Values.windowsVector.podPriorityClassName }}
+      priorityClassName: {{ .Values.windowsVector.podPriorityClassName }}
       {{- end }}
       serviceAccount: {{ include "tfy-logs.fullname" . }}-vector
       serviceAccountName: {{ include "tfy-logs.fullname" . }}-vector
@@ -74,6 +74,9 @@ spec:
             - name: var-log
               mountPath: "C:\\var\\log\\"
               readOnly: true
+            {{- if .Values.windowsVector.additionalVolumeMounts }}
+            {{- toYaml .Values.windowsVector.additionalVolumeMounts | nindent 12 }}
+            {{- end }}
       volumes:
         - name: config
           projected:
@@ -89,4 +92,7 @@ spec:
           hostPath:
             path: "C:\\var\\log\\"
             type: ""
+        {{- if .Values.windowsVector.additionalVolumes }}
+        {{- toYaml .Values.windowsVector.additionalVolumes | nindent 8 }}
+        {{- end }}
 {{- end }}
