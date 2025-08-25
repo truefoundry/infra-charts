@@ -17,6 +17,7 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 | Name                                                              | Description                                       | Value          |
 | ----------------------------------------------------------------- | ------------------------------------------------- | -------------- |
 | `karpenter.serviceAccount.annotations.eks.amazonaws.com/role-arn` | Karpenter role ARN                                | `""`           |
+| `karpenter.logLevel`                                              | Log level for karpenter                           | `debug`        |
 | `karpenter.settings.clusterName`                                  | Name of the EKS cluster                           | `cluster-name` |
 | `karpenter.settings.clusterEndpoint`                              | Endpoint URL of the EKS cluster                   | `""`           |
 | `karpenter.settings.interruptionQueue`                            | Name of the interruption queue for spot instances | `""`           |
