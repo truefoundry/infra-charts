@@ -105,8 +105,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-nginx-proxy.serviceAccountName" -}}
-{{- default (include "tfy-nginx-proxy.fullname" .) "tfy-nginx-proxy" }}
-
+{{- if .Values.tfyNginxProxy.serviceAccount.name -}}
+{{- .Values.tfyNginxProxy.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 
