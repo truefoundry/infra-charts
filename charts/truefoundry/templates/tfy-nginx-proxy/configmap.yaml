@@ -32,16 +32,6 @@ data:
           proxy_cache_bypass $http_upgrade;
         }
 
-        # 2. LLM Gateway
-        # Path: /api/llm/
-        # Strips the prefix, forwarding the rest of the path to the root of the backend
-        location /api/llm/ {
-          proxy_pass http://{{ .Release.Name }}-tfy-llm-gateway:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}/;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-
         # 3. Controller
         # Path: /api/proxy-server/
         # Strips the prefix
