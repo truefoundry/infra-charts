@@ -1,0 +1,95 @@
+{{- if .Values.tfyNginxProxy.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-nginx-proxy.fullname" . }}
+  labels:
+      {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
+  annotations:
+      {{- include "tfy-nginx-proxy.annotations" . | nindent 4 }}
+data:
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+    http {
+      server {
+        listen 80;
+        # Dynamically sets server_name from the hosts list in your values.yaml
+        server_name {{ join " " .Values.truefoundryFrontendApp.ingress.hosts }};
+
+        # 1. WebSocket proxy for socket.io
+        # Path: /api/svc/socket.io/
+        # Rewrites requests to /socket.io/ on the backend service
+        location /api/svc/socket.io/ {
+          proxy_pass http://{{ .Release.Name }}-servicefoundry-server:3000/socket.io/;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_cache_bypass $http_upgrade;
+        }
+
+        # 2. LLM Gateway
+        # Path: /api/llm/
+        # Strips the prefix, forwarding the rest of the path to the root of the backend
+        location /api/llm/ {
+          proxy_pass http://{{ .Release.Name }}-tfy-llm-gateway:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 3. Controller
+        # Path: /api/proxy-server/
+        # Strips the prefix
+        location /api/proxy-server/ {
+          proxy_pass http://{{ .Release.Name }}-tfy-controller:8123/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 4. Flyte Admin Service
+        # Path: /flyteidl.service.AdminService/
+        # No rewrite is applied for this service
+        location /flyteidl.service.AdminService/ {
+          proxy_pass http://{{ .Release.Name }}-tfy-workflow-admin-server:8089;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 5. S3 Proxy
+        # Path: /api/s3proxy/
+        # Strips the prefix
+        location /api/s3proxy/ {
+          proxy_pass http://{{ .Release.Name }}-s3proxy:8080/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 6. OpenTelemetry Collector
+        # Path: /api/otel/
+        # Strips the prefix
+        location /api/otel/ {
+          proxy_pass http://{{ .Release.Name }}-tfy-otel-collector:4318/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # 7. Frontend application (catch-all)
+        # Path: /
+        location / {
+          proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:5000;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+      }
+    }
+{{- end -}}

@@ -2292,6 +2292,128 @@ deltaFusionQueryServer:
     S3_PATH: s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}
     SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+## @section tfyNginxProxy Truefoundry tfy k8s controller values
+tfyNginxProxy:
+  ## @param tfyNginxProxy.enabled Bool to enable the tfyNginxProxy
+  enabled: true
+  ## @param tfyNginxProxy.tolerations Tolerations specific to the tfyNginxProxy
+  tolerations: []
+  ## @skip tfyNginxProxy.replicaCount Number of replicas for the tfyNginxProxy
+  # replicaCount: 1
+  ## @param tfyNginxProxy.annotations [object] Annotations for the tfyNginxProxy
+  annotations: {}
+  ## tfyNginxProxy.image Image for the tfyNginxProxy
+  image:
+    ## @param tfyNginxProxy.image.registry Registry for the tfyNginxProxy image (overrides global.registry if specified)
+    registry: ""
+    ## @param tfyNginxProxy.image.repository Image repository for the tfyNginxProxy (without registry)
+    repository: "tfy-images/nginx"
+    ## @param tfyNginxProxy.image.tag Image tag for the tfyNginxProxy
+    tag: "1.29"
+  ## @param tfyNginxProxy.environmentName Environment name for tfyNginxProxy
+  environmentName: default
+  ## @param tfyNginxProxy.envSecretName Secret name for the tfyNginxProxy environment variables
+  envSecretName: 'tfy-k8s-controller-env-secret'
+  ## @param tfyNginxProxy.imagePullPolicy Image pull policy for the tfyNginxProxy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyNginxProxy.nameOverride Override name for the tfyNginxProxy
+  nameOverride: ''
+  ## @param tfyNginxProxy.fullnameOverride Full name override for the tfyNginxProxy
+  fullnameOverride: ''
+  ## @param tfyNginxProxy.podAnnotations [object] Annotations for the tfyNginxProxy pods
+  podAnnotations:
+    karpenter.sh/do-not-disrupt: "true"
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  ## @param tfyNginxProxy.podSecurityContext Security context for the tfyNginxProxy pods
+  podSecurityContext: {}
+  ## @param tfyNginxProxy.commonLabels Common labels for the tfyNginxProxy pods
+  commonLabels: {}
+  ## tfyNginxProxy.securityContext Security context for the tfyNginxProxy
+  securityContext:
+    ## @param tfyNginxProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyNginxProxy
+    readOnlyRootFilesystem: true
+  ## @param tfyNginxProxy.autoscaling Autoscaling configuration for tfyNginxProxy
+  autoscaling:
+    ## @param autoscaling.enabled Enable autoscaling
+    enabled: true
+    ## @param autoscaling.minReplicas Minimum number of replicas
+    minReplicas: 3
+    ## @param autoscaling.maxReplicas Maximum number of replicas
+    maxReplicas: 100
+    ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 60
+  ## @param tfyNginxProxy.resources [object] Resource requests and limits for the tfyNginxProxy
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 400m
+  #    memory: 512Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 200m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
+  ## tfyNginxProxy.livenessProbe Liveness probe settings for the tfyNginxProxy
+  livenessProbe:
+    ## @param tfyNginxProxy.livenessProbe.failureThreshold Liveness probe failure threshold for tfyNginxProxy
+    failureThreshold: 3
+    ## @param tfyNginxProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyNginxProxy
+    initialDelaySeconds: 600
+    ## @param tfyNginxProxy.livenessProbe.periodSeconds Liveness probe period for tfyNginxProxy
+    periodSeconds: 10
+    ## @param tfyNginxProxy.livenessProbe.successThreshold Liveness probe success threshold for tfyNginxProxy
+    successThreshold: 1
+    ## @param tfyNginxProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyNginxProxy
+    timeoutSeconds: 1
+  ## tfyNginxProxy.readinessProbe Readiness probe settings for the tfyNginxProxy
+  readinessProbe:
+    ## @param tfyNginxProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyNginxProxy
+    failureThreshold: 3
+    ## @param tfyNginxProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyNginxProxy
+    initialDelaySeconds: 30
+    ## @param tfyNginxProxy.readinessProbe.periodSeconds Readiness probe period for tfyNginxProxy
+    periodSeconds: 10
+    ## @param tfyNginxProxy.readinessProbe.successThreshold Readiness probe success threshold for tfyNginxProxy
+    successThreshold: 1
+    ## @param tfyNginxProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyNginxProxy
+    timeoutSeconds: 1
+  ## @param tfyNginxProxy.nodeSelector Node selector for the tfyNginxProxy
+  nodeSelector: {}
+  ## @param tfyNginxProxy.affinity Affinity settings for the tfyNginxProxy
+  affinity: {}
+  ## @param tfyNginxProxy.topologySpreadConstraints Topology spread constraints for the tfyNginxProxy
+  topologySpreadConstraints: {}
+  ## tfyNginxProxy.service Service settings for the tfyNginxProxy
+  service:
+    ## @param tfyNginxProxy.service.type Service type for the tfyNginxProxy
+    type: ClusterIP
+    ## @param tfyNginxProxy.service.port Service port for the tfyNginxProxy
+    port: 3002
+    ## @param tfyNginxProxy.service.annotations Annotations for the tfyNginxProxy service
+    annotations: {}
+    ## tfyNginxProxy.serviceAccount Service account settings for the tfyNginxProxy
+  serviceAccount:
+    ## @param tfyNginxProxy.serviceAccount.annotations Annotations for the tfyNginxProxy service account
+    annotations: {}
+    ## @param tfyNginxProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyNginxProxy service account
+    automountServiceAccountToken: true
+  ## @param tfyNginxProxy.extraVolumes Extra volumes for the tfyNginxProxy
+  extraVolumes: []
+  ## @param tfyNginxProxy.extraVolumeMounts Extra volume mounts for the tfyNginxProxy
+  extraVolumeMounts: []
+  ## tfyNginxProxy.serviceMonitor ServiceMonitor settings for the tfyNginxProxy
+  serviceMonitor:
+    ## @param tfyNginxProxy.serviceMonitor.enabled Enable ServiceMonitor for the tfyNginxProxy
+    enabled: true
+    ## @param tfyNginxProxy.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
+    additionalLabels: {}
+    ## @param tfyNginxProxy.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
+    additionalAnnotations: {}
+  ## @param tfyNginxProxy.imagePullSecrets Image pull secrets for the tfyNginxProxy
+  ##
+  imagePullSecrets: []
+  ## @param tfyNginxProxy.env [object] Environment variables for the tfyNginxProxy
+  env: {}
 ###################################################################################################################
 ######################################## Extra Resources ##########################################################
 ###################################################################################################################

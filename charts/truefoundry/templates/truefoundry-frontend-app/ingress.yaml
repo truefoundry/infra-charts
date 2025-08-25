@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
   annotations:
-    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
     {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
 spec:
   {{- if .Values.truefoundryFrontendApp.ingress.tls }}
@@ -19,54 +18,12 @@ spec:
     - host: {{ $host }}
       http:
         paths:
-          - path: /api/svc/socket.io/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-servicefoundry-server
-                port:
-                  number: 3000
-          - path: /api/llm/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-tfy-llm-gateway
-                port:
-                  number: {{ $.Values.truefoundryFrontendApp.llmGateway.backendPort }}
-          - path: /api/proxy-server/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-tfy-controller
-                port:
-                  number: 8123
-          - path: /flyteidl.service.AdminService/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-tfy-workflow-admin-server
-                port:
-                  number: 8089
-          - path: /api/s3proxy/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-s3proxy
-                port:
-                  number: 8080
-          - path: /api/otel/
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $.Release.Name }}-tfy-otel-collector
-                port:
-                  number: 4318
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: {{ include "truefoundry-frontend-app.fullname" $ }}
+                name: {{ $.Release.Name }}-tfy-nginx-proxy
                 port:
-                  number: 5000
+                  number: 80
     {{- end }}
 {{- end -}}
