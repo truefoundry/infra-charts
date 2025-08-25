@@ -1,0 +1,19 @@
+{{- if .Values.tfyNginxProxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-nginx-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-nginx-proxy.annotations" . | indent 4 }}
+spec:
+  type: {{ .Values.tfyNginxProxy.service.type }}
+  ports:
+    - port: {{ .Values.tfyNginxProxy.service.port }}
+      targetPort: {{ .Values.tfyNginxProxy.service.port }}
+      protocol: TCP
+      name: http-{{ .Values.tfyNginxProxy.service.port }}
+  selector:
+    {{- include "tfy-nginx-proxy.selectorLabels" . | nindent 4 }}
+{{- end }}
