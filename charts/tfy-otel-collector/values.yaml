@@ -19,10 +19,6 @@ global:
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
-  CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
-  CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
-  NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
@@ -40,7 +36,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 1eabfc6a32c1b7a8959bbf8ac0412c5901389673
+  tag: 9d55c7beed136935c96b11ad66293e9ece4c66d3
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
