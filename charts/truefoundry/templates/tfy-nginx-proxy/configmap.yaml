@@ -18,7 +18,8 @@ data:
         # Dynamically sets server_name from the hosts list in your values.yaml
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
-        # 1. WebSocket proxy for socket.io
+        {{-if .Values.servicefoundryServer.enabled }}
+        # WebSocket proxy for socket.io
         # Path: /api/svc/socket.io/
         # Rewrites requests to /socket.io/ on the backend service
         location /api/svc/socket.io/ {
@@ -31,8 +32,22 @@ data:
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_cache_bypass $http_upgrade;
         }
+        {{- end }}
 
-        # 3. Controller
+        {{- if .Values.tags.llmGateway }}
+        # LLM Gateway
+        # Path: /api/llm/
+        # Strips the prefix, forwarding the rest of the path to the root of the backend
+        location /api/llm/ {
+          proxy_pass http://{{ .Release.Name }}-tfy-llm-gateway:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+        {{- end }}
+
+        {{-if .Values.tfyController.enabled }}
+        # Controller
         # Path: /api/proxy-server/
         # Strips the prefix
         location /api/proxy-server/ {
@@ -41,8 +56,10 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
+        {{- end }}
 
-        # 4. Flyte Admin Service
+        {{- if .Values.tfyWorkflowAdmin.enabled }}
+        # Flyte Admin Service
         # Path: /flyteidl.service.AdminService/
         # No rewrite is applied for this service
         location /flyteidl.service.AdminService/ {
@@ -51,18 +68,19 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
+        {{- end }}
 
-        # 5. S3 Proxy
-        # Path: /api/s3proxy/
-        # Strips the prefix
+        {{- if .Values.s3proxy.enabled }}
         location /api/s3proxy/ {
           proxy_pass http://{{ .Release.Name }}-s3proxy:8080/;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
+        {{- end }}
 
-        # 6. OpenTelemetry Collector
+        {{-if .Values.tags.llmGatewayRequestLogging }}
+        # OpenTelemetry Collector
         # Path: /api/otel/
         # Strips the prefix
         location /api/otel/ {
@@ -72,7 +90,7 @@ data:
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
 
-        # 7. Frontend application (catch-all)
+        # Frontend application (catch-all)
         # Path: /
         location / {
           proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:5000;
