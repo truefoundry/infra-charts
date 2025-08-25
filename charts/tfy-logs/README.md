@@ -57,17 +57,23 @@ The solution consists of two main components:
 
 ### Windows Vector configurations
 
-| Name                            | Description                                                      | Value                      |
-| ------------------------------- | ---------------------------------------------------------------- | -------------------------- |
-| `windowsVector.enabled`         | Enable Windows Vector daemon set for Windows node log collection | `true`                     |
-| `windowsVector.labels`          | Labels to add to the Windows Vector pods                         | `{}`                       |
-| `windowsVector.annotations`     | Annotations to add to the Windows Vector pods                    | `{}`                       |
-| `windowsVector.image`           | Image configuration for Windows Vector pods                      | `{}`                       |
-| `windowsVector.env`             | Additional environment variables for Windows Vector pods         | `[]`                       |
-| `windowsVector.resources`       | Resources for Windows Vector pods                                | `{}`                       |
-| `windowsVector.nodeSelector`    | Node selector                                                    | `{}`                       |
-| `windowsVector.affinity`        | Affinity configuration for Windows Vector pods                   | `{}`                       |
-| `resourceQuota.enabled`         | Create the ResourceQuota.                                        | `true`                     |
-| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota                          | `{}`                       |
-| `resourceQuota.labels`          | Labels to add to the ResourceQuota                               | `{}`                       |
-| `resourceQuota.priorityClasses` | PriorityClasses to enable.                                       | `["system-node-critical"]` |
+| Name                                   | Description                                                      | Value                               |
+| -------------------------------------- | ---------------------------------------------------------------- | ----------------------------------- |
+| `windowsVector.enabled`                | Enable Windows Vector daemon set for Windows node log collection | `true`                              |
+| `windowsVector.labels`                 | Labels to add to the Windows Vector pods                         | `{}`                                |
+| `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                                |
+| `windowsVector.image.registry`         | Image registry                                                   | `tfy.jfrog.io`                      |
+| `windowsVector.image.repository`       | Image repository                                                 | `tfy-mirror/djboris/vector-windows` |
+| `windowsVector.image.tag`              | Image tag                                                        | `0.46.1`                            |
+| `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                      |
+| `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                                |
+| `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                                |
+| `windowsVector.nodeSelector`           | Node selector                                                    | `{}`                                |
+| `windowsVector.podPriorityClassName`   | Pod priority class name for Windows Vector pods                  | `""`                                |
+| `windowsVector.affinity`               | Affinity configuration for Windows Vector pods                   | `{}`                                |
+| `windowsVector.additionalVolumeMounts` | Additional volume mounts for Windows Vector pods                 | `[]`                                |
+| `windowsVector.additionalVolumes`      | Additional volumes for Windows Vector pods                       | `[]`                                |
+| `resourceQuota.enabled`                | Create the ResourceQuota.                                        | `true`                              |
+| `resourceQuota.annotations`            | Annotations to add to the ResourceQuota                          | `{}`                                |
+| `resourceQuota.labels`                 | Labels to add to the ResourceQuota                               | `{}`                                |
+| `resourceQuota.priorityClasses`        | PriorityClasses to enable.                                       | `["system-node-critical"]`          |
