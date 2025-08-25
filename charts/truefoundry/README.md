@@ -96,7 +96,7 @@ servicefoundryServer:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.79.7`                                                                         |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.80.0-rc.1`                                                                    |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -182,7 +182,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                                             | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.registry`                              | Registry for the frontend app image (overrides global.registry if specified) | `""`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app (without registry)                     | `tfy-private-images/truefoundry-frontend-app`                                              |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.79.3`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.80.0`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables                       | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                                       | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                                           | `""`                                                                                       |
@@ -242,7 +242,7 @@ servicefoundryServer:
 | `mlfoundryServer.annotations`                                 | Annotations for the mlfoundry server                                             | `{}`                                  |
 | `mlfoundryServer.image.registry`                              | Registry for the mlfoundry server image (overrides global.registry if specified) | `""`                                  |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server (without registry)                     | `tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.79.0`                             |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.80.0`                             |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                                        | `default`                             |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables                       | `mlfoundry-server-env-secret`         |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                                       | `IfNotPresent`                        |
@@ -332,7 +332,7 @@ servicefoundryServer:
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                                                  | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified) | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                     | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.79.4`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.80.0`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                        | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                       | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                       | `IfNotPresent`                                          |
@@ -429,7 +429,7 @@ servicefoundryServer:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                             | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified) | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                     | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.79.1`                               |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.80.0`                               |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                            | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                       | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                       | `IfNotPresent`                          |
@@ -640,7 +640,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.annotations`                        | Annotations for the tfyWorkflowAdmin                                             | `{}`                                    |
 | `tfyWorkflowAdmin.image.registry`                     | Registry for the tfyWorkflowAdmin image (overrides global.registry if specified) | `""`                                    |
 | `tfyWorkflowAdmin.image.repository`                   | Image repository for the tfyWorkflowAdmin (without registry)                     | `tfy-private-images/tfy-workflow-admin` |
-| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                               | `v0.74.0`                               |
+| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                               | `v0.80.0`                               |
 | `tfyWorkflowAdmin.environmentName`                    | Environment name for the tfyWorkflowAdmin                                        | `default`                               |
 | `tfyWorkflowAdmin.envSecretName`                      | Secret name for the tfyWorkflowAdmin environment variables                       | `tfy-workflow-admin-env-secret`         |
 | `tfyWorkflowAdmin.imagePullPolicy`                    | Image pull policy for the tfyWorkflowAdmin                                       | `IfNotPresent`                          |
