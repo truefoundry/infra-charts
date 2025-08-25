@@ -170,7 +170,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- /* Create a list containing the default volume mount for nginx.conf.
      Using 'subPath' mounts the specific file, not the whole directory.
      This prevents the original /etc/nginx directory from being overwritten. */}}
-{{- $defaultVolumeMount := dict "name" "nginx-config" "mountPath" "/etc/nginx/nginx.conf" "subPath" "nginx.conf" "readOnly" true -}}
+{{- $defaultVolumeMount := dict "name" (include "tfy-nginx-proxy.fullname" .) "mountPath" "/etc/nginx/nginx.conf" "subPath" "nginx.conf" "readOnly" true -}}
 {{- $volumeMounts := list $defaultVolumeMount -}}
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
