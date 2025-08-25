@@ -79,7 +79,7 @@ data:
         }
         {{- end }}
 
-        {{-if .Values.tags.llmGatewayRequestLogging }}
+        {{-if .Values.tags.tracing }}
         # OpenTelemetry Collector
         # Path: /api/otel/
         # Strips the prefix
@@ -89,6 +89,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
+        {{- end }}
 
         # Frontend application (catch-all)
         # Path: /
