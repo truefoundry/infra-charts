@@ -142,16 +142,27 @@ victoria-logs-single:
 ##
 windowsVector:
   ## @param windowsVector.enabled Enable Windows Vector daemon set for Windows node log collection
-  enabled: false
+  enabled: true
+  labels: {}
+  annotations: {}
   ## @param windowsVector.image [object] Image configuration for Windows Vector pods
   image:
     registry: tfy.jfrog.io/tfy-mirror
     repository: djboris/vector-windows
     tag: 0.46.1
     pullPolicy: IfNotPresent
+  ## @param windowsVector.env [array] Additional environment variables for Windows Vector pods
+  env: []
+  ## @param windowsVector.resources [object] Resources for Windows Vector pods
+  resources:
+    requests:
+      cpu: 50m
+      memory: 80Mi
+    limits:
+      cpu: 200m
+      memory: 200Mi
   ## @param windowsVector.nodeSelector [object] Node selector
-  nodeSelector:
-    kubernetes.io/os: windows
+  nodeSelector: {}
   ## @param windowsVector.affinity [object] Affinity configuration for Windows Vector pods
   affinity:
     nodeAffinity:

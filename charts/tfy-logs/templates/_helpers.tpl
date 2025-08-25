@@ -31,15 +31,28 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+labels for vector
 */}}
 {{- define "tfy-logs.labels" -}}
 helm.sh/chart: {{ include "tfy-logs.chart" . }}
 {{ include "tfy-logs.selectorLabels" . }}
+app.kubernetes.io/component: vector
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.labels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+annotations for vector
+*/}}
+{{- define "tfy-logs.annotations" -}}
+{{- with .Values.annotations }}
+{{ toYaml . }}
+{{- end }}
 {{- end }}
 
 {{/*

@@ -6,12 +6,12 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "tfy-logs.labels" . | nindent 4 }}
-    app.kubernetes.io/component: vector-windows
+  annotations:
+    {{- include "tfy-logs.annotations" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
       {{- include "tfy-logs.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: vector-windows
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
@@ -20,7 +20,6 @@ spec:
     metadata:
       labels:
         {{- include "tfy-logs.labels" . | nindent 8 }}
-        app.kubernetes.io/component: vector-windows
     spec:
       tolerations:
         - operator: Exists
@@ -38,7 +37,7 @@ spec:
       containers:
         - name: vector-windows
           image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.windowsVector.image.pullPolicy }}
           args:
             - "-w"
             - "--config-dir"
@@ -60,13 +59,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- range $key, $value := .Values.windowsVector.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
           resources:
-            requests:
-              cpu: 50m
-              memory: 80Mi
-            limits:
-              cpu: 200m
-              memory: 200Mi
+            {{- toYaml .Values.windowsVector.resources | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: "C:\\etc\\vector\\"
