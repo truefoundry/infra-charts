@@ -160,7 +160,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.alertManager.endpoints`                   | Endpoints for alert manager                     | `[]`                                      |
 | `serviceMonitors.alertManager.serviceSelectorLabels`       | Service selector labels for alert manager       | `{}`                                      |
 | `serviceMonitors.alertManager.namespaceSelector`           | Namespace selector for alert manager            | `{}`                                      |
-| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows            | `true`                                    |
+| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows            | `false`                                   |
 | `serviceMonitors.workflows.name`                           | Name of the service monitor                     | `argo-workflows`                          |
 | `serviceMonitors.workflows.annotations`                    | Annotations for workflows                       | `{}`                                      |
 | `serviceMonitors.workflows.labels`                         | Labels for workflows                            | `{}`                                      |
@@ -168,7 +168,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.workflows.endpoints`                      | Endpoints for workflows                         | `[]`                                      |
 | `serviceMonitors.workflows.serviceSelectorLabels`          | Service selector labels for workflows           | `{}`                                      |
 | `serviceMonitors.workflows.namespaceSelector`              | Namespace selector for workflows                | `{}`                                      |
-| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                 | `true`                                    |
+| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                 | `false`                                   |
 | `serviceMonitors.keda.name`                                | Name of the service monitor                     | `keda`                                    |
 | `serviceMonitors.keda.labels`                              | Labels for keda                                 | `{}`                                      |
 | `serviceMonitors.keda.annotations`                         | Annotations for keda                            | `{}`                                      |
@@ -206,7 +206,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                | `{}`                                      |
 | `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                         | `[]`                                      |
 | `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter           | `{}`                                      |
-| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `true`                                    |
+| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `false`                                   |
 | `serviceMonitors.kubecost.name`                            | Name of the service monitor                     | `kubecost`                                |
 | `serviceMonitors.kubecost.labels`                          | Labels for kubecost                             | `{}`                                      |
 | `serviceMonitors.kubecost.annotations`                     | Annotations for kubecost                        | `{}`                                      |
@@ -252,7 +252,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `serviceMonitors.loki.enabled`                             | Enable service monitor for loki                 | `true`                                    |
+| `serviceMonitors.loki.enabled`                             | Enable service monitor for loki                 | `false`                                   |
 | `serviceMonitors.loki.name`                                | Name of the service monitor                     | `loki`                                    |
 | `serviceMonitors.loki.labels`                              | Labels for loki                                 | `{}`                                      |
 | `serviceMonitors.loki.annotations`                         | Annotations for loki                            | `{}`                                      |
