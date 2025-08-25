@@ -59,8 +59,12 @@ The solution consists of two main components:
 
 | Name                            | Description                                                      | Value                      |
 | ------------------------------- | ---------------------------------------------------------------- | -------------------------- |
-| `windowsVector.enabled`         | Enable Windows Vector daemon set for Windows node log collection | `false`                    |
+| `windowsVector.enabled`         | Enable Windows Vector daemon set for Windows node log collection | `true`                     |
+| `windowsVector.labels`          | Labels to add to the Windows Vector pods                         | `{}`                       |
+| `windowsVector.annotations`     | Annotations to add to the Windows Vector pods                    | `{}`                       |
 | `windowsVector.image`           | Image configuration for Windows Vector pods                      | `{}`                       |
+| `windowsVector.env`             | Additional environment variables for Windows Vector pods         | `[]`                       |
+| `windowsVector.resources`       | Resources for Windows Vector pods                                | `{}`                       |
 | `windowsVector.nodeSelector`    | Node selector                                                    | `{}`                       |
 | `windowsVector.affinity`        | Affinity configuration for Windows Vector pods                   | `{}`                       |
 | `resourceQuota.enabled`         | Create the ResourceQuota.                                        | `true`                     |
