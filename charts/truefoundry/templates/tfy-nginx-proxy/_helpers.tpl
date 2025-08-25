@@ -153,7 +153,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- /* Create a list containing the default nginx-config volume.
      Using 'items' allows the ConfigMap to have other keys without
      polluting the container's filesystem. */}}
-{{- $defaultVolume := dict "name" "nginx-config" "configMap" (dict "name" (include "tfy-nginx-proxy.fullname" .) "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
+{{- $defaultVolume := dict "name" (include "tfy-nginx-proxy.fullname" .) "configMap" (dict "name" (include "tfy-nginx-proxy.fullname" .) "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
 {{- $volumes := list $defaultVolume -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
