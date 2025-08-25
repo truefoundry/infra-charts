@@ -837,6 +837,56 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.extraVolumes`                                | Extra volumes for the deltaFusionQueryServer server                                    | `[]`                                          |
 | `deltaFusionQueryServer.env`                                         | Environment variables for the deltaFusionQueryServer                                   | `{}`                                          |
 
+### tfyNginxProxy Truefoundry tfy k8s controller values
+
+| Name                                                        | Description                                                                   | Value                           |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------- |
+| `tfyNginxProxy.enabled`                                     | Bool to enable the tfyNginxProxy                                              | `true`                          |
+| `tfyNginxProxy.tolerations`                                 | Tolerations specific to the tfyNginxProxy                                     | `[]`                            |
+| `tfyNginxProxy.annotations`                                 | Annotations for the tfyNginxProxy                                             | `{}`                            |
+| `tfyNginxProxy.image.registry`                              | Registry for the tfyNginxProxy image (overrides global.registry if specified) | `""`                            |
+| `tfyNginxProxy.image.repository`                            | Image repository for the tfyNginxProxy (without registry)                     | `tfy-images/nginx`              |
+| `tfyNginxProxy.image.tag`                                   | Image tag for the tfyNginxProxy                                               | `1.29`                          |
+| `tfyNginxProxy.environmentName`                             | Environment name for tfyNginxProxy                                            | `default`                       |
+| `tfyNginxProxy.envSecretName`                               | Secret name for the tfyNginxProxy environment variables                       | `tfy-k8s-controller-env-secret` |
+| `tfyNginxProxy.imagePullPolicy`                             | Image pull policy for the tfyNginxProxy                                       | `IfNotPresent`                  |
+| `tfyNginxProxy.nameOverride`                                | Override name for the tfyNginxProxy                                           | `""`                            |
+| `tfyNginxProxy.fullnameOverride`                            | Full name override for the tfyNginxProxy                                      | `""`                            |
+| `tfyNginxProxy.podAnnotations`                              | Annotations for the tfyNginxProxy pods                                        | `{}`                            |
+| `tfyNginxProxy.podSecurityContext`                          | Security context for the tfyNginxProxy pods                                   | `{}`                            |
+| `tfyNginxProxy.commonLabels`                                | Common labels for the tfyNginxProxy pods                                      | `{}`                            |
+| `tfyNginxProxy.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the tfyNginxProxy                               | `true`                          |
+| `tfyNginxProxy.autoscaling.enabled`                         | Enable autoscaling                                                            | `true`                          |
+| `tfyNginxProxy.autoscaling.minReplicas`                     | Minimum number of replicas for tfyNginxProxy                                  | `3`                             |
+| `tfyNginxProxy.autoscaling.maxReplicas`                     | Maximum number of replicas for tfyNginxProxy                                  | `100`                           |
+| `tfyNginxProxy.autoscaling.targetCPUUtilizationPercentage`  | Target CPU utilization percentage                                             | `60`                            |
+| `tfyNginxProxy.resources`                                   | Resource requests and limits for the tfyNginxProxy                            | `{}`                            |
+| `tfyNginxProxy.livenessProbe.failureThreshold`              | Liveness probe failure threshold for tfyNginxProxy                            | `3`                             |
+| `tfyNginxProxy.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyNginxProxy                                | `600`                           |
+| `tfyNginxProxy.livenessProbe.periodSeconds`                 | Liveness probe period for tfyNginxProxy                                       | `10`                            |
+| `tfyNginxProxy.livenessProbe.successThreshold`              | Liveness probe success threshold for tfyNginxProxy                            | `1`                             |
+| `tfyNginxProxy.livenessProbe.timeoutSeconds`                | Liveness probe timeout for tfyNginxProxy                                      | `1`                             |
+| `tfyNginxProxy.readinessProbe.failureThreshold`             | Readiness probe failure threshold for tfyNginxProxy                           | `3`                             |
+| `tfyNginxProxy.readinessProbe.initialDelaySeconds`          | Readiness probe initial delay for tfyNginxProxy                               | `30`                            |
+| `tfyNginxProxy.readinessProbe.periodSeconds`                | Readiness probe period for tfyNginxProxy                                      | `10`                            |
+| `tfyNginxProxy.readinessProbe.successThreshold`             | Readiness probe success threshold for tfyNginxProxy                           | `1`                             |
+| `tfyNginxProxy.readinessProbe.timeoutSeconds`               | Readiness probe timeout for tfyNginxProxy                                     | `1`                             |
+| `tfyNginxProxy.nodeSelector`                                | Node selector for the tfyNginxProxy                                           | `{}`                            |
+| `tfyNginxProxy.affinity`                                    | Affinity settings for the tfyNginxProxy                                       | `{}`                            |
+| `tfyNginxProxy.topologySpreadConstraints`                   | Topology spread constraints for the tfyNginxProxy                             | `{}`                            |
+| `tfyNginxProxy.service.type`                                | Service type for the tfyNginxProxy                                            | `ClusterIP`                     |
+| `tfyNginxProxy.service.port`                                | Service port for the tfyNginxProxy                                            | `3002`                          |
+| `tfyNginxProxy.service.annotations`                         | Annotations for the tfyNginxProxy service                                     | `{}`                            |
+| `tfyNginxProxy.serviceAccount.annotations`                  | Annotations for the tfyNginxProxy service account                             | `{}`                            |
+| `tfyNginxProxy.serviceAccount.automountServiceAccountToken` | Automount service account token for the tfyNginxProxy service account         | `true`                          |
+| `tfyNginxProxy.extraVolumes`                                | Extra volumes for the tfyNginxProxy                                           | `[]`                            |
+| `tfyNginxProxy.extraVolumeMounts`                           | Extra volume mounts for the tfyNginxProxy                                     | `[]`                            |
+| `tfyNginxProxy.serviceMonitor.enabled`                      | Enable ServiceMonitor for the tfyNginxProxy                                   | `true`                          |
+| `tfyNginxProxy.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                      | `{}`                            |
+| `tfyNginxProxy.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                 | `{}`                            |
+| `tfyNginxProxy.imagePullSecrets`                            | Image pull secrets for the tfyNginxProxy                                      | `[]`                            |
+| `tfyNginxProxy.env`                                         | Environment variables for the tfyNginxProxy                                   | `{}`                            |
+
 ### extraResources Extra Resources to deploy along with the TrueFoundry Control Plane
 
 | Name                       | Description                         | Value   |
