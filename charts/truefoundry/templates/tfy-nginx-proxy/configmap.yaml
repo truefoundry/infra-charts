@@ -24,7 +24,6 @@ data:
         # Dynamically sets server_name from the hosts list in your values.yaml
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
-        {{- if .Values.servicefoundryServer.enabled }}
         # WebSocket proxy for socket.io
         # Path: /api/svc/socket.io/
         # Rewrites requests to /socket.io/ on the backend service
@@ -38,9 +37,7 @@ data:
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_cache_bypass $http_upgrade;
         }
-        {{- end }}
 
-        {{- if .Values.tags.llmGateway }}
         # LLM Gateway
         # Path: /api/llm/
         # Strips the prefix, forwarding the rest of the path to the root of the backend
@@ -50,9 +47,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        {{- end }}
 
-        {{- if .Values.tfyController.enabled }}
         # Controller
         # Path: /api/proxy-server/
         # Strips the prefix
@@ -62,9 +57,7 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        {{- end }}
 
-        {{- if .Values.tfyWorkflowAdmin.enabled }}
         # Flyte Admin Service
         # Path: /flyteidl.service.AdminService/
         # No rewrite is applied for this service
@@ -74,18 +67,14 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        {{- end }}
 
-        {{- if .Values.s3proxy.enabled }}
         location /api/s3proxy/ {
           proxy_pass http://{{ .Release.Name }}-s3proxy:8080/;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        {{- end }}
 
-        {{- if .Values.tags.tracing }}
         # OpenTelemetry Collector
         # Path: /api/otel/
         # Strips the prefix
@@ -95,7 +84,6 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
-        {{- end }}
 
         # Frontend application (catch-all)
         # Path: /
