@@ -154,7 +154,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
      Using 'items' allows the ConfigMap to have other keys without
      polluting the container's filesystem. */}}
 {{- $defaultVolume := dict "name" (include "tfy-nginx-proxy.fullname" .) "configMap" (dict "name" (include "tfy-nginx-proxy.fullname" .) "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
-{{- $volumes := list $defaultVolume -}}
+{{- /* Writable dirs for readOnlyRootFilesystem images */ -}}
+{{- $cache := dict "name" "nginx-cache" "emptyDir" (dict) -}}
+{{- $run   := dict "name" "nginx-run"   "emptyDir" (dict) -}}
+{{- $logs  := dict "name" "nginx-logs"  "emptyDir" (dict) -}}
+{{- $volumes := list $defaultVolume $cache $run $logs  -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumes -}}
@@ -171,7 +175,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
      Using 'subPath' mounts the specific file, not the whole directory.
      This prevents the original /etc/nginx directory from being overwritten. */}}
 {{- $defaultVolumeMount := dict "name" (include "tfy-nginx-proxy.fullname" .) "mountPath" "/etc/nginx/nginx.conf" "subPath" "nginx.conf" "readOnly" true -}}
-{{- $volumeMounts := list $defaultVolumeMount -}}
+{{- /* Writable mounts */ -}}
+{{- $mCache := dict "name" "nginx-cache" "mountPath" "/var/cache/nginx" -}}
+{{- $mRun   := dict "name" "nginx-run"   "mountPath" "/var/run" -}}
+{{- $mLogs  := dict "name" "nginx-logs"  "mountPath" "/var/log/nginx" -}}
+{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs -}}
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumeMounts -}}
