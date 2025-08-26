@@ -96,7 +96,7 @@ servicefoundryServer:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.80.3`                                                                         |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.80.6`                                                                         |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
 | `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
@@ -122,7 +122,7 @@ servicefoundryServer:
 | `global.config.storageConfiguration.googleCloudStorageBucketName`            | Google cloud storage bucket name                                                       | `""`                                                                             |
 | `global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent` | Google cloud service account key file content                                          | `""`                                                                             |
 | `tags.llmGateway`                                                            | Bool to enable llmGateway infra                                                        | `false`                                                                          |
-| `tags.llmGatewayRequestLogging`                                              | Bool to enable request logging feature in LLM gateway                                  | `false`                                                                          |
+| `tags.llmGatewayRequestLogging`                                              | Bool to enable observability (metrics and request logging) features in LLM gateway     | `false`                                                                          |
 | `tags.tracing`                                                               | Bool to enable OTEL tracing feature                                                    | `false`                                                                          |
 | `devMode.enabled`                                                            | Bool to enable dev mode                                                                | `false`                                                                          |
 
@@ -182,7 +182,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.annotations`                                 | Annotations for the frontend app                                             | `{}`                                                                                       |
 | `truefoundryFrontendApp.image.registry`                              | Registry for the frontend app image (overrides global.registry if specified) | `""`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app (without registry)                     | `tfy-private-images/truefoundry-frontend-app`                                              |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.80.1`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.80.3`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables                       | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                                       | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                                           | `""`                                                                                       |
@@ -204,7 +204,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.readinessProbe.successThreshold`             | Success threshold for the readiness probe                                    | `1`                                                                                        |
 | `truefoundryFrontendApp.nodeSelector`                                | Node selector for the frontend app                                           | `{}`                                                                                       |
 | `truefoundryFrontendApp.affinity`                                    | Affinity settings for the frontend app                                       | `{}`                                                                                       |
-| `truefoundryFrontendApp.topologySpreadConstraints`                   | Topology spread constraints for the frontend app                             | `{}`                                                                                       |
+| `truefoundryFrontendApp.topologySpreadConstraints`                   | Topology spread constraints for the frontend app                             | `[]`                                                                                       |
 | `truefoundryFrontendApp.service.type`                                | Service type for the frontend app                                            | `ClusterIP`                                                                                |
 | `truefoundryFrontendApp.service.port`                                | Service port for the frontend app                                            | `5000`                                                                                     |
 | `truefoundryFrontendApp.service.annotations`                         | Annotations for the frontend app service                                     | `{}`                                                                                       |
@@ -265,7 +265,7 @@ servicefoundryServer:
 | `mlfoundryServer.readinessProbe.timeoutSeconds`               | Readiness probe timeout for mlfoundry server                                     | `1`                                   |
 | `mlfoundryServer.nodeSelector`                                | Node selector for the mlfoundry server                                           | `{}`                                  |
 | `mlfoundryServer.affinity`                                    | Affinity settings for the mlfoundry server                                       | `{}`                                  |
-| `mlfoundryServer.topologySpreadConstraints`                   | Topology spread constraints for the mlfoundry server                             | `{}`                                  |
+| `mlfoundryServer.topologySpreadConstraints`                   | Topology spread constraints for the mlfoundry server                             | `[]`                                  |
 | `mlfoundryServer.service.type`                                | Service type for the mlfoundry server                                            | `ClusterIP`                           |
 | `mlfoundryServer.service.port`                                | Service port for the mlfoundry server                                            | `5000`                                |
 | `mlfoundryServer.service.annotations`                         | Annotations for the mlfoundry server service                                     | `{}`                                  |
@@ -309,7 +309,7 @@ servicefoundryServer:
 | `s3proxy.readinessProbe.timeoutSeconds`      | Readiness probe timeout for s3 proxy                                     | `1`                                                                                   |
 | `s3proxy.nodeSelector`                       | Node selector for the s3 proxy                                           | `{}`                                                                                  |
 | `s3proxy.affinity`                           | Affinity settings for the s3 proxy                                       | `{}`                                                                                  |
-| `s3proxy.topologySpreadConstraints`          | Topology spread constraints for the s3 proxy                             | `{}`                                                                                  |
+| `s3proxy.topologySpreadConstraints`          | Topology spread constraints for the s3 proxy                             | `[]`                                                                                  |
 | `s3proxy.service.type`                       | Service type for the s3 proxy                                            | `ClusterIP`                                                                           |
 | `s3proxy.service.port`                       | Service port for the s3 proxy                                            | `8080`                                                                                |
 | `s3proxy.service.annotations`                | Annotations for the s3 proxy service                                     | `{}`                                                                                  |
@@ -332,7 +332,7 @@ servicefoundryServer:
 | `servicefoundryServer.annotations`                                 | Annotations for the mlfoundry server                                                  | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified) | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                     | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.80.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.80.1`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                        | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                       | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                       | `IfNotPresent`                                          |
@@ -355,7 +355,7 @@ servicefoundryServer:
 | `servicefoundryServer.readinessProbe.timeoutSeconds`               | Readiness probe timeout for servicefoundry server                                     | `1`                                                     |
 | `servicefoundryServer.nodeSelector`                                | Node selector for the servicefoundry server                                           | `{}`                                                    |
 | `servicefoundryServer.affinity`                                    | Affinity settings for the servicefoundry server                                       | `{}`                                                    |
-| `servicefoundryServer.topologySpreadConstraints`                   | Topology spread constraints for the servicefoundry server                             | `{}`                                                    |
+| `servicefoundryServer.topologySpreadConstraints`                   | Topology spread constraints for the servicefoundry server                             | `[]`                                                    |
 | `servicefoundryServer.service.type`                                | Service type for the servicefoundry server                                            | `ClusterIP`                                             |
 | `servicefoundryServer.service.port`                                | Service port for the servicefoundry server                                            | `3000`                                                  |
 | `servicefoundryServer.service.annotations`                         | Annotations for the servicefoundry server service                                     | `{}`                                                    |
@@ -407,7 +407,7 @@ servicefoundryServer:
 | `sparkHistoryServer.readinessProbe.timeoutSeconds`      | Readiness probe timeout for spark history server                                     | `1`                                       |
 | `sparkHistoryServer.nodeSelector`                       | Node selector for the spark history server                                           | `{}`                                      |
 | `sparkHistoryServer.affinity`                           | Affinity settings for the spark history server                                       | `{}`                                      |
-| `sparkHistoryServer.topologySpreadConstraints`          | Topology spread constraints for the spark history server                             | `{}`                                      |
+| `sparkHistoryServer.topologySpreadConstraints`          | Topology spread constraints for the spark history server                             | `[]`                                      |
 | `sparkHistoryServer.service.type`                       | Service type for the spark history server                                            | `ClusterIP`                               |
 | `sparkHistoryServer.service.port`                       | Service port for the spark history server                                            | `18080`                                   |
 | `sparkHistoryServer.service.annotations`                | Annotations for the spark history server service                                     | `{}`                                      |
@@ -452,7 +452,7 @@ servicefoundryServer:
 | `tfyK8sController.readinessProbe.timeoutSeconds`               | Readiness probe timeout for tfyK8sController                                     | `1`                                     |
 | `tfyK8sController.nodeSelector`                                | Node selector for the tfyK8sController                                           | `{}`                                    |
 | `tfyK8sController.affinity`                                    | Affinity settings for the tfyK8sController                                       | `{}`                                    |
-| `tfyK8sController.topologySpreadConstraints`                   | Topology spread constraints for the tfyK8sController                             | `{}`                                    |
+| `tfyK8sController.topologySpreadConstraints`                   | Topology spread constraints for the tfyK8sController                             | `[]`                                    |
 | `tfyK8sController.service.type`                                | Service type for the tfyK8sController                                            | `ClusterIP`                             |
 | `tfyK8sController.service.port`                                | Service port for the tfyK8sController                                            | `3002`                                  |
 | `tfyK8sController.service.annotations`                         | Annotations for the tfyK8sController service                                     | `{}`                                    |
@@ -498,7 +498,7 @@ servicefoundryServer:
 | `sfyManifestService.readinessProbe.timeoutSeconds`               | Readiness probe timeout for sfy manifest service                                     | `1`                                       |
 | `sfyManifestService.nodeSelector`                                | Node selector for the sfy manifest service                                           | `{}`                                      |
 | `sfyManifestService.affinity`                                    | Affinity settings for the sfy manifest service                                       | `{}`                                      |
-| `sfyManifestService.topologySpreadConstraints`                   | Topology spread constraints for the sfy manifest service                             | `{}`                                      |
+| `sfyManifestService.topologySpreadConstraints`                   | Topology spread constraints for the sfy manifest service                             | `[]`                                      |
 | `sfyManifestService.serviceMonitor.enabled`                      | Enable ServiceMonitor for the sfy manifest service                                   | `true`                                    |
 | `sfyManifestService.serviceMonitor.additionalLabels`             | Additional labels for the ServiceMonitor                                             | `{}`                                      |
 | `sfyManifestService.serviceMonitor.additionalAnnotations`        | Additional annotations for the ServiceMonitor                                        | `{}`                                      |
@@ -624,7 +624,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.readinessProbe.timeoutSeconds`               | Readiness probe timeout for tfyController                                     | `1`                                 |
 | `tfyController.nodeSelector`                                | Node selector for the tfyController                                           | `{}`                                |
 | `tfyController.affinity`                                    | Affinity settings for the tfyController                                       | `{}`                                |
-| `tfyController.topologySpreadConstraints`                   | Topology spread constraints for the tfyController                             | `{}`                                |
+| `tfyController.topologySpreadConstraints`                   | Topology spread constraints for the tfyController                             | `[]`                                |
 | `tfyController.service.type`                                | Service type for the tfyController                                            | `ClusterIP`                         |
 | `tfyController.service.port`                                | Service port for the tfyController                                            | `8123`                              |
 | `tfyController.service.annotations`                         | Annotations for the tfyController service                                     | `{}`                                |
@@ -664,7 +664,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.readinessProbe.timeoutSeconds`      | Readiness probe timeout for tfyWorkflowAdmin                                     | `1`                                     |
 | `tfyWorkflowAdmin.nodeSelector`                       | Node selector for the tfyWorkflowAdmin                                           | `{}`                                    |
 | `tfyWorkflowAdmin.affinity`                           | Affinity settings for the tfyWorkflowAdmin                                       | `{}`                                    |
-| `tfyWorkflowAdmin.topologySpreadConstraints`          | Topology spread constraints for the tfyWorkflowAdmin                             | `{}`                                    |
+| `tfyWorkflowAdmin.topologySpreadConstraints`          | Topology spread constraints for the tfyWorkflowAdmin                             | `[]`                                    |
 | `tfyWorkflowAdmin.service.type`                       | Service type for the tfyWorkflowAdmin                                            | `ClusterIP`                             |
 | `tfyWorkflowAdmin.service.port`                       | Service port for the tfyWorkflowAdmin                                            | `8089`                                  |
 | `tfyWorkflowAdmin.service.annotations`                | Annotations for the tfyWorkflowAdmin service                                     | `{}`                                    |
@@ -722,7 +722,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 
 | Name                                                              | Description                                                                                | Value                                     |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                                    | `false`                                   |
+| `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                                    | `true`                                    |
 | `deltaFusionIngestor.image.registry`                              | Registry for the DeltaFusion Ingestor image (overrides global.image.registry if specified) | `""`                                      |
 | `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor (without registry)                           | `tfy-private-images/deltafusion-ingestor` |
 | `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.1.0`                                  |
@@ -776,20 +776,20 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.nodeSelector`                                | Node selector                                                                              | `{}`                                      |
 | `deltaFusionIngestor.tolerations`                                 | Tolerations                                                                                | `[]`                                      |
 | `deltaFusionIngestor.affinity`                                    | Affinity                                                                                   | `{}`                                      |
-| `deltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                                | `{}`                                      |
+| `deltaFusionIngestor.topologySpreadConstraints`                   | Topology spread constraints                                                                | `[]`                                      |
 | `deltaFusionIngestor.env`                                         | Additional environment variables                                                           | `{}`                                      |
 
 ### deltaFusionQueryServer Truefoundry DeltaFusion Query
 
 | Name                                                                 | Description                                                                            | Value                                         |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `deltaFusionQueryServer.enabled`                                     | Bool to enable the deltaFusionQueryServer                                              | `false`                                       |
+| `deltaFusionQueryServer.enabled`                                     | Bool to enable the deltaFusionQueryServer                                              | `true`                                        |
 | `deltaFusionQueryServer.deploymentLabels`                            | Labels for the deltaFusionQueryServer deployment                                       | `{}`                                          |
 | `deltaFusionQueryServer.deploymentAnnotations`                       | Annotations for the deltaFusionQueryServer deployment                                  | `{}`                                          |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified) | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                     | `tfy-private-images/deltafusion-query-server` |
 | `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                               | `v0.1.2`                                      |
-| `deltaFusionQueryServer.image.optimized`                             | Optimized image tag for the deltaFusionQueryServer                                     | `false`                                       |
+| `deltaFusionQueryServer.image.optimized`                             | Use optimized image tag for the deltaFusionQueryServer                                 | `false`                                       |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                        | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                       | `deltafusion-query-env-secret`                |
 | `deltaFusionQueryServer.imagePullPolicy`                             | Image pull policy for the deltaFusionQueryServer                                       | `IfNotPresent`                                |
@@ -818,7 +818,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                      | `3`                                           |
 | `deltaFusionQueryServer.nodeSelector`                                | Node selector for the deltaFusionQueryServer                                           | `{}`                                          |
 | `deltaFusionQueryServer.affinity`                                    | Affinity settings for the deltaFusionQueryServer                                       | `{}`                                          |
-| `deltaFusionQueryServer.topologySpreadConstraints`                   | Topology spread constraints for the deltaFusionQueryServer                             | `{}`                                          |
+| `deltaFusionQueryServer.topologySpreadConstraints`                   | Topology spread constraints for the deltaFusionQueryServer                             | `[]`                                          |
 | `deltaFusionQueryServer.service.type`                                | Service type for the deltaFusionQueryServer                                            | `ClusterIP`                                   |
 | `deltaFusionQueryServer.service.port`                                | Service port for the deltaFusionQueryServer                                            | `8080`                                        |
 | `deltaFusionQueryServer.service.labels`                              | Labels for the deltaFusionQueryServer service                                          | `{}`                                          |
