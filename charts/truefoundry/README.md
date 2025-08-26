@@ -862,7 +862,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNginxProxy.autoscaling.targetCPUUtilizationPercentage`  | Target CPU utilization percentage                                             | `60`                            |
 | `tfyNginxProxy.resources`                                   | Resource requests and limits for the tfyNginxProxy                            | `{}`                            |
 | `tfyNginxProxy.livenessProbe.failureThreshold`              | Liveness probe failure threshold for tfyNginxProxy                            | `3`                             |
-| `tfyNginxProxy.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyNginxProxy                                | `600`                           |
+| `tfyNginxProxy.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyNginxProxy                                | `15`                            |
 | `tfyNginxProxy.livenessProbe.periodSeconds`                 | Liveness probe period for tfyNginxProxy                                       | `10`                            |
 | `tfyNginxProxy.livenessProbe.successThreshold`              | Liveness probe success threshold for tfyNginxProxy                            | `1`                             |
 | `tfyNginxProxy.livenessProbe.timeoutSeconds`                | Liveness probe timeout for tfyNginxProxy                                      | `1`                             |
