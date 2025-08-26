@@ -19275,6 +19275,59 @@ entries:
     version: 0.0.1
   truefoundry:
   - apiVersion: v2
+    created: "2025-08-26T18:19:41.613663182Z"
+    dependencies:
+    - condition: servicefoundryServer.enabled
+      name: tfy-configs
+      repository: https://truefoundry.github.io/infra-charts
+      version: 0.1.19
+    - alias: tfyNats
+      condition: tfyNats.enabled
+      name: nats
+      repository: https://nats-io.github.io/k8s/helm/charts/
+      version: 1.3.9
+    - condition: devMode.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 15.5.38
+    - condition: tfy-buildkitd-service.enabled
+      name: tfy-buildkitd-service
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.11
+    - alias: extraResources
+      condition: extraResources.enabled
+      name: tfy-manifests-template
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.0
+    - condition: tfy-llm-gateway.enabled
+      name: tfy-llm-gateway
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGateway
+      version: 0.80.1
+    - condition: tfy-otel-collector.enabled
+      name: tfy-otel-collector
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGatewayRequestLogging
+      - tracing
+      version: 0.77.1
+    - condition: tfy-clickhouse.enabled
+      name: tfy-clickhouse
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGatewayRequestLogging
+      - tracing
+      version: 0.1.11
+    description: TrueFoundry Control Plane Components
+    digest: 13f92ee91e77f4778270c926ea4829c58729e86554ddbb8d012da2634d895e5a
+    maintainers:
+    - name: truefoundry
+    name: truefoundry
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.80.6/truefoundry-0.80.6.tgz
+    version: 0.80.6
+  - apiVersion: v2
     created: "2025-08-26T13:21:16.164031302Z"
     dependencies:
     - condition: servicefoundryServer.enabled
@@ -25803,4 +25856,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-configs-0.1.0-rc.1/truefoundry-configs-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2025-08-26T13:21:16.166350302Z"
+generated: "2025-08-26T18:19:41.617408127Z"
