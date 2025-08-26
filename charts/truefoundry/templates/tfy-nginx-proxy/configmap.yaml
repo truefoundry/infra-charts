@@ -58,6 +58,8 @@ data:
         # Strips the prefix
         location /api/proxy-server/ {
           proxy_pass http://{{ .Release.Name }}-tfy-controller:8123/;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -101,6 +103,8 @@ data:
         # Path: /
         location / {
           proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:5000;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
