@@ -213,7 +213,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.ingress.labels`                              | Labels for the frontend app ingress                                          | `{}`                                                                                       |
 | `truefoundryFrontendApp.ingress.ingressClassName`                    | Ingress class name for the frontend app                                      | `istio`                                                                                    |
 | `truefoundryFrontendApp.ingress.tls`                                 | TLS settings for the frontend app                                            | `[]`                                                                                       |
-| `truefoundryFrontendApp.ingress.hosts`                               | Hosts for the frontend app                                                   | `[]`                                                                                       |
+| `truefoundryFrontendApp.ingress.hosts`                               | Hosts for the frontend app                                                   | `["tfy-vedant-rds-upgrade.devtest.truefoundry.tech"]`                                      |
 | `truefoundryFrontendApp.istio.virtualservice.enabled`                | Enable virtual service for the frontend app                                  | `false`                                                                                    |
 | `truefoundryFrontendApp.istio.virtualservice.annotations`            | Annotations for the frontend app virtual service                             | `{}`                                                                                       |
 | `truefoundryFrontendApp.istio.virtualservice.gateways`               | Gateways for the frontend app virtual service                                | `[]`                                                                                       |
@@ -875,7 +875,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNginxProxy.affinity`                                    | Affinity settings for the tfyNginxProxy                                       | `{}`                            |
 | `tfyNginxProxy.topologySpreadConstraints`                   | Topology spread constraints for the tfyNginxProxy                             | `{}`                            |
 | `tfyNginxProxy.service.type`                                | Service type for the tfyNginxProxy                                            | `ClusterIP`                     |
-| `tfyNginxProxy.service.port`                                | Service port for the tfyNginxProxy                                            | `3002`                          |
+| `tfyNginxProxy.service.port`                                | Service port for the tfyNginxProxy                                            | `80`                            |
 | `tfyNginxProxy.service.annotations`                         | Annotations for the tfyNginxProxy service                                     | `{}`                            |
 | `tfyNginxProxy.serviceAccount.annotations`                  | Annotations for the tfyNginxProxy service account                             | `{}`                            |
 | `tfyNginxProxy.serviceAccount.automountServiceAccountToken` | Automount service account token for the tfyNginxProxy service account         | `true`                          |
