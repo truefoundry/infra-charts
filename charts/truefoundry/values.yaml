@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.80.3
+  controlPlaneChartVersion: 0.80.6
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -104,7 +104,7 @@ global:
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
   llmGateway: false
-  ## @param tags.llmGatewayRequestLogging Bool to enable request logging feature in LLM gateway
+  ## @param tags.llmGatewayRequestLogging Bool to enable observability (metrics and request logging) features in LLM gateway
   llmGatewayRequestLogging: false
   ## @param tags.tracing Bool to enable OTEL tracing feature
   tracing: false
@@ -232,7 +232,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.80.1"
+    tag: "v0.80.3"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -291,7 +291,7 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.affinity Affinity settings for the frontend app
   affinity: {}
   ## @param truefoundryFrontendApp.topologySpreadConstraints Topology spread constraints for the frontend app
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## truefoundryFrontendApp.service Service settings for the frontend app
   service:
     ## @param truefoundryFrontendApp.service.type Service type for the frontend app
@@ -452,7 +452,7 @@ mlfoundryServer:
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
   affinity: {}
   ## @param mlfoundryServer.topologySpreadConstraints Topology spread constraints for the mlfoundry server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## mlfoundryServer.service Service settings for the mlfoundry server
   service:
     ## @param mlfoundryServer.service.type Service type for the mlfoundry server
@@ -582,7 +582,7 @@ s3proxy:
   ## @param s3proxy.affinity Affinity settings for the s3 proxy
   affinity: {}
   ## @param s3proxy.topologySpreadConstraints Topology spread constraints for the s3 proxy
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## s3proxy.service Service settings for the s3 proxy
   service:
     ## @param s3proxy.service.type Service type for the s3 proxy
@@ -633,7 +633,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.80.0"
+    tag: "v0.80.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -694,7 +694,7 @@ servicefoundryServer:
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
   affinity: {}
   ## @param servicefoundryServer.topologySpreadConstraints Topology spread constraints for the servicefoundry server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## servicefoundryServer.service Service settings for the servicefoundry server
   service:
     ## @param servicefoundryServer.service.type Service type for the servicefoundry server
@@ -973,7 +973,7 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
   affinity: {}
   ## @param sparkHistoryServer.topologySpreadConstraints Topology spread constraints for the spark history server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## sparkHistoryServer.service Service settings for the spark history server
   service:
     ## @param sparkHistoryServer.service.type Service type for the spark history server
@@ -1086,7 +1086,7 @@ tfyK8sController:
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
   affinity: {}
   ## @param tfyK8sController.topologySpreadConstraints Topology spread constraints for the tfyK8sController
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyK8sController.service Service settings for the tfyK8sController
   service:
     ## @param tfyK8sController.service.type Service type for the tfyK8sController
@@ -1220,7 +1220,7 @@ sfyManifestService:
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
   affinity: {}
   ## @param sfyManifestService.topologySpreadConstraints Topology spread constraints for the sfy manifest service
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## sfyManifestService.serviceMonitor ServiceMonitor settings for the sfy manifest service
   serviceMonitor:
     ## @param sfyManifestService.serviceMonitor.enabled Enable ServiceMonitor for the sfy manifest service
@@ -1612,7 +1612,7 @@ tfyController:
   ## @param tfyController.affinity Affinity settings for the tfyController
   affinity: {}
   ## @param tfyController.topologySpreadConstraints Topology spread constraints for the tfyController
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyController.service Service settings for the tfyController
   service:
     ## @param tfyController.service.type Service type for the tfyController
@@ -1730,7 +1730,7 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.affinity Affinity settings for the tfyWorkflowAdmin
   affinity: {}
   ## @param tfyWorkflowAdmin.topologySpreadConstraints Topology spread constraints for the tfyWorkflowAdmin
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyWorkflowAdmin.service Service settings for the tfyWorkflowAdmin
   service:
     ## @param tfyWorkflowAdmin.service.type Service type for the tfyWorkflowAdmin
@@ -1934,11 +1934,11 @@ tfyNats:
         value:
           limits:
             cpu: 1000m
-            memory: 2048Mi
+            memory: 1024Mi
             ephemeral-storage: 2Gi
           requests:
             cpu: 500m
-            memory: 2048Mi
+            memory: 1024Mi
             ephemeral-storage: 1Gi
   ## skip tfyNats.podTemplate Pod template configuration
   podTemplate:
@@ -2005,7 +2005,7 @@ tfy-otel-collector:
 ## @section deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 deltaFusionIngestor:
   ## @param deltaFusionIngestor.enabled Bool to enable the DeltaFusion Ingestor
-  enabled: false
+  enabled: true
   ## @skip deltaFusionIngestor.replicaCount Number of replicas for the DeltaFusion Ingestor
   #  replicaCount: 2
 
@@ -2140,7 +2140,7 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.affinity Affinity
   affinity: {}
   ## @param deltaFusionIngestor.topologySpreadConstraints Topology spread constraints
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
@@ -2156,7 +2156,7 @@ deltaFusionIngestor:
 ## @section deltaFusionQueryServer Truefoundry DeltaFusion Query
 deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.enabled Bool to enable the deltaFusionQueryServer
-  enabled: false
+  enabled: true
   ## @skip deltaFusionQueryServer.replicaCount Number of replicas for the DeltaFusion Query
   #  replicaCount: 2
   ## @skip deltaFusionQueryServer.tolerations Tolerations specific to the deltaFusionQueryServer
@@ -2173,7 +2173,7 @@ deltaFusionQueryServer:
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
     tag: v0.1.2
-    ## @param deltaFusionQueryServer.image.optimized Optimized image tag for the deltaFusionQueryServer
+    ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
   environmentName: default
@@ -2242,7 +2242,7 @@ deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
   affinity: {}
   ## @param deltaFusionQueryServer.topologySpreadConstraints Topology spread constraints for the deltaFusionQueryServer
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## deltaFusionQueryServer.service Service settings for the deltaFusionQueryServer
   service:
     ## @param deltaFusionQueryServer.service.type Service type for the deltaFusionQueryServer
