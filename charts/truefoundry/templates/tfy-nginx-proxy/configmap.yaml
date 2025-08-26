@@ -18,7 +18,7 @@ data:
         # Dynamically sets server_name from the hosts list in your values.yaml
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
-        {{-if .Values.servicefoundryServer.enabled }}
+        {{- if .Values.servicefoundryServer.enabled }}
         # WebSocket proxy for socket.io
         # Path: /api/svc/socket.io/
         # Rewrites requests to /socket.io/ on the backend service
@@ -46,7 +46,7 @@ data:
         }
         {{- end }}
 
-        {{-if .Values.tfyController.enabled }}
+        {{- if .Values.tfyController.enabled }}
         # Controller
         # Path: /api/proxy-server/
         # Strips the prefix
@@ -79,7 +79,7 @@ data:
         }
         {{- end }}
 
-        {{-if .Values.tags.tracing }}
+        {{- if .Values.tags.tracing }}
         # OpenTelemetry Collector
         # Path: /api/otel/
         # Strips the prefix
