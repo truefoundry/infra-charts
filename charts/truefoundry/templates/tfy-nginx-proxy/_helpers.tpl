@@ -72,17 +72,25 @@ helm.sh/chart: {{ include "tfy-nginx-proxy.chart" . }}
 
 {{/*
   Deployment annotations
-*/}}
+  */}}
 {{- define "tfy-nginx-proxy.deploymentAnnotations" -}}
-{{- $base := dict "argocd.argoproj.io/sync-wave" "3" -}}
-{{- $extra := (include "tfy-nginx-proxy.annotations" . | fromYaml) | default (dict) -}}
-{{- $anns := merge $base $extra -}}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-nginx-proxy.annotations" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
+  Pod annotations
+*/}}
+{{- define "tfy-nginx-proxy.podAnnotations" -}}
+{{- /* User-provided pod annotations from values */ -}}
+{{- $podVals := .Values.tfyNginxProxy.podAnnotations | default (dict) -}}
 
 {{- /* Render the ConfigMap template and hash it */ -}}
 {{- $cm := include (print $.Template.BasePath "/tfy-nginx-proxy/configmap.yaml") . -}}
-{{- $_ := set $anns "checksum/config" (sha256sum $cm) -}}
 
-{{- toYaml $anns -}}
+{{- $_ := set $podVals "checksum/config" (sha256sum $cm) -}}
+
+{{- toYaml $podVals -}}
 {{- end -}}
 
 {{/*

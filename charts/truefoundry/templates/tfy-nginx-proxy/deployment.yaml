@@ -14,10 +14,8 @@ spec:
       {{- include "tfy-nginx-proxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfyNginxProxy.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-nginx-proxy.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-nginx-proxy.labels" . | nindent 8 }}
     spec:
