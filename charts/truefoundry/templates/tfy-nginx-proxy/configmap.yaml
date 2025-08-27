@@ -4,14 +4,15 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-nginx-proxy.fullname" . }}
   labels:
-      {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
+    {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
   annotations:
-      {{- include "tfy-nginx-proxy.annotations" . | nindent 4 }}
+    {{- include "tfy-nginx-proxy.annotations" . | nindent 4 }}
 data:
   nginx.conf: |
     events {
       worker_connections 1024;
     }
+
     http {
       client_body_temp_path  /var/cache/nginx/client_temp;
       proxy_temp_path        /var/cache/nginx/proxy_temp;
@@ -19,95 +20,249 @@ data:
       uwsgi_temp_path        /var/cache/nginx/uwsgi_temp;
       scgi_temp_path         /var/cache/nginx/scgi_temp;
 
+      # Define once, used by WS/SSE locations
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ""      close;
+      }
+
       server {
         listen 80;
-        # Dynamically sets server_name from the hosts list in your values.yaml
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
         {{- if .Values.servicefoundryServer.enabled }}
         # WebSocket proxy for socket.io
-        # Path: /api/svc/socket.io/
-        # Rewrites requests to /socket.io/ on the backend service
-        location /api/svc/socket.io/ {
-          proxy_pass http://{{ .Release.Name }}-servicefoundry-server:3000/socket.io/;
+        location ~* ^/api/svc/socket\.io(?:/|$) {
+          rewrite ^/api/svc/socket\.io/?(.*)$ /socket.io/$1 break;
+          proxy_pass http://{{ .Values.truefoundryFrontendApp.servicefoundryServerHost }}:{{ .Values.servicefoundryServer.service.port }};
+
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
+          proxy_set_header Connection $connection_upgrade;
+
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_cache_bypass $http_upgrade;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
         {{- if .Values.tags.llmGateway }}
-        # LLM Gateway
-        # Path: /api/llm/
-        # Strips the prefix, forwarding the rest of the path to the root of the backend
-        location /api/llm/ {
-          proxy_pass http://{{ .Release.Name }}-tfy-llm-gateway:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}/;
+        # LLM Gateway (long-lived streams)
+        location ~* ^/api/llm(?:/|$) {
+          rewrite ^/api/llm/?(.*)$ /$1 break;
+          proxy_pass http://{{ .Values.truefoundryFrontendApp.llmGateway.backendHost }}:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }};
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_read_timeout 3600s;
+
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_cache_bypass $http_upgrade;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
         {{- if .Values.tfyController.enabled }}
         # Controller
-        # Path: /api/proxy-server/
-        # Strips the prefix
-        location /api/proxy-server/ {
-          proxy_pass http://{{ .Release.Name }}-tfy-controller:8123/;
+        location ~* ^/api/proxy-server(?:/|$) {
+          rewrite ^/api/proxy-server/?(.*)$ /$1 break;
+          proxy_pass http://{{ .Values.truefoundryFrontendApp.proxyServerHost }}:{{ .Values.tfyController.service.port }};
+
+          proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
+          proxy_set_header Connection $connection_upgrade;
+
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_cache_bypass $http_upgrade;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
         {{- if .Values.tfyWorkflowAdmin.enabled }}
-        # Flyte Admin Service
-        # Path: /flyteidl.service.AdminService/
-        # No rewrite is applied for this service
-        location /flyteidl.service.AdminService/ {
-          proxy_pass http://{{ .Release.Name }}-tfy-workflow-admin-server:8089;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # Flyte Admin gRPC (no rewrite, keep method path intact)
+        location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
+          grpc_pass grpc://{{ .Values.truefoundryFrontendApp.tfyWorkflowAdminHost }}:{{ .Values.tfyWorkflowAdmin.service.port }};
+
+          grpc_read_timeout  3600s;
+          grpc_send_timeout  3600s;
+
+          grpc_set_header Host $host;
+          grpc_set_header X-Real-IP $remote_addr;
+          grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          grpc_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
         {{- if .Values.s3proxy.enabled }}
-        location /api/s3proxy/ {
-          proxy_pass http://{{ .Release.Name }}-s3proxy:8080/;
+        # S3 proxy (streaming uploads)
+        location ~* ^/api/s3proxy(?:/|$) {
+          rewrite ^/api/s3proxy/?(.*)$ /$1 break;
+          proxy_pass {{ .Values.truefoundryFrontendApp.s3proxyHost }}:{{ .Values.s3proxy.service.port }};
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;        # raise for large uploads
+          proxy_request_buffering off;    # stream to upstream
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 300s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_cache_bypass $http_upgrade;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
         {{- if .Values.tags.tracing }}
-        # OpenTelemetry Collector
-        # Path: /api/otel/
-        # Strips the prefix
-        location /api/otel/ {
-          proxy_pass http://{{ .Release.Name }}-tfy-otel-collector:4318/;
+        # OpenTelemetry Collector (OTLP/HTTP on :4318) strip /api/otel
+        location ~* ^/api/otel(?:/|$) {
+          rewrite ^/api/otel/?(.*)$ /$1 break;
+          proxy_pass http://{{ .Values.truefoundryFrontendApp.tfyOtelCollectorHost }}:4318;
+
+          proxy_http_version 1.1;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 10m;   # OTLP payloads can be sizable
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 8k;
+          proxy_buffers 8 8k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
         {{- end }}
 
-        # Frontend application (catch-all)
-        # Path: /
+        # Frontend catch-all
         location / {
-          proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:5000;
+          proxy_pass http://{{ .Values.global.controlPlaneURL }}:{{ .Values.truefoundryFrontendApp.service.port }};
+
+          proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
+          proxy_set_header Connection $connection_upgrade;
+
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 1m;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+          proxy_cache_bypass $http_upgrade;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
         }
       }
     }
