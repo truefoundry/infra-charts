@@ -21,7 +21,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.80.6
+  controlPlaneChartVersion: 0.80.7
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -79,27 +79,27 @@ global:
     automountServiceAccountToken: true
   config:
     ## @param global.config.defaultCloudProvider Default Cloud provider
-    defaultCloudProvider: ''
+    defaultCloudProvider: ""
     storageConfiguration:
       ## @param global.config.storageConfiguration.awsS3BucketName AWS S3 bucket name
-      awsS3BucketName: ''
+      awsS3BucketName: ""
       ## @param global.config.storageConfiguration.awsRegion AWS region
-      awsRegion: ''
+      awsRegion: ""
       ## @param global.config.storageConfiguration.awsAssumeRoleArn AWS assume role ARN
-      awsAssumeRoleArn: ''
+      awsAssumeRoleArn: ""
       ## @param global.config.storageConfiguration.azureBlobUri Azure blob URI
-      azureBlobUri: ''
+      azureBlobUri: ""
       ## @param global.config.storageConfiguration.azureBlobConnectionString Azure blob connection string
       ## For passing it as a secret, use the following format(refer - https://github.com/truefoundry/infra-charts/blob/main/charts/truefoundry/README.md#using-k8s-secret-for-additional-fields):
       ## azureBlobConnectionString: ${k8s-secret/truefoundry-creds/AZURE_BLOB_CONNECTION_STRING}
-      azureBlobConnectionString: ''
+      azureBlobConnectionString: ""
       ## @param global.config.storageConfiguration.googleCloudProjectId Google cloud project ID
-      googleCloudProjectId: ''
+      googleCloudProjectId: ""
       ## @param global.config.storageConfiguration.googleCloudStorageBucketName Google cloud storage bucket name
-      googleCloudStorageBucketName: ''
+      googleCloudStorageBucketName: ""
       ## @param global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent Google cloud service account key file content
       ## For passing it as a secret, use the following format(refer - https://github.com/truefoundry/infra-charts/blob/main/charts/truefoundry/README.md#using-k8s-secret-for-additional-fields):
-      googleCloudServiceAccountKeyFileContent: ''
+      googleCloudServiceAccountKeyFileContent: ""
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -238,9 +238,9 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
   imagePullPolicy: IfNotPresent
   ## @param truefoundryFrontendApp.nameOverride Override name for the frontend app
-  nameOverride: ''
+  nameOverride: ""
   ## @param truefoundryFrontendApp.fullnameOverride Full name override for the frontend app
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
   podAnnotations: {}
   ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
@@ -343,11 +343,11 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
     external: false
     ## @param truefoundryFrontendApp.llmGateway.backendHost Backend Host for the LLM gateway
-    backendHost: '{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local'
+    backendHost: "{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local"
     ## @param truefoundryFrontendApp.llmGateway.backendPort Backend Port for the LLM gateway
     backendPort: 8787
   ## @param truefoundryFrontendApp.proxyServerHost Proxy server host for the frontend app
-  proxyServerHost: '{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local'
+  proxyServerHost: "{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local"
   ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
   serviceAccount:
     ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
@@ -399,9 +399,9 @@ mlfoundryServer:
   ## @param mlfoundryServer.imagePullPolicy Image pull policy for the mlfoundry server
   imagePullPolicy: IfNotPresent
   ## @param mlfoundryServer.nameOverride Override name for the mlfoundry server
-  nameOverride: ''
+  nameOverride: ""
   ## @param mlfoundryServer.fullnameOverride Full name override for the mlfoundry server
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param mlfoundryServer.podAnnotations Annotations for the mlfoundry server pods
   podAnnotations: {}
   ## @param mlfoundryServer.podSecurityContext Security context for the mlfoundry server pods
@@ -524,9 +524,9 @@ s3proxy:
   ## @param s3proxy.imagePullPolicy Image pull policy for the s3 proxy
   imagePullPolicy: IfNotPresent
   ## @param s3proxy.nameOverride Override name for the s3 proxy
-  nameOverride: ''
+  nameOverride: ""
   ## @param s3proxy.fullnameOverride Full name override for the s3 proxy
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param s3proxy.podAnnotations Annotations for the s3 proxy pods
   podAnnotations: {}
   ## @param s3proxy.podSecurityContext Security context for the s3 proxy pods
@@ -641,9 +641,9 @@ servicefoundryServer:
   ## @param servicefoundryServer.imagePullPolicy Image pull policy for the servicefoundry server
   imagePullPolicy: IfNotPresent
   ## @param servicefoundryServer.nameOverride Override name for the servicefoundry server
-  nameOverride: ''
+  nameOverride: ""
   ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param servicefoundryServer.podAnnotations Annotations for the servicefoundry server pods
   podAnnotations: {}
   ## @param servicefoundryServer.podSecurityContext Security context for the servicefoundry server pods
@@ -880,13 +880,13 @@ servicefoundryServer:
     FE_ENABLE_ROUTING_CONFIG: "false"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
-    cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
+    cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for workbench deployments
-    workbenchImages: '{{ .Release.Name }}-workbench-images-cm'
+    workbenchImages: "{{ .Release.Name }}-workbench-images-cm"
     ## @param servicefoundryServer.configs.imageMutationPolicy Image Mutations policy for workloads
-    imageMutationPolicy: '{{ .Release.Name }}-image-mutation-policy-cm'
+    imageMutationPolicy: "{{ .Release.Name }}-image-mutation-policy-cm"
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
-    k8sManifestValidationPolicy: '{{ .Release.Name }}-k8s-manifest-validation-policy-cm'
+    k8sManifestValidationPolicy: "{{ .Release.Name }}-k8s-manifest-validation-policy-cm"
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -915,9 +915,9 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.imagePullPolicy Image pull policy for the spark history server
   imagePullPolicy: IfNotPresent
   ## @param sparkHistoryServer.nameOverride Override name for the spark history server
-  nameOverride: ''
+  nameOverride: ""
   ## @param sparkHistoryServer.fullnameOverride Full name override for the spark history server
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param sparkHistoryServer.podAnnotations Annotations for the spark history server pods
   podAnnotations: {}
   ## @param sparkHistoryServer.podSecurityContext Security context for the spark history server pods
@@ -1027,13 +1027,13 @@ tfyK8sController:
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
-  envSecretName: 'tfy-k8s-controller-env-secret'
+  envSecretName: "tfy-k8s-controller-env-secret"
   ## @param tfyK8sController.imagePullPolicy Image pull policy for the tfyK8sController
   imagePullPolicy: IfNotPresent
   ## @param tfyK8sController.nameOverride Override name for the tfyK8sController
-  nameOverride: ''
+  nameOverride: ""
   ## @param tfyK8sController.fullnameOverride Full name override for the tfyK8sController
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param tfyK8sController.podAnnotations [object] Annotations for the tfyK8sController pods
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
@@ -1167,9 +1167,9 @@ sfyManifestService:
   ## @param sfyManifestService.imagePullPolicy Image pull policy for the sfy manifest service
   imagePullPolicy: IfNotPresent
   ## @param sfyManifestService.nameOverride Override name for the sfy manifest service
-  nameOverride: ''
+  nameOverride: ""
   ## @param sfyManifestService.fullnameOverride Full name override for the sfy manifest service
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
   ## @param sfyManifestService.podSecurityContext Security context for the sfy manifest service pods
@@ -1285,9 +1285,9 @@ tfyBuild:
   ## @param tfyBuild.labels [object] Labels for the tfyBuild server
   labels: {}
   ## @param tfyBuild.nameOverride Override name for the tfyBuild server
-  nameOverride: ''
+  nameOverride: ""
   ## @param tfyBuild.fullnameOverride Full name override for the tfyBuild server
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## tfyBuild.serviceAccount Service account settings for the tfyBuild server
   serviceAccount:
     ## @param tfyBuild.serviceAccount.create Bool to create a service account for the tfyBuild server
@@ -1381,9 +1381,9 @@ tfyBuild:
         labels:
           app: buildkit
         annotations:
-          cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
-          karpenter.sh/do-not-disrupt: 'true'
-          karpenter.sh/do-not-evict: 'true'
+          cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+          karpenter.sh/do-not-disrupt: "true"
+          karpenter.sh/do-not-evict: "true"
       resources:
         limits:
           cpu: 2
@@ -1473,8 +1473,8 @@ tfy-buildkitd-service:
   ## @skip tfy-buildkitd-service.podAnnotations Annotations for the tfy-buildkitd service pods
   podAnnotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-    karpenter.sh/do-not-disrupt: 'true'
-    karpenter.sh/do-not-evict: 'true'
+    karpenter.sh/do-not-disrupt: "true"
+    karpenter.sh/do-not-evict: "true"
   ## tfy-buildkitd-service.tls TLS settings for the tfy-buildkitd service
   tls:
     ## @param tfy-buildkitd-service.tls.enabled Enable TLS for the tfy-buildkitd service
@@ -1546,9 +1546,9 @@ tfyController:
   ## @param tfyController.imagePullPolicy Image pull policy for the tfyController
   imagePullPolicy: IfNotPresent
   ## @param tfyController.nameOverride Override name for the tfyController
-  nameOverride: ''
+  nameOverride: ""
   ## @param tfyController.fullnameOverride Full name override for the tfyController
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param tfyController.podAnnotations [object]Annotations for the tfyController pods
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
@@ -1676,9 +1676,9 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.imagePullPolicy Image pull policy for the tfyWorkflowAdmin
   imagePullPolicy: IfNotPresent
   ## @param tfyWorkflowAdmin.nameOverride Override name for the tfyWorkflowAdmin
-  nameOverride: ''
+  nameOverride: ""
   ## @param tfyWorkflowAdmin.fullnameOverride Full name override for the tfyWorkflowAdmin
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param tfyWorkflowAdmin.podAnnotations Annotations for the tfyWorkflowAdmin pods
   podAnnotations: {}
   ## @param tfyWorkflowAdmin.podSecurityContext Security context for the tfyWorkflowAdmin pods
@@ -2182,9 +2182,9 @@ deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.imagePullPolicy Image pull policy for the deltaFusionQueryServer
   imagePullPolicy: IfNotPresent
   ## @param deltaFusionQueryServer.nameOverride Override name for the deltaFusionQueryServer
-  nameOverride: ''
+  nameOverride: ""
   ## @param deltaFusionQueryServer.fullnameOverride Full name override for the deltaFusionQueryServer
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param deltaFusionQueryServer.podLabels [object] Labels for the deltaFusionQueryServer pods
   podLabels: {}
   ## @param deltaFusionQueryServer.podAnnotations [object] Annotations for the deltaFusionQueryServer pods
