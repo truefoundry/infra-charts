@@ -1,4 +1,4 @@
-{{- if .Values.deltaFusionIngestor.enabled }}
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionIngestor.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

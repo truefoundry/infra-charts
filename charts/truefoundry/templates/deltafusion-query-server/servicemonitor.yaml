@@ -1,4 +1,5 @@
-{{- if and .Values.deltaFusionQueryServer.enabled .Values.deltaFusionQueryServer.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1alpha1") -}}
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled }}
+{{- if and .Values.deltaFusionQueryServer.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1alpha1") -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -20,3 +21,4 @@ spec:
       honorLabels: true
       interval: {{ .Values.deltaFusionQueryServer.serviceMonitor.interval }}
 {{- end -}}
+{{- end }}

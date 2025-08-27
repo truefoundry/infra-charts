@@ -40,34 +40,15 @@ data:
 
     exporters:
       debug:
-        verbosity: detailed # For debug. Have to add clickhouse exporter
+        verbosity: detailed # For debug output during troubleshooting
       nop:
-      clickhouse:
-        endpoint: ${env:CLICKHOUSE_TCP_HOST}
-        username: ${env:CLICKHOUSE_USER}
-        password: ${env:CLICKHOUSE_PASSWORD}
-        cluster_name: default 
-        timeout: 10s
-        sending_queue:
-          queue_size: 1000
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_interval: 30s
-          max_elapsed_time: 300s
-        fallback:
-          nats_baseurl: ${env:NATS_BASE_URL}
-          wait_time_between_pulls: 30s
-          nats_stream: "tfyotelcollector"
-          nats_subject: "tfyotelcollector.traces"
-          nats_consumer: "tyf-otel-collector-worker"    
-        cache_ttl: 5m
+      datafusion:
+        base_url: ${env:DELTAFUSION_INGESTER_BASE_URL}
+        request_timeout: ${env:DELTAFUSION_INGESTER_REQUEST_TIMEOUT}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
-        deltafusion_ingester_base_url: ${env:DELTAFUSION_INGESTER_BASE_URL}
-        deltafusion_ingester_path: ${env:DELTAFUSION_INGESTER_PATH}
-        deltafusion_ingester_request_timeout: ${env:DELTAFUSION_INGESTER_REQUEST_TIMEOUT}
         tfy_api_key: ${env:TFY_API_KEY}
+        cache_ttl: 5m
 
     processors:
       batch:
@@ -109,7 +90,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [resource, batch]
-          exporters: [clickhouse]
+          exporters: [datafusion]
         metrics:
           receivers: [otlp]
           processors: []
