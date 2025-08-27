@@ -2315,7 +2315,7 @@ tfyNginxProxy:
   ## @param tfyNginxProxy.environmentName Environment name for tfyNginxProxy
   environmentName: default
   ## @param tfyNginxProxy.envSecretName Secret name for the tfyNginxProxy environment variables
-  envSecretName: 'tfy-k8s-controller-env-secret'
+  envSecretName: 'tfy-nginx-proxy-env-secret'
   ## @param tfyNginxProxy.imagePullPolicy Image pull policy for the tfyNginxProxy
   imagePullPolicy: IfNotPresent
   ## @param tfyNginxProxy.nameOverride Override name for the tfyNginxProxy
@@ -2324,8 +2324,12 @@ tfyNginxProxy:
   fullnameOverride: ''
   ## @param tfyNginxProxy.podAnnotations [object] Annotations for the tfyNginxProxy pods
   podAnnotations: {}
+  ## @param tfyNginxProxy.podAnnotations [object] Labels for the tfyNginxProxy pods
+  podLabels: {}
   ## @param tfyNginxProxy.podSecurityContext Security context for the tfyNginxProxy pods
   podSecurityContext: {}
+  ## @param tfyNginxProxy.commonAnnotations Common annotations for the tfyNginxProxy pods
+  commonAnnotations: {}
   ## @param tfyNginxProxy.commonLabels Common labels for the tfyNginxProxy pods
   commonLabels: {}
   ## tfyNginxProxy.securityContext Security context for the tfyNginxProxy
@@ -2393,6 +2397,8 @@ tfyNginxProxy:
     annotations: {}
     ## tfyNginxProxy.serviceAccount Service account settings for the tfyNginxProxy
   serviceAccount:
+    ## @param tfyNginxProxy.serviceAccount.create Bool to create a service account for the tfyNginxProxy
+    create: false
     ## @param tfyNginxProxy.serviceAccount.annotations Annotations for the tfyNginxProxy service account
     annotations: {}
     ## @param tfyNginxProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyNginxProxy service account
@@ -2405,6 +2411,10 @@ tfyNginxProxy:
   serviceMonitor:
     ## @param tfyNginxProxy.serviceMonitor.enabled Enable ServiceMonitor for the tfyNginxProxy
     enabled: true
+    ## @param tfyNginxProxy.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
+    ## @param tfyNginxProxy.serviceMonitor.path Path for the ServiceMonitor
+    path: /metrics
     ## @param tfyNginxProxy.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
     additionalLabels: {}
     ## @param tfyNginxProxy.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor

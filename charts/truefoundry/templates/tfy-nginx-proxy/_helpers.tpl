@@ -116,15 +116,41 @@ app.kubernetes.io/name: {{ include "tfy-nginx-proxy.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+
+{{/*
+  Create the name of the service account to use
+  */}}
+{{- define "tfy-k8s-controller.serviceAccountName" -}}
+{{- default (include "tfy-k8s-controller.fullname" .) "tfy-k8s-controller" }}
+
+{{- end }}
+
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-nginx-proxy.serviceAccountName" -}}
-{{- if .Values.tfyNginxProxy.serviceAccount.name -}}
-{{- .Values.tfyNginxProxy.serviceAccount.name -}}
+{{- if .Values.tfyNginxProxy.serviceAccount.create -}}
+{{- default (include "tfy-nginx-proxy.fullname" .) "tfy-nginx-proxy" }}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end -}}
+{{- end }}
+
+{{/*
+ServiceMonitor Labels
+*/}}
+{{- define "tfy-nginx-proxy.serviceMonitorLabels" -}}
+release: prometheus
+{{- $merged := merge (include "tfy-nginx-proxy.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalLabels) }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+ServiceMonitor Annotations
+*/}}
+{{- define "tfy-nginx-proxy.serviceMonitorAnnotations" -}}
+{{- $merged := merge (include "tfy-nginx-proxy.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalAnnotations) }}
+{{- toYaml $merged }}
 {{- end }}
 
 {{/*
