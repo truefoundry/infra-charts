@@ -164,7 +164,7 @@ data:
         # S3 proxy (streaming uploads)
         location ~* ^/api/s3proxy(?:/|$) {
           rewrite ^/api/s3proxy/?(.*)$ /$1 break;
-          proxy_pass {{ .Values.truefoundryFrontendApp.s3proxyHost }}:{{ .Values.s3proxy.service.port }};
+          proxy_pass http://{{ .Values.truefoundryFrontendApp.s3proxyHost }}:{{ .Values.s3proxy.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
