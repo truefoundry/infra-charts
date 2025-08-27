@@ -874,7 +874,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyNginxProxy.readinessProbe.timeoutSeconds`               | Readiness probe timeout for tfyNginxProxy                                     | `1`                             |
 | `tfyNginxProxy.nodeSelector`                                | Node selector for the tfyNginxProxy                                           | `{}`                            |
 | `tfyNginxProxy.affinity`                                    | Affinity settings for the tfyNginxProxy                                       | `{}`                            |
-| `tfyNginxProxy.topologySpreadConstraints`                   | Topology spread constraints for the tfyNginxProxy                             | `{}`                            |
+| `tfyNginxProxy.topologySpreadConstraints`                   | Topology spread constraints for the tfyNginxProxy                             | `[]`                            |
 | `tfyNginxProxy.service.type`                                | Service type for the tfyNginxProxy                                            | `ClusterIP`                     |
 | `tfyNginxProxy.service.port`                                | Service port for the tfyNginxProxy                                            | `80`                            |
 | `tfyNginxProxy.service.annotations`                         | Annotations for the tfyNginxProxy service                                     | `{}`                            |
