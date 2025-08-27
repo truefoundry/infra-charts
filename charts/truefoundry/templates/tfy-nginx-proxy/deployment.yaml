@@ -8,7 +8,9 @@ metadata:
   annotations:
     {{- include "tfy-nginx-proxy.deploymentAnnotations" . | nindent 4 }}
 spec:
+  {{- if not .Values.tfyNginxProxy.autoscaling.enabled }}
   replicas: {{- include "tfy-nginx-proxy.replicas" . | indent 1 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-nginx-proxy.selectorLabels" . | nindent 6 }}
@@ -60,10 +62,8 @@ spec:
             initialDelaySeconds: {{ .Values.tfyNginxProxy.readinessProbe.initialDelaySeconds }}
           volumeMounts:
             {{- include "tfy-nginx-proxy.volumeMounts" . | nindent 12 }}
-      {{- with .Values.tfyNginxProxy.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-nginx-proxy.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "tfy-nginx-proxy.volumes" . | nindent 8 }}
       {{- if .Values.tfyNginxProxy.nodeSelector }}

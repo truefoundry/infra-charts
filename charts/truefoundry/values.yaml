@@ -50,6 +50,8 @@ global:
   labels: {}
   ## @param global.annotations [object] Annotations for all services
   annotations: {}
+  ## @param global.imagePullSecrets Image pull secrets for all services
+  imagePullSecrets: []
   ## @skip global.tolerations
   tolerations:
     - key: class.truefoundry.io/control-plane
@@ -313,8 +315,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.ingress.tls TLS settings for the frontend app
     tls: []
     ## @param truefoundryFrontendApp.ingress.hosts Hosts for the frontend app
-    hosts:
-      - tfy-vedant-rds-upgrade.devtest.truefoundry.tech
+    hosts: []
   ## truefoundryFrontendApp.istio Istio virtual service settings for the frontend app
   istio:
     ## truefoundryFrontendApp.istio.virtualservice Enable virtual service for the frontend app
@@ -2322,9 +2323,7 @@ tfyNginxProxy:
   ## @param tfyNginxProxy.fullnameOverride Full name override for the tfyNginxProxy
   fullnameOverride: ''
   ## @param tfyNginxProxy.podAnnotations [object] Annotations for the tfyNginxProxy pods
-  podAnnotations:
-    karpenter.sh/do-not-disrupt: "true"
-    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+  podAnnotations: {}
   ## @param tfyNginxProxy.podSecurityContext Security context for the tfyNginxProxy pods
   podSecurityContext: {}
   ## @param tfyNginxProxy.commonLabels Common labels for the tfyNginxProxy pods

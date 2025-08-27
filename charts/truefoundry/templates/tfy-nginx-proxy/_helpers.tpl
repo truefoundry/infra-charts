@@ -127,6 +127,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end }}
 
+{{/*
+  Image Pull Secret
+*/}}
+{{- define "tfy-nginx-proxy.imagePullSecrets" -}}
+{{- if .Values.tfyNginxProxy.imagePullSecrets -}}
+{{- toYaml .Values.tfyNginxProxy.imagePullSecrets -}}
+{{- else -}}
+{{- toYaml .Values.global.imagePullSecrets -}}
+{{- end -}}
+{{- end }}
 
 {{/*
   Parse env from template
@@ -242,11 +252,11 @@ limits:
 requests:
   cpu: 500m
   memory: 512Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 1000m
   memory: 1024Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "tfy-nginx-proxy.resources" }}
