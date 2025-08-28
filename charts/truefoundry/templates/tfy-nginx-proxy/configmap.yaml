@@ -30,7 +30,6 @@ data:
         listen 80;
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
-        {{- if .Values.servicefoundryServer.enabled }}
         # WebSocket proxy for socket.io
         location ~* ^/api/svc/socket\.io(?:/|$) {
           rewrite ^/api/svc/socket\.io/?(.*)$ /socket.io/$1 break;
@@ -63,9 +62,7 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
-        {{- if .Values.tags.llmGateway }}
         # LLM Gateway (long-lived streams)
         location ~* ^/api/llm(?:/|$) {
           rewrite ^/api/llm/?(.*)$ /$1 break;
@@ -100,9 +97,7 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
-        {{- if .Values.tfyController.enabled }}
         # Controller
         location ~* ^/api/proxy-server(?:/|$) {
           rewrite ^/api/proxy-server/?(.*)$ /$1 break;
@@ -137,9 +132,7 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
-        {{- if .Values.tfyWorkflowAdmin.enabled }}
         # Flyte Admin gRPC (no rewrite, keep method path intact)
         location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
           grpc_pass grpc://{{ .Values.truefoundryFrontendApp.tfyWorkflowAdminHost }}:{{ .Values.tfyWorkflowAdmin.service.port }};
@@ -196,9 +189,7 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
-        {{- if .Values.tags.tracing }}
         # OpenTelemetry Collector (OTLP/HTTP on :4318) strip /api/otel
         location ~* ^/api/otel(?:/|$) {
           rewrite ^/api/otel/?(.*)$ /$1 break;
@@ -229,7 +220,6 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
         # Frontend catch-all
         location / {
