@@ -221,9 +221,7 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-        {{- end }}
 
-        {{- if .Values.s3proxy.enabled }}
         # S3 proxy (streaming uploads)
         location ~* ^/api/s3proxy(?:/|$) {
           rewrite ^/api/s3proxy/?(.*)$ /$1 break;
