@@ -203,25 +203,6 @@ data:
           proxy_next_upstream_tries 3;
         }
 
-        # Flyte Admin gRPC (no rewrite, keep method path intact)
-        location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
-          grpc_pass grpc://{{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}:{{ .Values.tfyWorkflowAdmin.service.port }};
-
-          grpc_read_timeout  3600s;
-          grpc_send_timeout  3600s;
-
-          grpc_set_header Host $host;
-          grpc_set_header X-Real-IP $remote_addr;
-          grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          grpc_set_header X-Forwarded-Proto $scheme;
-
-          client_max_body_size 1m;
-
-          proxy_next_upstream error timeout;
-          proxy_next_upstream_timeout 0;
-          proxy_next_upstream_tries 3;
-        }
-
         # S3 proxy (streaming uploads)
         location ~* ^/api/s3proxy(?:/|$) {
           rewrite ^/api/s3proxy/?(.*)$ /$1 break;
