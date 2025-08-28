@@ -135,7 +135,7 @@ data:
 
         # Flyte Admin gRPC (no rewrite, keep method path intact)
         location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
-          grpc_pass grpc://{{ .Values.truefoundryFrontendApp.tfyWorkflowAdminHost }}:{{ .Values.tfyWorkflowAdmin.service.port }};
+          grpc_pass grpc://{{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}:{{ .Values.tfyWorkflowAdmin.service.port }};
 
           grpc_read_timeout  3600s;
           grpc_send_timeout  3600s;
