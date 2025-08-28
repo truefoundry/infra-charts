@@ -137,23 +137,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-ServiceMonitor Labels
-*/}}
-{{- define "tfy-nginx-proxy.serviceMonitorLabels" -}}
-release: prometheus
-{{- $merged := merge (include "tfy-nginx-proxy.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalLabels) }}
-{{ toYaml $merged }}
-{{- end }}
-
-{{/*
-ServiceMonitor Annotations
-*/}}
-{{- define "tfy-nginx-proxy.serviceMonitorAnnotations" -}}
-{{- $merged := merge (include "tfy-nginx-proxy.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalAnnotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
   Image Pull Secret
 */}}
 {{- define "tfy-nginx-proxy.imagePullSecrets" -}}

@@ -4,9 +4,12 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-nginx-proxy.fullname" . }}
   labels:
-    {{- include "tfy-nginx-proxy.serviceMonitorLabels" . | nindent 4 }}
+    release: prometheus
+    {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
+  {{- with .Values.tfyK8sController.serviceMonitor.additionalAnnotations }}
   annotations:
-    {{- include "tfy-nginx-proxy.serviceMonitorAnnotations" . | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   namespaceSelector:
     matchNames:
@@ -19,4 +22,4 @@ spec:
       path: {{ .Values.tfyNginxProxy.serviceMonitor.path }}
       honorLabels: true
       interval: {{ .Values.tfyNginxProxy.serviceMonitor.interval }}
-{{- end -}}w
+{{- end -}}
