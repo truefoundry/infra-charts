@@ -30,6 +30,9 @@ data:
         listen 80;
         server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
 
+        # simple health endpoint
+        location = /health { return 200; }
+
         {{- if .Values.servicefoundryServer.enabled }}
         # WebSocket proxy for socket.io
         location ~* ^/api/svc/socket\.io(?:/|$) {
@@ -231,6 +234,12 @@ data:
         }
         {{- end }}
 
+        {{- if .Values.tfyNginxProxy.extraProxyLocations }}
+        {{- range $idx, $proxyLocation := .Values.tfyNginxProxy.extraProxyLocations }}
+        {{ $proxyLocation | nindent 8 }}
+        {{- end }}
+        {{- end }}
+
         # Frontend catch-all
         location / {
           proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:{{ .Values.truefoundryFrontendApp.service.port }};
@@ -263,6 +272,17 @@ data:
           proxy_next_upstream error timeout;
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
+        }
+      }
+      # NGINX stub status for monitoring
+      server {
+        listen 127.0.0.1:8080;
+        server_name 127.0.0.1;
+
+        location /stub_status {
+        stub_status;         # built-in NGINX status
+        allow 127.0.0.1;     # exporter only
+        deny all;
         }
       }
     }

@@ -18,7 +18,7 @@ spec:
     matchLabels:
       {{- include "tfy-nginx-proxy.selectorLabels" . | nindent 6 }}
   endpoints:
-    - targetPort: {{ .Values.tfyNginxProxy.service.port }}
+    - port: metrics
       path: {{ .Values.tfyNginxProxy.serviceMonitor.path }}
       honorLabels: true
       interval: {{ .Values.tfyNginxProxy.serviceMonitor.interval }}

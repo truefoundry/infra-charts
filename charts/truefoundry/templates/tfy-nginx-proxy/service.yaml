@@ -13,7 +13,10 @@ spec:
     - port: {{ .Values.tfyNginxProxy.service.port }}
       targetPort: {{ .Values.tfyNginxProxy.service.port }}
       protocol: TCP
-      name: http-{{ .Values.tfyNginxProxy.service.port }}
+      name: http
+    - name: metrics
+      port: 9113
+      targetPort: metrics
   selector:
     {{- include "tfy-nginx-proxy.selectorLabels" . | nindent 4 }}
 {{- end }}
