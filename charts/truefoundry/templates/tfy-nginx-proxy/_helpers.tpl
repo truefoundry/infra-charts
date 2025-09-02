@@ -192,7 +192,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $cache := dict "name" "nginx-cache" "emptyDir" (dict) -}}
 {{- $run   := dict "name" "nginx-run"   "emptyDir" (dict) -}}
 {{- $logs  := dict "name" "nginx-logs"  "emptyDir" (dict) -}}
-{{- $volumes := list $defaultVolume $cache $run $logs  -}}
+{{- $confd  := dict "name" "nginx-confd"  "emptyDir" (dict) -}}
+{{- $volumes := list $defaultVolume $cache $run $logs confd  -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumes -}}
@@ -213,7 +214,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $mCache := dict "name" "nginx-cache" "mountPath" "/var/cache/nginx" -}}
 {{- $mRun   := dict "name" "nginx-run"   "mountPath" "/var/run" -}}
 {{- $mLogs  := dict "name" "nginx-logs"  "mountPath" "/var/log/nginx" -}}
-{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs -}}
+{{- $mConfd := dict "name" "nginx-confd" "mountPath" "/etc/nginx/conf.d" -}}
+{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs mConfd -}}
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumeMounts -}}
