@@ -6,8 +6,11 @@ metadata:
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
   annotations:
-    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
     {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
+    {{- if not .Values.tfyNginxProxy.enabled -}}
+    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
+    {{- end -}}
+    "nginx.ingress.kubernetes.io/proxy-body-size": "0"
 spec:
   {{- if .Values.truefoundryFrontendApp.ingress.tls }}
   tls:
@@ -17,6 +20,17 @@ spec:
   rules:
     {{- range $host := .Values.truefoundryFrontendApp.ingress.hosts }}
     - host: {{ $host }}
+      {{- if $.Values.tfyNginxProxy.enabled }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-nginx-proxy
+                port:
+                  number: 80
+      {{- else }}
       http:
         paths:
           - path: /api/svc/socket.io/
@@ -68,5 +82,6 @@ spec:
                 name: {{ include "truefoundry-frontend-app.fullname" $ }}
                 port:
                   number: 5000
+      {{- end }}
     {{- end }}
 {{- end -}}
