@@ -193,7 +193,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $run   := dict "name" "nginx-run"   "emptyDir" (dict) -}}
 {{- $logs  := dict "name" "nginx-logs"  "emptyDir" (dict) -}}
 {{- $confd  := dict "name" "nginx-confd"  "emptyDir" (dict) -}}
-{{- $volumes := list $defaultVolume $cache $run $logs confd  -}}
+{{- $volumes := list $defaultVolume $cache $run $logs $confd  -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumes -}}
@@ -215,7 +215,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $mRun   := dict "name" "nginx-run"   "mountPath" "/var/run" -}}
 {{- $mLogs  := dict "name" "nginx-logs"  "mountPath" "/var/log/nginx" -}}
 {{- $mConfd := dict "name" "nginx-confd" "mountPath" "/etc/nginx/conf.d" -}}
-{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs mConfd -}}
+{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs $mConfd -}}
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
 {{- if .Values.tfyNginxProxy.extraVolumeMounts -}}
