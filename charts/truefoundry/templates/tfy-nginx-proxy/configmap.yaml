@@ -80,7 +80,7 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 1m;
+          client_max_body_size 10m;
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
 
@@ -270,10 +270,9 @@ data:
           proxy_next_upstream_tries 3;
         }
 
-        # Frontend
-        location /api/svc/ {
-          rewrite ^/api/svc/(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
+        # Frontend catch-all
+        location / {
+          proxy_pass http://truefoundry-frontend-app.truefoundry.svc.cluster.local:{{ .Values.truefoundryFrontendApp.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -283,8 +282,10 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
+          client_max_body_size 1m;
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
@@ -296,25 +297,12 @@ data:
           proxy_cookie_domain off;
           proxy_cookie_path off;
           proxy_redirect off;
+          proxy_cache_bypass $http_upgrade;
 
           proxy_next_upstream error timeout;
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
-
-        # Frontend assets
-        location /assets/ {
-          root /usr/share/nginx/html;
-          try_files $uri /index.html;
-          access_log off;
-        }
-
-        # Frontend catch-all
-        location / {
-            root /usr/share/nginx/html;
-            index index.html;
-            try_files $uri /index.html;
-          }
       }
       # NGINX stub status for monitoring
       server {
