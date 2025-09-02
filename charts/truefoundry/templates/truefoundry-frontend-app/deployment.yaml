@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "truefoundry-frontend-app.fullname" . }}
   labels:
-    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+    {{- include "truefoundry-frontend-app.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry-frontend-app.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "truefoundry-frontend-app.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "truefoundry-frontend-app.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-frontend-app") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.truefoundryFrontendApp.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "truefoundry-frontend-app.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "truefoundry-frontend-app.podLabels" . | nindent 8 }}
     spec:
@@ -86,7 +84,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "truefoundry-frontend-app.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-frontend-app") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

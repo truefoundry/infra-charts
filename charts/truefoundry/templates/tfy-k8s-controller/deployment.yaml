@@ -4,22 +4,20 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
   labels:
-    {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+    {{- include "tfy-k8s-controller.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-k8s-controller.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-k8s-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfyK8sController.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-k8s-controller.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-k8s-controller.labels" . | nindent 8 }}
+        {{- include "tfy-k8s-controller.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-k8s-controller.serviceAccountName" . }}
       {{- with .Values.tfyK8sController.podSecurityContext }}
@@ -86,7 +84,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "tfy-k8s-controller.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

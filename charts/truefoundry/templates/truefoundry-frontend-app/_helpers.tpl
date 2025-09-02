@@ -31,113 +31,131 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "truefoundry-frontend-app.podLabels" -}}
-{{ include "truefoundry-frontend-app.selectorLabels" . }}
-{{- if .Values.truefoundryFrontendApp.image.tag }}
-app.kubernetes.io/version: {{ .Values.truefoundryFrontendApp.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.truefoundryFrontendApp.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "truefoundry-frontend-app.labels" -}}
-helm.sh/chart: {{ include "truefoundry-frontend-app.chart" . }}
-{{ include "truefoundry-frontend-app.podLabels" . }}
-{{- if .Values.truefoundryFrontendApp.commonLabels }}
-{{ toYaml .Values.truefoundryFrontendApp.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
+{{- include "truefoundry.labels" (dict "context" . "name" "truefoundry-frontend-app") }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "truefoundry-frontend-app.commonLabels" -}}
+{{- $baseLabels := include "truefoundry-frontend-app.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.truefoundryFrontendApp.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
   */}}
-{{- define "truefoundry-frontend-app.annotations" -}}
-{{- if .Values.truefoundryFrontendApp.annotations }}
-{{ toYaml .Values.truefoundryFrontendApp.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- define "truefoundry-frontend-app.commonAnnotations" -}}
+{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.truefoundryFrontendApp.commonAnnotations }}
+{{- toYaml $commonAnnotations }}
 {{- end }}
 
 {{/*
-  Deployment annotations
+  Pod Labels - merges commonLabels with pod-specific labels
   */}}
-{{- define "truefoundry-frontend-app.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "truefoundry-frontend-app.annotations" . | fromYaml) }}
-{{- toYaml $merged }}
+{{- define "truefoundry-frontend-app.podLabels" -}}
+{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-frontend-app") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.truefoundryFrontendApp.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-  Service Account Annotations
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "truefoundry-frontend-app.podAnnotations" -}}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.truefoundryFrontendApp.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "truefoundry-frontend-app.serviceLabels" -}}
+{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.truefoundryFrontendApp.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "truefoundry-frontend-app.serviceAnnotations" -}}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.truefoundryFrontendApp.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "truefoundry-frontend-app.serviceAccountLabels" -}}
+{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.truefoundryFrontendApp.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
   */}}
 {{- define "truefoundry-frontend-app.serviceAccountAnnotations" -}}
-{{- if .Values.truefoundryFrontendApp.serviceAccount.annotations }}
-{{ toYaml .Values.truefoundryFrontendApp.serviceAccount.annotations }}
-{{- else if .Values.truefoundryFrontendApp.annotations }}
-{{ toYaml .Values.truefoundryFrontendApp.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.truefoundryFrontendApp.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
 {{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "truefoundry-frontend-app.deploymentLabels" -}}
+{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.truefoundryFrontendApp.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+  */}}
+{{- define "truefoundry-frontend-app.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.truefoundryFrontendApp.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
   Ingress Annotations
   */}}
 {{- define "truefoundry-frontend-app.ingress.annotations" -}}
-{{- if .Values.truefoundryFrontendApp.ingress.annotations }}
-{{- toYaml .Values.truefoundryFrontendApp.ingress.annotations }}
-{{- else if .Values.truefoundryFrontendApp.annotations }}
-{{- toYaml .Values.truefoundryFrontendApp.annotations }}
-{{- else if .Values.global.annotations }}
-{{- toYaml .Values.global.annotations }}
-{{- end }}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
+{{- $ingressAnnotations := mergeOverwrite $commonAnnotations .Values.truefoundryFrontendApp.ingress.annotations }}
+{{- toYaml $ingressAnnotations }}
 {{- end }}
 
 {{/*
   Ingress VirtualService Annotations
   */}}
 {{- define "truefoundry-frontend-app.istio.virtualService.annotations" -}}
-{{- if .Values.truefoundryFrontendApp.istio.virtualservice.annotations }}
-{{- toYaml .Values.truefoundryFrontendApp.istio.virtualservice.annotations }}
-{{- else if .Values.truefoundryFrontendApp.annotations }}
-{{- toYaml .Values.truefoundryFrontendApp.annotations }}
-{{- else if .Values.global.annotations }}
-{{- toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
+{{- $virtualServiceAnnotations := mergeOverwrite $commonAnnotations .Values.truefoundryFrontendApp.istio.virtualservice.annotations }}
+{{- toYaml $virtualServiceAnnotations }}
 {{- end }}
 
 {{/*
-  Ingress Labels
+  Ingress Labels - merges commonLabels with ingress-specific labels
   */}}
 {{- define "truefoundry-frontend-app.ingress.labels" -}}
-{{- include "truefoundry-frontend-app.labels" . }}
-{{- if .Values.truefoundryFrontendApp.ingress.labels }}
-{{ toYaml .Values.truefoundryFrontendApp.ingress.labels }}
-{{- end }}
+{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
+{{- $ingressLabels := mergeOverwrite $commonLabels .Values.truefoundryFrontendApp.ingress.labels }}
+{{- toYaml $ingressLabels }}
 {{- end }}
 
-{{/*
-  Selector labels
-  */}}
-{{- define "truefoundry-frontend-app.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "truefoundry-frontend-app.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
 
 {{/*
   Create the name of the service account to use

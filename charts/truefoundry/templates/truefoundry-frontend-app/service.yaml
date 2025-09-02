@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "truefoundry-frontend-app.fullname" . }}
   labels:
-    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+    {{- include "truefoundry-frontend-app.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "truefoundry-frontend-app.annotations" . | indent 4 }}
+    {{- include "truefoundry-frontend-app.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.truefoundryFrontendApp.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "truefoundry-frontend-app.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-frontend-app") | nindent 4 }}
 {{- end }}

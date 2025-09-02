@@ -31,144 +31,133 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common Annotations
-*/}}
-{{- define "deltafusion-ingestor.inputCommonAnnotations" -}}
-{{- if .Values.deltaFusionIngestor.commonAnnotations }}
-{{ toYaml .Values.deltaFusionIngestor.commonAnnotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- end }}
-{{- end }}
-
-{{- define "deltafusion-ingestor.commonAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "1") (include "deltafusion-ingestor.inputCommonAnnotations" . | fromYaml) }}
-{{- toYaml $merged }}
-{{- end }}
-
-
-{{/*
-Pod Annotations
-*/}}
-{{- define "deltafusion-ingestor.podAnnotations" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.podAnnotations) }}
-{{- toYaml $merged }}
+  Common labels - uses global truefoundry.labels function
+  */}}
+{{- define "deltafusion-ingestor.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "deltafusion-ingestor") }}
 {{- end }}
 
 {{/*
-ServiceAccount annotations
-*/}}
-{{- define "deltafusion-ingestor.serviceAccountAnnotations" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceAccount.annotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-Service Annotations
-*/}}
-{{- define "deltafusion-ingestor.serviceAnnotations" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.service.annotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-ServiceMonitor Annotations
-*/}}
-{{- define "deltafusion-ingestor.serviceMonitorAnnotations" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalAnnotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-Statefulset Annotations
-*/}}
-{{- define "deltafusion-ingestor.statefulsetAnnotations" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonAnnotations" . | fromYaml) (.Values.deltaFusionIngestor.statefulsetAnnotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-App name and instance Labels
-*/}}
-{{- define "deltafusion-ingestor.appNameAndInstanceLabels" -}}
-app.kubernetes.io/name: {{ include "deltafusion-ingestor.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "deltafusion-ingestor.selectorLabels" -}}
-{{ include "deltafusion-ingestor.appNameAndInstanceLabels" . }}
-{{- end }}
-
-{{/*
-Common labels
-*/}}
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
 {{- define "deltafusion-ingestor.commonLabels" -}}
-{{ include "deltafusion-ingestor.appNameAndInstanceLabels" . }}
-helm.sh/chart: {{ include "deltafusion-ingestor.chart" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/version: {{ .Values.deltaFusionIngestor.image.tag | quote }}
-{{- if .Values.deltaFusionIngestor.commonLabels }}
-{{ toYaml .Values.deltaFusionIngestor.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
+{{- $baseLabels := include "deltafusion-ingestor.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.deltaFusionIngestor.commonLabels }}
+{{- toYaml $commonLabels }}
 {{- end }}
 
 {{/*
-Pod Labels
-*/}}
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.commonAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "1" }}
+{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.deltaFusionIngestor.commonAnnotations $syncWaveAnnotation }}
+{{- toYaml $commonAnnotations }}
+{{- end }}
+
+{{/*
+  Pod Labels - merges commonLabels with pod-specific labels
+  */}}
 {{- define "deltafusion-ingestor.podLabels" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.podLabels) }}
-{{- $merged = merge $merged (include "deltafusion-ingestor.selectorLabels" . | fromYaml) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.deltaFusionIngestor.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-Service Labels
-*/}}
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.podAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.deltaFusionIngestor.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
 {{- define "deltafusion-ingestor.serviceLabels" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.service.labels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.deltaFusionIngestor.service.labels }}
+{{- toYaml $serviceLabels }}
 {{- end }}
 
 {{/*
-ServiceMonitor Labels
-*/}}
-{{- define "deltafusion-ingestor.serviceMonitorLabels" -}}
-release: prometheus
-{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceMonitor.additionalLabels) }}
-{{ toYaml $merged }}
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.serviceAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.deltaFusionIngestor.service.annotations }}
+{{- toYaml $serviceAnnotations }}
 {{- end }}
 
 {{/*
-ServiceAccount Labels
-*/}}
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
 {{- define "deltafusion-ingestor.serviceAccountLabels" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.serviceAccount.labels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.deltaFusionIngestor.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
 {{- end }}
 
 {{/*
-Statefulset Labels
-*/}}
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.deltaFusionIngestor.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  StatefulSet Labels - merges commonLabels with statefulset-specific labels
+  */}}
 {{- define "deltafusion-ingestor.statefulsetLabels" -}}
-{{- $merged := merge (include "deltafusion-ingestor.commonLabels" . | fromYaml) (.Values.deltaFusionIngestor.statefulsetLabels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $statefulsetLabels := mergeOverwrite $commonLabels .Values.deltaFusionIngestor.statefulsetLabels }}
+{{- toYaml $statefulsetLabels }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
-*/}}
+  StatefulSet Annotations - merges commonAnnotations with statefulset-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.statefulsetAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $statefulsetAnnotations := mergeOverwrite $commonAnnotations .Values.deltaFusionIngestor.statefulsetAnnotations }}
+{{- toYaml $statefulsetAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "deltafusion-ingestor.serviceMonitorLabels" -}}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels .Values.deltaFusionIngestor.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations $prometheusLabel .Values.deltaFusionIngestor.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+{{/*
+  Create the name of the service account to use
+  */}}
 {{- define "deltafusion-ingestor.serviceAccountName" -}}
 {{- if .Values.deltaFusionIngestor.serviceAccount.name -}}
 {{- .Values.deltaFusionIngestor.serviceAccount.name -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end -}}
-{{- end -}}
+{{- end }}
 
 {{- define "deltafusion-ingestor.resources" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}

@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-controller.fullname" . }}
   labels:
-    {{- include "tfy-controller.labels" . | nindent 4 }}
+    {{- include "tfy-controller.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-controller.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-controller.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfyController.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-controller.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-controller.podLabels" . | nindent 8 }}
     spec:
@@ -75,7 +73,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "tfy-controller.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | nindent 14 }}
         {{- end }}
       {{- if .Values.tfyController.nodeSelector }}
       nodeSelector:

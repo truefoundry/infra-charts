@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}
   labels:
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- include "servicefoundry-server.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "servicefoundry-server.annotations" . | indent 4 }}
+    {{- include "servicefoundry-server.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.servicefoundryServer.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "servicefoundry-server.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 4 }}
 {{- end }}
