@@ -304,5 +304,16 @@ data:
           proxy_next_upstream_tries 3;
         }
       }
+      # NGINX stub status for monitoring
+      server {
+        listen 127.0.0.1:80;
+        server_name 127.0.0.1;
+
+        location /stub_status {
+        stub_status;         # built-in NGINX status
+        allow 127.0.0.1;     # exporter only
+        deny all;
+        }
+      }
     }
 {{- end -}}
