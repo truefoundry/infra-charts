@@ -54,6 +54,28 @@ The solution consists of two main components:
 | `victoria-logs-single.vector.nodeSelector`            | Node selector                                                                         | `{}`                               |
 | `victoria-logs-single.vector.customConfig`            | Custom config                                                                         | `{}`                               |
 
+### Windows Vector configurations
+
+| Name                                   | Description                                                      | Value                              |
+| -------------------------------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| `windowsVector.enabled`                | Enable Windows Vector daemon set for Windows node log collection | `true`                             |
+| `windowsVector.labels`                 | Labels to add to the Windows Vector pods                         | `{}`                               |
+| `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                               |
+| `windowsVector.image.registry`         | Image registry                                                   | `public.ecr.aws`                   |
+| `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
+| `windowsVector.image.tag`              | Image tag                                                        | `latest`                           |
+| `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
+| `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
+| `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                               |
+| `windowsVector.nodeSelector`           | Node selector                                                    | `{}`                               |
+| `windowsVector.podPriorityClassName`   | Pod priority class name for Windows Vector pods                  | `""`                               |
+| `windowsVector.affinity`               | Affinity configuration for Windows Vector pods                   | `{}`                               |
+| `windowsVector.additionalVolumeMounts` | Additional volume mounts for Windows Vector pods                 | `[]`                               |
+| `windowsVector.additionalVolumes`      | Additional volumes for Windows Vector pods                       | `[]`                               |
+
+### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
+
+
 ### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 
 | Name                            | Description                             | Value                      |
