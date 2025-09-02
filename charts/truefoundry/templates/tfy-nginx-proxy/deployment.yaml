@@ -63,7 +63,7 @@ spec:
           volumeMounts:
             {{- include "tfy-nginx-proxy.volumeMounts" . | nindent 12 }}
         - name: nginx-prometheus-exporter
-          image: {{ .Values.tfyProxy.prometheusExporter.image}}:{{ .Values.tfyProxy.prometheusExporter.tag }}
+          image: {{ .Values.tfyNginxProxy.prometheusExporter.image}}:{{ .Values.tfyNginxProxy.prometheusExporter.tag }}
           args:
             - -nginx.scrape-uri=http://127.0.0.1:8081/stub_status
           ports:
