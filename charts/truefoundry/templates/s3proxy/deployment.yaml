@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "s3proxy.fullname" . }}
   labels:
-    {{- include "s3proxy.labels" . | nindent 4 }}
+    {{- include "s3proxy.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "s3proxy.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "s3proxy.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "s3proxy.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.s3proxy.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "s3proxy.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "s3proxy.podLabels" . | nindent 8 }}
     spec:
@@ -98,7 +96,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "s3proxy.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

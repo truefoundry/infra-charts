@@ -11,7 +11,7 @@ spec:
   replicas: {{- include "deltafusion-query-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "deltafusion-query-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}
   template:
     metadata:
       {{- with .Values.deltaFusionQueryServer.podAnnotations }}
@@ -101,7 +101,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "deltafusion-query-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

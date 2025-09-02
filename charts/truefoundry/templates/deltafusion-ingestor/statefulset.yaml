@@ -12,13 +12,11 @@ spec:
   replicas: {{- include "deltafusion-ingestor.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "deltafusion-ingestor.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.deltaFusionIngestor.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "deltafusion-ingestor.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "deltafusion-ingestor.podLabels" . | nindent 8 }}
     spec:
@@ -89,7 +87,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "deltafusion-ingestor.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 14 }}
           {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

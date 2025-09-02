@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "sfy-manifest-service.fullname" . }}
   labels:
-    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+    {{- include "sfy-manifest-service.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "sfy-manifest-service.annotations" . | indent 4 }}
+    {{- include "sfy-manifest-service.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.sfyManifestService.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "sfy-manifest-service.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 4 }}
   {{- end }}

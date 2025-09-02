@@ -4,9 +4,9 @@ kind: WorkflowTemplate
 metadata:
   name: build
   labels:
-    {{- include "tfy-build.labels" . | nindent 4 }}
+    {{- include "tfy-build.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-build.annotations" . | indent 4 }}
+    {{- include "tfy-build.commonAnnotations" . | nindent 4 }}
 spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
   workflowMetadata:

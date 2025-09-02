@@ -4,9 +4,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "s3proxy.configmapName" . }}
   labels:
-    {{- include "s3proxy.labels" . | nindent 4 }}
+    {{- include "s3proxy.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "s3proxy.annotations" . | indent 4 }}
+    {{- include "s3proxy.commonAnnotations" . | nindent 4 }}
 data:
   config.properties: |-
     s3proxy.endpoint=http://0.0.0.0:{{ .Values.s3proxy.service.port }}

@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "mlfoundry-server.fullname" . }}
   labels:
-    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+    {{- include "mlfoundry-server.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "mlfoundry-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "mlfoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.mlfoundryServer.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "mlfoundry-server.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "mlfoundry-server.podLabels" . | nindent 8 }}
     spec:
@@ -88,7 +86,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "mlfoundry-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 14 }}
        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

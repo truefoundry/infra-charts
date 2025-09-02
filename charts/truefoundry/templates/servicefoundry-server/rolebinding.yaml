@@ -4,9 +4,9 @@ kind: RoleBinding
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}-role-binding
   labels:
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- include "servicefoundry-server.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "servicefoundry-server.annotations" . | indent 4 }}
+    {{- include "servicefoundry-server.commonAnnotations" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role

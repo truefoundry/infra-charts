@@ -14,7 +14,7 @@ spec:
       - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      {{- include "deltafusion-ingestor.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 6 }}
   endpoints:
     - targetPort: {{ .Values.deltaFusionIngestor.service.port }}
       path: {{ .Values.deltaFusionIngestor.serviceMonitor.path }}

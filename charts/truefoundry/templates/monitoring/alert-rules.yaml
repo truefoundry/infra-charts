@@ -5,14 +5,10 @@ kind: PrometheusRule
 metadata:
   name: {{ .Values.monitoring.alertRules.name }}
   labels:
+    {{- include "monitoring.alertRulesLabels" . | nindent 4 }}
     release: prometheus
-  {{- with .Values.monitoring.alertRules.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.monitoring.alertRules.additionalAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "monitoring.alertRulesAnnotations" . | nindent 4 }}
 spec:
   groups:
     - name: {{ .Values.monitoring.alertRules.name }}

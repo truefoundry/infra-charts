@@ -31,59 +31,103 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "mlfoundry-server.podLabels" -}}
-{{ include "mlfoundry-server.selectorLabels" . }}
-{{- if .Values.mlfoundryServer.image.tag }}
-app.kubernetes.io/version: {{ .Values.mlfoundryServer.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.mlfoundryServer.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "mlfoundry-server.labels" -}}
-{{- include "mlfoundry-server.podLabels" . }}
-helm.sh/chart: {{ include "mlfoundry-server.chart" . }}
-{{- if .Values.mlfoundryServer.commonLabels }}
-{{ toYaml .Values.mlfoundryServer.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "name" "mlfoundry-server") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "mlfoundry-server.commonLabels" -}}
+{{- $baseLabels := include "mlfoundry-server.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.mlfoundryServer.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "mlfoundry-server.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.mlfoundryServer.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges commonLabels with pod-specific labels
   */}}
-{{- define "mlfoundry-server.annotations" -}}
-{{- if .Values.mlfoundryServer.annotations }}
-{{ toYaml .Values.mlfoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- define "mlfoundry-server.podLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.mlfoundryServer.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "mlfoundry-server.podAnnotations" -}}
+{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.mlfoundryServer.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "mlfoundry-server.serviceLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.mlfoundryServer.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "mlfoundry-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.mlfoundryServer.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "mlfoundry-server.serviceAccountLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.mlfoundryServer.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "mlfoundry-server.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.mlfoundryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "mlfoundry-server.deploymentLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.mlfoundryServer.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
 {{- end }}
 
 {{/*
   Deployment annotations
   */}}
 {{- define "mlfoundry-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "mlfoundry-server.annotations" . | fromYaml) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-  Selector labels
-  */}}
-{{- define "mlfoundry-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "mlfoundry-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.mlfoundryServer.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
@@ -97,20 +141,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end }}
 
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "mlfoundry-server.serviceAccountAnnotations" -}}
-{{- if .Values.mlfoundryServer.serviceAccount.annotations }}
-{{ toYaml .Values.mlfoundryServer.serviceAccount.annotations }}
-{{- else if .Values.mlfoundryServer.annotations }}
-{{ toYaml .Values.mlfoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
 
 
 {{/*
