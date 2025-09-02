@@ -31,6 +31,88 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Common labels - uses global truefoundry.labels function
+  */}}
+{{- define "tfy-build.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "tfy-build") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "tfy-build.commonLabels" -}}
+{{- $baseLabels := include "tfy-build.labels" . | fromYaml }}
+{{- $componentLabels := default dict .Values.tfyBuild.commonLabels }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) $componentLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "tfy-build.commonAnnotations" -}}
+{{- $componentAnnotations := default dict .Values.tfyBuild.commonAnnotations }}
+{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) $componentAnnotations }}
+{{- toYaml $commonAnnotations }}
+{{- end }}
+
+{{/*
+  Pod Labels - merges commonLabels with pod-specific labels
+  */}}
+{{- define "tfy-build.podLabels" -}}
+{{- $commonLabels := include "tfy-build.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-build") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.tfyBuild.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "tfy-build.podAnnotations" -}}
+{{- $commonAnnotations := include "tfy-build.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyBuild.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "tfy-build.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-build.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.tfyBuild.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+  */}}
+{{- define "tfy-build.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "tfy-build.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.tfyBuild.deploymentAnnotations }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "tfy-build.serviceAccountLabels" -}}
+{{- $commonLabels := include "tfy-build.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.tfyBuild.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "tfy-build.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-build.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.tfyBuild.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-build.serviceAccountName" -}}
@@ -57,44 +139,4 @@ Expand the name of the chart.
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
 {{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
-{{- end }}
-
-{{/*
-  Common labels
-  */}}
-{{- define "tfy-build.labels" -}}
-helm.sh/chart: {{ include "tfy-build.chart" . }}
-{{- if .Values.tfyBuild.labels }}
-{{ toYaml .Values.tfyBuild.labels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common annotations
-  */}}
-{{- define "tfy-build.annotations" -}}
-{{- if .Values.tfyBuild.annotations }}
-{{ toYaml .Values.tfyBuild.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "tfy-build.serviceAccountAnnotations" -}}
-{{- if .Values.tfyBuild.serviceAccount.annotations }}
-{{ toYaml .Values.tfyBuild.serviceAccount.annotations }}
-{{- else if .Values.tfyBuild.annotations }}
-{{ toYaml .Values.tfyBuild.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
 {{- end }}

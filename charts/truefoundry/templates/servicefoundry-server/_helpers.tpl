@@ -30,60 +30,126 @@ Expand the name of the chart.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-  Pod Labels
-  */}}
-{{- define "servicefoundry-server.podLabels" -}}
-{{ include "servicefoundry-server.selectorLabels" . }}
-{{- if .Values.servicefoundryServer.image.tag }}
-app.kubernetes.io/version: {{ .Values.servicefoundryServer.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.servicefoundryServer.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
+
 
 {{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "servicefoundry-server.labels" -}}
-{{- include "servicefoundry-server.podLabels" . }}
-helm.sh/chart: {{ include "servicefoundry-server.chart" . }}
-{{- if .Values.servicefoundryServer.commonLabels }}
-{{ toYaml .Values.servicefoundryServer.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "component" "servicefoundry-server" "name" "servicefoundry-server") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "servicefoundry-server.commonLabels" -}}
+{{- $baseLabels := include "servicefoundry-server.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.servicefoundryServer.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "servicefoundry-server.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.servicefoundryServer.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges commonLabels with pod-specific labels
   */}}
-{{- define "servicefoundry-server.annotations" -}}
-{{- if .Values.servicefoundryServer.annotations }}
-{{ toYaml .Values.servicefoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- define "servicefoundry-server.podLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.servicefoundryServer.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "servicefoundry-server.podAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.servicefoundryServer.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "servicefoundry-server.serviceLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.servicefoundryServer.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.servicefoundryServer.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service-account specific labels
+  */}}
+{{- define "servicefoundry-server.serviceAccountLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.servicefoundryServer.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service-account specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.servicefoundryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.servicefoundryServer.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor specific labels
+  */}}
+{{- define "servicefoundry-server.serviceMonitorLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.servicefoundryServer.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "servicefoundry-server.deploymentLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.servicefoundryServer.deploymentLabels }}
+{{- toYaml $mergedLabels }}
 {{- end }}
 
 {{/*
   Deployment annotations
   */}}
 {{- define "servicefoundry-server.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "2") (include "servicefoundry-server.annotations" . | fromYaml) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-  Selector labels
-  */}}
-{{- define "servicefoundry-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "servicefoundry-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "2" }}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $mergedAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.servicefoundryServer.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $mergedAnnotations }}
 {{- end }}
 
 {{/*
@@ -95,21 +161,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end -}}
-{{- end }}
-
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "servicefoundry-server.serviceAccountAnnotations" -}}
-{{- if .Values.servicefoundryServer.serviceAccount.annotations }}
-{{ toYaml .Values.servicefoundryServer.serviceAccount.annotations }}
-{{- else if .Values.servicefoundryServer.annotations }}
-{{ toYaml .Values.servicefoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
 {{- end }}
 
 {{/*

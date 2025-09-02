@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "spark-history-server.fullname" . }}
   labels:
-    {{- include "spark-history-server.labels" . | nindent 4 }}
+    {{- include "spark-history-server.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "spark-history-server.annotations" . | indent 4 }}
+    {{- include "spark-history-server.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.sparkHistoryServer.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "spark-history-server.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "spark-history-server") | nindent 4 }}
 {{- end }}

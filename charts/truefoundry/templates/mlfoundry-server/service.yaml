@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "mlfoundry-server.fullname" . }}
   labels:
-    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+    {{- include "mlfoundry-server.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "mlfoundry-server.annotations" . | indent 4 }}
+    {{- include "mlfoundry-server.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.mlfoundryServer.service.type }}
   ports:
@@ -14,5 +14,6 @@ spec:
       targetPort: {{ .Values.mlfoundryServer.service.port }}
       protocol: TCP
       name: http
-  selector: {{- include "mlfoundry-server.selectorLabels" . | nindent 4 }}
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 4 }}
 {{- end }}

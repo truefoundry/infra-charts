@@ -4,9 +4,9 @@ kind: Role
 metadata:
   name: truefoundry-bootstrap-job-role
   annotations:
-    {{- include "bootstrap-annotations" (dict "hookWeight" "-4" "syncWave" "-4" "annotations" .Values.truefoundryBootstrap.annotations "globalAnnotations" .Values.global.annotations) | nindent 4 }}
+    {{- include "bootstrap.commonAnnotations" . | nindent 4 }}
   labels:
-    {{- include "bootstrap-labels" . | indent 4 }}
+    {{- include "bootstrap.commonLabels" . | nindent 4 }}
 rules:
 - apiGroups: [""]
   resources: ["configmaps", "secrets"]

@@ -4,20 +4,19 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-server
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-workflow-admin.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-workflow-admin-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 6 }}
+      app.kubernetes.io/workflow-component: server
   template:
     metadata:
-      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-workflow-admin.server.podLabels" . | nindent 8 }}
     spec:
@@ -104,7 +103,8 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "tfy-workflow-admin.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 14 }}
+              app.kubernetes.io/workflow-component: server
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
@@ -117,20 +117,19 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-scheduler
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-workflow-admin.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-workflow-admin-scheduler.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.scheduler.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 6 }}
+      app.kubernetes.io/workflow-component: scheduler
   template:
     metadata:
-      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-workflow-admin.scheduler.podLabels" . | nindent 8 }}
     spec:

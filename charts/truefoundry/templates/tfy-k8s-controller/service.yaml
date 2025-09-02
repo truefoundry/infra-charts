@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
   labels:
-    {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+    {{- include "tfy-k8s-controller.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-k8s-controller.annotations" . | indent 4 }}
+    {{- include "tfy-k8s-controller.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.tfyK8sController.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http-{{ .Values.tfyK8sController.service.port }}
   selector:
-    {{- include "tfy-k8s-controller.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 4 }}
 {{- end }}

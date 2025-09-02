@@ -31,144 +31,134 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common Annotations
-*/}}
-{{- define "deltafusion-query-server.inputCommonAnnotations" -}}
-{{- if .Values.deltaFusionQueryServer.commonAnnotations }}
-{{ toYaml .Values.deltaFusionQueryServer.commonAnnotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- end }}
-{{- end }}
-
-{{- define "deltafusion-query-server.commonAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "1") (include "deltafusion-query-server.inputCommonAnnotations" . | fromYaml) }}
-{{- toYaml $merged }}
-{{- end }}
-
-
-{{/*
-Pod Annotations
-*/}}
-{{- define "deltafusion-query-server.podAnnotations" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.podAnnotations) }}
-{{- toYaml $merged }}
+  Common labels - uses global truefoundry.labels function
+  */}}
+{{- define "deltafusion-query-server.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "deltafusion-query-server") }}
 {{- end }}
 
 {{/*
-ServiceAccount annotations
-*/}}
-{{- define "deltafusion-query-server.serviceAccountAnnotations" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.serviceAccount.annotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-Service Annotations
-*/}}
-{{- define "deltafusion-query-server.serviceAnnotations" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.service.annotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-ServiceMonitor Annotations
-*/}}
-{{- define "deltafusion-query-server.serviceMonitorAnnotations" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.serviceMonitor.additionalAnnotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-Statefulset Annotations
-*/}}
-{{- define "deltafusion-query-server.deploymentAnnotations" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonAnnotations" . | fromYaml) (.Values.deltaFusionQueryServer.deploymentAnnotations) }}
-{{- toYaml $merged }}
-{{- end }}
-
-{{/*
-App name and instance Labels
-*/}}
-{{- define "deltafusion-query-server.appNameAndInstanceLabels" -}}
-app.kubernetes.io/name: {{ include "deltafusion-query-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "deltafusion-query-server.selectorLabels" -}}
-{{ include "deltafusion-query-server.appNameAndInstanceLabels" . }}
-{{- end }}
-
-{{/*
-Common labels
-*/}}
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
 {{- define "deltafusion-query-server.commonLabels" -}}
-{{ include "deltafusion-query-server.appNameAndInstanceLabels" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/version: {{ .Values.deltaFusionQueryServer.image.tag | quote }}
-helm.sh/chart: {{ include "deltafusion-query-server.chart" . }}
-{{- if .Values.deltaFusionQueryServer.commonLabels }}
-{{ toYaml .Values.deltaFusionQueryServer.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
+{{- $baseLabels := include "deltafusion-query-server.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.deltaFusionQueryServer.commonLabels }}
+{{- toYaml $commonLabels }}
 {{- end }}
 
 {{/*
-Pod Labels
-*/}}
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "deltafusion-query-server.commonAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "1" }}
+{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.deltaFusionQueryServer.commonAnnotations $syncWaveAnnotation }}
+{{- toYaml $commonAnnotations }}
+{{- end }}
+
+{{/*
+  Pod Labels - merges commonLabels with pod-specific labels
+  */}}
 {{- define "deltafusion-query-server.podLabels" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.podLabels) }}
-{{- $merged = merge $merged (include "deltafusion-query-server.selectorLabels" . | fromYaml) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.deltaFusionQueryServer.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-Service Labels
-*/}}
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "deltafusion-query-server.podAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.deltaFusionQueryServer.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
 {{- define "deltafusion-query-server.serviceLabels" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.service.labels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.deltaFusionQueryServer.service.labels }}
+{{- toYaml $serviceLabels }}
 {{- end }}
 
 {{/*
-ServiceMonitor Labels
-*/}}
-{{- define "deltafusion-query-server.serviceMonitorLabels" -}}
-release: prometheus
-{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.serviceMonitor.additionalLabels) }}
-{{ toYaml $merged }}
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "deltafusion-query-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.deltaFusionQueryServer.service.annotations }}
+{{- toYaml $serviceAnnotations }}
 {{- end }}
 
 {{/*
-ServiceAccount Labels
-*/}}
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
 {{- define "deltafusion-query-server.serviceAccountLabels" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.serviceAccount.labels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.deltaFusionQueryServer.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
 {{- end }}
 
 {{/*
-Deployment Labels
-*/}}
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "deltafusion-query-server.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.deltaFusionQueryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
 {{- define "deltafusion-query-server.deploymentLabels" -}}
-{{- $merged := merge (include "deltafusion-query-server.commonLabels" . | fromYaml) (.Values.deltaFusionQueryServer.deploymentLabels) }}
-{{ toYaml $merged }}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.deltaFusionQueryServer.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
-*/}}
+  Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+  */}}
+{{- define "deltafusion-query-server.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite  (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deltaFusionQueryServer.deploymentAnnotations }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "deltafusion-query-server.serviceMonitorLabels" -}}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels .Values.deltaFusionQueryServer.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  */}}
+{{- define "deltafusion-query-server.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations $prometheusLabel .Values.deltaFusionQueryServer.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+{{/*
+  Create the name of the service account to use
+  */}}
 {{- define "deltafusion-query-server.serviceAccountName" -}}
 {{- if .Values.deltaFusionQueryServer.serviceAccount.name -}}
 {{- .Values.deltaFusionQueryServer.serviceAccount.name -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end -}}
-{{- end -}}
+{{- end }}
 
 {{/*
 Resource Tier

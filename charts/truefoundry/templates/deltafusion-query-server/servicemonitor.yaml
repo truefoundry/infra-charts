@@ -14,7 +14,7 @@ spec:
       - {{ .Release.Namespace }}
   selector:
     matchLabels:
-      {{- include "deltafusion-query-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}
   endpoints:
     - targetPort: {{ .Values.deltaFusionQueryServer.service.port }}
       path: {{ .Values.deltaFusionQueryServer.serviceMonitor.path }}

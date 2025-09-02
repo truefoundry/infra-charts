@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}
   labels:
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- include "servicefoundry-server.commonLabels" . | nindent 4 }}
   annotations:
     {{- include "servicefoundry-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "servicefoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.servicefoundryServer.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "servicefoundry-server.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "servicefoundry-server.podLabels" . | nindent 8 }}
     spec:
@@ -88,7 +86,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "servicefoundry-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
