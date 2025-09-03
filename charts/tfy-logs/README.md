@@ -47,7 +47,7 @@ The solution consists of two main components:
 | `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`             |
 | `victoria-logs-single.vector.image.registry`          | Image registry                                                                        | `public.ecr.aws`                   |
 | `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `truefoundrycloud/timberio/vector` |
-| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `latest`                           |
+| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `0.46.1`                           |
 | `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                             |
 | `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                               |
 | `victoria-logs-single.vector.tolerations`             | Tolerations                                                                           | `[]`                               |
@@ -63,7 +63,7 @@ The solution consists of two main components:
 | `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                               |
 | `windowsVector.image.registry`         | Image registry                                                   | `public.ecr.aws`                   |
 | `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
-| `windowsVector.image.tag`              | Image tag                                                        | `latest-windows-hlpw12`            |
+| `windowsVector.image.tag`              | Image tag                                                        | `0.46.1`                           |
 | `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
 | `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
 | `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                               |
