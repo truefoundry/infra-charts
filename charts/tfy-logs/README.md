@@ -65,6 +65,7 @@ The solution consists of two main components:
 | `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
 | `windowsVector.image.tag`              | Image tag                                                        | `0.46.1`                           |
 | `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
+| `windowsVector.imagePullSecrets`       | Image pull secrets for Windows Vector pods                       | `[]`                               |
 | `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
 | `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                               |
 | `windowsVector.nodeSelector`           | Node selector                                                    | `{}`                               |
