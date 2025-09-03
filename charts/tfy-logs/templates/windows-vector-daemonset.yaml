@@ -34,6 +34,10 @@ spec:
       {{- end }}
       serviceAccount: {{ include "tfy-logs.fullname" . }}-vector
       serviceAccountName: {{ include "tfy-logs.fullname" . }}-vector
+      {{- if .Values.windowsVector.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.windowsVector.imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
         - name: vector-windows
           image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
