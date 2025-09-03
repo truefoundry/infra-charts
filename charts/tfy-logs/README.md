@@ -63,7 +63,7 @@ The solution consists of two main components:
 | `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                               |
 | `windowsVector.image.registry`         | Image registry                                                   | `public.ecr.aws`                   |
 | `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
-| `windowsVector.image.tag`              | Image tag                                                        | `latest-windows-hlpw`              |
+| `windowsVector.image.tag`              | Image tag                                                        | `latest-windows-hlpw1`             |
 | `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
 | `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
 | `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                               |
