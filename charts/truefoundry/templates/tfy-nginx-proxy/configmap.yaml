@@ -364,16 +364,9 @@ data:
         {{- end }}
         {{- end }}
 
-        # Frontend assets
-        location /assets/ {
-          root /usr/share/nginx/html;
-          try_files $uri /index.html;
-          access_log off;
-        }
-
         # Frontend catch-all
         location / {
-          proxy_pass {{ .Release.Name }}-truefoundry-frontend-app.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.truefoundryFrontendApp.service.port }};
+          proxy_pass http://{{ .Release.Name }}-truefoundry-frontend-app.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.truefoundryFrontendApp.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
