@@ -373,7 +373,8 @@ data:
 
         # Frontend catch-all
         location / {
-          proxy_pass http://truefoundry-truefoundry-frontend-app.{{ .Release.Namespace }}.svc.cluster.local:5000;
+          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.tfyOtelCollectorHost . }}:4318;
+          proxy_pass {{ $.Values.global.controlPlaneURL }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
