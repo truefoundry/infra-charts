@@ -27,9 +27,38 @@ data:
       }
 
       server {
-        listen 80;
-        server_name {{ join " " .Values.truefoundryFrontendApp.istio.virtualservice.hosts }};
+        listen 8080;
+        server_name {{ if .Values.global.proxy.hosts }}{{ join " " .Values.global.proxy.hosts }}{{ else }}{{ .Values.global.controlPlaneURL }}{{ end }};
+        include       /etc/nginx/mime.types;
 
+        gzip on;
+        gzip_disable "msie6";
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_min_length 256;
+        gzip_types
+          application/atom+xml
+          application/geo+json
+          application/javascript
+          application/x-javascript
+          application/json
+          application/ld+json
+          application/manifest+json
+          application/rdf+xml
+          application/rss+xml
+          application/xhtml+xml
+          application/xml
+          font/eot
+          font/otf
+          font/ttf
+          image/svg+xml
+          text/css
+          text/javascript
+          text/plain
+          text/xml;
+
+        client_max_body_size 0;
         # simple health endpoint
         location = /health { return 200; }
 
@@ -49,7 +78,104 @@ data:
           proxy_set_header X-Forwarded-Host $host;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 1m;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
+        }
+
+        location /api/svc/v1/tfy-ai/proxy {
+          rewrite ^/api/svc/(.*)$ /$1 break;
+          proxy_pass http://servicefoundry-server.truefoundry.svc.cluster.local:3000;
+
+          gzip off;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          client_max_body_size 0;
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
+        }
+
+        location /api/svc/ {
+          rewrite ^/api/svc/(.*)$ /$1 break;
+          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          proxy_connect_timeout 5s;
+          proxy_send_timeout 60s;
+          proxy_read_timeout 60s;
+
+          proxy_buffering off;
+          proxy_buffer_size 4k;
+          proxy_buffers 4 4k;
+
+          proxy_cookie_domain off;
+          proxy_cookie_path off;
+          proxy_redirect off;
+
+          proxy_next_upstream error timeout;
+          proxy_next_upstream_timeout 0;
+          proxy_next_upstream_tries 3;
+        }
+        {{- end }}
+
+        {{- if .Values.mlfoundryServer.enabled }}
+        # MLFoundry Server
+        location ~* ^/api/ml(?:/|$) {
+          rewrite ^/api/ml/?(.*)$ /$1 break;
+          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }};
+
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
@@ -74,6 +200,7 @@ data:
           rewrite ^/api/llm/?(.*)$ /$1 break;
           proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }};
 
+          gzip off;
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection $connection_upgrade;
@@ -86,7 +213,7 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 1m;
+          client_max_body_size 0;
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
 
@@ -105,11 +232,11 @@ data:
         }
         {{- end }}
 
-        {{- if .Values.tfyController.enabled }}
+        {{- if .Values.tfyNginxProxy.enabled }}
         # Controller
         location ~* ^/api/proxy-server(?:/|$) {
           rewrite ^/api/proxy-server/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}:{{ .Values.tfyController.service.port }};
+          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}:{{ .Values.tfyNginxProxy.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -122,7 +249,6 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 1m;
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
@@ -145,7 +271,7 @@ data:
         {{- if .Values.tfyWorkflowAdmin.enabled }}
         # Flyte Admin gRPC (no rewrite, keep method path intact)
         location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
-          grpc_pass grpc://{{ .Values.truefoundryFrontendApp.tfyWorkflowAdminHost }}:{{ .Values.tfyWorkflowAdmin.service.port }};
+          grpc_pass grpc://{{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}:{{ .Values.tfyWorkflowAdmin.service.port }};
 
           grpc_read_timeout  3600s;
           grpc_send_timeout  3600s;
@@ -154,8 +280,6 @@ data:
           grpc_set_header X-Real-IP $remote_addr;
           grpc_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           grpc_set_header X-Forwarded-Proto $scheme;
-
-          client_max_body_size 1m;
 
           proxy_next_upstream error timeout;
           proxy_next_upstream_timeout 0;
@@ -180,7 +304,7 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 1m;        # raise for large uploads
+          client_max_body_size 0;        # raise for large uploads
           proxy_request_buffering off;    # stream to upstream
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
@@ -215,7 +339,7 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 10m;   # OTLP payloads can be sizable
+          client_max_body_size 0;
           proxy_connect_timeout 5s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
@@ -240,43 +364,23 @@ data:
         {{- end }}
         {{- end }}
 
+        # Frontend assets
+        location /assets/ {
+          root /usr/share/nginx/html;
+          try_files $uri /index.html;
+          access_log off;
+        }
+
         # Frontend catch-all
         location / {
-          proxy_pass http://{{ include "truefoundry-frontend-app.fullname" . }}:{{ .Values.truefoundryFrontendApp.service.port }};
-
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection $connection_upgrade;
-
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Host $host;
-          proxy_set_header X-Forwarded-Port $server_port;
-          proxy_set_header X-Forwarded-Proto $scheme;
-
-          client_max_body_size 1m;
-          proxy_connect_timeout 5s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-
-          proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
-
-          proxy_cookie_domain off;
-          proxy_cookie_path off;
-          proxy_redirect off;
-          proxy_cache_bypass $http_upgrade;
-
-          proxy_next_upstream error timeout;
-          proxy_next_upstream_timeout 0;
-          proxy_next_upstream_tries 3;
+          root /usr/share/nginx/html;
+          index index.html;
+          try_files $uri /index.html;
         }
       }
       # NGINX stub status for monitoring
       server {
-        listen 127.0.0.1:8080;
+        listen 127.0.0.1:8081;
         server_name 127.0.0.1;
 
         location /stub_status {

@@ -102,6 +102,8 @@ global:
       ## @param global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent Google cloud service account key file content
       ## For passing it as a secret, use the following format(refer - https://github.com/truefoundry/infra-charts/blob/main/charts/truefoundry/README.md#using-k8s-secret-for-additional-fields):
       googleCloudServiceAccountKeyFileContent: ''
+  proxy:
+    hosts: []
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -2346,6 +2348,7 @@ tfyNginxProxy:
     maxReplicas: 100
     ## @param tfyNginxProxy.autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
     targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 60
   ## @param tfyNginxProxy.resources [object] Resource requests and limits for the tfyNginxProxy
   resources: {}
   # resources:
@@ -2392,7 +2395,7 @@ tfyNginxProxy:
     ## @param tfyNginxProxy.service.type Service type for the tfyNginxProxy
     type: ClusterIP
     ## @param tfyNginxProxy.service.port Service port for the tfyNginxProxy
-    port: 80
+    port: 8080
     ## @param tfyNginxProxy.service.annotations Annotations for the tfyNginxProxy service
     annotations: {}
     ## tfyNginxProxy.serviceAccount Service account settings for the tfyNginxProxy
