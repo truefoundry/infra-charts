@@ -74,7 +74,7 @@ helm.sh/chart: {{ include "tfy-nginx-proxy.chart" . }}
   Deployment annotations
   */}}
 {{- define "tfy-nginx-proxy.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-nginx-proxy.annotations" . | fromYaml) }}
+{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "0") (include "tfy-nginx-proxy.annotations" . | fromYaml) }}
 {{- toYaml $merged }}
 {{- end }}
 
