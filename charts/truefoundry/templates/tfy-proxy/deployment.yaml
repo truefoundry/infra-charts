@@ -1,0 +1,108 @@
+{{- if .Values.tfyProxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-proxy.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.deploymentAnnotations" . | nindent 4 }}
+spec:
+  {{- if not .Values.tfyProxy.autoscaling.enabled }}
+  replicas: {{- include "tfy-proxy.replicas" . | indent 1 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-proxy.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-proxy.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-proxy.serviceAccountName" . }}
+      {{- with .Values.tfyProxy.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-proxy"
+          {{- with .Values.tfyProxy.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-proxy.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyProxy.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyProxy.image.repository }}:{{ .Values.tfyProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.tfyProxy.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyProxy.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "tfy-proxy.resources" . | indent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.tfyProxy.service.port }}
+            periodSeconds: {{ .Values.tfyProxy.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyProxy.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyProxy.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyProxy.livenessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyProxy.livenessProbe.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.tfyProxy.service.port }}
+            periodSeconds: {{ .Values.tfyProxy.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyProxy.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyProxy.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyProxy.readinessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyProxy.readinessProbe.initialDelaySeconds }}
+          volumeMounts:
+            {{- include "tfy-proxy.volumeMounts" . | nindent 12 }}
+        - name: nginx-prometheus-exporter
+          image: {{ .Values.tfyProxy.prometheusExporter.image}}:{{ .Values.tfyProxy.prometheusExporter.tag }}
+          args:
+            - -nginx.scrape-uri=http://127.0.0.1:8081/stub_status
+          ports:
+            - name: metrics
+              containerPort: 9113
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+      imagePullSecrets:
+        {{- include "tfy-proxy.imagePullSecrets" . | nindent 8 }}
+      volumes:
+        {{- include "tfy-proxy.volumes" . | nindent 8 }}
+      {{- if .Values.tfyProxy.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.tfyProxy.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.tfyProxy.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.tfyProxy.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyProxy.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "tfy-proxy.name" . }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyProxy.tolerations }}
+        {{- .Values.tfyProxy.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}

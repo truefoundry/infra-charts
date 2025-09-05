@@ -1,12 +1,12 @@
-{{- if .Values.tfyNginxProxy.enabled }}
+{{- if .Values.tfyProxy.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "tfy-nginx-proxy.fullname" . }}
+  name: {{ include "tfy-proxy.fullname" . }}
   labels:
-    {{- include "tfy-nginx-proxy.labels" . | nindent 4 }}
+    {{- include "tfy-proxy.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-nginx-proxy.annotations" . | nindent 4 }}
+    {{- include "tfy-proxy.commonAnnotations" . | nindent 4 }}
 data:
   nginx.conf: |
     events {
@@ -97,7 +97,7 @@ data:
 
         location /api/svc/v1/tfy-ai/proxy {
           rewrite ^/api/svc/(.*)$ /$1 break;
-          proxy_pass http://truefoundry-servicefoundry-server.truefoundry.svc.cluster.local:3000;
+          proxy_pass http://servicefoundry-server.truefoundry.svc.cluster.local:3000;
 
           gzip off;
           proxy_http_version 1.1;
@@ -232,11 +232,11 @@ data:
         }
         {{- end }}
 
-        {{- if .Values.tfyNginxProxy.enabled }}
+        {{- if .Values.tfyProxy.enabled }}
         # Controller
         location ~* ^/api/proxy-server(?:/|$) {
           rewrite ^/api/proxy-server/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}:{{ .Values.tfyNginxProxy.service.port }};
+          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}:{{ .Values.tfyProxy.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -358,45 +358,37 @@ data:
         }
         {{- end }}
 
-        {{- if .Values.tfyNginxProxy.extraProxyLocations }}
-        {{- range $idx, $proxyLocation := .Values.tfyNginxProxy.extraProxyLocations }}
+        {{- if .Values.tfyProxy.extraProxyLocations }}
+        {{- range $idx, $proxyLocation := .Values.tfyProxy.extraProxyLocations }}
         {{ $proxyLocation | nindent 8 }}
         {{- end }}
         {{- end }}
 
+        # Frontend assets
+        location /assets/ {
+          root /usr/share/nginx/html;
+          try_files $uri /index.html;
+          access_log off;
+        }
+
         # Frontend catch-all
         location / {
-          proxy_pass http://{{ .Release.Name }}-truefoundry-frontend-app.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.truefoundryFrontendApp.service.port }};
+          root /usr/share/nginx/html;
+          index index.html;
+          try_files $uri /index.html;
+        }
+      }
+      # NGINX stub status for monitoring
+      server {
+        listen 127.0.0.1:8081;
+        server_name 127.0.0.1;
 
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection $connection_upgrade;
-
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Host $host;
-          proxy_set_header X-Forwarded-Port $server_port;
-          proxy_set_header X-Forwarded-Proto $scheme;
-
-          client_max_body_size 1m;
-          proxy_connect_timeout 5s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-
-          proxy_buffering off;
-          proxy_buffer_size 32k;
-          proxy_buffers 16 16k;
-
-          proxy_cookie_domain off;
-          proxy_cookie_path off;
-          proxy_redirect off;
-          proxy_cache_bypass $http_upgrade;
-
-          proxy_next_upstream error timeout;
-          proxy_next_upstream_timeout 0;
-          proxy_next_upstream_tries 3;
+        location /stub_status {
+        stub_status;         # built-in NGINX status
+        allow 127.0.0.1;     # exporter only
+        deny all;
         }
       }
     }
+
 {{- end -}}

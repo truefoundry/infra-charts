@@ -12,8 +12,10 @@ global:
   # The below are installation secrets that will be provided as is.
   # These are customised for your account. Please use the provided values as is.
   # If you have an existing imagepullsecret, set this to its name
-  ## @param global.existingTruefoundryImagePullSecretName Name of the existing image pull secret
-  existingTruefoundryImagePullSecretName: ""
+  ## imagePullSecrets:
+  ## - name: "truefoundry-image-pull-secret"
+  ## @param global.imagePullSecrets [array] List of image pull secrets
+  imagePullSecrets: []
   ## @param global.truefoundryImagePullConfigJSON JSON config for image pull secret
   truefoundryImagePullConfigJSON: ""
   ## @param global.tenantName Name of the tenant
@@ -21,11 +23,41 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.80.0
+  controlPlaneChartVersion: 0.82.2
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
   existingTruefoundryCredsSecret: ""
+  ## global.ingress Ingress configuration for the control plane
+  ingress:
+    ## @param global.ingress.enabled Bool to enable ingress for the control plane
+    enabled: false
+    ## @param global.ingress.annotations [object] Annotations for the control plane ingress
+    annotations: {}
+    ## @param global.ingress.labels [object] Labels for the control plane ingress
+    labels: {}
+    ## @param global.ingress.ingressClassName Ingress class name for the control plane
+    ingressClassName: istio
+    ## @param global.ingress.tls TLS settings for the control plane
+    tls: []
+    ## @param global.ingress.hosts Hosts for the control plane
+    hosts: []
+  ## global.virtualservice Istio configuration for the control plane
+  virtualservice:
+    ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
+    enabled: false
+    ## @param global.virtualservice.annotations [object] Annotations for the control plane virtual service
+    annotations: {}
+    ## @param global.virtualservice.gateways Gateways for the control plane virtual service
+    gateways: []
+    ## @param global.virtualservice.hosts Hosts for the control plane virtual service
+    hosts: []
+  ## global.proxy Global proxy configuration
+  proxy:
+    ## @param global.proxy.enabled Bool to enable proxy for the control plane
+    enabled: false
+    ## @param global.proxy.hosts [array] List of proxy hosts
+    hosts: []
   ## global.database Database configuration when dev mode is not enabled
   database:
     ## @param global.database.host Control plane database hostname when dev mode is not enabled
@@ -50,8 +82,18 @@ global:
   labels: {}
   ## @param global.annotations [object] Annotations for all services
   annotations: {}
-  ## @param global.imagePullSecrets Image pull secrets for all services
-  imagePullSecrets: []
+  ## @param global.podLabels [object] Pod-specific labels for all services
+  podLabels: {}
+  ## @param global.podAnnotations [object] Pod-specific annotations for all services
+  podAnnotations: {}
+  ## @param global.serviceLabels [object] Service-specific labels for all services
+  serviceLabels: {}
+  ## @param global.serviceAnnotations [object] Service-specific annotations for all services
+  serviceAnnotations: {}
+  ## @param global.deploymentLabels [object] Deployment-specific labels for all services
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Deployment-specific annotations for all services
+  deploymentAnnotations: {}
   ## @skip global.tolerations
   tolerations:
     - key: class.truefoundry.io/control-plane
@@ -75,8 +117,10 @@ global:
     create: true
     ## @param global.serviceAccount.name Name of the service account
     name: truefoundry
-    ## @param global.serviceAccount.annotations Annotations for the service account
+    ## @param global.serviceAccount.annotations [object] Annotations for the service account
     annotations: {}
+    ## @param global.serviceAccount.labels [object] Labels for the service account
+    labels: {}
     ## @param global.serviceAccount.automountServiceAccountToken Automount service account token for the service account
     automountServiceAccountToken: true
   config:
@@ -102,13 +146,11 @@ global:
       ## @param global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent Google cloud service account key file content
       ## For passing it as a secret, use the following format(refer - https://github.com/truefoundry/infra-charts/blob/main/charts/truefoundry/README.md#using-k8s-secret-for-additional-fields):
       googleCloudServiceAccountKeyFileContent: ''
-  proxy:
-    hosts: []
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
   llmGateway: false
-  ## @param tags.llmGatewayRequestLogging Bool to enable request logging feature in LLM gateway
+  ## @param tags.llmGatewayRequestLogging Bool to enable observability (metrics and request logging) features in LLM gateway
   llmGatewayRequestLogging: false
   ## @param tags.tracing Bool to enable OTEL tracing feature
   tracing: false
@@ -125,16 +167,20 @@ monitoring:
   enabled: false
   ## @param monitoring.tenantNameOverride Override tenant name for the monitoring
   tenantNameOverride: ""
+  ## @param monitoring.commonLabels [object] Common labels for monitoring resources
+  commonLabels: {}
+  ## @param monitoring.commonAnnotations [object] Common annotations for monitoring resources
+  commonAnnotations: {}
   ## monitoring.alertManager [object] Alert manager configuration
   alertManager:
     ## @param monitoring.alertManager.enabled Bool to enable alert manager
     enabled: true
     ## @param monitoring.alertManager.name Name of the alert manager configuration
     name: tfy-control-plane-alert-manager
-    ## @param monitoring.alertManager.additionalLabels Additional labels for alert manager
-    additionalLabels: {}
-    ## @param monitoring.alertManager.additionalAnnotations Additional annotations for alert manager
-    additionalAnnotations: {}
+    ## @param monitoring.alertManager.labels [object] Labels for alert manager
+    labels: {}
+    ## @param monitoring.alertManager.annotations [object] Annotations for alert manager
+    annotations: {}
     slackConfigs:
       ## @param monitoring.alertManager.slackConfigs.enabled Bool to enable Slack notifications
       enabled: true
@@ -163,10 +209,10 @@ monitoring:
     enabled: true
     ## @param monitoring.alertRules.name Name of the alert rules configuration
     name: tfy-control-plane-alert-rules
-    ## @param monitoring.alertRules.additionalLabels Additional labels for alert rules
-    additionalLabels: {}
-    ## @param monitoring.alertRules.additionalAnnotations Additional annotations for alert rules
-    additionalAnnotations: {}
+    ## @param monitoring.alertRules.labels [object] Labels for alert rules
+    labels: {}
+    ## @param monitoring.alertRules.annotations [object] Annotations for alert rules
+    annotations: {}
 ###################################################################################################################
 ####################################### Truefoundry bootstrap script ##############################################
 ###################################################################################################################
@@ -178,6 +224,10 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.serviceAccount.automountServiceAccountToken Automount service account token for the bootstrap container
   serviceAccount:
     automountServiceAccountToken: true
+    ## @param truefoundryBootstrap.serviceAccount.labels [object] Labels for the bootstrap service account
+    labels: {}
+    ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
+    annotations: {}
   ## @param truefoundryBootstrap.podSecurityContext Pod security context for the bootstrap container
   podSecurityContext: {}
   ## securityContext Security context for the bootstrap container
@@ -194,10 +244,14 @@ truefoundryBootstrap:
     tag: "0.1.5"
   ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
   natsConfigmapName: "tfy-nats-accounts"
-  ## @param truefoundryBootstrap.annotations [object] Annotations for the bootstrap job
-  annotations: {}
-  ## @param truefoundryBootstrap.commonLabels [object] Common labels for the bootstrap job
+  ## @param truefoundryBootstrap.commonAnnotations [object] Common Annotations for the bootstrap job components
+  commonAnnotations: {}
+  ## @param truefoundryBootstrap.commonLabels [object] Common labels for the bootstrap job components
   commonLabels: {}
+  ## @param truefoundryBootstrap.podAnnotations [object] Pod annotations for the bootstrap job
+  podAnnotations: {}
+  ## @param truefoundryBootstrap.podLabels [object] Pod labels for the bootstrap job
+  podLabels: {}
   ## @param truefoundryBootstrap.extraEnvVars Extra environment variables for the bootstrap container
   extraEnvVars: []
   ## @param truefoundryBootstrap.extraVolumeMounts Extra volume mounts for the bootstrap container
@@ -227,8 +281,6 @@ truefoundryFrontendApp:
   tolerations: []
   ## @skip truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
   #  replicaCount: 1
-  ## @param truefoundryFrontendApp.annotations [object] Annotations for the frontend app
-  annotations: {}
   ## truefoundryFrontendApp.image Image for the frontend app
   image:
     ## @param truefoundryFrontendApp.image.registry Registry for the frontend app image (overrides global.registry if specified)
@@ -236,7 +288,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.80.0"
+    tag: "v0.82.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -247,14 +299,24 @@ truefoundryFrontendApp:
   fullnameOverride: ''
   ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
   podAnnotations: {}
+  ## @param truefoundryFrontendApp.podLabels [object] Labels for the frontend app pods
+  podLabels: {}
   ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
   podSecurityContext: {}
   ## @param truefoundryFrontendApp.commonLabels Common labels for the frontend app pods
   commonLabels: {}
+  ## @param truefoundryFrontendApp.commonAnnotations [object] Common annotations for the frontend app pods
+  commonAnnotations: {}
+  ## @param truefoundryFrontendApp.deploymentLabels [object] Deployment-specific labels for the frontend app
+  deploymentLabels: {}
+  ## @param truefoundryFrontendApp.deploymentAnnotations [object] Deployment-specific annotations for the frontend app
+  deploymentAnnotations: {}
   ## truefoundryFrontendApp.securityContext Security context for the frontend app
   securityContext:
     ## @param truefoundryFrontendApp.securityContext.readOnlyRootFilesystem Read only root filesystem for the frontend app
     readOnlyRootFilesystem: true
+  ## @param truefoundryFrontendApp.resourceTierOverride Resource tier override for the truefoundryFrontendApp
+  resourceTierOverride: ""
   ## @param truefoundryFrontendApp.resources Resource requests and limits for the frontend app
   resources: {}
   # resources:
@@ -295,7 +357,7 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.affinity Affinity settings for the frontend app
   affinity: {}
   ## @param truefoundryFrontendApp.topologySpreadConstraints Topology spread constraints for the frontend app
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## truefoundryFrontendApp.service Service settings for the frontend app
   service:
     ## @param truefoundryFrontendApp.service.type Service type for the frontend app
@@ -304,6 +366,8 @@ truefoundryFrontendApp:
     port: 5000
     ## @param truefoundryFrontendApp.service.annotations Annotations for the frontend app service
     annotations: {}
+    ## @param truefoundryFrontendApp.service.labels [object] Labels for the frontend app service
+    labels: {}
   ## truefoundryFrontendApp.ingress Ingress settings for the frontend app
   ingress:
     ## @param truefoundryFrontendApp.ingress.enabled Enable ingress for the frontend app
@@ -335,7 +399,7 @@ truefoundryFrontendApp:
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local
   ## @param truefoundryFrontendApp.mlfoundryHost mlfoundry server host for the frontend app
   mlfoundryHost: >-
-      {{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local
+    {{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local
   ## @param truefoundryFrontendApp.tfyWorkflowAdminHost tfy workflow admin host for the frontend app
   tfyWorkflowAdminHost: >-
     {{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -357,8 +421,10 @@ truefoundryFrontendApp:
   proxyServerHost: '{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local'
   ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
   serviceAccount:
-    ## @param truefoundryFrontendApp.serviceAccount.annotations Annotations for the frontend app service account
+    ## @param truefoundryFrontendApp.serviceAccount.annotations [object] Annotations for the frontend app service account
     annotations: {}
+    ## @param truefoundryFrontendApp.serviceAccount.labels [object] Labels for the frontend app service account
+    labels: {}
     ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Automount service account token for the frontend app
     automountServiceAccountToken: true
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
@@ -387,8 +453,14 @@ mlfoundryServer:
   enabled: true
   ## @param mlfoundryServer.tolerations Tolerations specific to the mlfoundry server
   tolerations: []
-  ## @param mlfoundryServer.annotations [object] Annotations for the mlfoundry server
-  annotations: {}
+  ## @param mlfoundryServer.commonAnnotations [object] Annotations for the mlfoundry server
+  commonAnnotations: {}
+  ## @param mlfoundryServer.commonLabels [object] Common labels for the mlfoundry server pods
+  commonLabels: {}
+  ## @param mlfoundryServer.deploymentLabels [object] Deployment-specific labels for the mlfoundry server
+  deploymentLabels: {}
+  ## @param mlfoundryServer.deploymentAnnotations [object] Deployment-specific annotations for the mlfoundry server
+  deploymentAnnotations: {}
   ## mlfoundryServer.image Image for the mlfoundry server
   image:
     ## @param mlfoundryServer.image.registry Registry for the mlfoundry server image (overrides global.registry if specified)
@@ -409,16 +481,18 @@ mlfoundryServer:
   nameOverride: ''
   ## @param mlfoundryServer.fullnameOverride Full name override for the mlfoundry server
   fullnameOverride: ''
-  ## @param mlfoundryServer.podAnnotations Annotations for the mlfoundry server pods
+  ## @param mlfoundryServer.podAnnotations [object] Annotations for the mlfoundry server pods
   podAnnotations: {}
-  ## @param mlfoundryServer.podSecurityContext Security context for the mlfoundry server pods
+  ## @param mlfoundryServer.podLabels [object] Labels for the mlfoundry server pods
+  podLabels: {}
+  ## @param mlfoundryServer.podSecurityContext [object] Security context for the mlfoundry server pods
   podSecurityContext: {}
-  ## @param mlfoundryServer.commonLabels Common labels for the mlfoundry server pods
-  commonLabels: {}
   ## mlfoundryServer.securityContext Security context for the mlfoundry server
   securityContext:
     ## @param mlfoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the mlfoundry server
     readOnlyRootFilesystem: true
+  ## @param mlfoundryServer.resourceTierOverride Resource tier override for the mlfoundryServer
+  resourceTierOverride: ""
   ## @param mlfoundryServer.resources [object] Resource requests and limits for the mlfoundry server
   resources: {}
   # resources:
@@ -459,7 +533,7 @@ mlfoundryServer:
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
   affinity: {}
   ## @param mlfoundryServer.topologySpreadConstraints Topology spread constraints for the mlfoundry server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## mlfoundryServer.service Service settings for the mlfoundry server
   service:
     ## @param mlfoundryServer.service.type Service type for the mlfoundry server
@@ -468,14 +542,18 @@ mlfoundryServer:
     port: 5000
     ## @param mlfoundryServer.service.annotations Annotations for the mlfoundry server service
     annotations: {}
+    ## @param mlfoundryServer.service.labels Labels for the mlfoundry server service
+    labels: {}
   ## mlfoundryServer.serviceAccount Service account settings for the mlfoundry server
   serviceAccount:
     ## @param mlfoundryServer.serviceAccount.create Bool to create a service account for the mlfoundry server
     create: false
     ## @param mlfoundryServer.serviceAccount.name Name of the mlfoundry server service account
     name: ""
-    ## @param mlfoundryServer.serviceAccount.annotations Annotations for the mlfoundry server service account
+    ## @param mlfoundryServer.serviceAccount.annotations [object] Annotations for the mlfoundry server service account
     annotations: {}
+    ## @param mlfoundryServer.serviceAccount.labels [object] Labels for the mlfoundry server service account
+    labels: {}
     ## @param mlfoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the mlfoundry server
     automountServiceAccountToken: true
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
@@ -540,8 +618,18 @@ s3proxy:
   podSecurityContext: {}
   ## @param s3proxy.commonLabels Common labels for the s3 proxy pods
   commonLabels: {}
+  ## @param s3proxy.commonAnnotations [object] Common annotations for the s3 proxy pods
+  commonAnnotations: {}
+  ## @param s3proxy.podLabels [object] Labels for the s3 proxy pods
+  podLabels: {}
+  ## @param s3proxy.deploymentLabels [object] Deployment-specific labels for the s3 proxy
+  deploymentLabels: {}
+  ## @param s3proxy.deploymentAnnotations [object] Deployment-specific annotations for the s3 proxy
+  deploymentAnnotations: {}
   ## @param s3proxy.securityContext Security context for the s3 proxy
   securityContext: {}
+  ## @param s3proxy.resourceTierOverride Resource tier override for the s3proxy
+  resourceTierOverride: ""
   ## @skip s3proxy.resources [object] Resource requests and limits for the s3 proxy
   # resources:
   #  ## s3proxy.resources.limits Resource limits for the s3 proxy
@@ -589,7 +677,7 @@ s3proxy:
   ## @param s3proxy.affinity Affinity settings for the s3 proxy
   affinity: {}
   ## @param s3proxy.topologySpreadConstraints Topology spread constraints for the s3 proxy
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## s3proxy.service Service settings for the s3 proxy
   service:
     ## @param s3proxy.service.type Service type for the s3 proxy
@@ -598,14 +686,18 @@ s3proxy:
     port: 8080
     ## @param s3proxy.service.annotations Annotations for the s3 proxy service
     annotations: {}
+    ## @param s3proxy.service.labels [object] Labels for the s3 proxy service
+    labels: {}
     ## s3proxy.serviceAccount Service account settings for the s3 proxy
   serviceAccount:
     ## @param s3proxy.serviceAccount.create Bool to create the s3 proxy service account
     create: false
     ## @param s3proxy.serviceAccount.name Name of the s3 proxy service account
     name: ""
-    ## @param s3proxy.serviceAccount.annotations Annotations for the s3 proxy service account
+    ## @param s3proxy.serviceAccount.annotations [object] Annotations for the s3 proxy service account
     annotations: {}
+    ## @param s3proxy.serviceAccount.labels [object] Labels for the s3 proxy service account
+    labels: {}
   ## @param s3proxy.extraVolumes Extra volumes for the s3 proxy
   extraVolumes: []
   ## @param s3proxy.extraVolumeMounts Extra volume mounts for the s3 proxy
@@ -631,8 +723,14 @@ servicefoundryServer:
   tolerations: []
   ## @skip servicefoundryServer.replicaCount Number of replicas for the servicefoundry server
   # replicaCount: 1
-  ## @param servicefoundryServer.annotations [object] Annotations for the mlfoundry server
-  annotations: {}
+  ## @param servicefoundryServer.commonAnnotations [object] Common annotations for the servicefoundry server components
+  commonAnnotations: {}
+  ## @param servicefoundryServer.commonLabels [object] Common labels for the servicefoundry server pods
+  commonLabels: {}
+  ## @param servicefoundryServer.deploymentLabels [object] Deployment-specific labels for the servicefoundry server
+  deploymentLabels: {}
+  ## @param servicefoundryServer.deploymentAnnotations [object] Deployment-specific annotations for the servicefoundry server
+  deploymentAnnotations: {}
   ## servicefoundryServer.image Image for the servicefoundry server
   image:
     ## @param servicefoundryServer.image.registry Registry for the servicefoundry server image (overrides global.registry if specified)
@@ -640,7 +738,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.80.0"
+    tag: "v0.82.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -651,16 +749,18 @@ servicefoundryServer:
   nameOverride: ''
   ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
   fullnameOverride: ''
-  ## @param servicefoundryServer.podAnnotations Annotations for the servicefoundry server pods
-  podAnnotations: {}
-  ## @param servicefoundryServer.podSecurityContext Security context for the servicefoundry server pods
+  ## @param servicefoundryServer.podSecurityContext [object] Security context for the servicefoundry server pods
   podSecurityContext: {}
-  ## @param servicefoundryServer.commonLabels Common labels for the servicefoundry server pods
-  commonLabels: {}
+  ## @param servicefoundryServer.podLabels [object] Pod-specific labels for the servicefoundry server
+  podLabels: {}
+  ## @param servicefoundryServer.podAnnotations [object] Pod-specific annotations for the servicefoundry server
+  podAnnotations: {}
   ## servicefoundryServer.securityContext Security context for the servicefoundry server
   securityContext:
     ## @param servicefoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the servicefoundry server
     readOnlyRootFilesystem: true
+  ## @param servicefoundryServer.resourceTierOverride Resource tier override for the servicefoundryServer
+  resourceTierOverride: ""
   ## @param servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
   resources: {}
   # resources:
@@ -701,7 +801,7 @@ servicefoundryServer:
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
   affinity: {}
   ## @param servicefoundryServer.topologySpreadConstraints Topology spread constraints for the servicefoundry server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## servicefoundryServer.service Service settings for the servicefoundry server
   service:
     ## @param servicefoundryServer.service.type Service type for the servicefoundry server
@@ -710,14 +810,18 @@ servicefoundryServer:
     port: 3000
     ## @param servicefoundryServer.service.annotations Annotations for the servicefoundry server service
     annotations: {}
+    ## @param servicefoundryServer.service.labels [object] Labels for the servicefoundry server service
+    labels: {}
   ## servicefoundryServer.serviceAccount Service account settings for the servicefoundry server
   serviceAccount:
     ## @param servicefoundryServer.serviceAccount.create Bool to create a service account for the servicefoundry server
     create: false
     ## @param servicefoundryServer.serviceAccount.name Name of the servicefoundry server service account
     name: ""
-    ## @param servicefoundryServer.serviceAccount.annotations Annotations for the servicefoundry server service account
+    ## @param servicefoundryServer.serviceAccount.annotations [object] Annotations for the servicefoundry server service account
     annotations: {}
+    ## @param servicefoundryServer.serviceAccount.labels [object] Labels for the servicefoundry server service account
+    labels: {}
     ## @param servicefoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the servicefoundry server
     automountServiceAccountToken: true
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
@@ -734,10 +838,10 @@ servicefoundryServer:
   serviceMonitor:
     ## @param servicefoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the servicefoundry server
     enabled: true
-    ## @param servicefoundryServer.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param servicefoundryServer.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param servicefoundryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param servicefoundryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
   ## @param servicefoundryServer.env [object] Environment variables for the servicefoundry server
   env:
     DEFAULT_CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
@@ -931,8 +1035,18 @@ sparkHistoryServer:
   podSecurityContext: {}
   ## @param sparkHistoryServer.commonLabels Common labels for the spark history server pods
   commonLabels: {}
+  ## @param sparkHistoryServer.commonAnnotations [object] Common annotations for the spark history server pods
+  commonAnnotations: {}
+  ## @param sparkHistoryServer.podLabels [object] Labels for the spark history server pods
+  podLabels: {}
+  ## @param sparkHistoryServer.deploymentLabels [object] Deployment-specific labels for the spark history server
+  deploymentLabels: {}
+  ## @param sparkHistoryServer.deploymentAnnotations [object] Deployment-specific annotations for the spark history server
+  deploymentAnnotations: {}
   ## @param sparkHistoryServer.securityContext Security context for the spark history server
   securityContext: {}
+  ## @param sparkHistoryServer.resourceTierOverride Resource tier override for the sparkHistoryServer
+  resourceTierOverride: ""
   ## @skip sparkHistoryServer.resources [object] Resource requests and limits for the spark history server
   # resources:
   #  ## sparkHistoryServer.resources.limits Resource limits for the spark history server
@@ -980,7 +1094,7 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
   affinity: {}
   ## @param sparkHistoryServer.topologySpreadConstraints Topology spread constraints for the spark history server
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## sparkHistoryServer.service Service settings for the spark history server
   service:
     ## @param sparkHistoryServer.service.type Service type for the spark history server
@@ -989,14 +1103,18 @@ sparkHistoryServer:
     port: 18080
     ## @param sparkHistoryServer.service.annotations Annotations for the spark history server service
     annotations: {}
+    ## @param sparkHistoryServer.service.labels [object] Labels for the spark history server service
+    labels: {}
     ## sparkHistoryServer.serviceAccount Service account settings for the spark history server
   serviceAccount:
     ## @param sparkHistoryServer.serviceAccount.create Bool to create the spark history server service account
     create: false
     ## @param sparkHistoryServer.serviceAccount.name Name of the spark history server service account
     name: ""
-    ## @param sparkHistoryServer.serviceAccount.annotations Annotations for the spark history server service account
+    ## @param sparkHistoryServer.serviceAccount.annotations [object] Annotations for the spark history server service account
     annotations: {}
+    ## @param sparkHistoryServer.serviceAccount.labels [object] Labels for the spark history server service account
+    labels: {}
   ## @param sparkHistoryServer.extraVolumes Extra volumes for the spark history server
   extraVolumes: []
   ## @param sparkHistoryServer.extraVolumeMounts Extra volume mounts for the spark history server
@@ -1049,10 +1167,20 @@ tfyK8sController:
   podSecurityContext: {}
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
+  ## @param tfyK8sController.commonAnnotations [object] Common annotations for the tfyK8sController pods
+  commonAnnotations: {}
+  ## @param tfyK8sController.podLabels [object] Labels for the tfyK8sController pods
+  podLabels: {}
+  ## @param tfyK8sController.deploymentLabels [object] Deployment-specific labels for the tfyK8sController
+  deploymentLabels: {}
+  ## @param tfyK8sController.deploymentAnnotations [object] Deployment-specific annotations for the tfyK8sController
+  deploymentAnnotations: {}
   ## tfyK8sController.securityContext Security context for the tfyK8sController
   securityContext:
     ## @param tfyK8sController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyK8sController
     readOnlyRootFilesystem: true
+  ## @param tfyK8sController.resourceTierOverride Resource tier override for the tfyK8sController
+  resourceTierOverride: ""
   ## @param tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
   resources: {}
   # resources:
@@ -1093,7 +1221,7 @@ tfyK8sController:
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
   affinity: {}
   ## @param tfyK8sController.topologySpreadConstraints Topology spread constraints for the tfyK8sController
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyK8sController.service Service settings for the tfyK8sController
   service:
     ## @param tfyK8sController.service.type Service type for the tfyK8sController
@@ -1102,10 +1230,14 @@ tfyK8sController:
     port: 3002
     ## @param tfyK8sController.service.annotations Annotations for the tfyK8sController service
     annotations: {}
+    ## @param tfyK8sController.service.labels [object] Labels for the tfyK8sController service
+    labels: {}
     ## tfyK8sController.serviceAccount Service account settings for the tfyK8sController
   serviceAccount:
-    ## @param tfyK8sController.serviceAccount.annotations Annotations for the tfyK8sController service account
+    ## @param tfyK8sController.serviceAccount.annotations [object] Annotations for the tfyK8sController service account
     annotations: {}
+    ## @param tfyK8sController.serviceAccount.labels [object] Labels for the tfyK8sController service account
+    labels: {}
     ## @param tfyK8sController.serviceAccount.automountServiceAccountToken Automount service account token for the tfyK8sController service account
     automountServiceAccountToken: true
   ## @param tfyK8sController.extraVolumes Extra volumes for the tfyK8sController
@@ -1116,10 +1248,10 @@ tfyK8sController:
   serviceMonitor:
     ## @param tfyK8sController.serviceMonitor.enabled Enable ServiceMonitor for the tfyK8sController
     enabled: true
-    ## @param tfyK8sController.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param tfyK8sController.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param tfyK8sController.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param tfyK8sController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
   ## @param tfyK8sController.imagePullSecrets Image pull secrets for the tfyK8sController
   ##
   imagePullSecrets: []
@@ -1183,10 +1315,20 @@ sfyManifestService:
   podSecurityContext: {}
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
+  ## @param sfyManifestService.commonAnnotations [object] Common annotations for the sfy manifest service pods
+  commonAnnotations: {}
+  ## @param sfyManifestService.podLabels [object] Labels for the sfy manifest service pods
+  podLabels: {}
+  ## @param sfyManifestService.deploymentLabels [object] Deployment-specific labels for the sfy manifest service
+  deploymentLabels: {}
+  ## @param sfyManifestService.deploymentAnnotations [object] Deployment-specific annotations for the sfy manifest service
+  deploymentAnnotations: {}
   ## sfyManifestService.securityContext Security context for the sfy manifest service
   securityContext:
     ## @param sfyManifestService.securityContext.readOnlyRootFilesystem Read only root filesystem for the sfy manifest service
     readOnlyRootFilesystem: false
+  ## @param sfyManifestService.resourceTierOverride Resource tier override for the sfyManifestService
+  resourceTierOverride: ""
   ## @param sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
   resources: {}
   # resources:
@@ -1227,15 +1369,15 @@ sfyManifestService:
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
   affinity: {}
   ## @param sfyManifestService.topologySpreadConstraints Topology spread constraints for the sfy manifest service
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## sfyManifestService.serviceMonitor ServiceMonitor settings for the sfy manifest service
   serviceMonitor:
     ## @param sfyManifestService.serviceMonitor.enabled Enable ServiceMonitor for the sfy manifest service
     enabled: true
-    ## @param sfyManifestService.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param sfyManifestService.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param sfyManifestService.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param sfyManifestService.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
   ## sfyManifestService.service Service settings for the sfy manifest service
   service:
     ## @param sfyManifestService.service.type Service type for the sfy manifest service
@@ -1244,10 +1386,14 @@ sfyManifestService:
     port: 8080
     ## @param sfyManifestService.service.annotations Annotations for the sfy manifest service
     annotations: {}
+    ## @param sfyManifestService.service.labels [object] Labels for the sfy manifest service
+    labels: {}
   ## sfyManifestService.serviceAccount Service account settings for the sfy manifest service
   serviceAccount:
-    ## @param sfyManifestService.serviceAccount.annotations Annotations for the sfy manifest service service account
+    ## @param sfyManifestService.serviceAccount.annotations [object] Annotations for the sfy manifest service service account
     annotations: {}
+    ## @param sfyManifestService.serviceAccount.labels [object] Labels for the sfy manifest service service account
+    labels: {}
     ## @param sfyManifestService.serviceAccount.automountServiceAccountToken Automount service account token for the sfy manifest service
     automountServiceAccountToken: true
   ## @param sfyManifestService.extraVolumes Extra volumes for the sfy manifest service
@@ -1287,10 +1433,10 @@ sfyManifestService:
 tfyBuild:
   ## @param tfyBuild.enabled Bool to enable the tfyBuild server
   enabled: true
-  ## @param tfyBuild.annotations [object] Annotations for the tfyBuild server
-  annotations: {}
-  ## @param tfyBuild.labels [object] Labels for the tfyBuild server
-  labels: {}
+  ## @param tfyBuild.commonAnnotations [object] Annotations for the tfyBuild server
+  commonAnnotations: {}
+  ## @param tfyBuild.commonLabels [object] Labels for the tfyBuild server
+  commonLabels: {}
   ## @param tfyBuild.nameOverride Override name for the tfyBuild server
   nameOverride: ''
   ## @param tfyBuild.fullnameOverride Full name override for the tfyBuild server
@@ -1301,8 +1447,10 @@ tfyBuild:
     create: false
     ## @param tfyBuild.serviceAccount.name Name of the tfyBuild server service account
     name: ""
-    ## @param tfyBuild.serviceAccount.annotations Annotations for the tfyBuild server service account
+    ## @param tfyBuild.serviceAccount.annotations [object] Annotations for the tfyBuild server service account
     annotations: {}
+    ## @param tfyBuild.serviceAccount.labels [object] Labels for the tfyBuild server service account
+    labels: {}
     ## @param tfyBuild.serviceAccount.automountServiceAccountToken Automount service account token for the tfyBuild server
     automountServiceAccountToken: true
   ## tfyBuild.preemptibleDeployment Preemptible deployment settings for the tfyBuild server
@@ -1564,6 +1712,14 @@ tfyController:
   podSecurityContext: {}
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
+  ## @param tfyController.commonAnnotations [object] Common annotations for the tfyController pods
+  commonAnnotations: {}
+  ## @param tfyController.podLabels [object] Labels for the tfyController pods
+  podLabels: {}
+  ## @param tfyController.deploymentLabels [object] Deployment-specific labels for the tfyController
+  deploymentLabels: {}
+  ## @param tfyController.deploymentAnnotations [object] Deployment-specific annotations for the tfyController
+  deploymentAnnotations: {}
   ## tfyController.securityContext Security context for the tfyController
   securityContext:
     ## @param tfyController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyController
@@ -1575,10 +1731,12 @@ tfyController:
   serviceMonitor:
     ## @param tfyController.serviceMonitor.enabled Enable ServiceMonitor for the tfyController
     enabled: true
-    ## @param tfyController.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param tfyController.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param tfyController.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param tfyController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
+  ## @param tfyController.resourceTierOverride Resource tier override for the tfyController
+  resourceTierOverride: ""
   ## @param tfyController.resources [object] Resource requests and limits for the tfyController
   resources: {}
   # resources:
@@ -1619,7 +1777,7 @@ tfyController:
   ## @param tfyController.affinity Affinity settings for the tfyController
   affinity: {}
   ## @param tfyController.topologySpreadConstraints Topology spread constraints for the tfyController
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyController.service Service settings for the tfyController
   service:
     ## @param tfyController.service.type Service type for the tfyController
@@ -1628,10 +1786,14 @@ tfyController:
     port: 8123
     ## @param tfyController.service.annotations Annotations for the tfyController service
     annotations: {}
+    ## @param tfyController.service.labels [object] Labels for the tfyController service
+    labels: {}
   ## tfyController.serviceAccount Service account settings for the tfyController
   serviceAccount:
-    ## @param tfyController.serviceAccount.annotations Annotations for the tfyController service account
+    ## @param tfyController.serviceAccount.annotations [object] Annotations for the tfyController service account
     annotations: {}
+    ## @param tfyController.serviceAccount.labels [object] Labels for the tfyController service account
+    labels: {}
     ## @param tfyController.serviceAccount.automountServiceAccountToken Automount service account token for the tfyController service account
     automountServiceAccountToken: true
   ## @param tfyController.env [object] Environment variables for the tfyController
@@ -1692,11 +1854,21 @@ tfyWorkflowAdmin:
   podSecurityContext: {}
   ## @param tfyWorkflowAdmin.commonLabels Common labels for the tfyWorkflowAdmin pods
   commonLabels: {}
+  ## @param tfyWorkflowAdmin.commonAnnotations [object] Common annotations for the tfyWorkflowAdmin pods
+  commonAnnotations: {}
+  ## @param tfyWorkflowAdmin.podLabels [object] Labels for the tfyWorkflowAdmin pods
+  podLabels: {}
+  ## @param tfyWorkflowAdmin.deploymentLabels [object] Deployment-specific labels for the tfyWorkflowAdmin
+  deploymentLabels: {}
+  ## @param tfyWorkflowAdmin.deploymentAnnotations [object] Deployment-specific annotations for the tfyWorkflowAdmin
+  deploymentAnnotations: {}
   ## @param tfyWorkflowAdmin.securityContext Security context for the tfyWorkflowAdmin
   securityContext: {}
   ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
+  ## @param tfyWorkflowAdmin.resourceTierOverride Resource tier override for the tfyWorkflowAdmin
+  resourceTierOverride: ""
   ## @param tfyWorkflowAdmin.resources [object] Resource requests and limits for the tfyWorkflowAdmin
   resources: {}
   # resources:
@@ -1737,7 +1909,7 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.affinity Affinity settings for the tfyWorkflowAdmin
   affinity: {}
   ## @param tfyWorkflowAdmin.topologySpreadConstraints Topology spread constraints for the tfyWorkflowAdmin
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## tfyWorkflowAdmin.service Service settings for the tfyWorkflowAdmin
   service:
     ## @param tfyWorkflowAdmin.service.type Service type for the tfyWorkflowAdmin
@@ -1746,14 +1918,18 @@ tfyWorkflowAdmin:
     port: 8089
     ## @param tfyWorkflowAdmin.service.annotations Annotations for the tfyWorkflowAdmin service
     annotations: {}
+    ## @param tfyWorkflowAdmin.service.labels [object] Labels for the tfyWorkflowAdmin service
+    labels: {}
   ## tfyWorkflowAdmin.serviceAccount Service account settings for the tfyWorkflowAdmin
   serviceAccount:
     ## @param tfyWorkflowAdmin.serviceAccount.create Bool to create a service account for the tfyWorkflowAdmin
     create: false
     ## @param tfyWorkflowAdmin.serviceAccount.name Name of the tfyWorkflowAdmin service account
     name: ""
-    ## @param tfyWorkflowAdmin.serviceAccount.annotations Annotations for the tfyWorkflowAdmin service account
+    ## @param tfyWorkflowAdmin.serviceAccount.annotations [object] Annotations for the tfyWorkflowAdmin service account
     annotations: {}
+    ## @param tfyWorkflowAdmin.serviceAccount.labels [object] Labels for the tfyWorkflowAdmin service account
+    labels: {}
   ## @param tfyWorkflowAdmin.storage Storage settings for the tfyWorkflowAdmin
   storage: {}
   ## For AWS uncomment this section
@@ -1941,10 +2117,12 @@ tfyNats:
         value:
           limits:
             cpu: 1000m
-            memory: 2048Mi
+            memory: 1024Mi
+            ephemeral-storage: 2Gi
           requests:
             cpu: 500m
             memory: 1024Mi
+            ephemeral-storage: 1Gi
   ## skip tfyNats.podTemplate Pod template configuration
   podTemplate:
     ## @skip tfyNats.podTemplate.patch Pod template patches
@@ -1981,8 +2159,10 @@ tfyNats:
   serviceAccount:
     ## @param tfyNats.serviceAccount.enabled Specifies whether a service account should be created
     enabled: true
-    ## @param tfyNats.serviceAccount.annotations Annotations to add to the service account
+    ## @param tfyNats.serviceAccount.annotations [object] Annotations to add to the service account
     annotations: {}
+    ## @param tfyNats.serviceAccount.labels [object] Labels to add to the service account
+    labels: {}
     ## @param tfyNats.serviceAccount.name The name of the service account to use.
     ## If not set and create is true, a name is generated using the fullname template
     name: "truefoundry-tfy-nats"
@@ -2010,7 +2190,7 @@ tfy-otel-collector:
 ## @section deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 deltaFusionIngestor:
   ## @param deltaFusionIngestor.enabled Bool to enable the DeltaFusion Ingestor
-  enabled: false
+  enabled: true
   ## @skip deltaFusionIngestor.replicaCount Number of replicas for the DeltaFusion Ingestor
   #  replicaCount: 2
 
@@ -2021,7 +2201,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.1.0"
+    tag: "v0.81.1"
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
     pullPolicy: IfNotPresent
   ## @param deltaFusionIngestor.statefulsetLabels Labels to apply to the DeltaFusion Ingestor statefulset
@@ -2045,7 +2225,7 @@ deltaFusionIngestor:
       ## @param deltaFusionIngestor.healthcheck.readiness.successThreshold Success threshold
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
-      failureThreshold: 3
+      failureThreshold: 2
     ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
       ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
@@ -2068,7 +2248,7 @@ deltaFusionIngestor:
     accessModes:
       - ReadWriteOnce
     ## @param deltaFusionIngestor.storage.storageClassName Storage class name
-    storageClassName: "gp3"
+    storageClassName: ""
     ## @param deltaFusionIngestor.storage.size Storage size
     size: 5Gi
     ## @param deltaFusionIngestor.storage.mountPath Mount path
@@ -2081,6 +2261,10 @@ deltaFusionIngestor:
   nameOverride: ""
   ## @param deltaFusionIngestor.fullnameOverride Full name override
   fullnameOverride: ""
+  ## @param deltaFusionIngestor.commonLabels [object] Common labels for the deltafusion-ingestor
+  commonLabels: {}
+  ## @param deltaFusionIngestor.commonAnnotations [object] Common annotations for the deltafusion-ingestor
+  commonAnnotations: {}
   ## @param deltaFusionIngestor.podLabels Pod-level labels
   podLabels: {}
   ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
@@ -2110,32 +2294,30 @@ deltaFusionIngestor:
     interval: 10s
     ## @param deltaFusionIngestor.serviceMonitor.path Path for the ServiceMonitor
     path: /metrics
-    ## @param deltaFusionIngestor.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param deltaFusionIngestor.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param deltaFusionIngestor.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param deltaFusionIngestor.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
   ## deltaFusionIngestor.serviceAccount Service account settings
   serviceAccount:
     ## @param deltaFusionIngestor.serviceAccount.create Bool to create a service account
     create: false
-    ## @param deltaFusionIngestor.serviceAccount.labels Service account labels
+    ## @param deltaFusionIngestor.serviceAccount.labels [object] Service account labels
     labels: {}
-    ## @param deltaFusionIngestor.serviceAccount.annotations Service account annotations
+    ## @param deltaFusionIngestor.serviceAccount.annotations [object] Service account annotations
     annotations: {}
     ## @param deltaFusionIngestor.serviceAccount.name Service account name
     name: ""
     ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
     automountServiceAccountToken: false
+  ## @param deltaFusionIngestor.resourceTierOverride Resource tier override for the deltaFusionIngestor
+  resourceTierOverride: ""
   ## @skip deltaFusionIngestor.resources Resource requests and limits
   # resources: {}
   ## @param deltaFusionIngestor.extraVolumes Extra volumes
   extraVolumes: []
   ## @param deltaFusionIngestor.extraVolumeMounts Extra volume mounts
   extraVolumeMounts: []
-  ## @param deltaFusionIngestor.commonLabels [object] Common labels for the bootstrap job
-  commonLabels: {}
-  ## @param deltaFusionIngestor.commonAnnotations [object] Common annotations for the DeltaFusion Ingestor statefulset
-  commonAnnotations: {}
   ## @param deltaFusionIngestor.extraEnvs Extra environment variables
   extraEnvs: []
   ## @param deltaFusionIngestor.nodeSelector Node selector
@@ -2145,23 +2327,24 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.affinity Affinity
   affinity: {}
   ## @param deltaFusionIngestor.topologySpreadConstraints Topology spread constraints
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
     BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
-    RUST_LOG: "info"
-    TFY_API_KEY: "${k8s-secret/truefoundry-creds/TFY_API_KEY}"
+    RUST_LOG: info
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PAYLOAD_SIZE_LIMIT: "104857600"
-    SERVICEFOUNDRY_API_URL: "http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000"
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AZURE_STORAGE_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
     GOOGLE_SERVICE_ACCOUNT_KEY: "{{ .Values.global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent }}"
-    S3_PATH: "s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}"
+    S3_PATH: s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}
+    AUTH_SERVER_URL: https://auth.truefoundry.com
 ## @section deltaFusionQueryServer Truefoundry DeltaFusion Query
 deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.enabled Bool to enable the deltaFusionQueryServer
-  enabled: false
+  enabled: true
   ## @skip deltaFusionQueryServer.replicaCount Number of replicas for the DeltaFusion Query
   #  replicaCount: 2
   ## @skip deltaFusionQueryServer.tolerations Tolerations specific to the deltaFusionQueryServer
@@ -2177,8 +2360,8 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.1.0
-    ## @param deltaFusionQueryServer.image.optimized Optimized image tag for the deltaFusionQueryServer
+    tag: v0.82.0
+    ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
   environmentName: default
@@ -2241,13 +2424,13 @@ deltaFusionQueryServer:
       ## @param deltaFusionQueryServer.healthcheck.readiness.successThreshold Success threshold
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.readiness.failureThreshold Failure threshold
-      failureThreshold: 3
+      failureThreshold: 2
   ## @param deltaFusionQueryServer.nodeSelector Node selector for the deltaFusionQueryServer
   nodeSelector: {}
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
   affinity: {}
   ## @param deltaFusionQueryServer.topologySpreadConstraints Topology spread constraints for the deltaFusionQueryServer
-  topologySpreadConstraints: {}
+  topologySpreadConstraints: []
   ## deltaFusionQueryServer.service Service settings for the deltaFusionQueryServer
   service:
     ## @param deltaFusionQueryServer.service.type Service type for the deltaFusionQueryServer
@@ -2266,19 +2449,19 @@ deltaFusionQueryServer:
     interval: 10s
     ## @param deltaFusionQueryServer.serviceMonitor.path Path for the ServiceMonitor
     path: /metrics
-    ## @param deltaFusionQueryServer.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param deltaFusionQueryServer.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
+    ## @param deltaFusionQueryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param deltaFusionQueryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
   ## deltaFusionQueryServer.serviceAccount Service account settings for the deltaFusionQueryServer
   serviceAccount:
     ## @param deltaFusionQueryServer.serviceAccount.create Bool to create a service account for the deltaFusionQueryServer
     create: false
     ## @param deltaFusionQueryServer.serviceAccount.name Service account name
     name: ""
-    ## @param deltaFusionQueryServer.serviceAccount.labels Labels for the deltaFusionQueryServer service account
+    ## @param deltaFusionQueryServer.serviceAccount.labels [object] Labels for the deltaFusionQueryServer service account
     labels: {}
-    ## @param deltaFusionQueryServer.serviceAccount.annotations Annotations for the deltaFusionQueryServer service account
+    ## @param deltaFusionQueryServer.serviceAccount.annotations [object] Annotations for the deltaFusionQueryServer service account
     annotations: {}
     ## @param deltaFusionQueryServer.serviceAccount.automountServiceAccountToken Automount service account token for the deltaFusionQueryServer service account
     automountServiceAccountToken: true
@@ -2291,68 +2474,81 @@ deltaFusionQueryServer:
     AWS_EC2_METADATA_DISABLED: "true"
     CACHE_FILE_SIZE_MB: "1024"
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
-    DATAFUSION_EXECUTION_META_FETCH_CONCURRENCY: "30"
+    DATAFUSION_EXECUTION_META_FETCH_CONCURRENCY: "64"
+    DATAFUSION_EXECUTION_PARQUET_METADATA_SIZE_HINT: "16384"
     DATAFUSION_EXECUTION_PARQUET_PUSHDOWN_FILTERS: "true"
     DATAFUSION_EXECUTION_PARQUET_REORDER_FILTERS: "true"
     DATAFUSION_EXECUTION_USE_ROW_NUMBER_ESTIMATES_TO_OPTIMIZE_PARTITIONING: "true"
+    DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
     RUST_LOG: info
-    S3_PATH: s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}
+    BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
     SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-## @section tfyNginxProxy Truefoundry tfy k8s controller values
-tfyNginxProxy:
-  ## @param tfyNginxProxy.enabled Bool to enable the tfyNginxProxy
-  enabled: true
-  ## @param tfyNginxProxy.tolerations Tolerations specific to the tfyNginxProxy
+## @section tfyProxy Truefoundry tfy proxy values
+tfyProxy:
+  ## @param tfyProxy.enabled Bool to enable the tfyProxy
+  enabled: false
+  ## @param tfyProxy.tolerations Tolerations specific to the tfyProxy
   tolerations: []
-  ## @skip tfyNginxProxy.replicaCount Number of replicas for the tfyNginxProxy
+  ## @skip tfyProxy.replicaCount Number of replicas for the tfyProxy
   # replicaCount: 1
-  ## @param tfyNginxProxy.annotations [object] Annotations for the tfyNginxProxy
+  ## @param tfyProxy.annotations [object] Annotations for the tfyProxy
   annotations: {}
-  ## tfyNginxProxy.image Image for the tfyNginxProxy
+  ## tfyProxy.image Image for the tfyProxy
   image:
-    ## @param tfyNginxProxy.image.registry Registry for the tfyNginxProxy image (overrides global.registry if specified)
+    ## @param tfyProxy.image.registry Registry for the tfyProxy image (overrides global.registry if specified)
     registry: ""
-    ## @param tfyNginxProxy.image.repository Image repository for the tfyNginxProxy (without registry)
+    ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-images/nginx"
-    ## @param tfyNginxProxy.image.tag Image tag for the tfyNginxProxy
+    ## @param tfyProxy.image.tag Image tag for the tfyProxy
     tag: "1.29"
-  ## @param tfyNginxProxy.environmentName Environment name for tfyNginxProxy
+  ## @param tfyProxy.environmentName Environment name for tfyProxy
   environmentName: default
-  ## @param tfyNginxProxy.envSecretName Secret name for the tfyNginxProxy environment variables
-  envSecretName: 'tfy-nginx-proxy-env-secret'
-  ## @param tfyNginxProxy.imagePullPolicy Image pull policy for the tfyNginxProxy
+  ## @param tfyProxy.envSecretName Secret name for the tfyProxy environment variables
+  envSecretName: 'tfy-proxy-env-secret'
+  ## @param tfyProxy.imagePullPolicy Image pull policy for the tfyProxy
   imagePullPolicy: IfNotPresent
-  ## @param tfyNginxProxy.nameOverride Override name for the tfyNginxProxy
+  ## @param tfyProxy.nameOverride Override name for the tfyProxy
   nameOverride: ''
-  ## @param tfyNginxProxy.fullnameOverride Full name override for the tfyNginxProxy
+  ## @param tfyProxy.fullnameOverride Full name override for the tfyProxy
   fullnameOverride: ''
-  ## @param tfyNginxProxy.podAnnotations [object] Annotations for the tfyNginxProxy pods
+  ## @param tfyProxy.podAnnotations [object] Annotations for the tfyProxy pods
   podAnnotations: {}
-  ## @param tfyNginxProxy.podAnnotations [object] Labels for the tfyNginxProxy pods
+  ## @param tfyProxy.podLabels [object] Labels for the tfyProxy pods
   podLabels: {}
-  ## @param tfyNginxProxy.podSecurityContext Security context for the tfyNginxProxy pods
+  ## @param tfyProxy.podSecurityContext Security context for the tfyProxy pods
   podSecurityContext: {}
-  ## @param tfyNginxProxy.commonAnnotations Common annotations for the tfyNginxProxy pods
+  ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
   commonAnnotations: {}
-  ## @param tfyNginxProxy.commonLabels Common labels for the tfyNginxProxy pods
+  ## @param tfyProxy.deploymentLabels [object] Deployment-specific labels for the tfyProxy pods
+  deploymentLabels: {}
+  ## @param tfyProxy.deploymentAnnotations [object] Deployment-specific annotations for the tfyProxy pods
+  deploymentAnnotations: {}
+  ## @param tfyProxy.commonLabels Common labels for the tfyProxy pods
   commonLabels: {}
-  ## tfyNginxProxy.securityContext Security context for the tfyNginxProxy
+  ## tfyProxy.securityContext Security context for the tfyProxy
   securityContext:
-    ## @param tfyNginxProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyNginxProxy
+    ## @param tfyProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyProxy
     readOnlyRootFilesystem: true
-  ## tfyNginxProxy.autoscaling Autoscaling configuration for tfyNginxProxy
+  ## tfyProxy.prometheusExporter Prometheus exporter settings for the tfyProxy
+  prometheusExporter:
+    ## @param tfyProxy.prometheusExporter.image Nginx Prometheus exporter image
+    image: nginx/nginx-prometheus-exporter
+    ## @param tfyProxy.prometheusExporter.tag Nginx Prometheus exporter image tag
+    tag: 1.4.2
+  ## tfyProxy.autoscaling Autoscaling configuration for tfyProxy
   autoscaling:
-    ## @param tfyNginxProxy.autoscaling.enabled Enable autoscaling
+    ## @param tfyProxy.autoscaling.enabled Enable autoscaling
     enabled: true
-    ## @param tfyNginxProxy.autoscaling.minReplicas Minimum number of replicas for tfyNginxProxy
+    ## @param tfyProxy.autoscaling.minReplicas Minimum number of replicas for tfyProxy
     minReplicas: 3
-    ## @param tfyNginxProxy.autoscaling.maxReplicas Maximum number of replicas for tfyNginxProxy
+    ## @param tfyProxy.autoscaling.maxReplicas Maximum number of replicas for tfyProxy
     maxReplicas: 100
-    ## @param tfyNginxProxy.autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+    ## @param tfyProxy.autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
     targetCPUUtilizationPercentage: 60
+    ## @param tfyProxy.autoscaling.targetMemoryUtilizationPercentage Target Memory utilization percentage
     targetMemoryUtilizationPercentage: 60
-  ## @param tfyNginxProxy.resources [object] Resource requests and limits for the tfyNginxProxy
+  ## @param tfyProxy.resources [object] Resource requests and limits for the tfyProxy
   resources: {}
   # resources:
   #  limits:
@@ -2363,74 +2559,76 @@ tfyNginxProxy:
   #    cpu: 200m
   #    memory: 256Mi
   #    ephemeral-storage: 128Mi
-  ## tfyNginxProxy.livenessProbe Liveness probe settings for the tfyNginxProxy
+  ## tfyProxy.livenessProbe Liveness probe settings for the tfyProxy
   livenessProbe:
-    ## @param tfyNginxProxy.livenessProbe.failureThreshold Liveness probe failure threshold for tfyNginxProxy
+    ## @param tfyProxy.livenessProbe.failureThreshold Liveness probe failure threshold for tfyProxy
     failureThreshold: 3
-    ## @param tfyNginxProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyNginxProxy
+    ## @param tfyProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyProxy
     initialDelaySeconds: 15
-    ## @param tfyNginxProxy.livenessProbe.periodSeconds Liveness probe period for tfyNginxProxy
+    ## @param tfyProxy.livenessProbe.periodSeconds Liveness probe period for tfyProxy
     periodSeconds: 10
-    ## @param tfyNginxProxy.livenessProbe.successThreshold Liveness probe success threshold for tfyNginxProxy
+    ## @param tfyProxy.livenessProbe.successThreshold Liveness probe success threshold for tfyProxy
     successThreshold: 1
-    ## @param tfyNginxProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyNginxProxy
+    ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
     timeoutSeconds: 1
-  ## tfyNginxProxy.readinessProbe Readiness probe settings for the tfyNginxProxy
+  ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
   readinessProbe:
-    ## @param tfyNginxProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyNginxProxy
+    ## @param tfyProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyProxy
     failureThreshold: 3
-    ## @param tfyNginxProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyNginxProxy
+    ## @param tfyProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyProxy
     initialDelaySeconds: 30
-    ## @param tfyNginxProxy.readinessProbe.periodSeconds Readiness probe period for tfyNginxProxy
+    ## @param tfyProxy.readinessProbe.periodSeconds Readiness probe period for tfyProxy
     periodSeconds: 10
-    ## @param tfyNginxProxy.readinessProbe.successThreshold Readiness probe success threshold for tfyNginxProxy
+    ## @param tfyProxy.readinessProbe.successThreshold Readiness probe success threshold for tfyProxy
     successThreshold: 1
-    ## @param tfyNginxProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyNginxProxy
+    ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
     timeoutSeconds: 1
-  ## @param tfyNginxProxy.nodeSelector Node selector for the tfyNginxProxy
+  ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
   nodeSelector: {}
-  ## @param tfyNginxProxy.affinity Affinity settings for the tfyNginxProxy
+  ## @param tfyProxy.affinity Affinity settings for the tfyProxy
   affinity: {}
-  ## @param tfyNginxProxy.topologySpreadConstraints [object] Topology spread constraints for the tfyNginxProxy
+  ## @param tfyProxy.topologySpreadConstraints [object] Topology spread constraints for the tfyProxy
   topologySpreadConstraints: {}
-  ## tfyNginxProxy.service Service settings for the tfyNginxProxy
+  ## tfyProxy.service Service settings for the tfyProxy
   service:
-    ## @param tfyNginxProxy.service.type Service type for the tfyNginxProxy
+    ## @param tfyProxy.service.type Service type for the tfyProxy
     type: ClusterIP
-    ## @param tfyNginxProxy.service.port Service port for the tfyNginxProxy
+    ## @param tfyProxy.service.port Service port for the tfyProxy
     port: 8080
-    ## @param tfyNginxProxy.service.annotations Annotations for the tfyNginxProxy service
+    ## @param tfyProxy.service.labels [object] Labels for the tfyProxy service
+    labels: {}
+    ## @param tfyProxy.service.annotations Annotations for the tfyProxy service
     annotations: {}
-    ## tfyNginxProxy.serviceAccount Service account settings for the tfyNginxProxy
+    ## tfyProxy.serviceAccount Service account settings for the tfyProxy
   serviceAccount:
-    ## @param tfyNginxProxy.serviceAccount.create Bool to create a service account for the tfyNginxProxy
+    ## @param tfyProxy.serviceAccount.create Bool to create a service account for the tfyProxy
     create: false
-    ## @param tfyNginxProxy.serviceAccount.annotations Annotations for the tfyNginxProxy service account
+    ## @param tfyProxy.serviceAccount.annotations Annotations for the tfyProxy service account
     annotations: {}
-    ## @param tfyNginxProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyNginxProxy service account
+    ## @param tfyProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyProxy service account
     automountServiceAccountToken: true
-  ## @param tfyNginxProxy.extraVolumes Extra volumes for the tfyNginxProxy
+  ## @param tfyProxy.extraVolumes Extra volumes for the tfyProxy
   extraVolumes: []
-  ## @param tfyNginxProxy.extraVolumeMounts Extra volume mounts for the tfyNginxProxy
+  ## @param tfyProxy.extraVolumeMounts Extra volume mounts for the tfyProxy
   extraVolumeMounts: []
-  ## tfyNginxProxy.serviceMonitor ServiceMonitor settings for the tfyNginxProxy
+  ## tfyProxy.serviceMonitor ServiceMonitor settings for the tfyProxy
   serviceMonitor:
-    ## @param tfyNginxProxy.serviceMonitor.enabled Enable ServiceMonitor for the tfyNginxProxy
+    ## @param tfyProxy.serviceMonitor.enabled Enable ServiceMonitor for the tfyProxy
     enabled: true
-    ## @param tfyNginxProxy.serviceMonitor.interval Interval for the ServiceMonitor
+    ## @param tfyProxy.serviceMonitor.interval Interval for the ServiceMonitor
     interval: 10s
-    ## @param tfyNginxProxy.serviceMonitor.path Path for the ServiceMonitor
+    ## @param tfyProxy.serviceMonitor.path Path for the ServiceMonitor
     path: /metrics
-    ## @param tfyNginxProxy.serviceMonitor.additionalLabels Additional labels for the ServiceMonitor
-    additionalLabels: {}
-    ## @param tfyNginxProxy.serviceMonitor.additionalAnnotations Additional annotations for the ServiceMonitor
-    additionalAnnotations: {}
-  ## @param tfyNginxProxy.extraProxyLocations Extra proxy locations for the tfyNginxProxy
+    ## @param tfyProxy.serviceMonitor.labels Additional labels for the ServiceMonitor
+    labels: {}
+    ## @param tfyProxy.serviceMonitor.annotations Additional annotations for the ServiceMonitor
+    annotations: {}
+  ## @param tfyProxy.extraProxyLocations Extra proxy locations for the tfyProxy
   extraProxyLocations: []
-  ## @param tfyNginxProxy.imagePullSecrets Image pull secrets for the tfyNginxProxy
+  ## @param tfyProxy.imagePullSecrets Image pull secrets for the tfyProxy
   ##
   imagePullSecrets: []
-  ## @param tfyNginxProxy.env [object] Environment variables for the tfyNginxProxy
+  ## @param tfyProxy.env [object] Environment variables for the tfyProxy
   env: {}
 ###################################################################################################################
 ######################################## Extra Resources ##########################################################
