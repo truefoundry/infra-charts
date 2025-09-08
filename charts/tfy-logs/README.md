@@ -30,27 +30,57 @@ The solution consists of two main components:
 
 ## Parameters
 
+### Global configuration
+
+| Name                      | Description               | Value |
+| ------------------------- | ------------------------- | ----- |
+| `global.imagePullSecrets` | Global image pull secrets | `[]`  |
+
 ### Upstream VictoriaLogs configurations
 
-| Name                                                  | Description                                                                           | Value                                             |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `victoria-logs-single.enabled`                        | Enable victoria-logs-single                                                           | `true`                                            |
-| `victoria-logs-single.global.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                         |
-| `victoria-logs-single.server.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                         |
-| `victoria-logs-single.server.retentionPeriod`         | Retention period                                                                      | `15d`                                             |
-| `victoria-logs-single.server.retentionDiskSpaceUsage` | Retention disk space usage, this is kept to be 6-8% smaller than the total disk space | `46`                                              |
-| `victoria-logs-single.server.persistentVolume.size`   | Persistent volume size                                                                | `50Gi`                                            |
-| `victoria-logs-single.server.resources`               | Resources                                                                             | `{}`                                              |
-| `victoria-logs-single.server.affinity`                | Affinity                                                                              | `{}`                                              |
-| `victoria-logs-single.server.tolerations`             | Tolerations                                                                           | `[]`                                              |
-| `victoria-logs-single.vector.resources`               | Resources                                                                             | `{}`                                              |
-| `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`                            |
-| `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `public.ecr.aws/truefoundrycloud/timberio/vector` |
-| `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                                            |
-| `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                                              |
-| `victoria-logs-single.vector.tolerations`             | Tolerations                                                                           | `[]`                                              |
-| `victoria-logs-single.vector.nodeSelector`            | Node selector                                                                         | `{}`                                              |
-| `victoria-logs-single.vector.customConfig`            | Custom config                                                                         | `{}`                                              |
+| Name                                                  | Description                                                                           | Value                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `victoria-logs-single.enabled`                        | Enable victoria-logs-single                                                           | `true`                                                      |
+| `victoria-logs-single.global.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                                   |
+| `victoria-logs-single.server.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                                   |
+| `victoria-logs-single.server.retentionPeriod`         | Retention period                                                                      | `15d`                                                       |
+| `victoria-logs-single.server.retentionDiskSpaceUsage` | Retention disk space usage, this is kept to be 6-8% smaller than the total disk space | `46`                                                        |
+| `victoria-logs-single.server.persistentVolume.size`   | Persistent volume size                                                                | `50Gi`                                                      |
+| `victoria-logs-single.server.resources`               | Resources                                                                             | `{}`                                                        |
+| `victoria-logs-single.server.affinity`                | Affinity                                                                              | `{}`                                                        |
+| `victoria-logs-single.server.tolerations`             | Tolerations                                                                           | `[]`                                                        |
+| `victoria-logs-single.vector.resources`               | Resources                                                                             | `{}`                                                        |
+| `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`                                      |
+| `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `tfy-user@truefoundry.com/truefoundrycloud/timberio/vector` |
+| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `0.46.1`                                                    |
+| `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                                                      |
+| `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                                                        |
+| `victoria-logs-single.vector.tolerations`             | Tolerations                                                                           | `[]`                                                        |
+| `victoria-logs-single.vector.nodeSelector`            | Node selector                                                                         | `{}`                                                        |
+| `victoria-logs-single.vector.customConfig`            | Custom config                                                                         | `{}`                                                        |
+
+### Windows Vector configurations
+
+| Name                                   | Description                                                      | Value                              |
+| -------------------------------------- | ---------------------------------------------------------------- | ---------------------------------- |
+| `windowsVector.enabled`                | Enable Windows Vector daemon set for Windows node log collection | `true`                             |
+| `windowsVector.labels`                 | Labels to add to the Windows Vector pods                         | `{}`                               |
+| `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                               |
+| `windowsVector.image.registry`         | Image registry                                                   | `public.ecr.aws`                   |
+| `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
+| `windowsVector.image.tag`              | Image tag                                                        | `0.46.1`                           |
+| `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
+| `windowsVector.imagePullSecrets`       | Image pull secrets for Windows Vector pods                       | `[]`                               |
+| `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
+| `windowsVector.resources`              | Resources for Windows Vector pods                                | `{}`                               |
+| `windowsVector.nodeSelector`           | Node selector                                                    | `{}`                               |
+| `windowsVector.podPriorityClassName`   | Pod priority class name for Windows Vector pods                  | `""`                               |
+| `windowsVector.affinity`               | Affinity configuration for Windows Vector pods                   | `{}`                               |
+| `windowsVector.additionalVolumeMounts` | Additional volume mounts for Windows Vector pods                 | `[]`                               |
+| `windowsVector.additionalVolumes`      | Additional volumes for Windows Vector pods                       | `[]`                               |
+
+### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
+
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 

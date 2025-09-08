@@ -31,6 +31,41 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+labels for vector
+*/}}
+{{- define "tfy-logs.labels" -}}
+helm.sh/chart: {{ include "tfy-logs.chart" . }}
+{{ include "tfy-logs.selectorLabels" . }}
+app.kubernetes.io/component: vector
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- with .Values.labels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+annotations for vector
+*/}}
+{{- define "tfy-logs.annotations" -}}
+{{- with .Values.annotations }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "tfy-logs.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-logs.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+
+
+{{/*
 Labels for resource quotas
 */}}
 {{- define "resource-quotas.labels" -}}
@@ -49,5 +84,16 @@ Annotations for resource quotas
   {{ toYaml . }}
 {{- else }}
 {}
+{{- end }}
+{{- end }}
+
+{{/*
+Image pull secrets for Windows Vector with fallback to global
+*/}}
+{{- define "tfy-logs.windowsVector.imagePullSecrets" -}}
+{{- if .Values.windowsVector.imagePullSecrets }}
+{{- toYaml .Values.windowsVector.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets }}
+{{- toYaml .Values.global.imagePullSecrets }}
 {{- end }}
 {{- end }} 
