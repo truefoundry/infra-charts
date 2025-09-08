@@ -85,4 +85,15 @@ Annotations for resource quotas
 {{- else }}
 {}
 {{- end }}
+{{- end }}
+
+{{/*
+Image pull secrets for Windows Vector with fallback to global
+*/}}
+{{- define "tfy-logs.windowsVector.imagePullSecrets" -}}
+{{- if .Values.windowsVector.imagePullSecrets }}
+{{- toYaml .Values.windowsVector.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets }}
+{{- toYaml .Values.global.imagePullSecrets }}
+{{- end }}
 {{- end }} 
