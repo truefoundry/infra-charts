@@ -18,6 +18,7 @@ A Helm chart for jspolicy configurations
 | `replaceImageRegistry.excludeNamespaces`      | Namespaces to exclude from replacing the image registry. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.                                                         | `[]`    |
 | `replaceImageRegistry.includeNamespaces`      | Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-. | `[]`    |
 | `replaceImageRegistry.registryReplacementMap` | The image registry replacement map                                                                                                                                                                                                                        | `{}`    |
+| `replaceImageRegistry.excludeRegistries`      | Registries to exclude from replacing the image registry. Example ["docker.io", "ghcr.io"] will exclude docker.io and ghcr.io.                                                                                                                             | `[]`    |
 
 ### replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 
