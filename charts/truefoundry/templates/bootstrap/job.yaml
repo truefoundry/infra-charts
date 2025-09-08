@@ -52,10 +52,8 @@ spec:
         {{- if gt (len .Values.truefoundryBootstrap.extraVolumeMounts) 0 }}
         {{- toYaml .Values.truefoundryBootstrap.extraVolumeMounts | nindent 8 }}
         {{- end }}
-      {{- with .Values.truefoundryBootstrap.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "bootstrap.imagePullSecrets" . | nindent 8 }}
       volumes:
       - name: truefoundry-bootstrap-script
         secret:

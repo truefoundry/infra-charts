@@ -45,6 +45,17 @@ requests:
 {{- end -}}
 
 {{/*
+  image pull secrets
+*/}}
+{{- define "bootstrap.imagePullSecrets" -}}
+{{- if .Values.truefoundryBootstrap.imagePullSecrets -}}
+{{- toYaml .Values.truefoundryBootstrap.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
+{{- end }}
+
+{{/*
   pod labels
 */}}
 {{ define "bootstrap.podlabels" -}}

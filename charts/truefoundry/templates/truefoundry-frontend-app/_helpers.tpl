@@ -208,8 +208,16 @@ Expand the name of the chart.
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "truefoundry-frontend-app.resourceTier" }}
+{{- $tier := .Values.truefoundryFrontendApp.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "truefoundry-frontend-app.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "truefoundry-frontend-app.resourceTier" . }}
 {{- if .Values.truefoundryFrontendApp.replicaCount -}}
 {{ .Values.truefoundryFrontendApp.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -255,7 +263,7 @@ limits:
 {{- end }}
 
 {{- define "truefoundry-frontend-app.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "truefoundry-frontend-app.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -278,4 +286,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "truefoundry-frontend-app.imagePullSecrets" -}}
+{{- if .Values.truefoundryFrontendApp.imagePullSecrets -}}
+{{- toYaml .Values.truefoundryFrontendApp.imagePullSecrets | nindent 2 }}
+{{- else }}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

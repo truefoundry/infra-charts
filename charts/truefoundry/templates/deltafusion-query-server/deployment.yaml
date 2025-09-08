@@ -72,10 +72,8 @@ spec:
             {{- if .Values.deltaFusionQueryServer.extraVolumeMounts }}
             {{- include "deltafusion-query-server.volumeMounts" . | nindent 12 }}
             {{- end }}
-      {{- with .Values.deltaFusionQueryServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "deltafusion-query-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         - name: tmp-dir
           emptyDir:

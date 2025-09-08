@@ -322,7 +322,7 @@ PORT: "{{ .Values.deltaFusionQueryServer.service.port }}"
 {{- end }}
 
 {{- define "deltafusion-query-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "deltafusion-query-server.resourceTier" . }}
 {{- if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
@@ -377,3 +377,14 @@ Tolerations for the deltafusion-query-server service
 {{- toYaml . | nindent 0 }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Image Pull Secrets
+*/}}
+{{- define "deltafusion-query-server.imagePullSecrets" -}}
+{{- if .Values.deltaFusionQueryServer.imagePullSecrets -}}
+{{- toYaml .Values.deltaFusionQueryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
+{{- end }}

@@ -178,8 +178,16 @@ Expand the name of the chart.
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "mlfoundry-server.resourceTier" }}
+{{- $tier := .Values.mlfoundryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "mlfoundry-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "mlfoundry-server.resourceTier" . }}
 {{- if .Values.mlfoundryServer.replicaCount -}}
 {{ .Values.mlfoundryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -225,7 +233,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "mlfoundry-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -262,4 +270,12 @@ limits:
 {{- $userMounts := .Values.mlfoundryServer.extraVolumeMounts | default (list) -}}
 {{- $final := prepend $userMounts $required }}
 {{- toYaml $final }}
+{{- end }}
+
+{{- define "mlfoundry-server.imagePullSecrets" -}}
+{{- if .Values.mlfoundryServer.imagePullSecrets -}}
+{{- toYaml .Values.mlfoundryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

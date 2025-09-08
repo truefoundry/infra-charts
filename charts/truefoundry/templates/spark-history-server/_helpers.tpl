@@ -201,8 +201,16 @@ Expand the name of the chart.
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "spark-history-server.resourceTier" }}
+{{- $tier := .Values.sparkHistoryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "spark-history-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "spark-history-server.resourceTier" . }}
 {{- if .Values.sparkHistoryServer.replicaCount -}}
 {{ .Values.sparkHistoryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -247,7 +255,7 @@ limits:
 {{- end }}
 
 {{- define "spark-history-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "spark-history-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -270,4 +278,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "spark-history-server.imagePullSecrets" -}}
+{{- if .Values.sparkHistoryServer.imagePullSecrets -}}
+{{- toYaml .Values.sparkHistoryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

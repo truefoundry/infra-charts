@@ -215,8 +215,16 @@ Expand the name of the chart.
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "tfy-k8s-controller.resourceTier" }}
+{{- $tier := .Values.tfyK8sController.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "tfy-k8s-controller.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-k8s-controller.resourceTier" . }}
 {{- if .Values.tfyK8sController.replicaCount -}}
 {{ .Values.tfyK8sController.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -260,7 +268,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-k8s-controller.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-k8s-controller.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -283,4 +291,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-k8s-controller.imagePullSecrets" -}}
+{{- if .Values.tfyK8sController.imagePullSecrets -}}
+{{- toYaml .Values.tfyK8sController.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

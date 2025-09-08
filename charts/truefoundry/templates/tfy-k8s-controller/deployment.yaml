@@ -60,10 +60,8 @@ spec:
             initialDelaySeconds: {{ .Values.tfyK8sController.readinessProbe.initialDelaySeconds }}
           volumeMounts:
             {{- include "tfy-k8s-controller.volumeMounts" . | nindent 12 }}
-      {{- with .Values.tfyK8sController.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-k8s-controller.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "tfy-k8s-controller.volumes" . | nindent 8 }}
       {{- if .Values.tfyK8sController.nodeSelector }}

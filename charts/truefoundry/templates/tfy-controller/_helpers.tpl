@@ -194,8 +194,16 @@ Expand the name of the chart.
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "tfy-controller.resourceTier" }}
+{{- $tier := .Values.tfyController.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "tfy-controller.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-controller.resourceTier" . }}
 {{- if .Values.tfyController.replicaCount -}}
 {{ .Values.tfyController.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -241,7 +249,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-controller.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-controller.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -264,4 +272,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-controller.imagePullSecrets"}}
+{{- if .Values.tfyController.imagePullSecrets -}}
+{{- toYaml .Values.tfyController.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

@@ -205,8 +205,16 @@ Expand the name of the chart.
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "tfy-workflow-admin.resourceTier" }}
+{{- $tier := .Values.tfyWorkflowAdmin.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "tfy-workflow-admin-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 {{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -219,7 +227,7 @@ Expand the name of the chart.
 {{- end }}
 
 {{- define "tfy-workflow-admin-scheduler.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 {{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -298,7 +306,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-workflow-admin-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -324,7 +332,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-workflow-admin-scheduler.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -347,4 +355,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged | indent 8 }}
+{{- end }}
+
+{{- define "tfy-workflow-admin.imagePullSecrets" -}}
+{{- if .Values.tfyWorkflowAdmin.imagePullSecrets -}}
+{{- toYaml .Values.tfyWorkflowAdmin.imagePullSecrets | indent 8 }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets | indent 8 }}
+{{- end -}}
 {{- end }}

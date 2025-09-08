@@ -303,8 +303,16 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "servicefoundry-server.resourceTier" }}
+{{- $tier := .Values.servicefoundryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "servicefoundry-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "servicefoundry-server.resourceTier" . }}
 {{- if .Values.servicefoundryServer.replicaCount -}}
 {{ .Values.servicefoundryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -350,7 +358,7 @@ limits:
 {{- end }}
 
 {{- define "servicefoundry-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "servicefoundry-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -373,4 +381,13 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+
+{{- define "servicefoundry-server.imagePullSecrets" -}}
+{{- if .Values.servicefoundryServer.imagePullSecrets -}}
+{{- toYaml .Values.servicefoundryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}
