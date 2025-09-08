@@ -74,6 +74,8 @@ spec:
             mountPath: /etc/oidc
             readOnly: true
           {{- end }}
+      imagePullSecrets:
+        {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 8 }}
       volumes:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}

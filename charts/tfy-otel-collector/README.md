@@ -11,6 +11,7 @@ Tfy-Otel_collector Helm Chart
 | `global.resourceTier`                         | Resource deployment type                                                           | `""`                                       |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                        | `{}`                                       |
 | `global.tolerations`                          | Tolerations for pod scheduling on a node                                           | `[]`                                       |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                        | `[]`                                       |
 | `global.nodeSelector`                         | Node selector                                                                      | `{}`                                       |
 | `global.serviceAccount.name`                  | Service account name                                                               | `truefoundry`                              |
 | `global.image.registry`                       | Image registry for tfyOtelCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                             |
