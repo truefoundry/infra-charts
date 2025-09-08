@@ -11,13 +11,14 @@ Tfy-Otel_collector Helm Chart
 | `global.resourceTier`                         | Resource deployment type                                                           | `""`                                       |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                        | `{}`                                       |
 | `global.tolerations`                          | Tolerations for pod scheduling on a node                                           | `[]`                                       |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                        | `[]`                                       |
 | `global.nodeSelector`                         | Node selector                                                                      | `{}`                                       |
 | `global.serviceAccount.name`                  | Service account name                                                               | `truefoundry`                              |
 | `global.image.registry`                       | Image registry for tfyOtelCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                             |
 | `env`                                         | Environment variables for the tfyOtelCollector                                     | `{}`                                       |
 | `image.registry`                              | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                       |
 | `image.repository`                            | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector`    |
-| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `c3c0f67ba8d497f99c4c59abcc08b6d45ba4c81d` |
+| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `b9fafa65f72486ed3a3f1fcbb734feb4ab190889` |
 | `imagePullSecrets`                            | List of secrets to pull images                                                     | `[]`                                       |
 | `fullnameOverride`                            | Full name override for the tfy-otel-collector                                      | `""`                                       |
 | `environmentName`                             | The environment name                                                               | `default`                                  |
