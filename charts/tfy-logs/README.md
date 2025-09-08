@@ -30,6 +30,12 @@ The solution consists of two main components:
 
 ## Parameters
 
+### Global configuration
+
+| Name                      | Description               | Value |
+| ------------------------- | ------------------------- | ----- |
+| `global.imagePullSecrets` | Global image pull secrets | `[]`  |
+
 ### Upstream VictoriaLogs configurations
 
 | Name                                                  | Description                                                                           | Value                                                       |
