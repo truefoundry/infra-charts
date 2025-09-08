@@ -210,8 +210,16 @@ Expand the name of the chart.
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "s3proxy.resourceTier" }}
+{{- $tier := .Values.s3proxy.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "s3proxy.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "s3proxy.resourceTier" . }}
 {{- if .Values.s3proxy.replicaCount -}}
 {{ .Values.s3proxy.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -256,7 +264,7 @@ limits:
 {{- end }}
 
 {{- define "s3proxy.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "s3proxy.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -279,4 +287,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "s3proxy.imagePullSecrets" -}}
+{{- if .Values.s3proxy.imagePullSecrets -}}
+{{- toYaml .Values.s3proxy.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

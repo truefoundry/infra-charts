@@ -12,8 +12,10 @@ global:
   # The below are installation secrets that will be provided as is.
   # These are customised for your account. Please use the provided values as is.
   # If you have an existing imagepullsecret, set this to its name
-  ## @param global.existingTruefoundryImagePullSecretName Name of the existing image pull secret
-  existingTruefoundryImagePullSecretName: ""
+  ## imagePullSecrets:
+  ## - name: "truefoundry-image-pull-secret"
+  ## @param global.imagePullSecrets [array] List of image pull secrets
+  imagePullSecrets: []
   ## @param global.truefoundryImagePullConfigJSON JSON config for image pull secret
   truefoundryImagePullConfigJSON: ""
   ## @param global.tenantName Name of the tenant
@@ -21,11 +23,41 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.82.1
+  controlPlaneChartVersion: 0.83.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
   existingTruefoundryCredsSecret: ""
+  ## global.ingress Ingress configuration for the control plane
+  ingress:
+    ## @param global.ingress.enabled Bool to enable ingress for the control plane
+    enabled: false
+    ## @param global.ingress.annotations [object] Annotations for the control plane ingress
+    annotations: {}
+    ## @param global.ingress.labels [object] Labels for the control plane ingress
+    labels: {}
+    ## @param global.ingress.ingressClassName Ingress class name for the control plane
+    ingressClassName: istio
+    ## @param global.ingress.tls TLS settings for the control plane
+    tls: []
+    ## @param global.ingress.hosts Hosts for the control plane
+    hosts: []
+  ## global.virtualservice Istio configuration for the control plane
+  virtualservice:
+    ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
+    enabled: false
+    ## @param global.virtualservice.annotations [object] Annotations for the control plane virtual service
+    annotations: {}
+    ## @param global.virtualservice.gateways Gateways for the control plane virtual service
+    gateways: []
+    ## @param global.virtualservice.hosts Hosts for the control plane virtual service
+    hosts: []
+  ## global.proxy Global proxy configuration
+  proxy:
+    ## @param global.proxy.enabled Bool to enable proxy for the control plane
+    enabled: false
+    ## @param global.proxy.hosts [array] List of proxy hosts
+    hosts: []
   ## global.database Database configuration when dev mode is not enabled
   database:
     ## @param global.database.host Control plane database hostname when dev mode is not enabled
@@ -256,7 +288,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.82.0"
+    tag: "v0.83.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -283,6 +315,8 @@ truefoundryFrontendApp:
   securityContext:
     ## @param truefoundryFrontendApp.securityContext.readOnlyRootFilesystem Read only root filesystem for the frontend app
     readOnlyRootFilesystem: true
+  ## @param truefoundryFrontendApp.resourceTierOverride Resource tier override for the truefoundryFrontendApp
+  resourceTierOverride: ""
   ## @param truefoundryFrontendApp.resources Resource requests and limits for the frontend app
   resources: {}
   # resources:
@@ -363,6 +397,9 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
   servicefoundryServerHost: >-
     {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local
+  ## @param truefoundryFrontendApp.mlfoundryHost mlfoundry server host for the frontend app
+  mlfoundryHost: >-
+    {{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local
   ## @param truefoundryFrontendApp.tfyWorkflowAdminHost tfy workflow admin host for the frontend app
   tfyWorkflowAdminHost: >-
     {{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local
@@ -431,7 +468,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.80.0"
+    tag: "v0.83.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -454,6 +491,8 @@ mlfoundryServer:
   securityContext:
     ## @param mlfoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the mlfoundry server
     readOnlyRootFilesystem: true
+  ## @param mlfoundryServer.resourceTierOverride Resource tier override for the mlfoundryServer
+  resourceTierOverride: ""
   ## @param mlfoundryServer.resources [object] Resource requests and limits for the mlfoundry server
   resources: {}
   # resources:
@@ -589,6 +628,8 @@ s3proxy:
   deploymentAnnotations: {}
   ## @param s3proxy.securityContext Security context for the s3 proxy
   securityContext: {}
+  ## @param s3proxy.resourceTierOverride Resource tier override for the s3proxy
+  resourceTierOverride: ""
   ## @skip s3proxy.resources [object] Resource requests and limits for the s3 proxy
   # resources:
   #  ## s3proxy.resources.limits Resource limits for the s3 proxy
@@ -697,7 +738,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.82.0"
+    tag: "v0.83.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -718,6 +759,8 @@ servicefoundryServer:
   securityContext:
     ## @param servicefoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the servicefoundry server
     readOnlyRootFilesystem: true
+  ## @param servicefoundryServer.resourceTierOverride Resource tier override for the servicefoundryServer
+  resourceTierOverride: ""
   ## @param servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
   resources: {}
   # resources:
@@ -916,7 +959,6 @@ servicefoundryServer:
     FE_FILL_THRESHOLD_PLUGIN_ENABLED_TENANTS: ""
     FE_ENABLE_MCP_CATALOGUE: "false"
     FE_MCP_CATALOGUE_ENABLED_TENANTS: ""
-    FE_ENABLE_CONTACT_SUPPORT: "false"
     FE_ENABLE_SENTRY: "true"
     FE_ENABLE_TOOLS_AGENTS: "false"
     FE_ENABLE_READ_ONLY_INTERACTIVE_MODE: "false"
@@ -940,12 +982,14 @@ servicefoundryServer:
     FE_ENABLE_SUPERFLOW: "false"
     FE_ENABLE_GUARDRAILS: "true"
     FE_GUARDRAILS_ENABLED_TENANTS: ""
-    FE_MODEL_CONFIG_PATH: /llm-gateway/ai-models-prod-v2.json
+    FE_MODEL_CONFIG_PATH: /llm-gateway/prod/ai-models.json
     DELTAFUSION_QUERY_URL: http://{{ .Release.Name }}-deltafusion-query-server.{{ .Release.Namespace }}.svc.cluster.local:8080
     SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ .Release.Namespace }}.svc.cluster.local:18080
     OTEL_SERVICE_NAME: servicefoundry-server
     FE_ENABLE_GATEWAY_DELTAFUSION: "false"
     FE_ENABLE_ROUTING_CONFIG: "false"
+    FE_ENABLE_MCP_METRICS: "false"
+    FE_MCP_METRICS_ENABLED_TENANTS: ""
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: '{{ .Release.Name }}-cicd-templates-cm'
@@ -1002,6 +1046,8 @@ sparkHistoryServer:
   deploymentAnnotations: {}
   ## @param sparkHistoryServer.securityContext Security context for the spark history server
   securityContext: {}
+  ## @param sparkHistoryServer.resourceTierOverride Resource tier override for the sparkHistoryServer
+  resourceTierOverride: ""
   ## @skip sparkHistoryServer.resources [object] Resource requests and limits for the spark history server
   # resources:
   #  ## sparkHistoryServer.resources.limits Resource limits for the spark history server
@@ -1103,7 +1149,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.80.0"
+    tag: "v0.83.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1134,6 +1180,8 @@ tfyK8sController:
   securityContext:
     ## @param tfyK8sController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyK8sController
     readOnlyRootFilesystem: true
+  ## @param tfyK8sController.resourceTierOverride Resource tier override for the tfyK8sController
+  resourceTierOverride: ""
   ## @param tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
   resources: {}
   # resources:
@@ -1230,6 +1278,8 @@ tfyK8sController:
     CLICKHOUSE_PASSWORD: "{{ if .Values.tags.llmGatewayRequestLogging }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}"
     MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     RUN_MODEL_COST_SYNC_CRON: "true"
+    DELTAFUSION_INGESTOR_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
+    DELTAFUSION_QUERY_SERVER_URL: http://{{ .Release.Name }}-deltafusion-query-server.{{ .Release.Namespace }}.svc.cluster.local:8080
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1280,6 +1330,8 @@ sfyManifestService:
   securityContext:
     ## @param sfyManifestService.securityContext.readOnlyRootFilesystem Read only root filesystem for the sfy manifest service
     readOnlyRootFilesystem: false
+  ## @param sfyManifestService.resourceTierOverride Resource tier override for the sfyManifestService
+  resourceTierOverride: ""
   ## @param sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
   resources: {}
   # resources:
@@ -1644,7 +1696,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.79.0
+    tag: v0.83.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1686,6 +1738,8 @@ tfyController:
     labels: {}
     ## @param tfyController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
     annotations: {}
+  ## @param tfyController.resourceTierOverride Resource tier override for the tfyController
+  resourceTierOverride: ""
   ## @param tfyController.resources [object] Resource requests and limits for the tfyController
   resources: {}
   # resources:
@@ -1816,6 +1870,8 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
+  ## @param tfyWorkflowAdmin.resourceTierOverride Resource tier override for the tfyWorkflowAdmin
+  resourceTierOverride: ""
   ## @param tfyWorkflowAdmin.resources [object] Resource requests and limits for the tfyWorkflowAdmin
   resources: {}
   # resources:
@@ -2172,7 +2228,7 @@ deltaFusionIngestor:
       ## @param deltaFusionIngestor.healthcheck.readiness.successThreshold Success threshold
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
-      failureThreshold: 3
+      failureThreshold: 2
     ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
       ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
@@ -2257,6 +2313,8 @@ deltaFusionIngestor:
     name: ""
     ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
     automountServiceAccountToken: false
+  ## @param deltaFusionIngestor.resourceTierOverride Resource tier override for the deltaFusionIngestor
+  resourceTierOverride: ""
   ## @skip deltaFusionIngestor.resources Resource requests and limits
   # resources: {}
   ## @param deltaFusionIngestor.extraVolumes Extra volumes
@@ -2305,7 +2363,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.82.0
+    tag: v0.83.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2369,7 +2427,7 @@ deltaFusionQueryServer:
       ## @param deltaFusionQueryServer.healthcheck.readiness.successThreshold Success threshold
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.readiness.failureThreshold Failure threshold
-      failureThreshold: 3
+      failureThreshold: 2
   ## @param deltaFusionQueryServer.nodeSelector Node selector for the deltaFusionQueryServer
   nodeSelector: {}
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
@@ -2428,7 +2486,154 @@ deltaFusionQueryServer:
     RUST_LOG: info
     BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
     SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+## @section tfyProxy Truefoundry tfy proxy values
+tfyProxy:
+  ## @param tfyProxy.enabled Bool to enable the tfyProxy
+  enabled: false
+  ## @param tfyProxy.tolerations Tolerations specific to the tfyProxy
+  tolerations: []
+  ## @skip tfyProxy.replicaCount Number of replicas for the tfyProxy
+  # replicaCount: 1
+  ## @param tfyProxy.annotations [object] Annotations for the tfyProxy
+  annotations: {}
+  ## tfyProxy.image Image for the tfyProxy
+  image:
+    ## @param tfyProxy.image.registry Registry for the tfyProxy image (overrides global.registry if specified)
+    registry: ""
+    ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
+    repository: "tfy-images/nginx"
+    ## @param tfyProxy.image.tag Image tag for the tfyProxy
+    tag: "1.29"
+  ## @param tfyProxy.environmentName Environment name for tfyProxy
+  environmentName: default
+  ## @param tfyProxy.envSecretName Secret name for the tfyProxy environment variables
+  envSecretName: 'tfy-proxy-env-secret'
+  ## @param tfyProxy.imagePullPolicy Image pull policy for the tfyProxy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyProxy.nameOverride Override name for the tfyProxy
+  nameOverride: ''
+  ## @param tfyProxy.fullnameOverride Full name override for the tfyProxy
+  fullnameOverride: ''
+  ## @param tfyProxy.podAnnotations [object] Annotations for the tfyProxy pods
+  podAnnotations: {}
+  ## @param tfyProxy.podLabels [object] Labels for the tfyProxy pods
+  podLabels: {}
+  ## @param tfyProxy.podSecurityContext Security context for the tfyProxy pods
+  podSecurityContext: {}
+  ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
+  commonAnnotations: {}
+  ## @param tfyProxy.deploymentLabels [object] Deployment-specific labels for the tfyProxy pods
+  deploymentLabels: {}
+  ## @param tfyProxy.deploymentAnnotations [object] Deployment-specific annotations for the tfyProxy pods
+  deploymentAnnotations: {}
+  ## @param tfyProxy.commonLabels Common labels for the tfyProxy pods
+  commonLabels: {}
+  ## tfyProxy.securityContext Security context for the tfyProxy
+  securityContext:
+    ## @param tfyProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyProxy
+    readOnlyRootFilesystem: true
+  ## tfyProxy.prometheusExporter Prometheus exporter settings for the tfyProxy
+  prometheusExporter:
+    ## @param tfyProxy.prometheusExporter.image Nginx Prometheus exporter image
+    image: nginx/nginx-prometheus-exporter
+    ## @param tfyProxy.prometheusExporter.tag Nginx Prometheus exporter image tag
+    tag: 1.4.2
+  ## tfyProxy.autoscaling Autoscaling configuration for tfyProxy
+  autoscaling:
+    ## @param tfyProxy.autoscaling.enabled Enable autoscaling
+    enabled: true
+    ## @param tfyProxy.autoscaling.minReplicas Minimum number of replicas for tfyProxy
+    minReplicas: 3
+    ## @param tfyProxy.autoscaling.maxReplicas Maximum number of replicas for tfyProxy
+    maxReplicas: 100
+    ## @param tfyProxy.autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+    targetCPUUtilizationPercentage: 60
+    ## @param tfyProxy.autoscaling.targetMemoryUtilizationPercentage Target Memory utilization percentage
+    targetMemoryUtilizationPercentage: 60
+  ## @param tfyProxy.resources [object] Resource requests and limits for the tfyProxy
+  resources: {}
+  # resources:
+  #  limits:
+  #    cpu: 400m
+  #    memory: 512Mi
+  #    ephemeral-storage: 256Mi
+  #  requests:
+  #    cpu: 200m
+  #    memory: 256Mi
+  #    ephemeral-storage: 128Mi
+  ## tfyProxy.livenessProbe Liveness probe settings for the tfyProxy
+  livenessProbe:
+    ## @param tfyProxy.livenessProbe.failureThreshold Liveness probe failure threshold for tfyProxy
+    failureThreshold: 3
+    ## @param tfyProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfyProxy
+    initialDelaySeconds: 15
+    ## @param tfyProxy.livenessProbe.periodSeconds Liveness probe period for tfyProxy
+    periodSeconds: 10
+    ## @param tfyProxy.livenessProbe.successThreshold Liveness probe success threshold for tfyProxy
+    successThreshold: 1
+    ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
+    timeoutSeconds: 1
+  ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
+  readinessProbe:
+    ## @param tfyProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyProxy
+    failureThreshold: 3
+    ## @param tfyProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfyProxy
+    initialDelaySeconds: 30
+    ## @param tfyProxy.readinessProbe.periodSeconds Readiness probe period for tfyProxy
+    periodSeconds: 10
+    ## @param tfyProxy.readinessProbe.successThreshold Readiness probe success threshold for tfyProxy
+    successThreshold: 1
+    ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
+    timeoutSeconds: 1
+  ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
+  nodeSelector: {}
+  ## @param tfyProxy.affinity Affinity settings for the tfyProxy
+  affinity: {}
+  ## @param tfyProxy.topologySpreadConstraints [object] Topology spread constraints for the tfyProxy
+  topologySpreadConstraints: {}
+  ## tfyProxy.service Service settings for the tfyProxy
+  service:
+    ## @param tfyProxy.service.type Service type for the tfyProxy
+    type: ClusterIP
+    ## @param tfyProxy.service.port Service port for the tfyProxy
+    port: 8080
+    ## @param tfyProxy.service.labels [object] Labels for the tfyProxy service
+    labels: {}
+    ## @param tfyProxy.service.annotations Annotations for the tfyProxy service
+    annotations: {}
+    ## tfyProxy.serviceAccount Service account settings for the tfyProxy
+  serviceAccount:
+    ## @param tfyProxy.serviceAccount.create Bool to create a service account for the tfyProxy
+    create: false
+    ## @param tfyProxy.serviceAccount.annotations Annotations for the tfyProxy service account
+    annotations: {}
+    ## @param tfyProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyProxy service account
+    automountServiceAccountToken: true
+  ## @param tfyProxy.extraVolumes Extra volumes for the tfyProxy
+  extraVolumes: []
+  ## @param tfyProxy.extraVolumeMounts Extra volume mounts for the tfyProxy
+  extraVolumeMounts: []
+  ## tfyProxy.serviceMonitor ServiceMonitor settings for the tfyProxy
+  serviceMonitor:
+    ## @param tfyProxy.serviceMonitor.enabled Enable ServiceMonitor for the tfyProxy
+    enabled: true
+    ## @param tfyProxy.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
+    ## @param tfyProxy.serviceMonitor.path Path for the ServiceMonitor
+    path: /metrics
+    ## @param tfyProxy.serviceMonitor.labels Additional labels for the ServiceMonitor
+    labels: {}
+    ## @param tfyProxy.serviceMonitor.annotations Additional annotations for the ServiceMonitor
+    annotations: {}
+  ## @param tfyProxy.extraProxyLocations Extra proxy locations for the tfyProxy
+  extraProxyLocations: []
+  ## @param tfyProxy.imagePullSecrets Image pull secrets for the tfyProxy
+  ##
+  imagePullSecrets: []
+  ## @param tfyProxy.env [object] Environment variables for the tfyProxy
+  env: {}
 ###################################################################################################################
 ######################################## Extra Resources ##########################################################
 ###################################################################################################################

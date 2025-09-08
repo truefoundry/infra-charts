@@ -62,10 +62,8 @@ spec:
               scheme: HTTP
           volumeMounts:
             {{- include "mlfoundry-server.volumeMounts" . | nindent 12 }}
-      {{- with .Values.mlfoundryServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "mlfoundry-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "mlfoundry-server.volumes" . | nindent 8 }}
       {{- if .Values.mlfoundryServer.nodeSelector }}

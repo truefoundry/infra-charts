@@ -20,10 +20,8 @@ spec:
       labels:
         {{- include "deltafusion-ingestor.podLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.deltaFusionIngestor.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "deltafusion-ingestor.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "deltafusion-ingestor.serviceAccountName" . }}
       {{- with .Values.deltaFusionIngestor.podSecurityContext }}
       securityContext:

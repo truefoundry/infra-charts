@@ -92,12 +92,24 @@ servicefoundryServer:
 | Name                                                                         | Description                                                                            | Value                                                                            |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `global.resourceTier`                                                        | Resource deployment tier for the control plane, either small, medium or large accepted | `medium`                                                                         |
-| `global.existingTruefoundryImagePullSecretName`                              | Name of the existing image pull secret                                                 | `""`                                                                             |
+| `global.imagePullSecrets`                                                    | List of image pull secrets                                                             | `[]`                                                                             |
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                             |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                             |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000` |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.82.1`                                                                         |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.83.0-rc.2`                                                                    |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                             |
+| `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                           | `false`                                                                          |
+| `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                              | `{}`                                                                             |
+| `global.ingress.labels`                                                      | Labels for the control plane ingress                                                   | `{}`                                                                             |
+| `global.ingress.ingressClassName`                                            | Ingress class name for the control plane                                               | `istio`                                                                          |
+| `global.ingress.tls`                                                         | TLS settings for the control plane                                                     | `[]`                                                                             |
+| `global.ingress.hosts`                                                       | Hosts for the control plane                                                            | `[]`                                                                             |
+| `global.virtualservice.enabled`                                              | Bool to enable virtual service for the control plane                                   | `false`                                                                          |
+| `global.virtualservice.annotations`                                          | Annotations for the control plane virtual service                                      | `{}`                                                                             |
+| `global.virtualservice.gateways`                                             | Gateways for the control plane virtual service                                         | `[]`                                                                             |
+| `global.virtualservice.hosts`                                                | Hosts for the control plane virtual service                                            | `[]`                                                                             |
+| `global.proxy.enabled`                                                       | Bool to enable proxy for the control plane                                             | `false`                                                                          |
+| `global.proxy.hosts`                                                         | List of proxy hosts                                                                    | `[]`                                                                             |
 | `global.database.host`                                                       | Control plane database hostname when dev mode is not enabled                           | `""`                                                                             |
 | `global.database.name`                                                       | Control plane database name when dev mode is not enabled                               | `""`                                                                             |
 | `global.database.username`                                                   | Control plane database username when dev mode is not enabled                           | `""`                                                                             |
@@ -194,7 +206,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app                                     | `[]`                                                                                       |
 | `truefoundryFrontendApp.image.registry`                              | Registry for the frontend app image (overrides global.registry if specified) | `""`                                                                                       |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app (without registry)                     | `tfy-private-images/truefoundry-frontend-app`                                              |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.82.0`                                                                                  |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.83.0`                                                                                  |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables                       | `truefoundry-frontend-app-env-secret`                                                      |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                                       | `IfNotPresent`                                                                             |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                                           | `""`                                                                                       |
@@ -207,6 +219,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.deploymentLabels`                            | Deployment-specific labels for the frontend app                              | `{}`                                                                                       |
 | `truefoundryFrontendApp.deploymentAnnotations`                       | Deployment-specific annotations for the frontend app                         | `{}`                                                                                       |
 | `truefoundryFrontendApp.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the frontend app                               | `true`                                                                                     |
+| `truefoundryFrontendApp.resourceTierOverride`                        | Resource tier override for the truefoundryFrontendApp                        | `""`                                                                                       |
 | `truefoundryFrontendApp.resources`                                   | Resource requests and limits for the frontend app                            | `{}`                                                                                       |
 | `truefoundryFrontendApp.livenessProbe.initialDelaySeconds`           | Initial delay seconds for the liveness probe                                 | `600`                                                                                      |
 | `truefoundryFrontendApp.livenessProbe.periodSeconds`                 | Period seconds for the liveness probe                                        | `30`                                                                                       |
@@ -236,6 +249,7 @@ servicefoundryServer:
 | `truefoundryFrontendApp.istio.virtualservice.gateways`               | Gateways for the frontend app virtual service                                | `[]`                                                                                       |
 | `truefoundryFrontendApp.istio.virtualservice.hosts`                  | Hosts for the frontend app virtual service                                   | `[]`                                                                                       |
 | `truefoundryFrontendApp.servicefoundryServerHost`                    | Servicefoundry server host for the frontend app                              | `{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local`     |
+| `truefoundryFrontendApp.mlfoundryHost`                               | mlfoundry server host for the frontend app                                   | `{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local`          |
 | `truefoundryFrontendApp.tfyWorkflowAdminHost`                        | tfy workflow admin host for the frontend app                                 | `{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local` |
 | `truefoundryFrontendApp.s3proxyHost`                                 | s3 proxy host for the frontend app                                           | `{{ .Release.Name }}-s3proxy.{{ .Release.Namespace }}.svc.cluster.local`                   |
 | `truefoundryFrontendApp.tfyOtelCollectorHost`                        | otel collector host for the frontend app                                     | `{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local`        |
@@ -263,7 +277,7 @@ servicefoundryServer:
 | `mlfoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the mlfoundry server                         | `{}`                                  |
 | `mlfoundryServer.image.registry`                              | Registry for the mlfoundry server image (overrides global.registry if specified) | `""`                                  |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server (without registry)                     | `tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.80.0`                             |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.83.0`                             |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                                        | `default`                             |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables                       | `mlfoundry-server-env-secret`         |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                                       | `IfNotPresent`                        |
@@ -273,6 +287,7 @@ servicefoundryServer:
 | `mlfoundryServer.podLabels`                                   | Labels for the mlfoundry server pods                                             | `{}`                                  |
 | `mlfoundryServer.podSecurityContext`                          | Security context for the mlfoundry server pods                                   | `{}`                                  |
 | `mlfoundryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the mlfoundry server                               | `true`                                |
+| `mlfoundryServer.resourceTierOverride`                        | Resource tier override for the mlfoundryServer                                   | `""`                                  |
 | `mlfoundryServer.resources`                                   | Resource requests and limits for the mlfoundry server                            | `{}`                                  |
 | `mlfoundryServer.livenessProbe.failureThreshold`              | Liveness probe failure threshold for mlfoundry server                            | `3`                                   |
 | `mlfoundryServer.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for mlfoundry server                                | `600`                                 |
@@ -324,6 +339,7 @@ servicefoundryServer:
 | `s3proxy.deploymentLabels`                   | Deployment-specific labels for the s3 proxy                              | `{}`                                                                                  |
 | `s3proxy.deploymentAnnotations`              | Deployment-specific annotations for the s3 proxy                         | `{}`                                                                                  |
 | `s3proxy.securityContext`                    | Security context for the s3 proxy                                        | `{}`                                                                                  |
+| `s3proxy.resourceTierOverride`               | Resource tier override for the s3proxy                                   | `""`                                                                                  |
 | `s3proxy.livenessProbe.failureThreshold`     | Liveness probe failure threshold for s3 proxy                            | `3`                                                                                   |
 | `s3proxy.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for s3 proxy                                | `600`                                                                                 |
 | `s3proxy.livenessProbe.periodSeconds`        | Liveness probe period for s3 proxy                                       | `10`                                                                                  |
@@ -364,7 +380,7 @@ servicefoundryServer:
 | `servicefoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the servicefoundry server                         | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified) | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                     | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.82.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.83.0`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                        | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                       | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                       | `IfNotPresent`                                          |
@@ -374,6 +390,7 @@ servicefoundryServer:
 | `servicefoundryServer.podLabels`                                   | Pod-specific labels for the servicefoundry server                                     | `{}`                                                    |
 | `servicefoundryServer.podAnnotations`                              | Pod-specific annotations for the servicefoundry server                                | `{}`                                                    |
 | `servicefoundryServer.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the servicefoundry server                               | `true`                                                  |
+| `servicefoundryServer.resourceTierOverride`                        | Resource tier override for the servicefoundryServer                                   | `""`                                                    |
 | `servicefoundryServer.resources`                                   | Resource requests and limits for the servicefoundry server                            | `{}`                                                    |
 | `servicefoundryServer.livenessProbe.failureThreshold`              | Liveness probe failure threshold for servicefoundry server                            | `3`                                                     |
 | `servicefoundryServer.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for servicefoundry server                                | `600`                                                   |
@@ -433,6 +450,7 @@ servicefoundryServer:
 | `sparkHistoryServer.deploymentLabels`                   | Deployment-specific labels for the spark history server                              | `{}`                                      |
 | `sparkHistoryServer.deploymentAnnotations`              | Deployment-specific annotations for the spark history server                         | `{}`                                      |
 | `sparkHistoryServer.securityContext`                    | Security context for the spark history server                                        | `{}`                                      |
+| `sparkHistoryServer.resourceTierOverride`               | Resource tier override for the sparkHistoryServer                                    | `""`                                      |
 | `sparkHistoryServer.livenessProbe.failureThreshold`     | Liveness probe failure threshold for spark history server                            | `3`                                       |
 | `sparkHistoryServer.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for spark history server                                | `20`                                      |
 | `sparkHistoryServer.livenessProbe.periodSeconds`        | Liveness probe period for spark history server                                       | `10`                                      |
@@ -469,7 +487,7 @@ servicefoundryServer:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                             | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified) | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                     | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.80.0`                               |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.83.0`                               |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                            | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                       | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                       | `IfNotPresent`                          |
@@ -483,6 +501,7 @@ servicefoundryServer:
 | `tfyK8sController.deploymentLabels`                            | Deployment-specific labels for the tfyK8sController                              | `{}`                                    |
 | `tfyK8sController.deploymentAnnotations`                       | Deployment-specific annotations for the tfyK8sController                         | `{}`                                    |
 | `tfyK8sController.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the tfyK8sController                               | `true`                                  |
+| `tfyK8sController.resourceTierOverride`                        | Resource tier override for the tfyK8sController                                  | `""`                                    |
 | `tfyK8sController.resources`                                   | Resource requests and limits for the tfyK8sController                            | `{}`                                    |
 | `tfyK8sController.livenessProbe.failureThreshold`              | Liveness probe failure threshold for tfyK8sController                            | `3`                                     |
 | `tfyK8sController.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyK8sController                                | `600`                                   |
@@ -535,6 +554,7 @@ servicefoundryServer:
 | `sfyManifestService.deploymentLabels`                            | Deployment-specific labels for the sfy manifest service                              | `{}`                                      |
 | `sfyManifestService.deploymentAnnotations`                       | Deployment-specific annotations for the sfy manifest service                         | `{}`                                      |
 | `sfyManifestService.securityContext.readOnlyRootFilesystem`      | Read only root filesystem for the sfy manifest service                               | `false`                                   |
+| `sfyManifestService.resourceTierOverride`                        | Resource tier override for the sfyManifestService                                    | `""`                                      |
 | `sfyManifestService.resources`                                   | Resource requests and limits for the sfy manifest service                            | `{}`                                      |
 | `sfyManifestService.livenessProbe.failureThreshold`              | Liveness probe failure threshold for sfy manifest service                            | `3`                                       |
 | `sfyManifestService.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for sfy manifest service                                | `600`                                     |
@@ -650,7 +670,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.annotations`                                 | Annotations for the tfyController                                             | `{}`                                |
 | `tfyController.image.registry`                              | Registry for the tfyController image (overrides global.registry if specified) | `""`                                |
 | `tfyController.image.repository`                            | Image repository for the tfyController (without registry)                     | `tfy-private-images/tfy-controller` |
-| `tfyController.image.tag`                                   | Image tag for the tfyController                                               | `v0.79.0`                           |
+| `tfyController.image.tag`                                   | Image tag for the tfyController                                               | `v0.83.0`                           |
 | `tfyController.environmentName`                             | Environment name for the tfyController                                        | `default`                           |
 | `tfyController.envSecretName`                               | Secret name for the tfyController environment variables                       | `sfy-manifest-service-env-secret`   |
 | `tfyController.imagePullPolicy`                             | Image pull policy for the tfyController                                       | `IfNotPresent`                      |
@@ -668,6 +688,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyController.serviceMonitor.enabled`                      | Enable ServiceMonitor for the tfyController                                   | `true`                              |
 | `tfyController.serviceMonitor.labels`                       | Labels for the ServiceMonitor                                                 | `{}`                                |
 | `tfyController.serviceMonitor.annotations`                  | Annotations for the ServiceMonitor                                            | `{}`                                |
+| `tfyController.resourceTierOverride`                        | Resource tier override for the tfyController                                  | `""`                                |
 | `tfyController.resources`                                   | Resource requests and limits for the tfyController                            | `{}`                                |
 | `tfyController.livenessProbe.failureThreshold`              | Liveness probe failure threshold for tfyController                            | `3`                                 |
 | `tfyController.livenessProbe.initialDelaySeconds`           | Liveness probe initial delay for tfyController                                | `600`                               |
@@ -714,6 +735,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `tfyWorkflowAdmin.deploymentAnnotations`              | Deployment-specific annotations for the tfyWorkflowAdmin                         | `{}`                                    |
 | `tfyWorkflowAdmin.securityContext`                    | Security context for the tfyWorkflowAdmin                                        | `{}`                                    |
 | `tfyWorkflowAdmin.imagePullSecrets`                   | Image pull secrets for the tfycontroller                                         | `[]`                                    |
+| `tfyWorkflowAdmin.resourceTierOverride`               | Resource tier override for the tfyWorkflowAdmin                                  | `""`                                    |
 | `tfyWorkflowAdmin.resources`                          | Resource requests and limits for the tfyWorkflowAdmin                            | `{}`                                    |
 | `tfyWorkflowAdmin.livenessProbe.failureThreshold`     | Liveness probe failure threshold for tfyWorkflowAdmin                            | `3`                                     |
 | `tfyWorkflowAdmin.livenessProbe.initialDelaySeconds`  | Liveness probe initial delay for tfyWorkflowAdmin                                | `600`                                   |
@@ -801,7 +823,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.healthcheck.readiness.periodSeconds`         | Period seconds                                                                             | `5`                                       |
 | `deltaFusionIngestor.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                            | `2`                                       |
 | `deltaFusionIngestor.healthcheck.readiness.successThreshold`      | Success threshold                                                                          | `1`                                       |
-| `deltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                          | `3`                                       |
+| `deltaFusionIngestor.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                          | `2`                                       |
 | `deltaFusionIngestor.healthcheck.liveness.path`                   | Liveness probe path                                                                        | `/health`                                 |
 | `deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds`    | Initial delay seconds                                                                      | `10`                                      |
 | `deltaFusionIngestor.healthcheck.liveness.periodSeconds`          | Period seconds                                                                             | `5`                                       |
@@ -836,6 +858,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionIngestor.serviceAccount.annotations`                  | Service account annotations                                                                | `{}`                                      |
 | `deltaFusionIngestor.serviceAccount.name`                         | Service account name                                                                       | `""`                                      |
 | `deltaFusionIngestor.serviceAccount.automountServiceAccountToken` | Automount token                                                                            | `false`                                   |
+| `deltaFusionIngestor.resourceTierOverride`                        | Resource tier override for the deltaFusionIngestor                                         | `""`                                      |
 | `deltaFusionIngestor.extraVolumes`                                | Extra volumes                                                                              | `[]`                                      |
 | `deltaFusionIngestor.extraVolumeMounts`                           | Extra volume mounts                                                                        | `[]`                                      |
 | `deltaFusionIngestor.extraEnvs`                                   | Extra environment variables                                                                | `[]`                                      |
@@ -854,7 +877,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.deploymentAnnotations`                       | Annotations for the deltaFusionQueryServer deployment                                  | `{}`                                          |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified) | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                     | `tfy-private-images/deltafusion-query-server` |
-| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                               | `v0.82.0`                                     |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                               | `v0.83.0`                                     |
 | `deltaFusionQueryServer.image.optimized`                             | Use optimized image tag for the deltaFusionQueryServer                                 | `false`                                       |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                        | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                       | `deltafusion-query-env-secret`                |
@@ -881,7 +904,7 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.healthcheck.readiness.periodSeconds`         | Period seconds                                                                         | `5`                                           |
 | `deltaFusionQueryServer.healthcheck.readiness.timeoutSeconds`        | Timeout seconds                                                                        | `2`                                           |
 | `deltaFusionQueryServer.healthcheck.readiness.successThreshold`      | Success threshold                                                                      | `1`                                           |
-| `deltaFusionQueryServer.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                      | `3`                                           |
+| `deltaFusionQueryServer.healthcheck.readiness.failureThreshold`      | Failure threshold                                                                      | `2`                                           |
 | `deltaFusionQueryServer.nodeSelector`                                | Node selector for the deltaFusionQueryServer                                           | `{}`                                          |
 | `deltaFusionQueryServer.affinity`                                    | Affinity settings for the deltaFusionQueryServer                                       | `{}`                                          |
 | `deltaFusionQueryServer.topologySpreadConstraints`                   | Topology spread constraints for the deltaFusionQueryServer                             | `[]`                                          |
@@ -902,6 +925,68 @@ update-build.sh '{"status":"SUCCEEDED"}'
 | `deltaFusionQueryServer.extraVolumeMounts`                           | Extra volume mounts for the deltaFusionQueryServer server                              | `[]`                                          |
 | `deltaFusionQueryServer.extraVolumes`                                | Extra volumes for the deltaFusionQueryServer server                                    | `[]`                                          |
 | `deltaFusionQueryServer.env`                                         | Environment variables for the deltaFusionQueryServer                                   | `{}`                                          |
+
+### tfyProxy Truefoundry tfy proxy values
+
+| Name                                                     | Description                                                              | Value                             |
+| -------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------- |
+| `tfyProxy.enabled`                                       | Bool to enable the tfyProxy                                              | `false`                           |
+| `tfyProxy.tolerations`                                   | Tolerations specific to the tfyProxy                                     | `[]`                              |
+| `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                             | `{}`                              |
+| `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified) | `""`                              |
+| `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                     | `tfy-images/nginx`                |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                               | `1.29`                            |
+| `tfyProxy.environmentName`                               | Environment name for tfyProxy                                            | `default`                         |
+| `tfyProxy.envSecretName`                                 | Secret name for the tfyProxy environment variables                       | `tfy-proxy-env-secret`            |
+| `tfyProxy.imagePullPolicy`                               | Image pull policy for the tfyProxy                                       | `IfNotPresent`                    |
+| `tfyProxy.nameOverride`                                  | Override name for the tfyProxy                                           | `""`                              |
+| `tfyProxy.fullnameOverride`                              | Full name override for the tfyProxy                                      | `""`                              |
+| `tfyProxy.podAnnotations`                                | Annotations for the tfyProxy pods                                        | `{}`                              |
+| `tfyProxy.podLabels`                                     | Labels for the tfyProxy pods                                             | `{}`                              |
+| `tfyProxy.podSecurityContext`                            | Security context for the tfyProxy pods                                   | `{}`                              |
+| `tfyProxy.commonAnnotations`                             | Common annotations for the tfyProxy pods                                 | `{}`                              |
+| `tfyProxy.deploymentLabels`                              | Deployment-specific labels for the tfyProxy pods                         | `{}`                              |
+| `tfyProxy.deploymentAnnotations`                         | Deployment-specific annotations for the tfyProxy pods                    | `{}`                              |
+| `tfyProxy.commonLabels`                                  | Common labels for the tfyProxy pods                                      | `{}`                              |
+| `tfyProxy.securityContext.readOnlyRootFilesystem`        | Read only root filesystem for the tfyProxy                               | `true`                            |
+| `tfyProxy.prometheusExporter.image`                      | Nginx Prometheus exporter image                                          | `nginx/nginx-prometheus-exporter` |
+| `tfyProxy.prometheusExporter.tag`                        | Nginx Prometheus exporter image tag                                      | `1.4.2`                           |
+| `tfyProxy.autoscaling.enabled`                           | Enable autoscaling                                                       | `true`                            |
+| `tfyProxy.autoscaling.minReplicas`                       | Minimum number of replicas for tfyProxy                                  | `3`                               |
+| `tfyProxy.autoscaling.maxReplicas`                       | Maximum number of replicas for tfyProxy                                  | `100`                             |
+| `tfyProxy.autoscaling.targetCPUUtilizationPercentage`    | Target CPU utilization percentage                                        | `60`                              |
+| `tfyProxy.autoscaling.targetMemoryUtilizationPercentage` | Target Memory utilization percentage                                     | `60`                              |
+| `tfyProxy.resources`                                     | Resource requests and limits for the tfyProxy                            | `{}`                              |
+| `tfyProxy.livenessProbe.failureThreshold`                | Liveness probe failure threshold for tfyProxy                            | `3`                               |
+| `tfyProxy.livenessProbe.initialDelaySeconds`             | Liveness probe initial delay for tfyProxy                                | `15`                              |
+| `tfyProxy.livenessProbe.periodSeconds`                   | Liveness probe period for tfyProxy                                       | `10`                              |
+| `tfyProxy.livenessProbe.successThreshold`                | Liveness probe success threshold for tfyProxy                            | `1`                               |
+| `tfyProxy.livenessProbe.timeoutSeconds`                  | Liveness probe timeout for tfyProxy                                      | `1`                               |
+| `tfyProxy.readinessProbe.failureThreshold`               | Readiness probe failure threshold for tfyProxy                           | `3`                               |
+| `tfyProxy.readinessProbe.initialDelaySeconds`            | Readiness probe initial delay for tfyProxy                               | `30`                              |
+| `tfyProxy.readinessProbe.periodSeconds`                  | Readiness probe period for tfyProxy                                      | `10`                              |
+| `tfyProxy.readinessProbe.successThreshold`               | Readiness probe success threshold for tfyProxy                           | `1`                               |
+| `tfyProxy.readinessProbe.timeoutSeconds`                 | Readiness probe timeout for tfyProxy                                     | `1`                               |
+| `tfyProxy.nodeSelector`                                  | Node selector for the tfyProxy                                           | `{}`                              |
+| `tfyProxy.affinity`                                      | Affinity settings for the tfyProxy                                       | `{}`                              |
+| `tfyProxy.topologySpreadConstraints`                     | Topology spread constraints for the tfyProxy                             | `{}`                              |
+| `tfyProxy.service.type`                                  | Service type for the tfyProxy                                            | `ClusterIP`                       |
+| `tfyProxy.service.port`                                  | Service port for the tfyProxy                                            | `8080`                            |
+| `tfyProxy.service.labels`                                | Labels for the tfyProxy service                                          | `{}`                              |
+| `tfyProxy.service.annotations`                           | Annotations for the tfyProxy service                                     | `{}`                              |
+| `tfyProxy.serviceAccount.create`                         | Bool to create a service account for the tfyProxy                        | `false`                           |
+| `tfyProxy.serviceAccount.annotations`                    | Annotations for the tfyProxy service account                             | `{}`                              |
+| `tfyProxy.serviceAccount.automountServiceAccountToken`   | Automount service account token for the tfyProxy service account         | `true`                            |
+| `tfyProxy.extraVolumes`                                  | Extra volumes for the tfyProxy                                           | `[]`                              |
+| `tfyProxy.extraVolumeMounts`                             | Extra volume mounts for the tfyProxy                                     | `[]`                              |
+| `tfyProxy.serviceMonitor.enabled`                        | Enable ServiceMonitor for the tfyProxy                                   | `true`                            |
+| `tfyProxy.serviceMonitor.interval`                       | Interval for the ServiceMonitor                                          | `10s`                             |
+| `tfyProxy.serviceMonitor.path`                           | Path for the ServiceMonitor                                              | `/metrics`                        |
+| `tfyProxy.serviceMonitor.labels`                         | Additional labels for the ServiceMonitor                                 | `{}`                              |
+| `tfyProxy.serviceMonitor.annotations`                    | Additional annotations for the ServiceMonitor                            | `{}`                              |
+| `tfyProxy.extraProxyLocations`                           | Extra proxy locations for the tfyProxy                                   | `[]`                              |
+| `tfyProxy.imagePullSecrets`                              | Image pull secrets for the tfyProxy                                      | `[]`                              |
+| `tfyProxy.env`                                           | Environment variables for the tfyProxy                                   | `{}`                              |
 
 ### extraResources Extra Resources to deploy along with the TrueFoundry Control Plane
 

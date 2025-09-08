@@ -60,10 +60,8 @@ spec:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
               scheme: HTTP
-      {{- with .Values.tfyController.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-controller.imagePullSecrets" . | nindent 8 }}
       topologySpreadConstraints:
         {{- if .Values.tfyController.topologySpreadConstraints }}
         {{- toYaml .Values.tfyController.topologySpreadConstraints | nindent 8 }}

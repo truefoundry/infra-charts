@@ -62,10 +62,8 @@ spec:
               scheme: HTTP
           volumeMounts:
             {{- include "spark-history-server.volumeMounts" . | nindent 12 }}
-      {{- with .Values.sparkHistoryServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "spark-history-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "spark-history-server.volumes" . | nindent 8 }}
       {{- if .Values.sparkHistoryServer.nodeSelector }}

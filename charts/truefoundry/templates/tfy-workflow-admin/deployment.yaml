@@ -74,10 +74,8 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
-      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
         - configMap:
             name: {{ include "tfy-workflow-admin.fullname" . }}-config
@@ -162,10 +160,8 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
-      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
         - configMap:
             name: {{ include "tfy-workflow-admin.fullname" . }}-config

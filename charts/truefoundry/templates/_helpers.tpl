@@ -35,17 +35,13 @@
 {{- end }}
 {{- end }}
 
-{{/*
-  Image Pull Secrets
-  Only include image pull secrets if:
-  1. existingTruefoundryImagePullSecretName is provided, OR
-  2. truefoundryImagePullConfigJSON is provided (which will create the secret)
-*/}}
 {{- define "global.imagePullSecrets" -}}
-{{- if .Values.global.existingTruefoundryImagePullSecretName }}
-  - name: {{ .Values.global.existingTruefoundryImagePullSecretName }}
-{{- else if .Values.global.truefoundryImagePullConfigJSON }}
-  - name: truefoundry-image-pull-secret
+{{- if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets -}}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
+{{- else -}}
+[]
 {{- end }}
 {{- end }}
 {{/*
@@ -117,3 +113,59 @@ app.kubernetes.io/name: {{ .name }}
 {{ end -}}
 app.kubernetes.io/instance: {{ .context.Release.Name }}
 {{- end }}  
+
+{{/*
+Global Ingress fullname
+*/}}
+{{- define "truefoundry.ingress.fullname" -}}
+{{- if .Values.global.ingress.fullnameOverride -}}
+{{- .Values.global.ingress.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "ingress" .Values.global.ingress.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Ingress labels - uses global truefoundry.labels function
+  */}}
+{{- define "truefoundry.ingress.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "truefoundry-ingress") }}
+{{- end }}
+
+{{/*
+Truefoundry virtual service fullname}}
+*/}}
+{{- define "truefoundry.virtualservice.fullname" -}}
+{{- if .Values.global.virtualservice.fullnameOverride -}}
+{{- .Values.global.virtualservice.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "virtualservice" .Values.global.virtualservice.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  VirtualService labels
+  */}}
+{{- define "truefoundry.virtualservice.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "truefoundry-virtualservice") }}
+{{- end }}
+
+{{/*
+  Truefoundry virtualService annotations
+  */}}
+{{- define "truefoundry.virtualservice.annotations" -}}
+{{- include "global.annotations" . -}}
+{{- with .Values.global.virtualservice.annotations }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}

@@ -196,8 +196,16 @@ Expand the name of the chart.
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "sfy-manifest-service.resourceTier" }}
+{{- $tier := .Values.sfyManifestService.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "sfy-manifest-service.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "sfy-manifest-service.resourceTier" . }}
 {{- if .Values.sfyManifestService.replicaCount -}}
 {{ .Values.sfyManifestService.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -243,7 +251,7 @@ limits:
 {{- end }}
 
 {{- define "sfy-manifest-service.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "sfy-manifest-service.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -266,4 +274,13 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+
+{{- define "sfy-manifest-service.imagePullSecrets" -}}
+{{- if .Values.sfyManifestService.imagePullSecrets -}}
+{{- toYaml .Values.sfyManifestService.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

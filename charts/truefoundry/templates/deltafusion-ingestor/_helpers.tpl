@@ -159,8 +159,16 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "deltafusion-ingestor.resourceTier" }}
+{{- $tier := .Values.deltaFusionIngestor.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "deltafusion-ingestor.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "deltafusion-ingestor.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -219,7 +227,7 @@ limits:
 {{- end }}
 
 {{- define "deltafusion-ingestor.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "deltafusion-ingestor.resourceTier" . }}
 {{- if .Values.replicaCount -}}
 2
 {{- else if eq $tier "small" -}}
@@ -314,3 +322,11 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- toYaml . | nindent 0 }}
 {{- end -}}
 {{- end -}}
+
+{{- define "deltafusion-ingestor.imagePullSecrets" -}}
+{{- if .Values.deltaFusionIngestor.imagePullSecrets -}}
+{{- toYaml .Values.deltaFusionIngestor.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
+{{- end }}

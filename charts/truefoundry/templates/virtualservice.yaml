@@ -1,24 +1,33 @@
-{{- if and .Values.truefoundryFrontendApp.enabled .Values.truefoundryFrontendApp.istio.virtualservice.enabled -}}
-{{- $serviceName := include "truefoundry-frontend-app.fullname" . -}}
-{{- $servicePort := .Values.truefoundryFrontendApp.service.port -}}
+{{- if .Values.global.virtualservice.enabled -}}
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: {{ include "truefoundry-frontend-app.fullname" . }}
+  name: {{ include "truefoundry.virtualservice.fullname" . }}
   labels:
-    {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
+    {{- include "truefoundry.virtualservice.labels" . | nindent 4 }}
   annotations:
-    {{- include "truefoundry-frontend-app.istio.virtualService.annotations" . | nindent 4 }}
+    {{- include "truefoundry.virtualservice.annotations" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
 spec:
   gateways:
-  {{- range .Values.truefoundryFrontendApp.istio.virtualservice.gateways}}
+  {{- range .Values.global.virtualservice.gateways }}
     - {{ . }}
   {{- end }}
   hosts:
-  {{- range .Values.truefoundryFrontendApp.istio.virtualservice.hosts}}
+  {{- range .Values.global.virtualservice.hosts}}
     - {{ . }}
   {{- end }}
+  {{- if $.Values.global.proxy.enabled }}
+  http:
+    paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $.Release.Name }}-tfy-proxy
+            port:
+              number: 8080
+  {{- else }}
   http:
     - match:
         - uri:
@@ -87,4 +96,5 @@ spec:
             host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: {{ .Values.truefoundryFrontendApp.service.port }}
+  {{- end }}
 {{- end }}
