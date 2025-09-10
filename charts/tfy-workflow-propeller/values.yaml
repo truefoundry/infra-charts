@@ -41,6 +41,20 @@ flyte-core:
             - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     core:
       propeller:
+        leader-election:
+          ## @param flyte-core.configmap.core.propeller.leader-election.enabled to enable leader election
+          enabled: true
+          ## @param flyte-core.configmap.core.propeller.leader-election.retry-period to set the retry period
+          retry-period: 2s
+          ## @param flyte-core.configmap.core.propeller.leader-election.lease-duration to set the lease duration
+          lease-duration: 15s
+          ## @param flyte-core.configmap.core.propeller.leader-election.renew-deadline to set the renew deadline
+          renew-deadline: 10s
+          lock-config-map:
+            ## @param flyte-core.configmap.core.propeller.leader-election.lock-config-map.name to set the name of the lock config map
+            name: propeller-leader
+            ## @param flyte-core.configmap.core.propeller.leader-election.lock-config-map.namespace to set the namespace of the lock config map
+            namespace: tfy-workflow-propeller
         ## @param flyte-core.configmap.core.propeller.max-ttl-hours to set the max ttl hours
         max-ttl-hours: 1
         ## @param flyte-core.configmap.core.propeller.max-workflow-retries to set the max workflow retries
@@ -72,6 +86,11 @@ flyte-core:
         type: admin
         ## @param flyte-core.configmap.admin.event.capacity to set the capacity
         capacity: 100
+    logger:
+      ## @param flyte-core.configmap.admin.logger.level to set the level
+      level: 5
+      ## @param flyte-core.configmap.admin.logger.show-source to set the show source
+      show-source: true
     task_logs:
       plugins:
         logs:
