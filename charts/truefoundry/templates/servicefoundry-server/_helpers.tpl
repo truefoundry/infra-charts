@@ -59,12 +59,11 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "servicefoundry-server.podLabels" -}}
-{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.servicefoundryServer.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.servicefoundryServer.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -339,22 +338,22 @@ limits:
 requests:
   cpu: 500m
   memory: 1024Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 1000m
   memory: 2048Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "servicefoundry-server.defaultResources.large" }}
 requests:
   cpu: 1000m
   memory: 2048Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
   memory: 4096Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "servicefoundry-server.resources" }}

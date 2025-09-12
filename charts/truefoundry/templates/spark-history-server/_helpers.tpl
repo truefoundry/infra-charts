@@ -57,12 +57,11 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "spark-history-server.podLabels" -}}
-{{- $commonLabels := include "spark-history-server.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "spark-history-server") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.sparkHistoryServer.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.sparkHistoryServer.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 

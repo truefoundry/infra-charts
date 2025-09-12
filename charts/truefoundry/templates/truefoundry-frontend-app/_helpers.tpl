@@ -56,12 +56,11 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "truefoundry-frontend-app.podLabels" -}}
-{{- $commonLabels := include "truefoundry-frontend-app.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-frontend-app") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.truefoundryFrontendApp.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.truefoundryFrontendApp.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
