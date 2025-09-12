@@ -57,12 +57,11 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "deltafusion-query-server.podLabels" -}}
-{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.deltaFusionQueryServer.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.deltaFusionQueryServer.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -373,9 +372,13 @@ Tolerations for the deltafusion-query-server service
 
 
 {{- define "deltafusion-query-server.volumeMounts" -}}
-{{- with .Values.deltaFusionQueryServer.extraVolumeMounts }}
-{{- toYaml . | nindent 0 }}
-{{- end -}}
+{{- $volumeMounts := list -}}
+{{- if .Values.deltaFusionQueryServer.extraVolumeMounts }}
+  {{- range .Values.deltaFusionQueryServer.extraVolumeMounts }}
+    {{- $volumeMounts = append $volumeMounts . }}
+  {{- end }}
+{{- end }}
+{{- $volumeMounts | toYaml -}}
 {{- end -}}
 
 {{/*
@@ -383,7 +386,7 @@ Image Pull Secrets
 */}}
 {{- define "deltafusion-query-server.imagePullSecrets" -}}
 {{- if .Values.deltaFusionQueryServer.imagePullSecrets -}}
-{{- toYaml .Values.deltaFusionQueryServer.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.deltaFusionQueryServer.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

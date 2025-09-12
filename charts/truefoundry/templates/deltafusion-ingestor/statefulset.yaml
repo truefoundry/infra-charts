@@ -103,5 +103,7 @@ spec:
         resources:
           requests:
             storage: {{ .Values.deltaFusionIngestor.storage.size }}
+        {{- if .Values.deltaFusionIngestor.storage.storageClassName }}
         storageClassName: {{ .Values.deltaFusionIngestor.storage.storageClassName | quote }}
+        {{- end }}
 {{- end }}
