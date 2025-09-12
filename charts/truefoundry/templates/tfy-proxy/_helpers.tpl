@@ -57,12 +57,11 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "tfy-proxy.podLabels" -}}
-{{- $commonLabels := include "tfy-proxy.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.tfyProxy.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyProxy.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 

@@ -7,7 +7,6 @@ metadata:
     {{- include "truefoundry.virtualservice.labels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry.virtualservice.annotations" . | nindent 4 }}
-  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
   {{- range .Values.global.virtualservice.gateways }}
@@ -19,12 +18,9 @@ spec:
   {{- end }}
   {{- if $.Values.global.proxy.enabled }}
   http:
-    paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ $.Release.Name }}-tfy-proxy
+    - route:
+        - destination:
+            host: {{ tpl .Values.global.proxy.tfyProxyHost . }}
             port:
               number: 8080
   {{- else }}
@@ -36,7 +32,7 @@ spec:
         uri: /socket.io
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}
+            host: {{ tpl .Values.global.proxy.servicefoundryServerHost . }}
             port:
               number: 3000
     - match:
@@ -44,14 +40,14 @@ spec:
             prefix: "/api/llm/"
       rewrite:
         uri: /
-      {{- if .Values.truefoundryFrontendApp.llmGateway.external }}
-        authority: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+      {{- if .Values.global.proxy.llmGateway.external }}
+        authority: {{ tpl .Values.global.proxy.llmGateway.backendHost . }}
       {{- end }}
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
+            host: {{ tpl .Values.global.proxy.llmGateway.backendHost . }}
             port:
-              number: {{ .Values.truefoundryFrontendApp.llmGateway.backendPort }}
+              number: {{ .Values.global.proxy.llmGateway.backendPort }}
     - match:
         - uri:
             prefix: /api/proxy-server/
@@ -59,7 +55,7 @@ spec:
         uri: /
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}
+            host: {{ tpl .Values.global.proxy.proxyServerHost . }}
             port:
               number: 8123
     - match:
@@ -67,7 +63,7 @@ spec:
             prefix: "/flyteidl.service.AdminService/"
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}
+            host: {{ tpl .Values.global.proxy.tfyWorkflowAdminHost . }}
             port:
               number: 8089
           weight: 100
@@ -78,7 +74,7 @@ spec:
         uri: /
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.s3proxyHost . }}
+            host: {{ tpl .Values.global.proxy.s3proxyHost . }}
             port:
               number: {{ .Values.s3proxy.service.port }}
     - match:
@@ -88,13 +84,33 @@ spec:
         uri: /
       route:
         - destination:
-            host: {{ tpl .Values.truefoundryFrontendApp.tfyOtelCollectorHost . }}
+            host: {{ tpl .Values.global.proxy.tfyOtelCollectorHost . }}
             port:
               number: 4318
+    - match:
+        - uri:
+            prefix: /api/agent/
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ tpl .Values.global.proxy.tfyLlmAgentHost . }}
+            port:
+              number: 8080
+    - match:
+        - uri:
+            prefix: /api/manifest/
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: {{ tpl .Values.global.proxy.sfyManifestServiceHost . }}
+            port:
+              number: 8080
     - route:
         - destination:
-            host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            host: {{ tpl .Values.global.proxy.truefoundryFrontendAppHost . }}
             port:
-              number: {{ .Values.truefoundryFrontendApp.service.port }}
+              number: 5000
   {{- end }}
 {{- end }}

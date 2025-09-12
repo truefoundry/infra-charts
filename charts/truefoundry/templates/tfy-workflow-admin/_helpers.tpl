@@ -57,12 +57,11 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "tfy-workflow-admin.podLabels" -}}
-{{- $commonLabels := include "tfy-workflow-admin.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.tfyWorkflowAdmin.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyWorkflowAdmin.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 

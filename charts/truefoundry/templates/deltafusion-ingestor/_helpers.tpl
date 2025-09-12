@@ -57,12 +57,11 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-  Pod Labels - merges commonLabels with pod-specific labels
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "deltafusion-ingestor.podLabels" -}}
-{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.deltaFusionIngestor.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.deltaFusionIngestor.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -196,34 +195,34 @@ Resource Tier
 {{- define "deltafusion-ingestor.defaultResources.small" }}
 requests:
   cpu: 500m
-  memory: 1000Mi
-  ephemeral-storage: 100Mi
+  memory: 1000M
+  ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000Mi
-  ephemeral-storage: 100Mi
+  memory: 2000M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.medium" }}
 requests:
   cpu: 500m
-  memory: 1000Mi
-  ephemeral-storage: 100Mi
+  memory: 1000M
+  ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000Mi
-  ephemeral-storage: 100Mi
+  memory: 2000M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 1000Mi
-  ephemeral-storage: 100Mi
+  memory: 1000M
+  ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000Mi
-  ephemeral-storage: 100Mi
+  memory: 2000M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.replicas" }}
@@ -269,8 +268,6 @@ Tolerations for the deltafusion-ingestor service
   Parse env from template
   */}}
 {{- define "deltafusion-ingestor.parseEnv" -}}
-{{/*SPANS_DATASET_PATH is Deprecated*/}}
-SPANS_DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
 DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
 PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{ tpl (.Values.deltaFusionIngestor.env | toYaml) . }}
@@ -314,7 +311,6 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- $volumes | toYaml -}}
 {{- end -}}
 
-
 {{- define "deltafusion-ingestor.volumeMounts" -}}
 - name: data
   mountPath: {{ .Values.deltaFusionIngestor.storage.mountPath }}
@@ -325,7 +321,309 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 
 {{- define "deltafusion-ingestor.imagePullSecrets" -}}
 {{- if .Values.deltaFusionIngestor.imagePullSecrets -}}
-{{- toYaml .Values.deltaFusionIngestor.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.deltaFusionIngestor.imagePullSecrets -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
+{{- end }}
+
+
+{{/*Compaction*/}}
+
+{{- define "deltafusion-compaction.name" -}}
+{{- default "deltafusion-compaction" .Values.deltaFusionCompaction.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create a default fully qualified app name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+If release name contains chart name it will be used as a full name.
+*/}}
+{{- define "deltafusion-compaction.fullname" -}}
+{{- if .Values.deltaFusionCompaction.fullnameOverride }}
+{{- .Values.deltaFusionCompaction.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default "deltafusion-compaction" .Values.deltaFusionCompaction.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "deltafusion-compaction.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+  Common labels - uses global truefoundry.labels function
+  */}}
+{{- define "deltafusion-compaction.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "deltafusion-compaction") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "deltafusion-compaction.commonLabels" -}}
+{{- $baseLabels := include "deltafusion-compaction.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.deltaFusionCompaction.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "deltafusion-compaction.commonAnnotations" -}}
+{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.deltaFusionCompaction.commonAnnotations }}
+{{- toYaml $commonAnnotations }}
+{{- end }}
+
+{{/*
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
+  */}}
+{{- define "deltafusion-compaction.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-compaction") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.deltaFusionCompaction.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "deltafusion-compaction.podAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-compaction.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.deltaFusionCompaction.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "deltafusion-compaction.serviceAccountLabels" -}}
+{{- $commonLabels := include "deltafusion-compaction.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.deltaFusionCompaction.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "deltafusion-compaction.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-compaction.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.deltaFusionCompaction.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  CronJob Labels - merges commonLabels with cronjob-specific labels
+  */}}
+{{- define "deltafusion-compaction.cronJobLabels" -}}
+{{- $commonLabels := include "deltafusion-compaction.commonLabels" . | fromYaml }}
+{{- $cronJobLabels := mergeOverwrite $commonLabels .Values.deltaFusionCompaction.cronJobLabels }}
+{{- toYaml $cronJobLabels }}
+{{- end }}
+
+{{/*
+  CronJob Annotations - merges commonAnnotations with statefulset-specific annotations
+  */}}
+{{- define "deltafusion-compaction.cronJobAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-compaction.commonAnnotations" . | fromYaml }}
+{{- $cronJobAnnotations := mergeOverwrite $commonAnnotations .Values.deltaFusionCompaction.cronJobAnnotations }}
+{{- toYaml $cronJobAnnotations }}
+{{- end }}
+
+
+{{/*
+  Create the name of the service account to use
+  */}}
+{{- define "deltafusion-compaction.serviceAccountName" -}}
+{{- if .Values.deltaFusionCompaction.serviceAccount.name -}}
+{{- .Values.deltaFusionCompaction.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Resource Tier
+*/}}
+{{- define "deltafusion-compaction.resourceTier" }}
+{{- $tier := .Values.deltaFusionCompaction.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
+{{- define "deltafusion-compaction.defaultResources.small" }}
+requests:
+  cpu: 1000m
+  memory: 2000M
+  ephemeral-storage: 10000M
+limits:
+  cpu: 2000m
+  memory: 3000M
+  ephemeral-storage: 10000M
+{{- end }}
+
+{{- define "deltafusion-compaction.defaultResources.medium" }}
+requests:
+  cpu: 2000m
+  memory: 4000M
+  ephemeral-storage: 20000M
+limits:
+  cpu: 4000m
+  memory: 6000M
+  ephemeral-storage: 20000M
+{{- end }}
+
+{{- define "deltafusion-compaction.defaultResources.large" }}
+requests:
+  cpu: 4000m
+  memory: 8000M
+  ephemeral-storage: 40000M
+limits:
+  cpu: 8000m
+  memory: 12000M
+  ephemeral-storage: 40000M
+{{- end }}
+
+{{/*
+Resource Tied Envs
+1.3 * requests/ 2
+spill is 120% / 2 of memory requests
+*/}}
+{{- define "deltafusion-compaction.resourceTiedEnvs" }}
+{{- $tier := include "deltafusion-compaction.resourceTier" . }}
+{{- if eq $tier "small" }}
+COMPACTION_MAX_SPILL_SIZE_MB: "1300"
+{{- else if eq $tier "medium" }}
+COMPACTION_MAX_SPILL_SIZE_MB: "2600"
+{{- else if eq $tier "large" }}
+COMPACTION_MAX_SPILL_SIZE_MB: "5200"
+{{- end }}
+{{- end }}
+
+
+{{- define "deltafusion-compaction.resources" }}
+{{- $tier := include "deltafusion-compaction.resourceTier" . }}
+
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "deltafusion-compaction.defaultResources.small" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "deltafusion-compaction.defaultResources.medium" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "deltafusion-compaction.defaultResources.large" . }}
+{{- end }}
+
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsRequests := $defaults.requests | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .Values.deltaFusionCompaction.resources | default dict }}
+{{- $overridesRequests := $overrides.requests | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+
+{{- $requests := merge $overridesRequests $defaultsRequests }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+
+{{- $merged := dict "requests" $requests "limits" $limits }}
+{{ toYaml $merged }}
+{{- end }}
+
+{{/*
+  Parse env from template
+  */}}
+{{- define "deltafusion-compaction.parseEnv" -}}
+{{ tpl (.Values.deltaFusionCompaction.env | toYaml) . }}
+{{- end }}
+
+{{/*merge envs*/}}
+{{- define "deltafusion-compaction.mergedEnvs" -}}
+{{- $merged := merge (include "deltafusion-compaction.parseEnv" . | fromYaml) (include "deltafusion-compaction.resourceTiedEnvs" . | fromYaml) }}
+{{- toYaml $merged }}
+{{- end }}
+
+{{/*
+  Create the env file
+  */}}
+{{- define "deltafusion-compaction.env" }}
+{{- range $key, $val := (include "deltafusion-compaction.mergedEnvs" .) | fromYaml }}
+{{- if and $val (contains "${k8s-secret" ($val | toString)) }}
+{{- if eq (regexSplit "/" $val -1 | len) 2 }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ $.Values.deltaFusionCompaction.envSecretName }}
+      key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
+{{- else if eq (regexSplit "/" $val -1 | len) 3 }}
+- name: {{ $key }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ index (regexSplit "/" $val -1) 1 }}
+      key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
+{{- else }}
+{{- fail "Invalid secret supplied" }}
+{{- end }}
+{{- else }}
+- name: {{ $key }}
+  value: {{ $val | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+NodeSelector merge logic
+*/}}
+{{- define "deltafusion-compaction.nodeSelector" -}}
+{{- if .Values.deltaFusionCompaction.nodeSelector -}}
+{{- toYaml .Values.deltaFusionCompaction.nodeSelector }}
+{{- else if .Values.global.nodeSelector -}}
+{{- toYaml .Values.global.nodeSelector }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Tolerations for the deltafusion-compaction service
+*/}}
+{{- define "deltafusion-compaction.tolerations" -}}
+{{- if .Values.deltaFusionCompaction.tolerations }}
+{{ toYaml .Values.deltaFusionCompaction.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{ toYaml .Values.global.tolerations -}}
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
+
+{{- define "deltafusion-compaction.volumes" -}}
+{{- $volumes := list -}}
+{{- if .Values.deltaFusionCompaction.extraVolumes }}
+  {{- range .Values.deltaFusionCompaction.extraVolumes }}
+    {{- $volumes = append $volumes . }}
+  {{- end }}
+{{- end }}
+{{- $volumes | toYaml -}}
+{{- end -}}
+
+{{- define "deltafusion-compaction.volumeMounts" -}}
+{{- $volumeMounts := list -}}
+{{- if .Values.deltaFusionCompaction.extraVolumeMounts }}
+  {{- range .Values.deltaFusionCompaction.extraVolumeMounts }}
+    {{- $volumeMounts = append $volumeMounts . }}
+  {{- end }}
+{{- end }}
+{{- $volumeMounts | toYaml -}}
+{{- end -}}
+
+{{- define "deltafusion-compaction.imagePullSecrets" -}}
+{{- if .Values.deltaFusionCompaction.imagePullSecrets -}}
+{{- toYaml .Values.deltaFusionCompaction.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
