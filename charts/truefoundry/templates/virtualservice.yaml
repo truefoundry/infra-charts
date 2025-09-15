@@ -13,14 +13,17 @@ spec:
     - {{ . }}
   {{- end }}
   hosts:
-  {{- range .Values.global.virtualservice.hosts}}
+  {{- range .Values.global.virtualservice.hosts }}
     - {{ . }}
   {{- end }}
   {{- if $.Values.global.proxy.enabled }}
   http:
-    - route:
+    - match:
+      - uri:
+          prefix: /
+      route:
         - destination:
-            host: {{ tpl .Values.global.proxy.tfyProxyHost . }}
+            host: {{ $.Release.Name }}-tfy-proxy.{{ .Release.Namespace }}.svc.cluster.local
             port:
               number: 8080
   {{- else }}
@@ -94,7 +97,7 @@ spec:
         uri: /
       route:
         - destination:
-            host: {{ tpl .Values.global.proxy.tfyLlmAgentHost . }}
+            host: {{ tpl .Values.global.proxy.tfyLLMAgentHost . }}
             port:
               number: 8080
     - match:

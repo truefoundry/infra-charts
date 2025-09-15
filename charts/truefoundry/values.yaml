@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.84.1
+  controlPlaneChartVersion: 0.84.7
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -58,22 +58,29 @@ global:
     enabled: false
     ## @param global.proxy.hosts [array] List of proxy hosts
     hosts: []
-    ## @param global.proxy.servicefoundryServerHost Servicefoundry server host for the frontend app
+    ## @param global.proxy.servicefoundryServerHost Servicefoundry server host for service routing
     servicefoundryServerHost: >-
       {{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local
-    ## @param global.proxy.mlfoundryHost mlfoundry server host for the frontend app
+    ## @param global.proxy.mlfoundryHost mlfoundry server host for service routing
     mlfoundryHost: >-
       {{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local
-    ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for the frontend app
+    ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
       {{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local
-    ## @param global.proxy.s3proxyHost s3 proxy host for the frontend app
+    ## @param global.proxy.s3proxyHost s3 proxy host for service routing
     s3proxyHost: >-
       {{ .Release.Name }}-s3proxy.{{ .Release.Namespace }}.svc.cluster.local
-    ## @param global.proxy.tfyOtelCollectorHost otel collector host for the frontend app
+    ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local
-    ## global.proxy.llmGateway LLM gateway settings for the frontend app
+    ## global.proxy.tfyNats NATS settings for service routing
+    tfyNats:
+      ## @param global.proxy.tfyNats.host nats host for nats service
+      host: >-
+        {{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local
+      ## @param global.proxy.tfyNats.port nats port for nats service
+      port: 8080
+    ## global.proxy.llmGateway LLM gateway settings for service routing
     llmGateway:
       ## @param global.proxy.llmGateway.external Make LLMGateway external
       external: false
@@ -81,12 +88,22 @@ global:
       backendHost: "{{ .Release.Name }}-tfy-llm-gateway.{{ .Release.Namespace }}.svc.cluster.local"
       ## @param global.proxy.llmGateway.backendPort Backend Port for the LLM gateway
       backendPort: 8787
-    ## @param global.proxy.proxyServerHost Proxy server host for the frontend app
+    ## global.proxy.tfyOtelCollector OTEL collector settings for service routing
+    tfyOtelCollector:
+      ## @param global.proxy.tfyOtelCollector.host OTEL collector host for OTEL collector service
+      host: "{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local"
+      ## @param global.proxy.tfyOtelCollector.port OTEL collector port for OTEL collector service
+      port: 4318
+    ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: "{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local"
-    ## @param global.proxy.tfyProxyHost tfy proxy host for the frontend app
+    ## @param global.proxy.tfyProxyHost tfy proxy host for service routing
     tfyProxyHost: "{{ .Release.Name }}-tfy-proxy.{{ .Release.Namespace }}.svc.cluster.local"
-    ## @param global.proxy.truefoundryFrontendAppHost truefoundry frontend app host for the frontend app
+    ## @param global.proxy.truefoundryFrontendAppHost truefoundry frontend app host for service routing
     truefoundryFrontendAppHost: "{{ .Release.Name }}-truefoundry-frontend-app.{{ .Release.Namespace }}.svc.cluster.local"
+    ## @param global.proxy.tfyLLMAgentHost LLM agent host for service routing
+    tfyLLMAgentHost: "{{ .Release.Name }}-tfy-llm-agent.{{ .Release.Namespace }}.svc.cluster.local"
+    ## @param global.proxy.sfyManifestServiceHost Manifest service host for service routing
+    sfyManifestServiceHost: "{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace }}.svc.cluster.local"
   ## global.database Database configuration when dev mode is not enabled
   database:
     ## @param global.database.host Control plane database hostname when dev mode is not enabled
@@ -438,6 +455,9 @@ truefoundryFrontendApp:
   ## @param truefoundryFrontendApp.tfyOtelCollectorHost otel collector host for the frontend app
   tfyOtelCollectorHost: >-
     {{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local
+  ## @param truefoundryFrontendApp.tfyNatsHost nats host for the frontend app
+  tfyNatsHost: >-
+    {{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local
   ## truefoundryFrontendApp.llmGateway LLM gateway settings for the frontend app
   llmGateway:
     ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
@@ -767,7 +787,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.84.0"
+    tag: "v0.84.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1179,7 +1199,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.84.0"
+    tag: "v0.84.2"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1525,7 +1545,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository Repository for the sfyBuilder (without registry)
         repository: "tfy-images/sfy-builder"
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag Tag for the sfyBuilder
-        tag: v0.8.18
+        tag: v0.8.19
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets Image pull secrets for the sfyBuilder
       ##
       imagePullSecrets: []
@@ -1632,7 +1652,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository Repository for the SOCI index build and push (without registry)
         repository: "tfy-images/sfy-builder"
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag Tag for the SOCI index build and push
-        tag: v0.8.18
+        tag: v0.8.19
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets Image pull secrets for the sociIndexBuildAndPush
       ##
       imagePullSecrets: []
@@ -2504,7 +2524,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.84.0
+    tag: v0.84.1
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2647,8 +2667,10 @@ tfyProxy:
     repository: "tfy-images/nginx"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
     tag: "1.29"
-  ## @param tfyProxy.environmentName Environment name for tfyProxy
-  environmentName: default
+  ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
+  existingProxyConfigMapName: ""
+  ## @param tfyProxy.proxyConfigOverride Nginx proxy configuration override for tfyProxy
+  proxyConfigOverride: ""
   ## @param tfyProxy.envSecretName Secret name for the tfyProxy environment variables
   envSecretName: "tfy-proxy-env-secret"
   ## @param tfyProxy.imagePullPolicy Image pull policy for the tfyProxy
@@ -2693,6 +2715,10 @@ tfyProxy:
     targetCPUUtilizationPercentage: 60
     ## @param tfyProxy.autoscaling.targetMemoryUtilizationPercentage Target Memory utilization percentage
     targetMemoryUtilizationPercentage: 60
+    ## @param tfyProxy.autoscaling.labels Labels for the tfyProxy hpa resource
+    labels: {}
+    ## @param tfyProxy.autoscaling.annotations Annotations for the tfyProxy hpa resource
+    annotations: {}
   ## @param tfyProxy.resources [object] Resource requests and limits for the tfyProxy
   resources: {}
   # resources:

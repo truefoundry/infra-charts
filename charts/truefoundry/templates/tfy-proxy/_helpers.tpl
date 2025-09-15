@@ -111,6 +111,15 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  HPA Labels - merges commonLabels with hpa-specific labels
+  */}}
+{{- define "tfy-proxy.hpaLabels" -}}
+{{- $commonLabels := include "tfy-proxy.commonLabels" . | fromYaml }}
+{{- $hpaLabels := mergeOverwrite $commonLabels .Values.tfyProxy.autoscaling.labels }}
+{{- toYaml $hpaLabels }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "tfy-proxy.deploymentLabels" -}}
@@ -127,6 +136,16 @@ Expand the name of the chart.
 {{- $commonAnnotations := include "tfy-proxy.commonAnnotations" . | fromYaml }}
 {{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.tfyProxy.deploymentAnnotations $syncWaveAnnotation }}
 {{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
+  HPA annotations
+  */}}
+{{- define "tfy-proxy.hpaAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "tfy-proxy.commonAnnotations" . | fromYaml }}
+{{- $hpaAnnotations := mergeOverwrite $commonAnnotations $syncWaveAnnotation .Values.tfyProxy.autoscaling.annotations }}
+{{- toYaml $hpaAnnotations }}
 {{- end }}
 
 {{/*
@@ -166,8 +185,8 @@ Expand the name of the chart.
 {{- if .Values.tfyProxy.imagePullSecrets -}}
 {{- toYaml .Values.tfyProxy.imagePullSecrets -}}
 {{- else -}}
-{{- toYaml .Values.global.imagePullSecrets -}}
-{{- end -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}
 
 {{/*
@@ -210,7 +229,9 @@ Expand the name of the chart.
 {{- /* Create a list containing the default nginx-config volume.
      Using 'items' allows the ConfigMap to have other keys without
      polluting the container's filesystem. */}}
-{{- $defaultVolume := dict "name" (include "tfy-proxy.fullname" .) "configMap" (dict "name" (include "tfy-proxy.fullname" .) "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
+{{- /* Prefer an explicitly provided existing ConfigMap name; otherwise use this chart's generated name */ -}}
+{{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
+{{- $defaultVolume := dict "name" (include "tfy-proxy.fullname" .) "configMap" (dict "name" $cmName "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
 {{- /* Writable dirs for readOnlyRootFilesystem images */ -}}
 {{- $cache := dict "name" "nginx-cache" "emptyDir" (dict) -}}
 {{- $run   := dict "name" "nginx-run"   "emptyDir" (dict) -}}
@@ -264,31 +285,31 @@ Expand the name of the chart.
 requests:
   cpu: 50m
   memory: 64Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 100m
   memory: 128Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 {{- define "tfy-proxy.defaultResources.medium" }}
 requests:
   cpu: 100m
   memory: 128Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 512Mi
 limits:
   cpu: 200m
   memory: 256Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 {{- define "tfy-proxy.defaultResources.large" }}
 requests:
   cpu: 500m
   memory: 512Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 1024Mi
 limits:
   cpu: 1000m
   memory: 1024Mi
-  ephemeral-storage: 512Mi
+  ephemeral-storage: 2048Mi
 {{- end }}
 
 {{- define "tfy-proxy.resources" }}
