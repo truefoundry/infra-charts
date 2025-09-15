@@ -1,4 +1,4 @@
-{{- if .Values.tfyProxy.enabled }}
+{{- if and .Values.tfyProxy.enabled (not .Values.tfyProxy.existingProxyConfigMapName) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,17 +8,26 @@ metadata:
   annotations:
     {{- include "tfy-proxy.commonAnnotations" . | nindent 4 }}
 data:
+  {{- if .Values.tfyProxy.proxyConfigOverride }}
+  nginx.conf: |-
+    {{ .Values.tfyProxy.proxyConfigOverride | nindent 4 }}
+  {{- else }}
   nginx.conf: |
     events {
       worker_connections 1024;
     }
 
     http {
+      include       /etc/nginx/mime.types;
+
       client_body_temp_path  /var/cache/nginx/client_temp;
       proxy_temp_path        /var/cache/nginx/proxy_temp;
       fastcgi_temp_path      /var/cache/nginx/fastcgi_temp;
       uwsgi_temp_path        /var/cache/nginx/uwsgi_temp;
       scgi_temp_path         /var/cache/nginx/scgi_temp;
+
+      access_log /var/log/nginx/access.log;
+      error_log /var/log/nginx/error.log debug;
 
       # Define once, used by WS/SSE locations
       map $http_upgrade $connection_upgrade {
@@ -26,10 +35,20 @@ data:
         ""      close;
       }
 
+      # Define once, used by WS locations
+      map $http_upgrade $is_ws {
+        default 0;
+        ~*websocket 1;
+        ~*upgrade 1;
+        ""      0;
+      }
+
       server {
         listen 8080;
         server_name {{ if .Values.global.proxy.hosts }}{{ join " " .Values.global.proxy.hosts }}{{ else }}{{ .Values.global.controlPlaneURL }}{{ end }};
-        include       /etc/nginx/mime.types;
+
+        root /usr/share/nginx/html;
+        index index.html;
 
         gzip on;
         gzip_disable "msie6";
@@ -66,7 +85,8 @@ data:
         # WebSocket proxy for socket.io
         location ~* ^/api/svc/socket\.io(?:/|$) {
           rewrite ^/api/svc/socket\.io/?(.*)$ /socket.io/$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
+
+          proxy_pass http://{{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -78,13 +98,11 @@ data:
           proxy_set_header X-Forwarded-Host $host;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          proxy_connect_timeout 5s;
+          proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -95,11 +113,10 @@ data:
           proxy_next_upstream_tries 3;
         }
 
-        location /api/svc/v1/tfy-ai/proxy {
+        location ~* ^/api/svc(?:/|$) {
           rewrite ^/api/svc/(.*)$ /$1 break;
-          proxy_pass http://servicefoundry-server.truefoundry.svc.cluster.local:3000;
+          proxy_pass http://{{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
 
-          gzip off;
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection $connection_upgrade;
@@ -110,14 +127,11 @@ data:
           proxy_set_header X-Forwarded-Host $host;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 0;
-          proxy_connect_timeout 5s;
+          proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -127,10 +141,16 @@ data:
           proxy_next_upstream_timeout 0;
           proxy_next_upstream_tries 3;
         }
+        {{- end }}
 
-        location /api/svc/ {
-          rewrite ^/api/svc/(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }};
+        {{- if .Values.sfyManifestService.enabled }}
+        # SFY Manifest Service
+        location ~* ^/api/manifest(?:/|$) {
+          rewrite ^/api/manifest/?(.*)$ /$1 break;
+
+          proxy_pass http://{{ tpl .Values.global.proxy.sfyManifestServiceHost . }}:{{ .Values.sfyManifestService.service.port }};
+
+
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -140,18 +160,18 @@ data:
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Host $host;
+          proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          proxy_connect_timeout 5s;
+          proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
+          proxy_read_timeout 3600s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
+          proxy_cache_bypass $http_upgrade;
           proxy_redirect off;
 
           proxy_next_upstream error timeout;
@@ -164,7 +184,10 @@ data:
         # MLFoundry Server
         location ~* ^/api/ml(?:/|$) {
           rewrite ^/api/ml/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }};
+
+          proxy_pass http://{{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }};
+
+
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -176,13 +199,11 @@ data:
           proxy_set_header X-Forwarded-Host $host;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          proxy_connect_timeout 5s;
-          proxy_send_timeout 60s;
+          proxy_connect_timeout 60s;
           proxy_read_timeout 60s;
+          proxy_send_timeout 3600s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -198,13 +219,13 @@ data:
         # LLM Gateway (long-lived streams)
         location ~* ^/api/llm(?:/|$) {
           rewrite ^/api/llm/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}:{{ .Values.truefoundryFrontendApp.llmGateway.backendPort }};
+
+          proxy_pass http://{{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }};
 
           gzip off;
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection $connection_upgrade;
-          proxy_read_timeout 3600s;
 
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
@@ -213,13 +234,11 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 0;
-          proxy_connect_timeout 5s;
-          proxy_send_timeout 60s;
+          proxy_connect_timeout 60s;
+          proxy_send_timeout 3600s;
+          proxy_read_timeout 60s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -236,11 +255,15 @@ data:
         # Controller
         location ~* ^/api/proxy-server(?:/|$) {
           rewrite ^/api/proxy-server/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.proxyServerHost . }}:{{ .Values.tfyProxy.service.port }};
+
+          proxy_pass http://{{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }};
+
+
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
           proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Sec-WebSocket-Protocol $http_sec_websocket_protocol;
 
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;
@@ -249,13 +272,11 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          proxy_connect_timeout 5s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
+          proxy_connect_timeout 60s;
+          proxy_send_timeout 3600s;
+          proxy_read_timeout 3600s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -271,7 +292,7 @@ data:
         {{- if .Values.tfyWorkflowAdmin.enabled }}
         # Flyte Admin gRPC (no rewrite, keep method path intact)
         location ~* ^/flyteidl\.service\.AdminService(?:/|$) {
-          grpc_pass grpc://{{ tpl .Values.truefoundryFrontendApp.tfyWorkflowAdminHost . }}:{{ .Values.tfyWorkflowAdmin.service.port }};
+          grpc_pass grpc://{{ tpl .Values.global.proxy.tfyWorkflowAdminHost . }}:{{ .Values.tfyWorkflowAdmin.service.port }};
 
           grpc_read_timeout  3600s;
           grpc_send_timeout  3600s;
@@ -291,7 +312,10 @@ data:
         # S3 proxy (streaming uploads)
         location ~* ^/api/s3proxy(?:/|$) {
           rewrite ^/api/s3proxy/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.s3proxyHost . }}:{{ .Values.s3proxy.service.port }};
+
+          proxy_pass http://{{ tpl .Values.global.proxy.s3proxyHost . }}:{{ .Values.s3proxy.service.port }};
+
+
 
           proxy_http_version 1.1;
           proxy_set_header Upgrade $http_upgrade;
@@ -304,15 +328,13 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 0;        # raise for large uploads
           proxy_request_buffering off;    # stream to upstream
-          proxy_connect_timeout 5s;
+
+          proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 300s;
 
           proxy_buffering off;
-          proxy_buffer_size 4k;
-          proxy_buffers 4 4k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -329,7 +351,8 @@ data:
         # OpenTelemetry Collector (OTLP/HTTP on :4318) strip /api/otel
         location ~* ^/api/otel(?:/|$) {
           rewrite ^/api/otel/?(.*)$ /$1 break;
-          proxy_pass http://{{ tpl .Values.truefoundryFrontendApp.tfyOtelCollectorHost . }}:4318;
+
+          proxy_pass http://{{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }};
 
           proxy_http_version 1.1;
           proxy_set_header Host $host;
@@ -339,14 +362,11 @@ data:
           proxy_set_header X-Forwarded-Port $server_port;
           proxy_set_header X-Forwarded-Proto $scheme;
 
-          client_max_body_size 0;
-          proxy_connect_timeout 5s;
+          proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
 
           proxy_buffering off;
-          proxy_buffer_size 8k;
-          proxy_buffers 8 8k;
 
           proxy_cookie_domain off;
           proxy_cookie_path off;
@@ -365,17 +385,39 @@ data:
         {{- end }}
 
         # Frontend assets
-        location /assets/ {
-          root /usr/share/nginx/html;
-          try_files $uri /index.html;
+        location ^~ /assets/ {
+          try_files $uri =404;
           access_log off;
         }
 
-        # Frontend catch-all
+        # SPA catch-all with WS handoff via named location
         location / {
-          root /usr/share/nginx/html;
-          index index.html;
-          try_files $uri /index.html;
+        # If it's a WS handshake, internally jump to @nats_ws
+        error_page 418 = @nats_ws;
+        if ($is_ws) { return 418; }   # only 'return' inside if -> allowed
+
+        # Normal HTTP deep links -> SPA
+        try_files $uri $uri/ /index.html;
+      }
+
+      # All proxy_* live here (legal context)
+        location @nats_ws {
+          proxy_pass http://{{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }};
+
+          proxy_http_version 1.1;
+
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection $connection_upgrade;
+          proxy_set_header Host $host;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+
+          proxy_read_timeout 86400;
+          proxy_send_timeout 86400;
+          proxy_connect_timeout 60s;
+
+          proxy_buffering off;
+          proxy_request_buffering off;
         }
       }
       # NGINX stub status for monitoring
@@ -390,5 +432,5 @@ data:
         }
       }
     }
-
+  {{- end }}
 {{- end -}}
