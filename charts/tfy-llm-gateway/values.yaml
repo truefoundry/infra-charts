@@ -27,7 +27,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.84.1
+  tag: v0.85.0-rc.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -196,6 +196,7 @@ env:
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/otel/v1/traces"
+  USE_GLOBAL_STATE_V2: "true"
 
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
