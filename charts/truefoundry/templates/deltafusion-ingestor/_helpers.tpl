@@ -268,6 +268,7 @@ Tolerations for the deltafusion-ingestor service
   Parse env from template
   */}}
 {{- define "deltafusion-ingestor.parseEnv" -}}
+{{- include "truefoundry.storage-credentials" . }}
 DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
 PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{ tpl (.Values.deltaFusionIngestor.env | toYaml) . }}
@@ -538,6 +539,7 @@ COMPACTION_MAX_SPILL_SIZE_MB: "5200"
   Parse env from template
   */}}
 {{- define "deltafusion-compaction.parseEnv" -}}
+{{- include "truefoundry.storage-credentials" . }}
 {{ tpl (.Values.deltaFusionCompaction.env | toYaml) . }}
 {{- end }}
 
