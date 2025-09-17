@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.84.8
+  controlPlaneChartVersion: 0.85.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -179,12 +179,6 @@ global:
       awsRegion: ""
       ## @param global.config.storageConfiguration.awsAssumeRoleArn AWS assume role ARN
       awsAssumeRoleArn: ""
-      ## @param global.config.storageConfiguration.awsAccessKeyId AWS access key ID
-      awsAccessKeyId: ""
-      ## @param global.config.storageConfiguration.awsSecretAccessKey AWS secret access key
-      awsSecretAccessKey: ""
-      ## @param global.config.storageConfiguration.awsEndpointURL AWS endpoint URL
-      awsEndpointURL: ""
       ## @param global.config.storageConfiguration.azureBlobUri Azure blob URI
       azureBlobUri: ""
       ## @param global.config.storageConfiguration.azureBlobConnectionString Azure blob connection string
@@ -340,7 +334,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.84.1"
+    tag: "v0.85.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -523,7 +517,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.84.0"
+    tag: "v0.85.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -635,6 +629,7 @@ mlfoundryServer:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    LLM_GATEWAY_URL: LM_GATEWAY_URL="{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
@@ -793,7 +788,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.84.3"
+    tag: "v0.85.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -903,10 +898,6 @@ servicefoundryServer:
     S3_BUCKET_NAME: "{{ .Values.global.config.storageConfiguration.awsS3BucketName }}"
     AWS_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
     AWS_ASSUME_ROLE_ARN: "{{ .Values.global.config.storageConfiguration.awsAssumeRoleArn }}"
-    AWS_DEFAULT_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
-    AWS_ACCESS_KEY_ID: "{{ .Values.global.config.storageConfiguration.awsAccessKeyId }}"
-    AWS_SECRET_ACCESS_KEY: "{{ .Values.global.config.storageConfiguration.awsSecretAccessKey }}"
-    AWS_ENDPOINT_URL: "{{ .Values.global.config.storageConfiguration.awsEndpointURL }}"
     AZURE_BLOB_URI: "{{ .Values.global.config.storageConfiguration.azureBlobUri }}"
     AZURE_BLOB_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
     GS_BUCKET_NAME: "{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}"
@@ -1048,7 +1039,6 @@ servicefoundryServer:
     SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ .Release.Namespace }}.svc.cluster.local:18080
     OTEL_SERVICE_NAME: servicefoundry-server
     FE_ENABLE_ROUTING_CONFIG: "true"
-    FE_ENABLE_MCP_METRICS: "false"
     FE_MCP_METRICS_ENABLED_TENANTS: ""
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
@@ -1209,7 +1199,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.84.2"
+    tag: "v0.85.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1764,7 +1754,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.83.0
+    tag: v0.85.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2271,7 +2261,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.84.0"
+    tag: "v0.85.0"
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
     pullPolicy: IfNotPresent
   ## @param deltaFusionIngestor.statefulsetLabels Labels to apply to the DeltaFusion Ingestor statefulset
@@ -2401,10 +2391,6 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
-    AWS_DEFAULT_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
-    AWS_ACCESS_KEY_ID: "{{ .Values.global.config.storageConfiguration.awsAccessKeyId }}"
-    AWS_SECRET_ACCESS_KEY: "{{ .Values.global.config.storageConfiguration.awsSecretAccessKey }}"
-    AWS_ENDPOINT_URL: "{{ .Values.global.config.storageConfiguration.awsEndpointURL }}"
     BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
     RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
@@ -2412,7 +2398,6 @@ deltaFusionIngestor:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AZURE_STORAGE_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
-    GOOGLE_SERVICE_ACCOUNT_KEY: "{{ .Values.global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     SENTRY_ENABLED: "true"
 ## @section deltaFusionCompaction Truefoundry DeltaFusion Compaction settings
@@ -2426,7 +2411,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.84.0"
+    tag: "v0.85.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction
@@ -2508,17 +2493,12 @@ deltaFusionCompaction:
   env:
     DATASET_PATH: /tmp
     CLOUD_PROVIDER: "{{ .Values.global.config.defaultCloudProvider }}"
-    AWS_DEFAULT_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
-    AWS_ACCESS_KEY_ID: "{{ .Values.global.config.storageConfiguration.awsAccessKeyId }}"
-    AWS_SECRET_ACCESS_KEY: "{{ .Values.global.config.storageConfiguration.awsSecretAccessKey }}"
-    AWS_ENDPOINT_URL: "{{ .Values.global.config.storageConfiguration.awsEndpointURL }}"
     BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
     RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AZURE_STORAGE_CONNECTION_STRING: "{{ .Values.global.config.storageConfiguration.azureBlobConnectionString }}"
-    GOOGLE_SERVICE_ACCOUNT_KEY: "{{ .Values.global.config.storageConfiguration.googleCloudServiceAccountKeyFileContent }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     SENTRY_ENABLED: "true"
     COMPACTION_LOOKBACK_DAYS: "30"
@@ -2663,10 +2643,6 @@ deltaFusionQueryServer:
     DATAFUSION_EXECUTION_USE_ROW_NUMBER_ESTIMATES_TO_OPTIMIZE_PARTITIONING: "true"
     DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
     RUST_LOG: info
-    AWS_DEFAULT_REGION: "{{ .Values.global.config.storageConfiguration.awsRegion }}"
-    AWS_ACCESS_KEY_ID: "{{ .Values.global.config.storageConfiguration.awsAccessKeyId }}"
-    AWS_SECRET_ACCESS_KEY: "{{ .Values.global.config.storageConfiguration.awsSecretAccessKey }}"
-    AWS_ENDPOINT_URL: "{{ .Values.global.config.storageConfiguration.awsEndpointURL }}"
     BLOB_STORAGE_PATH: "{{- if .Values.global.config.storageConfiguration.googleCloudStorageBucketName -}}gs://{{ .Values.global.config.storageConfiguration.googleCloudStorageBucketName }}{{- else if .Values.global.config.storageConfiguration.azureBlobUri -}}{{ .Values.global.config.storageConfiguration.azureBlobUri }}{{- else if .Values.global.config.storageConfiguration.awsS3BucketName -}}s3://{{ .Values.global.config.storageConfiguration.awsS3BucketName }}{{- end }}"
     SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
