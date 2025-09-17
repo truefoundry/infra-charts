@@ -281,6 +281,7 @@ Resources
   Parse env from template
   */}}
 {{- define "deltafusion-query-server.parseEnv" -}}
+{{- include "truefoundry.storage-credentials" . }}
 PORT: "{{ .Values.deltaFusionQueryServer.service.port }}"
 {{ tpl (.Values.deltaFusionQueryServer.env | toYaml) . }}
 {{- end }}

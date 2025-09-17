@@ -169,3 +169,20 @@ Truefoundry virtual service fullname}}
 {{ toYaml . }}
 {{- end }}
 {{- end }}
+
+
+
+{{- define "truefoundry.storage-credentials" }}
+{{- if .Values.global.config.storageConfiguration.awsAccessKeyId }}
+AWS_ACCESS_KEY_ID: {{ .Values.global.config.storageConfiguration.awsAccessKeyId }}
+{{- end }}
+{{- if .Values.global.config.storageConfiguration.awsSecretAccessKey }}
+AWS_SECRET_ACCESS_KEY: {{ .Values.global.config.storageConfiguration.awsSecretAccessKey }}
+{{- end }}
+{{- if .Values.global.config.storageConfiguration.awsEndpointURL }}
+AWS_ENDPOINT_URL: {{ .Values.global.config.storageConfiguration.awsEndpointURL }}
+{{- end }}
+{{- if .Values.global.config.storageConfiguration.awsAllowHttp }}
+AWS_ALLOW_HTTP: {{ .Values.global.config.storageConfiguration.awsAllowHttp }}
+{{- end }}
+{{- end }}
