@@ -160,7 +160,7 @@ spec:
               enabled: false
           metricLabelsAllowlist:
             - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/component,truefoundry.com/application-id]
-            - nodes=[karpenter.sh/capacity-type,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,kubernetes.azure.com/accelerator,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
+            - nodes=[karpenter.sh/capacity-type,karpenter.sh/nodepool,karpenter.sh/nodeclaim,eks.amazonaws.com/capacityType,kubernetes.azure.com/scalesetpriority,kubernetes.azure.com/accelerator,cloud.google.com/gke-provisioning,node.kubernetes.io/instance-type]
         prometheusOperator:
           resources:
             limits:
@@ -209,6 +209,8 @@ spec:
             - --collector.meminfo
             - --collector.filesystem
             - --collector.stat
+            - --collector.pressure
+            - --collector.loadavg
             - --collector.time
             - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$
