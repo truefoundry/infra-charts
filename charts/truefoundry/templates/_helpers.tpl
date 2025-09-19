@@ -171,7 +171,6 @@ Truefoundry virtual service fullname}}
 {{- end }}
 
 
-
 {{- define "truefoundry.storage-credentials" }}
 {{- if .Values.global.config.storageConfiguration.awsAccessKeyId }}
 AWS_ACCESS_KEY_ID: {{ .Values.global.config.storageConfiguration.awsAccessKeyId }}
@@ -186,3 +185,21 @@ AWS_ENDPOINT_URL: {{ .Values.global.config.storageConfiguration.awsEndpointURL }
 AWS_ALLOW_HTTP: {{ .Values.global.config.storageConfiguration.awsAllowHttp }}
 {{- end }}
 {{- end }}
+
+
+
+{{- define "truefoundry.clickhouseRequestLogging.enabled" -}}
+{{- if and (hasKey .Values "tfy-clickhouse") (hasKey (index .Values "tfy-clickhouse") "enabled") -}}
+{{- /*Key is set*/ -}}
+{{- if not (index .Values "tfy-clickhouse" "enabled") -}}
+{{- /*Key is set with value false*/ -}}
+false
+{{- else -}}
+{{- /*Key is set with value true, only enable if llmGatewayRequestLogging is true*/ -}}
+{{- .Values.tags.llmGatewayRequestLogging -}}
+{{- end -}}
+{{- else -}}
+{{- /*Key is not set, enable if llmGatewayRequestLogging is true*/ -}}
+{{- .Values.tags.llmGatewayRequestLogging -}}
+{{- end -}}
+{{- end -}}

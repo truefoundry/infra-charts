@@ -13,6 +13,8 @@ spec:
   timeZone: {{ .Values.deltaFusionCompaction.timeZone | quote }}
   concurrencyPolicy: {{ .Values.deltaFusionCompaction.concurrencyPolicy }}
   startingDeadlineSeconds: {{ .Values.deltaFusionCompaction.startingDeadlineSeconds }}
+  failedJobsHistoryLimit: 10
+  successfulJobsHistoryLimit: 3
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
