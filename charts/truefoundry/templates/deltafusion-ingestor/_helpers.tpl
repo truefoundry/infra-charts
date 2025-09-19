@@ -199,7 +199,7 @@ requests:
   ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000M
+  memory: 1200M
   ephemeral-storage: 100M
 {{- end }}
 
@@ -210,7 +210,7 @@ requests:
   ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000M
+  memory: 1200M
   ephemeral-storage: 100M
 {{- end }}
 
@@ -221,7 +221,7 @@ requests:
   ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 2000M
+  memory: 1200M
   ephemeral-storage: 100M
 {{- end }}
 
