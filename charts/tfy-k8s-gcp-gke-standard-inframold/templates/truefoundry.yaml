@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.85.2
+    targetRevision: 0.86.0
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -186,6 +186,7 @@ spec:
           affinity: {}
           {{- end }}
         tfy-clickhouse:
+          enabled: false
           clickhouse:
             {{- if $mergedTolerations }}
             tolerations:
@@ -233,4 +234,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - Prune=true
 {{- end }}
