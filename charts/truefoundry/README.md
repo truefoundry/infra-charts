@@ -402,7 +402,7 @@ servicefoundryServer:
 | `servicefoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the servicefoundry server                         | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified) | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                     | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.87.0`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.87.1`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                        | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                       | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                       | `IfNotPresent`                                          |
