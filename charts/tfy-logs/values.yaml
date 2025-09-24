@@ -65,8 +65,8 @@ victoria-logs-single:
       runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
-      fsGroup: 1001
-      supplementalGroups: [4]  # adm group for log file access
+      fsGroup: 0
+      supplementalGroups: [4, 10]  # adm, systemd-journal, and docker groups for log file access
     ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
     securityContext:
       allowPrivilegeEscalation: false
