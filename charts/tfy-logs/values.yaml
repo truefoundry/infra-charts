@@ -101,8 +101,17 @@ victoria-logs-single:
         operator: Exists
     ## @param victoria-logs-single.vector.nodeSelector [object] Node selector
     nodeSelector: {}
+    ## @param victoria-logs-single.vector.volumeMounts [array] Additional volume mounts for Vector
+    volumeMounts:
+      - name: vector-data
+        mountPath: /vector-data
+    ## @param victoria-logs-single.vector.volumes [array] Additional volumes for Vector
+    volumes:
+      - name: vector-data
+        emptyDir: {}
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
+      data_dir: /vector-data
       sinks:
         vlogs:
           type: elasticsearch
