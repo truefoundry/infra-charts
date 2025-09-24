@@ -60,6 +60,19 @@ victoria-logs-single:
       tag: 0.46.1
     ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
+    ## @param victoria-logs-single.vector.securityContext [object] Security context for Vector container
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 1001
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - CAP_FOWNER
     ## @param victoria-logs-single.vector.affinity [object] Affinity
     affinity:
       nodeAffinity:
