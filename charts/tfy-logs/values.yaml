@@ -104,18 +104,16 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.volumeMounts [array] Additional volume mounts for Vector
     volumeMounts:
       - name: vector-data
-        mountPath: /vector-data
+        mountPath: /tmp/vector-data
     ## @param victoria-logs-single.vector.volumes [array] Additional volumes for Vector
     volumes:
       - name: vector-data
         hostPath:
           path: /var/lib/vector
           type: DirectoryOrCreate
-    ## @param victoria-logs-single.vector.initContainers [array] Init containers for Vector
-    initContainers: []
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
-      data_dir: /vector-data
+      data_dir: /tmp/vector-data
       sinks:
         vlogs:
           type: elasticsearch
