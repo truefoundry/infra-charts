@@ -60,12 +60,14 @@ victoria-logs-single:
       tag: 0.46.1
     ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
-    ## @param victoria-logs-single.vector.securityContext [object] Security context for Vector container
-    securityContext:
+    ## @param victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
+    podSecurityContext:
       runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
       fsGroup: 1001
+    ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
+    securityContext:
       allowPrivilegeEscalation: false
       readOnlyRootFilesystem: false
       capabilities:
