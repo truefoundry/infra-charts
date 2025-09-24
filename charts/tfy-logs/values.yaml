@@ -112,16 +112,7 @@ victoria-logs-single:
           path: /var/lib/vector
           type: DirectoryOrCreate
     ## @param victoria-logs-single.vector.initContainers [array] Init containers for Vector
-    initContainers:
-      - name: fix-permissions
-        image: busybox:1.35
-        command: ['sh', '-c']
-        args: ['chown -R 1001:1001 /vector-data && chmod -R 755 /vector-data']
-        securityContext:
-          runAsUser: 0
-        volumeMounts:
-          - name: vector-data
-            mountPath: /vector-data
+    initContainers: []
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
       data_dir: /vector-data
