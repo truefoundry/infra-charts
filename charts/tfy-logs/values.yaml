@@ -105,7 +105,23 @@ victoria-logs-single:
     volumeMounts:
       - name: vector-data
         mountPath: /vector-data
-
+    ## @param victoria-logs-single.vector.volumes [array] Additional volumes for Vector
+    volumes:
+      - name: vector-data
+        hostPath:
+          path: /var/lib/vector
+          type: DirectoryOrCreate
+    ## @param victoria-logs-single.vector.initContainers [array] Init containers for Vector
+    initContainers:
+      - name: fix-permissions
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args: ['chown -R 1001:1001 /var/lib/vector && chmod -R 755 /var/lib/vector']
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          - name: vector-data
+            mountPath: /var/lib/vector
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
       data_dir: /vector-data
