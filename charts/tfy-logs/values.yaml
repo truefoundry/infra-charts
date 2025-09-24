@@ -66,6 +66,7 @@ victoria-logs-single:
       runAsUser: 1001
       runAsGroup: 1001
       fsGroup: 1001
+      fsGroupChangePolicy: "OnRootMismatch"
     ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
     securityContext:
       allowPrivilegeEscalation: false
@@ -101,19 +102,9 @@ victoria-logs-single:
         operator: Exists
     ## @param victoria-logs-single.vector.nodeSelector [object] Node selector
     nodeSelector: {}
-    ## @param victoria-logs-single.vector.volumeMounts [array] Volume mounts for Vector
-    volumeMounts:
-      - name: vector-data-dir
-        mountPath: /vector-data-dir
-    ## @param victoria-logs-single.vector.volumes [array] Volumes for Vector
-    volumes:
-      - name: vector-data-dir
-        emptyDir:
-          medium: ""
-          sizeLimit: 1Gi
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
-      data_dir: /vector-data-dir
+      data_dir: /tmp/vector-data
       sinks:
         vlogs:
           type: elasticsearch
