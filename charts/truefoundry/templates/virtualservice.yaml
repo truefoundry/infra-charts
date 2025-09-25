@@ -19,9 +19,15 @@ spec:
   {{- if $.Values.global.proxy.enabled }}
   http:
     - match:
-      - uri:
-          prefix: /
+        - uri:
+            prefix: "/flyteidl.service.AdminService/"
       route:
+        - destination:
+            host: {{ tpl .Values.global.proxy.tfyWorkflowAdminHost . }}
+            port:
+              number: 8089
+          weight: 100
+    - route:
         - destination:
             host: {{ $.Release.Name }}-tfy-proxy.{{ .Release.Namespace }}.svc.cluster.local
             port:
