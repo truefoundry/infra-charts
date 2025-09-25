@@ -194,7 +194,6 @@ Expand the name of the chart.
   */}}
 {{- define "tfy-proxy.parseEnv" -}}
 {{ tpl (.Values.tfyProxy.env | toYaml) . }}
-
 {{- end }}
 
 {{/*
@@ -226,38 +225,30 @@ Expand the name of the chart.
 {{- end }}
 
 {{- define "tfy-proxy.volumes" -}}
-{{- /* Create a list containing the default nginx-config volume.
-     Using 'items' allows the ConfigMap to have other keys without
-     polluting the container's filesystem. */}}
-{{- /* Prefer an explicitly provided existing ConfigMap name; otherwise use this chart's generated name */ -}}
 {{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
-{{- $defaultVolume := dict "name" (include "tfy-proxy.fullname" .) "configMap" (dict "name" $cmName "items" (list (dict "key" "nginx.conf" "path" "nginx.conf"))) -}}
-{{- /* Writable dirs for readOnlyRootFilesystem images */ -}}
-{{- $cache := dict "name" "nginx-cache" "emptyDir" (dict) -}}
-{{- $run   := dict "name" "nginx-run"   "emptyDir" (dict) -}}
-{{- $logs  := dict "name" "nginx-logs"  "emptyDir" (dict) -}}
-{{- $volumes := list $defaultVolume $cache $run $logs  -}}
+{{- $defaultVolume := dict "name" (include "tfy-proxy.fullname" .) "configMap" (dict "defaultMode" 420 "name" $cmName) -}}
+
+{{- $caddyData := dict "name" "caddy-data" "emptyDir" (dict) -}}
+{{- $caddyConfigData := dict "name" "caddy-config-data"   "emptyDir" (dict) -}}
+{{- $volumes := list $defaultVolume $caddyData $caddyConfigData  -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
 {{- if .Values.tfyProxy.extraVolumes -}}
   {{- $volumes = concat $volumes .Values.tfyProxy.extraVolumes -}}
 {{- end -}}
 
-{{- /* Convert the final, combined list of volumes to YAML */}}
 {{- toYaml $volumes -}}
 {{- end -}}
 
 
 {{- define "tfy-proxy.volumeMounts" -}}
-{{- /* Create a list containing the default volume mount for nginx.conf.
-     Using 'subPath' mounts the specific file, not the whole directory.
-     This prevents the original /etc/nginx directory from being overwritten. */}}
-{{- $defaultVolumeMount := dict "name" (include "tfy-proxy.fullname" .) "mountPath" "/etc/nginx/nginx.conf" "subPath" "nginx.conf" "readOnly" true -}}
-{{- /* Writable mounts */ -}}
-{{- $mCache := dict "name" "nginx-cache" "mountPath" "/var/cache/nginx" -}}
-{{- $mRun   := dict "name" "nginx-run"   "mountPath" "/var/run" -}}
-{{- $mLogs  := dict "name" "nginx-logs"  "mountPath" "/var/log/nginx" -}}
-{{- $volumeMounts := list $defaultVolumeMount $mCache $mRun $mLogs -}}
+{{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
+{{- $defaultVolumeMounts := dict "name" $cmName "mountPath" "/etc/caddy/Caddyfile" "subPath" "Caddyfile" -}}
+
+{{- $caddyData := dict "name" "caddy-data" "mountPath" "/data" -}}
+{{- $caddyConfigData := dict "name" "caddy-config-data" "mountPath" "/config" -}}
+{{- $volumeMounts := list $defaultVolumeMounts $caddyData $caddyConfigData -}}
+
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
 {{- if .Values.tfyProxy.extraVolumeMounts -}}

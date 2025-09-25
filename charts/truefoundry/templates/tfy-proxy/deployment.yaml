@@ -62,20 +62,6 @@ spec:
             initialDelaySeconds: {{ .Values.tfyProxy.readinessProbe.initialDelaySeconds }}
           volumeMounts:
             {{- include "tfy-proxy.volumeMounts" . | nindent 12 }}
-        - name: nginx-prometheus-exporter
-          image: {{ .Values.tfyProxy.prometheusExporter.image}}:{{ .Values.tfyProxy.prometheusExporter.tag }}
-          args:
-            - -nginx.scrape-uri=http://127.0.0.1:8081/stub_status
-          ports:
-            - name: metrics
-              containerPort: 9113
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 100m
-              memory: 64Mi
       imagePullSecrets:
         {{- include "tfy-proxy.imagePullSecrets" . | nindent 8 }}
       volumes:
