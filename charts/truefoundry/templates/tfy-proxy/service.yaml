@@ -14,8 +14,9 @@ spec:
       port: {{ .Values.tfyProxy.service.port }}
       targetPort: {{ .Values.tfyProxy.service.port }}
       protocol: TCP
+      appProtocol: tcp
     - name: metrics
-      port: 9113
+      port: 2019
       targetPort: metrics
   selector:
     {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 4 }}

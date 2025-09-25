@@ -96,7 +96,7 @@ servicefoundryServer:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                      | `""`                                                                                       |
 | `global.tenantName`                                                          | Name of the tenant                                                                     | `""`                                                                                       |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                               | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000`           |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.87.1`                                                                                   |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                         | `0.87.2`                                                                                   |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                          | `""`                                                                                       |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                           | `false`                                                                                    |
 | `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                              | `{}`                                                                                       |
@@ -402,7 +402,7 @@ servicefoundryServer:
 | `servicefoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the servicefoundry server                         | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified) | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                     | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.87.1`                                               |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                               | `v0.87.2`                                               |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                        | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                       | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                       | `IfNotPresent`                                          |
@@ -999,68 +999,66 @@ update-build.sh '{"status":"SUCCEEDED"}'
 
 ### tfyProxy Truefoundry tfy proxy values
 
-| Name                                                     | Description                                                                          | Value                             |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------- |
-| `tfyProxy.enabled`                                       | Bool to enable the tfyProxy                                                          | `false`                           |
-| `tfyProxy.tolerations`                                   | Tolerations specific to the tfyProxy                                                 | `[]`                              |
-| `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                         | `{}`                              |
-| `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)             | `""`                              |
-| `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                 | `tfy-images/nginx`                |
-| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `1.29`                            |
-| `tfyProxy.existingProxyConfigMapName`                    | Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`) | `""`                              |
-| `tfyProxy.proxyConfigOverride`                           | Nginx proxy configuration override for tfyProxy                                      | `""`                              |
-| `tfyProxy.envSecretName`                                 | Secret name for the tfyProxy environment variables                                   | `tfy-proxy-env-secret`            |
-| `tfyProxy.imagePullPolicy`                               | Image pull policy for the tfyProxy                                                   | `IfNotPresent`                    |
-| `tfyProxy.nameOverride`                                  | Override name for the tfyProxy                                                       | `""`                              |
-| `tfyProxy.fullnameOverride`                              | Full name override for the tfyProxy                                                  | `""`                              |
-| `tfyProxy.podAnnotations`                                | Annotations for the tfyProxy pods                                                    | `{}`                              |
-| `tfyProxy.podLabels`                                     | Labels for the tfyProxy pods                                                         | `{}`                              |
-| `tfyProxy.podSecurityContext`                            | Security context for the tfyProxy pods                                               | `{}`                              |
-| `tfyProxy.commonAnnotations`                             | Common annotations for the tfyProxy pods                                             | `{}`                              |
-| `tfyProxy.deploymentLabels`                              | Deployment-specific labels for the tfyProxy pods                                     | `{}`                              |
-| `tfyProxy.deploymentAnnotations`                         | Deployment-specific annotations for the tfyProxy pods                                | `{}`                              |
-| `tfyProxy.commonLabels`                                  | Common labels for the tfyProxy pods                                                  | `{}`                              |
-| `tfyProxy.securityContext.readOnlyRootFilesystem`        | Read only root filesystem for the tfyProxy                                           | `true`                            |
-| `tfyProxy.prometheusExporter.image`                      | Nginx Prometheus exporter image                                                      | `nginx/nginx-prometheus-exporter` |
-| `tfyProxy.prometheusExporter.tag`                        | Nginx Prometheus exporter image tag                                                  | `1.4.2`                           |
-| `tfyProxy.autoscaling.enabled`                           | Enable autoscaling                                                                   | `true`                            |
-| `tfyProxy.autoscaling.minReplicas`                       | Minimum number of replicas for tfyProxy                                              | `3`                               |
-| `tfyProxy.autoscaling.maxReplicas`                       | Maximum number of replicas for tfyProxy                                              | `100`                             |
-| `tfyProxy.autoscaling.targetCPUUtilizationPercentage`    | Target CPU utilization percentage                                                    | `60`                              |
-| `tfyProxy.autoscaling.targetMemoryUtilizationPercentage` | Target Memory utilization percentage                                                 | `60`                              |
-| `tfyProxy.autoscaling.labels`                            | Labels for the tfyProxy hpa resource                                                 | `{}`                              |
-| `tfyProxy.autoscaling.annotations`                       | Annotations for the tfyProxy hpa resource                                            | `{}`                              |
-| `tfyProxy.resources`                                     | Resource requests and limits for the tfyProxy                                        | `{}`                              |
-| `tfyProxy.livenessProbe.failureThreshold`                | Liveness probe failure threshold for tfyProxy                                        | `3`                               |
-| `tfyProxy.livenessProbe.initialDelaySeconds`             | Liveness probe initial delay for tfyProxy                                            | `15`                              |
-| `tfyProxy.livenessProbe.periodSeconds`                   | Liveness probe period for tfyProxy                                                   | `10`                              |
-| `tfyProxy.livenessProbe.successThreshold`                | Liveness probe success threshold for tfyProxy                                        | `1`                               |
-| `tfyProxy.livenessProbe.timeoutSeconds`                  | Liveness probe timeout for tfyProxy                                                  | `1`                               |
-| `tfyProxy.readinessProbe.failureThreshold`               | Readiness probe failure threshold for tfyProxy                                       | `3`                               |
-| `tfyProxy.readinessProbe.initialDelaySeconds`            | Readiness probe initial delay for tfyProxy                                           | `30`                              |
-| `tfyProxy.readinessProbe.periodSeconds`                  | Readiness probe period for tfyProxy                                                  | `10`                              |
-| `tfyProxy.readinessProbe.successThreshold`               | Readiness probe success threshold for tfyProxy                                       | `1`                               |
-| `tfyProxy.readinessProbe.timeoutSeconds`                 | Readiness probe timeout for tfyProxy                                                 | `1`                               |
-| `tfyProxy.nodeSelector`                                  | Node selector for the tfyProxy                                                       | `{}`                              |
-| `tfyProxy.affinity`                                      | Affinity settings for the tfyProxy                                                   | `{}`                              |
-| `tfyProxy.topologySpreadConstraints`                     | Topology spread constraints for the tfyProxy                                         | `{}`                              |
-| `tfyProxy.service.type`                                  | Service type for the tfyProxy                                                        | `ClusterIP`                       |
-| `tfyProxy.service.port`                                  | Service port for the tfyProxy                                                        | `8080`                            |
-| `tfyProxy.service.labels`                                | Labels for the tfyProxy service                                                      | `{}`                              |
-| `tfyProxy.service.annotations`                           | Annotations for the tfyProxy service                                                 | `{}`                              |
-| `tfyProxy.serviceAccount.create`                         | Bool to create a service account for the tfyProxy                                    | `false`                           |
-| `tfyProxy.serviceAccount.annotations`                    | Annotations for the tfyProxy service account                                         | `{}`                              |
-| `tfyProxy.serviceAccount.automountServiceAccountToken`   | Automount service account token for the tfyProxy service account                     | `true`                            |
-| `tfyProxy.extraVolumes`                                  | Extra volumes for the tfyProxy                                                       | `[]`                              |
-| `tfyProxy.extraVolumeMounts`                             | Extra volume mounts for the tfyProxy                                                 | `[]`                              |
-| `tfyProxy.serviceMonitor.enabled`                        | Enable ServiceMonitor for the tfyProxy                                               | `true`                            |
-| `tfyProxy.serviceMonitor.interval`                       | Interval for the ServiceMonitor                                                      | `10s`                             |
-| `tfyProxy.serviceMonitor.path`                           | Path for the ServiceMonitor                                                          | `/metrics`                        |
-| `tfyProxy.serviceMonitor.labels`                         | Additional labels for the ServiceMonitor                                             | `{}`                              |
-| `tfyProxy.serviceMonitor.annotations`                    | Additional annotations for the ServiceMonitor                                        | `{}`                              |
-| `tfyProxy.extraProxyLocations`                           | Extra proxy locations for the tfyProxy                                               | `[]`                              |
-| `tfyProxy.imagePullSecrets`                              | Image pull secrets for the tfyProxy                                                  | `[]`                              |
-| `tfyProxy.env`                                           | Environment variables for the tfyProxy                                               | `{}`                              |
+| Name                                                     | Description                                                                          | Value                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------ |
+| `tfyProxy.enabled`                                       | Bool to enable the tfyProxy                                                          | `false`                        |
+| `tfyProxy.tolerations`                                   | Tolerations specific to the tfyProxy                                                 | `[]`                           |
+| `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                         | `{}`                           |
+| `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)             | `""`                           |
+| `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                 | `tfy-private-images/tfy-proxy` |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `1.29`                         |
+| `tfyProxy.existingProxyConfigMapName`                    | Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`) | `""`                           |
+| `tfyProxy.proxyConfigOverride`                           | Nginx proxy configuration override for tfyProxy                                      | `""`                           |
+| `tfyProxy.envSecretName`                                 | Secret name for the tfyProxy environment variables                                   | `tfy-proxy-env-secret`         |
+| `tfyProxy.imagePullPolicy`                               | Image pull policy for the tfyProxy                                                   | `IfNotPresent`                 |
+| `tfyProxy.nameOverride`                                  | Override name for the tfyProxy                                                       | `""`                           |
+| `tfyProxy.fullnameOverride`                              | Full name override for the tfyProxy                                                  | `""`                           |
+| `tfyProxy.podAnnotations`                                | Annotations for the tfyProxy pods                                                    | `{}`                           |
+| `tfyProxy.podLabels`                                     | Labels for the tfyProxy pods                                                         | `{}`                           |
+| `tfyProxy.podSecurityContext`                            | Security context for the tfyProxy pods                                               | `{}`                           |
+| `tfyProxy.commonAnnotations`                             | Common annotations for the tfyProxy pods                                             | `{}`                           |
+| `tfyProxy.deploymentLabels`                              | Deployment-specific labels for the tfyProxy pods                                     | `{}`                           |
+| `tfyProxy.deploymentAnnotations`                         | Deployment-specific annotations for the tfyProxy pods                                | `{}`                           |
+| `tfyProxy.commonLabels`                                  | Common labels for the tfyProxy pods                                                  | `{}`                           |
+| `tfyProxy.securityContext.readOnlyRootFilesystem`        | Read only root filesystem for the tfyProxy                                           | `true`                         |
+| `tfyProxy.autoscaling.enabled`                           | Enable autoscaling                                                                   | `true`                         |
+| `tfyProxy.autoscaling.minReplicas`                       | Minimum number of replicas for tfyProxy                                              | `3`                            |
+| `tfyProxy.autoscaling.maxReplicas`                       | Maximum number of replicas for tfyProxy                                              | `100`                          |
+| `tfyProxy.autoscaling.targetCPUUtilizationPercentage`    | Target CPU utilization percentage                                                    | `60`                           |
+| `tfyProxy.autoscaling.targetMemoryUtilizationPercentage` | Target Memory utilization percentage                                                 | `60`                           |
+| `tfyProxy.autoscaling.labels`                            | Labels for the tfyProxy hpa resource                                                 | `{}`                           |
+| `tfyProxy.autoscaling.annotations`                       | Annotations for the tfyProxy hpa resource                                            | `{}`                           |
+| `tfyProxy.resources`                                     | Resource requests and limits for the tfyProxy                                        | `{}`                           |
+| `tfyProxy.livenessProbe.failureThreshold`                | Liveness probe failure threshold for tfyProxy                                        | `5`                            |
+| `tfyProxy.livenessProbe.initialDelaySeconds`             | Liveness probe initial delay for tfyProxy                                            | `5`                            |
+| `tfyProxy.livenessProbe.periodSeconds`                   | Liveness probe period for tfyProxy                                                   | `5`                            |
+| `tfyProxy.livenessProbe.successThreshold`                | Liveness probe success threshold for tfyProxy                                        | `1`                            |
+| `tfyProxy.livenessProbe.timeoutSeconds`                  | Liveness probe timeout for tfyProxy                                                  | `1`                            |
+| `tfyProxy.readinessProbe.failureThreshold`               | Readiness probe failure threshold for tfyProxy                                       | `5`                            |
+| `tfyProxy.readinessProbe.initialDelaySeconds`            | Readiness probe initial delay for tfyProxy                                           | `10`                           |
+| `tfyProxy.readinessProbe.periodSeconds`                  | Readiness probe period for tfyProxy                                                  | `5`                            |
+| `tfyProxy.readinessProbe.successThreshold`               | Readiness probe success threshold for tfyProxy                                       | `1`                            |
+| `tfyProxy.readinessProbe.timeoutSeconds`                 | Readiness probe timeout for tfyProxy                                                 | `1`                            |
+| `tfyProxy.nodeSelector`                                  | Node selector for the tfyProxy                                                       | `{}`                           |
+| `tfyProxy.affinity`                                      | Affinity settings for the tfyProxy                                                   | `{}`                           |
+| `tfyProxy.topologySpreadConstraints`                     | Topology spread constraints for the tfyProxy                                         | `{}`                           |
+| `tfyProxy.service.type`                                  | Service type for the tfyProxy                                                        | `ClusterIP`                    |
+| `tfyProxy.service.port`                                  | Service port for the tfyProxy                                                        | `8080`                         |
+| `tfyProxy.service.labels`                                | Labels for the tfyProxy service                                                      | `{}`                           |
+| `tfyProxy.service.annotations`                           | Annotations for the tfyProxy service                                                 | `{}`                           |
+| `tfyProxy.serviceAccount.create`                         | Bool to create a service account for the tfyProxy                                    | `false`                        |
+| `tfyProxy.serviceAccount.annotations`                    | Annotations for the tfyProxy service account                                         | `{}`                           |
+| `tfyProxy.serviceAccount.automountServiceAccountToken`   | Automount service account token for the tfyProxy service account                     | `true`                         |
+| `tfyProxy.extraVolumes`                                  | Extra volumes for the tfyProxy                                                       | `[]`                           |
+| `tfyProxy.extraVolumeMounts`                             | Extra volume mounts for the tfyProxy                                                 | `[]`                           |
+| `tfyProxy.serviceMonitor.enabled`                        | Enable ServiceMonitor for the tfyProxy                                               | `true`                         |
+| `tfyProxy.serviceMonitor.interval`                       | Interval for the ServiceMonitor                                                      | `15s`                          |
+| `tfyProxy.serviceMonitor.path`                           | Path for the ServiceMonitor                                                          | `/metrics`                     |
+| `tfyProxy.serviceMonitor.labels`                         | Additional labels for the ServiceMonitor                                             | `{}`                           |
+| `tfyProxy.serviceMonitor.annotations`                    | Additional annotations for the ServiceMonitor                                        | `{}`                           |
+| `tfyProxy.extraProxyLocations`                           | Extra proxy locations for the tfyProxy                                               | `[]`                           |
+| `tfyProxy.imagePullSecrets`                              | Image pull secrets for the tfyProxy                                                  | `[]`                           |
+| `tfyProxy.env`                                           | Environment variables for the tfyProxy                                               | `{}`                           |
 
 ### extraResources Extra Resources to deploy along with the TrueFoundry Control Plane
 

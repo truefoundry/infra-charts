@@ -138,7 +138,7 @@ Global Ingress fullname
 {{- end }}
 
 {{/*
-Truefoundry virtual service fullname}}
+Truefoundry virtual service fullname
 */}}
 {{- define "truefoundry.virtualservice.fullname" -}}
 {{- if .Values.global.virtualservice.fullnameOverride -}}
