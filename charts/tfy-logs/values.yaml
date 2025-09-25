@@ -60,6 +60,21 @@ victoria-logs-single:
       tag: 0.46.1
     ## @param victoria-logs-single.vector.enabled Enable vector
     enabled: true
+    ## @param victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      fsGroup: 0
+    ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - CAP_FOWNER
     ## @param victoria-logs-single.vector.affinity [object] Affinity
     affinity:
       nodeAffinity:
@@ -88,6 +103,7 @@ victoria-logs-single:
     nodeSelector: {}
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
+      data_dir: /tmp
       sinks:
         vlogs:
           type: elasticsearch
