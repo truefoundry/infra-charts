@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.87.3
+  controlPlaneChartVersion: 0.88.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -346,7 +346,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.87.0"
+    tag: "v0.88.0"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -800,7 +800,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.87.2"
+    tag: "v0.88.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1022,6 +1022,8 @@ servicefoundryServer:
     FE_FILL_THRESHOLD_PLUGIN_ENABLED_TENANTS: ""
     FE_ENABLE_MCP_CATALOGUE: "false"
     FE_MCP_CATALOGUE_ENABLED_TENANTS: ""
+    FE_ENABLE_GUARDRAIL_METRICS: "false"
+    FE_GUARDRAIL_METRICS_ENABLED_TENANTS: ""
     FE_ENABLE_SENTRY: "true"
     FE_ENABLE_DARK_MODE: "false"
     FE_ENABLE_TOOLS_AGENTS: "false"
@@ -2274,7 +2276,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.87.0"
+    tag: "v0.88.0"
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
     pullPolicy: IfNotPresent
   ## @param deltaFusionIngestor.statefulsetLabels Labels to apply to the DeltaFusion Ingestor statefulset
@@ -2428,7 +2430,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.87.0"
+    tag: "v0.88.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction
@@ -2543,7 +2545,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.87.0
+    tag: v0.88.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
