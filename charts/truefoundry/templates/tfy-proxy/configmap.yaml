@@ -57,7 +57,8 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      handle /api/env/* {
+      handle /api/env {
+        uri strip_prefix /api/env
         rewrite * /v1/fe-env
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
