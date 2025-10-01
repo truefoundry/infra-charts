@@ -31,46 +31,57 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Common labels
+ Base labels
   */}}
 {{- define "tfy-llm-gateway.labels" -}}
 helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-llm-gateway.selectorLabels" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "tfy-llm-gateway.commonLabels" -}}
+{{- $baseLabels := include "tfy-llm-gateway.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "tfy-llm-gateway.serviceLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Pod labels
+  */}}
+{{- define "tfy-llm-gateway.podLabels" -}}
+{{- $selectorLabels := include "tfy-llm-gateway.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
 
 {{/*
   Ingress labels
   */}}
-{{- define "tfy-llm-gateway.ingress.labels" -}}
-helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-llm-gateway.selectorLabels" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- if .Values.ingress.labels }}
-{{- toYaml .Values.ingress.labels | nindent 4 }}
-{{- end }}
+{{- define "tfy-llm-gateway.ingressLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $ingressLabels := mergeOverwrite $commonLabels .Values.ingress.labels }}
+{{- toYaml $ingressLabels }}
 {{- end }}
 
 {{/*
-Annotations
-*/}}
-{{- define "tfy-llm-gateway.annotations" -}}
-{{- if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "tfy-llm-gateway.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
@@ -107,17 +118,58 @@ ServiceAccount Annotation
 {{- end }}
 
 {{/*
-Virtual Service Annotations
+Virtual Service Labels
 */}}
-
-{{- define "tfy-llm-gateway.virtualservice.annotations" -}}
-{{- if .Values.istio.virtualservice.annotations }}
-  {{- toYaml .Values.istio.virtualservice.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-  {}
+{{- define "tfy-llm-gateway.virtualserviceLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $virtualServiceLabels := mergeOverwrite $commonLabels .Values.istio.virtualservice.labels }}
+{{- toYaml $virtualServiceLabels }}
 {{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "tfy-llm-gateway.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.deploymentLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "tfy-llm-gateway.serviceAccountLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "tfy-llm-gateway.serviceMonitorLabels" -}}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.serviceMonitor.additionalLabels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-llm-gateway.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deploymentAnnotations }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
+  VirtualService annotations
+  */}}
+{{- define "tfy-llm-gateway.virtualserviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite $commonAnnotations .Values.istio.virtualservice.annotations }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
@@ -158,40 +210,46 @@ Virtual Service Annotations
 {{/*
 Ingress Annotations
 */}}
-{{- define "tfy-llm-gateway.ingress.annotations" -}}
-{{- if .Values.ingress.annotations }}
-  {{- toYaml .Values.ingress.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
-{{- end }}
+{{- define "tfy-llm-gateway.ingressAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $ingressAnnotations := mergeOverwrite $commonAnnotations .Values.ingress.annotations }}
+{{- toYaml $ingressAnnotations }}
 {{- end }}
 
 {{/*
-Service Annotations
-*/}}
-{{- define "tfy-llm-gateway.service.annotations" -}}
-{{- if .Values.service.annotations }}
-  {{- toYaml .Values.service.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "tfy-llm-gateway.serviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.service.annotations }}
+{{- toYaml $serviceAnnotations }}
 {{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "tfy-llm-gateway.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.mlfoundryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
+  */}}
+{{- define "tfy-llm-gateway.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.serviceMonitor.additionalAnnotations }}
+{{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
 
 {{/*
 Pod Annotation Labels
 */}}
 {{- define "tfy-llm-gateway.podAnnotations" -}}
-{{- if .Values.podAnnotations }}
-  {{- toYaml .Values.podAnnotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- end }}
-prometheus.io/scrape: "true"
-prometheus.io/port: "8787"
+{{- $defaultAnnotations := dict "prometheus.io/scrape" "true" "prometheus.io/port" "8787" }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.commonAnnotations) $defaultAnnotations .Values.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
 
 {{- define "tfy-llm-gateway.defaultResources.small" }}
