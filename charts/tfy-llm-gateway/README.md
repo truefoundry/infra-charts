@@ -23,6 +23,7 @@ LLM-Gateway Helm Chart
 | `global.nodeSelector`                         | Node selector                                                                   | `{}`                                 |
 | `global.serviceAccount.name`                  | Service account name                                                            | `""`                                 |
 | `global.serviceAccount.labels`                | Service account labels                                                          | `{}`                                 |
+| `global.serviceAccount.annotations`           | Service account annotations                                                     | `{}`                                 |
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
