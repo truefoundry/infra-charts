@@ -86,17 +86,6 @@ Annotations
 {{- end }}
 
 {{/*
-  Ingress labels
-  */}}
-{{- define "tfy-otel-collector.ingress.labels" -}}
-{{- if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
   Selector labels
   */}}
 {{- define "tfy-otel-collector.selectorLabels" -}}
@@ -154,19 +143,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-ServiceAccount Annotation
-*/}}
-{{- define "tfy-otel-collector.serviceAccount.annotations" -}}
-{{- if .Values.serviceAccount.create }}
-  {{- toYaml .Values.serviceAccount.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-  {}
-{{- end }}
-{{- end }}
-
-{{/*
   Parse env from template
   */}}
 {{- define "tfy-otel-collector.parseEnv" -}}
@@ -216,21 +192,8 @@ ServiceAccount Annotation
   */}}
 {{- define "tfy-otel-collector.deploymentLabels" -}}
 {{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.deploymentLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.deploymentLabels }}
 {{- toYaml $mergedLabels }}
-{{- end }}
-
-{{/*
-Service Annotations
-*/}}
-{{- define "tfy-otel-collector.service.annotations" -}}
-{{- if .Values.service.annotations }}
-  {{- toYaml .Values.service.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
-{{- end }}
 {{- end }}
 
 {{/*
