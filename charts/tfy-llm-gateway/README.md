@@ -11,9 +11,18 @@ LLM-Gateway Helm Chart
 | `global.controlPlaneURL`                      | Control plane URL                                                               | `""`                                 |
 | `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                     | `[]`                                 |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                     | `{}`                                 |
+| `global.labels`                               | Global labels                                                                   | `{}`                                 |
+| `global.annotations`                          | Global annotations                                                              | `{}`                                 |
+| `global.podLabels`                            | Global pod labels                                                               | `{}`                                 |
+| `global.podAnnotations`                       | Global pod annotations                                                          | `{}`                                 |
+| `global.deploymentLabels`                     | Global deployment labels                                                        | `{}`                                 |
+| `global.deploymentAnnotations`                | Global deployment annotations                                                   | `{}`                                 |
+| `global.serviceAnnotations`                   | Global service annotations                                                      | `{}`                                 |
+| `global.serviceLabels`                        | Global service labels                                                           | `{}`                                 |
 | `global.tolerations`                          | Tolerations for pod scheduling on a node                                        | `[]`                                 |
 | `global.nodeSelector`                         | Node selector                                                                   | `{}`                                 |
 | `global.serviceAccount.name`                  | Service account name                                                            | `""`                                 |
+| `global.serviceAccount.labels`                | Service account labels                                                          | `{}`                                 |
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
@@ -27,6 +36,9 @@ LLM-Gateway Helm Chart
 | `commonAnnotations`                           | Common annotations                                                              | `{}`                                 |
 | `podSecurityContext`                          | Pod security context                                                            | `{}`                                 |
 | `commonLabels`                                | Common labels                                                                   | `{}`                                 |
+| `podLabels`                                   | Pod annotations                                                                 | `{}`                                 |
+| `deploymentLabels`                            | Deployment labels                                                               | `{}`                                 |
+| `deploymentAnnotations`                       | Deployment annotations                                                          | `{}`                                 |
 | `securityContext`                             | Security context configuration                                                  | `{}`                                 |
 | `imagePullSecrets`                            | Image pull secrets                                                              | `[]`                                 |
 | `healthcheck.enabled`                         | Enable healthcheck                                                              | `true`                               |
@@ -57,13 +69,16 @@ LLM-Gateway Helm Chart
 | `ingress.hosts`                               | Ingress hosts                                                                   | `[]`                                 |
 | `istio.virtualservice.enabled`                | Enable virtual service                                                          | `false`                              |
 | `istio.virtualservice.annotations`            | Virtual service annotations                                                     | `{}`                                 |
+| `istio.virtualservice.labels`                 | Virtual service labels                                                          | `{}`                                 |
 | `istio.virtualservice.gateways`               | Virtual service gateways                                                        | `[]`                                 |
 | `istio.virtualservice.hosts`                  | Virtual service hosts                                                           | `[]`                                 |
 | `service.type`                                | Service type                                                                    | `ClusterIP`                          |
 | `service.port`                                | Service port                                                                    | `8787`                               |
 | `service.annotations`                         | Service annotations                                                             | `{}`                                 |
+| `service.labels`                              | Service labels                                                                  | `{}`                                 |
 | `serviceAccount.create`                       | Create service account                                                          | `false`                              |
 | `serviceAccount.annotations`                  | Service account annotations                                                     | `{}`                                 |
+| `serviceAccount.labels`                       | Service account labels                                                          | `{}`                                 |
 | `serviceAccount.name`                         | Service account name                                                            | `""`                                 |
 | `serviceAccount.automountServiceAccountToken` | Automount service account token this will only be used if create is true        | `false`                              |
 | `extraVolumes`                                | Extra volumes                                                                   | `[]`                                 |
