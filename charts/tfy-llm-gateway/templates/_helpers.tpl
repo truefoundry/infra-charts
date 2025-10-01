@@ -58,6 +58,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+  Selector labels
+  */}}
+{{- define "tfy-llm-gateway.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-llm-gateway.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{/*
   Pod labels
   */}}
 {{- define "tfy-llm-gateway.podLabels" -}}
@@ -86,14 +94,6 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-  Selector labels
-  */}}
-{{- define "tfy-llm-gateway.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-llm-gateway.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-llm-gateway.serviceAccountName" -}}
@@ -105,25 +105,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-ServiceAccount Annotation
-*/}}
-{{- define "tfy-llm-gateway.serviceAccount.annotations" -}}
-{{- if .Values.serviceAccount.create }}
-  {{- toYaml .Values.serviceAccount.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-  {}
-{{- end }}
-{{- end }}
-
-{{/*
-Virtual Service Labels
+  VirtualService Labels
 */}}
 {{- define "tfy-llm-gateway.virtualserviceLabels" -}}
 {{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
 {{- $virtualServiceLabels := mergeOverwrite $commonLabels .Values.istio.virtualservice.labels }}
 {{- toYaml $virtualServiceLabels }}
+{{- end }}
+
+{{/*
+  VirtualService annotations
+  */}}
+{{- define "tfy-llm-gateway.virtualserviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite $commonAnnotations .Values.istio.virtualservice.annotations }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
@@ -136,12 +132,30 @@ Virtual Service Labels
 {{- end }}
 
 {{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-llm-gateway.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deploymentAnnotations }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
   Service Account Labels - merges commonLabels with service account-specific labels
   */}}
 {{- define "tfy-llm-gateway.serviceAccountLabels" -}}
 {{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
 {{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "tfy-llm-gateway.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
 {{- end }}
 
 {{/*
@@ -155,21 +169,12 @@ Virtual Service Labels
 {{- end }}
 
 {{/*
-  Deployment annotations
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
   */}}
-{{- define "tfy-llm-gateway.deploymentAnnotations" -}}
+{{- define "tfy-llm-gateway.serviceMonitorAnnotations" -}}
 {{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
-{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deploymentAnnotations }}
-{{- toYaml $deploymentAnnotations }}
-{{- end }}
-
-{{/*
-  VirtualService annotations
-  */}}
-{{- define "tfy-llm-gateway.virtualserviceAnnotations" -}}
-{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
-{{- $deploymentAnnotations := mergeOverwrite $commonAnnotations .Values.istio.virtualservice.annotations }}
-{{- toYaml $deploymentAnnotations }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.serviceMonitor.additionalAnnotations }}
+{{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
 
 {{/*
@@ -226,29 +231,11 @@ Ingress Annotations
 {{- end }}
 
 {{/*
-  Service Account Annotations - merges commonAnnotations with service account-specific annotations
-  */}}
-{{- define "tfy-llm-gateway.serviceAccountAnnotations" -}}
-{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }} 
-{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.mlfoundryServer.serviceAccount.annotations }}
-{{- toYaml $serviceAccountAnnotations }}
-{{- end }}
-
-{{/*
-  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
-  */}}
-{{- define "tfy-llm-gateway.serviceMonitorAnnotations" -}}
-{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
-{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.serviceMonitor.additionalAnnotations }}
-{{- toYaml $serviceMonitorAnnotations }}
-{{- end }}
-
-{{/*
 Pod Annotation Labels
 */}}
 {{- define "tfy-llm-gateway.podAnnotations" -}}
 {{- $defaultAnnotations := dict "prometheus.io/scrape" "true" "prometheus.io/port" "8787" }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.commonAnnotations) $defaultAnnotations .Values.podAnnotations }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) $defaultAnnotations .Values.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
