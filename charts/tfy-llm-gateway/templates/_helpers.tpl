@@ -36,6 +36,7 @@ Expand the name of the chart.
 {{- define "tfy-llm-gateway.labels" -}}
 helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 
 {{/*
