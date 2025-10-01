@@ -29,6 +29,11 @@ rules:
     resources: ["virtualservices", "gateways"]
     verbs: ["list"]
 
+  {{/* This allows us to check for conflicts in Ingresses when user is creating a new deployment */}}
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["list"]
+
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["list"]

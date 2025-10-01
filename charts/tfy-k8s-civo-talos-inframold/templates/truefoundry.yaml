@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.88.0
+    targetRevision: 0.88.2
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -90,7 +90,7 @@ spec:
         truefoundryFrontendApp:
           istio:
             virtualservice:
-              enabled: true
+              enabled: {{ .Values.truefoundry.virtualservice.enabled }}
               {{- if .Values.truefoundry.virtualservice.hosts }}
               hosts:
               {{- range $v := .Values.truefoundry.virtualservice.hosts }}

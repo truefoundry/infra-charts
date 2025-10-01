@@ -29,7 +29,7 @@ spec:
           weight: 100
     - route:
         - destination:
-            host: {{ $.Release.Name }}-tfy-proxy.{{ .Release.Namespace }}.svc.cluster.local
+            host: {{ tpl .Values.global.proxy.tfyProxyHost . }}
             port:
               number: 8080
   {{- else }}
