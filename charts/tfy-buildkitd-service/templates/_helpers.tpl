@@ -43,8 +43,8 @@ Annotations
  Base labels
   */}}
 {{- define "buildkitd-service.labels" -}}
-{{- $defaultAnnotations := dict "helm.sh/chart" (include "buildkitd-service.chart" .) "app.kubernetes.io/managed-by" .Release.Name "app.kubernetes.io/version" .Values.image.tag }}
-{{- $mergedLabels := mergeOverwrite $defaultAnnotations (deepCopy .Values.global.labels) .Values.labels }}
+{{- $defaultLabels := dict "helm.sh/chart" (include "buildkitd-service.chart" .) "app.kubernetes.io/managed-by" .Release.Name "app.kubernetes.io/version" .Values.image.tag }}
+{{- $mergedLabels := mergeOverwrite $defaultLabels (deepCopy .Values.global.labels) .Values.labels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
