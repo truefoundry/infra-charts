@@ -77,15 +77,6 @@ Common labels - merges global.labels with component-specific labels
 {{- end }}
 
 {{/*
-Annotations
-*/}}
-{{- define "tfy-otel-collector.annotations" -}}
-{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.commonAnnotations) }}
-{{- toYaml . }}
-{{- end }}
-{{- end }}
-
-{{/*
   Selector labels
   */}}
 {{- define "tfy-otel-collector.selectorLabels" -}}
@@ -181,7 +172,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Deployment annotations
   */}}
 {{- define "tfy-otel-collector.deploymentAnnotations" -}}
-{{- $defaultAnnotations := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-otel-collector.annotations" . | fromYaml) }}
+{{- $defaultAnnotations := merge (dict "argocd.argoproj.io/sync-wave" "3") }}
 {{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
 {{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations $defaultAnnotations .Values.deploymentAnnotations }}
 {{- toYaml $deploymentAnnotations }}
