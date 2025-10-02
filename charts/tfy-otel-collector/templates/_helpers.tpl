@@ -188,7 +188,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Pod Annotation Labels
+  Pod Annotations
 */}}
 {{- define "tfy-otel-collector.podAnnotations" -}}
 {{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) .Values.podAnnotations }}
