@@ -6,15 +6,36 @@ global:
   resourceTier: "medium"
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
   affinity: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
   ## @param global.tolerations [array] Tolerations for pod scheduling on a node
   tolerations: []
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
-  ## @param global.serviceAccount.name Service account name
+  ## global.serviceAccount Service account configuration
   serviceAccount:
+    ## @param global.serviceAccount.name Service account name
     name: "truefoundry"
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+  ## @param global.podAnnotations [object] Pod annotations
+  podAnnotations: {}
+  ## @param global.podLabels [object] Pod labels
+  podLabels: {}
+  ## @param global.serviceLabels [object] Service labels
+  serviceLabels: {}
+  ## @param global.deploymentLabels [object] Deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Service annotations
+  serviceAnnotations: {}
   ## @param global.image.registry Image registry for tfyOtelCollector (defaults to global.image.registry if not set)
   image:
     registry: "tfy.jfrog.io"
@@ -61,10 +82,16 @@ nameOverride: ''
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
-## @param podSecurityContext Pod security context
+## @param podSecurityContext [object] Pod security context
 podSecurityContext: {}
-## @param commonLabels Common labels
+## @param commonLabels [object] Common labels
 commonLabels: {}
+## @param podLabels [object] Pod annotations
+podLabels: {}
+## @param deploymentAnnotations [object] Deployment annotations
+deploymentAnnotations: {}
+## @param deploymentLabels [object] Deployment labels
+deploymentLabels: {}
 ## @param securityContext Security context configuration
 securityContext: {}
 ## Healthcheck configuration
@@ -131,12 +158,16 @@ service:
   port: 4318
   ## @param service.annotations Service annotations
   annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
   create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
+  ## @param serviceAccount.labels Service account labels
+  labels: {}
   ## @param serviceAccount.name Service account name
   name: ""
   ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
