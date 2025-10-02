@@ -31,42 +31,31 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common Annotations
+Annotations
 */}}
 {{- define "buildkitd-service.annotations" -}}
-{{- if .Values.annotations }}
-  {{- toYaml .Values.annotations }}
-{{- else }}
-{}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.annotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
+
+{{/*
+ Base labels
+  */}}
+{{- define "buildkitd-service.labels" -}}
+{{- $defaultAnnotations := dict "helm.sh/chart" (include "buildkitd-service.chart" .) "app.kubernetes.io/managed-by" .Release.Name "app.kubernetes.io/version" .Values.image.tag }}
+{{- $mergedLabels := mergeOverwrite $defaultAnnotations (deepCopy .Values.global.labels) .Values.labels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
 
 {{/*
   Pod Labels
   */}}
 {{- define "buildkitd-service.podLabels" -}}
-{{ include "buildkitd-service.selectorLabels" . }}
-{{- if .Values.image.tag }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.podLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-Common labels
-*/}}
-{{- define "buildkitd-service.labels" -}}
-{{- include "buildkitd-service.podLabels" . }}
-helm.sh/chart: {{ include "buildkitd-service.chart" . }}
-{{- if .Values.labels }}
-{{ toYaml .Values.labels }}
-{{- end }}
-{{- end }}
-
-{{/*
+{{- $selectorLabels := include "buildkitd-service.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
@@ -76,6 +65,46 @@ Selector labels
 app.kubernetes.io/name: {{ include "buildkitd-service.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+
+{{/*
+  Statefulset Labels - merges commonLabels with statefulset-specific labels
+  */}}
+{{- define "buildkitd-service.statefulsetLabels" -}}
+{{- $commonLabels := include "buildkitd-service.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.global.statefulsetLabels .Values.statefulsetLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+
+{{/*
+  Statefulset annotations
+  */}}
+{{- define "buildkitd-service.statefulsetAnnotations" -}}
+{{- $commonAnnotations := include "buildkitd-service.annotations" . | fromYaml }}
+{{- $statefulsetAnnotations := mergeOverwrite (deepCopy .Values.global.statefulsetAnnotations) $commonAnnotations .Values.statefulsetAnnotations }}
+{{- toYaml $statefulsetAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels
+  */}}
+{{- define "buildkitd-service.serviceAccountLabels" -}}
+{{- $commonLabels := include "buildkitd-service.labels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations
+  */}}
+{{- define "buildkitd-service.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "buildkitd-service.annotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+
 
 {{/*
 Create the name of the service account to use
@@ -122,13 +151,8 @@ ServiceAccount annotations for sds-server
 Pod Annotations
 */}}
 {{- define "buildkitd-service.podAnnotations" -}}
-{{- if .Values.podAnnotations }}
-{{ toYaml .Values.podAnnotations }}
-{{- else if .Values.annotations }}
-{{ toYaml .Values.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) .Values.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
 
 {{- define "buildkitd-service.resources" }}
