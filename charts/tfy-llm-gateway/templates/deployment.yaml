@@ -3,9 +3,9 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
-    {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.deploymentAnnotations" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ include "tfy-llm-gateway.replicas" . }}
@@ -25,7 +25,7 @@ spec:
       annotations:
         {{- include "tfy-llm-gateway.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-llm-gateway.labels" . | nindent 8 }}
+        {{- include "tfy-llm-gateway.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
       securityContext:

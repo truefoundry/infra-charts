@@ -4,9 +4,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}-oidc-cm
   labels:
-      {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+      {{- include "tfy-llm-gateway.commonLabels" . | nindent 4 }}
   annotations:
-      {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
+      {{- include "tfy-llm-gateway.commonAnnotations" . | nindent 4 }}
 data:
   config.json: |-
     {{- if .Values.oidc.config }}
