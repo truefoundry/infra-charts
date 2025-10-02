@@ -4,11 +4,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    {{- include "tfy-llm-gateway.ingress.annotations" . | nindent 4 }}
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
-    {{- include "tfy-llm-gateway.ingress.labels" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.ingressLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.ingressAnnotations" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
