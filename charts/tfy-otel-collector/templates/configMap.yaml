@@ -3,9 +3,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}-cm
   labels:
-      {{- include "tfy-otel-collector.commonLabels" . | nindent 4 }}
+      {{- include "tfy-otel-collector.labels" . | nindent 4 }}
   annotations:
-      {{- include "tfy-otel-collector.commonAnnotations" . | nindent 4 }}
+      {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
 data:
   config.yaml: |-
     extensions:
@@ -14,6 +14,8 @@ data:
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
         cache_ttl: 5m
         tfy_api_key: ${env:TFY_API_KEY}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -43,10 +45,14 @@ data:
         verbosity: detailed # For debug output during troubleshooting
       nop:
       datafusion:
-        base_url: ${env:DELTAFUSION_INGESTER_BASE_URL}
-        request_timeout: ${env:DELTAFUSION_INGESTER_REQUEST_TIMEOUT}
+        deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
+        deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT}
+        deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES}
+        deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
 
