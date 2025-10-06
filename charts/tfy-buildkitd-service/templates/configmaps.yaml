@@ -3,9 +3,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "buildkitd-service.fullname" . }}-config
   labels:
-    {{- include "buildkitd-service.labels" . | nindent 4 }}
+    {{- include "buildkitd-service.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "buildkitd-service.annotations" . | nindent 4 }}
+    {{- include "buildkitd-service.commonAnnotations" . | nindent 4 }}
 data:
   buildkitd.toml: |
     {{- .Values.buildkitConfig | nindent 4 }}

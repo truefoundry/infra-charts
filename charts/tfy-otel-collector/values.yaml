@@ -46,11 +46,16 @@ env:
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: "true"
+  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
   DELTAFUSION_INGESTER_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
   SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-  DELTAFUSION_INGESTER_PATH: /spans/ingest
   SFY_SERVER_REQUEST_TIMEOUT: 30s
-  DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 30s
+  DELTAFUSION_INGESTOR_REQUEST_TIMEOUT: 60s
+  DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 60s
+  DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL: 10s
+  DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES: "2"
+  SFY_SERVER_REQUEST_MAX_RETRIES: "2"
+  SFY_SERVER_REQUEST_RETRY_INTERVAL: 10s
 
 ## Image configuration for otel-collector
 image:
@@ -59,7 +64,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: 97354fde5953e2b8b0db36d553110b8f647d2dba
+  tag: ff3322184a086eda1b4af3218892a1aec67649f7
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
