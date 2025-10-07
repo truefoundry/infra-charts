@@ -139,3 +139,14 @@ Expand the name of the chart.
 {{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector $defaultNodeSelector }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
+
+{{/*
+  Image pull secrets for tfy-build - allows component-specific override
+*/}}
+{{- define "tfy-build.imagePullSecrets" -}}
+{{- if .Values.tfyBuild.imagePullSecrets -}}
+{{- toYaml .Values.tfyBuild.imagePullSecrets -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
+{{- end }}

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "tfy-build.fullname" . }}-job-template
+  name: {{ include "tfy-build.fullname" . }}-job-template-cm
   {{- $labels := include "tfy-build.commonLabels" . }}
   {{- if and $labels (ne $labels "{}") }}
   labels:
@@ -50,6 +50,9 @@ data:
             {{- $podAnnotations | nindent 12 }}
             {{- end }}
         spec:
+          serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
+          imagePullSecrets:
+            {{- include "tfy-build.imagePullSecrets" . | nindent 12 }}
           restartPolicy: Never
           {{- if .Values.tfyBuild.jobTemplate.nodeSelector }}
           nodeSelector:
@@ -115,6 +118,14 @@ data:
             volumeMounts:
             - name: scripts
               mountPath: /scripts
+            {{- if ne .Values.tfyBuild.jobTemplate.baseImagePullSecret "" }}
+            - name: truefoundry-docker-config
+              mountPath: /root/.truefoundry/.docker/
+            {{- end }}
+            {{- range $value := .Values.tfyBuild.jobTemplate.buildSecrets }}
+            - name: {{ $value.id | replace "." "-" }}
+              mountPath: /truefoundry-build-secrets/
+            {{- end }}
             {{- if .Values.tfyBuild.jobTemplate.extraVolumeMounts }}
             {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumeMounts | nindent 12 }}
             {{- end }}
@@ -123,6 +134,14 @@ data:
             - |
               {{ .Values.tfyBuild.jobTemplate.script | nindent 14 }}
           volumes:
+          {{- if ne .Values.tfyBuild.jobTemplate.baseImagePullSecret "" }}
+          - name: truefoundry-docker-config
+            secret:
+              items:
+              - key: .dockerconfigjson
+                path: base_config.json
+              secretName: {{ .Values.tfyBuild.jobTemplate.baseImagePullSecret }}
+          {{- end }}
           - name: scripts
             projected:
               defaultMode: 493
@@ -144,5 +163,13 @@ data:
                     path: update-build.sh
           {{- if .Values.tfyBuild.jobTemplate.extraVolumes }}
           {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumes | nindent 10 }}
+          {{- end }}
+          {{- range $value := .Values.tfyBuild.jobTemplate.buildSecrets }}
+          - name: {{ $value.id | replace "." "-" }}
+            secret:
+              items:
+              - key: {{ $value.valueFrom.secretKey }}
+                path: {{ $value.id }}
+              secretName: {{ $value.valueFrom.secretName }}
           {{- end }}
 {{- end }}
