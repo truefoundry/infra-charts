@@ -111,16 +111,16 @@ parse_image_url() {
     fi
     
     # Handle ECR prefix if destination is ECR
-    if is_aws_ecr "$destination_registry" && [ -n "$dest_prefix" ]; then
-        local ecr_repo_name="${dest_prefix}/${image_name}"
-        local new_image_url="$destination_registry/$ecr_repo_name$image_tag"
-        echo "$ecr_repo_name"
-        echo "$new_image_url"
-    else
-        local new_image_url="$destination_registry/$image_name$image_tag"
-        echo "$image_name"
-        echo "$new_image_url"
-    fi
+    # if is_aws_ecr "$destination_registry" && [ -n "$dest_prefix" ]; then
+    #     local ecr_repo_name="${dest_prefix}/${image_name}"
+    #     local new_image_url="$destination_registry/$ecr_repo_name$image_tag"
+    #     echo "$ecr_repo_name"
+    #     echo "$new_image_url"
+    # else
+    local new_image_url="$destination_registry/$image_name$image_tag"
+    echo "$image_name"
+    echo "$new_image_url"
+    # fi
 }
 
 # Parse command line arguments
