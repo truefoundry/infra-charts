@@ -1,0 +1,87 @@
+## Gateway Values
+## Version - 0.78.0
+global:
+  existingTruefoundryCredsSecret: truefoundry-creds
+  tenantName: mastercard
+  resourceTier: small
+  # controlPlaneURL: https://tfycp.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal
+  controlPlaneURL: http://truefoundry-truefoundry-frontend-app.<NS-CP>.svc.cluster.local:5000
+  serviceAccount:
+    automountServiceAccountToken: false
+  image:
+    registry: "artifacts.mastercard.int/artifactory/mcr-internal-stable/mastercard"
+
+tfy-llm-gateway:
+  enabled: true
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/hsts: "true"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    ingressClassName: nginx
+    tls:
+      - hosts:
+          - tfygw.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal
+        secretName: truefoundry-ep-cert
+    hosts:
+      - tfygw.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal
+  autoscaling:
+    enabled: false
+  serviceAccount:
+    automountServiceAccountToken: false
+  securityContext:
+    readOnlyRootFilesystem: true
+  env:
+    # CONTROL_PLANE_NATS_URL: wss://tfycp.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal
+    # SERVICEFOUNDRY_SERVER_URL: https://tfycp.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal/api/svc
+    CONTROL_PLANE_NATS_URL: ws://truefoundry-tfy-nats.<NS-CP>.svc.cluster.local:8080
+    SERVICEFOUNDRY_SERVER_URL: http://truefoundry-servicefoundry-server.<NS-CP>.svc.cluster.local:3000
+
+extraResources:
+  enabled: true
+  manifests:
+    - apiVersion: cert-manager.io/v1
+      kind: Certificate
+      metadata:
+        name: truefoundry-certificates
+      spec:
+        commonName: truefoundry-cert
+        dnsNames:
+          - tfygw.app.tenant-35.stage.mastercard-uscentral-tst-az1.mks.cloud.zlocal
+        issuerRef:
+          group: certificates.mastercard.int
+          kind: ClusterIssuer
+          name: mc-internal-tst-server
+        privateKey:
+          algorithm: RSA
+          encoding: PKCS1
+          size: 2048
+        secretName: truefoundry-ep-cert
+        subject:
+          organizations:
+            - mastercard
+
+tfyNats:
+  enabled: false
+truefoundryFrontendApp:
+  enabled: false
+servicefoundryServer:
+  enabled: false
+tfyK8sController:
+  enabled: false
+truefoundryBootstrap:
+  enabled: false
+tfyBuild:
+  enabled: false
+tfy-buildkitd-service:
+  enabled: false
+mlfoundryServer:
+  enabled: false
+sfyManifestService:
+  enabled: false
+tfyController:
+  enabled: false
