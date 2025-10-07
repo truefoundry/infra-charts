@@ -61,6 +61,22 @@ spec:
                 memory: 2Gi
             retention: 30d
             containers:
+            - livenessProbe:
+                failureThreshold: 10
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                timeoutSeconds: 10
+              name: prometheus
+              readinessProbe:
+                failureThreshold: 10
+                initialDelaySeconds: 60
+                periodSeconds: 10
+                timeoutSeconds: 10
+              startupProbe:
+                failureThreshold: 10
+                initialDelaySeconds: 300
+                periodSeconds: 10
+                timeoutSeconds: 10
             - name: config-reloader
               resources:
                 requests:
