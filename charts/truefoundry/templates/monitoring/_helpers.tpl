@@ -84,3 +84,38 @@
 {{- $alertManagerAnnotations := mergeOverwrite $commonAnnotations .Values.monitoring.alertManager.annotations }}
 {{- toYaml $alertManagerAnnotations }}
 {{- end }}
+
+{{/*
+  TfyNats labels for monitoring - merges common labels with tfyNats-specific labels
+  Priority: TfyNatsLabels > CommonLabels > GlobalLabels
+*/}}
+{{- define "monitoring.tfyNatsLabels" -}}
+{{- $commonLabels := include "monitoring.commonLabels" . | fromYaml }}
+{{- $tfyNatsLabels := dict "app.kubernetes.io/component" "nats" "app.kubernetes.io/name" "tfy-nats" "release" "prometheus" }}
+{{- $mergedLabels := mergeOverwrite $commonLabels $tfyNatsLabels }}
+{{- if and .Values.monitoring.tfyNats (hasKey .Values.monitoring.tfyNats "labels") .Values.monitoring.tfyNats.labels }}
+{{- $mergedLabels = mergeOverwrite $mergedLabels .Values.monitoring.tfyNats.labels }}
+{{- end }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  TfyNats selector labels for monitoring
+*/}}
+{{- define "monitoring.tfyNatsSelectorLabels" -}}
+app.kubernetes.io/component: nats
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/name: tfy-nats
+{{- end }}
+
+{{/*
+  TfyNats annotations for monitoring - merges common annotations with tfyNats-specific annotations
+  Priority: TfyNatsAnnotations > CommonAnnotations > GlobalAnnotations
+*/}}
+{{- define "monitoring.tfyNatsAnnotations" -}}
+{{- $commonAnnotations := include "monitoring.commonAnnotations" . | fromYaml }}
+{{- if and .Values.monitoring.tfyNats (hasKey .Values.monitoring.tfyNats "annotations") .Values.monitoring.tfyNats.annotations }}
+{{- $commonAnnotations = mergeOverwrite $commonAnnotations .Values.monitoring.tfyNats.annotations }}
+{{- end }}
+{{- toYaml $commonAnnotations }}
+{{- end }}

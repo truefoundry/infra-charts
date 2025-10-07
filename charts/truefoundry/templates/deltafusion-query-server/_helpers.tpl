@@ -130,23 +130,25 @@ Create chart name and version as used by the chart label.
 
 
 {{/*
-  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
-  */}}
-{{- define "deltafusion-query-server.serviceMonitorLabels" -}}
-{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
-{{- $serviceMonitorLabels := mergeOverwrite $commonLabels .Values.deltaFusionQueryServer.serviceMonitor.labels }}
-{{- toYaml $serviceMonitorLabels }}
-{{- end }}
-
-{{/*
-  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
   */}}
 {{- define "deltafusion-query-server.serviceMonitorAnnotations" -}}
 {{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
-{{- $prometheusLabel := dict "release" "prometheus" }}
-{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations $prometheusLabel .Values.deltaFusionQueryServer.serviceMonitor.annotations }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.deltaFusionQueryServer.serviceMonitor.annotations }}
 {{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
+
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor specific labels
+  */}}
+{{- define "deltafusion-query-server.serviceMonitorLabels" -}}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.deltaFusionQueryServer.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
 
 {{/*
   Create the name of the service account to use

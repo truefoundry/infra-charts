@@ -1,4 +1,63 @@
-{{- if.Values.global.ingress.enabled -}}
+{{- $tfyProxyServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyProxyHost) .)) 0 -}}
+{{- $tfyWorkflowAdminServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyWorkflowAdminHost) .)) 0 -}}
+---
+{{- if and .Values.global.ingress.enabled .Values.global.proxy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry.ingress.fullname" . }}
+  labels:
+    {{- include "truefoundry.ingress.labels" . | nindent 4 }}
+  annotations:
+    {{- include "truefoundry.ingress.annotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  {{- if .Values.global.ingress.tls }}
+  tls:
+    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $host := .Values.global.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $tfyProxyServiceName }}
+                port:
+                  number: {{ $.Values.tfyProxy.service.port }}
+    {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry.ingress.fullname" . }}-workflow
+  labels:
+    {{- include "truefoundry.ingress.workflow.labels" . | nindent 4 }}
+  annotations:
+    {{- include "truefoundry.ingress.workflow.annotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  {{- if .Values.global.ingress.tls }}
+  tls:
+    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $host := .Values.global.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $tfyWorkflowAdminServiceName }}
+                port:
+                  number: {{ $.Values.tfyWorkflowAdmin.service.port }}
+    {{- end }}
+{{- else if and .Values.global.ingress.enabled (not .Values.global.proxy.enabled) -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -68,4 +127,4 @@ spec:
                 port:
                   number: 5000
     {{- end }}
-{{- end -}}
+{{- end }}
