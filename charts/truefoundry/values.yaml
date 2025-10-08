@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.89.2
+  controlPlaneChartVersion: 0.89.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -804,7 +804,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.89.0"
+    tag: "v0.89.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -954,6 +954,7 @@ servicefoundryServer:
     CLICKHOUSE_USER: user
     CLICKHOUSE_PASSWORD: '{{ if eq (trim (include "truefoundry.clickhouseRequestLogging.enabled" .)) "true" }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}'
     CLICKHOUSE_TTL_IN_DAYS: "90"
+    MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
