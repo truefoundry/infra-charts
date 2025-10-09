@@ -56,6 +56,9 @@ spec:
         volumeType: gp3
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.gpuDefaultNodeTemplate.encrypted }}
+        {{- if .Values.karpenter.gpuDefaultNodeTemplate.kmsKeyID }}
+        kmsKeyID: {{ .Values.karpenter.gpuDefaultNodeTemplate.kmsKeyID }}
+        {{- end }}
   {{- if (eq (include "gpuDefaultNodeTemplate.inferredAmiFamily" .) "al2") }}
   {{- if .Values.karpenter.gpuDefaultNodeTemplate.enableSoci }}
   userData: |

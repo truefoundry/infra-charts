@@ -57,6 +57,9 @@ spec:
         volumeType: gp3
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.controlPlaneNodeTemplate.encrypted }}
+        {{- if .Values.karpenter.controlPlaneNodeTemplate.kmsKeyID }}
+        kmsKeyID: {{ .Values.karpenter.controlPlaneNodeTemplate.kmsKeyID }}
+        {{- end }}
   {{- if not (eq .Values.karpenter.controlPlaneNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.controlPlaneNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
