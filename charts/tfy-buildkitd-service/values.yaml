@@ -10,10 +10,26 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
-  ## @param global.existingTruefoundryImagePullSecretName [string] Existing truefoundry image pull secret name
-  ## @param global.serviceAccount.name [string] Service account name
+  ## @param global.annotations [object] Global annotations to be added to all resources
+  annotations: {}
+  ## @param global.labels [object] Global labels to be added to all resources
+  labels: {}
+  ## @param global.podLabels [object] Labels to be added to statefulset pods
+  podLabels: {}
+  ## @param global.podAnnotations [object] Annotations to be added to statefulset pods
+  podAnnotations: {}
+  ## @param global.statefulsetLabels [object] Labels to be added to statefulset
+  statefulsetLabels: {}
+  ## @param global.statefulsetAnnotations [object] Annotations to be added to statefulset
+  statefulsetAnnotations: {}
+  ## global.serviceAccount Service account configuration
   serviceAccount:
+    ## @param global.serviceAccount.name [string] Service account name
     name: "truefoundry"
+    ## @param global.serviceAccount.labels Labels to add to the serviceAccount
+    labels: {}
+    ## @param global.serviceAccount.annotations Annotations to add to the serviceAccount
+    annotations: {}
   ## @param global.image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
   image:
     registry: "tfy.jfrog.io"
@@ -35,13 +51,21 @@ image:
   ##
   tag: "v0.23.2"
 
-## @param labels Labels to be added to the tfyBuildkitdService
+## @param commonLabels Labels to be added to the tfyBuildkitdService
 ##
-labels: {}
+commonLabels: {}
 
-## @param annotations Annotations to be added to the tfyBuildkitdService
+## @param commonAnnotations Annotations to be added to the tfyBuildkitdService
 ##
-annotations: {}
+commonAnnotations: {}
+
+## @param statefulsetLabels Labels to be added to the tfyBuildkitdService statefulset
+##
+statefulsetLabels: {}
+
+## @param statefulsetAnnotations Annotations to be added to the tfyBuildkitdService statefulset
+##
+statefulsetAnnotations: {}
 
 ## @skip buildkitConfig buildkit configuration for tfyBuildkitdService
 buildkitConfig: |
@@ -101,6 +125,10 @@ serviceAccount:
   ##
   annotations: {}
 
+  ## @param serviceAccount.labels Labels to add to the serviceAccount
+  ##
+  labels: {}
+
   ## @param serviceAccount.automountServiceAccountToken Automount service account token
   ##
   automountServiceAccountToken: false
@@ -119,7 +147,6 @@ podAnnotations: {}
 ## @param podSecurityContext Security context for the pod
 ##
 podSecurityContext: {}
-
 ## SecurityContext holds pod-level security attributes and common container settings.
 ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/

@@ -253,6 +253,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
   value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
 {{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+- name: BUILD_JOB_TEMPLATE_PATH
+  value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
+{{- end }}
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
@@ -274,6 +278,15 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
+{{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+  {{- $configMapName := "" }}
+  {{- if .Values.servicefoundryServer.configs.buildJobTemplate }}
+    {{- $configMapName = tpl .Values.servicefoundryServer.configs.buildJobTemplate . }}
+  {{- else }}
+    {{- $configMapName = printf "%s-job-template-cm" (include "tfy-build.fullname" .) }}
+  {{- end }}
+  {{- $volumes = append $volumes (dict "name" "configs-build-job-template" "configMap" (dict "name" $configMapName)) }}
 {{- end }}
 
 {{- $volumes | toYaml -}}
@@ -299,6 +312,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
+{{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}

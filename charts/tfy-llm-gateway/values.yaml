@@ -9,13 +9,34 @@ global:
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
   affinity: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
   ## @param global.tolerations [array] Tolerations for pod scheduling on a node
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
-  ## @param global.serviceAccount.name Service account name
+  ## global.serviceAccount Service account configuration
   serviceAccount:
+    ## @param global.serviceAccount.name Service account name
     name: ""
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
   ## @param global.image.registry Global image registry override
   image:
     registry: "tfy.jfrog.io"
@@ -27,7 +48,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.88.1
+  tag: v0.90.0-rc.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -51,6 +72,12 @@ commonAnnotations: {}
 podSecurityContext: {}
 ## @param commonLabels Common labels
 commonLabels: {}
+## @param podLabels Pod annotations
+podLabels: {}
+## @param deploymentLabels Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations Deployment annotations
+deploymentAnnotations: {}
 ## @param securityContext Security context configuration
 securityContext: {}
 ## @param imagePullSecrets [array] Image pull secrets
@@ -134,6 +161,8 @@ istio:
     enabled: false
     ## @param istio.virtualservice.annotations Virtual service annotations
     annotations: {}
+    ## @param istio.virtualservice.labels Virtual service labels
+    labels: {}
     ## @param istio.virtualservice.gateways Virtual service gateways
     gateways: []
     ## @param istio.virtualservice.hosts Virtual service hosts
@@ -146,12 +175,16 @@ service:
   port: 8787
   ## @param service.annotations Service annotations
   annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
   create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
+  ## @param serviceAccount.labels Service account labels
+  labels: {}
   ## @param serviceAccount.name Service account name
   name: ""
   ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
@@ -195,8 +228,9 @@ env:
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   TENANT_NAME: "{{ .Values.global.tenantName }}"
-  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/otel/v1/traces"
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318/v1/traces
   USE_GLOBAL_STATE_V2: "true"
+  MULTITENANT: "false"
 
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:

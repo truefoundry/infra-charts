@@ -129,23 +129,25 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
-  */}}
-{{- define "deltafusion-ingestor.serviceMonitorLabels" -}}
-{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
-{{- $serviceMonitorLabels := mergeOverwrite $commonLabels .Values.deltaFusionIngestor.serviceMonitor.labels }}
-{{- toYaml $serviceMonitorLabels }}
-{{- end }}
-
-{{/*
-  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
   */}}
 {{- define "deltafusion-ingestor.serviceMonitorAnnotations" -}}
 {{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
-{{- $prometheusLabel := dict "release" "prometheus" }}
-{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations $prometheusLabel .Values.deltaFusionIngestor.serviceMonitor.annotations }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.deltaFusionIngestor.serviceMonitor.annotations }}
 {{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
+
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor specific labels
+  */}}
+{{- define "deltafusion-ingestor.serviceMonitorLabels" -}}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.deltaFusionIngestor.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
 
 {{/*
   Create the name of the service account to use
@@ -227,8 +229,8 @@ limits:
 
 {{- define "deltafusion-ingestor.replicas" }}
 {{- $tier := include "deltafusion-ingestor.resourceTier" . }}
-{{- if .Values.replicaCount -}}
-2
+{{- if .Values.deltaFusionIngestor.replicaCount -}}
+{{ .Values.deltaFusionIngestor.replicaCount }}
 {{- else if eq $tier "small" -}}
 2
 {{- else if eq $tier "medium" -}}

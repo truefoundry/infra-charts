@@ -31,29 +31,49 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Common labels
+  Base labels
   */}}
 {{- define "tfy-otel-collector.labels" -}}
 helm.sh/chart: {{ include "tfy-otel-collector.chart" . }}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{ include "tfy-otel-collector.selectorLabels" . }}
-{{- if .Values.image.tag }}
 app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
-Annotations
-*/}}
-{{- define "tfy-otel-collector.annotations" -}}
-{{- if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
+Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "tfy-otel-collector.commonLabels" -}}
+{{- $baseLabels := include "tfy-otel-collector.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.commonLabels }}
+{{- toYaml $mergedLabels }}
 {{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "tfy-otel-collector.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.commonAnnotations) }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "tfy-otel-collector.serviceLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "tfy-otel-collector.serviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.service.annotations }}
+{{- toYaml $serviceAnnotations }}
 {{- end }}
 
 {{/*
@@ -65,6 +85,44 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "tfy-otel-collector.serviceAccountLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "tfy-otel-collector.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "tfy-otel-collector.serviceMonitorLabels" -}}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.serviceMonitor.additionalLabels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
+  */}}
+{{- define "tfy-otel-collector.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.serviceMonitor.additionalAnnotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+
+{{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-otel-collector.serviceAccountName" -}}
@@ -72,19 +130,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- .Values.serviceAccount.name -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
-{{- end }}
-{{- end }}
-
-{{/*
-ServiceAccount Annotation
-*/}}
-{{- define "tfy-otel-collector.serviceAccount.annotations" -}}
-{{- if .Values.serviceAccount.create }}
-  {{- toYaml .Values.serviceAccount.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-  {}
 {{- end }}
 {{- end }}
 
@@ -127,34 +172,37 @@ ServiceAccount Annotation
   Deployment annotations
   */}}
 {{- define "tfy-otel-collector.deploymentAnnotations" -}}
-{{- $merged := merge (dict "argocd.argoproj.io/sync-wave" "3") (include "tfy-otel-collector.annotations" . | fromYaml) }}
-{{- toYaml $merged }}
+{{- $defaultAnnotations := merge (dict "argocd.argoproj.io/sync-wave" "3") }}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations $defaultAnnotations .Values.deploymentAnnotations }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
-Service Annotations
-*/}}
-{{- define "tfy-otel-collector.service.annotations" -}}
-{{- if .Values.service.annotations }}
-  {{- toYaml .Values.service.annotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
-{{- end }}
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "tfy-otel-collector.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.deploymentLabels }}
+{{- toYaml $mergedLabels }}
 {{- end }}
 
 {{/*
-Pod Annotation Labels
+  Pod Annotations
 */}}
 {{- define "tfy-otel-collector.podAnnotations" -}}
-{{- if .Values.podAnnotations }}
-  {{- toYaml .Values.podAnnotations }}
-{{- else if .Values.commonAnnotations }}
-  {{- toYaml .Values.commonAnnotations }}
-{{- else }}
-{}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) .Values.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
+
+
+{{/*
+  Pod labels
+  */}}
+{{- define "tfy-otel-collector.podLabels" -}}
+{{- $selectorLabels := include "tfy-otel-collector.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*

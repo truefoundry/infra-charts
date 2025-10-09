@@ -9,6 +9,8 @@ metadata:
     {{- include "tfy-build.commonAnnotations" . | nindent 4 }}
 spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
+  imagePullSecrets:
+    {{- include "tfy-build.imagePullSecrets" . | nindent 4 }}
   workflowMetadata:
     labelsFrom:
       "truefoundry.com/buildName":
