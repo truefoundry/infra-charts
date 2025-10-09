@@ -229,8 +229,8 @@ limits:
 
 {{- define "deltafusion-ingestor.replicas" }}
 {{- $tier := include "deltafusion-ingestor.resourceTier" . }}
-{{- if .Values.replicaCount -}}
-2
+{{- if .Values.deltaFusionIngestor.replicaCount -}}
+{{ .Values.deltaFusionIngestor.replicaCount }}
 {{- else if eq $tier "small" -}}
 2
 {{- else if eq $tier "medium" -}}

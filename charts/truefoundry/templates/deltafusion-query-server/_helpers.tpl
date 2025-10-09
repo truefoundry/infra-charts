@@ -325,7 +325,9 @@ PORT: "{{ .Values.deltaFusionQueryServer.service.port }}"
 
 {{- define "deltafusion-query-server.replicas" }}
 {{- $tier := include "deltafusion-query-server.resourceTier" . }}
-{{- if eq $tier "small" -}}
+{{- if .Values.deltaFusionQueryServer.replicaCount -}}
+{{ .Values.deltaFusionQueryServer.replicaCount }}
+{{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
 1

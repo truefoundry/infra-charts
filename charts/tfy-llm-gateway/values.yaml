@@ -48,7 +48,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.89.1
+  tag: v0.90.0-rc.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -228,7 +228,7 @@ env:
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   TENANT_NAME: "{{ .Values.global.tenantName }}"
-  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/otel/v1/traces"
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318/v1/traces
   USE_GLOBAL_STATE_V2: "true"
   MULTITENANT: "false"
 
