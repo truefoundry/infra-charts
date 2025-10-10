@@ -52,8 +52,10 @@ The solution consists of two main components:
 | `victoria-logs-single.vector.resources`               | Resources                                                                             | `{}`                                              |
 | `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`                            |
 | `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `public.ecr.aws/truefoundrycloud/timberio/vector` |
-| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `0.46.1`                                          |
+| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `v0.50.0`                                         |
 | `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                                            |
+| `victoria-logs-single.vector.podSecurityContext`      | Pod-level security context for Vector                                                 | `{}`                                              |
+| `victoria-logs-single.vector.securityContext`         | Container-level security context for Vector                                           | `{}`                                              |
 | `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                                              |
 | `victoria-logs-single.vector.tolerations`             | Tolerations                                                                           | `[]`                                              |
 | `victoria-logs-single.vector.nodeSelector`            | Node selector                                                                         | `{}`                                              |
@@ -68,7 +70,7 @@ The solution consists of two main components:
 | `windowsVector.annotations`            | Annotations to add to the Windows Vector pods                    | `{}`                               |
 | `windowsVector.image.registry`         | Image registry                                                   | `public.ecr.aws`                   |
 | `windowsVector.image.repository`       | Image repository                                                 | `truefoundrycloud/timberio/vector` |
-| `windowsVector.image.tag`              | Image tag                                                        | `0.46.1`                           |
+| `windowsVector.image.tag`              | Image tag                                                        | `v0.50.0`                          |
 | `windowsVector.image.pullPolicy`       | Image pull policy                                                | `IfNotPresent`                     |
 | `windowsVector.imagePullSecrets`       | Image pull secrets for Windows Vector pods                       | `[]`                               |
 | `windowsVector.env`                    | Additional environment variables for Windows Vector pods         | `[]`                               |
