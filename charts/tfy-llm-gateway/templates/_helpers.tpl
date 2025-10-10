@@ -342,13 +342,8 @@ Tolerations for tfy-llm-gateway deployment
 Node Selector for tfy-llm-gateway deployment
 */}}
 {{- define "tfy-llm-gateway.nodeSelector" -}}
-{{- if .Values.nodeSelector -}}
-{{- toYaml .Values.nodeSelector }}
-{{- else if .Values.global.nodeSelector -}}
-{{- toYaml .Values.global.nodeSelector }}
-{{- else -}}
-{}
-{{- end }}
+{{- $nodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) .Values.nodeSelector }}
+{{- toYaml $nodeSelector }}
 {{- end }}
 
 {{- define "tfy-llm-gateway.imagePullSecrets" -}}
