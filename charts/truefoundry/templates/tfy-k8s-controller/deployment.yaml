@@ -64,9 +64,10 @@ spec:
         {{- include "tfy-k8s-controller.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "tfy-k8s-controller.volumes" . | nindent 8 }}
-      {{- if .Values.tfyK8sController.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyK8sController.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyK8sController.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyK8sController.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

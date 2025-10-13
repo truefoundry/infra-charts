@@ -66,9 +66,10 @@ spec:
         {{- include "servicefoundry-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "servicefoundry-server.volumes" . | nindent 8 }}
-      {{- if .Values.servicefoundryServer.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.servicefoundryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.servicefoundryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

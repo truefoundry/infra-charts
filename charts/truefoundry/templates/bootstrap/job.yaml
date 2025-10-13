@@ -65,10 +65,11 @@ spec:
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}
       restartPolicy: Never
-      {{- if .Values.truefoundryBootstrap.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.truefoundryBootstrap.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-          {{- toYaml .Values.truefoundryBootstrap.nodeSelector | nindent 8 }}
-        {{- end }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.truefoundryBootstrap.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

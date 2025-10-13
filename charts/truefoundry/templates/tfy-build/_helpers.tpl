@@ -124,19 +124,23 @@ Expand the name of the chart.
 
 {{/*
   Merge default nodeSelector with nodeSelector specified in tfy-build.nodeSelector
+  Priority: default > component > global (defaults cannot be overwritten)
 */}}
 {{- define "tfy-build.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.nodeSelector $defaultNodeSelector }}
+{{- $temp := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyBuild.truefoundryWorkflows.nodeSelector) }}
+{{- $mergedNodeSelector := mergeOverwrite (deepCopy $temp) (deepCopy $defaultNodeSelector) }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
 
 {{/*
   Merge default nodeSelector with nodeSelector specified in tfy-buildkitd.nodeSelector
+  Priority: default > component > global (defaults cannot be overwritten)
 */}}
 {{- define "tfy-buildkitd.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector $defaultNodeSelector }}
+{{- $temp := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyBuild.truefoundryWorkflows.buildkitd.nodeSelector) }}
+{{- $mergedNodeSelector := mergeOverwrite (deepCopy $temp) (deepCopy $defaultNodeSelector) }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
 

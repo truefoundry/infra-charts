@@ -55,9 +55,10 @@ spec:
                 {{- include "deltafusion-compaction.volumeMounts" . | nindent 16 }}
           volumes:
             {{- include "deltafusion-compaction.volumes" . | nindent 12 }}
-          {{- if .Values.deltaFusionCompaction.nodeSelector }}
+          {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionCompaction.nodeSelector) }}
+          {{- if $mergedNodeSelector }}
           nodeSelector:
-            {{- toYaml .Values.deltaFusionCompaction.nodeSelector | nindent 12 }}
+            {{- toYaml $mergedNodeSelector | nindent 12 }}
           {{- end }}
           {{- $mergedAffinity := dict | merge .Values.deltaFusionCompaction.affinity .Values.global.affinity }}
           {{- if $mergedAffinity }}

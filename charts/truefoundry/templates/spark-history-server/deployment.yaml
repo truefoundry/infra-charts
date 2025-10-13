@@ -66,9 +66,10 @@ spec:
         {{- include "spark-history-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "spark-history-server.volumes" . | nindent 8 }}
-      {{- if .Values.sparkHistoryServer.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sparkHistoryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.sparkHistoryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.sparkHistoryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

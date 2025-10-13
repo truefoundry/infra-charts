@@ -67,9 +67,10 @@ spec:
             {{- include "deltafusion-ingestor.volumeMounts" . | nindent 12 }}
       volumes:
         {{- include "deltafusion-ingestor.volumes" . | nindent 8 }}
-      {{- if .Values.deltaFusionIngestor.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionIngestor.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.deltaFusionIngestor.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.deltaFusionIngestor.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

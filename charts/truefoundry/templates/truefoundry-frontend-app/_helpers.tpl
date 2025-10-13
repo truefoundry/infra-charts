@@ -200,10 +200,12 @@ Expand the name of the chart.
 
 {{/*
   Merge default nodeSelector with nodeSelector specified in truefoundry-frontend-app nodeSelector
+  Priority: default > component > global (defaults cannot be overwritten)
   */}}
 {{- define "truefoundry-frontend-app.nodeSelector" -}}
 {{- $defaultNodeSelector := dict "kubernetes.io/arch" "amd64" }}
-{{- $mergedNodeSelector := merge .Values.truefoundryFrontendApp.nodeSelector $defaultNodeSelector }}
+{{- $temp := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.truefoundryFrontendApp.nodeSelector) }}
+{{- $mergedNodeSelector := mergeOverwrite (deepCopy $temp) (deepCopy $defaultNodeSelector) }}
 {{- toYaml $mergedNodeSelector }}
 {{- end }}
 

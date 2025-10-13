@@ -580,19 +580,6 @@ COMPACTION_MAX_SPILL_SIZE_MB: "5200"
 {{- end }}
 
 {{/*
-NodeSelector merge logic
-*/}}
-{{- define "deltafusion-compaction.nodeSelector" -}}
-{{- if .Values.deltaFusionCompaction.nodeSelector -}}
-{{- toYaml .Values.deltaFusionCompaction.nodeSelector }}
-{{- else if .Values.global.nodeSelector -}}
-{{- toYaml .Values.global.nodeSelector }}
-{{- else -}}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
 Tolerations for the deltafusion-compaction service
 */}}
 {{- define "deltafusion-compaction.tolerations" -}}

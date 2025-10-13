@@ -81,9 +81,10 @@ spec:
         {{- if .Values.deltaFusionQueryServer.extraVolumes }}
         {{- include "deltafusion-query-server.volumes" . | nindent 8 }}
         {{- end }}
-      {{- if .Values.deltaFusionQueryServer.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionQueryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.deltaFusionQueryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.deltaFusionQueryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
