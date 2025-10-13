@@ -38,10 +38,18 @@ spec:
       imagePullSecrets:
         {{- . | nindent 8 }}
       {{- end }}
+      {{- if .Values.windowsVector.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.windowsVector.podSecurityContext | nindent 8 }}
+      {{- end }}
       containers:
         - name: vector-windows
           image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
           imagePullPolicy: {{ .Values.windowsVector.image.pullPolicy }}
+          {{- if .Values.windowsVector.securityContext }}
+          securityContext:
+            {{- toYaml .Values.windowsVector.securityContext | nindent 12 }}
+          {{- end }}
           args:
             - "-w"
             - "--config-dir"
