@@ -332,13 +332,8 @@ Tolerations for Otel-collector
 Node Selector for tfy-otel-collector deployment
 */}}
 {{- define "tfy-otel-collector.nodeSelector" -}}
-{{- if .Values.nodeSelector -}}
-{{- toYaml .Values.nodeSelector }}
-{{- else if .Values.global.nodeSelector -}}
-{{- toYaml .Values.global.nodeSelector }}
-{{- else -}}
-{}
-{{- end }}
+{{- $nodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) .Values.nodeSelector }}
+{{- toYaml $nodeSelector }}
 {{- end }}
 
 {{- define "tfy-otel-collector.imagePullSecrets" -}}
