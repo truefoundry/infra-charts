@@ -66,9 +66,10 @@ spec:
         {{- include "tfy-proxy.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "tfy-proxy.volumes" . | nindent 8 }}
-      {{- if .Values.tfyProxy.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyProxy.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyProxy.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyProxy.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

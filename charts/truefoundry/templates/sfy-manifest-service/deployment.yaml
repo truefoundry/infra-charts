@@ -64,9 +64,10 @@ spec:
         {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
-      {{- if .Values.sfyManifestService.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-          {{- toYaml .Values.sfyManifestService.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.sfyManifestService.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

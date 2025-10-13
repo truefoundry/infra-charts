@@ -73,9 +73,10 @@ spec:
             matchLabels:
               {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | nindent 14 }}
         {{- end }}
-      {{- if .Values.tfyController.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyController.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyController.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyController.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
