@@ -99,8 +99,13 @@ victoria-logs-single:
         operator: Exists
     ## @param victoria-logs-single.vector.nodeSelector [object] Node selector
     nodeSelector: {}
+    ## @param victoria-logs-single.vector.persistence [object] Persistence configuration
+    persistence:
+      hostPath:
+        enabled: false
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
+      data_dir: /vector-data-dir
       sinks:
         vlogs:
           type: elasticsearch
