@@ -63,6 +63,7 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
     podSecurityContext:
       runAsNonRoot: true
+      runAsGroup: 0
       fsGroup: 0
     ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
     securityContext:
@@ -102,10 +103,9 @@ victoria-logs-single:
     ## @param victoria-logs-single.vector.persistence [object] Persistence configuration
     persistence:
       hostPath:
-        enabled: false
+        enabled: true
     ## @param victoria-logs-single.vector.customConfig [object] Custom config
     customConfig:
-      data_dir: /vector-data-dir
       sinks:
         vlogs:
           type: elasticsearch
