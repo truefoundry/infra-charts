@@ -59,6 +59,7 @@ The solution consists of two main components:
 | `victoria-logs-single.vector.affinity`                | Affinity                                                                              | `{}`                                              |
 | `victoria-logs-single.vector.tolerations`             | Tolerations                                                                           | `[]`                                              |
 | `victoria-logs-single.vector.nodeSelector`            | Node selector                                                                         | `{}`                                              |
+| `victoria-logs-single.vector.persistence`             | Persistence configuration                                                             | `{}`                                              |
 | `victoria-logs-single.vector.customConfig`            | Custom config                                                                         | `{}`                                              |
 
 ### Windows Vector configurations
