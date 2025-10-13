@@ -185,17 +185,17 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### prometheus parameters
 
-| Name                                 | Description                                | Value  |
-| ------------------------------------ | ------------------------------------------ | ------ |
-| `prometheus.enabled`                 | Flag to enable Prometheus                  | `true` |
-| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus   | `[]`   |
-| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus  | `{}`   |
-| `prometheus.affinity`                | Affinity for prometheus statefulset pod    | `{}`   |
-| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod | `[]`   |
-| `prometheus.valuesOverride`          | Config override from default config values | `{}`   |
-| `prometheus.config.enabled`          | Flag to enable prometheus config           | `true` |
-| `prometheus.config.valuesOverride`   | Config override from default config values | `{}`   |
-| `prometheus.config.extraObjects`     | Extra objects for prometheus config        | `[]`   |
+| Name                                 | Description                                                               | Value  |
+| ------------------------------------ | ------------------------------------------------------------------------- | ------ |
+| `prometheus.enabled`                 | Flag to enable Prometheus                                                 | `true` |
+| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus                                  | `[]`   |
+| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus                                 | `{}`   |
+| `prometheus.affinity`                | Affinity for prometheus statefulset pod                                   | `{}`   |
+| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod                                | `[]`   |
+| `prometheus.valuesOverride`          | Config override from default config values                                | `{}`   |
+| `prometheus.config.enabled`          | Flag to enable prometheus config (requires prometheus.enabled to be true) | `true` |
+| `prometheus.config.valuesOverride`   | Config override from default config values                                | `{}`   |
+| `prometheus.config.extraObjects`     | Extra objects for prometheus config                                       | `[]`   |
 
 ### grafana parameters
 
