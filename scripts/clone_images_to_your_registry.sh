@@ -6,6 +6,13 @@ in_operation=false
 # Global variable to cache ECR check result
 is_destination_ecr=false
 
+# Error tracking variables
+total_images=0
+skipped_images=0
+copied_images=0
+failed_images=0
+error_messages=()
+
 # Function to handle cleanup on exit
 cleanup() {
     if [ "$in_operation" = true ]; then
@@ -25,24 +32,97 @@ show_helm_repo_error() {
     echo ""
 }
 
-# Function to get skopeo command based on destination registry type and mode
-get_skopeo_command() {
-    local mode="$1"  # "dry-run" or "copy"
+# Function to log messages with appropriate prefix based on run_mode
+log_msg() {
+    local message="$1"
+    if [ "$run_mode" = false ]; then
+        echo "[PREVIEW] $message"
+    else
+        echo "$message"
+    fi
+}
+
+# Function to track errors
+track_error() {
+    local image="$1"
+    local error="$2"
+    error_messages+=("$image: $error")
+    ((failed_images++))
+}
+
+# Function to detect authentication errors in skopeo output
+is_auth_error() {
+    local output="$1"
+    # Check for common authentication error patterns
+    if [[ "$output" =~ (unauthorized|authentication|login|credential|token|access.*denied|forbidden) ]]; then
+        return 0  # Auth error detected
+    fi
+    return 1  # No auth error
+}
+
+# Function to display summary statistics
+display_summary() {
+    echo ""
+    echo "Summary:"
+    echo "  Total images processed: $total_images"
+    echo "  Images skipped (already exist): $skipped_images"
+    echo "  Images successfully copied: $copied_images"
+    echo "  Images failed to copy: $failed_images"
+}
+
+# Function to handle authentication error and exit
+handle_auth_error() {
+    local image="$1"
+    local output="$2"
+    local context="$3"  # "inspect" or "copy"
+    
+    log_msg "✗ Authentication error detected during $context. Exiting script..."
+    log_msg "Auth error: $output"
+    track_error "$image" "Authentication error: $output"
+    echo ""
+    echo "========================================"
+    echo "Script terminated due to authentication error."
+    echo "========================================"
+    display_summary
+    echo ""
+    echo "Exit code: 1 (authentication error)"
+    exit 1
+}
+
+# Function to build complete skopeo command with credentials
+build_skopeo_command() {
+    local source_image="$1"
+    local dest_image="$2"
+    
+    # Build base skopeo command based on registry type
+    local skopeo_cmd="skopeo copy"
     
     if [ "$is_destination_ecr" = "true" ]; then
-        if [ "$mode" = "dry-run" ]; then
-            echo "skopeo copy --multi-arch"
-        else
-            echo "skopeo copy --all"
-        fi
+        skopeo_cmd="$skopeo_cmd --all"
     else
-        echo "skopeo copy --multi-arch index-only"
+        skopeo_cmd="$skopeo_cmd --multi-arch all"
+        # skopeo_cmd="$skopeo_cmd --multi-arch index-only"
     fi
+    
+    # Add source credentials if provided
+    if [ -n "$source_creds" ]; then
+        skopeo_cmd="$skopeo_cmd --src-creds=$source_creds"
+    fi
+
+    # Add destination credentials if provided
+    if [ -n "$destination_creds" ]; then
+        skopeo_cmd="$skopeo_cmd --dest-creds=$destination_creds"
+    fi
+
+    # Add source and destination images
+    skopeo_cmd="$skopeo_cmd docker://$source_image docker://$dest_image"
+    
+    echo "$skopeo_cmd"
 }
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--dest-prefix <ecr_prefix>] [--ecr-tags <tags>] [--dry-run]"
+    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--dest-prefix <ecr_prefix>] [--ecr-tags <tags>] [--run]"
     echo ""
     echo "Arguments:"
     echo "  --helm-repo, -hr         Helm repository URL or name (default: truefoundry)"
@@ -54,23 +134,24 @@ show_usage() {
     echo "  --dest-registry, -d      Destination registry URL (required)"
     echo "  --dest-user, -du         Destination registry username (required)"
     echo "  --dest-pass, -dp         Destination registry password (required)"
-    echo "  --dest-prefix, -dpf      ECR repository prefix (required when destination is AWS ECR)"
+    echo "  --dest-prefix, -dpf      Repository prefix for destination images (optional)"
     echo "  --ecr-tags, -et          Tags for ECR repositories in format Key1=Value1,Key2=Value2 (optional, AWS ECR only)"
-    echo "  --dry-run                Show what would be done without actually doing it"
+    echo "  --run                    Actually perform the operations (required for copying images and creating ECR repos)"
+    echo "  --force-copy             Skip existence check and force copy all images"
     echo "  --help, -h               Show this help message"
     echo ""
     echo "Examples:"
-    echo "  # Using default helm-repo"
+    echo "  # Preview mode (default) - shows what would be done"
     echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass"
     echo ""
-    echo "  # Using default helm-repo with ECR"
-    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp"
+    echo "  # Actually perform the operations"
+    echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass --run"
     echo ""
-    echo "  # Using a different chart"
-    echo "  $0 -hc tfy-agent -hv 0.2.81-rc.2 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp"
+    echo "  # Using ECR with prefix"
+    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp --run"
     echo ""
     echo "  # Full example with all options"
-    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp --ecr-tags \"Environment=Production,Team=Platform\""
+    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp --ecr-tags \"Environment=Production,Team=Platform\" --run"
 }
 
 # Function to check if destination is AWS ECR
@@ -87,7 +168,8 @@ is_aws_ecr() {
 ecr_repo_exists() {
     local registry="$1"
     local repo_name="$2"
-    local region=$(echo "$registry" | sed -n 's/.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com.*/\1/p')
+    local region
+    region=$(echo "$registry" | sed -n 's/.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com.*/\1/p')
     
     if [ -z "$region" ]; then
         return 1
@@ -101,7 +183,8 @@ create_ecr_repo() {
     local registry="$1"
     local repo_name="$2"
     local tags="$3"
-    local region=$(echo "$registry" | sed -n 's/.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com.*/\1/p')
+    local region
+    region=$(echo "$registry" | sed -n 's/.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com.*/\1/p')
     
     if [ -z "$region" ]; then
         echo "ERROR: Could not extract AWS region from ECR registry URL"
@@ -177,7 +260,8 @@ extract_images_from_helm_chart() {
     echo "Checking if Helm repository is added..."
     
     # Get list of existing repos
-    local existing_repos=$(helm repo list -o json 2>/dev/null)
+    local existing_repos
+    existing_repos=$(helm repo list -o json 2>/dev/null)
     local helm_exit_code=$?
     
     if [ $helm_exit_code -ne 0 ] || [ -z "$existing_repos" ] || [ "$existing_repos" = "null" ]; then
@@ -189,10 +273,12 @@ extract_images_from_helm_chart() {
     fi
     
     # Check if the repository name exists
-    local repo_exists=$(echo "$existing_repos" | jq -r ".[] | select(.name == \"$repo_name\") | .name" 2>/dev/null)
+    local repo_exists
+    repo_exists=$(echo "$existing_repos" | jq -r ".[] | select(.name == \"$repo_name\") | .name" 2>/dev/null)
     
     if [ -n "$repo_exists" ]; then
-        local existing_url=$(echo "$existing_repos" | jq -r ".[] | select(.name == \"$repo_name\") | .url" 2>/dev/null)
+        local existing_url
+        existing_url=$(echo "$existing_repos" | jq -r ".[] | select(.name == \"$repo_name\") | .url" 2>/dev/null)
         if [ -n "$existing_url" ] && [ "$existing_url" != "null" ]; then
             echo "✓ Helm repository found: $repo_name -> $existing_url"
         else
@@ -208,12 +294,13 @@ extract_images_from_helm_chart() {
         return 1
     fi
 
-    local chart_with_version=$(helm search repo "$repo_name/$chart_name" --version "$version" -o json | jq -r ".[] | select(.version == \"$version\") | .version" 2>/dev/null)
+    local chart_with_version
+    chart_with_version=$(helm search repo "$repo_name/$chart_name" --version "$version" -o json | jq -r ".[] | select(.version == \"$version\") | .version" 2>/dev/null)
     if [ -z "$chart_with_version" ]; then
         echo "✗ ERROR: Chart $chart_name with version $version not found!"
         show_helm_repo_error
         echo "For available chart versions:"
-        echo "  helm search repo "$repo_name/$chart_name" --versions"
+        echo "  helm search repo \"$repo_name/$chart_name\" --versions"
         echo ""
         return 1
     fi
@@ -253,7 +340,7 @@ extract_images_from_helm_chart() {
         image=$(echo "$image" | tr -d '"')
         
         # Check if image is in blacklist_images
-        if [[ " ${blacklist_images[@]} " =~ " $image " ]]; then
+        if [[ " ${blacklist_images[*]} " =~ $image ]]; then
             echo "  Skipping blacklisted image: $image"
             continue
         fi
@@ -294,8 +381,9 @@ parse_image_url() {
         image_name="${clean_url%:*}"
         image_tag=":${clean_url#*:}"
     else
-        image_name="$clean_url"
-        image_tag=":latest"
+        # No tag specified - this is not allowed
+        echo "ERROR: Image '$image_url' has no tag or digest specified" >&2
+        return 1
     fi
     
     # Handle digest if present
@@ -306,18 +394,19 @@ parse_image_url() {
     
     # Extract just the image name without registry
     if [[ "$image_name" == *"/"* ]]; then
-        local parts=(${image_name//\// })
+        local parts
+        IFS='/' read -ra parts <<< "$image_name"
         if [[ "${parts[0]}" == *"."* ]]; then
             # Registry contains dots, skip first part
             image_name=$(IFS=/; echo "${parts[*]:1}")
         fi
     fi
     
-    # Handle ECR prefix if destination is ECR
-    if [ "$is_destination_ecr" = "true" ] && [ -n "$dest_prefix" ]; then
-        local ecr_repo_name="${dest_prefix}/${image_name}"
-        local new_image_url="$destination_registry/$ecr_repo_name$image_tag"
-        echo "$ecr_repo_name"
+    # Handle prefix if provided
+    if [ -n "$dest_prefix" ]; then
+        local repo_name="${dest_prefix}/${image_name}"
+        local new_image_url="$destination_registry/$repo_name$image_tag"
+        echo "$repo_name"
         echo "$new_image_url"
     else
         local new_image_url="$destination_registry/$image_name$image_tag"
@@ -338,7 +427,8 @@ destination_registry_username=""
 destination_registry_password=""
 dest_prefix=""
 ecr_tags=""
-dry_run=false
+run_mode=false
+force_copy=false
 
 # Track if defaults are being used
 using_default_helm_repo=true
@@ -390,8 +480,12 @@ while [[ $# -gt 0 ]]; do
             ecr_tags="$2"
             shift 2
             ;;
-        --dry-run)
-            dry_run=true
+        --run)
+            run_mode=true
+            shift
+            ;;
+        --force-copy)
+            force_copy=true
             shift
             ;;
         --help|-h)
@@ -440,10 +534,13 @@ if [ -n "$source_registry_username" ]; then
 else
     echo "  Source Registry: Public (no credentials)"
 fi
-if [ "$dry_run" = true ]; then
-    echo "  Mode: DRY RUN"
+if [ "$run_mode" = true ]; then
+    echo "  Mode: LIVE (operations will be performed)"
 else
-    echo "  Mode: LIVE"
+    echo "  Mode: PREVIEW (no operations will be performed)"
+fi
+if [ "$force_copy" = true ]; then
+    echo "  Force Copy: Enabled (skipping existence checks)"
 fi
 echo ""
 echo "Process Steps:"
@@ -475,22 +572,13 @@ if [ -z "$helm_version" ]; then
     exit 1
 fi
 
-# Check if destination is AWS ECR and validate dest-prefix
-if [ "$is_destination_ecr" = "true" ]; then
-    if [ -z "$dest_prefix" ]; then
-        echo "ERROR: --dest-prefix is required when destination is AWS ECR"
-        echo "The dest-prefix will be used as a prefix for ECR repository names"
-        show_usage
-        exit 1
-    fi
-
-    if [[ "$destination_registry" =~ \.com/.* ]]; then
-        echo "ERROR: Invalid registry format. Only registry URLs are allowed, not paths."
-        echo "Expected format: 123456789012.dkr.ecr.us-west-2.amazonaws.com"
-        echo "Got: $destination_registry"
-        show_usage
-        exit 1
-    fi
+# Validate registry format
+if [[ "$destination_registry" =~ \.com/.* ]]; then
+    echo "ERROR: Invalid registry format. Only registry URLs are allowed, not paths."
+    echo "Expected format: my-registry.com or 123456789012.dkr.ecr.us-west-2.amazonaws.com"
+    echo "Got: $destination_registry"
+    show_usage
+    exit 1
 fi
 
 # Extract images from helm chart
@@ -579,8 +667,8 @@ echo "Starting image cloning process..."
 echo "========================================"
 echo "Input file: $input_file"
 echo "Destination registry: $destination_registry"
-if [ "$dry_run" = true ]; then
-    echo "DRY RUN MODE: No actual operations will be performed"
+if [ "$run_mode" = false ]; then
+    echo "PREVIEW MODE: No actual operations will be performed"
 fi
 echo ""
 
@@ -615,18 +703,22 @@ if [ "$is_destination_ecr" = "true" ]; then
         image_url=$(echo "$image_url" | xargs)
         
         # Parse image URL to get repository name
-        parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix")
-        ecr_repo_name=$(echo "$parsed_result" | head -n1)
+        if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix" 2>&1); then
+            echo "  ⚠ WARNING: Skipping image '$image_url' - no tag or digest specified"
+            continue
+        fi
         
-        echo "  Checking repository: $ecr_repo_name"
+        repo_name=$(echo "$parsed_result" | head -n1)
+        
+        echo "  Checking repository: $repo_name"
         
         # Check if repository exists
-        if ecr_repo_exists "$destination_registry" "$ecr_repo_name"; then
+        if ecr_repo_exists "$destination_registry" "$repo_name"; then
             echo "    ✓ Repository exists"
-            repos_existing+=("$ecr_repo_name")
+            repos_existing+=("$repo_name")
         else
             echo "    ✗ Repository does not exist (will be created)"
-            repos_to_create+=("$ecr_repo_name")
+            repos_to_create+=("$repo_name")
         fi
     done
     
@@ -653,27 +745,24 @@ if [ "$is_destination_ecr" = "true" ]; then
     # Create repositories if needed
     if [ ${#repos_to_create[@]} -gt 0 ]; then
         echo ""
-        if [ "$dry_run" = true ]; then
-            echo "DRY RUN: The following ECR repositories would be created:"
-            for repo in "${repos_to_create[@]}"; do
-                echo "  - $repo"
-            done
-            echo ""
-            echo "DRY RUN: Skipping actual repository creation"
-        else
-            echo "Creating ECR repositories..."
-            for repo in "${repos_to_create[@]}"; do
+        log_msg "Creating ECR repositories..."
+        for repo in "${repos_to_create[@]}"; do
+            log_msg "Creating repository: $repo"
+            
+            if [ "$run_mode" = false ]; then
+                log_msg "Skipping actual repository creation (use --run to perform operations)"
+            else
                 if create_ecr_repo "$destination_registry" "$repo" "$ecr_tags"; then
-                    echo "  ✓ Created repository: $repo"
+                    log_msg "✓ Created repository: $repo"
                 else
-                    echo "  ✗ Failed to create repository: $repo"
+                    log_msg "✗ Failed to create repository: $repo"
                     echo "Please check AWS permissions and try again"
                     exit 1
                 fi
-            done
-        fi
+            fi
+        done
     else
-        echo "All required repositories already exist."
+        log_msg "All required repositories already exist."
     fi
     
     echo ""
@@ -693,76 +782,91 @@ for image_url in $images; do
     # Remove leading/trailing whitespace
     image_url=$(echo "$image_url" | xargs)
     
+    # Increment total images counter
+    ((total_images++))
+    
     echo ""
     echo "Processing image: $image_url"
     echo "----------------------------------------"
     
     # Parse image URL to get new destination
-    parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix")
+    if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix" 2>&1); then
+        echo "  ⚠ WARNING: Skipping image '$image_url' - no tag or digest specified"
+        echo "  This image will not be copied to the destination registry"
+        continue
+    fi
+    
     image_name=$(echo "$parsed_result" | head -n1)
     new_image_url=$(echo "$parsed_result" | tail -n1)
     
     echo "  Source: $image_url"
     echo "  Destination: $new_image_url"
+    echo ""
+
     
-    if [ "$dry_run" = true ]; then
-        echo "  DRY RUN: Would check if image exists: $new_image_url"
-        echo "  DRY RUN: Would copy image from $image_url to $new_image_url"
-        
-        # Get skopeo command for dry-run mode
-        skopeo_cmd=$(get_skopeo_command "dry-run")
-        
-        if [ -n "$source_creds" ]; then
-            skopeo_cmd="$skopeo_cmd --src-creds=$source_creds"
-        fi
-
-        if [ -n "$destination_creds" ]; then
-            skopeo_cmd="$skopeo_cmd --dest-creds=$destination_creds"
-        fi
-
-        skopeo_cmd="$skopeo_cmd docker://$image_url docker://$new_image_url"
-        
-        echo "  DRY RUN: Would run command: $skopeo_cmd"
-        echo "  DRY RUN: Skipping actual image copy"
-        echo "  ✓ DRY RUN: Image processing complete"
-    else
-        echo "  Checking if image exists: $new_image_url"
+    
+    if [ "$force_copy" = false ]; then
+        log_msg "Checking if image exists: $new_image_url"
 
         # Check if the new_image_url already exists
-        if docker manifest inspect "$new_image_url" >/dev/null 2>&1; then
-            echo "  ✓ Image already exists. Skipping..."
+        inspect_cmd="skopeo inspect --override-os linux docker://$new_image_url"
+        if [ -n "$destination_creds" ]; then
+            inspect_cmd="$inspect_cmd --creds=$destination_creds"
+        fi
+        
+        # Capture both output and exit code
+        inspect_output=$($inspect_cmd 2>&1)
+        inspect_exit_code=$?
+        
+        if [ $inspect_exit_code -eq 0 ]; then
+            log_msg "✓ Image already exists. Skipping..."
+            ((skipped_images++))
             continue
         else
-            echo "  ✗ Image does not exist. Proceeding with copy..."
+            # Check if the error is an authentication error
+            if is_auth_error "$inspect_output"; then
+                handle_auth_error "$new_image_url" "$inspect_output" "inspect"
+            else
+                log_msg "✗ Image does not exist. Proceeding with copy..."
+                # if [ -n "$inspect_output" ]; then
+                #     log_msg "Inspect error: $inspect_output"
+                # fi
+            fi
         fi
-        
-        echo "  Copying image: $new_image_url"
+    else
+        log_msg "Force copy enabled - skipping existence check"
+    fi
+    
+    log_msg "Copying image: $new_image_url"
 
-        # Get skopeo command for copy mode
-        skopeo_cmd=$(get_skopeo_command "copy")
-        
-        if [ -n "$source_creds" ]; then
-            skopeo_cmd="$skopeo_cmd --src-creds=$source_creds"
-        fi
-
-        if [ -n "$destination_creds" ]; then
-            skopeo_cmd="$skopeo_cmd --dest-creds=$destination_creds"
-        fi
-
-        skopeo_cmd="$skopeo_cmd docker://$image_url docker://$new_image_url"
-        
-        echo "  Running command: $skopeo_cmd"
-
+    # Get skopeo command
+    skopeo_cmd=$(build_skopeo_command "$image_url" "$new_image_url")
+    
+    if [ "$run_mode" = false ]; then
+        log_msg "Skipping actual image copy (use --run to perform operations)"
+    else
         # Copy image using skopeo with signal handling
+        log_msg "Running command: $skopeo_cmd"
+        echo ""
+        
+        # Execute skopeo command and capture exit code
         if $skopeo_cmd; then
-            echo "  ✓ Successfully copied image: $new_image_url"
+            skopeo_exit_code=0
+        else
+            skopeo_exit_code=$?
+        fi
+        
+        if [ $skopeo_exit_code -eq 0 ]; then
+            log_msg "✓ Successfully copied image: $new_image_url"
+            ((copied_images++))
         else
             # Check if the failure was due to a signal
-            if [ $? -eq 130 ]; then
-                echo "  ⚠ Image copy interrupted by user"
+            if [ $skopeo_exit_code -eq 130 ]; then
+                log_msg "⚠ Image copy interrupted by user"
                 cleanup
             else
-                echo "  ✗ ERROR: Failed to copy image: $new_image_url"
+                log_msg "✗ ERROR: Failed to copy image: $new_image_url"
+                track_error "$new_image_url" "Copy failed (exit code: $skopeo_exit_code)"
             fi
         fi
     fi
@@ -782,3 +886,23 @@ echo ""
 echo "========================================"
 echo "Image cloning process complete."
 echo "========================================"
+
+# Display errors if any
+if [ $failed_images -gt 0 ]; then
+    echo ""
+    echo "Errors encountered:"
+    for error in "${error_messages[@]}"; do
+        echo "  - $error"
+    done
+    echo ""
+    display_summary
+    echo ""
+    echo "Exit code: 1 (some images failed to copy)"
+    exit 1
+else
+    echo ""
+    display_summary
+    echo ""
+    echo "Exit code: 0 (all operations completed successfully)"
+    exit 0
+fi
