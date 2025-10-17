@@ -2,91 +2,192 @@
 
 This guide will help you pull a list of all TrueFoundry images used in the Helm chart and copy them to your destination registry. For AWS ECR destinations, it will also create the necessary ECR repositories in your AWS account.
 
+**Important**: The script runs in preview mode by default. Use the `--run` flag to perform actual image copying and ECR repository creation.
+
 ## Prerequisites
 
 ### Required Tools
-- Docker CLI
 - [Skopeo CLI](https://github.com/containers/skopeo/blob/main/install.md)
 - AWS CLI (only required for AWS ECR destinations)
 
 ### Authentication
-- **Source Registry**: Access to the TrueFoundry Artifactory (JFrog) registry (required for all destinations)
-    ```bash
-    # Using Docker CLI
-    docker login tfy.jfrog.io
-    # Use previously shared credentials
-    
-    # Or using Skopeo directly
-    skopeo login tfy.jfrog.io
-    # Use previously shared credentials
-    ```
-- **Destination Registry**: Authentication to your destination registry
-  - For AWS ECR: AWS credentials and ECR authentication
-  - For other registries: Appropriate authentication for your registry
+
+#### Source Registry: Access to the TrueFoundry Artifactory (JFrog) registry (required for all destinations)
+```bash
+# Using Skopeo CLI
+skopeo login tfy.jfrog.io
+# Use previously shared credentials
+```
+#### Destination Registry: Authentication to your destination registry
+- **Method 1 (Recommended)**: Use `skopeo login` before running the script
+  ```bash
+  # For AWS ECR
+  aws ecr get-login-password --region <region> | skopeo login --username AWS --password-stdin <your-ecr-registry>
+  
+  # For other registries
+  skopeo login <your-registry>
+  ```
+- **Method 2**: Pass credentials as command-line flags (`--dest-user` and `--dest-pass`)
+  ```bash
+  # Example with flags
+  --dest-user your-username --dest-pass your-password
+  ```
 
 ### AWS ECR Authentication (Optional)
 If using AWS ECR as your destination, ensure you are authenticated:
 
 ```bash
-# Using Docker CLI
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <your-ecr-registry>
-
-# Or using Skopeo directly
+# Using Skopeo CLI
 aws ecr get-login-password --region <region> | skopeo login --username AWS --password-stdin <your-ecr-registry>
 
 # Example for specific registry
-aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-west-2.amazonaws.com
+aws ecr get-login-password --region us-west-2 | skopeo login --username AWS --password-stdin 123456789012.dkr.ecr.us-west-2.amazonaws.com
 ```
 
 ## Steps
+
+### Add TrueFoundry Helm Repository
+
+First, add the TrueFoundry Helm repository and get a list of available versions:
+
+```bash
+# Add the TrueFoundry Helm repository
+helm repo add truefoundry https://truefoundry.github.io/infra-charts
+
+# Update the repository to get the latest chart information
+helm repo update
+
+# List available versions of the TrueFoundry chart
+helm search repo truefoundry --versions
+
+# Example output:
+# NAME                    CHART VERSION   APP VERSION     DESCRIPTION
+# truefoundry/truefoundry 0.90.0         0.90.0         TrueFoundry platform deployment chart
+# truefoundry/truefoundry 0.89.4         0.89.4         TrueFoundry platform deployment chart
+# truefoundry/truefoundry 0.89.3         0.89.3         TrueFoundry platform deployment chart
+```
 
 ### Clone Images to Your Registry
 
 This script will:
 1. Extract images from the TrueFoundry Helm chart
-2. Verify your destination registry authentication using skopeo
-3. For AWS ECR destinations: determine and create necessary ECR repositories
-4. Copy the images to your destination registry
+2. Create ECR repositories (AWS ECR destinations only)
+3. Check destination registry authentication
+4. Check if images already exist in destination registry
+5. Copy images to your destination registry
+6. Display operation summary
 
 ```bash
 export TRUEFOUNDRY_HELM_CHART_VERSION=0.90.0
 export DEST_REGISTRY=<YOUR_DESTINATION_REGISTRY>
-export DEST_PREFIX=<REPO_PREFIX>  # Only required for AWS ECR
+export DEST_PREFIX=<REPO_PREFIX>  # Optional prefix for organizing repositories
 
-# For AWS ECR destinations
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-prefix $DEST_PREFIX --dry-run
+# Preview mode (default) - shows what would be done without making changes
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-prefix $DEST_PREFIX
+
+# Live mode - actually performs the operations (requires --run flag)
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-prefix $DEST_PREFIX --run
 
 # For other registries (Docker Hub, etc.)
-# Option 1: Using pre-authenticated sessions (recommended)
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dry-run
+# Method 1: Using pre-authenticated sessions (recommended)
+# First authenticate with skopeo login, then run without credentials
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --run
 
-# Option 2: Passing credentials as flags
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD --dry-run
+# Method 2: Passing credentials as command-line flags
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD --run
 ```
 
 ### Registry-Specific Examples
 
 #### Docker Hub
 ```bash
-# Using credentials as flags
+# Method 1: Using skopeo login (recommended)
+# First authenticate
+skopeo login docker.io
+
+# Then run without credentials
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
+  --helm-chart truefoundry \
+  --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --dest-registry docker.io \
+  --run
+
+# Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
   --dest-registry docker.io \
   --dest-user your-dockerhub-username \
-  --dest-pass your-dockerhub-token
+  --dest-pass your-dockerhub-token \
+  --run
+```
+
+#### AWS ECR
+```bash
+# Method 1: Using skopeo login with AWS_PROFILE (recommended)
+# Set your AWS profile
+export AWS_PROFILE=your-aws-profile
+
+# Authenticate to ECR using the profile
+aws ecr get-login-password --region us-west-2 | skopeo login --username AWS --password-stdin 123456789012.dkr.ecr.us-west-2.amazonaws.com
+
+# Then run without credentials
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
+  --helm-chart truefoundry \
+  --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com \
+  --dest-prefix truefoundry \
+  --run
+
+# Method 2: Using command-line flags with AWS_PROFILE
+export AWS_PROFILE=your-aws-profile
+export ECR_PASSWORD=$(aws ecr get-login-password --region us-west-2)
+
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
+  --helm-chart truefoundry \
+  --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com \
+  --dest-user AWS \
+  --dest-pass $ECR_PASSWORD \
+  --dest-prefix truefoundry \
+  --run
 ```
 
 #### Generic Private Registry
 ```bash
-# Using credentials as flags
+# Method 1: Using skopeo login (recommended)
+# First authenticate
+skopeo login your-registry.com
+
+# Then run without credentials
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
+  --helm-chart truefoundry \
+  --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --dest-registry your-registry.com \
+  --run
+
+# Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
   --dest-registry your-registry.com \
   --dest-user your-username \
-  --dest-pass your-password
+  --dest-pass your-password \
+  --run
 ```
+
+## Command Line Flags
+
+- `--run`: **Required** to perform actual image copying and ECR repository creation (default is preview mode)
+- `--force-copy`: Skip checking if images exist and force copy
+- `--helm-chart`: Helm chart name (default: truefoundry)
+- `--helm-version`: Helm chart version (required)
+- `--dest-registry`: Destination registry URL (required)
+- `--dest-prefix`: Repository prefix for destination images (optional)
+- `--dest-user`: Destination registry username (optional)
+- `--dest-pass`: Destination registry password/token (optional)
+- `--source-user`: Source registry username (optional)
+- `--source-pass`: Source registry password/token (optional)
 
 ## Variables
 
@@ -94,11 +195,57 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
   - AWS ECR: `123456789012.dkr.ecr.us-west-2.amazonaws.com`
   - Docker Hub: `docker.io` or `docker.io/your-username`
   - Other registries: `your-registry.com`
-- `DEST_PREFIX`: Repository prefix (only required for AWS ECR)
-  - ECR: `truefoundry` will create repositories like `truefoundry/<image-name>`
-  - Other registries: Images will be copied directly without prefix
+- `DEST_PREFIX`: Repository prefix (optional for all registries)
+  - With prefix: `truefoundry` will create repositories like `truefoundry/<image-name>`
+  - Without prefix: Images will be copied directly without prefix
 - `DEST_USERNAME`: Destination registry username (optional, for credential-based authentication)
 - `DEST_PASSWORD`: Destination registry password/token (optional, for credential-based authentication)
+
+## Output and Error Handling
+
+### Real-time Output
+The script now provides real-time output during operations:
+- Progress messages during image copying
+- Download progress bars from skopeo
+- Status updates for each operation
+- Clear success/failure indicators
+
+### Error Handling
+Enhanced error detection and reporting:
+- **Authentication Errors**: Automatically detected and script exits immediately
+- **Network Issues**: Clear error messages for connection problems
+- **Registry Issues**: Specific error messages for registry-related problems
+- **Summary Statistics**: Complete summary of operations at the end
+
+### Example Output
+```
+Processing image: tfy.jfrog.io/nginx:1.21
+----------------------------------------
+Checking if image exists: my-registry.com/myorg/nginx:1.21
+✗ Image does not exist. Proceeding with copy...
+Copying image: my-registry.com/myorg/nginx:1.21
+Running command: skopeo copy --multi-arch all docker://tfy.jfrog.io/nginx:1.21 docker://my-registry.com/myorg/nginx:1.21
+
+Getting image source signatures
+Copying blob sha256:abc123... done
+Copying blob sha256:def456... done
+Copying config sha256:ghi789... done
+Writing manifest to image destination
+Storing signatures
+✓ Successfully copied image: my-registry.com/myorg/nginx:1.21
+
+========================================
+Image cloning process complete.
+========================================
+
+Summary:
+  Total images processed: 5
+  Images skipped (already exist): 2
+  Images successfully copied: 3
+  Images failed to copy: 0
+
+Exit code: 0 (all operations completed successfully)
+```
 
 ## Troubleshooting
 
@@ -108,11 +255,7 @@ If you encounter authentication errors, ensure you are properly authenticated:
 
 #### Source Registry (JFrog) Authentication
 ```bash
-# Using Docker CLI
-docker login tfy.jfrog.io
-# Use previously shared credentials
-
-# Or using Skopeo directly
+# Using Skopeo CLI
 skopeo login tfy.jfrog.io
 # Use previously shared credentials
 ```
@@ -123,10 +266,6 @@ skopeo login tfy.jfrog.io
 aws sts get-caller-identity
 
 # Re-authenticate to ECR if needed
-# Using Docker CLI
-aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <your-ecr-registry>
-
-# Or using Skopeo directly
 aws ecr get-login-password --region <region> | skopeo login --username AWS --password-stdin <your-ecr-registry>
 
 # Verify ECR access manually
@@ -135,10 +274,7 @@ skopeo inspect docker://<your-ecr-registry>/<test-image>
 
 #### Other Registry Authentication
 ```bash
-# Using Docker CLI
-docker login <your-registry>
-
-# Or using Skopeo directly
+# Using Skopeo CLI
 skopeo login <your-registry>
 
 # Verify access manually
