@@ -318,13 +318,19 @@ extract_images_from_helm_chart() {
         echo "Found default registry in chart: $default_registry"
     fi
 
+    # Build helm template command
+    local helm_cmd="helm template \"$repo_name/$chart_name\" --version \"$version\""
+    
     if [ -n "$values_file" ] && [ -f "$values_file" ]; then
         echo "Using provided values file: $values_file with default global.image.registry=$default_registry"
-        helm template "$repo_name/$chart_name" --version "$version" -f "$values_file" --set global.image.registry="$default_registry" > tmp_rendered_k8s_manifest.yaml
+        helm_cmd="$helm_cmd -f \"$values_file\""
     else
         echo "No values file provided, using default values with global.image.registry=$default_registry"
-        helm template "$repo_name/$chart_name" --version "$version" --set global.image.registry="$default_registry" > tmp_rendered_k8s_manifest.yaml
     fi
+    
+    helm_cmd="$helm_cmd --set global.image.registry=\"$default_registry\" > tmp_rendered_k8s_manifest.yaml"
+    echo "Running: $helm_cmd"
+    eval "$helm_cmd"
 
     # Extract all image references from the rendered YAML
     images=$(grep -E '^\s*image:\s*' tmp_rendered_k8s_manifest.yaml | awk '{print $2}' | tr -d '"' | tr -d "'" | sort -u)
@@ -675,8 +681,20 @@ echo ""
 # get list of images from input file
 images=$(cat "$input_file" | grep -v '^#' | grep -v '^$' | sort -u)
 
-image_count=$(echo "$images" | wc -l)
+# Count images correctly (handle empty case)
+if [ -z "$images" ]; then
+    image_count=0
+else
+    image_count=$(echo "$images" | wc -l | tr -d ' ')
+fi
 echo "Found $image_count images to clone:"
+
+if [ "$image_count" -eq 0 ]; then
+    echo "No images found to process. Exiting."
+    rm -f "$temp_images_file"
+    exit 0
+fi
+
 echo "----------------------------------------"
 echo "$images" | while read -r image; do
     echo "  - $image"
