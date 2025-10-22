@@ -36,7 +36,7 @@ show_helm_repo_error() {
 log_msg() {
     local message="$1"
     if [ "$run_mode" = false ]; then
-        echo "[PREVIEW] $message"
+        echo "[DRY-RUN] $message"
     else
         echo "$message"
     fi
@@ -724,7 +724,7 @@ if [ "$is_destination_ecr" = "true" ]; then
         
         repo_name=$(echo "$parsed_result" | head -n1)
         
-        echo "  Checking repository: $repo_name"
+        echo "  Checking repository: $destination_registry/$repo_name"
         
         # Check if repository exists
         if ecr_repo_exists "$destination_registry" "$repo_name"; then
@@ -745,14 +745,14 @@ if [ "$is_destination_ecr" = "true" ]; then
     if [ ${#repos_existing[@]} -gt 0 ]; then
         echo "  Existing repositories:"
         for repo in "${repos_existing[@]}"; do
-            echo "    - $repo"
+            echo "    - $destination_registry/$repo"
         done
     fi
     
     if [ ${#repos_to_create[@]} -gt 0 ]; then
         echo "  Repositories to be created:"
         for repo in "${repos_to_create[@]}"; do
-            echo "    - $repo"
+            echo "    - $destination_registry/$repo"
         done
     fi
     
@@ -761,15 +761,16 @@ if [ "$is_destination_ecr" = "true" ]; then
         echo ""
         log_msg "Creating ECR repositories..."
         for repo in "${repos_to_create[@]}"; do
-            log_msg "Creating repository: $repo"
+            log_msg "Creating repository: $destination_registry/$repo"
             
             if [ "$run_mode" = false ]; then
                 log_msg "Skipping actual repository creation (remove --dry-run to perform operations)"
             else
                 if create_ecr_repo "$destination_registry" "$repo" "$ecr_tags"; then
-                    log_msg "✓ Created repository: $repo"
+                    log_msg "✓ Created repository: $destination_registry/$repo"
+                    echo ""
                 else
-                    log_msg "✗ Failed to create repository: $repo"
+                    log_msg "✗ Failed to create repository: $destination_registry/$repo"
                     echo "Please check AWS permissions and try again"
                     exit 1
                 fi
@@ -800,7 +801,6 @@ for image_url in $images; do
     ((total_images++))
     
     echo ""
-    echo "Processing image: $image_url"
     echo "----------------------------------------"
     
     # Parse image URL to get new destination
@@ -813,14 +813,14 @@ for image_url in $images; do
     image_name=$(echo "$parsed_result" | head -n1)
     new_image_url=$(echo "$parsed_result" | tail -n1)
     
-    echo "  Source: $image_url"
-    echo "  Destination: $new_image_url"
+    echo "Source: $image_url"
+    echo "Destination: $new_image_url"
     echo ""
 
     
     
     if [ "$force_copy" = false ]; then
-        log_msg "Checking if image exists: $new_image_url"
+        echo "Checking if image exists: $new_image_url"
 
         # Check if the new_image_url already exists
         inspect_cmd="skopeo inspect --override-os linux docker://$new_image_url"
@@ -833,7 +833,7 @@ for image_url in $images; do
         inspect_exit_code=$?
         
         if [ $inspect_exit_code -eq 0 ]; then
-            log_msg "✓ Image already exists. Skipping..."
+            echo "✓ Image already exists. Skipping..."
             ((skipped_images++))
             continue
         else
