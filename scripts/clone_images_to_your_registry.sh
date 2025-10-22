@@ -122,7 +122,7 @@ build_skopeo_command() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--ecr-tags <tags>] [--run]"
+    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--ecr-tags <tags>] [--dry-run]"
     echo ""
     echo "Arguments:"
     echo "  --helm-repo, -hr         Helm repository URL or name (default: truefoundry)"
@@ -136,22 +136,22 @@ show_usage() {
     echo "  --dest-user, -du         Destination registry username (required)"
     echo "  --dest-pass, -dp         Destination registry password (required)"
     echo "  --ecr-tags, -et          Tags for ECR repositories in format Key1=Value1,Key2=Value2 (optional, AWS ECR only)"
-    echo "  --run                    Actually perform the operations (required for copying images and creating ECR repos)"
+    echo "  --dry-run                Preview mode - shows what would be done without performing operations"
     echo "  --force-copy             Skip existence check and force copy all images"
     echo "  --help, -h               Show this help message"
     echo ""
     echo "Examples:"
-    echo "  # Preview mode (default) - shows what would be done"
+    echo "  # Actually perform the operations (default)"
     echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass"
     echo ""
-    echo "  # Actually perform the operations"
-    echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass --run"
+    echo "  # Preview mode - shows what would be done"
+    echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass --dry-run"
     echo ""
     echo "  # Using ECR with prefix in registry path"
-    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass --run"
+    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass"
     echo ""
     echo "  # Full example with all options"
-    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass --ecr-tags \"Environment=Production,Team=Platform\" --run"
+    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass --ecr-tags \"Environment=Production,Team=Platform\""
 }
 
 # Function to check if destination is AWS ECR
@@ -446,7 +446,7 @@ destination_registry=""
 destination_registry_username=""
 destination_registry_password=""
 ecr_tags=""
-run_mode=false
+run_mode=true
 force_copy=false
 
 # Track if defaults are being used
@@ -495,8 +495,8 @@ while [[ $# -gt 0 ]]; do
             ecr_tags="$2"
             shift 2
             ;;
-        --run)
-            run_mode=true
+        --dry-run)
+            run_mode=false
             shift
             ;;
         --force-copy)
@@ -546,10 +546,10 @@ if [ -n "$source_registry_username" ]; then
 else
     echo "  Source Registry: Public (no credentials)"
 fi
-if [ "$run_mode" = true ]; then
-    echo "  Mode: LIVE (operations will be performed)"
+if [ "$run_mode" = false ]; then
+    echo "  Mode: DRY-RUN (no operations will be performed)"
 else
-    echo "  Mode: PREVIEW (no operations will be performed)"
+    echo "  Mode: LIVE (operations will be performed)"
 fi
 if [ "$force_copy" = true ]; then
     echo "  Force Copy: Enabled (skipping existence checks)"
@@ -671,7 +671,7 @@ echo "========================================"
 echo "Input file: $input_file"
 echo "Destination registry: $destination_registry"
 if [ "$run_mode" = false ]; then
-    echo "PREVIEW MODE: No actual operations will be performed"
+    echo "DRY-RUN MODE: No actual operations will be performed"
 fi
 echo ""
 
@@ -764,7 +764,7 @@ if [ "$is_destination_ecr" = "true" ]; then
             log_msg "Creating repository: $repo"
             
             if [ "$run_mode" = false ]; then
-                log_msg "Skipping actual repository creation (use --run to perform operations)"
+                log_msg "Skipping actual repository creation (remove --dry-run to perform operations)"
             else
                 if create_ecr_repo "$destination_registry" "$repo" "$ecr_tags"; then
                     log_msg "✓ Created repository: $repo"
@@ -857,7 +857,7 @@ for image_url in $images; do
     skopeo_cmd=$(build_skopeo_command "$image_url" "$new_image_url")
     
     if [ "$run_mode" = false ]; then
-        log_msg "Skipping actual image copy (use --run to perform operations)"
+        log_msg "Skipping actual image copy (remove --dry-run to perform operations)"
     else
         # Copy image using skopeo with signal handling
         log_msg "Running command: $skopeo_cmd"

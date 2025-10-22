@@ -2,7 +2,7 @@
 
 This guide will help you pull a list of all TrueFoundry images used in the Helm chart and copy them to your destination registry. For AWS ECR destinations, it will also create the necessary ECR repositories in your AWS account.
 
-**Important**: The script runs in preview mode by default. Use the `--run` flag to perform actual image copying and ECR repository creation.
+**Important**: The script performs actual operations by default. Use the `--dry-run` flag to preview what would be done without making any changes.
 
 ## Prerequisites
 
@@ -81,19 +81,19 @@ This script will:
 export TRUEFOUNDRY_HELM_CHART_VERSION=0.90.0
 export DEST_REGISTRY=<YOUR_DESTINATION_REGISTRY>  # Can include optional prefix like: registry.com/prefix
 
-# Preview mode (default) - shows what would be done without making changes
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
+# Preview mode - shows what would be done without making changes
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dry-run
 
-# Live mode - actually performs the operations (requires --run flag)
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --run
+# Live mode (default) - actually performs the operations
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
 
 # For other registries (Docker Hub, etc.)
 # Method 1: Using pre-authenticated sessions (recommended)
 # First authenticate with skopeo login, then run without credentials
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --run
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
 
 # Method 2: Passing credentials as command-line flags
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD --run
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD
 ```
 
 ### Registry-Specific Examples
@@ -108,8 +108,7 @@ skopeo login docker.io
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
-  --dest-registry docker.io \
-  --run
+  --dest-registry docker.io
 
 # Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
@@ -117,8 +116,7 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
   --dest-registry docker.io \
   --dest-user your-dockerhub-username \
-  --dest-pass your-dockerhub-token \
-  --run
+  --dest-pass your-dockerhub-token
 ```
 
 #### AWS ECR
@@ -134,8 +132,7 @@ aws ecr get-login-password --region us-west-2 | skopeo login --username AWS --pa
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
-  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry \
-  --run
+  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry
 
 # Method 2: Using command-line flags with AWS_PROFILE
 export AWS_PROFILE=your-aws-profile
@@ -146,8 +143,7 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
   --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry \
   --dest-user AWS \
-  --dest-pass $ECR_PASSWORD \
-  --run
+  --dest-pass $ECR_PASSWORD
 ```
 
 #### Generic Private Registry
@@ -160,8 +156,7 @@ skopeo login your-registry.com
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
-  --dest-registry your-registry.com \
-  --run
+  --dest-registry your-registry.com
 
 # Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
@@ -169,13 +164,12 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
   --dest-registry your-registry.com \
   --dest-user your-username \
-  --dest-pass your-password \
-  --run
+  --dest-pass your-password
 ```
 
 ## Command Line Flags
 
-- `--run`: **Required** to perform actual image copying and ECR repository creation (default is preview mode)
+- `--dry-run`: Preview mode - shows what would be done without performing any operations (default is to perform operations)
 - `--force-copy`: Skip checking if images exist and force copy
 - `--helm-chart`: Helm chart name (default: truefoundry)
 - `--helm-version`: Helm chart version (required)
