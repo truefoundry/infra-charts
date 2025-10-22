@@ -122,7 +122,7 @@ build_skopeo_command() {
 
 # Function to show usage
 show_usage() {
-    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--dest-prefix <ecr_prefix>] [--ecr-tags <tags>] [--run]"
+    echo "Usage: $0 --helm-chart <helm_chart> --helm-version <helm_version> --dest-registry <destination_registry> --dest-user <dest_username> --dest-pass <dest_password> [--helm-repo <helm_repo>] [--helm-values <values_file>] [--source-user <source_username>] [--source-pass <source_password>] [--ecr-tags <tags>] [--run]"
     echo ""
     echo "Arguments:"
     echo "  --helm-repo, -hr         Helm repository URL or name (default: truefoundry)"
@@ -131,10 +131,10 @@ show_usage() {
     echo "  --helm-values, -hvf      Helm chart values file (optional)"
     echo "  --source-user, -su       Source registry username (optional)"
     echo "  --source-pass, -sp       Source registry password (optional)"
-    echo "  --dest-registry, -d      Destination registry URL (required)"
+    echo "  --dest-registry, -d      Destination registry URL with optional path prefix (required)"
+    echo "                           Examples: my-registry.com or my-registry.com/myapp"
     echo "  --dest-user, -du         Destination registry username (required)"
     echo "  --dest-pass, -dp         Destination registry password (required)"
-    echo "  --dest-prefix, -dpf      Repository prefix for destination images (optional)"
     echo "  --ecr-tags, -et          Tags for ECR repositories in format Key1=Value1,Key2=Value2 (optional, AWS ECR only)"
     echo "  --run                    Actually perform the operations (required for copying images and creating ECR repos)"
     echo "  --force-copy             Skip existence check and force copy all images"
@@ -147,11 +147,11 @@ show_usage() {
     echo "  # Actually perform the operations"
     echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass --run"
     echo ""
-    echo "  # Using ECR with prefix"
-    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp --run"
+    echo "  # Using ECR with prefix in registry path"
+    echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass --run"
     echo ""
     echo "  # Full example with all options"
-    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com -du AWS -dp mypass -dpf myapp --ecr-tags \"Environment=Production,Team=Platform\" --run"
+    echo "  $0 -hr truefoundry -hc truefoundry -hv 0.89.4 -hvf values.yaml -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass --ecr-tags \"Environment=Production,Team=Platform\" --run"
 }
 
 # Function to check if destination is AWS ECR
@@ -373,7 +373,6 @@ extract_images_from_helm_chart() {
 parse_image_url() {
     local image_url="$1"
     local destination_registry="$2"
-    local dest_prefix="$3"
     
     # Extract image name and tag using basic string manipulation
     local image_name=""
@@ -408,14 +407,29 @@ parse_image_url() {
         fi
     fi
     
-    # Handle prefix if provided
+    # Extract registry domain and optional prefix from destination_registry
+    local registry_domain=""
+    local dest_prefix=""
+    
+    # Check if destination_registry contains a path (prefix)
+    if [[ "$destination_registry" == *"/"* ]]; then
+        # Split into domain and prefix
+        registry_domain="${destination_registry%%/*}"
+        dest_prefix="${destination_registry#*/}"
+    else
+        # No prefix, just the registry domain
+        registry_domain="$destination_registry"
+        dest_prefix=""
+    fi
+    
+    # Build the destination image URL
     if [ -n "$dest_prefix" ]; then
         local repo_name="${dest_prefix}/${image_name}"
-        local new_image_url="$destination_registry/$repo_name$image_tag"
+        local new_image_url="$registry_domain/$repo_name$image_tag"
         echo "$repo_name"
         echo "$new_image_url"
     else
-        local new_image_url="$destination_registry/$image_name$image_tag"
+        local new_image_url="$registry_domain/$image_name$image_tag"
         echo "$image_name"
         echo "$new_image_url"
     fi
@@ -431,7 +445,6 @@ source_registry_password=""
 destination_registry=""
 destination_registry_username=""
 destination_registry_password=""
-dest_prefix=""
 ecr_tags=""
 run_mode=false
 force_copy=false
@@ -476,10 +489,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dest-pass|-dp)
             destination_registry_password="$2"
-            shift 2
-            ;;
-        --dest-prefix|-dpf)
-            dest_prefix="$2"
             shift 2
             ;;
         --ecr-tags|-et)
@@ -529,9 +538,6 @@ if [ -n "$helm_values" ]; then
     echo "  Helm Values File: $helm_values"
 fi
 echo "  Destination Registry: $destination_registry"
-if [ -n "$dest_prefix" ]; then
-    echo "  Destination Prefix: $dest_prefix"
-fi
 if [ -n "$ecr_tags" ]; then
     echo "  ECR Tags: $ecr_tags"
 fi
@@ -574,15 +580,6 @@ fi
 
 if [ -z "$helm_version" ]; then
     echo "ERROR: Missing required argument: --helm-version"
-    show_usage
-    exit 1
-fi
-
-# Validate registry format
-if [[ "$destination_registry" =~ \.com/.* ]]; then
-    echo "ERROR: Invalid registry format. Only registry URLs are allowed, not paths."
-    echo "Expected format: my-registry.com or 123456789012.dkr.ecr.us-west-2.amazonaws.com"
-    echo "Got: $destination_registry"
     show_usage
     exit 1
 fi
@@ -706,7 +703,6 @@ if [ "$is_destination_ecr" = "true" ]; then
     echo ""
     echo "=== AWS ECR Repository Analysis ==="
     echo "Destination: $destination_registry"
-    echo "ECR Prefix: $dest_prefix"
     echo ""
 
     # Analyze required repositories
@@ -721,7 +717,7 @@ if [ "$is_destination_ecr" = "true" ]; then
         image_url=$(echo "$image_url" | xargs)
         
         # Parse image URL to get repository name
-        if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix" 2>&1); then
+        if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" 2>&1); then
             echo "  ⚠ WARNING: Skipping image '$image_url' - no tag or digest specified"
             continue
         fi
@@ -808,7 +804,7 @@ for image_url in $images; do
     echo "----------------------------------------"
     
     # Parse image URL to get new destination
-    if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" "$dest_prefix" 2>&1); then
+    if ! parsed_result=$(parse_image_url "$image_url" "$destination_registry" 2>&1); then
         echo "  ⚠ WARNING: Skipping image '$image_url' - no tag or digest specified"
         echo "  This image will not be copied to the destination registry"
         continue

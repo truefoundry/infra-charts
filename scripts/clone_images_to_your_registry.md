@@ -79,14 +79,13 @@ This script will:
 
 ```bash
 export TRUEFOUNDRY_HELM_CHART_VERSION=0.90.0
-export DEST_REGISTRY=<YOUR_DESTINATION_REGISTRY>
-export DEST_PREFIX=<REPO_PREFIX>  # Optional prefix for organizing repositories
+export DEST_REGISTRY=<YOUR_DESTINATION_REGISTRY>  # Can include optional prefix like: registry.com/prefix
 
 # Preview mode (default) - shows what would be done without making changes
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-prefix $DEST_PREFIX
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
 
 # Live mode - actually performs the operations (requires --run flag)
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-prefix $DEST_PREFIX --run
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --run
 
 # For other registries (Docker Hub, etc.)
 # Method 1: Using pre-authenticated sessions (recommended)
@@ -131,12 +130,11 @@ export AWS_PROFILE=your-aws-profile
 # Authenticate to ECR using the profile
 aws ecr get-login-password --region us-west-2 | skopeo login --username AWS --password-stdin 123456789012.dkr.ecr.us-west-2.amazonaws.com
 
-# Then run without credentials
+# Then run without credentials (prefix included in registry URL)
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
-  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com \
-  --dest-prefix truefoundry \
+  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry \
   --run
 
 # Method 2: Using command-line flags with AWS_PROFILE
@@ -146,10 +144,9 @@ export ECR_PASSWORD=$(aws ecr get-login-password --region us-west-2)
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aws-ecr/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
-  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com \
+  --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry \
   --dest-user AWS \
   --dest-pass $ECR_PASSWORD \
-  --dest-prefix truefoundry \
   --run
 ```
 
@@ -182,8 +179,8 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
 - `--force-copy`: Skip checking if images exist and force copy
 - `--helm-chart`: Helm chart name (default: truefoundry)
 - `--helm-version`: Helm chart version (required)
-- `--dest-registry`: Destination registry URL (required)
-- `--dest-prefix`: Repository prefix for destination images (optional)
+- `--dest-registry`: Destination registry URL with optional path prefix (required)
+  - Examples: `my-registry.com` or `my-registry.com/myapp`
 - `--dest-user`: Destination registry username (optional)
 - `--dest-pass`: Destination registry password/token (optional)
 - `--source-user`: Source registry username (optional)
@@ -191,13 +188,14 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
 
 ## Variables
 
-- `DEST_REGISTRY`: Your destination registry URL
-  - AWS ECR: `123456789012.dkr.ecr.us-west-2.amazonaws.com`
+- `DEST_REGISTRY`: Your destination registry URL with optional path prefix
+  - AWS ECR without prefix: `123456789012.dkr.ecr.us-west-2.amazonaws.com`
+  - AWS ECR with prefix: `123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry`
   - Docker Hub: `docker.io` or `docker.io/your-username`
-  - Other registries: `your-registry.com`
-- `DEST_PREFIX`: Repository prefix (optional for all registries)
-  - With prefix: `truefoundry` will create repositories like `truefoundry/<image-name>`
-  - Without prefix: Images will be copied directly without prefix
+  - Other registries without prefix: `your-registry.com`
+  - Other registries with prefix: `your-registry.com/myapp`
+  - With prefix: Images will be copied to `registry.com/prefix/<image-name>`
+  - Without prefix: Images will be copied directly to `registry.com/<image-name>`
 - `DEST_USERNAME`: Destination registry username (optional, for credential-based authentication)
 - `DEST_PASSWORD`: Destination registry password/token (optional, for credential-based authentication)
 
@@ -221,10 +219,10 @@ Enhanced error detection and reporting:
 ```
 Processing image: tfy.jfrog.io/nginx:1.21
 ----------------------------------------
-Checking if image exists: my-registry.com/myorg/nginx:1.21
+Checking if image exists: my-registry.com/myapp/nginx:1.21
 ✗ Image does not exist. Proceeding with copy...
-Copying image: my-registry.com/myorg/nginx:1.21
-Running command: skopeo copy --multi-arch all docker://tfy.jfrog.io/nginx:1.21 docker://my-registry.com/myorg/nginx:1.21
+Copying image: my-registry.com/myapp/nginx:1.21
+Running command: skopeo copy --multi-arch all docker://tfy.jfrog.io/nginx:1.21 docker://my-registry.com/myapp/nginx:1.21
 
 Getting image source signatures
 Copying blob sha256:abc123... done
@@ -232,7 +230,7 @@ Copying blob sha256:def456... done
 Copying config sha256:ghi789... done
 Writing manifest to image destination
 Storing signatures
-✓ Successfully copied image: my-registry.com/myorg/nginx:1.21
+✓ Successfully copied image: my-registry.com/myapp/nginx:1.21
 
 ========================================
 Image cloning process complete.
