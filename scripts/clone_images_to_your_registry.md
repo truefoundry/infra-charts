@@ -193,23 +193,7 @@ curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/refs/heads/aw
 - `DEST_USERNAME`: Destination registry username (optional, for credential-based authentication)
 - `DEST_PASSWORD`: Destination registry password/token (optional, for credential-based authentication)
 
-## Output and Error Handling
-
-### Real-time Output
-The script now provides real-time output during operations:
-- Progress messages during image copying
-- Download progress bars from skopeo
-- Status updates for each operation
-- Clear success/failure indicators
-
-### Error Handling
-Enhanced error detection and reporting:
-- **Authentication Errors**: Automatically detected and script exits immediately
-- **Network Issues**: Clear error messages for connection problems
-- **Registry Issues**: Specific error messages for registry-related problems
-- **Summary Statistics**: Complete summary of operations at the end
-
-### Example Output
+## Example Output
 ```
 Processing image: tfy.jfrog.io/nginx:1.21
 ----------------------------------------
