@@ -80,20 +80,21 @@ This script will:
 ```bash
 export TRUEFOUNDRY_HELM_CHART_VERSION=0.90.0
 export DEST_REGISTRY=<YOUR_DESTINATION_REGISTRY>  # Can include optional prefix like: registry.com/prefix
+export TRUEFOUNDRY_HELM_VALUES=values.yaml  # Optional: Path to your Helm values file
 
 # Preview mode - shows what would be done without making changes
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dry-run
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --helm-values $TRUEFOUNDRY_HELM_VALUES --dest-registry $DEST_REGISTRY --dry-run
 
 # Live mode (default) - actually performs the operations
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --helm-values $TRUEFOUNDRY_HELM_VALUES --dest-registry $DEST_REGISTRY
 
 # For other registries (Docker Hub, etc.)
 # Method 1: Using pre-authenticated sessions (recommended)
 # First authenticate with skopeo login, then run without credentials
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --helm-values $TRUEFOUNDRY_HELM_VALUES --dest-registry $DEST_REGISTRY
 
 # Method 2: Passing credentials as command-line flags
-curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD
+curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- --helm-chart truefoundry --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION --helm-values $TRUEFOUNDRY_HELM_VALUES --dest-registry $DEST_REGISTRY --dest-user $DEST_USERNAME --dest-pass $DEST_PASSWORD
 ```
 
 ### Registry-Specific Examples
@@ -108,12 +109,14 @@ skopeo login docker.io
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry docker.io
 
 # Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry docker.io \
   --dest-user your-dockerhub-username \
   --dest-pass your-dockerhub-token
@@ -132,6 +135,7 @@ aws ecr get-login-password --region us-west-2 | skopeo login --username AWS --pa
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry
 
 # Method 2: Using command-line flags with AWS_PROFILE
@@ -141,6 +145,7 @@ export ECR_PASSWORD=$(aws ecr get-login-password --region us-west-2)
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry 123456789012.dkr.ecr.us-west-2.amazonaws.com/truefoundry \
   --dest-user AWS \
   --dest-pass $ECR_PASSWORD
@@ -156,12 +161,14 @@ skopeo login your-registry.com
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry your-registry.com
 
 # Method 2: Using command-line flags
 curl -s https://raw.githubusercontent.com/truefoundry/infra-charts/main/scripts/clone_images_to_your_registry.sh | bash -s -- \
   --helm-chart truefoundry \
   --helm-version $TRUEFOUNDRY_HELM_CHART_VERSION \
+  --helm-values $TRUEFOUNDRY_HELM_VALUES \
   --dest-registry your-registry.com \
   --dest-user your-username \
   --dest-pass your-password
