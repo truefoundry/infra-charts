@@ -28,7 +28,7 @@ Tfy-Otel_collector Helm Chart
 | `env`                                         | Environment variables for the tfyOtelCollector                                     | `{}`                                    |
 | `image.registry`                              | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                    |
 | `image.repository`                            | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector` |
-| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `v0.92.0`                               |
+| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `v0.93.0`                               |
 | `imagePullSecrets`                            | List of secrets to pull images                                                     | `[]`                                    |
 | `fullnameOverride`                            | Full name override for the tfy-otel-collector                                      | `""`                                    |
 | `environmentName`                             | The environment name                                                               | `default`                               |
