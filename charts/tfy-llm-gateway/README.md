@@ -62,6 +62,10 @@ LLM-Gateway Helm Chart
 | `affinity`                                    | Affinity                                                                        | `{}`                                 |
 | `topologySpreadConstraints`                   | Topology spread constraints                                                     | `{}`                                 |
 | `terminationGracePeriodSeconds`               | Termination grace period in seconds                                             | `300`                                |
+| `podDisruptionBudget.enabled`                 | Enable PodDisruptionBudget                                                      | `true`                               |
+| `podDisruptionBudget.annotations`             | PDB annotations                                                                 | `{}`                                 |
+| `podDisruptionBudget.labels`                  | PDB labels                                                                      | `{}`                                 |
+| `podDisruptionBudget.maxUnavailable`          | Maximum number of unavailable replicas                                          | `1`                                  |
 | `ingress.enabled`                             | Enable ingress configuration                                                    | `false`                              |
 | `ingress.annotations`                         | Ingress annotations                                                             | `{}`                                 |
 | `ingress.labels`                              | Ingress labels                                                                  | `{}`                                 |
@@ -92,6 +96,10 @@ LLM-Gateway Helm Chart
 | `rollout.enabled`                             | Enable rollout (rolling update)                                                 | `true`                               |
 | `rollout.maxUnavailable`                      | Maximum number of unavailable replicas during rolling update                    | `0`                                  |
 | `rollout.maxSurge`                            | Maximum number of surge replicas during rolling update                          | `100%`                               |
+| `pdb.enabled`                                 | Enable PodDisruptionBudget                                                      | `true`                               |
+| `pdb.minAvailable`                            | Minimum number of available replicas during disruption                          | `2`                                  |
+| `pdb.maxUnavailable`                          | Maximum number of unavailable replicas during disruption                        | `""`                                 |
+| `pdb.annotations`                             | PDB annotations                                                                 | `{}`                                 |
 | `serviceMonitor.enabled`                      | Enable service monitor                                                          | `true`                               |
 | `serviceMonitor.additionalLabels`             | Additional labels for the service monitor                                       | `{}`                                 |
 | `serviceMonitor.additionalAnnotations`        | Additional annotations for the service monitor                                  | `{}`                                 |
