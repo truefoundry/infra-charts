@@ -228,17 +228,6 @@ rollout:
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 100%
 
-## PodDisruptionBudget configuration
-pdb:
-  ## @param pdb.enabled Enable PodDisruptionBudget
-  enabled: true
-  ## @param pdb.minAvailable Minimum number of available replicas during disruption
-  minAvailable: 2
-  ## @param pdb.maxUnavailable Maximum number of unavailable replicas during disruption
-  maxUnavailable: ""
-  ## @param pdb.annotations PDB annotations
-  annotations: {}
-
 ## @skip env Environment variables for the llmGateway
 env:
   SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
