@@ -138,6 +138,16 @@ affinity: {}
 topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
 terminationGracePeriodSeconds: 300
+## @param podDisruptionBudget PodDisruptionBudget configuration
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
+  maxUnavailable: 1
 
 ## Ingress configuration
 ingress:
@@ -217,6 +227,17 @@ rollout:
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 100%
+
+## PodDisruptionBudget configuration
+pdb:
+  ## @param pdb.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param pdb.minAvailable Minimum number of available replicas during disruption
+  minAvailable: 2
+  ## @param pdb.maxUnavailable Maximum number of unavailable replicas during disruption
+  maxUnavailable: ""
+  ## @param pdb.annotations PDB annotations
+  annotations: {}
 
 ## @skip env Environment variables for the llmGateway
 env:
