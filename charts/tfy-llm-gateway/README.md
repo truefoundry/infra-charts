@@ -27,7 +27,7 @@ LLM-Gateway Helm Chart
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.93.0`                            |
+| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.93.1`                            |
 | `fullnameOverride`                            | Full name override for the tfy-llm-gateway                                      | `""`                                 |
 | `environmentName`                             | The environment name                                                            | `default`                            |
 | `envSecretName`                               | The environment secret name                                                     | `tfy-llm-gateway-env-secret`         |
