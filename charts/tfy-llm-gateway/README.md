@@ -62,6 +62,10 @@ LLM-Gateway Helm Chart
 | `affinity`                                    | Affinity                                                                        | `{}`                                 |
 | `topologySpreadConstraints`                   | Topology spread constraints                                                     | `{}`                                 |
 | `terminationGracePeriodSeconds`               | Termination grace period in seconds                                             | `300`                                |
+| `podDisruptionBudget.enabled`                 | Enable PodDisruptionBudget                                                      | `true`                               |
+| `podDisruptionBudget.annotations`             | PDB annotations                                                                 | `{}`                                 |
+| `podDisruptionBudget.labels`                  | PDB labels                                                                      | `{}`                                 |
+| `podDisruptionBudget.maxUnavailable`          | Maximum number of unavailable replicas                                          | `1`                                  |
 | `ingress.enabled`                             | Enable ingress configuration                                                    | `false`                              |
 | `ingress.annotations`                         | Ingress annotations                                                             | `{}`                                 |
 | `ingress.labels`                              | Ingress labels                                                                  | `{}`                                 |
