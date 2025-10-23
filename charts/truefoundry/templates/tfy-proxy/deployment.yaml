@@ -11,6 +11,13 @@ spec:
   {{- if not .Values.tfyProxy.autoscaling.enabled }}
   replicas: {{- include "tfy-proxy.replicas" . | indent 1 }}
   {{- end }}
+  {{- if .Values.tfyProxy.rollout.enabled }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.tfyProxy.rollout.maxSurge | quote }}
+      maxUnavailable: {{ .Values.tfyProxy.rollout.maxUnavailable }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 6 }}
@@ -26,6 +33,7 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.tfyProxy.terminationGracePeriodSeconds | default 300 }}
       containers:
         - name: "tfy-proxy"
           {{- with .Values.tfyProxy.securityContext }}
