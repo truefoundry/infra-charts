@@ -89,9 +89,16 @@ spec:
         {{- include "tfy-llm-gateway.nodeSelector" . | nindent 8 }}
       affinity:
         {{- include "tfy-llm-gateway.affinity" . | nindent 8 }}
-      {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.topologySpreadConstraints }}
+        {{- toYaml .Values.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "tfy-llm-gateway.selectorLabels" . | nindent 14 }}
+        {{- end }}
       tolerations:
         {{- include "tfy-llm-gateway.tolerations" . | nindent 8 }}

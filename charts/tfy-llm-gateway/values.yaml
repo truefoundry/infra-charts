@@ -48,7 +48,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.93.0
+  tag: v0.93.1
 
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
@@ -138,6 +138,16 @@ affinity: {}
 topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
 terminationGracePeriodSeconds: 300
+## podDisruptionBudget configuration
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
+  maxUnavailable: 1
 
 ## Ingress configuration
 ingress:
