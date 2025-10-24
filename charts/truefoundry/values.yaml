@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.91.2
+  controlPlaneChartVersion: 0.93.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -77,6 +77,16 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local
+    ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
+    managedClusterOnboardingServiceURL: ""
+    ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
+    liveDemoTokenVendorURL: ""
+    ## @param global.proxy.trtEngineBuilderBaseURL TRT ENGINE BUILDER BASE URL
+    trtEngineBuilderBaseURL: ""
+    ## @param global.proxy.authServerURL AUTH SERVER URL
+    authServerURL: "https://auth.truefoundry.com"
+    ## @param global.proxy.tfyLLMAgentURL LLM agent URL for service routing
+    tfyLLMAgentURL: ""
     ## global.proxy.tfyNats NATS settings for service routing
     tfyNats:
       ## @param global.proxy.tfyNats.host nats host for nats service
@@ -350,7 +360,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.91.1"
+    tag: "v0.93.1"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -533,7 +543,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.90.0"
+    tag: "v0.93.1"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -804,7 +814,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.91.1"
+    tag: "v0.93.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -966,90 +976,12 @@ servicefoundryServer:
     SPARK_JOB_EVENT_LOG_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/s3proxy"
     SPARK_JOB_EVENT_LOG_BASE_DIR: sparkjob-events
     TFY_BUILD_LOGS_INFRA_COMPONENT: tfy-logs
-    FE_AUTHSERVER_URL: /api/auth
-    FE_MLFOUNDRY_URL: /api/ml
-    FE_DEBUGGING_AGENT_URL: /api/agent
-    FE_SVCFOUNDRY_URL: /api/svc
-    FE_LLM_GATEWAY_URL: /api/llm
-    FE_LIVE_DEMO_TOKEN_VENDOR_URL: /api/live-demo-token-vendor
-    FE_TRT_ENGINE_BUILDER_URL: /api/trt-engine-builder
-    FE_SOCKET_URL: ""
-    FE_NATS_URL: ""
     FE_CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
-    FE_FUSIONAUTH_URL: https://login.truefoundry.com
-    FE_MULTITENANT_ENABLED: "false"
     FE_TENANT_NAME: "{{ .Values.global.tenantName }}"
-    FE_EXPORT_AS_HELM_TYPES: service,volume,helm,job
-    FE_CREATE_AS_APPLICATION_SET: service,helm,job
-    FE_ENABLE_COMPANY_REGISTRATION: "false"
-    FE_ENABLE_FEATURE_RESOURCE_COSTS: "false"
-    FE_COST_ENABLED_TENANTS: ""
-    FE_ENABLE_WORKFLOWS: "true"
-    FE_ENABLE_DEPLOYMENT_ASSISTANT: "false"
-    FE_DEPLOYMENT_ASSISTANT_ENABLED_TENANTS: ""
-    FE_ENABLE_WHATSNEW: "false"
-    FE_WHATSNEW_ENABLED_TENANTS: ""
-    FE_ENABLE_TROUBLESHOOT: "false"
-    FE_TROUBLESHOOT_ENABLED_TENANTS: ""
-    FE_ENABLE_RSTUDIO: "false"
-    FE_ENABLE_AGENT_APPS: "false"
-    FE_DATA_DIRECTORY_ENABLED_TENANTS: ""
-    FE_ENABLE_DATA_DIRECTORY: "false"
-    FE_ENABLE_SPARK_JOBS: "false"
-    FE_SPARK_JOBS_ENABLED_TENANTS: ""
-    FE_ENABLE_REPORT_WEBVITALS: "false"
-    FE_REPORT_WEBVITALS_ENABLED_TENANTS: ""
-    FE_ENABLE_LLM_GATEWAY_REQUEST_LOGS: "true"
-    FE_LLM_GATEWAY_REQUEST_LOGS_ENABLED_TENANTS: ""
     FE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
-    FE_LLM_GATEWAY_TRACING_ENABLED_TENANTS: ""
-    FE_ENABLE_TRACES: "false"
-    FE_TRACES_ENABLED_TENANTS: ""
-    FE_STRIPE_PUBLISHABLE_KEY: ""
-    FE_CREDIT_CARD_REQUIRED_DOMAINS: ""
-    FE_TENANT_BASE_DOMAIN: ""
-    FE_MANAGED_CLUSTER_ONBOARDING_ENABLED: "false"
-    FE_MANAGED_CLUSTER_ONBOARDING_SERVICE_URL: ""
-    FE_CIVO_RESOURCES_STRING: ""
-    FE_CLUSTER_ONBOARDING_FLOW_ENABLED: "false"
     FE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
-    FE_LLM_GATEWAY_PATH: llm-gateway
-    FE_ENABLE_FILL_THRESHOLD_PLUGIN: "true"
-    FE_FILL_THRESHOLD_PLUGIN_ENABLED_TENANTS: ""
-    FE_ENABLE_MCP_CATALOGUE: "false"
-    FE_MCP_CATALOGUE_ENABLED_TENANTS: ""
-    FE_GUARDRAIL_METRICS_ENABLED_TENANTS: ""
-    FE_ENABLE_SENTRY: "true"
-    FE_ENABLE_DARK_MODE: "false"
-    FE_ENABLE_TOOLS_AGENTS: "false"
-    FE_ENABLE_READ_ONLY_INTERACTIVE_MODE: "false"
-    FE_AGENT_ENABLED_TENANTS: ""
-    FE_BRAINFISH_WIDGET_ENABLED_TENANTS: ""
-    FE_SENTRY_DSN: ""
-    FE_APEX_DOMAIN: http://truefoundry.com/
-    FE_ITERATE_AI_KEY: ""
-    FE_BRAINFISH_WIDGET_KEY: ""
-    FE_DATAGRID_LICENSE_KEY: 1562842fe4dffce93855a342848a3609T1JERVI6NDA5ODIsRVhQSVJZPTE2ODA0NzEzNDkwMDAsS0VZVkVSU0lPTj0x
-    FE_ENABLE_GOOGLE_ANALYTICS: "false"
-    FE_ENABLE_PAGESENSE: "false"
-    FE_ENABLE_MIXPANEL: "false"
-    FE_ENABLE_SCHEMA_VISUALISER: "false"
-    FE_ENABLE_MARKDOWN_VISUALISER: "false"
-    FE_SENTRY_ENVIRONMENT: production
-    FE_MIXPANEL_TOKEN: ""
-    FE_CHAMELEON_TOKEN: ""
-    FE_PUBLIC_POSTHOG_KEY: ""
-    FE_CRISP_WEBSITE_ID: ""
-    FE_ENABLE_SUPERFLOW: "false"
-    FE_ENABLE_GUARDRAILS: "true"
-    FE_GUARDRAILS_ENABLED_TENANTS: ""
-    FE_MODEL_CONFIG_PATH: /llm-gateway/prod/ai-models.json
     DELTAFUSION_QUERY_URL: http://{{ .Release.Name }}-deltafusion-query-server.{{ .Release.Namespace }}.svc.cluster.local:8080
     SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ .Release.Namespace }}.svc.cluster.local:18080
-    OTEL_SERVICE_NAME: servicefoundry-server
-    FE_ENABLE_ROUTING_CONFIG: "true"
-    FE_MCP_METRICS_ENABLED_TENANTS: ""
-    FE_THEME_PREFERENCE: light
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1211,7 +1143,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.91.0"
+    tag: "v0.93.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1333,7 +1265,6 @@ tfyK8sController:
     ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     ENABLE_GATEWAY_REQUEST_LOGS_CONSUMER: '{{ trim (include "truefoundry.clickhouseRequestLogging.enabled" .) }}'
     NODE_ENV: production
-    DISABLE_SERVICE_RECOMMENDER_RECOMMENDATION_TYPES: autoscaling,readiness_probe
     SENTRY_ENABLED: "true"
     CLICKHOUSE_ENABLED: '{{ trim (include "truefoundry.clickhouseRequestLogging.enabled" .) }}'
     CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
@@ -1841,7 +1772,7 @@ postgresql:
     ## @param postgresql.image.registry Registry for the PostgreSQL image (overrides global.registry if specified)
     registry: "tfy.jfrog.io"
     ## @param postgresql.image.repository Repository for the PostgreSQL image (without registry)
-    repository: "tfy-mirror/bitnami/postgresql"
+    repository: "tfy-images/postgresql"
     ## @param postgresql.image.tag
     tag: 16.6.0-debian-12-r2
   ## postgresql.primary Primary PostgreSQL settings
@@ -2384,7 +2315,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.91.0"
+    tag: "v0.93.1"
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
     pullPolicy: IfNotPresent
   ## @param deltaFusionIngestor.statefulsetLabels Labels to apply to the DeltaFusion Ingestor statefulset
@@ -2521,6 +2452,7 @@ deltaFusionIngestor:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     SENTRY_ENABLED: "true"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
+    CLEANUP_EXPIRED_LOGS: "false"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -2535,7 +2467,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.91.0"
+    tag: "v0.93.1"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction
@@ -2626,6 +2558,7 @@ deltaFusionCompaction:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     COMPACTION_LOOKBACK_DAYS: "30"
     COMPACTION_THRESHOLD_MINS: "65"
+    CLEANUP_EXPIRED_LOGS: "true"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################
@@ -2648,7 +2581,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.90.0
+    tag: v0.93.1
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2768,7 +2701,6 @@ deltaFusionQueryServer:
     DATAFUSION_EXECUTION_USE_ROW_NUMBER_ESTIMATES_TO_OPTIMIZE_PARTITIONING: "true"
     DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
     RUST_LOG: info
-    SERVICEFOUNDRY_API_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 ## @section tfyProxy Truefoundry tfy proxy values
@@ -2788,7 +2720,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.91.1"
+    tag: "v0.93.1"
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
   existingProxyConfigMapName: ""
   ## @param tfyProxy.proxyConfigOverride Nginx proxy configuration override for tfyProxy
@@ -2835,8 +2767,20 @@ tfyProxy:
     labels: {}
     ## @param tfyProxy.autoscaling.annotations Annotations for the tfyProxy hpa resource
     annotations: {}
+  ## tfyProxy.rollout Rollout configuration for tfyProxy
+  rollout:
+    ## @param tfyProxy.rollout.enabled Enable rollout for the tfyProxy deployment
+    enabled: true
+    ## @param tfyProxy.rollout.strategy Rollout strategy for the tfyProxy deployment
+    strategy: RollingUpdate
+    ## @param tfyProxy.rollout.maxUnavailable Maximum unavailable pods during rollout
+    maxUnavailable: 0
+    ## @param tfyProxy.rollout.maxSurge Maximum surge pods during rollout
+    maxSurge: 100%
   ## @param tfyProxy.resources [object] Resource requests and limits for the tfyProxy
   resources: {}
+  ## @param tfyProxy.terminationGracePeriodSeconds Termination grace period in seconds
+  terminationGracePeriodSeconds: 300
   ## tfyProxy.livenessProbe Liveness probe settings for the tfyProxy
   livenessProbe:
     ## @param tfyProxy.livenessProbe.failureThreshold Liveness probe failure threshold for tfyProxy

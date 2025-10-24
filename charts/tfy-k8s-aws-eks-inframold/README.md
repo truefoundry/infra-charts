@@ -78,6 +78,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.karpenter.defaultZones`                   | Default zones list for Karpenter            | `[]`    |
 | `aws.karpenter.affinity`                       | Affinity for Karpenter                      | `{}`    |
 | `aws.karpenter.tolerations`                    | Tolerations for Karpenter                   | `[]`    |
+| `aws.karpenter.kmsKeyID`                       | KMS Key ID for Karpenter                    | `""`    |
 | `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
 | `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
 | `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
@@ -85,6 +86,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsEbsCsiDriver.roleArn`                  | Role ARN for AWS EBS CSI Driver             | `""`    |
 | `aws.awsEbsCsiDriver.affinity`                 | Affinity for AWS EBS CSI Driver             | `{}`    |
 | `aws.awsEbsCsiDriver.tolerations`              | Tolerations for AWS EBS CSI Driver          | `[]`    |
+| `aws.awsEbsCsiDriver.kmsKeyID`                 | KMS Key ID for AWS EBS CSI Driver           | `""`    |
 | `aws.awsEbsCsiDriver.valuesOverride`           | Config override from default config values  | `{}`    |
 | `aws.awsEfsCsiDriver.enabled`                  | Flag to enable AWS EFS CSI Driver           | `true`  |
 | `aws.awsEfsCsiDriver.fileSystemId`             | File system ID for AWS EFS CSI Driver       | `""`    |

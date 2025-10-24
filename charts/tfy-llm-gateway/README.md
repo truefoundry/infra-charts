@@ -27,7 +27,7 @@ LLM-Gateway Helm Chart
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.92.0-rc.1`                       |
+| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.93.1`                            |
 | `fullnameOverride`                            | Full name override for the tfy-llm-gateway                                      | `""`                                 |
 | `environmentName`                             | The environment name                                                            | `default`                            |
 | `envSecretName`                               | The environment secret name                                                     | `tfy-llm-gateway-env-secret`         |
@@ -62,6 +62,10 @@ LLM-Gateway Helm Chart
 | `affinity`                                    | Affinity                                                                        | `{}`                                 |
 | `topologySpreadConstraints`                   | Topology spread constraints                                                     | `{}`                                 |
 | `terminationGracePeriodSeconds`               | Termination grace period in seconds                                             | `300`                                |
+| `podDisruptionBudget.enabled`                 | Enable PodDisruptionBudget                                                      | `true`                               |
+| `podDisruptionBudget.annotations`             | PDB annotations                                                                 | `{}`                                 |
+| `podDisruptionBudget.labels`                  | PDB labels                                                                      | `{}`                                 |
+| `podDisruptionBudget.maxUnavailable`          | Maximum number of unavailable replicas                                          | `30%`                                |
 | `ingress.enabled`                             | Enable ingress configuration                                                    | `false`                              |
 | `ingress.annotations`                         | Ingress annotations                                                             | `{}`                                 |
 | `ingress.labels`                              | Ingress labels                                                                  | `{}`                                 |

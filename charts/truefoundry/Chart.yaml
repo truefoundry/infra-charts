@@ -1,6 +1,6 @@
 apiVersion: v2
 name: truefoundry
-version: 0.91.2
+version: 0.93.1
 description: "TrueFoundry Control Plane Components"
 maintainers:
   - name: truefoundry
@@ -16,7 +16,7 @@ dependencies:
     version: 1.3.9
   - condition: devMode.enabled
     name: postgresql
-    repository: https://charts.bitnami.com/bitnami
+    repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
     version: 15.5.38
   - condition: tfy-buildkitd-service.enabled
     name: tfy-buildkitd-service
@@ -29,13 +29,13 @@ dependencies:
     condition: extraResources.enabled
   - name: tfy-llm-gateway
     repository: https://truefoundry.github.io/infra-charts/
-    version: 0.91.1
+    version: 0.93.1
     condition: tfy-llm-gateway.enabled
     tags:
       - llmGateway
   - name: tfy-otel-collector
     repository: https://truefoundry.github.io/infra-charts/
-    version: 0.91.0
+    version: 0.93.1
     condition: tfy-otel-collector.enabled
     tags:
       - tracing
