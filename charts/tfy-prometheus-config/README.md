@@ -252,19 +252,4 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `serviceMonitors.loki.enabled`                             | Enable service monitor for loki                 | `false`                                   |
-| `serviceMonitors.loki.name`                                | Name of the service monitor                     | `loki`                                    |
-| `serviceMonitors.loki.labels`                              | Labels for loki                                 | `{}`                                      |
-| `serviceMonitors.loki.annotations`                         | Annotations for loki                            | `{}`                                      |
-| `serviceMonitors.loki.jobLabel`                            | Job label for loki                              | `app.kubernetes.io/instance`              |
-| `serviceMonitors.loki.endpoints`                           | Endpoints for loki                              | `[]`                                      |
-| `serviceMonitors.loki.serviceSelectorLabels`               | Service selector labels for loki                | `{}`                                      |
-| `serviceMonitors.loki.namespaceSelector`                   | Namespace selector for loki                     | `{}`                                      |
-| `serviceMonitors.loki.promtail.enabled`                    | Enable service monitor for promtail             | `true`                                    |
-| `serviceMonitors.loki.promtail.name`                       | Name of the service monitor                     | `loki-promtail`                           |
-| `serviceMonitors.loki.promtail.labels`                     | Labels for promtail                             | `{}`                                      |
-| `serviceMonitors.loki.promtail.annotations`                | Annotations for promtail                        | `{}`                                      |
-| `serviceMonitors.loki.promtail.endpoints`                  | Endpoints for promtail                          | `[]`                                      |
-| `serviceMonitors.loki.promtail.serviceSelectorLabels`      | Service selector labels for promtail            | `{}`                                      |
-| `serviceMonitors.loki.promtail.namespaceSelector`          | Namespace selector for promtail                 | `{}`                                      |
 | `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
