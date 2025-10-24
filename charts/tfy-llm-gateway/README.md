@@ -65,7 +65,7 @@ LLM-Gateway Helm Chart
 | `podDisruptionBudget.enabled`                 | Enable PodDisruptionBudget                                                      | `true`                               |
 | `podDisruptionBudget.annotations`             | PDB annotations                                                                 | `{}`                                 |
 | `podDisruptionBudget.labels`                  | PDB labels                                                                      | `{}`                                 |
-| `podDisruptionBudget.maxUnavailable`          | Maximum number of unavailable replicas                                          | `1`                                  |
+| `podDisruptionBudget.maxUnavailable`          | Maximum number of unavailable replicas                                          | `30%`                                |
 | `ingress.enabled`                             | Enable ingress configuration                                                    | `false`                              |
 | `ingress.annotations`                         | Ingress annotations                                                             | `{}`                                 |
 | `ingress.labels`                              | Ingress labels                                                                  | `{}`                                 |
