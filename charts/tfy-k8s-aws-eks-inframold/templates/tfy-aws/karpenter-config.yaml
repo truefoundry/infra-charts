@@ -14,7 +14,7 @@ spec:
   source:
     chart: tfy-karpenter-config
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.49
+    targetRevision: 0.1.50
     helm:
       values: |-
         {{- if .Values.aws.karpenter.config.valuesOverride }}
@@ -31,6 +31,7 @@ spec:
             {{- end }}
           defaultNodeTemplate:
             enableSoci: true
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
@@ -38,19 +39,26 @@ spec:
             {{- end }}
           gpuDefaultNodeTemplate:
             enableSoci: true
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          inferentiaDefaultNodeTemplate:
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+            nodeclass:
+              kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          controlPlaneNodeTemplate:
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
