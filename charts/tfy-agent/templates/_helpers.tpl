@@ -54,20 +54,76 @@ helm.sh/chart: {{ include "tfy-agent.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.tfyAgent.labels }}
-{{ toYaml . }}
+{{- end }}
+
+{{/*
+Common labels - merges base labels with commonLabels
+*/}}
+{{- define "tfy-agent.commonLabels" -}}
+{{- $baseLabels := include "tfy-agent.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.tfyAgent.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Common annotations - component-specific annotations
+*/}}
+{{- define "tfy-agent.commonAnnotations" -}}
+{{- with .Values.tfyAgent.commonAnnotations }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-Common annotations
+Pod Labels - merges commonLabels with pod-specific labels and legacy labels
 */}}
-{{- define "tfy-agent.annotations" -}}
-{{- if .Values.tfyAgent.annotations }}
-  {{- toYaml .Values.tfyAgent.annotations | nindent 4 }}
-{{- else }}
-{}
+{{- define "tfy-agent.podLabels" -}}
+{{- $selectorLabels := include "tfy-agent.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite .Values.tfyAgent.podLabels .Values.tfyAgent.labels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
+
+{{/*
+Pod Annotations - merges commonAnnotations with pod-specific annotations and legacy annotations
+*/}}
+{{- define "tfy-agent.podAnnotations" -}}
+{{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgent.podAnnotations .Values.tfyAgent.annotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+Deployment Labels - merges commonLabels with deployment-specific labels
+*/}}
+{{- define "tfy-agent.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-agent.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.tfyAgent.deploymentLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+*/}}
+{{- define "tfy-agent.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
+{{- $mergedAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgent.deploymentAnnotations }}
+{{- toYaml $mergedAnnotations }}
+{{- end }}
+
+{{/*
+Service Labels - merges commonLabels with service-specific labels
+*/}}
+{{- define "tfy-agent.serviceLabels" -}}
+{{- $commonLabels := include "tfy-agent.commonLabels" . | fromYaml }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+Service Annotations - merges commonAnnotations with service-specific annotations
+*/}}
+{{- define "tfy-agent.serviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
+{{- toYaml $commonAnnotations }}
 {{- end }}
 
 
@@ -87,9 +143,60 @@ helm.sh/chart: {{ include "tfy-agent.chart" . }}
 {{ include "tfy-agent-proxy.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Values.tfyAgentProxy.image.tag | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.tfyAgentProxy.labels }}
-{{ toYaml . }}
 {{- end }}
+
+{{/*
+Common labels - merges base labels with commonLabels
+*/}}
+{{- define "tfy-agent-proxy.commonLabels" -}}
+{{- $baseLabels := include "tfy-agent-proxy.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.tfyAgentProxy.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Common annotations - component-specific annotations
+*/}}
+{{- define "tfy-agent-proxy.commonAnnotations" -}}
+{{- with .Values.tfyAgentProxy.commonAnnotations }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Labels - merges commonLabels with pod-specific labels and legacy labels
+*/}}
+{{- define "tfy-agent-proxy.podLabels" -}}
+{{- $selectorLabels := include "tfy-agent-proxy.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite .Values.tfyAgentProxy.podLabels .Values.tfyAgentProxy.labels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
+{{/*
+Pod Annotations - merges commonAnnotations with pod-specific annotations and legacy annotations
+*/}}
+{{- define "tfy-agent-proxy.podAnnotations" -}}
+{{- $commonAnnotations := include "tfy-agent-proxy.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgentProxy.podAnnotations .Values.tfyAgentProxy.annotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+Deployment Labels - merges commonLabels with deployment-specific labels
+*/}}
+{{- define "tfy-agent-proxy.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-agent-proxy.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.tfyAgentProxy.deploymentLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+*/}}
+{{- define "tfy-agent-proxy.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "tfy-agent-proxy.commonAnnotations" . | fromYaml }}
+{{- $mergedAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgentProxy.deploymentAnnotations }}
+{{- toYaml $mergedAnnotations }}
 {{- end }}
 
 {{/*
@@ -97,17 +204,6 @@ Selector labels for tfyAgentProxy
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
-{{- end }}
-
-{{/*
-Annotations for tfyAgentProxy
-*/}}
-{{- define "tfy-agent-proxy.annotations" -}}
-{{- if .Values.tfyAgentProxy.annotations }}
-  {{- toYaml .Values.tfyAgentProxy.annotations | nindent 4 }}
-{{- else }}
-{}
-{{- end }}
 {{- end }}
 
 
@@ -119,9 +215,76 @@ helm.sh/chart: {{ include "tfy-agent.chart" . }}
 {{ include "sds-server.selectorLabels" . }}
 app.kubernetes.io/version: {{ .Values.sdsServer.image.tag | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.sdsServer.labels }}
-{{ toYaml . }}
 {{- end }}
+
+{{/*
+Common labels - merges base labels with commonLabels
+*/}}
+{{- define "sds-server.commonLabels" -}}
+{{- $baseLabels := include "sds-server.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.sdsServer.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Common annotations - component-specific annotations
+*/}}
+{{- define "sds-server.commonAnnotations" -}}
+{{- with .Values.sdsServer.commonAnnotations }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Labels - merges commonLabels with pod-specific labels and legacy labels
+*/}}
+{{- define "sds-server.podLabels" -}}
+{{- $selectorLabels := include "sds-server.selectorLabels" . | fromYaml }}
+{{- $podLabels := mergeOverwrite .Values.sdsServer.podLabels .Values.sdsServer.labels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
+{{/*
+Pod Annotations - merges commonAnnotations with pod-specific annotations and legacy annotations
+*/}}
+{{- define "sds-server.podAnnotations" -}}
+{{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite $commonAnnotations .Values.sdsServer.podAnnotations .Values.sdsServer.annotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+Deployment Labels - merges commonLabels with deployment-specific labels
+*/}}
+{{- define "sds-server.deploymentLabels" -}}
+{{- $commonLabels := include "sds-server.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $commonLabels .Values.sdsServer.deploymentLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Deployment Annotations - merges commonAnnotations with deployment-specific annotations
+*/}}
+{{- define "sds-server.deploymentAnnotations" -}}
+{{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
+{{- $mergedAnnotations := mergeOverwrite $commonAnnotations .Values.sdsServer.deploymentAnnotations }}
+{{- toYaml $mergedAnnotations }}
+{{- end }}
+
+{{/*
+Service Labels - merges commonLabels with service-specific labels
+*/}}
+{{- define "sds-server.serviceLabels" -}}
+{{- $commonLabels := include "sds-server.commonLabels" . | fromYaml }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+Service Annotations - merges commonAnnotations with service-specific annotations
+*/}}
+{{- define "sds-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
+{{- toYaml $commonAnnotations }}
 {{- end }}
 
 {{/*
@@ -130,17 +293,6 @@ Selector labels for sdsServer
 {{- define "sds-server.selectorLabels" -}}
 app.kubernetes.io/name: sds-server
 app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-Annototions for sdsServer
-*/}}
-{{- define "sds-server.annotations" -}}
-{{- if .Values.sdsServer.annotations }}
-  {{- toYaml .Values.sdsServer.annotations }}
-{{- else }}
-{}
-{{- end }}
 {{- end }}
 
 
@@ -194,57 +346,80 @@ Labels for resource quotas
 {{- define "resource-quotas.labels" -}}
 helm.sh/chart: {{ include "tfy-agent.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.resourceQuota.labels }}
+{{- end }}
+
+{{/*
+Common labels for resource quotas - merges base labels with commonLabels and legacy labels
+*/}}
+{{- define "resource-quotas.commonLabels" -}}
+{{- $baseLabels := include "resource-quotas.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.resourceQuota.commonLabels .Values.resourceQuota.labels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+Annotations for resource quotas - merges commonAnnotations with legacy annotations
+*/}}
+{{- define "resource-quotas.commonAnnotations" -}}
+{{- $annotations := mergeOverwrite .Values.resourceQuota.commonAnnotations .Values.resourceQuota.annotations }}
+{{- with $annotations }}
 {{ toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-Annotations for resource quotas
+ServiceAccount Labels for tfy-agent
 */}}
-{{- define "resource-quotas.annotations" -}}
-{{- with .Values.resourceQuota.annotations }}
-  {{ toYaml . }}
-{{- else }}
-{}
-{{- end }}
+{{- define "tfy-agent.serviceAccount.labels" -}}
+{{- $commonLabels := include "tfy-agent.commonLabels" . | fromYaml }}
+{{- toYaml $commonLabels }}
 {{- end }}
 
 {{/*
 ServiceAccount annotations for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccount.annotations" -}}
-{{- if .Values.tfyAgent.serviceAccount.annotations }}
-    {{- toYaml .Values.tfyAgent.serviceAccount.annotations }}
-{{- else if .Values.tfyAgent.annotations }}
-    {{- toYaml .Values.tfyAgent.annotations }}
-{{- else -}}
-{}
+{{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgent.serviceAccount.annotations .Values.tfyAgent.annotations }}
+{{- with $serviceAccountAnnotations }}
+{{- toYaml . }}
 {{- end }}
+{{- end }}
+
+{{/*
+ServiceAccount Labels for tfy-agent-proxy
+*/}}
+{{- define "tfy-agent-proxy.serviceAccount.labels" -}}
+{{- $commonLabels := include "tfy-agent-proxy.commonLabels" . | fromYaml }}
+{{- toYaml $commonLabels }}
 {{- end }}
 
 {{/*
 ServiceAccount annotations for tfy-agent-proxy
 */}}
 {{- define "tfy-agent-proxy.serviceAccount.annotations" -}}
-{{- if .Values.tfyAgentProxy.serviceAccount.annotations }}
-    {{- toYaml .Values.tfyAgentProxy.serviceAccount.annotations }}
-{{- else if .Values.tfyAgentProxy.annotations }}
-    {{- toYaml .Values.tfyAgentProxy.annotations }}
-{{- else -}}
-{}
+{{- $commonAnnotations := include "tfy-agent-proxy.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.tfyAgentProxy.serviceAccount.annotations .Values.tfyAgentProxy.annotations }}
+{{- with $serviceAccountAnnotations }}
+{{- toYaml . }}
 {{- end }}
+{{- end }}
+
+{{/*
+ServiceAccount Labels for sds-server
+*/}}
+{{- define "sds-server.serviceAccount.labels" -}}
+{{- $commonLabels := include "sds-server.commonLabels" . | fromYaml }}
+{{- toYaml $commonLabels }}
 {{- end }}
 
 {{/*
 ServiceAccount annotations for sds-server
 */}}
 {{- define "sds-server.serviceAccount.annotations" -}}
-{{- if .Values.sdsServer.serviceAccount.annotations }}
-    {{- toYaml .Values.sdsServer.serviceAccount.annotations }}
-{{- else if .Values.sdsServer.annotations }}
-    {{- toYaml .Values.sdsServer.annotations }}
-{{- else -}}
-{}
+{{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.sdsServer.serviceAccount.annotations .Values.sdsServer.annotations }}
+{{- with $serviceAccountAnnotations }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
