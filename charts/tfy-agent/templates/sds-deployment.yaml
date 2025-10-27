@@ -18,6 +18,9 @@ spec:
         {{- include "sds-server.annotations" . | nindent 8 }}
       labels:
         {{- include "sds-server.selectorLabels" . | nindent 8 }}
+        {{- with .Values.sdsServer.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.sdsServer.imagePullSecrets }}
       imagePullSecrets:

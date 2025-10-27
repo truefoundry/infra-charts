@@ -18,6 +18,9 @@ spec:
         {{- include "tfy-agent-proxy.annotations" . | nindent 8 }}
       labels:
         {{- include "tfy-agent-proxy.selectorLabels" . | nindent 8 }}
+        {{- with .Values.tfyAgentProxy.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.tfyAgentProxy.imagePullSecrets }}
       imagePullSecrets:
