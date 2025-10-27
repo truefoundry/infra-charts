@@ -178,57 +178,6 @@ Kubecost service monitor annotations
 {{- end }}
 {{- end }}
 
-{{/*
-Loki service monitor labels
-*/}}
-{{- define "loki.labels" -}}
-{{- if .Values.serviceMonitors.loki.labels }}
-{{- toYaml .Values.serviceMonitors.loki.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
-{{- end }}
-
-{{/*
-Loki service monitor annotations
-*/}}
-{{- define "loki.annotations" -}}
-{{- if .Values.serviceMonitors.loki.annotations }}
-{{- toYaml .Values.serviceMonitors.loki.annotations }}
-{{- else if .Values.global.annotations }}
-{{- toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
-
-{{/*
-Loki promtail service monitor labels
-*/}}
-{{- define "loki-promtail.labels" -}}
-{{- if .Values.serviceMonitors.loki.promtail.labels }}
-{{- toYaml .Values.serviceMonitors.loki.promtail.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
-{{- end }}
-
-{{/*
-Loki promtail service monitor annotations
-*/}}
-{{- define "loki-promtail.annotations" -}}
-{{- if .Values.serviceMonitors.loki.promtail.annotations }}
-{{- toYaml .Values.serviceMonitors.loki.promtail.annotations }}
-{{- else if .Values.global.annotations }}
-{{- toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
 
 {{/*
   Prometheus service monitor labels
