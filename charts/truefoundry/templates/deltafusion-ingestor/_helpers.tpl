@@ -51,7 +51,7 @@ Create chart name and version as used by the chart label.
   Common annotations - merges global.annotations with component-specific annotations
   */}}
 {{- define "deltafusion-ingestor.commonAnnotations" -}}
-{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "1" }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
 {{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.deltaFusionIngestor.commonAnnotations $syncWaveAnnotation }}
 {{- toYaml $commonAnnotations }}
 {{- end }}
