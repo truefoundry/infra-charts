@@ -33,7 +33,11 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if .Values.deltaFusionIngestor.image.optimized }}
+          image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}-optimized"
+          {{- else }}
           image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}"
+          {{- end }}
           imagePullPolicy: {{ .Values.deltaFusionIngestor.imagePullPolicy }}
           env:
             {{- include "deltafusion-ingestor.env" . | trim | nindent 12 }}

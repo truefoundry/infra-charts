@@ -1,0 +1,13 @@
+{{- if .Values.telemetry.enabled }}
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: {{ .Values.tfyGateway.name | default "tfy-mesh-default" }}
+  labels:
+    {{- include "tfy-istio-ingress.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-istio-ingress.annotations" . | nindent 4 }}
+spec:
+  accessLogging:
+  {{- toYaml .Values.telemetry.accessLogging | nindent 2 }}
+{{- end }}
