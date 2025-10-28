@@ -18,7 +18,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "sds-server.selectorLabels" . | nindent 4 }}
+    {{- include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") | nindent 4 }}
     {{- if .Values.sdsServer.service.sessionAffinity }}
     sessionAffinity: {{ .Values.sdsServer.service.sessionAffinity }}
     {{- end }}

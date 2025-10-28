@@ -45,22 +45,32 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels
+Common labels - Global function used for all components
+Takes: dict with "context" and "name" parameters
+Includes chart version and other metadata (for deployments/resources, NOT pods)
 */}}
 {{- define "tfy-agent.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" . }}
-{{ include "tfy-agent.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+helm.sh/chart: {{ include "tfy-agent.chart" .context }}
+{{ include "tfy-agent.selectorLabels" (dict "context" .context "name" .name) }}
+{{- if .context.Chart.AppVersion }}
+app.kubernetes.io/version: {{ .context.Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/managed-by: {{ .context.Release.Service }}
+{{- end }}
+
+{{/*
+Common labels for tfyAgent - uses global tfy-agent.labels function
+*/}}
+{{- define "tfyAgent.labels" -}}
+{{- include "tfy-agent.labels" (dict "context" . "name" "tfy-agent") }}
 {{- end }}
 
 {{/*
 Common labels - merges base labels with commonLabels
+For use on tfyAgent deployments/resources (includes chart version)
 */}}
 {{- define "tfy-agent.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" . | fromYaml }}
+{{- $baseLabels := include "tfyAgent.labels" . | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels .Values.tfyAgent.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -78,8 +88,8 @@ Common annotations - component-specific annotations
 Pod Labels - merges commonLabels with pod-specific labels and legacy labels
 */}}
 {{- define "tfy-agent.podLabels" -}}
-{{- $selectorLabels := include "tfy-agent.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite .Values.tfyAgent.podLabels .Values.tfyAgent.labels $selectorLabels }}
+{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "tfy-agent") | fromYaml }}
+{{- $podLabels := mergeOverwrite $selectorLabels .Values.tfyAgent.podLabels .Values.tfyAgent.labels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -128,28 +138,29 @@ Service Annotations - merges commonAnnotations with service-specific annotations
 
 
 {{/*
-Selector labels for tfyAgent
+Selector labels - Global function for all components
+Takes: dict with "context" and "name" parameters
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-agent.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- if .name -}}
+app.kubernetes.io/name: {{ .name }}
+{{ end -}}
+app.kubernetes.io/instance: {{ .context.Release.Name }}
 {{- end }}
 
 {{/*
-Common labels
+Common labels for tfyAgentProxy - uses global tfy-agent.labels function
 */}}
-{{- define "tfy-agent-proxy.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" . }}
-{{ include "tfy-agent-proxy.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Values.tfyAgentProxy.image.tag | quote }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- define "tfyAgentProxy.labels" -}}
+{{- include "tfy-agent.labels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) }}
 {{- end }}
 
 {{/*
 Common labels - merges base labels with commonLabels
+For use on tfyAgentProxy deployments/resources (includes chart version)
 */}}
 {{- define "tfy-agent-proxy.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent-proxy.labels" . | fromYaml }}
+{{- $baseLabels := include "tfyAgentProxy.labels" . | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels .Values.tfyAgentProxy.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -167,8 +178,8 @@ Common annotations - component-specific annotations
 Pod Labels - merges commonLabels with pod-specific labels and legacy labels
 */}}
 {{- define "tfy-agent-proxy.podLabels" -}}
-{{- $selectorLabels := include "tfy-agent-proxy.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite .Values.tfyAgentProxy.podLabels .Values.tfyAgentProxy.labels $selectorLabels }}
+{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) | fromYaml }}
+{{- $podLabels := mergeOverwrite $selectorLabels .Values.tfyAgentProxy.podLabels .Values.tfyAgentProxy.labels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -200,28 +211,26 @@ Deployment Annotations - merges commonAnnotations with deployment-specific annot
 {{- end }}
 
 {{/*
-Selector labels for tfyAgentProxy
+Selector labels for tfyAgentProxy - uses global function
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
+{{- include "tfy-agent.selectorLabels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) }}
 {{- end }}
 
 
 {{/*
-Common labels
+Common labels for sdsServer - uses global tfy-agent.labels function
 */}}
-{{- define "sds-server.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" . }}
-{{ include "sds-server.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Values.sdsServer.image.tag | quote }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- define "sdsServer.labels" -}}
+{{- include "tfy-agent.labels" (dict "context" . "name" "sds-server") }}
 {{- end }}
 
 {{/*
 Common labels - merges base labels with commonLabels
+For use on sdsServer deployments/resources (includes chart version)
 */}}
 {{- define "sds-server.commonLabels" -}}
-{{- $baseLabels := include "sds-server.labels" . | fromYaml }}
+{{- $baseLabels := include "sdsServer.labels" . | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels .Values.sdsServer.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -239,8 +248,8 @@ Common annotations - component-specific annotations
 Pod Labels - merges commonLabels with pod-specific labels and legacy labels
 */}}
 {{- define "sds-server.podLabels" -}}
-{{- $selectorLabels := include "sds-server.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite .Values.sdsServer.podLabels .Values.sdsServer.labels $selectorLabels }}
+{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite $selectorLabels .Values.sdsServer.podLabels .Values.sdsServer.labels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -288,11 +297,10 @@ Service Annotations - merges commonAnnotations with service-specific annotations
 {{- end }}
 
 {{/*
-Selector labels for sdsServer
+Selector labels for sdsServer - uses global function
 */}}
 {{- define "sds-server.selectorLabels" -}}
-app.kubernetes.io/name: sds-server
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") }}
 {{- end }}
 
 
@@ -344,15 +352,15 @@ Create the name of the secret which will contain cluster token
 Labels for resource quotas
 */}}
 {{- define "resource-quotas.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+helm.sh/chart: {{ include "tfy-agent.chart" .context }}
+app.kubernetes.io/managed-by: {{ .context.Release.Service }}
 {{- end }}
 
 {{/*
 Common labels for resource quotas - merges base labels with commonLabels and legacy labels
 */}}
 {{- define "resource-quotas.commonLabels" -}}
-{{- $baseLabels := include "resource-quotas.labels" . | fromYaml }}
+{{- $baseLabels := include "resource-quotas.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels .Values.resourceQuota.commonLabels .Values.resourceQuota.labels }}
 {{- toYaml $mergedLabels }}
 {{- end }}

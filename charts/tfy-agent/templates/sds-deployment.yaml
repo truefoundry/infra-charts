@@ -11,7 +11,7 @@ spec:
   replicas: {{ .Values.sdsServer.replicas}}
   selector:
     matchLabels:
-      {{- include "sds-server.selectorLabels" . | nindent 6 }}
+      {{- include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") | nindent 6 }}
   template:
     metadata:
       annotations:

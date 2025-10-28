@@ -18,7 +18,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "tfy-agent.selectorLabels" . | nindent 4 }}
+    {{- include "tfy-agent.selectorLabels" (dict "context" . "name" "tfy-agent") | nindent 4 }}
     {{- if .Values.tfyAgent.service.sessionAffinity }}
     sessionAffinity: {{ .Values.tfyAgent.service.sessionAffinity }}
     {{- end }}
