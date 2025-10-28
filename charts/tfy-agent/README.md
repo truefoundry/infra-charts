@@ -85,6 +85,19 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ## Parameters
 
+### Global parameters for tfy-agent
+
+| Name                           | Description                                  | Value |
+| ------------------------------ | -------------------------------------------- | ----- |
+| `global.labels`                | Global labels to add to all resources        | `{}`  |
+| `global.annotations`           | Global annotations to add to all resources   | `{}`  |
+| `global.podLabels`             | Global labels to add to all pods             | `{}`  |
+| `global.podAnnotations`        | Global annotations to add to all pods        | `{}`  |
+| `global.deploymentAnnotations` | Global annotations to add to all deployments | `{}`  |
+| `global.serviceLabels`         | Global labels to add to all services         | `{}`  |
+| `global.serviceAnnotations`    | Global annotations to add to all services    | `{}`  |
+| `global.serviceAccount.labels` | Global labels to add to all service accounts | `{}`  |
+
 ### Configuration parameters
 
 | Name                                     | Description                                                                                                         | Value                                                                            |
