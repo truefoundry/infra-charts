@@ -240,6 +240,24 @@ Pod Annotation Labels
 {{- toYaml $podAnnotations }}
 {{- end }}
 
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+*/}}
+{{- define "tfy-llm-gateway.pdbAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations .Values.podDisruptionBudget.annotations }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+*/}}
+{{- define "tfy-llm-gateway.pdbLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels .Values.podDisruptionBudget.labels }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
 {{- define "tfy-llm-gateway.defaultResources.small" }}
 requests:
   cpu: 200m

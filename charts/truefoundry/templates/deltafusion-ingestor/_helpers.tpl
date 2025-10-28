@@ -51,7 +51,7 @@ Create chart name and version as used by the chart label.
   Common annotations - merges global.annotations with component-specific annotations
   */}}
 {{- define "deltafusion-ingestor.commonAnnotations" -}}
-{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "1" }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
 {{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.deltaFusionIngestor.commonAnnotations $syncWaveAnnotation }}
 {{- toYaml $commonAnnotations }}
 {{- end }}
@@ -468,7 +468,7 @@ requests:
   ephemeral-storage: 10000M
 limits:
   cpu: 2000m
-  memory: 3000M
+  memory: 2400M
   ephemeral-storage: 10000M
 {{- end }}
 
@@ -479,7 +479,7 @@ requests:
   ephemeral-storage: 20000M
 limits:
   cpu: 4000m
-  memory: 6000M
+  memory: 4800M
   ephemeral-storage: 20000M
 {{- end }}
 
@@ -490,23 +490,22 @@ requests:
   ephemeral-storage: 40000M
 limits:
   cpu: 8000m
-  memory: 12000M
+  memory: 9600M
   ephemeral-storage: 40000M
 {{- end }}
 
 {{/*
 Resource Tied Envs
-1.3 * requests/ 2
-spill is 120% / 2 of memory requests
+spill is 0.9 x memory requests
 */}}
 {{- define "deltafusion-compaction.resourceTiedEnvs" }}
 {{- $tier := include "deltafusion-compaction.resourceTier" . }}
 {{- if eq $tier "small" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "1300"
+COMPACTION_MAX_SPILL_SIZE_MB: "1800"
 {{- else if eq $tier "medium" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "2600"
+COMPACTION_MAX_SPILL_SIZE_MB: "3600"
 {{- else if eq $tier "large" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "5200"
+COMPACTION_MAX_SPILL_SIZE_MB: "7200"
 {{- end }}
 {{- end }}
 

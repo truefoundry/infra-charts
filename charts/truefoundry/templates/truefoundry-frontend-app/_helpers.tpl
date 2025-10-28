@@ -123,7 +123,7 @@ Expand the name of the chart.
   */}}
 {{- define "truefoundry-frontend-app.deploymentAnnotations" -}}
 {{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
-{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "5" }}
 {{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.truefoundryFrontendApp.deploymentAnnotations $syncWaveAnnotation }}
 {{- toYaml $deploymentAnnotations }}
 {{- end }}
