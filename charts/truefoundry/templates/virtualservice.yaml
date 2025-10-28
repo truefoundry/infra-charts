@@ -96,26 +96,6 @@ spec:
             host: {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}
             port:
               number: 4318
-    - match:
-        - uri:
-            prefix: /api/agent/
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.tfyLLMAgentHost . }}
-            port:
-              number: 8080
-    - match:
-        - uri:
-            prefix: /api/manifest/
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.sfyManifestServiceHost . }}
-            port:
-              number: 8080
     - route:
         - destination:
             host: {{ tpl .Values.global.proxy.truefoundryFrontendAppHost . }}
