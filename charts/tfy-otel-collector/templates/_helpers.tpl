@@ -172,9 +172,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Deployment annotations
   */}}
 {{- define "tfy-otel-collector.deploymentAnnotations" -}}
-{{- $defaultAnnotations := merge (dict "argocd.argoproj.io/sync-wave" "3") }}
 {{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
-{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations $defaultAnnotations .Values.deploymentAnnotations }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deploymentAnnotations }}
 {{- toYaml $deploymentAnnotations }}
 {{- end }}
 
