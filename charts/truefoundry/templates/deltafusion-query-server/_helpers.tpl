@@ -185,6 +185,7 @@ Ephemeral Storage Limit
 
 {{/*
 Default Resources
+cpu limit is 100 because ideally we don't to set limit but some clusters may have policy which requires limit to be set
 */}}
 {{- define "deltafusion-query-server.defaultResources.small" }}
 requests:
@@ -192,7 +193,7 @@ requests:
   memory: 4000M
   ephemeral-storage: 5000M
 limits:
-  cpu: 2
+  cpu: 100
   memory: 8000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -203,7 +204,7 @@ requests:
   memory: 12000M
   ephemeral-storage: 20000M
 limits:
-  cpu: 4
+  cpu: 100
   memory: 16000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -214,7 +215,7 @@ requests:
   memory: 28000M
   ephemeral-storage: 40000M
 limits:
-  cpu: 8
+  cpu: 100
   memory: 32000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -222,6 +223,7 @@ limits:
 
 {{/*
 Resource Tied Envs
+partitions is (cpu request + 1) x 4
 cache is 60% of memory limit
 query is 40% of memory limit
 spill is 40% of ephemeral storage requests
@@ -229,19 +231,19 @@ spill is 40% of ephemeral storage requests
 {{- define "deltafusion-query-server.resourceTiedEnvs" }}
 {{- $tier := include "deltafusion-query-server.resourceTier" . }}
 {{- if eq $tier "small" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "1"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "8"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "4800"
 QUERY_MEMORY_POOL_MB: "3200"
 QUERY_SPILL_DISK_SIZE_MB: "2000"
 {{- else if eq $tier "medium" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "3"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "16"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "9600"
 QUERY_MEMORY_POOL_MB: "6400"
 QUERY_SPILL_DISK_SIZE_MB: "8000"
 {{- else if eq $tier "large" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "8"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "32"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
 CACHE_MEMORY_MB: "19200"
 QUERY_MEMORY_POOL_MB: "12800"
