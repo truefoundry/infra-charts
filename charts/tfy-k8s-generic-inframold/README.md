@@ -109,15 +109,6 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 | `truefoundry.tolerations`                          | Tolerations for the truefoundry components                 | `[]`      |
 | `truefoundry.affinity`                             | Affinity for the truefoundry components                    | `{}`      |
 
-### loki parameters
-
-| Name                  | Description                                | Value  |
-| --------------------- | ------------------------------------------ | ------ |
-| `loki.enabled`        | Flag to enable Loki                        | `true` |
-| `loki.valuesOverride` | Config override from default config values | `{}`   |
-| `loki.affinity`       | Affinity for loki statefulset pod          | `{}`   |
-| `loki.tolerations`    | Tolerations for loki statefulset pod       | `[]`   |
-
 ### tfyLogs parameters
 
 | Name                     | Description                                | Value  |
