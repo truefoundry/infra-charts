@@ -93,6 +93,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `global.annotations`           | Global annotations to add to all resources   | `{}`  |
 | `global.podLabels`             | Global labels to add to all pods             | `{}`  |
 | `global.podAnnotations`        | Global annotations to add to all pods        | `{}`  |
+| `global.deploymentLabels`      | Global labels to add to all deployments      | `{}`  |
 | `global.deploymentAnnotations` | Global annotations to add to all deployments | `{}`  |
 | `global.serviceLabels`         | Global labels to add to all services         | `{}`  |
 | `global.serviceAnnotations`    | Global annotations to add to all services    | `{}`  |
