@@ -1205,6 +1205,7 @@ fi
 | `tfyProxy.topologySpreadConstraints`                     | Topology spread constraints for the tfyProxy                                         | `{}`                           |
 | `tfyProxy.service.type`                                  | Service type for the tfyProxy                                                        | `ClusterIP`                    |
 | `tfyProxy.service.port`                                  | Service port for the tfyProxy                                                        | `8080`                         |
+| `tfyProxy.service.metricsPort`                           | Metrics port for the tfyProxy                                                        | `2019`                         |
 | `tfyProxy.service.labels`                                | Labels for the tfyProxy service                                                      | `{}`                           |
 | `tfyProxy.service.annotations`                           | Annotations for the tfyProxy service                                                 | `{}`                           |
 | `tfyProxy.serviceAccount.create`                         | Bool to create a service account for the tfyProxy                                    | `false`                        |
