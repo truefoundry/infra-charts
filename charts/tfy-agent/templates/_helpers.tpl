@@ -45,26 +45,28 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels 
-Takes: dict with "context" and "name" parameters
-Includes chart version and other metadata (for deployments/resources, NOT pods)
+Base labels - for use in commonLabels (deployment/service metadata)
+Includes chart metadata, part-of, and global.labels
 */}}
 {{- define "tfy-agent.labels" -}}
 helm.sh/chart: {{ include "tfy-agent.chart" .context }}
-{{ include "tfy-agent.selectorLabels" (dict "context" .context "name" .name) }}
+app.kubernetes.io/managed-by: {{ .context.Release.Service }}
+app.kubernetes.io/part-of: tfy-agent
 {{- if .context.Chart.AppVersion }}
 app.kubernetes.io/version: {{ .context.Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .context.Release.Service }}
+{{- with .context.Values.global.labels }}
+{{ toYaml . }}
+{{- end }}
 {{- end }}
 
 {{/*
-Common labels - merges base labels with global.labels and commonLabels
+Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
 For use on tfyAgent deployments/resources (includes chart version)
-Priority: global.labels < component.commonLabels < base labels (highest)
+Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
 */}}
 {{- define "tfy-agent.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" . "name" "tfy-agent") | fromYaml }}
+{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyAgent.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -80,22 +82,22 @@ Priority: global.annotations < component.commonAnnotations
 {{- end }}
 
 {{/*
-Pod Labels - merges global, legacy, pod-specific labels, and selector labels
-Priority: legacy labels (lowest) < global.podLabels < component.podLabels < selectorLabels (highest)
+Pod Labels - merges global, pod-specific labels, and selector labels
+Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "tfy-agent.podLabels" -}}
 {{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "tfy-agent") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.tfyAgent.labels) (deepCopy .Values.global.podLabels) .Values.tfyAgent.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgent.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-Pod Annotations - merges global, commonAnnotations, legacy, and pod-specific annotations
-Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < component.podAnnotations (highest)
+Pod Annotations - merges global, commonAnnotations, and pod-specific annotations
+Priority: global.podAnnotations < commonAnnotations < component.podAnnotations (highest)
 */}}
 {{- define "tfy-agent.podAnnotations" -}}
 {{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyAgent.annotations .Values.tfyAgent.podAnnotations }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyAgent.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
@@ -152,12 +154,12 @@ app.kubernetes.io/instance: {{ .context.Release.Name }}
 {{- end }}
 
 {{/*
-Common labels - merges base labels with global.labels and commonLabels
+Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
 For use on tfyAgentProxy deployments/resources (includes chart version)
-Priority: global.labels < component.commonLabels < base labels (highest)
+Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
 */}}
 {{- define "tfy-agent-proxy.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) | fromYaml }}
+{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyAgentProxy.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -173,22 +175,22 @@ Priority: global.annotations < component.commonAnnotations
 {{- end }}
 
 {{/*
-Pod Labels - merges global, legacy, pod-specific labels, and selector labels
-Priority: legacy labels (lowest) < global.podLabels < component.podLabels < selectorLabels (highest)
+Pod Labels - merges global, pod-specific labels, and selector labels
+Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "tfy-agent-proxy.podLabels" -}}
 {{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.tfyAgentProxy.labels) (deepCopy .Values.global.podLabels) .Values.tfyAgentProxy.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgentProxy.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-Pod Annotations - merges global, commonAnnotations, legacy, and pod-specific annotations
-Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < component.podAnnotations (highest)
+Pod Annotations - merges global, commonAnnotations, and pod-specific annotations
+Priority: global.podAnnotations < commonAnnotations < component.podAnnotations (highest)
 */}}
 {{- define "tfy-agent-proxy.podAnnotations" -}}
 {{- $commonAnnotations := include "tfy-agent-proxy.commonAnnotations" . | fromYaml }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyAgentProxy.annotations .Values.tfyAgentProxy.podAnnotations }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyAgentProxy.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
@@ -221,12 +223,12 @@ Selector labels for tfyAgentProxy - uses global function
 
 
 {{/*
-Common labels - merges base labels with global.labels and commonLabels
+Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
 For use on sdsServer deployments/resources (includes chart version)
-Priority: global.labels < component.commonLabels < base labels (highest)
+Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
 */}}
 {{- define "sds-server.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" . "name" "sds-server") | fromYaml }}
+{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.sdsServer.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -242,22 +244,22 @@ Priority: global.annotations < component.commonAnnotations
 {{- end }}
 
 {{/*
-Pod Labels - merges global, legacy, pod-specific labels, and selector labels
-Priority: legacy labels (lowest) < global.podLabels < component.podLabels < selectorLabels (highest)
+Pod Labels - merges global, pod-specific labels, and selector labels
+Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "sds-server.podLabels" -}}
 {{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.sdsServer.labels) (deepCopy .Values.global.podLabels) .Values.sdsServer.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.sdsServer.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-Pod Annotations - merges global, commonAnnotations, legacy, and pod-specific annotations
-Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < component.podAnnotations (highest)
+Pod Annotations - merges global, commonAnnotations, and pod-specific annotations
+Priority: global.podAnnotations < commonAnnotations < component.podAnnotations (highest)
 */}}
 {{- define "sds-server.podAnnotations" -}}
 {{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.sdsServer.annotations .Values.sdsServer.podAnnotations }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.sdsServer.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
@@ -394,11 +396,11 @@ Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base la
 
 {{/*
 ServiceAccount annotations for tfy-agent
-Merge order: commonAnnotations (lowest) < legacy annotations < serviceAccount.annotations (highest)
+Merge order: commonAnnotations < serviceAccount.annotations (highest)
 */}}
 {{- define "tfy-agent.serviceAccount.annotations" -}}
 {{- $commonAnnotations := include "tfy-agent.commonAnnotations" . | fromYaml }}
-{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.tfyAgent.annotations .Values.tfyAgent.serviceAccount.annotations }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.tfyAgent.serviceAccount.annotations }}
 {{- with $serviceAccountAnnotations }}
 {{- toYaml . }}
 {{- end }}
@@ -416,11 +418,11 @@ Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base la
 
 {{/*
 ServiceAccount annotations for tfy-agent-proxy
-Merge order: commonAnnotations (lowest) < legacy annotations < serviceAccount.annotations (highest)
+Merge order: commonAnnotations < serviceAccount.annotations (highest)
 */}}
 {{- define "tfy-agent-proxy.serviceAccount.annotations" -}}
 {{- $commonAnnotations := include "tfy-agent-proxy.commonAnnotations" . | fromYaml }}
-{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.tfyAgentProxy.annotations .Values.tfyAgentProxy.serviceAccount.annotations }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.tfyAgentProxy.serviceAccount.annotations }}
 {{- with $serviceAccountAnnotations }}
 {{- toYaml . }}
 {{- end }}
@@ -438,11 +440,11 @@ Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base la
 
 {{/*
 ServiceAccount annotations for sds-server
-Merge order: commonAnnotations (lowest) < legacy annotations < serviceAccount.annotations (highest)
+Merge order: commonAnnotations < serviceAccount.annotations (highest)
 */}}
 {{- define "sds-server.serviceAccount.annotations" -}}
 {{- $commonAnnotations := include "sds-server.commonAnnotations" . | fromYaml }}
-{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.sdsServer.annotations .Values.sdsServer.serviceAccount.annotations }}
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy $commonAnnotations) .Values.sdsServer.serviceAccount.annotations }}
 {{- with $serviceAccountAnnotations }}
 {{- toYaml . }}
 {{- end }}
