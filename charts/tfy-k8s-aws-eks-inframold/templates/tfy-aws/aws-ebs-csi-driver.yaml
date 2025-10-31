@@ -94,7 +94,9 @@ spec:
               type: gp3
               fsType: ext4
               encrypted: "true"
+              {{- if .Values.aws.awsEbsCsiDriver.kmsKeyID }}
               kmsKeyId: {{ .Values.aws.awsEbsCsiDriver.kmsKeyID }}
+              {{- end }}
             annotations:
               storageclass.kubernetes.io/is-default-class: "true"
             provisioner: ebs.csi.aws.com
