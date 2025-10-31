@@ -45,7 +45,7 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
-Common labels - Global function used for all components
+Common labels 
 Takes: dict with "context" and "name" parameters
 Includes chart version and other metadata (for deployments/resources, NOT pods)
 */}}
@@ -100,12 +100,12 @@ Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < componen
 {{- end }}
 
 {{/*
-Deployment Labels - merges commonLabels with deployment-specific labels
-Priority: commonLabels (includes base labels) < component.deploymentLabels
+Deployment Labels - merges global, commonLabels with deployment-specific labels
+Priority: global.deploymentLabels (lowest) < commonLabels (includes base labels) < component.deploymentLabels (highest)
 */}}
 {{- define "tfy-agent.deploymentLabels" -}}
 {{- $commonLabels := include "tfy-agent.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.tfyAgent.deploymentLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.tfyAgent.deploymentLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
@@ -193,12 +193,12 @@ Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < componen
 {{- end }}
 
 {{/*
-Deployment Labels - merges commonLabels with deployment-specific labels
-Priority: commonLabels (includes base labels) < component.deploymentLabels
+Deployment Labels - merges global, commonLabels with deployment-specific labels
+Priority: global.deploymentLabels (lowest) < commonLabels (includes base labels) < component.deploymentLabels (highest)
 */}}
 {{- define "tfy-agent-proxy.deploymentLabels" -}}
 {{- $commonLabels := include "tfy-agent-proxy.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.tfyAgentProxy.deploymentLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.tfyAgentProxy.deploymentLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
@@ -262,12 +262,12 @@ Priority: global.podAnnotations (lowest) < commonAnnotations < legacy < componen
 {{- end }}
 
 {{/*
-Deployment Labels - merges commonLabels with deployment-specific labels
-Priority: commonLabels (includes base labels) < component.deploymentLabels
+Deployment Labels - merges global, commonLabels with deployment-specific labels
+Priority: global.deploymentLabels (lowest) < commonLabels (includes base labels) < component.deploymentLabels (highest)
 */}}
 {{- define "sds-server.deploymentLabels" -}}
 {{- $commonLabels := include "sds-server.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.sdsServer.deploymentLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.sdsServer.deploymentLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
