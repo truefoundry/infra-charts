@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "tfy-agent.fullname" . }}
   labels:
-    {{- include "tfy-agent.labels" . | nindent 4 }}
+    {{- include "tfy-agent.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-agent.annotations" . | nindent 4 }}
+    {{- include "tfy-agent.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.tfyAgent.service.type }}
   ports:
@@ -18,7 +18,7 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "tfy-agent.selectorLabels" . | nindent 4 }}
+    {{- include "tfy-agent.selectorLabels" (dict "context" . "name" "tfy-agent") | nindent 4 }}
     {{- if .Values.tfyAgent.service.sessionAffinity }}
     sessionAffinity: {{ .Values.tfyAgent.service.sessionAffinity }}
     {{- end }}
