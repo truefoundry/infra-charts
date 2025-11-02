@@ -86,7 +86,7 @@ Pod Labels - merges global, pod-specific labels, and selector labels
 Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "tfy-agent.podLabels" -}}
-{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "tfy-agent") | fromYaml }}
+{{- $selectorLabels := include "tfy-agent.selectorLabels" . | fromYaml }}
 {{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgent.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
@@ -143,14 +143,11 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 
 
 {{/*
-Selector labels - Global function for all components
-Takes: dict with "context" and "name" parameters
+Selector labels for tfyAgent
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-{{- if .name -}}
-app.kubernetes.io/name: {{ .name }}
-{{ end -}}
-app.kubernetes.io/instance: {{ .context.Release.Name }}
+app.kubernetes.io/name: {{ include "tfy-agent.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
@@ -179,7 +176,7 @@ Pod Labels - merges global, pod-specific labels, and selector labels
 Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "tfy-agent-proxy.podLabels" -}}
-{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) | fromYaml }}
+{{- $selectorLabels := include "tfy-agent-proxy.selectorLabels" . | fromYaml }}
 {{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgentProxy.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
@@ -215,10 +212,10 @@ Priority: global.deploymentAnnotations (lowest) < commonAnnotations < component.
 {{- end }}
 
 {{/*
-Selector labels for tfyAgentProxy - uses global function
+Selector labels for tfyAgentProxy
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
-{{- include "tfy-agent.selectorLabels" (dict "context" . "name" (include "tfy-agent-proxy.fullname" .)) }}
+app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
 
@@ -248,7 +245,7 @@ Pod Labels - merges global, pod-specific labels, and selector labels
 Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "sds-server.podLabels" -}}
-{{- $selectorLabels := include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") | fromYaml }}
+{{- $selectorLabels := include "sds-server.selectorLabels" . | fromYaml }}
 {{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.sdsServer.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
@@ -304,10 +301,11 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 {{- end }}
 
 {{/*
-Selector labels for sdsServer - uses global function
+Selector labels for sdsServer
 */}}
 {{- define "sds-server.selectorLabels" -}}
-{{- include "tfy-agent.selectorLabels" (dict "context" . "name" "sds-server") }}
+app.kubernetes.io/name: sds-server
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 
