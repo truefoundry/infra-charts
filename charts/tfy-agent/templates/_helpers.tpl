@@ -354,33 +354,6 @@ Create the name of the secret which will contain cluster token
 {{- end }}
 
 {{/*
-Labels for resource quotas
-*/}}
-{{- define "resource-quotas.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" .context }}
-app.kubernetes.io/managed-by: {{ .context.Release.Service }}
-{{- end }}
-
-{{/*
-Common labels for resource quotas
-*/}}
-{{- define "resource-quotas.commonLabels" -}}
-{{- $baseLabels := include "resource-quotas.labels" (dict "context" .) | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.resourceQuota.labels) .Values.resourceQuota.commonLabels }}
-{{- toYaml $mergedLabels }}
-{{- end }}
-
-{{/*
-Annotations for resource quotas
-*/}}
-{{- define "resource-quotas.commonAnnotations" -}}
-{{- $annotations := mergeOverwrite (deepCopy .Values.resourceQuota.commonAnnotations) (deepCopy .Values.resourceQuota.annotations) }}
-{{- with $annotations }}
-{{ toYaml . }}
-{{- end }}
-{{- end }}
-
-{{/*
 ServiceAccount Labels for tfy-agent
 Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}
