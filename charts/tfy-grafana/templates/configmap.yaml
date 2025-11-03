@@ -19,3 +19,18 @@ data:
     {{ $name | toString | nindent 4 }}
 {{- end }}
 {{- end }}
+---
+{{- range $path, $_ := .Files.Glob "dashboards/Truefoundry Addons/*.json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tfy-dashboard-{{ base $path | replace ".json" "" | lower | replace " " "-" | replace "_" "-" }}
+  labels:
+    {{ $.Values.grafana.sidecar.dashboards.label }}: {{ $.Values.grafana.sidecar.dashboards.labelValue | quote }}
+  annotations:
+    grafana_folder: "Truefoundry Addons"
+data:
+  {{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
