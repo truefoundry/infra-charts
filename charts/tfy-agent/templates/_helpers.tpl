@@ -61,9 +61,9 @@ app.kubernetes.io/version: {{ .context.Chart.AppVersion | quote }}
 {{- end }}
 
 {{/*
-Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
+Common labels
 For use on tfyAgent deployments/resources (includes chart version)
-Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
+Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "tfy-agent.commonLabels" -}}
 {{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
@@ -151,13 +151,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
+Common labels
 For use on tfyAgentProxy deployments/resources (includes chart version)
-Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
+Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "tfy-agent-proxy.commonLabels" -}}
 {{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyAgentProxy.commonLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.labels) $baseLabels .Values.tfyAgentProxy.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
@@ -220,9 +220,9 @@ app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 
 
 {{/*
-Common labels - merges base labels (which includes global.labels) with global.labels again and component commonLabels
+Common labels
 For use on sdsServer deployments/resources (includes chart version)
-Priority: component.commonLabels < global.labels < base labels (which includes global.labels, highest)
+Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "sds-server.commonLabels" -}}
 {{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
@@ -362,21 +362,19 @@ app.kubernetes.io/managed-by: {{ .context.Release.Service }}
 {{- end }}
 
 {{/*
-Common labels for resource quotas - merges base labels with commonLabels and legacy labels
-Merge order: legacy labels (lowest) < commonLabels < base labels (highest priority)
+Common labels for resource quotas
 */}}
 {{- define "resource-quotas.commonLabels" -}}
 {{- $baseLabels := include "resource-quotas.labels" (dict "context" .) | fromYaml }}
-{{- $mergedLabels := mergeOverwrite (deepCopy .Values.resourceQuota.labels) .Values.resourceQuota.commonLabels $baseLabels }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.resourceQuota.labels) .Values.resourceQuota.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
 {{/*
-Annotations for resource quotas - merges commonAnnotations with legacy annotations
-Merge order: commonAnnotations (lowest) < legacy annotations (highest priority)
+Annotations for resource quotas
 */}}
 {{- define "resource-quotas.commonAnnotations" -}}
-{{- $annotations := mergeOverwrite (deepCopy .Values.resourceQuota.commonAnnotations) .Values.resourceQuota.annotations }}
+{{- $annotations := mergeOverwrite (deepCopy .Values.resourceQuota.commonAnnotations) (deepCopy .Values.resourceQuota.annotations) }}
 {{- with $annotations }}
 {{ toYaml . }}
 {{- end }}
@@ -384,11 +382,11 @@ Merge order: commonAnnotations (lowest) < legacy annotations (highest priority)
 
 {{/*
 ServiceAccount Labels for tfy-agent
-Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base labels, highest)
+Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}
 {{- define "tfy-agent.serviceAccount.labels" -}}
 {{- $commonLabels := include "tfy-agent.commonLabels" . | fromYaml }}
-{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.tfyAgent.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
 {{- end }}
 
@@ -406,11 +404,11 @@ Merge order: commonAnnotations < serviceAccount.annotations (highest)
 
 {{/*
 ServiceAccount Labels for tfy-agent-proxy
-Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base labels, highest)
+Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}
 {{- define "tfy-agent-proxy.serviceAccount.labels" -}}
 {{- $commonLabels := include "tfy-agent-proxy.commonLabels" . | fromYaml }}
-{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.tfyAgentProxy.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
 {{- end }}
 
@@ -428,11 +426,11 @@ Merge order: commonAnnotations < serviceAccount.annotations (highest)
 
 {{/*
 ServiceAccount Labels for sds-server
-Priority: global.serviceAccount.labels (lowest) < commonLabels (includes base labels, highest)
+Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}
 {{- define "sds-server.serviceAccount.labels" -}}
 {{- $commonLabels := include "sds-server.commonLabels" . | fromYaml }}
-{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.sdsServer.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
 {{- end }}
 
