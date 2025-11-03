@@ -14,8 +14,11 @@ data:
   {{- else }}
   Caddyfile: |
     {
-      # debug
-      log stdout
+      log {
+        level {{ .Values.tfyProxy.logLevel }}
+        output stdout
+      }
+
       auto_https disable_redirects
 
       servers {

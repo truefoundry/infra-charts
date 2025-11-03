@@ -132,9 +132,16 @@ Expand the name of the chart.
   Ingress Annotations
   */}}
 {{- define "truefoundry-frontend-app.ingress.annotations" -}}
-{{- $commonAnnotations := include "truefoundry-frontend-app.commonAnnotations" . | fromYaml }}
-{{- $ingressAnnotations := mergeOverwrite $commonAnnotations .Values.truefoundryFrontendApp.ingress.annotations }}
-{{- toYaml $ingressAnnotations }}
+{{- $baseAnnotations := dict }}
+{{- $_ := set $baseAnnotations "nginx.org/rewrites" (printf "serviceName=%s-servicefoundry-server rewrite=/socket.io;serviceName=%s-tfy-llm-gateway rewrite=/;serviceName=%s-tfy-controller rewrite=/;serviceName=%s-s3proxy rewrite=/;serviceName=%s-tfy-otel-collector rewrite=/" .Release.Name .Release.Name .Release.Name .Release.Name .Release.Name) }}
+{{- $commonAnnotations := dict }}
+{{- $commonAnnotationsYaml := include "truefoundry-frontend-app.commonAnnotations" . | trim }}
+{{- if $commonAnnotationsYaml }}
+{{- $commonAnnotations = $commonAnnotationsYaml | fromYaml | default dict }}
+{{- end }}
+{{- $ingressAnnotations := .Values.truefoundryFrontendApp.ingress.annotations | default dict }}
+{{- $merged := mergeOverwrite $baseAnnotations $commonAnnotations $ingressAnnotations }}
+{{- toYaml $merged }}
 {{- end }}
 
 {{/*
