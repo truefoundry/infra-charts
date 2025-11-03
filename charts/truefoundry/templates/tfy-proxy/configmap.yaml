@@ -35,6 +35,12 @@ data:
       }
     }
 
+    :2019 {
+      handle /metrics {
+        metrics /metrics
+      }
+    }
+
     :8080 {
       # Serve static files
       encode zstd gzip
@@ -103,12 +109,6 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}
       }
 
-      # /api/manifest/ → / on upstream:8080
-      handle /api/manifest/* {
-        uri strip_prefix /api/manifest
-        reverse_proxy {{ tpl .Values.global.proxy.sfyManifestServiceHost . }}:{{ .Values.sfyManifestService.service.port }}
-      }
-
       {{- if .Values.global.proxy.tfyLLMAgentURL }}
       # /api/agent → / on upstream:8080
       handle /api/agent/* {
@@ -119,11 +119,21 @@ data:
       }
       {{- end }}
 
+      {{- if .Values.global.proxy.llmGateway.external }}
+      # /api/llm/ → / on upstream:8787
+      handle /api/llm/* {
+        uri strip_prefix /api/llm
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.llmGateway.backendURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- else }}
       # /api/llm/ → / on upstream:8787
       handle /api/llm/* {
         uri strip_prefix /api/llm
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}
       }
+      {{- end }}
 
       # /api/proxy-server/socket.io → /socket.io on upstream:8123
       handle /api/proxy-server/socket.io* {

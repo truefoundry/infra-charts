@@ -137,7 +137,7 @@ Expand the name of the chart.
   */}}
 {{- define "servicefoundry-server.deploymentLabels" -}}
 {{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.servicefoundryServer.deploymentLabels }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.servicefoundryServer.deploymentLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 

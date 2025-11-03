@@ -48,6 +48,9 @@ spec:
             - name: http
               containerPort: {{ .Values.tfyProxy.service.port }}
               protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.tfyProxy.service.metricsPort }}
+              protocol: TCP
           resources:
             {{- include "tfy-proxy.resources" . | indent 12 }}
           livenessProbe:

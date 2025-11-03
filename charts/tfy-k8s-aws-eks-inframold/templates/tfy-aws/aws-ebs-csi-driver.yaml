@@ -59,6 +59,9 @@ spec:
             limits:
               cpu: 100m
               memory: 400Mi
+          serviceMonitor:
+            labels:
+              release: prometheus
           serviceAccount:
             name: ebs-csi-controller-sa
             annotations:
@@ -91,7 +94,9 @@ spec:
               type: gp3
               fsType: ext4
               encrypted: "true"
+              {{- if .Values.aws.awsEbsCsiDriver.kmsKeyID }}
               kmsKeyId: {{ .Values.aws.awsEbsCsiDriver.kmsKeyID }}
+              {{- end }}
             annotations:
               storageclass.kubernetes.io/is-default-class: "true"
             provisioner: ebs.csi.aws.com

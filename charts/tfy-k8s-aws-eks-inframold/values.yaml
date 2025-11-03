@@ -331,35 +331,6 @@ truefoundry:
                 values:
                   - control-plane
 
-## @section loki parameters
-## @param loki.enabled Flag to enable Loki
-##
-loki:
-  enabled: true
-  ## @param loki.valuesOverride [object] Config override from default config values
-  ##
-  valuesOverride: {}
-
-  ## @param loki.affinity [object] Affinity for loki statefulset pod
-  ##
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: class.truefoundry.com/component
-                operator: In
-                values:
-                  - critical
-
-  ## @param loki.tolerations [array] Tolerations for loki statefulset pod
-  ##
-  tolerations:
-    - key: "class.truefoundry.com/component"
-      value: "critical"
-      effect: "NoSchedule"
-
-
 ## @section tfyLogs parameters
 ## @param tfyLogs.enabled Flag to enable Tfy Logs
 ##
