@@ -87,17 +87,18 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### Global parameters for tfy-agent
 
-| Name                           | Description                                  | Value |
-| ------------------------------ | -------------------------------------------- | ----- |
-| `global.labels`                | Global labels to add to all resources        | `{}`  |
-| `global.annotations`           | Global annotations to add to all resources   | `{}`  |
-| `global.podLabels`             | Global labels to add to all pods             | `{}`  |
-| `global.podAnnotations`        | Global annotations to add to all pods        | `{}`  |
-| `global.deploymentLabels`      | Global labels to add to all deployments      | `{}`  |
-| `global.deploymentAnnotations` | Global annotations to add to all deployments | `{}`  |
-| `global.serviceLabels`         | Global labels to add to all services         | `{}`  |
-| `global.serviceAnnotations`    | Global annotations to add to all services    | `{}`  |
-| `global.serviceAccount.labels` | Global labels to add to all service accounts | `{}`  |
+| Name                           | Description                                                                                                                    | Value |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| `global.labels`                | Global labels to add to all resources                                                                                          | `{}`  |
+| `global.annotations`           | Global annotations to add to all resources                                                                                     | `{}`  |
+| `global.podLabels`             | Global labels to add to all pods                                                                                               | `{}`  |
+| `global.podAnnotations`        | Global annotations to add to all pods                                                                                          | `{}`  |
+| `global.deploymentLabels`      | Global labels to add to all deployments                                                                                        | `{}`  |
+| `global.deploymentAnnotations` | Global annotations to add to all deployments                                                                                   | `{}`  |
+| `global.serviceLabels`         | Global labels to add to all services                                                                                           | `{}`  |
+| `global.serviceAnnotations`    | Global annotations to add to all services                                                                                      | `{}`  |
+| `global.serviceAccount.name`   | Global service account name to use as fallback when component-specific service account is not created and no name is specified | `""`  |
+| `global.serviceAccount.labels` | Global labels to add to all service accounts                                                                                   | `{}`  |
 
 ### Configuration parameters
 
