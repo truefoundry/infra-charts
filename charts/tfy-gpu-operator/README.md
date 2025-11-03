@@ -1,5 +1,16 @@
-# Tfy-gpu-operator helm chart packaged by TrueFoundry
-Tfy-gpu-operator is a Helm chart that facilitates the deployment and management of GPU resources in Kubernetes clusters.
+# tfy-gpu-operator helm chart packaged by TrueFoundry
+tfy-gpu-operator is a Helm chart that facilitates the deployment and management of GPU resources in Kubernetes clusters.
+
+## Changelog
+
+### 0.5.0-rc.1
+- Update NVIDIA GPU Operator to v25.10.0
+
+If you are applying this chart using ArgoCD, you need to apply the following CRDs:
+```shell
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.0/deployments/gpu-operator/crds/nvidia.com_nvidiadrivers.yaml
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.0/deployments/gpu-operator/crds/nvidia.com_clusterpolicies.yaml
+```
 
 ## Parameters
 
