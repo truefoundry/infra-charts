@@ -153,7 +153,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for tfyAgent
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "chart.name" . }}
+app.kubernetes.io/name: {{ include "tfy-agent.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -311,7 +311,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for sdsServer
 */}}
 {{- define "sds-server.selectorLabels" -}}
-app.kubernetes.io/name: sds-server
+app.kubernetes.io/name: {{ include "sds-server.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
