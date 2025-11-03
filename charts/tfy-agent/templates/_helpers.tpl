@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "tfy-agent.fullname" -}}
+{{- define "chart.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -27,20 +27,20 @@ If release name contains chart name it will be used as a full name.
 Create a default fully qualified tfy-agent-proxy name
 */}}
 {{- define "tfy-agent-proxy.fullname" -}}
-{{- include "tfy-agent.fullname" . | trunc 57 | trimSuffix "-" }}-proxy
+{{- include "chart.fullname" . | trunc 57 | trimSuffix "-" }}-proxy
 {{- end }}
 
 {{/*
 Create a default fully qualified sds-server name
 */}}
 {{- define "sds-server.fullname" -}}
-{{- include "tfy-agent.fullname" . | trunc 52 | trimSuffix "-" }}-sds-server
+{{- include "chart.fullname" . | trunc 52 | trimSuffix "-" }}-sds-server
 {{- end }}
 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "chart.label" -}}
+{{- define "chart.nameAndVersion" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -49,7 +49,7 @@ Base labels - for use in commonLabels (deployment/service metadata)
 Includes chart metadata, part-of, and global.labels
 */}}
 {{- define "chart.labels" -}}
-helm.sh/chart: {{ include "chart.label" .context }}
+helm.sh/chart: {{ include "chart.nameAndVersion" .context }}
 app.kubernetes.io/managed-by: {{ .context.Release.Service }}
 app.kubernetes.io/part-of: tfy-agent
 {{- if .context.Chart.AppVersion }}
@@ -314,7 +314,7 @@ Create the name of the service account to use for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccountName" -}}
 {{- if .Values.tfyAgent.serviceAccount.create }}
-{{- default (include "tfy-agent.fullname" .) .Values.tfyAgent.serviceAccount.name }}
+{{- default (include "chart.fullname" .) .Values.tfyAgent.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.tfyAgent.serviceAccount.name }}
 {{- end }}
@@ -349,7 +349,7 @@ Create the name of the secret which will contain cluster token
 {{- if .Values.config.clusterTokenSecret }}
 {{- .Values.config.clusterTokenSecret }}
 {{- else }}
-{{- include "tfy-agent.fullname" . | trunc 57 | trimSuffix "-" }}-token
+{{- include "chart.fullname" . | trunc 57 | trimSuffix "-" }}-token
 {{- end }}
 {{- end }}
 
