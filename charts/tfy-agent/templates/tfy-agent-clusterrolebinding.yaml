@@ -3,7 +3,7 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ include "chart.fullname" . }}
+  name: {{ include "tfy-agent.fullname" . }}
   labels:
     {{- include "tfy-agent.commonLabels" . | nindent 4 }}
   annotations:
@@ -14,7 +14,7 @@ subjects:
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: {{ include "chart.fullname" . }}
+  name: {{ include "tfy-agent.fullname" . }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 {{- end }}

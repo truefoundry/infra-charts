@@ -24,6 +24,13 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
+Create a default fully qualified tfy-agent name
+*/}}
+{{- define "tfy-agent.fullname" -}}
+{{- include "chart.fullname" . }}
+{{- end }}
+
+{{/*
 Create a default fully qualified tfy-agent-proxy name
 */}}
 {{- define "tfy-agent-proxy.fullname" -}}
@@ -314,7 +321,7 @@ Create the name of the service account to use for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccountName" -}}
 {{- if .Values.tfyAgent.serviceAccount.create }}
-{{- default (include "chart.fullname" .) .Values.tfyAgent.serviceAccount.name }}
+{{- default (include "tfy-agent.fullname" .) .Values.tfyAgent.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.tfyAgent.serviceAccount.name }}
 {{- end }}
@@ -349,7 +356,7 @@ Create the name of the secret which will contain cluster token
 {{- if .Values.config.clusterTokenSecret }}
 {{- .Values.config.clusterTokenSecret }}
 {{- else }}
-{{- include "chart.fullname" . | trunc 57 | trimSuffix "-" }}-token
+{{- include "tfy-agent.fullname" . | trunc 57 | trimSuffix "-" }}-token
 {{- end }}
 {{- end }}
 
