@@ -31,7 +31,9 @@ spec:
             {{- end }}
           defaultNodeTemplate:
             enableSoci: true
+            {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+            {{- end }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
@@ -39,26 +41,34 @@ spec:
             {{- end }}
           gpuDefaultNodeTemplate:
             enableSoci: true
+            {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+            {{- end }}
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if .Values.aws.karpenter.kmsKeyID }}
           inferentiaDefaultNodeTemplate:
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+          {{- end }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+            {{- if .Values.aws.karpenter.kmsKeyID }}
             nodeclass:
               kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+            {{- end }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if .Values.aws.karpenter.kmsKeyID }}
           controlPlaneNodeTemplate:
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+          {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
