@@ -153,7 +153,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for tfyAgent
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-agent.fullname" . }}
+app.kubernetes.io/name: 'tfy-agent'
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -222,7 +222,8 @@ Priority: global.deploymentAnnotations (lowest) < commonAnnotations < component.
 Selector labels for tfyAgentProxy
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
+app.kubernetes.io/name: tfy-agent-proxy
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 
@@ -311,7 +312,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for sdsServer
 */}}
 {{- define "sds-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "sds-server.fullname" . }}
+app.kubernetes.io/name: sds-server
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -321,9 +322,19 @@ Create the name of the service account to use for tfy-agent
 */}}
 {{- define "tfy-agent.serviceAccountName" -}}
 {{- if .Values.tfyAgent.serviceAccount.create }}
-{{- default (include "tfy-agent.fullname" .) .Values.tfyAgent.serviceAccount.name }}
+{{- if .Values.tfyAgent.serviceAccount.name }}
+{{- .Values.tfyAgent.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.tfyAgent.serviceAccount.name }}
+{{- include "tfy-agent.fullname" . }}
+{{- end }}
+{{- else }}
+{{- if .Values.tfyAgent.serviceAccount.name }}
+{{- .Values.tfyAgent.serviceAccount.name }}
+{{- else if .Values.global.serviceAccount.name }}
+{{- .Values.global.serviceAccount.name }}
+{{- else }}
+{{- "default" }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -332,9 +343,19 @@ Create the name of the service account to use for tfy-agent-proxy
 */}}
 {{- define "tfy-agent-proxy.serviceAccountName" -}}
 {{- if .Values.tfyAgentProxy.serviceAccount.create }}
-{{- default (include "tfy-agent-proxy.fullname" .) .Values.tfyAgentProxy.serviceAccount.name }}
+{{- if .Values.tfyAgentProxy.serviceAccount.name }}
+{{- .Values.tfyAgentProxy.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.tfyAgentProxy.serviceAccount.name }}
+{{- include "tfy-agent-proxy.fullname" . }}
+{{- end }}
+{{- else }}
+{{- if .Values.tfyAgentProxy.serviceAccount.name }}
+{{- .Values.tfyAgentProxy.serviceAccount.name }}
+{{- else if .Values.global.serviceAccount.name }}
+{{- .Values.global.serviceAccount.name }}
+{{- else }}
+{{- "default" }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -343,9 +364,19 @@ Create the name of the service account to use for sds-server
 */}}
 {{- define "sds-server.serviceAccountName" -}}
 {{- if .Values.sdsServer.serviceAccount.create }}
-{{- default (include "sds-server.fullname" .) .Values.sdsServer.serviceAccount.name }}
+{{- if .Values.sdsServer.serviceAccount.name }}
+{{- .Values.sdsServer.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.sdsServer.serviceAccount.name }}
+{{- include "sds-server.fullname" . }}
+{{- end }}
+{{- else }}
+{{- if .Values.sdsServer.serviceAccount.name }}
+{{- .Values.sdsServer.serviceAccount.name }}
+{{- else if .Values.global.serviceAccount.name }}
+{{- .Values.global.serviceAccount.name }}
+{{- else }}
+{{- "default" }}
+{{- end }}
 {{- end }}
 {{- end }}
 
