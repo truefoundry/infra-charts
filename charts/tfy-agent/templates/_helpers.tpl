@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "tfy-agent.name" -}}
+{{- define "chart.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -40,7 +40,7 @@ Create a default fully qualified sds-server name
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "tfy-agent.chart" -}}
+{{- define "chart.label" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -48,8 +48,8 @@ Create chart name and version as used by the chart label.
 Base labels - for use in commonLabels (deployment/service metadata)
 Includes chart metadata, part-of, and global.labels
 */}}
-{{- define "tfy-agent.labels" -}}
-helm.sh/chart: {{ include "tfy-agent.chart" .context }}
+{{- define "chart.labels" -}}
+helm.sh/chart: {{ include "chart.label" .context }}
 app.kubernetes.io/managed-by: {{ .context.Release.Service }}
 app.kubernetes.io/part-of: tfy-agent
 {{- if .context.Chart.AppVersion }}
@@ -66,7 +66,7 @@ For use on tfyAgent deployments/resources (includes chart version)
 Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "tfy-agent.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
+{{- $baseLabels := include "chart.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyAgent.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -146,7 +146,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for tfyAgent
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-agent.name" . }}
+app.kubernetes.io/name: {{ include "chart.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -156,7 +156,7 @@ For use on tfyAgentProxy deployments/resources (includes chart version)
 Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "tfy-agent-proxy.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
+{{- $baseLabels := include "chart.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.labels) $baseLabels .Values.tfyAgentProxy.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
@@ -225,7 +225,7 @@ For use on sdsServer deployments/resources (includes chart version)
 Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "sds-server.commonLabels" -}}
-{{- $baseLabels := include "tfy-agent.labels" (dict "context" .) | fromYaml }}
+{{- $baseLabels := include "chart.labels" (dict "context" .) | fromYaml }}
 {{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.sdsServer.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
