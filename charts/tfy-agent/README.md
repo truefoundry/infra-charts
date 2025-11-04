@@ -85,6 +85,21 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ## Parameters
 
+### Global parameters for tfy-agent
+
+| Name                           | Description                                                                                                                    | Value |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| `global.labels`                | Global labels to add to all resources                                                                                          | `{}`  |
+| `global.annotations`           | Global annotations to add to all resources                                                                                     | `{}`  |
+| `global.podLabels`             | Global labels to add to all pods                                                                                               | `{}`  |
+| `global.podAnnotations`        | Global annotations to add to all pods                                                                                          | `{}`  |
+| `global.deploymentLabels`      | Global labels to add to all deployments                                                                                        | `{}`  |
+| `global.deploymentAnnotations` | Global annotations to add to all deployments                                                                                   | `{}`  |
+| `global.serviceLabels`         | Global labels to add to all services                                                                                           | `{}`  |
+| `global.serviceAnnotations`    | Global annotations to add to all services                                                                                      | `{}`  |
+| `global.serviceAccount.name`   | Global service account name to use as fallback when component-specific service account is not created and no name is specified | `""`  |
+| `global.serviceAccount.labels` | Global labels to add to all service accounts                                                                                   | `{}`  |
+
 ### Configuration parameters
 
 | Name                                     | Description                                                                                                         | Value                                                                            |
@@ -112,8 +127,14 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | Name                                                   | Description                                                                                                           | Value                                      |
 | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `tfyAgent.enabled`                                     | Bool value to deploy tfyAgent                                                                                         | `true`                                     |
-| `tfyAgent.annotations`                                 | Add annotations to tfyAgent pods                                                                                      | `{}`                                       |
-| `tfyAgent.labels`                                      | Add labels to tfyAgent pods                                                                                           | `{}`                                       |
+| `tfyAgent.commonLabels`                                | Common labels for tfyAgent resources                                                                                  | `{}`                                       |
+| `tfyAgent.commonAnnotations`                           | Common annotations for tfyAgent resources                                                                             | `{}`                                       |
+| `tfyAgent.podLabels`                                   | Add labels to tfyAgent pods                                                                                           | `{}`                                       |
+| `tfyAgent.podAnnotations`                              | Add annotations to tfyAgent pods                                                                                      | `{}`                                       |
+| `tfyAgent.deploymentLabels`                            | Deployment-specific labels for tfyAgent                                                                               | `{}`                                       |
+| `tfyAgent.deploymentAnnotations`                       | Deployment-specific annotations for tfyAgent                                                                          | `{}`                                       |
+| `tfyAgent.annotations`                                 | Annotations for tfyAgent pods (DEPRECATED: Use tfyAgent.podAnnotations instead)                                       | `{}`                                       |
+| `tfyAgent.labels`                                      | Labels for tfyAgent pods (DEPRECATED: Use tfyAgent.podLabels instead)                                                 | `{}`                                       |
 | `tfyAgent.extraEnvVars`                                | Additional envrionment variables for tfyAgent                                                                         | `[]`                                       |
 | `tfyAgent.imagePullSecrets`                            | Secrets to pull images for tfyAgent                                                                                   | `[]`                                       |
 | `tfyAgent.service.clusterIP`                           | Cluster IP for tfyAgent service                                                                                       | `""`                                       |
@@ -156,6 +177,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgent.clusterRole.enable`                          | Create cluster role.                                                                                                  | `true`                                     |
 | `tfyAgent.serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                                | `true`                                     |
 | `tfyAgent.serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                              | `{}`                                       |
+| `tfyAgent.serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                                   | `{}`                                       |
 | `tfyAgent.serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template     | `""`                                       |
 | `tfyAgent.serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                       | `true`                                     |
 
@@ -164,8 +186,14 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | Name                                                                | Description                                                                                                                | Value                                      |
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `tfyAgentProxy.enabled`                                             | Bool value to deploy tfyAgentProxy                                                                                         | `true`                                     |
-| `tfyAgentProxy.annotations`                                         | Add annotations to tfyAgentProxy pods                                                                                      | `{}`                                       |
-| `tfyAgentProxy.labels`                                              | Add labels to tfyAgentProxy pods                                                                                           | `{}`                                       |
+| `tfyAgentProxy.commonLabels`                                        | Common labels for tfyAgentProxy resources                                                                                  | `{}`                                       |
+| `tfyAgentProxy.commonAnnotations`                                   | Common annotations for tfyAgentProxy resources                                                                             | `{}`                                       |
+| `tfyAgentProxy.podLabels`                                           | Add labels to tfyAgentProxy pods                                                                                           | `{}`                                       |
+| `tfyAgentProxy.podAnnotations`                                      | Add annotations to tfyAgentProxy pods                                                                                      | `{}`                                       |
+| `tfyAgentProxy.deploymentLabels`                                    | Deployment-specific labels for tfyAgentProxy                                                                               | `{}`                                       |
+| `tfyAgentProxy.deploymentAnnotations`                               | Deployment-specific annotations for tfyAgentProxy                                                                          | `{}`                                       |
+| `tfyAgentProxy.annotations`                                         | Annotations for tfyAgentProxy pods (DEPRECATED: Use tfyAgentProxy.podAnnotations instead)                                  | `{}`                                       |
+| `tfyAgentProxy.labels`                                              | Labels for tfyAgentProxy pods (DEPRECATED: Use tfyAgentProxy.podLabels instead)                                            | `{}`                                       |
 | `tfyAgentProxy.imagePullSecrets`                                    | Secrets to pull images for tfyAgentProxy                                                                                   | `[]`                                       |
 | `tfyAgentProxy.image.repository`                                    | tfyAgentProxy repository                                                                                                   | `tfy.jfrog.io/tfy-images/tfy-agent-proxy`  |
 | `tfyAgentProxy.image.pullPolicy`                                    | Pull policy for tfyAgentProxy                                                                                              | `IfNotPresent`                             |
@@ -184,6 +212,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgentProxy.priorityClassName`                                   | PriorityClass name for the pod.                                                                                            | `system-cluster-critical`                  |
 | `tfyAgentProxy.serviceAccount.create`                               | Bool to enable serviceAccount creation                                                                                     | `true`                                     |
 | `tfyAgentProxy.serviceAccount.annotations`                          | Annotations to add to the serviceAccount                                                                                   | `{}`                                       |
+| `tfyAgentProxy.serviceAccount.labels`                               | Labels to add to the serviceAccount                                                                                        | `{}`                                       |
 | `tfyAgentProxy.serviceAccount.name`                                 | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template          | `""`                                       |
 | `tfyAgentProxy.serviceAccount.automountServiceAccountToken`         | Automount service account token                                                                                            | `true`                                     |
 | `tfyAgentProxy.extraVolumes`                                        | Extra volume for tfyAgentProxy container                                                                                   | `[]`                                       |
@@ -197,16 +226,25 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | Name                                                    | Description                                                                                                       | Value                                      |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `resourceQuota.enabled`                                 | Create the ResourceQuota.                                                                                         | `true`                                     |
-| `resourceQuota.annotations`                             | Annotations to add to the ResourceQuota                                                                           | `{}`                                       |
-| `resourceQuota.labels`                                  | Labels to add to the ResourceQuota                                                                                | `{}`                                       |
+| `resourceQuota.commonLabels`                            | Common labels for ResourceQuota                                                                                   | `{}`                                       |
+| `resourceQuota.commonAnnotations`                       | Common annotations for ResourceQuota                                                                              | `{}`                                       |
+| `resourceQuota.annotations`                             | Annotations for ResourceQuota (DEPRECATED: Use resourceQuota.commonAnnotations instead)                           | `{}`                                       |
+| `resourceQuota.labels`                                  | Labels for ResourceQuota (DEPRECATED: Use resourceQuota.commonLabels instead)                                     | `{}`                                       |
 | `resourceQuota.priorityClasses`                         | PriorityClasses to enable.                                                                                        | `["system-cluster-critical"]`              |
 | `sdsServer.enabled`                                     | Bool value to deploy sdsServer                                                                                    | `true`                                     |
 | `sdsServer.replicas`                                    | Number of replicas of sdsServer                                                                                   | `2`                                        |
-| `sdsServer.annotations`                                 | Add annotations to sdsServer pods                                                                                 | `{}`                                       |
-| `sdsServer.labels`                                      | Add labels to sdsServer pods                                                                                      | `{}`                                       |
+| `sdsServer.commonLabels`                                | Common labels for sdsServer resources                                                                             | `{}`                                       |
+| `sdsServer.commonAnnotations`                           | Common annotations for sdsServer resources                                                                        | `{}`                                       |
+| `sdsServer.podLabels`                                   | Add labels to sdsServer pods                                                                                      | `{}`                                       |
+| `sdsServer.podAnnotations`                              | Add annotations to sdsServer pods                                                                                 | `{}`                                       |
+| `sdsServer.deploymentLabels`                            | Deployment-specific labels for sdsServer                                                                          | `{}`                                       |
+| `sdsServer.deploymentAnnotations`                       | Deployment-specific annotations for sdsServer                                                                     | `{}`                                       |
+| `sdsServer.annotations`                                 | Annotations for sdsServer pods (DEPRECATED: Use sdsServer.podAnnotations instead)                                 | `{}`                                       |
+| `sdsServer.labels`                                      | Labels for sdsServer pods (DEPRECATED: Use sdsServer.podLabels instead)                                           | `{}`                                       |
 | `sdsServer.nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                                       |
 | `sdsServer.serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `true`                                     |
 | `sdsServer.serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                                       |
+| `sdsServer.serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                                       |
 | `sdsServer.serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                                       |
 | `sdsServer.serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                                    |
 | `sdsServer.extraVolumes`                                | Additional volumes for sdsServer                                                                                  | `[]`                                       |

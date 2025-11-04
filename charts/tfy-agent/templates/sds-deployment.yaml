@@ -4,9 +4,9 @@ kind: Deployment
 metadata:
   name: {{ include "sds-server.fullname" . }}
   labels:
-    {{- include "sds-server.labels" . | nindent 4 }}
+    {{- include "sds-server.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "sds-server.annotations" . | nindent 4 }}
+    {{- include "sds-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.sdsServer.replicas}}
   selector:
@@ -15,12 +15,9 @@ spec:
   template:
     metadata:
       annotations:
-        {{- include "sds-server.annotations" . | nindent 8 }}
+        {{- include "sds-server.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "sds-server.selectorLabels" . | nindent 8 }}
-        {{- with .Values.sdsServer.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- include "sds-server.podLabels" . | nindent 8 }}
     spec:
       {{- with .Values.sdsServer.imagePullSecrets }}
       imagePullSecrets:

@@ -5,9 +5,9 @@ kind: ClusterRole
 metadata:
   name: {{ include "tfy-agent.fullname" . }}
   labels:
-    {{- include "tfy-agent.labels" . | nindent 4 }}
+    {{- include "tfy-agent.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-agent.annotations" . | nindent 4 }}
+    {{- include "tfy-agent.commonAnnotations" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["namespaces", "pods", "resourcequotas", "nodes", "events"]
