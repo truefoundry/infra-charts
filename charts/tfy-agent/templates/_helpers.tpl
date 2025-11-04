@@ -153,7 +153,7 @@ Priority: global.serviceAnnotations (lowest) < commonAnnotations (highest)
 Selector labels for tfyAgent
 */}}
 {{- define "tfy-agent.selectorLabels" -}}
-app.kubernetes.io/name: 'tfy-agent'
+app.kubernetes.io/name: {{ include "chart.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -222,8 +222,7 @@ Priority: global.deploymentAnnotations (lowest) < commonAnnotations < component.
 Selector labels for tfyAgentProxy
 */}}
 {{- define "tfy-agent-proxy.selectorLabels" -}}
-app.kubernetes.io/name: tfy-agent-proxy
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/name: {{ include "tfy-agent-proxy.fullname" . }}
 {{- end }}
 
 
