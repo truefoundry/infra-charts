@@ -63,7 +63,8 @@ Common labels - merges global.labels with component-specific labels
   */}}
 {{- define "tfy-otel-collector.serviceLabels" -}}
 {{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
-{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.service.labels }}
+{{- $serviceMonitorLabels := include "tfy-otel-collector.selectorLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels $serviceMonitorLabels .Values.service.labels }}
 {{- toYaml $serviceLabels }}
 {{- end }}
 
