@@ -6,7 +6,6 @@ metadata:
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
   annotations:
-    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
     {{- include "truefoundry-frontend-app.ingress.annotations" . | nindent 4 }}
 spec:
   {{- if .Values.truefoundryFrontendApp.ingress.tls }}

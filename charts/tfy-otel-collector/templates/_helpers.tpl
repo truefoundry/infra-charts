@@ -35,8 +35,9 @@ Expand the name of the chart.
   */}}
 {{- define "tfy-otel-collector.labels" -}}
 helm.sh/chart: {{ include "tfy-otel-collector.chart" . }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+{{ include "tfy-otel-collector.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 
 {{/*
@@ -187,10 +188,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Pod Annotations
-*/}}
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
 {{- define "tfy-otel-collector.podAnnotations" -}}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) .Values.podAnnotations }}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 

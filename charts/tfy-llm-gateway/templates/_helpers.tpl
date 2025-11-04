@@ -35,6 +35,7 @@ Expand the name of the chart.
   */}}
 {{- define "tfy-llm-gateway.labels" -}}
 helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
+{{ include "tfy-llm-gateway.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
@@ -128,8 +129,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   */}}
 {{- define "tfy-llm-gateway.deploymentLabels" -}}
 {{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $commonLabels .Values.deploymentLabels }}
-{{- toYaml $mergedLabels }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
 {{- end }}
 
 {{/*
@@ -232,11 +233,11 @@ Ingress Annotations
 {{- end }}
 
 {{/*
-Pod Annotation Labels
-*/}}
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
 {{- define "tfy-llm-gateway.podAnnotations" -}}
-{{- $defaultAnnotations := dict "prometheus.io/scrape" "true" "prometheus.io/port" "8787" }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) $defaultAnnotations .Values.podAnnotations }}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
