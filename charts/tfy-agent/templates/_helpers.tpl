@@ -164,7 +164,7 @@ Priority: component.commonLabels > global.labels > base labels
 */}}
 {{- define "tfy-agent-proxy.commonLabels" -}}
 {{- $baseLabels := include "chart.labels" (dict "context" .) | fromYaml }}
-{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.labels) $baseLabels .Values.tfyAgentProxy.commonLabels }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyAgentProxy.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end }}
 
