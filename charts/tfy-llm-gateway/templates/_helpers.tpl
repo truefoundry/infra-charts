@@ -218,8 +218,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Ingress Annotations
 */}}
 {{- define "tfy-llm-gateway.ingressAnnotations" -}}
+{{- $baseAnnotations := dict }}
+{{- $_ := set $baseAnnotations "nginx.org/proxy-read-timeout" "3600s" }}
+{{- $_ := set $baseAnnotations "nginx.org/proxy-send-timeout" "3600s" }}
+{{- $_ := set $baseAnnotations "nginx.org/proxy-connect-timeout" "3600s" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-read-timeout" "3600" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-send-timeout" "3600" }}
+{{- $_ := set $baseAnnotations "nginx.ingress.kubernetes.io/proxy-connect-timeout" "3600" }}
 {{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
-{{- $ingressAnnotations := mergeOverwrite $commonAnnotations .Values.ingress.annotations }}
+{{- $ingressAnnotations := mergeOverwrite $baseAnnotations $commonAnnotations .Values.ingress.annotations }}
 {{- toYaml $ingressAnnotations }}
 {{- end }}
 
