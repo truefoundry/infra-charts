@@ -7,6 +7,8 @@ global:
   ## @param global.annotations
   ##
   annotations: {}
+  ## @param global.selectorLabels [object] Selector labels for prometheus objects
+  selectorLabels: {}
 ## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
   # scrapeConfigs.envoy Scrape config for envoy pods
@@ -106,6 +108,8 @@ scrapeConfigs:
           - __meta_kubernetes_pod_label_truefoundry_com_application_id
     ## @param scrapeConfigs.kubernetesPods.metricsRelabelings [array] Metrics relabelings for kubernetes pods
     metricsRelabelings: []
+  # scrapeConfigs.scrapConfigSelector Selector used by prometheus to find scrape configs
+  scrapeConfigSelectorLabels: {}
   ## @param scrapeConfigs.additionalScrapeConfigs [array] Additional scrape configs for prometheus
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
@@ -167,10 +171,12 @@ prometheusRules:
     annotations: {}
     ## @param prometheusRules.envoyPortRules.portList [array] List of common ports
     portList: ["80", "443", "3000", "5000", "5005", "8000", "8008", "8080", "8443", "6000", "9000", "9090", "10000"]
+  ## @param prometheusRules.selectorLabels [object] Selector used by prometheus to find prometheus rules
+  selectorLabels: {}
 ## @section controlPlaneMonitors service monitors for control plane components
 controlPlaneMonitors:
   ## @param controlPlaneMonitors.enabled Enable service monitors for control plane components
-  enabled: false
+  enabled: true
   ## @param controlPlaneMonitors.releaseNamespace Release namespace for the control plane
   releaseNamespace: truefoundry
   ## @param controlPlaneMonitors.tenantName Tenant name for the control plane
@@ -184,7 +190,7 @@ controlPlaneMonitors:
   # controlPlaneMonitors.alerts Alert configuration for control plane
   alerts:
     ## @param controlPlaneMonitors.alerts.enabled Enable alerts for control plane
-    enabled: false
+    enabled: true
     # controlPlaneMonitors.alerts.alertRules Alert rules configuration
     alertRules:
       ## @param controlPlaneMonitors.alerts.alertRules.labels [object] Labels for control plane alert rules
@@ -208,7 +214,7 @@ controlPlaneMonitors:
       ## controlPlaneMonitors.alerts.alertManager.secret Secret for the alert manager
       secret:
         ## @param controlPlaneMonitors.alerts.alertManager.secret.create Create a secret for the alert manager
-        create: false
+        create: true
         ## @param controlPlaneMonitors.alerts.alertManager.secret.name Name of the secret for the alert manager
         name: tfy-control-plane-alert-manager-secret
         ## @param controlPlaneMonitors.alerts.alertManager.secret.data [object] Data for the secret for the alert manager
@@ -476,6 +482,10 @@ controlPlaneMonitors:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
+  ## @param.serviceMonitors.labels [object] Labels for service monitors
+  labels: {}
+  ## @param serviceMonitors.selectorLabels [object] Selector used by prometheus to find service monitors
+  selectorLabels: {}
   # serviceMonitors.alertManager Service monitor for alert manager
   alertManager:
     ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager

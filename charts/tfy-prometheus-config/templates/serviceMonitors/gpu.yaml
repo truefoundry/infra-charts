@@ -4,7 +4,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.gpu.operator.name }}
   labels:
-    {{- include "gpu.labels" . | nindent 4 }}
+    {{- include "gpu.serviceMonitorLabels" . | nindent 4 }}
   annotations:
     {{- include "gpu.annotations" . | nindent 4 }}
 spec:
@@ -24,7 +24,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ .Values.serviceMonitors.gpu.dcgmExporter.name }}
   labels:
-    {{- include "gpu.labels" . | nindent 4 }}
+    {{- include "gpu.serviceMonitorLabels" . | nindent 4 }}
   annotations:
     {{- include "gpu.annotations" . | nindent 4 }}
 spec:
