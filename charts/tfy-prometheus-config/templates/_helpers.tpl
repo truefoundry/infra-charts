@@ -2,7 +2,7 @@
 prometheus selector labels
 */}}
 {{- define "global.selectorLabels" -}}
-{{- $prometheusLabel := dict "release" "global-prometheus" }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
 {{- if .Values.global.selectorLabels }}
 {{- toYaml .Values.global.selectorLabels }}
 {{- else }}
