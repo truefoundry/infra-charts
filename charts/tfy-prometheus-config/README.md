@@ -6,10 +6,11 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### global Global settings for prometheus
 
-| Name                 | Description | Value |
-| -------------------- | ----------- | ----- |
-| `global.labels`      |             | `{}`  |
-| `global.annotations` |             | `{}`  |
+| Name                    | Description                            | Value |
+| ----------------------- | -------------------------------------- | ----- |
+| `global.labels`         |                                        | `{}`  |
+| `global.annotations`    |                                        | `{}`  |
+| `global.selectorLabels` | Selector labels for prometheus objects | `{}`  |
 
 ### scrapeConfigs Scrape configs for prometheus
 
@@ -43,21 +44,22 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### prometheusRules Prometheus rules for prometheus
 
-| Name                                         | Description                          | Value                                    |
-| -------------------------------------------- | ------------------------------------ | ---------------------------------------- |
-| `prometheusRules.containerRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
-| `prometheusRules.containerRules.name`        | Name of the prometheus rules         | `tfy-alertmanager-config-alerting-rules` |
-| `prometheusRules.containerRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.containerRules.annotations` | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.kubecostRules.enabled`      | Enable prometheus rules for kubecost | `true`                                   |
-| `prometheusRules.kubecostRules.name`         | Name of the prometheus rules         | `tfy-alertmanager-config-kubecost-rules` |
-| `prometheusRules.kubecostRules.labels`       | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.kubecostRules.annotations`  | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.envoyPortRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
-| `prometheusRules.envoyPortRules.name`        | Name of the prometheus rules         | `tfy-envoy-port-rules`                   |
-| `prometheusRules.envoyPortRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.envoyPortRules.annotations` | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.envoyPortRules.portList`    | List of common ports                 | `[]`                                     |
+| Name                                         | Description                                          | Value                                    |
+| -------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `prometheusRules.containerRules.enabled`     | Enable prometheus rules for alerts                   | `true`                                   |
+| `prometheusRules.containerRules.name`        | Name of the prometheus rules                         | `tfy-alertmanager-config-alerting-rules` |
+| `prometheusRules.containerRules.labels`      | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.containerRules.annotations` | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.kubecostRules.enabled`      | Enable prometheus rules for kubecost                 | `true`                                   |
+| `prometheusRules.kubecostRules.name`         | Name of the prometheus rules                         | `tfy-alertmanager-config-kubecost-rules` |
+| `prometheusRules.kubecostRules.labels`       | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.kubecostRules.annotations`  | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.envoyPortRules.enabled`     | Enable prometheus rules for alerts                   | `true`                                   |
+| `prometheusRules.envoyPortRules.name`        | Name of the prometheus rules                         | `tfy-envoy-port-rules`                   |
+| `prometheusRules.envoyPortRules.labels`      | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.envoyPortRules.annotations` | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.envoyPortRules.portList`    | List of common ports                                 | `[]`                                     |
+| `prometheusRules.selectorLabels`             | Selector used by prometheus to find prometheus rules | `{}`                                     |
 
 ### controlPlaneMonitors service monitors for control plane components
 
@@ -150,106 +152,108 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### serviceMonitors Service monitors for prometheus
 
-| Name                                                       | Description                                     | Value                                     |
-| ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
-| `serviceMonitors.enabled`                                  | Enable service monitors for prometheus          | `true`                                    |
-| `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `true`                                    |
-| `serviceMonitors.alertManager.name`                        | Name of the service monitor                     | `prometheus-kube-prometheus-alertmanager` |
-| `serviceMonitors.alertManager.labels`                      | Labels for alert manager                        | `{}`                                      |
-| `serviceMonitors.alertManager.annotations`                 | Annotations for alert manager                   | `{}`                                      |
-| `serviceMonitors.alertManager.endpoints`                   | Endpoints for alert manager                     | `[]`                                      |
-| `serviceMonitors.alertManager.serviceSelectorLabels`       | Service selector labels for alert manager       | `{}`                                      |
-| `serviceMonitors.alertManager.namespaceSelector`           | Namespace selector for alert manager            | `{}`                                      |
-| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows            | `false`                                   |
-| `serviceMonitors.workflows.name`                           | Name of the service monitor                     | `argo-workflows`                          |
-| `serviceMonitors.workflows.annotations`                    | Annotations for workflows                       | `{}`                                      |
-| `serviceMonitors.workflows.labels`                         | Labels for workflows                            | `{}`                                      |
-| `serviceMonitors.workflows.jobLabel`                       | Job label for workflows                         | `app.kubernetes.io/instance`              |
-| `serviceMonitors.workflows.endpoints`                      | Endpoints for workflows                         | `[]`                                      |
-| `serviceMonitors.workflows.serviceSelectorLabels`          | Service selector labels for workflows           | `{}`                                      |
-| `serviceMonitors.workflows.namespaceSelector`              | Namespace selector for workflows                | `{}`                                      |
-| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                 | `false`                                   |
-| `serviceMonitors.keda.name`                                | Name of the service monitor                     | `keda`                                    |
-| `serviceMonitors.keda.labels`                              | Labels for keda                                 | `{}`                                      |
-| `serviceMonitors.keda.annotations`                         | Annotations for keda                            | `{}`                                      |
-| `serviceMonitors.keda.jobLabel`                            | Job label for keda                              | `app.kubernetes.io/instance`              |
-| `serviceMonitors.keda.endpoints`                           | Endpoints for keda                              | `[]`                                      |
-| `serviceMonitors.keda.serviceSelectorLabels`               | Service selector labels for keda                | `{}`                                      |
-| `serviceMonitors.keda.namespaceSelector`                   | Namespace selector for keda                     | `{}`                                      |
-| `serviceMonitors.sshServer.enabled`                        | Enable service monitor for ssh server           | `true`                                    |
-| `serviceMonitors.sshServer.name`                           | Name of the service monitor                     | `ssh`                                     |
-| `serviceMonitors.sshServer.labels`                         | Labels for ssh server                           | `{}`                                      |
-| `serviceMonitors.sshServer.jobLabel`                       | Job label for ssh server                        | `truefoundry.com/component-type`          |
-| `serviceMonitors.sshServer.endpoints`                      | Endpoints for ssh server                        | `[]`                                      |
-| `serviceMonitors.sshServer.serviceSelectorLabels`          | Service selector labels for ssh server          | `{}`                                      |
-| `serviceMonitors.sshServer.namespaceSelector`              | Namespace selector for ssh server               | `{}`                                      |
-| `serviceMonitors.gpu.labels`                               | Labels for gpu                                  | `{}`                                      |
-| `serviceMonitors.gpu.annotations`                          | Annotations for gpu                             | `{}`                                      |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
-| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                  | `false`                                   |
-| `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                     | `gpu-operator`                            |
-| `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                               | `app`                                     |
-| `serviceMonitors.gpu.operator.endpoints`                   | Endpoints for gpu                               | `[]`                                      |
-| `serviceMonitors.gpu.operator.serviceSelectorLabels`       | Service selector labels for gpu                 | `{}`                                      |
-| `serviceMonitors.gpu.operator.namespaceSelector`           | Namespace selector for gpu                      | `{}`                                      |
-| `serviceMonitors.gpu.dcgmExporter.enabled`                 | Enable service monitor for dcgm exporter        | `true`                                    |
-| `serviceMonitors.gpu.dcgmExporter.name`                    | Name of the service monitor                     | `nvidia-dcgm-exporter`                    |
-| `serviceMonitors.gpu.dcgmExporter.jobLabel`                | Job label for dcgm exporter                     | `app`                                     |
-| `serviceMonitors.gpu.dcgmExporter.endpoints`               | Endpoints for dcgm exporter                     | `[]`                                      |
-| `serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels`   | Service selector labels for dcgm exporter       | `{}`                                      |
-| `serviceMonitors.gpu.dcgmExporter.namespaceSelector`       | Namespace selector for dcgm exporter            | `{}`                                      |
-| `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter            | `false`                                   |
-| `serviceMonitors.karpenter.name`                           | Name of the service monitor                     | `karpenter`                               |
-| `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                         | `kube-system`                             |
-| `serviceMonitors.karpenter.labels`                         | Labels for karpenter                            | `{}`                                      |
-| `serviceMonitors.karpenter.annotations`                    | Annotations for karpenter                       | `{}`                                      |
-| `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                | `{}`                                      |
-| `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                         | `[]`                                      |
-| `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter           | `{}`                                      |
-| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost             | `false`                                   |
-| `serviceMonitors.kubecost.name`                            | Name of the service monitor                     | `kubecost`                                |
-| `serviceMonitors.kubecost.labels`                          | Labels for kubecost                             | `{}`                                      |
-| `serviceMonitors.kubecost.annotations`                     | Annotations for kubecost                        | `{}`                                      |
-| `serviceMonitors.kubecost.jobLabel`                        | Job label for kubecost                          | `app.kubernetes.io/instance`              |
-| `serviceMonitors.kubecost.endpoints`                       | Endpoints for kubecost                          | `[]`                                      |
-| `serviceMonitors.kubecost.serviceSelectorLabels`           | Service selector labels for kubecost            | `{}`                                      |
-| `serviceMonitors.kubecost.namespaceSelector`               | Namespace selector for kubecost                 | `{}`                                      |
-| `serviceMonitors.kubelet.enabled`                          | Enable service monitor for kubelet              | `true`                                    |
-| `serviceMonitors.kubelet.name`                             | Name of the service monitor                     | `prometheus-kube-prometheus-kubelet`      |
-| `serviceMonitors.kubelet.labels`                           | Labels for kubelet                              | `{}`                                      |
-| `serviceMonitors.kubelet.annotations`                      | Annotations for kubelet                         | `{}`                                      |
-| `serviceMonitors.kubelet.jobLabel`                         | Job label for kubelet                           | `k8s-app`                                 |
-| `serviceMonitors.kubelet.endpoints`                        | Endpoints for kubelet                           | `[]`                                      |
-| `serviceMonitors.kubelet.serviceSelectorLabels`            | Service selector labels for kubelet             | `{}`                                      |
-| `serviceMonitors.kubelet.namespaceSelector`                | Namespace selector for kubelet                  | `{}`                                      |
-| `serviceMonitors.nodeExporter.enabled`                     | Enable service monitor for node exporter        | `true`                                    |
-| `serviceMonitors.nodeExporter.name`                        | Name of the service monitor                     | `prometheus-prometheus-node-exporter`     |
-| `serviceMonitors.nodeExporter.labels`                      | Labels for node exporter                        | `{}`                                      |
-| `serviceMonitors.nodeExporter.annotations`                 | Annotations for node exporter                   | `{}`                                      |
-| `serviceMonitors.nodeExporter.jobLabel`                    | Job label for node exporter                     | `jobLabel`                                |
-| `serviceMonitors.nodeExporter.endpoints`                   | Endpoints for node exporter                     | `[]`                                      |
-| `serviceMonitors.nodeExporter.serviceSelectorLabels`       | Service selector labels for node exporter       | `{}`                                      |
-| `serviceMonitors.nodeExporter.namespaceSelector`           | Namespace selector for node exporter            | `{}`                                      |
-| `serviceMonitors.kubeStateMetrics.enabled`                 | Enable service monitor for kube state metrics   | `true`                                    |
-| `serviceMonitors.kubeStateMetrics.name`                    | Name of the service monitor                     | `prometheus-kube-state-metrics`           |
-| `serviceMonitors.kubeStateMetrics.labels`                  | Labels for kube state metrics                   | `{}`                                      |
-| `serviceMonitors.kubeStateMetrics.annotations`             | Annotations for kube state metrics              | `{}`                                      |
-| `serviceMonitors.kubeStateMetrics.jobLabel`                | Job label for kube state metrics                | `app.kubernetes.io/name`                  |
-| `serviceMonitors.kubeStateMetrics.endpoints`               | Endpoints for kube state metrics                | `[]`                                      |
-| `serviceMonitors.kubeStateMetrics.serviceSelectorLabels`   | Service selector labels for kube state metrics  | `{}`                                      |
-| `serviceMonitors.prometheus.enabled`                       | Enable service monitor for prometheus           | `true`                                    |
-| `serviceMonitors.prometheus.name`                          | Name of the service monitor                     | `prometheus`                              |
-| `serviceMonitors.prometheus.labels`                        | Labels for prometheus                           | `{}`                                      |
-| `serviceMonitors.prometheus.annotations`                   | Annotations for prometheus                      | `{}`                                      |
-| `serviceMonitors.prometheus.jobLabel`                      | Job label for prometheus                        | `app.kubernetes.io/instance`              |
-| `serviceMonitors.prometheus.endpoints`                     | Endpoints for prometheus                        | `[]`                                      |
-| `serviceMonitors.prometheus.serviceSelectorLabels`         | Service selector labels for prometheus          | `{}`                                      |
-| `serviceMonitors.prometheus.namespaceSelector`             | Namespace selector for prometheus               | `{}`                                      |
-| `serviceMonitors.prometheusOperator.enabled`               | Enable service monitor for prometheus operator  | `true`                                    |
-| `serviceMonitors.prometheusOperator.name`                  | Name of the service monitor                     | `prometheus-kube-prometheus-admission`    |
-| `serviceMonitors.prometheusOperator.labels`                | Labels for prometheus operator                  | `{}`                                      |
-| `serviceMonitors.prometheusOperator.annotations`           | Annotations for prometheus operator             | `{}`                                      |
-| `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
-| `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
-| `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
+| Name                                                       | Description                                          | Value                                     |
+| ---------------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| `serviceMonitors.enabled`                                  | Enable service monitors for prometheus               | `true`                                    |
+| `serviceMonitors.labels`                                   | Labels for service monitors                          | `{}`                                      |
+| `serviceMonitors.selectorLabels`                           | Selector used by prometheus to find service monitors | `{}`                                      |
+| `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager             | `true`                                    |
+| `serviceMonitors.alertManager.name`                        | Name of the service monitor                          | `prometheus-kube-prometheus-alertmanager` |
+| `serviceMonitors.alertManager.labels`                      | Labels for alert manager                             | `{}`                                      |
+| `serviceMonitors.alertManager.annotations`                 | Annotations for alert manager                        | `{}`                                      |
+| `serviceMonitors.alertManager.endpoints`                   | Endpoints for alert manager                          | `[]`                                      |
+| `serviceMonitors.alertManager.serviceSelectorLabels`       | Service selector labels for alert manager            | `{}`                                      |
+| `serviceMonitors.alertManager.namespaceSelector`           | Namespace selector for alert manager                 | `{}`                                      |
+| `serviceMonitors.workflows.enabled`                        | Enable service monitor for workflows                 | `false`                                   |
+| `serviceMonitors.workflows.name`                           | Name of the service monitor                          | `argo-workflows`                          |
+| `serviceMonitors.workflows.annotations`                    | Annotations for workflows                            | `{}`                                      |
+| `serviceMonitors.workflows.labels`                         | Labels for workflows                                 | `{}`                                      |
+| `serviceMonitors.workflows.jobLabel`                       | Job label for workflows                              | `app.kubernetes.io/instance`              |
+| `serviceMonitors.workflows.endpoints`                      | Endpoints for workflows                              | `[]`                                      |
+| `serviceMonitors.workflows.serviceSelectorLabels`          | Service selector labels for workflows                | `{}`                                      |
+| `serviceMonitors.workflows.namespaceSelector`              | Namespace selector for workflows                     | `{}`                                      |
+| `serviceMonitors.keda.enabled`                             | Enable service monitor for keda                      | `false`                                   |
+| `serviceMonitors.keda.name`                                | Name of the service monitor                          | `keda`                                    |
+| `serviceMonitors.keda.labels`                              | Labels for keda                                      | `{}`                                      |
+| `serviceMonitors.keda.annotations`                         | Annotations for keda                                 | `{}`                                      |
+| `serviceMonitors.keda.jobLabel`                            | Job label for keda                                   | `app.kubernetes.io/instance`              |
+| `serviceMonitors.keda.endpoints`                           | Endpoints for keda                                   | `[]`                                      |
+| `serviceMonitors.keda.serviceSelectorLabels`               | Service selector labels for keda                     | `{}`                                      |
+| `serviceMonitors.keda.namespaceSelector`                   | Namespace selector for keda                          | `{}`                                      |
+| `serviceMonitors.sshServer.enabled`                        | Enable service monitor for ssh server                | `true`                                    |
+| `serviceMonitors.sshServer.name`                           | Name of the service monitor                          | `ssh`                                     |
+| `serviceMonitors.sshServer.labels`                         | Labels for ssh server                                | `{}`                                      |
+| `serviceMonitors.sshServer.jobLabel`                       | Job label for ssh server                             | `truefoundry.com/component-type`          |
+| `serviceMonitors.sshServer.endpoints`                      | Endpoints for ssh server                             | `[]`                                      |
+| `serviceMonitors.sshServer.serviceSelectorLabels`          | Service selector labels for ssh server               | `{}`                                      |
+| `serviceMonitors.sshServer.namespaceSelector`              | Namespace selector for ssh server                    | `{}`                                      |
+| `serviceMonitors.gpu.labels`                               | Labels for gpu                                       | `{}`                                      |
+| `serviceMonitors.gpu.annotations`                          | Annotations for gpu                                  | `{}`                                      |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                       | `false`                                   |
+| `serviceMonitors.gpu.operator.enabled`                     | Enable service monitor for gpu                       | `false`                                   |
+| `serviceMonitors.gpu.operator.name`                        | Name of the service monitor                          | `gpu-operator`                            |
+| `serviceMonitors.gpu.operator.jobLabel`                    | Job label for gpu                                    | `app`                                     |
+| `serviceMonitors.gpu.operator.endpoints`                   | Endpoints for gpu                                    | `[]`                                      |
+| `serviceMonitors.gpu.operator.serviceSelectorLabels`       | Service selector labels for gpu                      | `{}`                                      |
+| `serviceMonitors.gpu.operator.namespaceSelector`           | Namespace selector for gpu                           | `{}`                                      |
+| `serviceMonitors.gpu.dcgmExporter.enabled`                 | Enable service monitor for dcgm exporter             | `true`                                    |
+| `serviceMonitors.gpu.dcgmExporter.name`                    | Name of the service monitor                          | `nvidia-dcgm-exporter`                    |
+| `serviceMonitors.gpu.dcgmExporter.jobLabel`                | Job label for dcgm exporter                          | `app`                                     |
+| `serviceMonitors.gpu.dcgmExporter.endpoints`               | Endpoints for dcgm exporter                          | `[]`                                      |
+| `serviceMonitors.gpu.dcgmExporter.serviceSelectorLabels`   | Service selector labels for dcgm exporter            | `{}`                                      |
+| `serviceMonitors.gpu.dcgmExporter.namespaceSelector`       | Namespace selector for dcgm exporter                 | `{}`                                      |
+| `serviceMonitors.karpenter.enabled`                        | Enable service monitor for karpenter                 | `false`                                   |
+| `serviceMonitors.karpenter.name`                           | Name of the service monitor                          | `karpenter`                               |
+| `serviceMonitors.karpenter.namespace`                      | Namespace for karpenter                              | `kube-system`                             |
+| `serviceMonitors.karpenter.labels`                         | Labels for karpenter                                 | `{}`                                      |
+| `serviceMonitors.karpenter.annotations`                    | Annotations for karpenter                            | `{}`                                      |
+| `serviceMonitors.karpenter.namespaceSelector`              | Namespace selector for karpenter                     | `{}`                                      |
+| `serviceMonitors.karpenter.endpoints`                      | Endpoints for karpenter                              | `[]`                                      |
+| `serviceMonitors.karpenter.serviceSelectorLabels`          | Service selector labels for karpenter                | `{}`                                      |
+| `serviceMonitors.kubecost.enabled`                         | Enable service monitor for kubecost                  | `false`                                   |
+| `serviceMonitors.kubecost.name`                            | Name of the service monitor                          | `kubecost`                                |
+| `serviceMonitors.kubecost.labels`                          | Labels for kubecost                                  | `{}`                                      |
+| `serviceMonitors.kubecost.annotations`                     | Annotations for kubecost                             | `{}`                                      |
+| `serviceMonitors.kubecost.jobLabel`                        | Job label for kubecost                               | `app.kubernetes.io/instance`              |
+| `serviceMonitors.kubecost.endpoints`                       | Endpoints for kubecost                               | `[]`                                      |
+| `serviceMonitors.kubecost.serviceSelectorLabels`           | Service selector labels for kubecost                 | `{}`                                      |
+| `serviceMonitors.kubecost.namespaceSelector`               | Namespace selector for kubecost                      | `{}`                                      |
+| `serviceMonitors.kubelet.enabled`                          | Enable service monitor for kubelet                   | `true`                                    |
+| `serviceMonitors.kubelet.name`                             | Name of the service monitor                          | `prometheus-kube-prometheus-kubelet`      |
+| `serviceMonitors.kubelet.labels`                           | Labels for kubelet                                   | `{}`                                      |
+| `serviceMonitors.kubelet.annotations`                      | Annotations for kubelet                              | `{}`                                      |
+| `serviceMonitors.kubelet.jobLabel`                         | Job label for kubelet                                | `k8s-app`                                 |
+| `serviceMonitors.kubelet.endpoints`                        | Endpoints for kubelet                                | `[]`                                      |
+| `serviceMonitors.kubelet.serviceSelectorLabels`            | Service selector labels for kubelet                  | `{}`                                      |
+| `serviceMonitors.kubelet.namespaceSelector`                | Namespace selector for kubelet                       | `{}`                                      |
+| `serviceMonitors.nodeExporter.enabled`                     | Enable service monitor for node exporter             | `true`                                    |
+| `serviceMonitors.nodeExporter.name`                        | Name of the service monitor                          | `prometheus-prometheus-node-exporter`     |
+| `serviceMonitors.nodeExporter.labels`                      | Labels for node exporter                             | `{}`                                      |
+| `serviceMonitors.nodeExporter.annotations`                 | Annotations for node exporter                        | `{}`                                      |
+| `serviceMonitors.nodeExporter.jobLabel`                    | Job label for node exporter                          | `jobLabel`                                |
+| `serviceMonitors.nodeExporter.endpoints`                   | Endpoints for node exporter                          | `[]`                                      |
+| `serviceMonitors.nodeExporter.serviceSelectorLabels`       | Service selector labels for node exporter            | `{}`                                      |
+| `serviceMonitors.nodeExporter.namespaceSelector`           | Namespace selector for node exporter                 | `{}`                                      |
+| `serviceMonitors.kubeStateMetrics.enabled`                 | Enable service monitor for kube state metrics        | `true`                                    |
+| `serviceMonitors.kubeStateMetrics.name`                    | Name of the service monitor                          | `prometheus-kube-state-metrics`           |
+| `serviceMonitors.kubeStateMetrics.labels`                  | Labels for kube state metrics                        | `{}`                                      |
+| `serviceMonitors.kubeStateMetrics.annotations`             | Annotations for kube state metrics                   | `{}`                                      |
+| `serviceMonitors.kubeStateMetrics.jobLabel`                | Job label for kube state metrics                     | `app.kubernetes.io/name`                  |
+| `serviceMonitors.kubeStateMetrics.endpoints`               | Endpoints for kube state metrics                     | `[]`                                      |
+| `serviceMonitors.kubeStateMetrics.serviceSelectorLabels`   | Service selector labels for kube state metrics       | `{}`                                      |
+| `serviceMonitors.prometheus.enabled`                       | Enable service monitor for prometheus                | `true`                                    |
+| `serviceMonitors.prometheus.name`                          | Name of the service monitor                          | `prometheus`                              |
+| `serviceMonitors.prometheus.labels`                        | Labels for prometheus                                | `{}`                                      |
+| `serviceMonitors.prometheus.annotations`                   | Annotations for prometheus                           | `{}`                                      |
+| `serviceMonitors.prometheus.jobLabel`                      | Job label for prometheus                             | `app.kubernetes.io/instance`              |
+| `serviceMonitors.prometheus.endpoints`                     | Endpoints for prometheus                             | `[]`                                      |
+| `serviceMonitors.prometheus.serviceSelectorLabels`         | Service selector labels for prometheus               | `{}`                                      |
+| `serviceMonitors.prometheus.namespaceSelector`             | Namespace selector for prometheus                    | `{}`                                      |
+| `serviceMonitors.prometheusOperator.enabled`               | Enable service monitor for prometheus operator       | `true`                                    |
+| `serviceMonitors.prometheusOperator.name`                  | Name of the service monitor                          | `prometheus-kube-prometheus-admission`    |
+| `serviceMonitors.prometheusOperator.labels`                | Labels for prometheus operator                       | `{}`                                      |
+| `serviceMonitors.prometheusOperator.annotations`           | Annotations for prometheus operator                  | `{}`                                      |
+| `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator                    | `[]`                                      |
+| `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator      | `{}`                                      |
+| `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator           | `{}`                                      |
+| `extraObjects`                                             | Extra objects for prometheus                         | `[]`                                      |
