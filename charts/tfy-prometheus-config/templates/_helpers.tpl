@@ -1,5 +1,5 @@
 {{/*}}
-prometheus selector labels
+Global Labels
 */}}
 {{- define "global.labels" -}}
 {{- $prometheusLabel := dict "release" "prometheus" }}
