@@ -131,13 +131,14 @@ show_usage() {
     echo "  --helm-values, -hvf      Helm chart values file (optional)"
     echo "  --source-user, -su       Source registry username (optional)"
     echo "  --source-pass, -sp       Source registry password (optional)"
-    echo "  --dest-registry, -d      Destination registry URL with optional path prefix (required)"
+    echo "  --dest-registry, -d      Destination registry URL with optional path prefix (required unless --list-only)"
     echo "                           Examples: my-registry.com or my-registry.com/myapp"
-    echo "  --dest-user, -du         Destination registry username (required)"
-    echo "  --dest-pass, -dp         Destination registry password (required)"
+    echo "  --dest-user, -du         Destination registry username (required unless --list-only)"
+    echo "  --dest-pass, -dp         Destination registry password (required unless --list-only)"
     echo "  --ecr-tags, -et          Tags for ECR repositories in format Key1=Value1,Key2=Value2 (optional, AWS ECR only)"
     echo "  --dry-run                Preview mode - shows what would be done without performing operations"
     echo "  --force-copy             Skip existence check and force copy all images"
+    echo "  --list-only              Only list images from helm chart without copying (no destination registry required)"
     echo "  --help, -h               Show this help message"
     echo ""
     echo "Examples:"
@@ -146,6 +147,9 @@ show_usage() {
     echo ""
     echo "  # Preview mode - shows what would be done"
     echo "  $0 -hc truefoundry -hv 0.89.4 -d my-registry.com -du myuser -dp mypass --dry-run"
+    echo ""
+    echo "  # List images only"
+    echo "  $0 -hc truefoundry -hv 0.89.4 --list-only"
     echo ""
     echo "  # Using ECR with prefix in registry path"
     echo "  $0 -hc truefoundry -hv 0.89.4 -d 123456789012.dkr.ecr.us-west-2.amazonaws.com/myapp -du AWS -dp mypass"
@@ -448,6 +452,7 @@ destination_registry_password=""
 ecr_tags=""
 run_mode=true
 force_copy=false
+list_only=false
 
 # Track if defaults are being used
 using_default_helm_repo=true
@@ -503,6 +508,10 @@ while [[ $# -gt 0 ]]; do
             force_copy=true
             shift
             ;;
+        --list-only)
+            list_only=true
+            shift
+            ;;
         --help|-h)
             show_usage
             exit 0
@@ -515,15 +524,16 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Cache ECR check result to avoid repeated function calls
-is_destination_ecr=$(is_aws_ecr "$destination_registry" && echo "true" || echo "false")
-
 # Set up signal handlers for graceful exit
 trap cleanup SIGINT SIGTERM
 
 echo ""
 echo "========================================"
-echo "Clone Images to Your Registry"
+if [ "$list_only" = true ]; then
+    echo "List Images from Helm Chart"
+else
+    echo "Clone Images to Your Registry"
+fi
 echo "========================================"
 echo ""
 echo "Configuration:"
@@ -537,41 +547,49 @@ echo "  Helm Version: $helm_version"
 if [ -n "$helm_values" ]; then
     echo "  Helm Values File: $helm_values"
 fi
-echo "  Destination Registry: $destination_registry"
-if [ -n "$ecr_tags" ]; then
-    echo "  ECR Tags: $ecr_tags"
-fi
-if [ -n "$source_registry_username" ]; then
-    echo "  Source Registry: Authenticated"
+if [ "$list_only" = true ]; then
+    echo "  Mode: LIST-ONLY (no copying will be performed)"
 else
-    echo "  Source Registry: Public (no credentials)"
-fi
-if [ "$run_mode" = false ]; then
-    echo "  Mode: DRY-RUN (no operations will be performed)"
-else
-    echo "  Mode: LIVE (operations will be performed)"
-fi
-if [ "$force_copy" = true ]; then
-    echo "  Force Copy: Enabled (skipping existence checks)"
+    echo "  Destination Registry: $destination_registry"
+    if [ -n "$ecr_tags" ]; then
+        echo "  ECR Tags: $ecr_tags"
+    fi
+    if [ -n "$source_registry_username" ]; then
+        echo "  Source Registry: Authenticated"
+    else
+        echo "  Source Registry: Public (no credentials)"
+    fi
+    if [ "$run_mode" = false ]; then
+        echo "  Mode: DRY-RUN (no operations will be performed)"
+    else
+        echo "  Mode: LIVE (operations will be performed)"
+    fi
+    if [ "$force_copy" = true ]; then
+        echo "  Force Copy: Enabled (skipping existence checks)"
+    fi
 fi
 echo ""
-echo "Process Steps:"
-echo "  1. Verify Helm repository is added"
-echo "  2. Extract default registry from helm chart"
-echo "  3. Render helm chart with helm template"
-echo "  4. Extract image references from rendered manifests"
-echo "  5. Filter images to only include TrueFoundry registry images"
-echo "  6. Create ECR repositories if needed (AWS ECR only)"
-echo "  7. Copy images to destination registry"
+if [ "$list_only" = true ]; then
+    echo "Process Steps:"
+    echo "  1. Verify Helm repository is added"
+    echo "  2. Extract default registry from helm chart"
+    echo "  3. Render helm chart with helm template"
+    echo "  4. Extract image references from rendered manifests"
+    echo "  5. Filter images to only include TrueFoundry registry images"
+    echo "  6. Output image list"
+else
+    echo "Process Steps:"
+    echo "  1. Verify Helm repository is added"
+    echo "  2. Extract default registry from helm chart"
+    echo "  3. Render helm chart with helm template"
+    echo "  4. Extract image references from rendered manifests"
+    echo "  5. Filter images to only include TrueFoundry registry images"
+    echo "  6. Create ECR repositories if needed (AWS ECR only)"
+    echo "  7. Copy images to destination registry"
+fi
 echo ""
 
 # Validate required arguments
-if [ -z "$destination_registry" ]; then
-    echo "ERROR: Missing required argument: --dest-registry"
-    show_usage
-    exit 1
-fi
-
 if [ -z "$helm_chart" ]; then
     echo "ERROR: Missing required argument: --helm-chart"
     show_usage
@@ -582,6 +600,18 @@ if [ -z "$helm_version" ]; then
     echo "ERROR: Missing required argument: --helm-version"
     show_usage
     exit 1
+fi
+
+# Destination registry only required if not in list-only mode
+if [ "$list_only" = false ]; then
+    if [ -z "$destination_registry" ]; then
+        echo "ERROR: Missing required argument: --dest-registry (or use --list-only to skip copying)"
+        show_usage
+        exit 1
+    fi
+    
+    # Cache ECR check result to avoid repeated function calls
+    is_destination_ecr=$(is_aws_ecr "$destination_registry" && echo "true" || echo "false")
 fi
 
 # Extract images from helm chart
@@ -599,6 +629,21 @@ fi
 input_file="$temp_images_file"
 echo ""
 echo "Extracted images to temporary file: $input_file"
+
+# If list-only mode, output the images and exit
+if [ "$list_only" = true ]; then
+    echo ""
+    echo "========================================"
+    echo "Image List"
+    echo "========================================"
+    
+    images=$(cat "$input_file" | grep -v '^#' | grep -v '^$' | sort -u)
+    echo "$images"
+    
+    # Clean up temporary file
+    rm -f "$temp_images_file"
+    exit 0
+fi
 
 # check if skopeo is installed
 if ! command -v skopeo &> /dev/null; then
