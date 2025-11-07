@@ -536,6 +536,13 @@ else
 fi
 echo "========================================"
 echo ""
+# Warning if no values file is provided
+if [ -z "$helm_values" ]; then
+    echo "⚠ WARNING: No values file provided (--helm-values)"
+    echo "  Using chart default values, which may not include all required images."
+    echo "  To extract all images for your specific configuration, provide a values file with --helm-values"
+    echo ""
+fi
 echo "Configuration:"
 if [ "$using_default_helm_repo" = true ]; then
     echo "  Helm Repository: $helm_repo (using default)"
@@ -546,6 +553,8 @@ echo "  Helm Chart: $helm_chart"
 echo "  Helm Version: $helm_version"
 if [ -n "$helm_values" ]; then
     echo "  Helm Values File: $helm_values"
+else
+    echo "  Helm Values File: (none - using chart defaults)"
 fi
 if [ "$list_only" = true ]; then
     echo "  Mode: LIST-ONLY (no copying will be performed)"
@@ -614,11 +623,6 @@ if [ "$list_only" = false ]; then
     is_destination_ecr=$(is_aws_ecr "$destination_registry" && echo "true" || echo "false")
 fi
 
-# Extract images from helm chart
-echo ""
-echo "========================================"
-echo "Extracting images from helm chart..."
-echo "========================================"
 temp_images_file="temp_${helm_chart}-images-${helm_version}"
 
 if ! extract_images_from_helm_chart "$helm_repo" "$helm_chart" "$helm_version" "$helm_values" "$temp_images_file"; then
