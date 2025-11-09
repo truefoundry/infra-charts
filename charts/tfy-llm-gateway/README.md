@@ -77,6 +77,9 @@ LLM-Gateway Helm Chart
 | `istio.virtualservice.labels`                 | Virtual service labels                                                          | `{}`                                 |
 | `istio.virtualservice.gateways`               | Virtual service gateways                                                        | `[]`                                 |
 | `istio.virtualservice.hosts`                  | Virtual service hosts                                                           | `[]`                                 |
+| `istio.virtualservice.retries.enabled`        | Enable retries                                                                  | `false`                              |
+| `istio.virtualservice.retries.attempts`       | Retries attempts                                                                | `3`                                  |
+| `istio.virtualservice.retries.retryOn`        | Retries retry on                                                                | `gateway-error`                      |
 | `service.type`                                | Service type                                                                    | `ClusterIP`                          |
 | `service.port`                                | Service port                                                                    | `8787`                               |
 | `service.annotations`                         | Service annotations                                                             | `{}`                                 |
