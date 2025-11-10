@@ -370,6 +370,8 @@ Node Selector for tfy-llm-gateway deployment
 {{- toYaml .Values.imagePullSecrets }}
 {{- else if .Values.global.imagePullSecrets -}}
 {{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
 {{- else -}}
 []
 {{- end }}
