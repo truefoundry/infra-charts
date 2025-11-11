@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.98.0
+  controlPlaneChartVersion: 0.98.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -294,6 +294,10 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.serviceAccount.automountServiceAccountToken Automount service account token for the bootstrap container
   serviceAccount:
     automountServiceAccountToken: true
+    ## @param truefoundryBootstrap.serviceAccount.name Name of the bootstrap service account (defaults to "truefoundry-bootstrap-job-sa")
+    name: "truefoundry-bootstrap-job-sa"
+    ## @param truefoundryBootstrap.serviceAccount.create Bool to create a service account for the bootstrap container
+    create: true
     ## @param truefoundryBootstrap.serviceAccount.labels [object] Labels for the bootstrap service account
     labels: {}
     ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
@@ -494,12 +498,16 @@ truefoundryFrontendApp:
   proxyServerHost: "{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local"
   ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
   serviceAccount:
+    ## @param truefoundryFrontendApp.serviceAccount.create Bool to create a service account for the frontend app
+    create: true
+    ## @param truefoundryFrontendApp.serviceAccount.name Name of the frontend app service account
+    name: "truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.serviceAccount.annotations [object] Annotations for the frontend app service account
     annotations: {}
     ## @param truefoundryFrontendApp.serviceAccount.labels [object] Labels for the frontend app service account
     labels: {}
     ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Automount service account token for the frontend app
-    automountServiceAccountToken: true
+    automountServiceAccountToken: false
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -1222,6 +1230,10 @@ tfyK8sController:
     labels: {}
     ## tfyK8sController.serviceAccount Service account settings for the tfyK8sController
   serviceAccount:
+    ## @param tfyK8sController.serviceAccount.create Bool to create a service account for the tfyK8sController
+    create: true
+    ## @param tfyK8sController.serviceAccount.name Name of the tfyK8sController service account
+    name: "tfy-k8s-controller"
     ## @param tfyK8sController.serviceAccount.annotations [object] Annotations for the tfyK8sController service account
     annotations: {}
     ## @param tfyK8sController.serviceAccount.labels [object] Labels for the tfyK8sController service account
@@ -1380,6 +1392,10 @@ sfyManifestService:
     labels: {}
   ## sfyManifestService.serviceAccount Service account settings for the sfy manifest service
   serviceAccount:
+    ## @param sfyManifestService.serviceAccount.create Bool to create a service account for the sfy manifest service
+    create: true
+    ## @param sfyManifestService.serviceAccount.name Name of the sfy manifest service service account
+    name: "sfy-manifest-service"
     ## @param sfyManifestService.serviceAccount.annotations [object] Annotations for the sfy manifest service service account
     annotations: {}
     ## @param sfyManifestService.serviceAccount.labels [object] Labels for the sfy manifest service service account
@@ -1719,6 +1735,14 @@ tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: true
   serviceAccount:
+    ## @param tfy-buildkitd-service.serviceAccount.create Bool to create a service account for the tfy-buildkitd service
+    create: true
+    ## @param tfy-buildkitd-service.serviceAccount.name Name of the tfy-buildkitd service service account
+    name: "tfy-buildkitd-service"
+    ## @param tfy-buildkitd-service.serviceAccount.annotations [object] Annotations for the tfy-buildkitd service service account
+    annotations: {}
+    ## @param tfy-buildkitd-service.serviceAccount.labels [object] Labels for the tfy-buildkitd service service account
+    labels: {}
     ## @param tfy-buildkitd-service.serviceAccount.automountServiceAccountToken Automount service account token for the tfy-buildkitd service
     automountServiceAccountToken: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
@@ -1905,6 +1929,10 @@ tfyController:
     labels: {}
   ## tfyController.serviceAccount Service account settings for the tfyController
   serviceAccount:
+    ## @param tfyController.serviceAccount.create Bool to create a service account for the tfyController
+    create: true
+    ## @param tfyController.serviceAccount.name Name of the tfyController service account
+    name: "tfy-controller"
     ## @param tfyController.serviceAccount.annotations [object] Annotations for the tfyController service account
     annotations: {}
     ## @param tfyController.serviceAccount.labels [object] Labels for the tfyController service account
@@ -2418,14 +2446,14 @@ deltaFusionIngestor:
   serviceAccount:
     ## @param deltaFusionIngestor.serviceAccount.create Bool to create a service account
     create: false
+    ## @param deltaFusionIngestor.serviceAccount.name Name of the deltaFusionIngestor service account
+    name: ""
     ## @param deltaFusionIngestor.serviceAccount.labels [object] Service account labels
     labels: {}
     ## @param deltaFusionIngestor.serviceAccount.annotations [object] Service account annotations
     annotations: {}
-    ## @param deltaFusionIngestor.serviceAccount.name Service account name
-    name: ""
-    ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
-    automountServiceAccountToken: false
+    ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount service account token for the deltaFusionIngestor service account
+    automountServiceAccountToken: true
   ## @param deltaFusionIngestor.resourceTierOverride Resource tier override for the deltaFusionIngestor
   resourceTierOverride: ""
   ## @skip deltaFusionIngestor.resources Resource requests and limits
@@ -2833,6 +2861,8 @@ tfyProxy:
     create: false
     ## @param tfyProxy.serviceAccount.annotations Annotations for the tfyProxy service account
     annotations: {}
+    ## @param tfyProxy.serviceAccount.labels [object] Labels for the tfyProxy service account
+    labels: {}
     ## @param tfyProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyProxy service account
     automountServiceAccountToken: true
   ## @param tfyProxy.extraVolumes Extra volumes for the tfyProxy

@@ -9,7 +9,7 @@ metadata:
     {{- include "bootstrap.commonLabels" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
-  name: truefoundry-bootstrap-job-sa
+  name: {{ include "bootstrap.serviceAccountName" . }}
   namespace: "{{ .Release.Namespace }}"
 roleRef:
   kind: Role
