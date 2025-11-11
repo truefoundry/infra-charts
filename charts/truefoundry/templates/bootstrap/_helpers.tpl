@@ -13,7 +13,7 @@ The bootstrap annotations are getting more priority than the globalAnnotations.
 {{ $syncWaveAnnotation = set $syncWaveAnnotation "helm.sh/hook-delete-policy" "before-hook-creation" }}
 {{ $syncWaveAnnotation = set $syncWaveAnnotation "argocd.argoproj.io/hook" "PreSync" }}
 {{ $syncWaveAnnotation = set $syncWaveAnnotation "argocd.argoproj.io/hook-delete-policy" "BeforeHookCreation" }}
-{{ $baseAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.truefoundryBootstrap.commonAnnotations }}
+{{ $baseAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) (deepCopy .Values.truefoundryBootstrap.commonAnnotations) }}
 {{ $mergedAnnotations := mergeOverwrite $baseAnnotations $syncWaveAnnotation }}
 {{ toYaml $mergedAnnotations }}
 {{- end -}}
@@ -59,9 +59,8 @@ requests:
   pod labels
 */}}
 {{ define "bootstrap.podlabels" -}}
-{{- $commonLabels := include "bootstrap.commonLabels" . | fromYaml }}
 {{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "truefoundry-bootstrap") | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.labels) $commonLabels (deepCopy .Values.global.podLabels) .Values.truefoundryBootstrap.podLabels $selectorLabels  }}
+{{- $podLabels := mergeOverwrite  (deepCopy .Values.global.podLabels) .Values.truefoundryBootstrap.podLabels $selectorLabels  }}
 {{- toYaml $podLabels }}
 {{- end -}}
 
@@ -106,4 +105,15 @@ requests:
 {{- $bootstrapLabels := include "bootstrap.commonLabels" . | fromYaml }}
 {{- $serviceAccountLabels := mergeOverwrite $bootstrapLabels .Values.truefoundryBootstrap.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
+{{- end -}}
+
+{{/*
+  serviceaccount name
+*/}}
+{{- define "bootstrap.serviceAccountName" -}}
+{{- if .Values.truefoundryBootstrap.serviceAccount.name }}
+{{- .Values.truefoundryBootstrap.serviceAccount.name }}
+{{- else }}
+{{- "truefoundry-bootstrap-job-sa" }}
+{{- end }}
 {{- end -}}

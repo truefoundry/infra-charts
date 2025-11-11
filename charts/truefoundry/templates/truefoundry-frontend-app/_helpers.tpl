@@ -167,7 +167,11 @@ Expand the name of the chart.
   Create the name of the service account to use
   */}}
 {{- define "truefoundry-frontend-app.serviceAccountName" -}}
-{{- default (include "truefoundry-frontend-app.fullname" .) "truefoundry-frontend-app" }}
+{{- if .Values.truefoundryFrontendApp.serviceAccount.name -}}
+{{- .Values.truefoundryFrontendApp.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*

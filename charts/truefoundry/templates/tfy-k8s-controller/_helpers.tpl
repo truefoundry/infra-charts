@@ -152,8 +152,11 @@ Expand the name of the chart.
   Create the name of the service account to use
   */}}
 {{- define "tfy-k8s-controller.serviceAccountName" -}}
-{{- default (include "tfy-k8s-controller.fullname" .) "tfy-k8s-controller" }}
-
+{{- if .Values.tfyK8sController.serviceAccount.name -}}
+{{- .Values.tfyK8sController.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 

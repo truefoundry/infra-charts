@@ -155,7 +155,11 @@ Expand the name of the chart.
   Create the name of the service account to use
   */}}
 {{- define "sfy-manifest-service.serviceAccountName" -}}
-{{- default (include "sfy-manifest-service.fullname" .) "sfy-manifest-service"}}
+{{- if .Values.sfyManifestService.serviceAccount.name -}}
+{{- .Values.sfyManifestService.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 
