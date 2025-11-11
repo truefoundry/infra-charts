@@ -20,7 +20,7 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: truefoundry-bootstrap-job-sa
+      serviceAccountName: {{ include "bootstrap.serviceAccountName" . }}
       containers:
       - name: truefoundry-bootstrap-job
         {{- with .Values.truefoundryBootstrap.securityContext }}
