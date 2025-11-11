@@ -9,6 +9,7 @@ LLM-Gateway Helm Chart
 | --------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------ |
 | `global.resourceTier`                         | Resource deployment type                                                        | `medium`                             |
 | `global.controlPlaneURL`                      | Control plane URL                                                               | `""`                                 |
+| `global.controlPlaneChartVersion`             | Control plane version                                                           | `0.98.2`                             |
 | `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                     | `[]`                                 |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                     | `{}`                                 |
 | `global.labels`                               | Global labels                                                                   | `{}`                                 |
