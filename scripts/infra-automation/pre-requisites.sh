@@ -266,8 +266,10 @@ install_tool() {
                 tofu_path=$(which tofu)
             fi
             if [[ -n "$tofu_path" && "$tofu_path" == *"homebrew"* ]] && brew list opentofu &> /dev/null; then
-                log_debug "OpenTofu is installed via brew. Using brew to upgrade tofu..."
-                brew upgrade opentofu
+                log_info "Updating Homebrew formulas to get latest OpenTofu version..."
+                brew update > /dev/null 2>&1
+                log_info "OpenTofu is installed via brew. Using brew to upgrade tofu..."
+                HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade opentofu
             else
                 log_debug "Downloading OpenTofu version $version"
                 wget -q "https://github.com/opentofu/opentofu/releases/download/v${version}/tofu_${version}_${OS}_${ARCH}.zip" -O tofu.zip
@@ -280,8 +282,10 @@ install_tool() {
                 terraform_path=$(which terraform)
             fi
             if [[ -n "$terraform_path" && "$terraform_path" == *"homebrew"* ]] && brew list terraform &> /dev/null; then
-                log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
-                brew upgrade terraform
+                log_info "Updating Homebrew formulas to get latest Terraform version..."
+                brew update > /dev/null 2>&1
+                log_info "Terraform is installed via brew. Using brew to upgrade terraform..."
+                HOMEBREW_NO_AUTO_UPDATE=1 brew upgrade terraform
             else
                 log_debug "Downloading terraform version $version"
                 wget -q "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_${OS}_${ARCH}.zip" -O terraform.zip
@@ -418,14 +422,24 @@ enforce_tofu_version() {
 
     if ! tool_exists tofu; then
         log_info "OpenTofu not found. Installing version $required_version..."
-        install_tool "tofu"
+        if confirm_installation "OpenTofu $required_version"; then
+            install_tool "tofu"
+        else
+            log_error "OpenTofu installation declined"
+            return 1
+        fi
         return
     fi
 
     current_version=$(get_tool_version "tofu")
     if ! version_compare "$current_version" "$required_version"; then
         log_info "OpenTofu $current_version found. Required version is $required_version. Upgrading..."
-        install_tool "tofu"
+        if confirm_installation "OpenTofu upgrade to $required_version"; then
+            install_tool "tofu"
+        else
+            log_error "OpenTofu upgrade declined. Current version $current_version does not meet minimum requirement"
+            return 1
+        fi
     else
         log_success "OpenTofu $current_version is already installed and meets the minimum required version"
     fi
@@ -437,14 +451,24 @@ enforce_terraform_version() {
 
     if ! tool_exists terraform; then
         log_info "Terraform not found. Installing version $required_version..."
-        install_tool "terraform"
+        if confirm_installation "Terraform $required_version"; then
+            install_tool "terraform"
+        else
+            log_error "Terraform installation declined"
+            return 1
+        fi
         return
     fi
 
     current_version=$(get_tool_version "terraform")
     if ! version_compare "$current_version" "$required_version"; then
         log_info "Terraform $current_version found. Required version is $required_version. Upgrading..."
-        install_tool "terraform"
+        if confirm_installation "Terraform upgrade to $required_version"; then
+            install_tool "terraform"
+        else
+            log_error "Terraform upgrade declined. Current version $current_version does not meet minimum requirement"
+            return 1
+        fi
     else
         log_success "Terraform $current_version is already installed and meets the minimum required version"
     fi
