@@ -12,10 +12,7 @@ declare -a COMMON_TOOLS=("kubectl" "helm" "jq")
 AUTO_CONFIRM=false
 
 # IAC tool selection - defaults to Terraform
-IAC_TOOL="${IAC_TOOL:-terraform}"
-
-# Add IAC tool to common tools
-COMMON_TOOLS=("${COMMON_TOOLS[@]}" "${IAC_TOOL}")
+IAC_TOOL="terraform"
 
 # Display usage information
 show_help() {
@@ -29,15 +26,14 @@ CONFIG_FILE:
   Path to JSON config file (required)
 
 OPTIONS:
+  -t, --iac-tool TOOL        IaC tool to use: 'terraform' (default) or 'tofu'
   -y, --yes                  Auto-confirm all installation prompts
   -h, --help                 Show this help message
 
-ENVIRONMENT VARIABLES:
-  IAC_TOOL                   IaC tool to use: 'terraform' (default) or 'tofu'
-
 Example:
-  $0 aws config.json -y      Install AWS tools without confirmation
-  $0 -y aws config.json      Same as above (order doesn't matter)
+  $0 aws config.json -y              Install AWS tools with Terraform (default)
+  $0 aws config.json -t tofu -y      Install AWS tools with OpenTofu
+  $0 -t tofu -y aws config.json      Same as above (order doesn't matter)
 EOF
 }
 
@@ -807,6 +803,16 @@ main() {
     # Process all arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
+            -t|--iac-tool)
+                if [[ -z "$2" || "$2" == -* ]]; then
+                    log_error "Option $1 requires an argument"
+                    show_help
+                    exit $INVALID_PROVIDER
+                fi
+                IAC_TOOL="$2"
+                log_debug "IaC tool set to: $IAC_TOOL"
+                shift 2
+                ;;
             -y|--yes)
                 AUTO_CONFIRM=true
                 log_debug "Auto-confirm enabled"
@@ -870,6 +876,9 @@ main() {
         exit $INVALID_PROVIDER
     fi
     log_debug "Using IaC tool: $IAC_TOOL"
+
+    # Add IAC tool to common tools
+    COMMON_TOOLS=("${COMMON_TOOLS[@]}" "${IAC_TOOL}")
 
     # Step 1: Detect system
     detect_system
