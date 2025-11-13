@@ -6,10 +6,16 @@ readonly RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[1;33m' BLUE='\033[0;34
 readonly SUCCESS=0 INVALID_PROVIDER=2 MISSING_TOOLS=3 
 
 # Tool configurations
-declare -a COMMON_TOOLS=("terraform" "kubectl" "helm" "jq")
+declare -a COMMON_TOOLS=("kubectl" "helm" "jq")
 
 # Auto-confirm installations when true
 AUTO_CONFIRM=false
+
+# IAC tool selection - defaults to Terraform
+IAC_TOOL="${IAC_TOOL:-terraform}"
+
+# Add IAC tool to common tools
+COMMON_TOOLS=("${COMMON_TOOLS[@]}" "${IAC_TOOL}")
 
 # Display usage information
 show_help() {
@@ -26,6 +32,9 @@ OPTIONS:
   -y, --yes                  Auto-confirm all installation prompts
   -h, --help                 Show this help message
 
+ENVIRONMENT VARIABLES:
+  IAC_TOOL                   IaC tool to use: 'terraform' (default) or 'tofu'
+
 Example:
   $0 aws config.json -y      Install AWS tools without confirmation
   $0 -y aws config.json      Same as above (order doesn't matter)
@@ -36,6 +45,7 @@ EOF
 get_tool_required_version() {
     case $1 in
         terraform) echo "1.10.1" ;;
+        tofu) echo "1.10.6" ;;
         kubectl) echo "1.31.8" ;;
         helm) echo "3.17.3" ;;
         jq) echo "1.7.1" ;;
@@ -212,6 +222,7 @@ install_essential_utilities() {
 get_tool_version() {
     local version
     case $1 in
+        tofu) version=$(tofu version | head -n1 | cut -d'v' -f2) ;;
         terraform) version=$(terraform version | head -n1 | cut -d'v' -f2) ;;
         kubectl) version=$(kubectl version --client -o json | jq -r '.clientVersion.gitVersion' | cut -d'v' -f2) ;;
         helm) version=$(helm version --short | cut -d'+' -f1) ;;
@@ -244,18 +255,31 @@ upgrade_tool_version() {
 install_tool() {
     local tool=$1 tmp_dir="$(mktemp -d)"
     pushd "$tmp_dir" > /dev/null
-    mkdir -p "$tmp_dir" && cd "$tmp_dir" || exit 1
     log_debug "Installing $tool in temporary directory: $tmp_dir"
     local version
     version=$(get_tool_required_version "$tool")
 
     case $tool in
+        tofu)
+            local tofu_path=""
+            if tool_exists tofu; then
+                tofu_path=$(which tofu)
+            fi
+            if [[ -n "$tofu_path" && "$tofu_path" == *"homebrew"* ]] && brew list opentofu &> /dev/null; then
+                log_debug "OpenTofu is installed via brew. Using brew to upgrade tofu..."
+                brew upgrade opentofu
+            else
+                log_debug "Downloading OpenTofu version $version"
+                wget -q "https://github.com/opentofu/opentofu/releases/download/v${version}/tofu_${version}_${OS}_${ARCH}.zip" -O tofu.zip
+                unzip -q tofu.zip && run_with_sudo mv tofu /usr/local/bin/
+            fi
+            ;;
         terraform)
             local terraform_path
             if tool_exists terraform; then
                 terraform_path=$(which terraform)
             fi
-            if [[ $terraform_path == *"homebrew"* ]]; then
+            if [[ -n "$terraform_path" && "$terraform_path" == *"homebrew"* ]] && brew list terraform &> /dev/null; then
                 log_debug "Terraform is installed via brew. Using brew to upgrade terraform..."
                 brew upgrade terraform
             else
@@ -388,7 +412,25 @@ install_tool() {
     log_debug "Finished installing $tool"
 }
 
-# Function to check and enforce Terraform version
+enforce_tofu_version() {
+    local required_version current_version
+    required_version=$(get_tool_required_version "tofu")
+
+    if ! tool_exists tofu; then
+        log_info "OpenTofu not found. Installing version $required_version..."
+        install_tool "tofu"
+        return
+    fi
+
+    current_version=$(get_tool_version "tofu")
+    if ! version_compare "$current_version" "$required_version"; then
+        log_info "OpenTofu $current_version found. Required version is $required_version. Upgrading..."
+        install_tool "tofu"
+    else
+        log_success "OpenTofu $current_version is already installed and meets the minimum required version"
+    fi
+}
+
 enforce_terraform_version() {
     local required_version current_version
     required_version=$(get_tool_required_version "terraform")
@@ -414,12 +456,15 @@ verify_tools() {
     local missing_tools=()
     local install_failed=()
 
-    # First, make sure Terraform is installed with the correct version
-    enforce_terraform_version
-    log_debug "Terraform verification complete"
-    # Check other common tools (skip terraform as we've already handled it)
+    if [ "$IAC_TOOL" = "tofu" ]; then
+        enforce_tofu_version
+    else
+        enforce_terraform_version
+    fi
+    log_debug "IaC tool ($IAC_TOOL) verification complete"
+    # Check other common tools (skip IAC tool as we've already handled it)
     for tool in "${COMMON_TOOLS[@]}"; do
-        if [ "$tool" != "terraform" ]; then
+        if [ "$tool" != "$IAC_TOOL" ]; then
             if ! tool_exists "$tool"; then
                 if confirm_installation "$tool"; then
                     install_tool "$tool" || install_failed+=("$tool")
@@ -555,6 +600,14 @@ create_backend() {
                 log_info "S3 bucket already exists: $bucket_name"
             fi
 
+            log_info "Enabling versioning on S3 bucket"
+            log_info "Running: aws s3api put-bucket-versioning --bucket $bucket_name --versioning-configuration Status=Enabled --region $region"
+            if ! aws s3api put-bucket-versioning --bucket "$bucket_name" --versioning-configuration Status=Enabled --region "$region"; then
+                log_error "Failed to enable versioning on S3 bucket"
+                exit 1
+            fi
+            log_success "Versioning enabled on S3 bucket: $bucket_name"
+
             if [[ $dynamodb_table != "null" ]]; then
                 log_info "Creating DynamoDB table for state locking"
                 if ! aws dynamodb describe-table --table-name "$dynamodb_table" --region "$region" >/dev/null 2>&1; then
@@ -584,6 +637,22 @@ create_backend() {
             if ! gcloud storage buckets describe "gs://$bucket_name" >/dev/null 2>&1; then
                 log_debug "Creating GCS bucket $bucket_name"
                 gcloud storage buckets create "gs://$bucket_name" --location="$region"
+            fi
+
+            log_info "Checking versioning status on GCS bucket"
+            local versioning_enabled
+            versioning_enabled=$(gcloud storage buckets describe "gs://$bucket_name" --format="json" | jq -r '.versioning.enabled // false')
+            
+            if [[ "$versioning_enabled" != "true" ]]; then
+                log_info "Enabling versioning on GCS bucket"
+                log_info "Running: gcloud storage buckets update gs://$bucket_name --versioning"
+                if ! gcloud storage buckets update "gs://$bucket_name" --versioning; then
+                    log_error "Failed to enable versioning on GCS bucket"
+                    exit 1
+                fi
+                log_success "Versioning enabled on GCS bucket: $bucket_name"
+            else
+                log_success "Versioning already enabled on GCS bucket: $bucket_name"
             fi
             ;;
         azure)
@@ -617,6 +686,30 @@ create_backend() {
             if ! az storage container show --name "$container_name" --account-name "$storage_account" >/dev/null 2>&1; then
                 log_debug "Creating storage container $container_name"
                 az storage container create --name "$container_name" --account-name "$storage_account"
+            fi
+
+            # Check and enable blob versioning
+            log_info "Checking blob versioning status on storage account"
+            local versioning_enabled
+            versioning_enabled=$(az storage account blob-service-properties show \
+                --account-name "$storage_account" \
+                --resource-group "$resource_group" \
+                --query 'isVersioningEnabled' \
+                --output tsv 2>/dev/null || echo "false")
+            
+            if [[ "$versioning_enabled" != "true" ]]; then
+                log_info "Enabling blob versioning on storage account"
+                log_info "Running: az storage account blob-service-properties update --account-name $storage_account --resource-group $resource_group --enable-versioning true"
+                if ! az storage account blob-service-properties update \
+                    --account-name "$storage_account" \
+                    --resource-group "$resource_group" \
+                    --enable-versioning true >/dev/null; then
+                    log_error "Failed to enable blob versioning on storage account"
+                    exit 1
+                fi
+                log_success "Blob versioning enabled on storage account: $storage_account"
+            else
+                log_success "Blob versioning already enabled on storage account: $storage_account"
             fi
             ;;
     esac
@@ -746,6 +839,13 @@ main() {
             exit $INVALID_PROVIDER
             ;;
     esac
+
+    if [[ "$IAC_TOOL" != "tofu" && "$IAC_TOOL" != "terraform" ]]; then
+        log_error "Invalid IAC_TOOL value: '$IAC_TOOL'"
+        log_error "Valid options: 'terraform' (default) or 'tofu'"
+        exit $INVALID_PROVIDER
+    fi
+    log_debug "Using IaC tool: $IAC_TOOL"
 
     # Step 1: Detect system
     detect_system
