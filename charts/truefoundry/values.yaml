@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.96.4
+  controlPlaneChartVersion: 0.98.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -294,6 +294,10 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.serviceAccount.automountServiceAccountToken Automount service account token for the bootstrap container
   serviceAccount:
     automountServiceAccountToken: true
+    ## @param truefoundryBootstrap.serviceAccount.name Name of the bootstrap service account (defaults to "truefoundry-bootstrap-job-sa")
+    name: "truefoundry-bootstrap-job-sa"
+    ## @param truefoundryBootstrap.serviceAccount.create Bool to create a service account for the bootstrap container
+    create: true
     ## @param truefoundryBootstrap.serviceAccount.labels [object] Labels for the bootstrap service account
     labels: {}
     ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
@@ -358,7 +362,7 @@ truefoundryFrontendApp:
     ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
     repository: "tfy-private-images/truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.96.0"
+    tag: "v0.98.1"
   ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
   envSecretName: truefoundry-frontend-app-env-secret
   ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
@@ -494,12 +498,16 @@ truefoundryFrontendApp:
   proxyServerHost: "{{ .Release.Name }}-tfy-controller.{{ .Release.Namespace }}.svc.cluster.local"
   ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
   serviceAccount:
+    ## @param truefoundryFrontendApp.serviceAccount.create Bool to create a service account for the frontend app
+    create: true
+    ## @param truefoundryFrontendApp.serviceAccount.name Name of the frontend app service account
+    name: "truefoundry-frontend-app"
     ## @param truefoundryFrontendApp.serviceAccount.annotations [object] Annotations for the frontend app service account
     annotations: {}
     ## @param truefoundryFrontendApp.serviceAccount.labels [object] Labels for the frontend app service account
     labels: {}
     ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Automount service account token for the frontend app
-    automountServiceAccountToken: true
+    automountServiceAccountToken: false
   ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
   extraVolumes: []
   ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
@@ -541,7 +549,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.94.0"
+    tag: "v0.98.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -812,7 +820,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.96.4"
+    tag: "v0.98.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -957,11 +965,6 @@ servicefoundryServer:
     GITLAB_SCOPE: ""
     AZURE_CLIENT_ID: ""
     AZURE_CLIENT_SECRET: ""
-    CLICKHOUSE_ENABLED: '{{ trim (include "truefoundry.clickhouseRequestLogging.enabled" .) }}'
-    CLICKHOUSE_HOST: http://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:8123
-    CLICKHOUSE_USER: user
-    CLICKHOUSE_PASSWORD: '{{ if eq (trim (include "truefoundry.clickhouseRequestLogging.enabled" .)) "true" }}${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}{{ end }}'
-    CLICKHOUSE_TTL_IN_DAYS: "90"
     MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
@@ -1141,7 +1144,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.96.0"
+    tag: "v0.98.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1227,6 +1230,10 @@ tfyK8sController:
     labels: {}
     ## tfyK8sController.serviceAccount Service account settings for the tfyK8sController
   serviceAccount:
+    ## @param tfyK8sController.serviceAccount.create Bool to create a service account for the tfyK8sController
+    create: true
+    ## @param tfyK8sController.serviceAccount.name Name of the tfyK8sController service account
+    name: "tfy-k8s-controller"
     ## @param tfyK8sController.serviceAccount.annotations [object] Annotations for the tfyK8sController service account
     annotations: {}
     ## @param tfyK8sController.serviceAccount.labels [object] Labels for the tfyK8sController service account
@@ -1385,6 +1392,10 @@ sfyManifestService:
     labels: {}
   ## sfyManifestService.serviceAccount Service account settings for the sfy manifest service
   serviceAccount:
+    ## @param sfyManifestService.serviceAccount.create Bool to create a service account for the sfy manifest service
+    create: true
+    ## @param sfyManifestService.serviceAccount.name Name of the sfy manifest service service account
+    name: "sfy-manifest-service"
     ## @param sfyManifestService.serviceAccount.annotations [object] Annotations for the sfy manifest service service account
     annotations: {}
     ## @param sfyManifestService.serviceAccount.labels [object] Labels for the sfy manifest service service account
@@ -1724,6 +1735,14 @@ tfy-buildkitd-service:
   ## @param tfy-buildkitd-service.enabled Bool to enable the tfy-buildkitd service
   enabled: true
   serviceAccount:
+    ## @param tfy-buildkitd-service.serviceAccount.create Bool to create a service account for the tfy-buildkitd service
+    create: true
+    ## @param tfy-buildkitd-service.serviceAccount.name Name of the tfy-buildkitd service service account
+    name: "tfy-buildkitd-service"
+    ## @param tfy-buildkitd-service.serviceAccount.annotations [object] Annotations for the tfy-buildkitd service service account
+    annotations: {}
+    ## @param tfy-buildkitd-service.serviceAccount.labels [object] Labels for the tfy-buildkitd service service account
+    labels: {}
     ## @param tfy-buildkitd-service.serviceAccount.automountServiceAccountToken Automount service account token for the tfy-buildkitd service
     automountServiceAccountToken: true
   ## tfy-buildkitd-service.service Service settings for the tfy-buildkitd service
@@ -1910,6 +1929,10 @@ tfyController:
     labels: {}
   ## tfyController.serviceAccount Service account settings for the tfyController
   serviceAccount:
+    ## @param tfyController.serviceAccount.create Bool to create a service account for the tfyController
+    create: true
+    ## @param tfyController.serviceAccount.name Name of the tfyController service account
+    name: "tfy-controller"
     ## @param tfyController.serviceAccount.annotations [object] Annotations for the tfyController service account
     annotations: {}
     ## @param tfyController.serviceAccount.labels [object] Labels for the tfyController service account
@@ -2320,7 +2343,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.96.0"
+    tag: "v0.98.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2423,14 +2446,14 @@ deltaFusionIngestor:
   serviceAccount:
     ## @param deltaFusionIngestor.serviceAccount.create Bool to create a service account
     create: false
+    ## @param deltaFusionIngestor.serviceAccount.name Name of the deltaFusionIngestor service account
+    name: ""
     ## @param deltaFusionIngestor.serviceAccount.labels [object] Service account labels
     labels: {}
     ## @param deltaFusionIngestor.serviceAccount.annotations [object] Service account annotations
     annotations: {}
-    ## @param deltaFusionIngestor.serviceAccount.name Service account name
-    name: ""
-    ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount token
-    automountServiceAccountToken: false
+    ## @param deltaFusionIngestor.serviceAccount.automountServiceAccountToken Automount service account token for the deltaFusionIngestor service account
+    automountServiceAccountToken: true
   ## @param deltaFusionIngestor.resourceTierOverride Resource tier override for the deltaFusionIngestor
   resourceTierOverride: ""
   ## @skip deltaFusionIngestor.resources Resource requests and limits
@@ -2474,7 +2497,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.96.0"
+    tag: "v0.98.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction
@@ -2564,6 +2587,7 @@ deltaFusionCompaction:
     SENTRY_ENABLED: "true"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "true"
+    DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################
@@ -2586,7 +2610,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.96.0
+    tag: v0.98.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer
     optimized: false
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2708,6 +2732,7 @@ deltaFusionQueryServer:
     RUST_LOG: info
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    AZURE_BLOB_USE_START_FROM: "true"
 ## @section tfyProxy Truefoundry tfy proxy values
 tfyProxy:
   ## @param tfyProxy.enabled Bool to enable the tfyProxy
@@ -2725,7 +2750,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.96.0"
+    tag: "v0.98.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
@@ -2836,6 +2861,8 @@ tfyProxy:
     create: false
     ## @param tfyProxy.serviceAccount.annotations Annotations for the tfyProxy service account
     annotations: {}
+    ## @param tfyProxy.serviceAccount.labels [object] Labels for the tfyProxy service account
+    labels: {}
     ## @param tfyProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyProxy service account
     automountServiceAccountToken: true
   ## @param tfyProxy.extraVolumes Extra volumes for the tfyProxy

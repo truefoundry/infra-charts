@@ -5,6 +5,10 @@ global:
   resourceTier: "medium"
   ## @param global.controlPlaneURL Control plane URL
   controlPlaneURL: ""
+  ## @param global.controlPlaneChartVersion Control plane version
+  controlPlaneChartVersion: "0.98.2"
+  ## @param global.gatewayChartVersion Gateway version
+  gatewayChartVersion: "0.99.0-rc.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -40,7 +44,6 @@ global:
   ## @param global.image.registry Global image registry override
   image:
     registry: "tfy.jfrog.io"
-
 ## Image configuration for llm-gateway
 image:
   ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
@@ -48,11 +51,9 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.96.1
-
+  tag: v0.99.0-rc.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
-
 ## @skip replicaCount Number of replicas
 # replicaCount: 3
 
@@ -148,7 +149,6 @@ podDisruptionBudget:
   labels: {}
   ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
   maxUnavailable: 30%
-
 ## Ingress configuration
 ingress:
   ## @param ingress.enabled Enable ingress configuration
@@ -177,6 +177,14 @@ istio:
     gateways: []
     ## @param istio.virtualservice.hosts Virtual service hosts
     hosts: []
+    ## Retries configuration
+    retries:
+      ## @param istio.virtualservice.retries.enabled Enable retries
+      enabled: false
+      ## @param istio.virtualservice.retries.attempts Retries attempts
+      attempts: 3
+      ## @param istio.virtualservice.retries.retryOn Retries retry on
+      retryOn: "gateway-error"
 ## Service configuration
 service:
   ## @param service.type Service type
@@ -207,7 +215,6 @@ extraVolumeMounts: []
 rbac:
   ## @param rbac.enabled Enable rbac
   enabled: true
-
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling
@@ -218,7 +225,6 @@ autoscaling:
   maxReplicas: 100
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
   targetCPUUtilizationPercentage: 60
-
 ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
@@ -227,7 +233,6 @@ rollout:
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 100%
-
 ## @skip env Environment variables for the llmGateway
 env:
   SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
@@ -244,7 +249,10 @@ env:
   TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
   AUTH_SERVER_URL: https://auth.truefoundry.com
   RUN_IN_SINGLE_TENANT_MODE: "false"
-
+  CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
+  GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+  ENABLE_ZOD_VALIDATION: "true"
+  DEFAULT_GATEWAY_METADATA: "{}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
@@ -253,7 +261,6 @@ serviceMonitor:
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
   additionalAnnotations: {}
-
 ## OIDC configuration
 oidc:
   ## @param oidc.enabled Enable OIDC configuration

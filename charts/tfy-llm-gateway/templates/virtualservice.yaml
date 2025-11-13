@@ -25,4 +25,9 @@ spec:
         host: {{ include "tfy-llm-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
         port:
           number: {{ .Values.service.port }}
+    {{- if .Values.istio.virtualservice.retries.enabled }}
+    retries:
+      attempts: {{ .Values.istio.virtualservice.retries.attempts }}
+      retryOn: {{ .Values.istio.virtualservice.retries.retryOn }}
+    {{- end }}
 {{- end }}

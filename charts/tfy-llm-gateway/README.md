@@ -9,6 +9,8 @@ LLM-Gateway Helm Chart
 | --------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------ |
 | `global.resourceTier`                         | Resource deployment type                                                        | `medium`                             |
 | `global.controlPlaneURL`                      | Control plane URL                                                               | `""`                                 |
+| `global.controlPlaneChartVersion`             | Control plane version                                                           | `0.98.2`                             |
+| `global.gatewayChartVersion`                  | Gateway version                                                                 | `0.99.0-rc.1`                        |
 | `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                     | `[]`                                 |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                     | `{}`                                 |
 | `global.labels`                               | Global labels                                                                   | `{}`                                 |
@@ -27,7 +29,7 @@ LLM-Gateway Helm Chart
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.96.1`                            |
+| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.99.0-rc.1`                       |
 | `fullnameOverride`                            | Full name override for the tfy-llm-gateway                                      | `""`                                 |
 | `environmentName`                             | The environment name                                                            | `default`                            |
 | `envSecretName`                               | The environment secret name                                                     | `tfy-llm-gateway-env-secret`         |
@@ -77,6 +79,9 @@ LLM-Gateway Helm Chart
 | `istio.virtualservice.labels`                 | Virtual service labels                                                          | `{}`                                 |
 | `istio.virtualservice.gateways`               | Virtual service gateways                                                        | `[]`                                 |
 | `istio.virtualservice.hosts`                  | Virtual service hosts                                                           | `[]`                                 |
+| `istio.virtualservice.retries.enabled`        | Enable retries                                                                  | `false`                              |
+| `istio.virtualservice.retries.attempts`       | Retries attempts                                                                | `3`                                  |
+| `istio.virtualservice.retries.retryOn`        | Retries retry on                                                                | `gateway-error`                      |
 | `service.type`                                | Service type                                                                    | `ClusterIP`                          |
 | `service.port`                                | Service port                                                                    | `8787`                               |
 | `service.annotations`                         | Service annotations                                                             | `{}`                                 |
