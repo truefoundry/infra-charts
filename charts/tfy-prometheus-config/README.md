@@ -43,21 +43,22 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 ### prometheusRules Prometheus rules for prometheus
 
-| Name                                         | Description                          | Value                                    |
-| -------------------------------------------- | ------------------------------------ | ---------------------------------------- |
-| `prometheusRules.containerRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
-| `prometheusRules.containerRules.name`        | Name of the prometheus rules         | `tfy-alertmanager-config-alerting-rules` |
-| `prometheusRules.containerRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.containerRules.annotations` | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.kubecostRules.enabled`      | Enable prometheus rules for kubecost | `true`                                   |
-| `prometheusRules.kubecostRules.name`         | Name of the prometheus rules         | `tfy-alertmanager-config-kubecost-rules` |
-| `prometheusRules.kubecostRules.labels`       | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.kubecostRules.annotations`  | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.envoyPortRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
-| `prometheusRules.envoyPortRules.name`        | Name of the prometheus rules         | `tfy-envoy-port-rules`                   |
-| `prometheusRules.envoyPortRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
-| `prometheusRules.envoyPortRules.annotations` | Annotations for the prometheus rules | `{}`                                     |
-| `prometheusRules.envoyPortRules.portList`    | List of common ports                 | `[]`                                     |
+| Name                                         | Description                                          | Value                                    |
+| -------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `prometheusRules.containerRules.enabled`     | Enable prometheus rules for alerts                   | `true`                                   |
+| `prometheusRules.containerRules.name`        | Name of the prometheus rules                         | `tfy-alertmanager-config-alerting-rules` |
+| `prometheusRules.containerRules.labels`      | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.containerRules.annotations` | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.kubecostRules.enabled`      | Enable prometheus rules for kubecost                 | `true`                                   |
+| `prometheusRules.kubecostRules.name`         | Name of the prometheus rules                         | `tfy-alertmanager-config-kubecost-rules` |
+| `prometheusRules.kubecostRules.labels`       | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.kubecostRules.annotations`  | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.envoyPortRules.enabled`     | Enable prometheus rules for alerts                   | `true`                                   |
+| `prometheusRules.envoyPortRules.name`        | Name of the prometheus rules                         | `tfy-envoy-port-rules`                   |
+| `prometheusRules.envoyPortRules.labels`      | Labels for the prometheus rules                      | `{}`                                     |
+| `prometheusRules.envoyPortRules.annotations` | Annotations for the prometheus rules                 | `{}`                                     |
+| `prometheusRules.envoyPortRules.portList`    | List of common ports                                 | `[]`                                     |
+| `prometheusRules.selectorLabels`             | Selector used by prometheus to find prometheus rules | `{}`                                     |
 
 ### controlPlaneMonitors service monitors for control plane components
 
@@ -153,6 +154,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | Name                                                       | Description                                     | Value                                     |
 | ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
 | `serviceMonitors.enabled`                                  | Enable service monitors for prometheus          | `true`                                    |
+| `serviceMonitors.labels`                                   | Labels for service monitors                     | `{}`                                      |
 | `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `true`                                    |
 | `serviceMonitors.alertManager.name`                        | Name of the service monitor                     | `prometheus-kube-prometheus-alertmanager` |
 | `serviceMonitors.alertManager.labels`                      | Labels for alert manager                        | `{}`                                      |

@@ -167,6 +167,8 @@ prometheusRules:
     annotations: {}
     ## @param prometheusRules.envoyPortRules.portList [array] List of common ports
     portList: ["80", "443", "3000", "5000", "5005", "8000", "8008", "8080", "8443", "6000", "9000", "9090", "10000"]
+  ## @param prometheusRules.selectorLabels [object] Selector used by prometheus to find prometheus rules
+  selectorLabels: {}
 ## @section controlPlaneMonitors service monitors for control plane components
 controlPlaneMonitors:
   ## @param controlPlaneMonitors.enabled Enable service monitors for control plane components
@@ -476,6 +478,8 @@ controlPlaneMonitors:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
+  ## @param serviceMonitors.labels [object] Labels for service monitors
+  labels: {}
   # serviceMonitors.alertManager Service monitor for alert manager
   alertManager:
     ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager

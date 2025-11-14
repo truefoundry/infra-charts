@@ -1,3 +1,23 @@
+{{/*}}
+Global Labels
+*/}}
+{{- define "global.labels" -}}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{{- toYaml $prometheusLabel }}
+{{- end }}
+{{- end }}
+
+{{/*
+Service Monitor Labels
+*/}}
+{{- define "serviceMonitors.labels"}}
+{{- $mergedLabels := mergeOverwrite (include "global.labels" . | fromYaml) .Values.serviceMonitors.labels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
 {{/*
 Alert Manager Labels
 */}}
@@ -74,16 +94,12 @@ Annotations for kubernetes pods scrape configs
 {{- end }}
 
 {{/*
-Argo workflows service monitor labels
+  Argo Workflows service monitor labels
 */}}
 {{- define "argo-workflows.labels" -}}
-{{- if .Values.serviceMonitors.workflows.labels }}
-{{- toYaml .Values.serviceMonitors.workflows.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $argoWorkflowsLabels := mergeOverwrite $base (.Values.serviceMonitors.workflows.labels | default (dict)) }}
+{{- toYaml $argoWorkflowsLabels }}
 {{- end }}
 
 
@@ -127,17 +143,14 @@ Elasti service monitor annotations
 {{- end }}
 
 {{/*
-Keda service monitor labels
+  KEDA service monitor labels
 */}}
 {{- define "keda.labels" -}}
-{{- if .Values.serviceMonitors.keda.labels }}
-{{- toYaml .Values.serviceMonitors.keda.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $kedaLabels := mergeOverwrite $base (.Values.serviceMonitors.keda.labels | default (dict)) }}
+{{- toYaml $kedaLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
 Keda service monitor annotations
@@ -153,17 +166,14 @@ Keda service monitor annotations
 {{- end }}
 
 {{/*
-Kubecost service monitor labels
+  Kubecost service monitor labels
 */}}
 {{- define "kubecost.labels" -}}
-{{- if .Values.serviceMonitors.kubecost.labels }}
-{{- toYaml .Values.serviceMonitors.kubecost.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $kubecostLabels := mergeOverwrite $base (.Values.serviceMonitors.kubecost.labels | default (dict)) }}
+{{- toYaml $kubecostLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
 Kubecost service monitor annotations
@@ -183,14 +193,11 @@ Kubecost service monitor annotations
   Prometheus service monitor labels
 */}}
 {{- define "prometheus.labels" -}}
-{{- if .Values.serviceMonitors.prometheus.labels }}
-{{- toYaml .Values.serviceMonitors.prometheus.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $prometheusLabels := mergeOverwrite $base (.Values.serviceMonitors.prometheus.labels | default (dict)) }}
+{{- toYaml $prometheusLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
   Prometheus service monitor annotations
@@ -206,16 +213,12 @@ Kubecost service monitor annotations
 {{- end }}
 
 {{/*
-  Prometheus operator service monitor labels
+  Prometheus Operator service monitor labels
 */}}
 {{- define "prometheusOperator.labels" -}}
-{{- if .Values.serviceMonitors.prometheusOperator.labels }}
-{{- toYaml .Values.serviceMonitors.prometheusOperator.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $prometheusOperatorLabels := mergeOverwrite $base (.Values.serviceMonitors.prometheusOperator.labels | default (dict)) }}
+{{- toYaml $prometheusOperatorLabels }}
 {{- end }}
 
 {{/*
@@ -314,79 +317,58 @@ Container rules annotations
   Alert manager service monitor labels
 */}}
 {{- define "alert-manager.labels" -}}
-{{- if .Values.serviceMonitors.alertManager.labels }}
-{{- toYaml .Values.serviceMonitors.alertManager.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $alertManagerLabels := mergeOverwrite $base .Values.serviceMonitors.alertManager.labels }}
+{{- toYaml $alertManagerLabels }}
 {{- end }}
 
 {{/*
   Kubelet service monitor labels
 */}}
 {{- define "kubelet.labels" -}}
-{{- if .Values.serviceMonitors.kubelet.labels }}
-{{- toYaml .Values.serviceMonitors.kubelet.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $kubeletLabels := mergeOverwrite $base .Values.serviceMonitors.kubelet.labels }}
+{{- toYaml $kubeletLabels }}
 {{- end }}
 
 {{/*
   Node exporter service monitor labels
 */}}
 {{- define "nodeExporter.labels" -}}
-{{- if .Values.serviceMonitors.nodeExporter.labels }}
-{{- toYaml .Values.serviceMonitors.nodeExporter.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $nodeExporterLabels := mergeOverwrite $base (.Values.serviceMonitors.nodeExporter.labels | default (dict)) }}
+{{- toYaml $nodeExporterLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
   Kube state metrics service monitor labels
 */}}
 {{- define "kubeStateMetrics.labels" -}}
-{{- if .Values.serviceMonitors.kubeStateMetrics.labels }}
-{{- toYaml .Values.serviceMonitors.kubeStateMetrics.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $kubeStateMetricsLabels := mergeOverwrite $base (.Values.serviceMonitors.kubeStateMetrics.labels | default (dict)) }}
+{{- toYaml $kubeStateMetricsLabels }}
 {{- end }}
 
 {{/*
   Karpenter service monitor labels
 */}}
 {{- define "karpenter.labels" -}}
-{{- if .Values.serviceMonitors.karpenter.labels }}
-{{- toYaml .Values.serviceMonitors.karpenter.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $karpenterLabels := mergeOverwrite $base (.Values.serviceMonitors.karpenter.labels | default (dict)) }}
+{{- toYaml $karpenterLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
   GPU service monitor labels
 */}}
 {{- define "gpu.labels" -}}
-{{- if .Values.serviceMonitors.gpu.labels }}
-{{- toYaml .Values.serviceMonitors.gpu.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $gpuLabels := mergeOverwrite $base (.Values.serviceMonitors.gpu.labels | default (dict)) }}
+{{- toYaml $gpuLabels }}
 {{- end }}
-{{- end }}
+
 
 {{/*
   GPU service monitor annotations
@@ -596,15 +578,13 @@ Container rules annotations
 {{- end }}
 {{- end }}
 
-{{- /*
+{{/*
   SSH service monitor labels
-*/ -}}
+*/}}
 {{- define "sshServer.labels" -}}
-{{- if .Values.serviceMonitors.sshServer.labels }}
-{{- toYaml .Values.serviceMonitors.sshServer.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $sshLabels := mergeOverwrite $base (.Values.serviceMonitors.sshServer.labels | default (dict)) }}
+{{- toYaml $sshLabels }}
 {{- end }}
 
 {{/*
