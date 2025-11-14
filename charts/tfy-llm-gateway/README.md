@@ -93,6 +93,7 @@ LLM-Gateway Helm Chart
 | `serviceAccount.automountServiceAccountToken` | Automount service account token this will only be used if create is true        | `false`                              |
 | `extraVolumes`                                | Extra volumes                                                                   | `[]`                                 |
 | `extraVolumeMounts`                           | Extra volume mounts                                                             | `[]`                                 |
+| `dnsConfig`                                   | DNS config                                                                      | `{}`                                 |
 | `rbac.enabled`                                | Enable rbac                                                                     | `true`                               |
 | `autoscaling.enabled`                         | Enable autoscaling                                                              | `true`                               |
 | `autoscaling.minReplicas`                     | Minimum number of replicas                                                      | `3`                                  |
