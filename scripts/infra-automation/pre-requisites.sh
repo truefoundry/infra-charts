@@ -194,7 +194,8 @@ install_essential_utilities() {
             log_info "Auto-installing missing utilities..."
         else
             read -r -p "$(echo -e "${YELLOW}Install missing utilities? (Y/n)${NC}") " response
-            if [[ ! $response =~ [yY|Yes|yes|YES] ]]; then
+            response=${response:-Y}  # Default to Y if empty
+            if [[ ! $response =~ ^([yY]|[yY][eE][sS])$ ]]; then
                 log_error "Installation skipped - some features may not work"
                 return 1
             fi
