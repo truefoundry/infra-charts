@@ -284,11 +284,11 @@ limits:
 {{- define "tfy-llm-gateway.defaultResources.large" }}
 requests:
   cpu: 1000m
-  memory: 1024Mi
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
-  memory: 2048Mi
+  memory: 4096Mi
   ephemeral-storage: 512Mi
 {{- end }}
 
