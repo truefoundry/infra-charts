@@ -20,6 +20,13 @@ spec:
   - {{ . }}
   {{- end }}
   http:
+  - match:
+    - uri:
+        prefix: /metrics
+    directResponse:
+      status: 403
+      body: 
+        string: "Access denied"
   - route:
     - destination:
         host: {{ include "tfy-llm-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local

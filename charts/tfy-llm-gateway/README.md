@@ -10,7 +10,7 @@ LLM-Gateway Helm Chart
 | `global.resourceTier`                         | Resource deployment type                                                        | `medium`                             |
 | `global.controlPlaneURL`                      | Control plane URL                                                               | `""`                                 |
 | `global.controlPlaneChartVersion`             | Control plane version                                                           | `0.98.2`                             |
-| `global.gatewayChartVersion`                  | Gateway version                                                                 | `0.99.0-rc.1`                        |
+| `global.gatewayChartVersion`                  | Gateway version                                                                 | `0.100.2`                            |
 | `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                     | `[]`                                 |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                     | `{}`                                 |
 | `global.labels`                               | Global labels                                                                   | `{}`                                 |
@@ -29,7 +29,7 @@ LLM-Gateway Helm Chart
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.99.0-rc.1`                       |
+| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.100.0`                           |
 | `fullnameOverride`                            | Full name override for the tfy-llm-gateway                                      | `""`                                 |
 | `environmentName`                             | The environment name                                                            | `default`                            |
 | `envSecretName`                               | The environment secret name                                                     | `tfy-llm-gateway-env-secret`         |
@@ -93,6 +93,7 @@ LLM-Gateway Helm Chart
 | `serviceAccount.automountServiceAccountToken` | Automount service account token this will only be used if create is true        | `false`                              |
 | `extraVolumes`                                | Extra volumes                                                                   | `[]`                                 |
 | `extraVolumeMounts`                           | Extra volume mounts                                                             | `[]`                                 |
+| `dnsConfig`                                   | DNS config                                                                      | `{}`                                 |
 | `rbac.enabled`                                | Enable rbac                                                                     | `true`                               |
 | `autoscaling.enabled`                         | Enable autoscaling                                                              | `true`                               |
 | `autoscaling.minReplicas`                     | Minimum number of replicas                                                      | `3`                                  |

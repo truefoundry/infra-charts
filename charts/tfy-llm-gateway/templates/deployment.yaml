@@ -27,6 +27,10 @@ spec:
       labels:
         {{- include "tfy-llm-gateway.podLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.dnsConfig }}
+      dnsConfig:
+        {{- toYaml .Values.dnsConfig | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
