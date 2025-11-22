@@ -1,3 +1,0 @@
-# ClickHouse Operator
-
-## Parameters
