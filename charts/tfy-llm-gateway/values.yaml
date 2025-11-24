@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.100.1"
+  gatewayChartVersion: "0.102.0-rc.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -51,7 +51,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.100.0
+  tag: v0.102.0-rc.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -255,6 +255,9 @@ env:
   GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
   ENABLE_ZOD_VALIDATION: "true"
   DEFAULT_GATEWAY_METADATA: "{}"
+  GATEWAY_AWS_ROLE_ARN: ""
+  GATEWAY_AWS_USER_ACCESS_KEY_ID: ""
+  GATEWAY_AWS_USER_SECRET_ACCESS_KEY: ""
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor

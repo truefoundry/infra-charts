@@ -208,22 +208,22 @@ limits:
 {{- define "deltafusion-ingestor.defaultResources.medium" }}
 requests:
   cpu: 500m
-  memory: 1000M
+  memory: 1500M
   ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 1200M
+  memory: 1700M
   ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 1000M
+  memory: 2000M
   ephemeral-storage: 100M
 limits:
   cpu: 1000m
-  memory: 1200M
+  memory: 2200M
   ephemeral-storage: 100M
 {{- end }}
 
