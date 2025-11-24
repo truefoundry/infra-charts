@@ -10,7 +10,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      - {{ include "global.namespace" . }}
+      - {{ .Release.Namespace }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 6 }}

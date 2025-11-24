@@ -7,6 +7,7 @@ metadata:
     {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry-frontend-app.commonAnnotations" . | indent 4 }}
+  namespace: {{ .Release.Namespace }}
 spec:
   host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
   trafficPolicy:
