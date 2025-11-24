@@ -253,21 +253,3 @@ AZURE_STORAGE_CONNECTION_STRING: {{ .Values.global.config.storageConfiguration.a
 {{- end }}
 {{- end }}
 {{- end }}
-
-
-
-{{- define "truefoundry.clickhouseRequestLogging.enabled" -}}
-{{- if and (hasKey .Values "tfy-clickhouse") (hasKey (index .Values "tfy-clickhouse") "enabled") -}}
-{{- /*Key is set*/ -}}
-{{- if not (index .Values "tfy-clickhouse" "enabled") -}}
-{{- /*Key is set with value false*/ -}}
-false
-{{- else -}}
-{{- /*Key is set with value true, only enable if llmGatewayRequestLogging is true*/ -}}
-{{- .Values.tags.llmGatewayRequestLogging -}}
-{{- end -}}
-{{- else -}}
-{{- /*Key is not set, enable if llmGatewayRequestLogging is true*/ -}}
-{{- .Values.tags.llmGatewayRequestLogging -}}
-{{- end -}}
-{{- end -}}

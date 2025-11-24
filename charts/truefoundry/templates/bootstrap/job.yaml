@@ -38,8 +38,6 @@ spec:
           value: "{{ .Release.Namespace }}"
         - name: INSTALL_TLS_CERTIFICATES
           value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
-        - name: CLICKHOUSE_ENABLED
-          value: "{{ or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing }}"
         {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
         - name: {{ $val.name }}
           value: {{ $val.value }}

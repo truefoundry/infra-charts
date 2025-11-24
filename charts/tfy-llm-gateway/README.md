@@ -10,7 +10,7 @@ LLM-Gateway Helm Chart
 | `global.resourceTier`                         | Resource deployment type                                                        | `medium`                             |
 | `global.controlPlaneURL`                      | Control plane URL                                                               | `""`                                 |
 | `global.controlPlaneChartVersion`             | Control plane version                                                           | `0.98.2`                             |
-| `global.gatewayChartVersion`                  | Gateway version                                                                 | `0.101.0`                            |
+| `global.gatewayChartVersion`                  | Gateway version                                                                 | `0.102.0`                            |
 | `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                     | `[]`                                 |
 | `global.affinity`                             | Affinity rules for pod scheduling on a node                                     | `{}`                                 |
 | `global.labels`                               | Global labels                                                                   | `{}`                                 |
@@ -29,7 +29,7 @@ LLM-Gateway Helm Chart
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
-| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.101.0`                           |
+| `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.102.0`                           |
 | `fullnameOverride`                            | Full name override for the tfy-llm-gateway                                      | `""`                                 |
 | `environmentName`                             | The environment name                                                            | `default`                            |
 | `envSecretName`                               | The environment secret name                                                     | `tfy-llm-gateway-env-secret`         |
@@ -49,14 +49,14 @@ LLM-Gateway Helm Chart
 | `healthcheck.readiness.path`                  | Path to probe                                                                   | `/`                                  |
 | `healthcheck.readiness.initialDelaySeconds`   | Initial delay in seconds                                                        | `30`                                 |
 | `healthcheck.readiness.periodSeconds`         | Period in seconds                                                               | `10`                                 |
-| `healthcheck.readiness.timeoutSeconds`        | Timeout in seconds                                                              | `1`                                  |
+| `healthcheck.readiness.timeoutSeconds`        | Timeout in seconds                                                              | `5`                                  |
 | `healthcheck.readiness.successThreshold`      | Success threshold                                                               | `1`                                  |
 | `healthcheck.readiness.failureThreshold`      | Failure threshold                                                               | `3`                                  |
 | `healthcheck.liveness.port`                   | Port to probe                                                                   | `8787`                               |
 | `healthcheck.liveness.path`                   | Path to probe                                                                   | `/`                                  |
 | `healthcheck.liveness.initialDelaySeconds`    | Initial delay in seconds                                                        | `600`                                |
 | `healthcheck.liveness.periodSeconds`          | Period in seconds                                                               | `10`                                 |
-| `healthcheck.liveness.timeoutSeconds`         | Timeout in seconds                                                              | `1`                                  |
+| `healthcheck.liveness.timeoutSeconds`         | Timeout in seconds                                                              | `5`                                  |
 | `healthcheck.liveness.successThreshold`       | Success threshold                                                               | `1`                                  |
 | `healthcheck.liveness.failureThreshold`       | Failure threshold                                                               | `3`                                  |
 | `nodeSelector`                                | Node selector                                                                   | `{}`                                 |
