@@ -35,7 +35,7 @@ spec:
         - name: TRUEFOUNDRY_NATS_CONFIGMAP
           value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
         - name: TRUEFOUNDRY_NAMESPACE
-          value: "{{ .Release.Namespace }}"
+          value: {{ include "global.namespace" . }}
         - name: INSTALL_TLS_CERTIFICATES
           value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
         - name: CLICKHOUSE_ENABLED
