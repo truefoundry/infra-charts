@@ -27,6 +27,7 @@ LLM-Gateway Helm Chart
 | `global.serviceAccount.labels`                | Service account labels                                                          | `{}`                                 |
 | `global.serviceAccount.annotations`           | Service account annotations                                                     | `{}`                                 |
 | `global.image.registry`                       | Global image registry override                                                  | `tfy.jfrog.io`                       |
+| `global.namespaceOverride`                    | Namespace override (defaults to .Release.Namespace if not set)                  | `""`                                 |
 | `image.registry`                              | Image registry for tfyLLMGateway (defaults to global.image.registry if not set) | `""`                                 |
 | `image.repository`                            | Image repository for tfyLLMGateway                                              | `tfy-private-images/tfy-llm-gateway` |
 | `image.tag`                                   | Image tag for the tfyLLMGateway                                                 | `v0.102.1`                           |
