@@ -1,5 +1,12 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+{{/*
   Global Labels
 */}}
 {{- define "global.labels" }}
@@ -20,7 +27,6 @@
 {}
 {{- end }}
 {{- end }}
-
 
 {{/*
   Service Account Annotations

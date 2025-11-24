@@ -13,6 +13,6 @@ roleRef:
   name: {{ include "tfy-build.fullname" . }}-role
 subjects:
   - kind: ServiceAccount
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ include "global.namespace" . }}
     name: {{ include "tfy-build.serviceAccountName" . }}
 {{- end }}
