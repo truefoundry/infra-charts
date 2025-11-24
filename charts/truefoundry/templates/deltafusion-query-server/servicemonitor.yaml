@@ -11,7 +11,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}

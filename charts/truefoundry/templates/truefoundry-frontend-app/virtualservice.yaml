@@ -9,7 +9,6 @@ metadata:
     {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry-frontend-app.istio.virtualService.annotations" . | nindent 4 }}
-  namespace: {{ .Release.Namespace }}
 spec:
   gateways:
   {{- range .Values.truefoundryFrontendApp.istio.virtualservice.gateways}}
@@ -84,7 +83,7 @@ spec:
               number: 4318
     - route:
         - destination:
-            host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            host: {{ include "truefoundry-frontend-app.fullname" . }}.{{ include "global.namespace" . }}.svc.cluster.local
             port:
               number: {{ .Values.truefoundryFrontendApp.service.port }}
 {{- end }}
