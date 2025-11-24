@@ -1,6 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+
 {{- define "tfy-llm-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
