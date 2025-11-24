@@ -25,6 +25,7 @@ Tfy-Otel_collector Helm Chart
 | `global.deploymentAnnotations`                | Deployment annotations                                                             | `{}`                                    |
 | `global.serviceAnnotations`                   | Service annotations                                                                | `{}`                                    |
 | `global.image.registry`                       | Image registry for tfyOtelCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                          |
+| `global.namespaceOverride`                    | Namespace override (defaults to .Release.Namespace if not set)                     | `""`                                    |
 | `env`                                         | Environment variables for the tfyOtelCollector                                     | `{}`                                    |
 | `image.registry`                              | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                    |
 | `image.repository`                            | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector` |
