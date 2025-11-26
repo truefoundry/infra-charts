@@ -97,7 +97,7 @@ Annotations for kubernetes pods scrape configs
 */}}
 {{- define "argo-workflows.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $argoWorkflowsLabels := mergeOverwrite $base (.Values.serviceMonitors.workflows.labels | default (dict)) }}
+{{- $argoWorkflowsLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.workflows.labels | default (dict)) }}
 {{- toYaml $argoWorkflowsLabels }}
 {{- end }}
 
@@ -142,11 +142,11 @@ Elasti service monitor annotations
 {{- end }}
 
 {{/*
-  KEDA service monitor labels
+KEDA service monitor labels
 */}}
 {{- define "keda.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $kedaLabels := mergeOverwrite $base (.Values.serviceMonitors.keda.labels | default (dict)) }}
+{{- $kedaLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.keda.labels | default (dict)) }}
 {{- toYaml $kedaLabels }}
 {{- end }}
 
@@ -165,11 +165,11 @@ Keda service monitor annotations
 {{- end }}
 
 {{/*
-  Kubecost service monitor labels
+Kubecost service monitor labels
 */}}
 {{- define "kubecost.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $kubecostLabels := mergeOverwrite $base (.Values.serviceMonitors.kubecost.labels | default (dict)) }}
+{{- $kubecostLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.kubecost.labels | default (dict)) }}
 {{- toYaml $kubecostLabels }}
 {{- end }}
 
@@ -193,7 +193,7 @@ Kubecost service monitor annotations
 */}}
 {{- define "prometheus.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $prometheusLabels := mergeOverwrite $base (.Values.serviceMonitors.prometheus.labels | default (dict)) }}
+{{- $prometheusLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.prometheus.labels | default (dict)) }}
 {{- toYaml $prometheusLabels }}
 {{- end }}
 
@@ -216,7 +216,7 @@ Kubecost service monitor annotations
 */}}
 {{- define "prometheusOperator.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $prometheusOperatorLabels := mergeOverwrite $base (.Values.serviceMonitors.prometheusOperator.labels | default (dict)) }}
+{{- $prometheusOperatorLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.prometheusOperator.labels | default (dict)) }}
 {{- toYaml $prometheusOperatorLabels }}
 {{- end }}
 
@@ -317,7 +317,7 @@ Container rules annotations
 */}}
 {{- define "alert-manager.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $alertManagerLabels := mergeOverwrite $base .Values.serviceMonitors.alertManager.labels }}
+{{- $alertManagerLabels := mergeOverwrite (deepCopy $base) .Values.serviceMonitors.alertManager.labels }}
 {{- toYaml $alertManagerLabels }}
 {{- end }}
 
@@ -326,7 +326,7 @@ Container rules annotations
 */}}
 {{- define "kubelet.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $kubeletLabels := mergeOverwrite $base .Values.serviceMonitors.kubelet.labels }}
+{{- $kubeletLabels := mergeOverwrite (deepCopy $base) .Values.serviceMonitors.kubelet.labels }}
 {{- toYaml $kubeletLabels }}
 {{- end }}
 
@@ -335,7 +335,7 @@ Container rules annotations
 */}}
 {{- define "nodeExporter.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $nodeExporterLabels := mergeOverwrite $base (.Values.serviceMonitors.nodeExporter.labels | default (dict)) }}
+{{- $nodeExporterLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.nodeExporter.labels | default (dict)) }}
 {{- toYaml $nodeExporterLabels }}
 {{- end }}
 
@@ -345,7 +345,7 @@ Container rules annotations
 */}}
 {{- define "kubeStateMetrics.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $kubeStateMetricsLabels := mergeOverwrite $base (.Values.serviceMonitors.kubeStateMetrics.labels | default (dict)) }}
+{{- $kubeStateMetricsLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.kubeStateMetrics.labels | default (dict)) }}
 {{- toYaml $kubeStateMetricsLabels }}
 {{- end }}
 
@@ -354,7 +354,7 @@ Container rules annotations
 */}}
 {{- define "karpenter.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $karpenterLabels := mergeOverwrite $base (.Values.serviceMonitors.karpenter.labels | default (dict)) }}
+{{- $karpenterLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.karpenter.labels | default (dict)) }}
 {{- toYaml $karpenterLabels }}
 {{- end }}
 
@@ -364,7 +364,7 @@ Container rules annotations
 */}}
 {{- define "gpu.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $gpuLabels := mergeOverwrite $base (.Values.serviceMonitors.gpu.labels | default (dict)) }}
+{{- $gpuLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.gpu.labels | default (dict)) }}
 {{- toYaml $gpuLabels }}
 {{- end }}
 
@@ -582,7 +582,7 @@ Container rules annotations
 */}}
 {{- define "sshServer.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $sshLabels := mergeOverwrite $base (.Values.serviceMonitors.sshServer.labels | default (dict)) }}
+{{- $sshLabels := mergeOverwrite (deepCopy $base) (.Values.serviceMonitors.sshServer.labels | default (dict)) }}
 {{- toYaml $sshLabels }}
 {{- end }}
 
