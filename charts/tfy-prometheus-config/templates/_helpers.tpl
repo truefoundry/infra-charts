@@ -70,16 +70,6 @@ Alert Manager Annotations
 {{- end }}
 
 {{/*
-Scrape Config Labels}}
-*/}}
-{{- define "scrapeConfigs.labels" -}}
-{{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.scrapeConfigs.labels -}}
-{{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
-{{- toYaml $mergedLabels -}}
-{{- end -}}
-
-{{/*
 Labels for envoy stats scrape configs
 */}}
 {{- define "envoyStats.labels" -}}
