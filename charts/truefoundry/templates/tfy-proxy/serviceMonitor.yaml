@@ -1,17 +1,16 @@
-{{- if and .Values.tfyProxy.enabled .Values.tfyProxy.serviceMonitor.enabled -}}
+{{- if and .Values.tfyProxy.enabled .Values.tfyProxy.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-proxy.fullname" . }}
   labels:
-    release: prometheus
     {{- include "tfy-proxy.serviceMonitorLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-proxy.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 6 }}

@@ -1,6 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+
 {{- define "tfy-llm-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -262,33 +270,33 @@ Ingress Annotations
 {{- define "tfy-llm-gateway.defaultResources.small" }}
 requests:
   cpu: 200m
-  memory: 256Mi
+  memory: 512Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 400m
-  memory: 512Mi
+  memory: 1024Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "tfy-llm-gateway.defaultResources.medium" }}
 requests:
   cpu: 1000m
-  memory: 1024Mi
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
-  memory: 2048Mi
+  memory: 4096Mi
   ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "tfy-llm-gateway.defaultResources.large" }}
 requests:
   cpu: 1000m
-  memory: 1024Mi
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
-  memory: 2048Mi
+  memory: 4096Mi
   ephemeral-storage: 512Mi
 {{- end }}
 

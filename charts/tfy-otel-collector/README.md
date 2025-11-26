@@ -25,10 +25,11 @@ Tfy-Otel_collector Helm Chart
 | `global.deploymentAnnotations`                | Deployment annotations                                                             | `{}`                                    |
 | `global.serviceAnnotations`                   | Service annotations                                                                | `{}`                                    |
 | `global.image.registry`                       | Image registry for tfyOtelCollector (defaults to global.image.registry if not set) | `tfy.jfrog.io`                          |
+| `global.namespaceOverride`                    | Namespace override (defaults to .Release.Namespace if not set)                     | `""`                                    |
 | `env`                                         | Environment variables for the tfyOtelCollector                                     | `{}`                                    |
 | `image.registry`                              | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                    |
 | `image.repository`                            | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector` |
-| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `v0.99.0-rc.1`                          |
+| `image.tag`                                   | Image tag for the tfyOTELCollector                                                 | `v0.101.0`                              |
 | `imagePullSecrets`                            | List of secrets to pull images                                                     | `[]`                                    |
 | `fullnameOverride`                            | Full name override for the tfy-otel-collector                                      | `""`                                    |
 | `environmentName`                             | The environment name                                                               | `default`                               |

@@ -39,6 +39,8 @@ global:
   ## @param global.image.registry Image registry for tfyOtelCollector (defaults to global.image.registry if not set)
   image:
     registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
@@ -46,8 +48,8 @@ env:
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: "true"
-  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
-  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ include "global.namespace" . }}.svc.cluster.local:8000
+  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
   SFY_SERVER_REQUEST_TIMEOUT: 30s
   DELTAFUSION_INGESTOR_REQUEST_TIMEOUT: 60s
   DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 60s
@@ -70,7 +72,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.99.0-rc.1
+  tag: v0.101.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -88,7 +90,7 @@ envSecretName: ""
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations

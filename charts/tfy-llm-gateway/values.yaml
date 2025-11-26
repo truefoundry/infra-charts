@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.99.0-rc.1"
+  gatewayChartVersion: "0.102.4"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -44,6 +44,8 @@ global:
   ## @param global.image.registry Global image registry override
   image:
     registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 ## Image configuration for llm-gateway
 image:
   ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
@@ -51,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.99.0-rc.1
+  tag: v0.102.4
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -64,7 +66,7 @@ envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
@@ -98,7 +100,7 @@ healthcheck:
     ## @param healthcheck.readiness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.readiness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
@@ -114,7 +116,7 @@ healthcheck:
     ## @param healthcheck.liveness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.liveness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.liveness.failureThreshold Failure threshold
@@ -211,6 +213,8 @@ serviceAccount:
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
+## @param dnsConfig DNS config
+dnsConfig: {}
 ## rbac configuration
 rbac:
   ## @param rbac.enabled Enable rbac
@@ -235,15 +239,15 @@ rollout:
   maxSurge: 100%
 ## @skip env Environment variables for the llmGateway
 env:
-  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   LOG_LEVEL: info
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:4222
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   TENANT_NAME: "{{ .Values.global.tenantName }}"
-  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318/v1/traces
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local:4318/v1/traces
   USE_GLOBAL_STATE_V2: "true"
   MULTITENANT: "false"
   TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
@@ -253,6 +257,9 @@ env:
   GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
   ENABLE_ZOD_VALIDATION: "true"
   DEFAULT_GATEWAY_METADATA: "{}"
+  GATEWAY_AWS_ROLE_ARN: ""
+  GATEWAY_AWS_USER_ACCESS_KEY_ID: ""
+  GATEWAY_AWS_USER_SECRET_ACCESS_KEY: ""
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
