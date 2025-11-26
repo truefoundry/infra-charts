@@ -233,3 +233,4 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | ------------------------------------- | ------------------------------------------ | ------- |
 | `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.         | `false` |
 | `tfyWorkflowPropeller.valuesOverride` | Config override from default config values | `{}`    |
+| `helm.resourcePolicy`                 | Resource policy for the helm chart         | `keep`  |
