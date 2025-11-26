@@ -110,12 +110,16 @@ scrapeConfigs:
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
 alertManagers:
+  ## @param alertManagers.labels [object] Labels for alert managers
+  labels: {}
   # alertManagers.tfyAgent Alert manager for tfy-agent
   tfyAgent:
     ## @param alertManagers.tfyAgent.enabled Enable alert manager for tfy-agent
     enabled: true
     ## @param alertManagers.tfyAgent.name Name of the alert manager
     name: tfy-alertmanager-config
+    ## @param alertManagers.tfyAgent.labels Label for tfy-agent
+    labels: {}
     ## @param alertManagers.tfyAgent.route [object] Route for the alert manager
     route:
       receiver: tfy-agent
@@ -135,6 +139,8 @@ alertManagers:
             url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
 ## @section prometheusRules Prometheus rules for prometheus
 prometheusRules:
+  ## @param prometheusRules.labels [object] Labels for prometheus rules
+  labels: {}
   # prometheusRules.alerts Prometheus rules for alerts
   containerRules:
     ## @param prometheusRules.containerRules.enabled Enable prometheus rules for alerts
