@@ -3,7 +3,7 @@ Global Labels
 */}}
 {{- define "global.labels" -}}
 {{- $prometheusLabel := dict "release" "prometheus" -}}
-{{- $globals := deepCopy (.Values.global.labels | default dict) -}}
+{{- $globals := deepCopy (.Values.global.labels) -}}
 {{- mergeOverwrite $prometheusLabel $globals | toYaml -}}
 {{- end }}
 
@@ -12,7 +12,7 @@ Service Monitor Labels
 */}}
 {{- define "serviceMonitors.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.serviceMonitors.labels | default dict -}}
+{{- $local := .Values.serviceMonitors.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -22,7 +22,7 @@ Pod Monitor Labels
 */}}
 {{- define "podMonitors.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.podMonitors.labels | default dict -}}
+{{- $local := .Values.podMonitors.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -32,7 +32,7 @@ Alert Manager Labels
 */}}
 {{- define "alertManagers.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.alertManagers.labels | default dict -}}
+{{- $local := .Values.alertManagers.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -42,7 +42,7 @@ TFY Agent Labels
 */}}
 {{- define "tfy-agent.labels" -}}
 {{- $base := (include "alertManagers.labels" . | fromYaml) -}}
-{{- $local := .Values.alertManagers.tfyAgent.labels | default dict -}}
+{{- $local := .Values.alertManagers.tfyAgent.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -64,7 +64,7 @@ Scrape Config Labels}}
 */}}
 {{- define "scrapeConfigs.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.scrapeConfigs.labels | default dict -}}
+{{- $local := .Values.scrapeConfigs.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -74,7 +74,7 @@ Labels for envoy stats scrape configs
 */}}
 {{- define "envoyStats.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.scrapeConfigs.envoy.labels | default dict -}}
+{{- $local := .Values.scrapeConfigs.envoy.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -97,7 +97,7 @@ Labels for kubernetes pods scrape configs
 */}}
 {{- define "k8sPods.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.scrapeConfigs.kubernetesPods.labels | default dict -}}
+{{- $local := .Values.scrapeConfigs.kubernetesPods.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -261,7 +261,7 @@ Prometheus Rules Labels
 */}}
 {{- define "prometheusRules.labels" -}}
 {{- $base := (include "global.labels" . | fromYaml) -}}
-{{- $local := .Values.prometheusRules.labels | default dict -}}
+{{- $local := .Values.prometheusRules.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end -}}
@@ -274,7 +274,7 @@ Prometheus Rules Labels
 */}}
 {{- define "containerRule.labels" -}}
 {{- $base := (include "prometheusRules.labels" . | fromYaml) -}}
-{{- $containerRuleLabels := .Values.prometheusRules.containerRules.labels | default dict -}}
+{{- $containerRuleLabels := .Values.prometheusRules.containerRules.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $containerRuleLabels -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -298,7 +298,7 @@ Container rules annotations
 */}}
 {{- define "envoyPortRules.labels" -}}
 {{- $base := (include "prometheusRules.labels" . | fromYaml) -}}
-{{- $envoyPortRuleLabels := .Values.prometheusRules.envoyPortRules.labels | default dict -}}
+{{- $envoyPortRuleLabels := .Values.prometheusRules.envoyPortRules.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $envoyPortRuleLabels -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -321,7 +321,7 @@ Container rules annotations
 */}}
 {{- define "kubecostRules.labels" -}}
 {{- $base := (include "prometheusRules.labels" . | fromYaml) -}}
-{{- $kubecostRuleLabels := .Values.prometheusRules.kubecostRules.labels | default dict -}}
+{{- $kubecostRuleLabels := .Values.prometheusRules.kubecostRules.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $kubecostRuleLabels -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -458,7 +458,7 @@ Container rules annotations
 */}}
 {{- define "alert-manager.labels" -}}
 {{- $base := (include "serviceMonitors.labels" . | fromYaml) -}}
-{{- $local := .Values.serviceMonitors.alertManager.labels | default dict -}}
+{{- $local := .Values.serviceMonitors.alertManager.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -696,7 +696,7 @@ Control Plane Alert Rules Labels
 */}}
 {{- define "controlPlaneAlertRules.labels" -}}
 {{- $base := (include "prometheusRules.labels" . | fromYaml) -}}
-{{- $local := .Values.controlPlaneMonitors.alerts.alertRules.labels | default dict -}}
+{{- $local := .Values.controlPlaneMonitors.alerts.alertRules.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
@@ -719,7 +719,7 @@ Control Plane Alert Manager Labels
 */}}
 {{- define "controlPlaneAlertManager.labels" -}}
 {{- $base := (include "alertManagers.labels" . | fromYaml) -}}
-{{- $local := .Values.controlPlaneMonitors.alerts.alertManager.labels | default dict -}}
+{{- $local := .Values.controlPlaneMonitors.alerts.alertManager.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
 {{- end }}
