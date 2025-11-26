@@ -18,6 +18,16 @@ Service Monitor Labels
 {{- end -}}
 
 {{/*
+Scrape Config Labels
+*/}}
+{{- define "scrapeConfigs.labels" -}}
+{{- $base := (include "global.labels" . | fromYaml) -}}
+{{- $local := .Values.scrapeConfigs.labels -}}
+{{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
+{{- toYaml $mergedLabels -}}
+{{- end -}}
+
+{{/*
 Pod Monitor Labels
 */}}
 {{- define "podMonitors.labels" -}}
@@ -73,7 +83,7 @@ Scrape Config Labels}}
 Labels for envoy stats scrape configs
 */}}
 {{- define "envoyStats.labels" -}}
-{{- $base := (include "global.labels" . | fromYaml) -}}
+{{- $base := (include "scrapeConfigs.labels" . | fromYaml) -}}
 {{- $local := .Values.scrapeConfigs.envoy.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}
@@ -96,7 +106,7 @@ Annotations for envoy stats scrape configs
 Labels for kubernetes pods scrape configs
 */}}
 {{- define "k8sPods.labels" -}}
-{{- $base := (include "global.labels" . | fromYaml) -}}
+{{- $base := (include "scrapeConfigs.labels" . | fromYaml) -}}
 {{- $local := .Values.scrapeConfigs.kubernetesPods.labels -}}
 {{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
 {{- toYaml $mergedLabels -}}

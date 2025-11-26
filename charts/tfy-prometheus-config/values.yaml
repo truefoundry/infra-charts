@@ -9,6 +9,8 @@ global:
   annotations: {}
 ## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
+  ## @param scrapeConfigs.labels [object] Labels for scrape configs
+  labels: {}
   # scrapeConfigs.envoy Scrape config for envoy pods
   envoy:
     ## @param scrapeConfigs.envoy.enabled Enable scrape config for envoy
@@ -176,7 +178,7 @@ prometheusRules:
 ## @section controlPlaneMonitors service monitors for control plane components
 controlPlaneMonitors:
   ## @param controlPlaneMonitors.enabled Enable service monitors for control plane components
-  enabled: false
+  enabled: true
   ## @param controlPlaneMonitors.releaseNamespace Release namespace for the control plane
   releaseNamespace: truefoundry
   ## @param controlPlaneMonitors.tenantName Tenant name for the control plane
@@ -190,7 +192,7 @@ controlPlaneMonitors:
   # controlPlaneMonitors.alerts Alert configuration for control plane
   alerts:
     ## @param controlPlaneMonitors.alerts.enabled Enable alerts for control plane
-    enabled: false
+    enabled: true
     # controlPlaneMonitors.alerts.alertRules Alert rules configuration
     alertRules:
       ## @param controlPlaneMonitors.alerts.alertRules.labels [object] Labels for control plane alert rules
