@@ -18,6 +18,16 @@ Service Monitor Labels
 {{- end -}}
 
 {{/*
+Pod Monitor Labels}}
+*/}}
+{{- define "podMonitors.labels" -}}
+{{- $base := (include "global.labels" . | fromYaml) -}}
+{{- $local := .Values.podMonitors.labels | default dict -}}
+{{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
+{{- toYaml $mergedLabels -}}
+{{- end -}}
+
+{{/*
 Alert Manager Labels
 */}}
 {{- define "alertManagers.labels" -}}
@@ -516,26 +526,18 @@ Container rules annotations
   MLFoundry server service monitor labels
 */}}
 {{- define "mlfoundry.labels" -}}
-{{- if .Values.controlPlaneMonitors.mlfoundryServer.labels }}
-{{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $mlfoundryLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.mlfoundryServer.labels | default (dict)) }}
+{{- toYaml $mlfoundryLabels }}
 {{- end }}
 
 {{/*
   Sfy-manifests service monitor labels
 */}}
 {{- define "sfyManifestService.labels" -}}
-{{- if .Values.controlPlaneMonitors.sfyManifestService.labels }}
-{{- toYaml .Values.controlPlaneMonitors.sfyManifestService.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $sfyManifestLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.sfyManifestService.labels | default (dict)) }}
+{{- toYaml $sfyManifestLabels }}
 {{- end }}
 
 {{/*
@@ -555,13 +557,9 @@ Container rules annotations
   NATS service monitor labels
 */}}
 {{- define "nats.labels" -}}
-{{- if .Values.controlPlaneMonitors.nats.labels }}
-{{- toYaml .Values.controlPlaneMonitors.nats.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "podMonitors.labels" . | fromYaml }}
+{{- $natsLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.nats.labels | default (dict)) }}
+{{- toYaml $natsLabels }}
 {{- end }}
 
 {{/*
@@ -590,13 +588,9 @@ Container rules annotations
   TFY Controller service monitor labels
  */}}
 {{- define "tfyController.labels" -}}
-{{- if .Values.controlPlaneMonitors.tfyController.labels }}
-{{- toYaml .Values.controlPlaneMonitors.tfyController.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $tfyControllerLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.tfyController.labels | default (dict)) }}
+{{- toYaml $tfyControllerLabels }}
 {{- end }}
 
 {{/*
@@ -616,13 +610,9 @@ Container rules annotations
   TFY K8S Controller service monitor labels
  */}}
 {{- define "tfyK8sController.labels" -}}
-{{- if .Values.controlPlaneMonitors.tfyK8sController.labels }}
-{{- toYaml .Values.controlPlaneMonitors.tfyK8sController.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $tfyK8sControllerLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.tfyK8sController.labels | default (dict)) }}
+{{- toYaml $tfyK8sControllerLabels }}
 {{- end }}
 
 {{/*
@@ -642,13 +632,9 @@ Container rules annotations
   TYF Otel Collector service monitor labels
 */}}
 {{- define "tfyOtelCollector.labels" -}}
-{{- if .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
-{{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $tfyOtelCollectorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.tfyOtelCollector.labels | default (dict)) }}
+{{- toYaml $tfyOtelCollectorLabels }}
 {{- end }}
 
 {{/*
@@ -668,13 +654,9 @@ Container rules annotations
   Altinity ClickHouse Operator service monitor labels
 */}}
 {{- define "clickhouseOperator.labels" -}}
-{{- if .Values.controlPlaneMonitors.clickHouseOperator.labels }}
-{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.labels }}
-{{- else if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml (dict "release" "prometheus") }}
-{{- end }}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $clickhouseOperatorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.clickHouseOperator.labels | default (dict)) }}
+{{- toYaml $clickhouseOperatorLabels }}
 {{- end }}
 
 {{/*
