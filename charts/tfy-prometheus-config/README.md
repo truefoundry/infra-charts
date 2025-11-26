@@ -67,12 +67,12 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                                                              | Description                                           | Value                                    |
 | ----------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------- |
-| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components  | `true`                                   |
+| `controlPlaneMonitors.enabled`                                    | Enable service monitors for control plane components  | `false`                                  |
 | `controlPlaneMonitors.releaseNamespace`                           | Release namespace for the control plane               | `truefoundry`                            |
 | `controlPlaneMonitors.tenantName`                                 | Tenant name for the control plane                     | `<to_be_provided>`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors     | `{}`                                     |
 | `controlPlaneMonitors.serviceSelectorLabel`                       | Service selector label for the control plane monitors | `app.kubernetes.io/name`                 |
-| `controlPlaneMonitors.alerts.enabled`                             | Enable alerts for control plane                       | `true`                                   |
+| `controlPlaneMonitors.alerts.enabled`                             | Enable alerts for control plane                       | `false`                                  |
 | `controlPlaneMonitors.alerts.alertRules.labels`                   | Labels for control plane alert rules                  | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertRules.annotations`              | Annotations for control plane alert rules             | `{}`                                     |
 | `controlPlaneMonitors.alerts.alertRules.enabled`                  | Enable alert rules for control plane                  | `true`                                   |
