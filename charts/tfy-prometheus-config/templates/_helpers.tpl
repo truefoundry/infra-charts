@@ -339,14 +339,6 @@ Container rules annotations
 {{- end }}
 {{- end }}
 
-{{/*
-Alert manager service monitor labels
-*/}}
-{{- define "alert-manager.labels" -}}
-{{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $alertManagerLabels := mergeOverwrite (deepCopy $base) .Values.serviceMonitors.alertManager.labels }}
-{{- toYaml $alertManagerLabels }}
-{{- end }}
 
 {{/*
   Kubelet service monitor labels
