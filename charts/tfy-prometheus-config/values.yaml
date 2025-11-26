@@ -482,6 +482,8 @@ controlPlaneMonitors:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
+  ## @param serviceMonitors.labels [object] Labels for service monitors
+  labels: {}
   # serviceMonitors.alertManager Service monitor for alert manager
   alertManager:
     ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager
@@ -583,7 +585,8 @@ serviceMonitors:
     ## @param serviceMonitors.sshServer.name Name of the service monitor
     name: ssh
     ## @param serviceMonitors.sshServer.labels [object] Labels for ssh server
-    labels: {}
+    labels:
+      release: overwrite
     ## @param serviceMonitors.sshServer.jobLabel Job label for ssh server
     jobLabel: truefoundry.com/component-type
     ## @param serviceMonitors.sshServer.endpoints [array] Endpoints for ssh server
@@ -1015,5 +1018,11 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - prometheus
+
+## @section podMonitors Pod monitors for prometheus
+podMonitors:
+  ## @param podMonitors.labels [object] Labels for pod monitors
+  labels: {}
+
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []

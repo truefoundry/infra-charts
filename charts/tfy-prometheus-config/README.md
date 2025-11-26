@@ -156,6 +156,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | Name                                                       | Description                                     | Value                                     |
 | ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
 | `serviceMonitors.enabled`                                  | Enable service monitors for prometheus          | `true`                                    |
+| `serviceMonitors.labels`                                   | Labels for service monitors                     | `{}`                                      |
 | `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `true`                                    |
 | `serviceMonitors.alertManager.name`                        | Name of the service monitor                     | `prometheus-kube-prometheus-alertmanager` |
 | `serviceMonitors.alertManager.labels`                      | Labels for alert manager                        | `{}`                                      |
@@ -255,4 +256,10 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
+
+### podMonitors Pod monitors for prometheus
+
+| Name                 | Description                  | Value |
+| -------------------- | ---------------------------- | ----- |
+| `podMonitors.labels` | Labels for pod monitors      | `{}`  |
+| `extraObjects`       | Extra objects for prometheus | `[]`  |
