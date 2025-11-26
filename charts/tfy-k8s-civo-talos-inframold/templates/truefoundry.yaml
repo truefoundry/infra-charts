@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "truefoundry"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: truefoundry
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.102.4
+    targetRevision: 0.102.5
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
