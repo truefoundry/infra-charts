@@ -477,6 +477,16 @@ Container rules annotations
 {{- end }}
 
 {{/*
+  Alert manager service monitor labels
+*/}}
+{{- define "alert-manager.labels" -}}
+{{- $base := (include "serviceMonitors.labels" . | fromYaml) -}}
+{{- $local := .Values.serviceMonitors.alertManager.labels | default dict -}}
+{{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
+{{- toYaml $mergedLabels -}}
+{{- end }}
+
+{{/*
   Alert manager service monitor annotations
 */}}
 {{- define "alert-manager.annotations" -}}
