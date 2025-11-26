@@ -253,4 +253,10 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
+
+### podMonitors Pod monitors for prometheus
+
+| Name                 | Description                  | Value |
+| -------------------- | ---------------------------- | ----- |
+| `podMonitors.labels` | Labels for pod monitors      | `{}`  |
+| `extraObjects`       | Extra objects for prometheus | `[]`  |
