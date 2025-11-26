@@ -2,21 +2,20 @@
 Global Labels
 */}}
 {{- define "global.labels" -}}
-{{- $prometheusLabel := dict "release" "prometheus" }}
-{{- if .Values.global.labels }}
-{{- toYaml .Values.global.labels }}
-{{- else }}
-{{- toYaml $prometheusLabel }}
-{{- end }}
+{{- $prometheusLabel := dict "release" "prometheus" -}}
+{{- $globals := deepCopy (.Values.global.labels | default dict) -}}
+{{- mergeOverwrite $prometheusLabel $globals | toYaml -}}
 {{- end }}
 
 {{/*
 Service Monitor Labels
 */}}
-{{- define "serviceMonitors.labels"}}
-{{- $mergedLabels := mergeOverwrite (include "global.labels" . | fromYaml) .Values.serviceMonitors.labels }}
-{{- toYaml $mergedLabels }}
-{{- end }}
+{{- define "serviceMonitors.labels" -}}
+{{- $base := (include "global.labels" . | fromYaml) -}}
+{{- $local := .Values.serviceMonitors.labels | default dict -}}
+{{- $mergedLabels := mergeOverwrite (deepCopy $base) $local -}}
+{{- toYaml $mergedLabels -}}
+{{- end -}}
 
 {{/*
 Alert Manager Labels
@@ -94,7 +93,7 @@ Annotations for kubernetes pods scrape configs
 {{- end }}
 
 {{/*
-  Argo Workflows service monitor labels
+ Argo Workflows service monitor labels
 */}}
 {{- define "argo-workflows.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
