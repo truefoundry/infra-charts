@@ -40,6 +40,8 @@ spec:
           create: true
           labels:
             {{- toYaml .Values.certManager.podLabels | nindent 12 }}
+          annotations:
+             {{- toYaml .Values.certManager.annotations | nindent 12 }}
         crds:
           enabled: true
         {{- if $mergedTolerations }}
