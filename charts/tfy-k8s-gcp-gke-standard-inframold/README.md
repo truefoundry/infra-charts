@@ -42,13 +42,14 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### certManager parameters
 
-| Name                         | Description                                                                       | Value  |
-| ---------------------------- | --------------------------------------------------------------------------------- | ------ |
-| `certManager.enabled`        | Flag to enable Cert Manager                                                       | `true` |
-| `certManager.tolerations`    | Tolerations for Cert Manager                                                      | `[]`   |
-| `certManager.podLabels`      | Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well. | `{}`   |
-| `certManager.affinity`       | Affinity for Cert Manager                                                         | `{}`   |
-| `certManager.valuesOverride` | Config override from default config values                                        | `{}`   |
+| Name                                     | Description                                                                       | Value  |
+| ---------------------------------------- | --------------------------------------------------------------------------------- | ------ |
+| `certManager.enabled`                    | Flag to enable Cert Manager                                                       | `true` |
+| `certManager.tolerations`                | Tolerations for Cert Manager                                                      | `[]`   |
+| `certManager.podLabels`                  | Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well. | `{}`   |
+| `certManager.serviceAccount.annotations` | Service account annotations for Cert Manager.                                     | `{}`   |
+| `certManager.affinity`                   | Affinity for Cert Manager                                                         | `{}`   |
+| `certManager.valuesOverride`             | Config override from default config values                                        | `{}`   |
 
 ### metricsServer parameters
 
