@@ -36,6 +36,8 @@ spec:
         - name: squid-proxy
           image: "{{ .Values.squid.image.repository }}:{{ .Values.squid.image.tag }}"
           imagePullPolicy: {{ .Values.squid.image.pullPolicy }}
+          command: ["/usr/sbin/squid"]
+          args: ["-N", "-f", "/etc/squid/squid.conf"]
           ports:
             - name: proxy
               containerPort: {{ .Values.squid.port }}
