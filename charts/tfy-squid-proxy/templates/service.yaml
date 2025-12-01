@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-squid-proxy
+  labels:
+    {{- include "tfy-squid-proxy.labels" . | nindent 4 }}
+  {{- with .Values.squid.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.squid.service.type }}
+  ports:
+    - port: {{ .Values.squid.port }}
+      targetPort: proxy
+      protocol: TCP
+      name: proxy
+  selector:
+    {{- include "tfy-squid-proxy.selectorLabels" . | nindent 4 }}
+

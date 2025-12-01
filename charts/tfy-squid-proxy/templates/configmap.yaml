@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-squid-proxy-config
+  labels:
+    {{- include "tfy-squid-proxy.labels" . | nindent 4 }}
+data:
+  squid.conf: |
+{{ .Values.squid.config | indent 4 }}
+

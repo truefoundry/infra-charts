@@ -1,0 +1,72 @@
+## Squid Proxy Configuration
+squid:
+  ## @param squid.replicas number of replicas of squid proxy service
+  replicas: 3
+
+  ## Image configuration
+  image:
+    ## @param squid.image.repository the docker image repository for squid proxy
+    repository: public.ecr.aws/ubuntu/squid
+    ## @param squid.image.tag the docker image tag for squid proxy
+    tag: "6.6-24.04_edge"
+    ## @param squid.image.pullPolicy Image pull policy
+    pullPolicy: IfNotPresent
+
+  ## @param squid.imagePullSecrets [array] Image pull secrets for squid proxy
+  imagePullSecrets: []
+
+  ## @param squid.port the port on which squid proxy listens
+  port: 3130
+
+  ## @param squid.config the squid configuration file content
+  config: |
+    # ------------------------
+    # Squid #3 - groq-only
+    # Listens on 3130
+    # ------------------------
+    http_port 3130
+
+    # No caching
+    cache deny all
+    cache_mem 0 MB
+    maximum_object_size 0 KB
+    cache_dir null /tmp
+
+    # Allow all by default
+    http_access allow all
+
+    # Logging
+    # Route access logs directly to stdout (no stdio: prefix)
+    access_log /dev/stdout
+    # cache_log  ./squid-multi/logs3/cache.log
+    pid_filename ./squid-multi/logs3/squid.pid
+
+  ## Resource limits and requests
+  resources:
+    limits:
+      ## @param squid.resources.limits.cpu The maximum amount of CPU the service can use
+      cpu: 200m
+      ## @param squid.resources.limits.memory The maximum amount of memory the service can use
+      memory: 256Mi
+    requests:
+      ## @param squid.resources.requests.cpu The amount of CPU the service requests
+      cpu: 100m
+      ## @param squid.resources.requests.memory The amount of memory the service requests
+      memory: 128Mi
+
+  ## @param squid.tolerations [array] Tolerations for the squid proxy service
+  tolerations: []
+
+  ## @param squid.affinity [object] Node affinity for squid proxy service
+  affinity: {}
+
+  ## @param squid.nodeSelector [object] Node selector for squid proxy service
+  nodeSelector: {}
+
+  ## Service configuration
+  service:
+    ## @param squid.service.type Service type for squid proxy
+    type: ClusterIP
+    ## @param squid.service.annotations Service annotations
+    annotations: {}
+
