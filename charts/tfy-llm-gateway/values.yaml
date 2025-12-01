@@ -274,3 +274,43 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Redis dependency configuration
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  image:
+    tag: 8.4.0
+    registry: public.ecr.aws
+    pullPolicy: IfNotPresent
+    repository: docker/library/redis
+  master:
+    configmap: >-
+      # Basic Redis config
+      appendonly yes                     # Enable AOF
+      appendfsync everysec               # Standard durability vs performance
+      balance
+      # AOF Rewrite (Consolidation) Settings
+      auto-aof-rewrite-percentage 100    # Default threshold
+      auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting
+      # Force AOF rewrite every 24 hours using system-based triggering
+      # by setting an active-expire-cycle to help reduce fragmentation
+      # and using cron-trigger for rewrite via Redis "CONFIG SET" supported:
+      aof-rewrite-incremental-fsync yes
+      # Optional: reduce memory fragmentation in long-running single-pod Redis
+      maxmemory-policy noeviction
+    persistence:
+      size: 8Gi
+      enabled: true
+      accessModes:
+        - ReadWriteOnce
+      storageClass: gp3
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 6000Mi
+    requests:
+      cpu: 1000m
+      memory: 4000Mi
+  architecture: standalone
+  replicaCount: 1
