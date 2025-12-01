@@ -1,108 +1,46 @@
-# Squid Forward Proxy Helm Chart
+# Tfy-squid-proxy helm chart packaged by TrueFoundry
+Tfy-squid-proxy is a Helm chart that facilitates the deployment and management of Squid forward proxy for HTTP/HTTPS traffic forwarding.
 
-This Helm chart deploys a Squid forward proxy for HTTP/HTTPS traffic forwarding.
+## Parameters
 
-## Overview
+### Squid Proxy Configuration
 
-Squid is a caching and forwarding HTTP web proxy. This chart configures it as a forward proxy that can be used to route outbound HTTP/HTTPS traffic through a controlled endpoint.
+| Name                              | Description                                      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `squid.replicas`                  | number of replicas of squid proxy service        | `3`                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `squid.image.repository`          | the docker image repository for squid proxy      | `public.ecr.aws/ubuntu/squid`                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `squid.image.tag`                 | the docker image tag for squid proxy             | `6.6-24.04_edge`                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `squid.image.pullPolicy`          | Image pull policy                                | `IfNotPresent`                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `squid.imagePullSecrets`          | Image pull secrets for squid proxy               | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `squid.port`                      | the port on which squid proxy listens            | `3130`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `squid.config`                    | the squid configuration file content             | `# ------------------------
+# Squid #3 - groq-only
+# Listens on 3130
+# ------------------------
+http_port 3130
 
-## Prerequisites
+# No caching
+cache deny all
+cache_mem 0 MB
+maximum_object_size 0 KB
+cache_dir null /tmp
 
-- Kubernetes 1.19+
-- Helm 3.0+
+# Allow all by default
+http_access allow all
 
-## Installation
-
-```bash
-helm install my-squid-proxy ./tfy-squid-proxy
-```
-
-## Configuration
-
-The following table lists the configurable parameters of the Squid Proxy chart and their default values.
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `squid.replicas` | Number of replicas | `1` |
-| `squid.image.repository` | Docker image repository | `public.ecr.aws/ubuntu/squid` |
-| `squid.image.tag` | Docker image tag | `6.6-24.04_edge` |
-| `squid.image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `squid.imagePullSecrets` | Image pull secrets | `[]` |
-| `squid.port` | Proxy listen port | `3130` |
-| `squid.config` | Squid configuration file content | See values.yaml |
-| `squid.resources.limits.cpu` | CPU limit | `200m` |
-| `squid.resources.limits.memory` | Memory limit | `256Mi` |
-| `squid.resources.requests.cpu` | CPU request | `100m` |
-| `squid.resources.requests.memory` | Memory request | `128Mi` |
-| `squid.tolerations` | Pod tolerations | `[]` |
-| `squid.affinity` | Pod affinity rules | `{}` |
-| `squid.nodeSelector` | Node selector | `{}` |
-| `squid.service.type` | Service type | `ClusterIP` |
-| `squid.service.annotations` | Service annotations | `{}` |
-
-## Usage
-
-### Basic Installation
-
-```bash
-helm install squid-proxy ./tfy-squid-proxy
-```
-
-### Custom Configuration
-
-Create a custom values file:
-
-```yaml
-squid:
-  replicas: 2
-  port: 3128
-  config: |
-    http_port 3128
-    cache deny all
-    http_access allow all
-    access_log /dev/stdout
-```
-
-Install with custom values:
-
-```bash
-helm install squid-proxy ./tfy-squid-proxy -f custom-values.yaml
-```
-
-### With Image Pull Secrets
-
-```yaml
-squid:
-  imagePullSecrets:
-    - name: my-registry-secret
-```
-
-## Accessing the Proxy
-
-The proxy will be available at:
-
-```
-http://<release-name>-squid-proxy.<namespace>.svc.cluster.local:<port>
-```
-
-For example:
-```
-http://squid-proxy-squid-proxy.default.svc.cluster.local:3130
-```
-
-## Uninstallation
-
-```bash
-helm uninstall squid-proxy
-```
-
-## Default Squid Configuration
-
-The default configuration:
-- Listens on port 3130
-- Disables caching
-- Allows all traffic by default
-- Logs to stdout
-
-**Note**: The default configuration allows all traffic. For production use, you should customize the ACLs and access controls based on your security requirements.
+# Logging
+# Route access logs directly to stdout (no stdio: prefix)
+access_log /dev/stdout
+# cache_log  ./squid-multi/logs3/cache.log
+pid_filename ./squid-multi/logs3/squid.pid
+` |
+| `squid.resources.limits.cpu`      | The maximum amount of CPU the service can use    | `200m`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `squid.resources.limits.memory`   | The maximum amount of memory the service can use | `256Mi`                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `squid.resources.requests.cpu`    | The amount of CPU the service requests           | `100m`                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `squid.resources.requests.memory` | The amount of memory the service requests        | `128Mi`                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `squid.tolerations`               | Tolerations for the squid proxy service          | `[]`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `squid.affinity`                  | Node affinity for squid proxy service            | `{}`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `squid.nodeSelector`              | Node selector for squid proxy service            | `{}`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `squid.service.type`              | Service type for squid proxy                     | `ClusterIP`                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `squid.service.annotations`       | Service annotations                              | `{}`                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
