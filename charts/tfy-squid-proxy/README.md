@@ -12,12 +12,12 @@ Tfy-squid-proxy is a Helm chart that facilitates the deployment and management o
 | `squid.image.tag`                 | the docker image tag for squid proxy             | `6.6-24.04_edge`                                                                                                                                                                                                                                                                        |
 | `squid.image.pullPolicy`          | Image pull policy                                | `IfNotPresent`                                                                                                                                                                                                                                                                          |
 | `squid.imagePullSecrets`          | Image pull secrets for squid proxy               | `[]`                                                                                                                                                                                                                                                                                    |
-| `squid.port`                      | the port on which squid proxy listens            | `3130`                                                                                                                                                                                                                                                                                  |
+| `squid.port`                      | the port on which squid proxy listens            | `3128`                                                                                                                                                                                                                                                                                  |
 | `squid.config`                    | the squid configuration file content             | `# ------------------------
 # Squid #3 - groq-only
-# Listens on 3130
+# Listens on 3128
 # ------------------------
-http_port 3130
+http_port 3128
 
 # No caching
 cache deny all
