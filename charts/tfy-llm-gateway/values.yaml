@@ -276,15 +276,25 @@ oidc:
   config: {}
 ## Redis dependency configuration
 redis:
+  ## @param redis.enabled Enable Redis dependency
   enabled: true
+  ## redis.auth Authentication configuration
   auth:
+    ## @param redis.auth.enabled Enable Redis authentication
     enabled: false
+  ## redis.image Image configuration
   image:
+    ## @param redis.image.tag Image tag
     tag: 8.4.0
+    ## @param redis.image.registry Image registry
     registry: public.ecr.aws
+    ## @param redis.image.pullPolicy Image pull policy
     pullPolicy: IfNotPresent
+    ## @param redis.image.repository Image repository
     repository: docker/library/redis
+  ## redis.master Master configuration
   master:
+    ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
       # Basic Redis config
       appendonly yes                     # Enable AOF
@@ -299,18 +309,32 @@ redis:
       aof-rewrite-incremental-fsync yes
       # Optional: reduce memory fragmentation in long-running single-pod Redis
       maxmemory-policy noeviction
+    ## redis.master.persistence Persistence configuration
     persistence:
+      ## @param redis.master.persistence.size Persistence volume size
       size: 8Gi
+      ## @param redis.master.persistence.enabled Enable persistence
       enabled: true
+      ## @param redis.master.persistence.accessModes [array] Persistence access modes
       accessModes:
         - ReadWriteOnce
+      ## @param redis.master.persistence.storageClass Persistence storage class
       storageClass: gp3
+  ## redis.resources Resource configuration
   resources:
+    ## redis.resources.limits Resource limits
     limits:
+      ## @param redis.resources.limits.cpu CPU limit
       cpu: 2000m
+      ## @param redis.resources.limits.memory Memory limit
       memory: 6000Mi
+    ## redis.resources.requests Resource requests
     requests:
+      ## @param redis.resources.requests.cpu CPU request
       cpu: 1000m
+      ## @param redis.resources.requests.memory Memory request
       memory: 4000Mi
+  ## @param redis.architecture Redis architecture
   architecture: standalone
+  ## @param redis.replicaCount Redis replica count
   replicaCount: 1
