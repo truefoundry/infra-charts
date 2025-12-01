@@ -31,78 +31,118 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "s3proxy.podLabels" -}}
-{{ include "s3proxy.selectorLabels" . }}
-{{- if .Values.s3proxy.image.tag }}
-app.kubernetes.io/version: {{ .Values.s3proxy.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.s3proxy.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "s3proxy.labels" -}}
-{{- include "s3proxy.podLabels" . }}
-helm.sh/chart: {{ include "s3proxy.chart" . }}
-{{- if .Values.s3proxy.commonLabels }}
-{{ toYaml .Values.s3proxy.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "name" "s3proxy") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "s3proxy.commonLabels" -}}
+{{- $baseLabels := include "s3proxy.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.s3proxy.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "s3proxy.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.s3proxy.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
-{{- define "s3proxy.annotations" -}}
-{{- if .Values.s3proxy.annotations }}
-{{ toYaml .Values.s3proxy.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- define "s3proxy.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.s3proxy.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-  Selector labels
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
   */}}
-{{- define "s3proxy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "s3proxy.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "s3proxy.podAnnotations" -}}
+{{- $commonAnnotations := include "s3proxy.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.s3proxy.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "s3proxy.serviceLabels" -}}
+{{- $commonLabels := include "s3proxy.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.s3proxy.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "s3proxy.serviceAnnotations" -}}
+{{- $commonAnnotations := include "s3proxy.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.s3proxy.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "s3proxy.serviceAccountLabels" -}}
+{{- $commonLabels := include "s3proxy.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.s3proxy.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "s3proxy.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "s3proxy.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.s3proxy.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "s3proxy.deploymentLabels" -}}
+{{- $commonLabels := include "s3proxy.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.s3proxy.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "s3proxy.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "s3proxy.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.s3proxy.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "s3proxy.serviceAccountName" -}}
-{{- if .Values.s3proxy.serviceAccount.create }}
-{{- .Values.s3proxy.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
-{{- end }}
+{{- if .Values.s3proxy.serviceAccount.name -}}
+{{- .Values.s3proxy.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "s3proxy.serviceAccountAnnotations" -}}
-{{- if .Values.s3proxy.serviceAccount.annotations }}
-{{ toYaml .Values.s3proxy.serviceAccount.annotations }}
-{{- else if .Values.s3proxy.annotations }}
-{{ toYaml .Values.s3proxy.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
+
 
 {{/*
   Parse env from template
@@ -169,9 +209,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "s3proxy.resourceTier" }}
+{{- $tier := .Values.s3proxy.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "s3proxy.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.s3proxy.replicaCount }}
+{{- $tier := include "s3proxy.resourceTier" . }}
+{{- if .Values.s3proxy.replicaCount -}}
 {{ .Values.s3proxy.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
@@ -215,7 +263,7 @@ limits:
 {{- end }}
 
 {{- define "s3proxy.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "s3proxy.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -238,4 +286,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "s3proxy.imagePullSecrets" -}}
+{{- if .Values.s3proxy.imagePullSecrets -}}
+{{- toYaml .Values.s3proxy.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

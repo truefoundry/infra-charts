@@ -4,20 +4,22 @@ kind: Deployment
 metadata:
   name: buildkit-placeholder-deployment
   labels:
-    {{- include "tfy-build.labels" . | nindent 4 }}
+    {{- include "tfy-build.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-build.annotations" . | indent 4 }}
+    {{- include "tfy-build.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: buildkit-placeholder-deployment
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-build") | nindent 6 }}
   template:
     metadata:
       labels:
-        app: buildkit-placeholder-deployment
+        {{- include "tfy-build.podLabels" . | nindent 8 }}
+      annotations:
+        {{- include "tfy-build.podAnnotations" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: preemptible
@@ -27,7 +29,7 @@ spec:
       {{- end }}
       containers:
         - name: alpine
-          image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+          image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
           command: ["tail", "-f", "/dev/null"]
           {{- with .Values.tfyBuild.preemptibleDeployment.extraEnvs }}
           env:

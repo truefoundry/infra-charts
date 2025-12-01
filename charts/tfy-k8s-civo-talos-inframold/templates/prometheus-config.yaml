@@ -1,4 +1,4 @@
-{{- if .Values.prometheus.config.enabled }}
+{{- if and .Values.prometheus.enabled .Values.prometheus.config.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -7,7 +7,8 @@ metadata:
      - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-prometheus-config"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   project: tfy-apps
   destination:
@@ -19,7 +20,7 @@ spec:
       - CreateNamespace=false
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.2.8
+    targetRevision: 0.2.14
     chart: tfy-prometheus-config
     helm:
       values: |-
@@ -33,6 +34,14 @@ spec:
         {{- else }}
           karpenter:
             enabled: false
+        {{- end }}
+        {{- if eq .Values.gpu.clusterType "gcpGkeStandard" }}
+          gpu:
+            dcgmExporter:
+              serviceSelectorLabels:
+                app.kubernetes.io/component: gcp-gke-standard-dcgm-exporter
+                app.kubernetes.io/instance: tfy-gpu-operator
+                app.kubernetes.io/name: gcp-gke-standard-dcgm-exporter
         {{- end }}
         extraObjects: []
         {{- end }}

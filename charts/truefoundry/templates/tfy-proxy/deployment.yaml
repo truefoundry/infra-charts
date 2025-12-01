@@ -1,0 +1,106 @@
+{{- if .Values.tfyProxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-proxy.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.deploymentAnnotations" . | nindent 4 }}
+spec:
+  {{- if not .Values.tfyProxy.autoscaling.enabled }}
+  replicas: {{- include "tfy-proxy.replicas" . | indent 1 }}
+  {{- end }}
+  {{- if .Values.tfyProxy.rollout.enabled }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.tfyProxy.rollout.maxSurge | quote }}
+      maxUnavailable: {{ .Values.tfyProxy.rollout.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-proxy.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-proxy.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-proxy.serviceAccountName" . }}
+      {{- with .Values.tfyProxy.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.tfyProxy.terminationGracePeriodSeconds | default 300 }}
+      containers:
+        - name: "tfy-proxy"
+          {{- with .Values.tfyProxy.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-proxy.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyProxy.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyProxy.image.repository }}:{{ .Values.tfyProxy.image.tag }}"
+          imagePullPolicy: {{ .Values.tfyProxy.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyProxy.service.port }}
+              protocol: TCP
+            - name: metrics
+              containerPort: {{ .Values.tfyProxy.service.metricsPort }}
+              protocol: TCP
+          resources:
+            {{- include "tfy-proxy.resources" . | indent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.tfyProxy.service.port }}
+            periodSeconds: {{ .Values.tfyProxy.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyProxy.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyProxy.livenessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyProxy.livenessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyProxy.livenessProbe.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.tfyProxy.service.port }}
+            periodSeconds: {{ .Values.tfyProxy.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.tfyProxy.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.tfyProxy.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.tfyProxy.readinessProbe.successThreshold }}
+            initialDelaySeconds: {{ .Values.tfyProxy.readinessProbe.initialDelaySeconds }}
+          volumeMounts:
+            {{- include "tfy-proxy.volumeMounts" . | nindent 12 }}
+      imagePullSecrets:
+        {{- include "tfy-proxy.imagePullSecrets" . | nindent 8 }}
+      volumes:
+        {{- include "tfy-proxy.volumes" . | nindent 8 }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyProxy.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
+      nodeSelector:
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.tfyProxy.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.tfyProxy.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyProxy.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 14 }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyProxy.tolerations }}
+        {{- .Values.tfyProxy.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}

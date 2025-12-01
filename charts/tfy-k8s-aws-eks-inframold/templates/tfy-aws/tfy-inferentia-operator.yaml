@@ -7,7 +7,8 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-inferentia-operator"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: tfy-inferentia-operator

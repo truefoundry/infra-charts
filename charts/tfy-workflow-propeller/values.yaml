@@ -30,17 +30,31 @@ flyte-core:
       ## @param flyte-core.storage.connection.auth-type to define the storage connection auth type
       auth-type: <to_be_provided>
   webhook:
-  ## @param flyte-core.webhook.enabled to enable the webhook
+    ## @param flyte-core.webhook.enabled to enable the webhook
     enabled: false
   configmap:
     k8s:
       plugins:
         k8s:
           default-env-vars:
-            ## @param flyte-core.configmap.k8s.plugins.k8s.default-env-vars[0].TFY_INTERNAL_SIGNED_URL_SERVER_HOST to set the signed url server host 
+            ## @param flyte-core.configmap.k8s.plugins.k8s.default-env-vars[0].TFY_INTERNAL_SIGNED_URL_SERVER_HOST to set the signed url server host
             - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     core:
       propeller:
+        leader-election:
+          ## @param flyte-core.configmap.core.propeller.leader-election.enabled to enable leader election
+          enabled: true
+          ## @param flyte-core.configmap.core.propeller.leader-election.retry-period to set the retry period
+          retry-period: 2s
+          ## @param flyte-core.configmap.core.propeller.leader-election.lease-duration to set the lease duration
+          lease-duration: 15s
+          ## @param flyte-core.configmap.core.propeller.leader-election.renew-deadline to set the renew deadline
+          renew-deadline: 10s
+          lock-config-map:
+            ## @param flyte-core.configmap.core.propeller.leader-election.lock-config-map.name to set the name of the lock config map
+            name: propeller-leader
+            ## @param flyte-core.configmap.core.propeller.leader-election.lock-config-map.namespace to set the namespace of the lock config map
+            namespace: tfy-workflow-propeller
         ## @param flyte-core.configmap.core.propeller.max-ttl-hours to set the max ttl hours
         max-ttl-hours: 1
         ## @param flyte-core.configmap.core.propeller.max-workflow-retries to set the max workflow retries
@@ -72,6 +86,11 @@ flyte-core:
         type: admin
         ## @param flyte-core.configmap.admin.event.capacity to set the capacity
         capacity: 100
+    logger:
+      ## @param flyte-core.configmap.logger.level to set the level
+      level: 5
+      ## @param flyte-core.configmap.logger.show-source to set the show source
+      show-source: true
     task_logs:
       plugins:
         logs:
@@ -147,9 +166,9 @@ tfySignedURLServer:
   ## @param tfySignedURLServer.imagePullPolicy to set the image pull policy
   imagePullPolicy: IfNotPresent
   ## @param tfySignedURLServer.nameOverride Override name for the tfySignedURLServer
-  nameOverride: ''
+  nameOverride: ""
   ## @param tfySignedURLServer.fullnameOverride Full name override for the tfySignedURLServer
-  fullnameOverride: ''
+  fullnameOverride: ""
   ## @param tfySignedURLServer.envSecretName to set the environment secret name
   envSecretName: tfy-signed-url-server-env
   ## @param tfySignedURLServer.podAnnotations to set the pod annotations
@@ -198,7 +217,7 @@ tfySignedURLServer:
   extraVolumes: []
   ## @param tfySignedURLServer.extraVolumeMounts to set the extra volume mounts
   extraVolumeMounts: []
-  ## @skip tfySignedURLServer.env to set the environment variables
+  ## @param tfySignedURLServer.env [object] to set the environment variables
   env:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneUrl }}"

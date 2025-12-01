@@ -17,6 +17,8 @@ env:
   RELEASES_SERVER_URL: ${{ secrets.RELEASES_SERVER_URL }}
   RELEASES_SERVER_API_KEY: ${{ secrets.RELEASES_SERVER_API_KEY }}
   S3_IAM_ROLE_ARN: ${{ secrets.S3_IAM_ROLE_ARN }}
+  TFY_HOST: ${{ secrets.ANALYTICS_SERVER_TFY_HOST }}
+  TFY_API_KEY: ${{ secrets.ANALYTICS_SERVER_TFY_API_KEY }}
 
 permissions:
   id-token: write
@@ -47,6 +49,14 @@ jobs:
         run: |
           python scripts/release-updater/release-updater.py --url ${{ env.RELEASES_SERVER_URL }} --api-key ${{ env.RELEASES_SERVER_API_KEY }}
 
+      - name: Run trigger-vul-scan script
+        run: |
+          curl -v "${TFY_HOST}/api/svc/v1/jobs/trigger" \
+            -H "Authorization: Bearer ${TFY_API_KEY}" \
+            -H 'content-type: application/json' \
+            --data-raw '{"applicationId":"cmclxkvga4kqj01teeq5l3vre","componentName":"inframold-vulnerability-scanner","input":{"command":"python main.py --inframold_chart_name _all"}}'
+
+
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -54,9 +64,9 @@ jobs:
           aws-region: 'eu-west-1'
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v4.3.0
         with:
-          version: v3.9.2
+          version: v3.17.3
 
       - name: Set up Python 3.10 (needed for cookiecutter cli)
         uses: actions/setup-python@v5

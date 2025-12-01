@@ -7,7 +7,8 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "karpenter-config"
-    truefoundry.com/infra-migration-tag: "1002"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: kube-system
@@ -15,7 +16,7 @@ spec:
   source:
     chart: tfy-karpenter-config
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.44
+    targetRevision: 0.1.51
     helm:
       values: |-
         {{- if .Values.aws.karpenter.config.valuesOverride }}
@@ -30,24 +31,46 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          defaultNodeTemplate:
+            enableSoci: true
+            {{- if .Values.aws.karpenter.kmsKeyID }}
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+            {{- end }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
+            {{- end }}
+          gpuDefaultNodeTemplate:
+            enableSoci: true
+            {{- if .Values.aws.karpenter.kmsKeyID }}
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if .Values.aws.karpenter.kmsKeyID }}
+          inferentiaDefaultNodeTemplate:
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+          {{- end }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
+            {{- end }}
+            {{- if .Values.aws.karpenter.kmsKeyID }}
+            nodeclass:
+              kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if .Values.aws.karpenter.kmsKeyID }}
+          controlPlaneNodeTemplate:
+            kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+          {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:

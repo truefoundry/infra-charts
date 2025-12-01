@@ -1,0 +1,19 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionIngestor.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "deltafusion-ingestor.fullname" . }}
+  labels:
+    {{- include "deltafusion-ingestor.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-ingestor.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.deltaFusionIngestor.service.type }}
+  ports:
+    - port: {{ .Values.deltaFusionIngestor.service.port }}
+      targetPort: {{ .Values.deltaFusionIngestor.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 4 }}
+{{- end }}

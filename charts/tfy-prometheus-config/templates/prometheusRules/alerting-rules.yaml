@@ -28,25 +28,27 @@ spec:
             VALUE = {{`{{ $value }}`}}
     - for: 5m
       expr: >-
-        sum(
-          rate(istio_requests_total{job="envoy-stats", response_code!~"5.*"}[5m]) > 0
-          unless
-          label_replace(
-            istio_requests_total{job="envoy-stats", response_code!~"5.*"},
-            "namespace", "$1", "destination_service_namespace", "(.*)"
-          )
-        )
-        by (destination_service_namespace, destination_service_name)
-        /
-        sum(
-          rate(istio_requests_total{job="envoy-stats"}[5m]) > 0
-          unless
-          label_replace(
-            istio_requests_total{job="envoy-stats"},
-            "namespace", "$1", "destination_service_namespace", "(.*)"
-          )
-        )
-        by (destination_service_namespace, destination_service_name) < 0.95
+            (
+              sum(
+                rate(istio_requests_total{job="envoy-stats", response_code!~"5.*"}[5m]) > 0
+                unless
+                label_replace(
+                  istio_requests_total{job="envoy-stats", response_code!~"5.*"},
+                  "namespace", "$1", "destination_service_namespace", "(.*)"
+                )
+              )
+              by (destination_service_namespace, destination_service_name)
+              /
+              sum(
+                rate(istio_requests_total{job="envoy-stats"}[5m]) > 0
+                unless
+                label_replace(
+                  istio_requests_total{job="envoy-stats"},
+                  "namespace", "$1", "destination_service_namespace", "(.*)"
+                )
+              )
+              by (destination_service_namespace, destination_service_name)
+            ) * 100 < 95
       alert: LowServiceRequestSuccessRate
       labels:
         entity: service
@@ -55,7 +57,7 @@ spec:
         summary: Low success rate ({{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}})
         description: |-
           Service {{`{{ $labels.destination_service_namespace }}`}}/{{`{{ $labels.destination_service_name }}`}} has a low success rate
-            VALUE = {{ printf "%.2f" (mul 100 $value) }}%
+           VALUE = {{`{{ printf "%.2f" $value }}`}}%
     - for: 15m
       expr: >-
         sum by (namespace, pod)
@@ -134,7 +136,7 @@ spec:
         description: |-
           Node {{`{{ $labels.instance }}`}} is experiencing CPU pressure.
             VALUE = {{`{{ $value }}`}}%
-    - for: 5m
+    - for: 10m
       expr: kube_node_status_condition{job="kube-state-metrics", condition="Ready", status="true"} == 0
       alert: NodeNotReady
       labels:

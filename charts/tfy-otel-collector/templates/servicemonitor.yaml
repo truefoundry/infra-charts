@@ -4,19 +4,13 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}
   labels:
-    release: prometheus
-    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
-  {{- with .Values.serviceMonitor.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.serviceMonitor.additionalAnnotations }}
+    {{- include "tfy-otel-collector.serviceMonitorLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "tfy-otel-collector.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}

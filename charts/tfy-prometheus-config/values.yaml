@@ -9,6 +9,8 @@ global:
   annotations: {}
 ## @section scrapeConfigs Scrape configs for prometheus
 scrapeConfigs:
+  ## @param scrapeConfigs.labels [object] Labels for scrape configs
+  labels: {}
   # scrapeConfigs.envoy Scrape config for envoy pods
   envoy:
     ## @param scrapeConfigs.envoy.enabled Enable scrape config for envoy
@@ -110,12 +112,16 @@ scrapeConfigs:
   additionalScrapeConfigs: []
 ## @section alertManagers Alert managers for prometheus
 alertManagers:
+  ## @param alertManagers.labels [object] Labels for alert managers
+  labels: {}
   # alertManagers.tfyAgent Alert manager for tfy-agent
   tfyAgent:
     ## @param alertManagers.tfyAgent.enabled Enable alert manager for tfy-agent
     enabled: true
     ## @param alertManagers.tfyAgent.name Name of the alert manager
     name: tfy-alertmanager-config
+    ## @param alertManagers.tfyAgent.labels Label for tfy-agent
+    labels: {}
     ## @param alertManagers.tfyAgent.route [object] Route for the alert manager
     route:
       receiver: tfy-agent
@@ -135,6 +141,8 @@ alertManagers:
             url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
 ## @section prometheusRules Prometheus rules for prometheus
 prometheusRules:
+  ## @param prometheusRules.labels [object] Labels for prometheus rules
+  labels: {}
   # prometheusRules.alerts Prometheus rules for alerts
   containerRules:
     ## @param prometheusRules.containerRules.enabled Enable prometheus rules for alerts
@@ -239,17 +247,17 @@ controlPlaneMonitors:
                 name: tfy-control-plane-alert-manager-secret
               sendResolved: true
               text: >-
-                {{ range .Alerts }} 
+                {{ range .Alerts }}
 
                 {{ if eq .Status "firing" }}:warning:{{ else
                 }}:white_check_mark:{{ end }} *Alert:* {{ .Annotations.summary
-                }} 
+                }}
 
-                *Severity:* `{{ .Labels.severity }}` 
+                *Severity:* `{{ .Labels.severity }}`
 
-                *Description:* {{ .Annotations.description }} 
+                *Description:* {{ .Annotations.description }}
 
-                *Details:* 
+                *Details:*
 
                 {{ range.Labels.SortedPairs }}
                 • *{{ .Name }}:* `{{ .Value }}`
@@ -264,7 +272,7 @@ controlPlaneMonitors:
         # slackConfigs:
         #   - channel: "#alerts"
         #     iconEmoji: ":alert:"
-        #     apiURL: 
+        #     apiURL:
         #       key: "API_URL"
         #       name: tfy-control-plane-alert-manager-secret
         #     sendResolved: true
@@ -476,6 +484,8 @@ controlPlaneMonitors:
 serviceMonitors:
   ## @param serviceMonitors.enabled Enable service monitors for prometheus
   enabled: true
+  ## @param serviceMonitors.labels [object] Labels for service monitors
+  labels: {}
   # serviceMonitors.alertManager Service monitor for alert manager
   alertManager:
     ## @param serviceMonitors.alertManager.enabled Enable service monitor for alert manager
@@ -514,7 +524,7 @@ serviceMonitors:
   # serviceMonitors.workflows Service monitor for workflows
   workflows:
     ## @param serviceMonitors.workflows.enabled Enable service monitor for workflows
-    enabled: true
+    enabled: false
     ## @param serviceMonitors.workflows.name Name of the service monitor
     name: argo-workflows
     ## @param serviceMonitors.workflows.annotations [object] Annotations for workflows
@@ -539,7 +549,7 @@ serviceMonitors:
   # serviceMonitors.keda Service monitor for keda
   keda:
     ## @param serviceMonitors.keda.enabled Enable service monitor for keda
-    enabled: true
+    enabled: false
     ## @param serviceMonitors.keda.name Name of the service monitor
     name: keda
     ## @param serviceMonitors.keda.labels [object] Labels for keda
@@ -577,7 +587,8 @@ serviceMonitors:
     ## @param serviceMonitors.sshServer.name Name of the service monitor
     name: ssh
     ## @param serviceMonitors.sshServer.labels [object] Labels for ssh server
-    labels: {}
+    labels:
+      release: overwrite
     ## @param serviceMonitors.sshServer.jobLabel Job label for ssh server
     jobLabel: truefoundry.com/component-type
     ## @param serviceMonitors.sshServer.endpoints [array] Endpoints for ssh server
@@ -681,7 +692,7 @@ serviceMonitors:
   # serviceMonitors.kubecost Service monitor for kubecost
   kubecost:
     ## @param serviceMonitors.kubecost.enabled Enable service monitor for kubecost
-    enabled: true
+    enabled: false
     ## @param serviceMonitors.kubecost.name Name of the service monitor
     name: kubecost
     ## @param serviceMonitors.kubecost.labels [object] Labels for kubecost
@@ -698,7 +709,15 @@ serviceMonitors:
         path: /metrics
         honorLabels: true
         metricRelabelings:
-          - regex: container_fs_limit_bytes|container_fs_usage_bytes|kube_namespace_annotations|kube_pod_annotations|kube_pod_owner|kube_pod_container_resource_requests|kubecost_load_balancer_cost|kube_persistentvolume_capacity_bytes|kube_node_status_capacity_memory_bytes|node_total_hourly_cost|kube_node_labels|kubecost_pv_info|pv_hourly_cost|node_ram_hourly_cost|node_gpu_hourly_cost|node_cpu_hourly_cost|kubecost_node_is_spot|kube_persistentvolumeclaim_info|kube_node_status_allocatable_cpu_cores|node_gpu_count|kube_node_status_capacity_cpu_cores|kube_node_status_allocatable_memory_bytes|kube_pod_container_status_running|kubecost_cluster_management_cost|kubecost_container_cpu_usage_irate|kubecost_network_zone_egress_cost|kubecost_network_region_egress_cost|kubecost_network_internet_egress_cost|pod_pvc_allocation|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_namespace_labels|container_memory_allocation_bytes|container_cpu_allocation|container_gpu_allocation|kube_pod_labels|statefulSet_match_labels|service_selector_labels|deployment_match_labels|kubecost_cluster_info|kube_node_status_allocatable|kube_node_status_capacity
+          - regex:
+              "container_fs_limit_bytes|container_fs_usage_bytes|kube_namespace_annotations|kube_pod_annotations|kube_pod_owner|kube_pod_container_resource_requests|\
+              kubecost_load_balancer_cost|kube_persistentvolume_capacity_bytes|kube_node_status_capacity_memory_bytes|node_total_hourly_cost|kube_node_labels|\
+              kubecost_pv_info|pv_hourly_cost|node_ram_hourly_cost|node_gpu_hourly_cost|node_cpu_hourly_cost|kubecost_node_is_spot|kube_persistentvolumeclaim_info|\
+              kube_node_status_allocatable_cpu_cores|node_gpu_count|kube_node_status_capacity_cpu_cores|kube_node_status_allocatable_memory_bytes|\
+              kube_pod_container_status_running|kubecost_cluster_management_cost|kubecost_container_cpu_usage_irate|kubecost_network_zone_egress_cost|\
+              kubecost_network_region_egress_cost|kubecost_network_internet_egress_cost|pod_pvc_allocation|kube_persistentvolumeclaim_resource_requests_storage_bytes|\
+              kube_namespace_labels|container_memory_allocation_bytes|container_cpu_allocation|container_gpu_allocation|kube_pod_labels|statefulSet_match_labels|\
+              service_selector_labels|deployment_match_labels|kubecost_cluster_info|kube_node_status_allocatable|kube_node_status_capacity"
             action: keep
             sourceLabels:
               - __name__
@@ -739,7 +758,13 @@ serviceMonitors:
             regex: (container_(.+)|kubelet_volume_(.+))
             sourceLabels:
               - __name__
-          - regex: ALERTS|container_memory_working_set_bytes|container_fs_reads_bytes_total|container_fs_writes_bytes_total|container_memory_cache|container_cpu_usage_seconds_total|container_cpu_cfs_throttled_periods_total|container_cpu_cfs_periods_total|container_oom_events_total|kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_pleg_relist_duration_seconds_bucket|kubelet_node_name|container_memory_swap|kubelet_volume_stats_available_bytes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubelet_pod_worker_duration_seconds_bucket|up|container_memory_rss|container_network_transmit_bytes_total|container_network_receive_bytes_total|container_cpu_cfs_throttled_seconds_total
+          - regex:
+              "ALERTS|container_memory_working_set_bytes|container_fs_reads_bytes_total|container_fs_writes_bytes_total|container_memory_cache|\
+              container_cpu_usage_seconds_total|container_cpu_cfs_throttled_periods_total|container_cpu_cfs_periods_total|container_oom_events_total|\
+              kubelet_volume_stats_used_bytes|kubelet_volume_stats_capacity_bytes|kubelet_pleg_relist_duration_seconds_bucket|kubelet_node_name|\
+              container_memory_swap|kubelet_volume_stats_available_bytes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes|\
+              kubelet_volume_stats_inodes_used|kubelet_pod_worker_duration_seconds_bucket|up|container_memory_rss|container_network_transmit_bytes_total|\
+              container_network_receive_bytes_total|container_cpu_cfs_throttled_seconds_total|container_pressure_(.+)"
             action: keep
             sourceLabels:
               - __name__
@@ -837,7 +862,14 @@ serviceMonitors:
             targetLabel: node
         scheme: http
         metricRelabelings:
-          - regex: node_time_seconds|node_boot_time_seconds|up|node_cpu_seconds_total|node_load1|instance:node_num_cpu:sum|node_memory_MemAvailable_bytes|node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_MemFree_bytes|node_memory_Slab_bytes|node_memory_MemTotal_bytes|node_vmstat_pgmajfault|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_network_receive_bytes_total|node_network_transmit_bytes_total|node_network_receive_drop_total|node_network_transmit_drop_total|node_filesystem_avail_bytes|node_filesystem_size_bytes|node_filesystem_readonly|node_filesystem_files_free|node_filesystem_files|node_network_receive_errs_total|node_network_receive_packets_total|node_network_transmit_errs_total|node_network_transmit_packets_total|node_nf_conntrack_entries|node_textfile_scrape_error|node_timex_offset_seconds|node_timex_sync_status|node_timex_maxerror_seconds|node_md_disks_required|node_md_disks|node_filefd_allocated|node_filefd_maximum|node_systemd_unit_state|node_network_up
+          - regex:
+              "node_time_seconds|node_boot_time_seconds|up|node_cpu_seconds_total|node_load1|instance:node_num_cpu:sum|node_memory_MemAvailable_bytes|\
+              node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_MemFree_bytes|node_memory_Slab_bytes|node_memory_MemTotal_bytes|node_vmstat_pgmajfault|\
+              node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_network_receive_bytes_total|node_network_transmit_bytes_total|\
+              node_network_receive_drop_total|node_network_transmit_drop_total|node_filesystem_avail_bytes|node_filesystem_size_bytes|node_filesystem_readonly|\
+              node_filesystem_files_free|node_filesystem_files|node_network_receive_errs_total|node_network_receive_packets_total|node_network_transmit_errs_total|\
+              node_network_transmit_packets_total|node_nf_conntrack_entries|node_textfile_scrape_error|node_timex_offset_seconds|node_timex_sync_status|\
+              node_timex_maxerror_seconds|node_md_disks_required|node_md_disks|node_filefd_allocated|node_filefd_maximum|node_systemd_unit_state|node_network_up|node_pressure_(.+)"
             action: keep
             sourceLabels:
               - __name__
@@ -886,7 +918,22 @@ serviceMonitors:
               - label_node_kubernetes_io_instance_type
             targetLabel: instance_type
           - action: keep
-            regex: ALERTS|kube_pod_container_resource_requests|kube_pod_status_phase|kube_node_status_capacity|kube_pod_status_ready|kube_pod_labels|kube_node_labels|kube_pod_container_resource_limits|kube_pod_container_status_restarts_total|kube_node_status_condition|kube_pod_owner|kube_replicaset_owner|kube_node_status_allocatable|kube_resourcequota|kube_pod_info|kube_pod_container_status_waiting_reason|kube_deployment_status_observed_generation|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_deployment_status_condition|kube_statefulset_status_replicas_ready|kube_statefulset_status_replicas|kube_statefulset_status_replicas_updated|kube_statefulset_status_observed_generation|kube_statefulset_metadata_generation|kube_statefulset_status_current_revision|kube_statefulset_status_update_revision|kube_statefulset_replicas|kube_daemonset_status_current_number_scheduled|kube_daemonset_status_desired_number_scheduled|kube_daemonset_status_number_misscheduled|kube_daemonset_status_updated_number_scheduled|kube_daemonset_status_number_available|kube_job_status_start_time|kube_job_status_active|kube_job_failed|kube_horizontalpodautoscaler_status_desired_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_spec_max_replicas|kube_persistentvolume_status_phase|kube_node_spec_taint|kube_state_metrics_list_total|kube_state_metrics_watch_total|kube_state_metrics_total_shards|kube_state_metrics_shard_ordinal|kube_pod_container_state_started|kube_pod_status_container_ready_time|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_ready|kube_pod_container_info
+            regex:
+              "ALERTS|kube_pod_container_status_last_terminated_exitcode|kube_pod_container_status_terminated_reason|kube_pod_init_container_info|\
+              kube_pod_init_container_status_ready|kube_pod_init_container_status_last_terminated_reason|kube_pod_init_container_status_waiting_reason|\
+              kube_pod_init_container_status_restarts_total|kube_pod_init_container_status_terminated_reason|kube_pod_container_resource_requests|\
+              kube_pod_status_phase|kube_node_status_capacity|kube_pod_status_ready|kube_pod_labels|kube_node_labels|kube_pod_container_resource_limits|\
+              kube_pod_container_status_restarts_total|kube_node_status_condition|kube_pod_owner|kube_replicaset_owner|kube_node_status_allocatable|kube_resourcequota|\
+              kube_pod_info|kube_pod_container_status_waiting_reason|kube_deployment_status_observed_generation|kube_deployment_metadata_generation|\
+              kube_deployment_spec_replicas|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_deployment_status_condition|\
+              kube_statefulset_status_replicas_ready|kube_statefulset_status_replicas|kube_statefulset_status_replicas_updated|kube_statefulset_status_observed_generation|\
+              kube_statefulset_metadata_generation|kube_statefulset_status_current_revision|kube_statefulset_status_update_revision|kube_statefulset_replicas|\
+              kube_daemonset_status_current_number_scheduled|kube_daemonset_status_desired_number_scheduled|kube_daemonset_status_number_misscheduled|\
+              kube_daemonset_status_updated_number_scheduled|kube_daemonset_status_number_available|kube_job_status_start_time|kube_job_status_active|kube_job_failed|\
+              kube_horizontalpodautoscaler_status_desired_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_spec_min_replicas|\
+              kube_horizontalpodautoscaler_spec_max_replicas|kube_persistentvolume_status_phase|kube_node_spec_taint|kube_state_metrics_list_total|kube_state_metrics_watch_total|\
+              kube_state_metrics_total_shards|kube_state_metrics_shard_ordinal|kube_pod_container_state_started|kube_pod_status_container_ready_time|\
+              kube_pod_container_status_last_terminated_reason|kube_pod_container_status_ready|kube_pod_container_info|kube_persistentvolumeclaim_status_condition|kube_node_info"
             sourceLabels:
               - __name__
         port: http
@@ -911,7 +958,20 @@ serviceMonitors:
       - path: /metrics
         port: http-web
         metricRelabelings:
-          - regex: prometheus_config_last_reload_successful|prometheus_tsdb_compaction_chunk_size_bytes_sum|prometheus_tsdb_compaction_chunk_samples_sum|prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered|prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_series|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total|prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_tsdb_lowest_timestamp_seconds
+          - regex:
+              "prometheus_config_last_reload_successful|prometheus_tsdb_compaction_chunk_size_bytes_sum|prometheus_tsdb_compaction_chunk_samples_sum|\
+              prometheus_sd_refresh_failures_total|prometheus_sd_kubernetes_failures_total|prometheus_notifications_queue_length|prometheus_notifications_queue_capacity|\
+              prometheus_notifications_errors_total|prometheus_notifications_sent_total|prometheus_notifications_alertmanagers_discovered|\
+              prometheus_tsdb_reloads_failures_total|prometheus_tsdb_compactions_failed_total|prometheus_tsdb_head_samples_appended_total|\
+              prometheus_target_metadata_cache_entries|prometheus_rule_group_rules|prometheus_target_scrapes_sample_duplicate_timestamp_total|\
+              prometheus_target_scrapes_sample_out_of_order_total|prometheus_remote_storage_failed_samples_total|prometheus_remote_storage_samples_failed_total|\
+              prometheus_remote_storage_succeeded_samples_total|prometheus_remote_storage_samples_total|prometheus_engine_query_samples_total|prometheus_engine_queries|\
+              prometheus_engine_queries_concurrent_max|prometheus_http_requests_total|prometheus_http_request_duration_seconds_bucket|prometheus_tsdb_head_series|\
+              prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_shards_desired|\
+              prometheus_remote_storage_shards_max|prometheus_rule_evaluation_failures_total|prometheus_rule_group_iterations_missed_total|\
+              prometheus_target_scrape_pool_exceeded_target_limit_total|prometheus_target_scrape_pool_exceeded_label_limits_total|\
+              prometheus_target_scrapes_exceeded_body_size_limit_total|prometheus_target_scrapes_exceeded_sample_limit_total|\
+              prometheus_target_sync_failed_total|prometheus_engine_queries|prometheus_engine_queries_concurrent_max|prometheus_tsdb_lowest_timestamp_seconds"
             action: keep
             sourceLabels:
               - __name__
@@ -945,7 +1005,11 @@ serviceMonitors:
               optional: false
         metricRelabelings:
           - action: keep
-            regex: ALERTS|prometheus_operator_list_operations_failed_total|prometheus_operator_list_operations_total|prometheus_operator_watch_operations_failed_total|prometheus_operator_watch_operations_total|prometheus_operator_syncs|prometheus_operator_reconcile_errors_total|prometheus_operator_reconcile_operations_total|prometheus_operator_status_update_errors_total|prometheus_operator_status_update_operations_total|prometheus_operator_node_address_lookup_errors_total|prometheus_operator_ready|prometheus_operator_managed_resources
+            regex:
+              "ALERTS|prometheus_operator_list_operations_failed_total|prometheus_operator_list_operations_total|prometheus_operator_watch_operations_failed_total|\
+              prometheus_operator_watch_operations_total|prometheus_operator_syncs|prometheus_operator_reconcile_errors_total|prometheus_operator_reconcile_operations_total|\
+              prometheus_operator_status_update_errors_total|prometheus_operator_status_update_operations_total|prometheus_operator_node_address_lookup_errors_total|\
+              prometheus_operator_ready|prometheus_operator_managed_resources"
             sourceLabels:
               - __name__
     ## @param serviceMonitors.prometheusOperator.serviceSelectorLabels [object] Service selector labels for prometheus operator
@@ -956,54 +1020,11 @@ serviceMonitors:
     namespaceSelector:
       matchNames:
         - prometheus
-  # serviceMonitors.loki Service monitor for loki
-  loki:
-    ## @param serviceMonitors.loki.enabled Enable service monitor for loki
-    enabled: true
-    ## @param serviceMonitors.loki.name Name of the service monitor
-    name: loki
-    ## @param serviceMonitors.loki.labels [object] Labels for loki
-    labels: {}
-    ## @param serviceMonitors.loki.annotations [object] Annotations for loki
-    annotations: {}
-    ## @param serviceMonitors.loki.jobLabel Job label for loki
-    jobLabel: app.kubernetes.io/instance
-    ## @param serviceMonitors.loki.endpoints [array] Endpoints for loki
-    endpoints:
-      - port: http-metrics
-        interval: 30s
-        path: /metrics
-        honorLabels: true
-    ## @param serviceMonitors.loki.serviceSelectorLabels [object] Service selector labels for loki
-    serviceSelectorLabels:
-      app.kubernetes.io/name: loki
-    ## @param serviceMonitors.loki.namespaceSelector [object] Namespace selector for loki
-    namespaceSelector:
-      matchNames:
-        - loki
-    # serviceMonitors.loki.promtail Service monitor for promtail
-    promtail:
-      ## @param serviceMonitors.loki.promtail.enabled Enable service monitor for promtail
-      enabled: true
-      ## @param serviceMonitors.loki.promtail.name Name of the service monitor
-      name: loki-promtail
-      ## @param serviceMonitors.loki.promtail.labels [object] Labels for promtail
-      labels: {}
-      ## @param serviceMonitors.loki.promtail.annotations [object] Annotations for promtail
-      annotations: {}
-      ## @param serviceMonitors.loki.promtail.endpoints [array] Endpoints for promtail
-      endpoints:
-        - port: http-metrics
-          interval: 30s
-          path: /metrics
-          honorLabels: true
-      ## @param serviceMonitors.loki.promtail.serviceSelectorLabels [object] Service selector labels for promtail
-      serviceSelectorLabels:
-        app.kubernetes.io/name: promtail
-      ## @param serviceMonitors.loki.promtail.namespaceSelector [object] Namespace selector for promtail
-      namespaceSelector:
-        matchNames:
-          - loki
+
+## @section podMonitors Pod monitors for prometheus
+podMonitors:
+  ## @param podMonitors.labels [object] Labels for pod monitors
+  labels: {}
 
 ## @param extraObjects [array] Extra objects for prometheus
 extraObjects: []

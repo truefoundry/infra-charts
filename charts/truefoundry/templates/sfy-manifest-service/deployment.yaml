@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "sfy-manifest-service.fullname" . }}
   labels:
-    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
+    {{- include "sfy-manifest-service.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "sfy-manifest-service.annotations" . | indent 4 }}
+    {{- include "sfy-manifest-service.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "sfy-manifest-service.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.sfyManifestService.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "sfy-manifest-service.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "sfy-manifest-service.podLabels" . | nindent 8 }}
     spec:
@@ -34,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "sfy-manifest-service.env" . | trim | nindent 12 }}
-          image: "{{ .Values.sfyManifestService.image.repository }}:{{ .Values.sfyManifestService.image.tag }}"
+          image: "{{ .Values.sfyManifestService.image.registry | default .Values.global.image.registry }}/{{ .Values.sfyManifestService.image.repository }}:{{ .Values.sfyManifestService.image.tag }}"
           imagePullPolicy: {{ .Values.sfyManifestService.imagePullPolicy }}
           ports:
             - name: http
@@ -62,15 +60,14 @@ spec:
               port: {{ .Values.sfyManifestService.service.port }}
           volumeMounts:
           {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
-      {{- with .Values.sfyManifestService.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
-      {{- if .Values.sfyManifestService.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-          {{- toYaml .Values.sfyManifestService.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.sfyManifestService.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -86,7 +83,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "sfy-manifest-service.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

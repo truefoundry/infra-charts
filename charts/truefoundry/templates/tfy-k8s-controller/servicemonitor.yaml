@@ -4,22 +4,16 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
   labels:
-    release: prometheus
-    {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
-  {{- with .Values.tfyK8sController.serviceMonitor.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.tfyK8sController.serviceMonitor.additionalAnnotations }}
+    {{- include "tfy-k8s-controller.serviceMonitorLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "tfy-k8s-controller.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
-      {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 6 }}
   endpoints:
     - targetPort: 3002
       path: /metrics

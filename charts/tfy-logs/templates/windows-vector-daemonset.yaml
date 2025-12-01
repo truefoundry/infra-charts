@@ -1,0 +1,110 @@
+{{- if .Values.windowsVector.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "tfy-logs.fullname" . }}-windows
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-logs.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-logs.annotations" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tfy-logs.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        {{- include "tfy-logs.labels" . | nindent 8 }}
+    spec:
+      tolerations:
+        - operator: Exists
+      nodeSelector:
+        {{- toYaml .Values.windowsVector.nodeSelector | nindent 8 }}
+      {{- if .Values.windowsVector.affinity }}
+      affinity:
+        {{- toYaml .Values.windowsVector.affinity | nindent 8 }}
+      {{- end }}
+      {{- if .Values.windowsVector.podPriorityClassName }}
+      priorityClassName: {{ .Values.windowsVector.podPriorityClassName }}
+      {{- end }}
+      serviceAccount: {{ include "tfy-logs.fullname" . }}-vector
+      serviceAccountName: {{ include "tfy-logs.fullname" . }}-vector
+      {{- with include "tfy-logs.windowsVector.imagePullSecrets" . }}
+      imagePullSecrets:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.windowsVector.podSecurityContext }}
+      securityContext:
+        {{- toYaml .Values.windowsVector.podSecurityContext | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: vector-windows
+          image: {{ .Values.windowsVector.image.registry }}/{{ .Values.windowsVector.image.repository }}:{{ .Values.windowsVector.image.tag }}
+          imagePullPolicy: {{ .Values.windowsVector.image.pullPolicy }}
+          {{- if .Values.windowsVector.securityContext }}
+          securityContext:
+            {{- toYaml .Values.windowsVector.securityContext | nindent 12 }}
+          {{- end }}
+          args:
+            - "-w"
+            - "--config-dir"
+            - "C:\\etc\\vector\\"
+          env:
+            - name: VECTOR_LOG
+              value: info
+            - name: VECTOR_SELF_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: VECTOR_SELF_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: VECTOR_SELF_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- range $key, $value := .Values.windowsVector.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.windowsVector.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: "C:\\etc\\vector\\"
+              readOnly: true
+            - name: data
+              mountPath: "C:\\vector-data-dir"
+            - name: var-log
+              mountPath: "C:\\var\\log\\"
+              readOnly: true
+            {{- if .Values.windowsVector.additionalVolumeMounts }}
+            {{- toYaml .Values.windowsVector.additionalVolumeMounts | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: config
+          projected:
+            defaultMode: 420
+            sources:
+              - configMap:
+                  name: vl-config
+        - name: data
+          hostPath:
+            path: "C:\\var\\lib\\vector"
+            type: ""
+        - name: var-log
+          hostPath:
+            path: "C:\\var\\log\\"
+            type: ""
+        {{- if .Values.windowsVector.additionalVolumes }}
+        {{- toYaml .Values.windowsVector.additionalVolumes | nindent 8 }}
+        {{- end }}
+{{- end }}

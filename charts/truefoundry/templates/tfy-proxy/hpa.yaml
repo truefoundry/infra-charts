@@ -1,0 +1,34 @@
+{{- if and .Values.tfyProxy.enabled .Values.tfyProxy.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-proxy.hpaLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.hpaAnnotations" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "tfy-proxy.fullname" . }}
+  minReplicas: {{ .Values.tfyProxy.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.tfyProxy.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.tfyProxy.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.tfyProxy.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

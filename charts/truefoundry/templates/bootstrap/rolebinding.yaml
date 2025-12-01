@@ -4,13 +4,13 @@ kind: RoleBinding
 metadata:
   name: truefoundry-bootstrap-job-rolebinding
   annotations:
-    {{- include "bootstrap-annotations" (dict "hookWeight" "-3" "syncWave" "-3" "annotations" .Values.truefoundryBootstrap.annotations "globalAnnotations" .Values.global.annotations) | nindent 4 }}
+    {{- include "bootstrap.commonAnnotations" . | nindent 4 }}
   labels:
-    {{- include "bootstrap-labels" . | indent 4 }}
+    {{- include "bootstrap.commonLabels" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
-  name: truefoundry-bootstrap-job-sa
-  namespace: "{{ .Release.Namespace }}"
+  name: {{ include "bootstrap.serviceAccountName" . }}
+  namespace: "{{ include "global.namespace" . }}"
 roleRef:
   kind: Role
   name: truefoundry-bootstrap-job-role

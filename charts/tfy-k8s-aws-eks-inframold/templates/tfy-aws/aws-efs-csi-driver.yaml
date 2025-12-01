@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "aws-efs-csi-driver"
-    truefoundry.com/infra-migration-tag: "1001"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: aws-efs-csi-driver
@@ -30,6 +31,31 @@ spec:
         {{- if .Values.aws.awsEfsCsiDriver.affinity }}
         {{- $mergedAffinity = .Values.aws.awsEfsCsiDriver.affinity }}
         {{- end }}
+        node:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
+        sidecars:
+          nodeDriverRegistrar:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                cpu: 100m
+                memory: 400Mi
+          livenessProbe:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                cpu: 100m
+                memory: 400Mi
         controller:
           serviceAccount:
             create: true
@@ -47,6 +73,13 @@ spec:
             cluster-name: {{ .Values.clusterName }}
             volume-type: efs
             truefoundry.com/managed: "true"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 128Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
         storageClasses:
           - name: efs-sc
             mountOptions:

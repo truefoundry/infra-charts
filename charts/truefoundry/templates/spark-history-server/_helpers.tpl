@@ -31,77 +31,117 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "spark-history-server.podLabels" -}}
-{{ include "spark-history-server.selectorLabels" . }}
-{{- if .Values.sparkHistoryServer.image.tag }}
-app.kubernetes.io/version: {{ .Values.sparkHistoryServer.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.sparkHistoryServer.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "spark-history-server.labels" -}}
-{{- include "spark-history-server.podLabels" . }}
-helm.sh/chart: {{ include "spark-history-server.chart" . }}
-{{- if .Values.sparkHistoryServer.commonLabels }}
-{{ toYaml .Values.sparkHistoryServer.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "name" "spark-history-server") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "spark-history-server.commonLabels" -}}
+{{- $baseLabels := include "spark-history-server.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.sparkHistoryServer.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "spark-history-server.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.sparkHistoryServer.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
-{{- define "spark-history-server.annotations" -}}
-{{- if .Values.sparkHistoryServer.annotations }}
-{{ toYaml .Values.sparkHistoryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- define "spark-history-server.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "spark-history-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.sparkHistoryServer.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-  Selector labels
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
   */}}
-{{- define "spark-history-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "spark-history-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "spark-history-server.podAnnotations" -}}
+{{- $commonAnnotations := include "spark-history-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.sparkHistoryServer.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "spark-history-server.serviceLabels" -}}
+{{- $commonLabels := include "spark-history-server.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.sparkHistoryServer.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "spark-history-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "spark-history-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.sparkHistoryServer.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "spark-history-server.serviceAccountLabels" -}}
+{{- $commonLabels := include "spark-history-server.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.sparkHistoryServer.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "spark-history-server.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "spark-history-server.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.sparkHistoryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "spark-history-server.deploymentLabels" -}}
+{{- $commonLabels := include "spark-history-server.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.sparkHistoryServer.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "spark-history-server.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "spark-history-server.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.sparkHistoryServer.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "spark-history-server.serviceAccountName" -}}
-{{- if .Values.sparkHistoryServer.serviceAccount.create }}
-{{- .Values.sparkHistoryServer.serviceAccount.name }}
-{{- else }}
-{{- .Values.global.serviceAccount.name }}
+{{- if .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- .Values.sparkHistoryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
-{{- end }}
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "spark-history-server.serviceAccountAnnotations" -}}
-{{- if .Values.sparkHistoryServer.serviceAccount.annotations }}
-{{ toYaml .Values.sparkHistoryServer.serviceAccount.annotations }}
-{{- else if .Values.sparkHistoryServer.annotations }}
-{{ toYaml .Values.sparkHistoryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
+
 
 {{/*
   Parse env from template
@@ -160,9 +200,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "spark-history-server.resourceTier" }}
+{{- $tier := .Values.sparkHistoryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "spark-history-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.sparkHistoryServer.replicaCount }}
+{{- $tier := include "spark-history-server.resourceTier" . }}
+{{- if .Values.sparkHistoryServer.replicaCount -}}
 {{ .Values.sparkHistoryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
@@ -206,7 +254,7 @@ limits:
 {{- end }}
 
 {{- define "spark-history-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "spark-history-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -229,4 +277,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "spark-history-server.imagePullSecrets" -}}
+{{- if .Values.sparkHistoryServer.imagePullSecrets -}}
+{{- toYaml .Values.sparkHistoryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

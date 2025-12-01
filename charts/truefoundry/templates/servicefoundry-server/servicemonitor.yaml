@@ -4,22 +4,16 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}
   labels:
-    release: prometheus
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
-  {{- with .Values.servicefoundryServer.serviceMonitor.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.servicefoundryServer.serviceMonitor.additionalAnnotations }}
+    {{- include "servicefoundry-server.serviceMonitorLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "servicefoundry-server.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
-      {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 6 }}
   endpoints:
     - targetPort: 3000
       path: /metrics

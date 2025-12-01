@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "kubecost"
-    truefoundry.com/infra-migration-tag: "1001"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: kubecost
@@ -38,6 +39,10 @@ spec:
           prometheus:
             fqdn: http://prometheus-operated.prometheus.svc.cluster.local:9090/
             enabled: false
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: prometheus
         diagnostics:
           enabled: true
         networkCosts:
@@ -48,6 +53,38 @@ spec:
             prometheusScrape: false
         forecasting:
           enabled: false
+        kubecostFrontend:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 10m
+              memory: 55Mi
+        kubecostAggregator:
+          cloudCost:
+            resources:
+              limits:
+                cpu: 200m
+                memory: 512Mi
+              requests:
+                cpu: 50m
+                memory: 128Mi
+          resources:
+            limits:
+              cpu: 800m
+              memory: 4Gi
+            requests:
+              cpu: 200m
+              memory: 3Gi
+        kubecostModel:
+          resources:
+            limits:
+              cpu: 256m
+              memory: 1024Mi
+            requests:
+              cpu: 128m
+              memory: 512Mi
         server:
           {{- if $mergedTolerations }}
           tolerations:

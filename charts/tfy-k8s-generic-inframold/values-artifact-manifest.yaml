@@ -10,13 +10,10 @@ argoRollouts:
   enabled: true
 certManager:
   enabled: true
+  serviceAccount:
+    annotations: {}
 metricsServer:
-
-  enabled: false
-
-
-
-  
+  enabled: true
 
 gpu:
   enabled: true
@@ -45,7 +42,8 @@ truefoundry:
   tfyApiKey: ""
   truefoundryImagePullConfigJSON: ""
 
-loki:
+
+tfyLogs:
   enabled: true
 
 istio:
@@ -60,6 +58,7 @@ istio:
     
     httpsRedirect: false
     
+    domains: ["*"]
 
 keda:
   enabled: true
@@ -85,3 +84,37 @@ elasti:
 
 jspolicy:
   enabled: true
+
+tfyWorkflowPropeller:
+  enabled: true
+
+  flyteCore:
+    storage:
+      type: custom
+      custom:
+        type: minio
+        container: ""
+        stow:
+          kind: s3
+          config:
+            auth_type: accesskey
+            region: ""
+            endpoint: ""
+            access_key_id: ""
+            secret_key: ""
+      configmap:
+        core:
+          propeller:
+            metadata-prefix: ""
+            rawoutput-prefix: ""
+        k8s:
+          plugins:
+            k8s:
+              default-env-vars:
+                - FLYTE_AWS_ENDPOINT: ""
+                - FLYTE_AWS_ACCESS_KEY_ID: ""
+                - FLYTE_AWS_SECRET_ACCESS_KEY: ""
+      flytepropeller:
+        serviceAccount:
+          annotations:
+            {}

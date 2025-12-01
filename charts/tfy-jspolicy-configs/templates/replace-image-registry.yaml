@@ -18,13 +18,6 @@ spec:
   javascript: |
     import { load } from 'js-yaml';
 
-    const excludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml | nindent 4 }}`)
-    const includedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml | nindent 4 }}`)
-    const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml | nindent 4 }}`)
-    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
-      exit()
-    }
-
     function parseYamlString(yamlString) {
       try {
         return load(yamlString);
@@ -34,6 +27,38 @@ spec:
       }
     }
 
+    // get the namespaces from the input namespaces. If inputNamespace is a string, return the string. If inputNamespace is an array, return the array. If inputNamespace is a regex, return the namespaces that match the regex. Only basic regex is supported.
+    function getNamespaces(inputNamespace) {
+      let namespaceList = [];
+      let filteredNamespaces = [];
+      const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+      for (let i in inputNamespace) {
+        if (inputNamespace[i] === "*") {
+          namespaceList = allNamespaces;
+          break;
+        }
+        if (inputNamespace[i].includes("*")) {
+          const regex = new RegExp(inputNamespace[i]);
+          filteredNamespaces = allNamespaces.filter(namespace => regex.test(namespace));
+          namespaceList = [...namespaceList, ...filteredNamespaces];
+        } else {
+          namespaceList.push(inputNamespace[i]);
+        }
+      }
+      return namespaceList;
+    }
+
+    const inputExcludedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.excludeNamespaces | toYaml | nindent 4 }}`)
+    const inputInlcudedNamespaces = parseYamlString(`{{ .Values.replaceImageRegistry.includeNamespaces | toYaml | nindent 4 }}`)
+    const inputExcludedRegistries = parseYamlString(`{{ .Values.replaceImageRegistry.excludeRegistries | toYaml | nindent 4 }}`)
+    const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
+    const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
+    print("includedNamespaces", includedNamespaces);
+    print("excludedNamespaces", excludedNamespaces);
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceImageRegistry.registryReplacementMap | toYaml | nindent 4 }}`)
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+      exit()
+    }
     /*
     * Normalize the image name to a standard format
     * image_normalize("nginx") docker.io/library/nginx:latest
@@ -104,6 +129,9 @@ spec:
       const imageUri = result[1]
       print (initialImageUri, registry, imageUri)
       let newImageUri = imageUri;
+      if (inputExcludedRegistries.includes(registry)) {
+        return imageUri;
+      }
       let registryReplacement = registryReplacementMap[registry];
       if (!registryReplacement) {
         if (!registryReplacementMap['*']) {

@@ -1,0 +1,130 @@
+{{- $tfyProxyServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyProxyHost) .)) 0 -}}
+{{- $tfyWorkflowAdminServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyWorkflowAdminHost) .)) 0 -}}
+---
+{{- if and .Values.global.ingress.enabled .Values.global.proxy.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry.ingress.fullname" . }}
+  labels:
+    {{- include "truefoundry.ingress.labels" . | nindent 4 }}
+  annotations:
+    {{- include "truefoundry.ingress.annotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  {{- if .Values.global.ingress.tls }}
+  tls:
+    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $host := .Values.global.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $tfyProxyServiceName }}
+                port:
+                  number: {{ $.Values.tfyProxy.service.port }}
+    {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry.ingress.fullname" . }}-workflow
+  labels:
+    {{- include "truefoundry.ingress.workflow.labels" . | nindent 4 }}
+  annotations:
+    {{- include "truefoundry.ingress.workflow.annotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  {{- if .Values.global.ingress.tls }}
+  tls:
+    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $host := .Values.global.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $tfyWorkflowAdminServiceName }}
+                port:
+                  number: {{ $.Values.tfyWorkflowAdmin.service.port }}
+    {{- end }}
+{{- else if and .Values.global.ingress.enabled (not .Values.global.proxy.enabled) -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "truefoundry.ingress.fullname" . }}
+  labels:
+    {{- include "truefoundry.ingress.labels" . | nindent 4 }}
+  annotations:
+    nginx.org/rewrites: "serviceName={{ .Release.Name }}-servicefoundry-server rewrite=/socket.io;serviceName={{ .Release.Name }}-tfy-llm-gateway rewrite=/;serviceName={{ .Release.Name }}-tfy-controller rewrite=/;serviceName={{ .Release.Name }}-s3proxy rewrite=/;serviceName={{ .Release.Name }}-tfy-otel-collector rewrite=/"
+spec:
+  {{- if .Values.global.ingress.tls }}
+  tls:
+    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+  {{- end }}
+  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  rules:
+    {{- range $host := .Values.global.ingress.hosts }}
+    - host: {{ $host }}
+      http:
+        paths:
+          - path: /api/svc/socket.io/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-servicefoundry-server
+                port:
+                  number: 3000
+          - path: /api/llm/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-llm-gateway
+                port:
+                  number: {{ $.Values.truefoundryFrontendApp.llmGateway.backendPort }}
+          - path: /api/proxy-server/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-controller
+                port:
+                  number: 8123
+          - path: /flyteidl.service.AdminService/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-workflow-admin-server
+                port:
+                  number: 8089
+          - path: /api/s3proxy/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-s3proxy
+                port:
+                  number: 8080
+          - path: /api/otel/
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Release.Name }}-tfy-otel-collector
+                port:
+                  number: 4318
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "truefoundry-frontend-app.fullname" $ }}
+                port:
+                  number: 5000
+    {{- end }}
+{{- end }}

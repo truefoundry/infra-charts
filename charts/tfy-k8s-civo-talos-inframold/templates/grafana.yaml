@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "grafana"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: grafana
@@ -16,7 +17,7 @@ spec:
   source:
     chart: tfy-grafana
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.12
+    targetRevision: 0.1.19
     helm:
       values: |-
         {{- if .Values.grafana.valuesOverride }}

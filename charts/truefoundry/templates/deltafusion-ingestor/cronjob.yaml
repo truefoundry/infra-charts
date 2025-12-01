@@ -1,0 +1,75 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionIngestor.enabled }}
+{{- if .Values.deltaFusionCompaction.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "deltafusion-compaction.fullname" . }}
+  labels:
+    {{- include "deltafusion-compaction.cronJobLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-compaction.cronJobAnnotations" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.deltaFusionCompaction.schedule | quote }}
+  timeZone: {{ .Values.deltaFusionCompaction.timeZone | quote }}
+  concurrencyPolicy: {{ .Values.deltaFusionCompaction.concurrencyPolicy }}
+  startingDeadlineSeconds: {{ .Values.deltaFusionCompaction.startingDeadlineSeconds }}
+  failedJobsHistoryLimit: {{ .Values.deltaFusionCompaction.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.deltaFusionCompaction.successfulJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
+      ttlSecondsAfterFinished: {{ .Values.deltaFusionCompaction.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          annotations:
+            {{- include "deltafusion-compaction.podAnnotations" . | nindent 12 }}
+          labels:
+            {{- include "deltafusion-compaction.podLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: {{ .Values.deltaFusionCompaction.restartPolicy }}
+          imagePullSecrets:
+            {{- include "deltafusion-compaction.imagePullSecrets" . | nindent 12 }}
+          serviceAccountName: {{ include "deltafusion-compaction.serviceAccountName" . }}
+          {{- with .Values.deltaFusionCompaction.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: "deltafusion-compaction"
+              {{- with .Values.deltaFusionCompaction.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if .Values.deltaFusionCompaction.image.optimized }}
+              image: "{{ .Values.deltaFusionCompaction.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionCompaction.image.repository }}:{{ .Values.deltaFusionCompaction.image.tag }}-optimized"
+              {{- else }}
+              image: "{{ .Values.deltaFusionCompaction.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionCompaction.image.repository }}:{{ .Values.deltaFusionCompaction.image.tag }}"
+              {{- end }}
+              imagePullPolicy: {{ .Values.deltaFusionCompaction.imagePullPolicy }}
+              env:
+                {{- include "deltafusion-compaction.env" . | trim | nindent 16 }}
+              command: {{ .Values.deltaFusionCompaction.command }}
+              args: {{ .Values.deltaFusionCompaction.args }}
+              resources:
+                {{- include "deltafusion-compaction.resources" . | nindent 16 }}
+              volumeMounts:
+                {{- include "deltafusion-compaction.volumeMounts" . | nindent 16 }}
+          volumes:
+            {{- include "deltafusion-compaction.volumes" . | nindent 12 }}
+          {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionCompaction.nodeSelector) }}
+          {{- if $mergedNodeSelector }}
+          nodeSelector:
+            {{- toYaml $mergedNodeSelector | nindent 12 }}
+          {{- end }}
+          {{- $mergedAffinity := dict | merge .Values.deltaFusionCompaction.affinity .Values.global.affinity }}
+          {{- if $mergedAffinity }}
+          affinity:
+          {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- end }}
+          tolerations:
+            {{- .Values.global.tolerations | toYaml | nindent 12 }}
+            {{- if .Values.deltaFusionCompaction.tolerations }}
+            {{- .Values.deltaFusionCompaction.tolerations | toYaml | nindent 12 }}
+            {{- end }}
+{{- end }}
+{{- end }}

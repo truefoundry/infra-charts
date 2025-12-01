@@ -10,6 +10,29 @@ global:
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## @param global.annotations [object] Global annotations to be added to all resources
+  annotations: {}
+  ## @param global.labels [object] Global labels to be added to all resources
+  labels: {}
+  ## @param global.podLabels [object] Labels to be added to statefulset pods
+  podLabels: {}
+  ## @param global.podAnnotations [object] Annotations to be added to statefulset pods
+  podAnnotations: {}
+  ## @param global.statefulsetLabels [object] Labels to be added to statefulset
+  statefulsetLabels: {}
+  ## @param global.statefulsetAnnotations [object] Annotations to be added to statefulset
+  statefulsetAnnotations: {}
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.name [string] Service account name
+    name: "truefoundry"
+    ## @param global.serviceAccount.labels Labels to add to the serviceAccount
+    labels: {}
+    ## @param global.serviceAccount.annotations Annotations to add to the serviceAccount
+    annotations: {}
+  ## @param global.image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
+  image:
+    registry: "tfy.jfrog.io"
 
 ## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
 # replicaCount: 1
@@ -17,9 +40,10 @@ global:
 ## Image of tfyBuildkitdService
 ##
 image:
+  ## @param image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
+  registry: ""
   ## @param image.repository tfyBuildkitdService repository
-  ##
-  repository: moby/buildkit
+  repository: tfy-mirror/moby/buildkit
   ## @param image.pullPolicy Pull policy for tfyBuildkitdService
   ##
   pullPolicy: IfNotPresent
@@ -27,13 +51,21 @@ image:
   ##
   tag: "v0.17.0"
 
-## @param labels Labels to be added to the tfyBuildkitdService
+## @param commonLabels Labels to be added to the tfyBuildkitdService
 ##
-labels: {}
+commonLabels: {}
 
-## @param annotations Annotations to be added to the tfyBuildkitdService
+## @param commonAnnotations Annotations to be added to the tfyBuildkitdService
 ##
-annotations: {}
+commonAnnotations: {}
+
+## @param statefulsetLabels Labels to be added to the tfyBuildkitdService statefulset
+##
+statefulsetLabels: {}
+
+## @param statefulsetAnnotations Annotations to be added to the tfyBuildkitdService statefulset
+##
+statefulsetAnnotations: {}
 
 ## @skip buildkitConfig buildkit configuration for tfyBuildkitdService
 buildkitConfig: |
@@ -63,7 +95,7 @@ storage:
   ## @param storage.enabled Bool to enable storage for tfyBuildkitdService
   enabled: true
   ## @param storage.accessModes Access mode for tfyBuildkitdService
-  accessModes: 
+  accessModes:
     - ReadWriteOnce
   ## @param storage.storageClassName Storage class name for tfyBuildkitdService
   storageClassName: ""
@@ -85,17 +117,28 @@ fullnameOverride: ""
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
 serviceAccount:
-  ## @param serviceAccount.create Bool to enable serviceAccount creation 
+  ## @param serviceAccount.create Bool to enable serviceAccount creation
   ##
-  create: true
+  create: false
 
   ## @param serviceAccount.annotations Annotations to add to the serviceAccount
   ##
   annotations: {}
 
+  ## @param serviceAccount.labels Labels to add to the serviceAccount
+  ##
+  labels: {}
+
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token
+  ##
+  automountServiceAccountToken: false
   ## @param serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
   ##
   name: ""
+
+## @param podLabels Labels to be added to the tfyBuildkitdService pod
+##
+podLabels: {}
 
 ## @param podAnnotations Annotations to be added to the pod
 ##
@@ -104,7 +147,6 @@ podAnnotations: {}
 ## @param podSecurityContext Security context for the pod
 ##
 podSecurityContext: {}
-
 ## SecurityContext holds pod-level security attributes and common container settings.
 ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -131,7 +173,7 @@ service:
 ## decreasing the resource might make the service UNAVAILABLE
 
 ## @skip resources [object] Resource requests and limits for tfyBuildkitdService
-#resources:
+# resources:
 #  limits:
 #      cpu: 1000m
 #      ephemeral-storage: 256Mi
@@ -160,8 +202,9 @@ nodeSelector: {}
 ##
 ## @param tolerations Taints that pod can tolerate
 ##
-tolerations: []
- # - key: "key"
+tolerations:
+  []
+  # - key: "key"
   #   operator: "Equal"
   #   value: "value"
   #   effect: "NoSchedule"
@@ -170,7 +213,7 @@ tolerations: []
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 ##
 ## @param affinity Affinity rules for pod scheduling on a node
-## 
+##
 affinity: {}
 # nodeAffinity:
 #   requiredDuringSchedulingIgnoredDuringExecution:
@@ -184,7 +227,7 @@ affinity: {}
 
 ## TLS configuration for tfyBuildkitdService
 ##
-tls: 
+tls:
   ## @param tls.buildkitDaemonCertsSecretName Name of secret containing the buildkit daemon certs
   buildkitDaemonCertsSecretName: tfy-buildkit-daemon-certs
 

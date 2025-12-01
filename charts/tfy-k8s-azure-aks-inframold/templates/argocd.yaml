@@ -9,9 +9,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "-1"
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "-20"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "argocd"
-    truefoundry.com/infra-migration-tag: "1000"
 spec:
   destination:
     namespace: argocd
@@ -101,6 +101,12 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         controller:
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: prometheus
           extraArgs:
             - '--application-namespaces="*"'
           resources:

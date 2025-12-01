@@ -29,6 +29,14 @@ aws-eks-gpu-operator:
   gfd:
     ## @param aws-eks-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @skip aws-eks-gpu-operator.gfd.env
+    env:
+      - name: GFD_SLEEP_INTERVAL
+        value: "60s"
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param aws-eks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -63,7 +71,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.17.4-ubi8
+    version: v1.17.8-ubi8
     ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -91,6 +99,8 @@ aws-eks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip aws-eks-gpu-operator.devicePlugin.config
     config:
       data:
@@ -155,9 +165,15 @@ aws-eks-gpu-operator:
                       - p3dn.24xlarge
                       - p4d.24xlarge
                       - p4de.24xlarge
+                      - p5.4xlarge
                       - p5.48xlarge
                       - p5e.48xlarge
                       - p5en.48xlarge
+                      - p6-b200.48xlarge
+                      - g3.4xlarge
+                      - g3.8xlarge
+                      - g3.16xlarge
+                      - g3s.xlarge
                       - g4dn.xlarge
                       - g4dn.2xlarge
                       - g4dn.4xlarge
@@ -174,6 +190,11 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+                      - g6f.large
+                      - g6f.xlarge
+                      - g6f.2xlarge
+                      - g6f.4xlarge
+                      - gr6f.4xlarge
                       - g6.xlarge
                       - g6.2xlarge
                       - g6.4xlarge
@@ -182,6 +203,8 @@ aws-eks-gpu-operator:
                       - g6.12xlarge
                       - g6.24xlarge
                       - g6.48xlarge
+                      - gr6.4xlarge
+                      - gr6.8xlarge
                       - g6e.xlarge
                       - g6e.2xlarge
                       - g6e.4xlarge
@@ -226,9 +249,15 @@ aws-eks-gpu-operator:
                       - p3dn.24xlarge
                       - p4d.24xlarge
                       - p4de.24xlarge
+                      - p5.4xlarge
                       - p5.48xlarge
                       - p5e.48xlarge
                       - p5en.48xlarge
+                      - p6-b200.48xlarge
+                      - g3.4xlarge
+                      - g3.8xlarge
+                      - g3.16xlarge
+                      - g3s.xlarge
                       - g4dn.xlarge
                       - g4dn.2xlarge
                       - g4dn.4xlarge
@@ -245,6 +274,11 @@ aws-eks-gpu-operator:
                       - g5.12xlarge
                       - g5.24xlarge
                       - g5.48xlarge
+                      - g6f.large
+                      - g6f.xlarge
+                      - g6f.2xlarge
+                      - g6f.4xlarge
+                      - gr6f.4xlarge
                       - g6.xlarge
                       - g6.2xlarge
                       - g6.4xlarge
@@ -301,7 +335,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param aws-eks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.9-1-ubuntu22.04
+    version: 4.3.1-1-ubuntu22.04
     ## @param aws-eks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -316,10 +350,10 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
     enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.9-3.6.1-ubuntu22.04
+    version: 4.3.1-4.4.0-ubuntu22.04
     serviceMonitor:
       ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-      enabled: false
+      enabled: true
       ## @skip aws-eks-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
       honorLabels: true
       ## @skip aws-eks-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
@@ -358,7 +392,7 @@ aws-eks-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param aws-eks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:
@@ -367,6 +401,8 @@ aws-eks-gpu-operator:
 
   ## Fake Toolkit Ready Daemonset
   fakeToolkitReady:
+    ## @param aws-eks-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+    enabled: true
     image:
       ## @param aws-eks-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -404,9 +440,15 @@ aws-eks-gpu-operator:
                     - p3dn.24xlarge
                     - p4d.24xlarge
                     - p4de.24xlarge
+                    - p5.4xlarge
                     - p5.48xlarge
                     - p5e.48xlarge
                     - p5en.48xlarge
+                    - p6-b200.48xlarge
+                    - g3.4xlarge
+                    - g3.8xlarge
+                    - g3.16xlarge
+                    - g3s.xlarge
                     - g4dn.xlarge
                     - g4dn.2xlarge
                     - g4dn.4xlarge
@@ -423,6 +465,11 @@ aws-eks-gpu-operator:
                     - g5.12xlarge
                     - g5.24xlarge
                     - g5.48xlarge
+                    - g6f.large
+                    - g6f.xlarge
+                    - g6f.2xlarge
+                    - g6f.4xlarge
+                    - gr6f.4xlarge
                     - g6.xlarge
                     - g6.2xlarge
                     - g6.4xlarge
@@ -463,6 +510,9 @@ gcp-gke-standard-driver:
     gkeAccelerators:
       - nvidia-l4
       - nvidia-h100-80gb
+      - nvidia-h100-mega-80gb
+      - nvidia-h200-141gb
+      - nvidia-b200
     cosDriverInstaller:
       image:
         ## @param gcp-gke-standard-driver.latest.cosDriverInstaller.image.repository Repository for the Nvidia Latest Driver Installer cos initContainer.
@@ -509,9 +559,17 @@ gcp-gke-standard-driver:
         ##
         tag: "3.8@sha256:880e63f94b145e46f1b1082bb71b85e21f16b99b180b9996407d61240ceb9830"
 
+## @section gcp-gke-standard-gpu-operator Configuration for the GPU Operator. Unused - Reserved for future use.
+gcp-gke-standard-gpu-operator:
+  ## @param gcp-gke-standard-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+  fakeToolkitReady:
+    enabled: false
+
 ## @section gcp-gke-standard-dcgm-exporter Configuration for the GCP GKE Standard DCGM Exporter. This section will only be used when clusterType.gcpGkeStandard is set to true.
 ##
 gcp-gke-standard-dcgm-exporter:
+  ## @param gcp-gke-standard-dcgm-exporter.fullnameOverride Fullname override for the DCGM Exporter.
+  fullnameOverride: nvidia-dcgm-exporter
   ## Docker image tag for the DCGM Exporter.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.arguments Arguments for the DCGM Exporter.
@@ -539,7 +597,7 @@ gcp-gke-standard-dcgm-exporter:
   ##
   serviceMonitor:
     ## @param gcp-gke-standard-dcgm-exporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-    enabled: false
+    enabled: true
     ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.honorLabels
     honorLabels: true
     ## @skip gcp-gke-standard-dcgm-exporter.serviceMonitor.additionalLabels
@@ -593,6 +651,9 @@ gcp-gke-standard-dcgm-exporter:
     ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[2]
     - name: DCGM_EXPORTER_COLLECTORS
       value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+    ## @skip gcp-gke-standard-dcgm-exporter.extraEnv[3]
+    - name: LD_LIBRARY_PATH
+      value: /usr/local/nvidia/lib64:/usr/local/nvidia/lib:/usr/local/cuda/lib64
   ## Additional host volumes for the DCGM Exporter.
   ##
   extraHostVolumes:
@@ -638,6 +699,8 @@ azure-aks-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param azure-aks-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -797,7 +860,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param azure-aks-gpu-operator.toolkit.version Version of the toolkit. Note for Aure Linux change `-ubuntu20.04` to `-ubi8`. However at the time of writing Azure Linux only supports V100 and T4 GPUs
-    version: v1.17.4-ubuntu20.04
+    version: v1.17.8-ubuntu20.04
     ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -816,7 +879,7 @@ azure-aks-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param azure-aks-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## Device Plugin configuration.
   devicePlugin:
@@ -830,6 +893,8 @@ azure-aks-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip azure-aks-gpu-operator.devicePlugin.config
     config:
       data:
@@ -859,7 +924,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param azure-aks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.9-1-ubuntu22.04
+    version: 4.3.1-1-ubuntu22.04
     ## @param azure-aks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -874,10 +939,10 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param azure-aks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.9-3.6.1-ubuntu22.04
+    version: 4.3.1-4.4.0-ubuntu22.04
     serviceMonitor:
       ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-      enabled: false
+      enabled: true
       ## @skip azure-aks-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
       honorLabels: true
       ## @skip azure-aks-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
@@ -951,6 +1016,14 @@ civo-talos-gpu-operator:
   gfd:
     ## @param civo-talos-gpu-operator.gfd.enabled Enable/Disable gpu feature discovery.
     enabled: true
+    ## @skip civo-talos-gpu-operator.gfd.env
+    env:
+      - name: GFD_SLEEP_INTERVAL
+        value: "60s"
+      - name: GFD_FAIL_ON_INIT_ERROR
+        value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param civo-talos-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -1089,6 +1162,8 @@ civo-talos-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip civo-talos-gpu-operator.devicePlugin.config
     config:
       data:
@@ -1118,7 +1193,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.9-1-ubuntu22.04
+    version: 4.3.1-1-ubuntu22.04
     ## @param civo-talos-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -1133,10 +1208,10 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.9-3.6.1-ubuntu22.04
+    version: 4.3.1-4.4.0-ubuntu22.04
     serviceMonitor:
       ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-      enabled: false
+      enabled: true
       ## @skip civo-talos-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
       honorLabels: true
       ## @skip civo-talos-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
@@ -1175,7 +1250,7 @@ civo-talos-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param civo-talos-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:
@@ -1204,6 +1279,8 @@ civo-talos-gpu-operator:
         memory: 300Mi
 
   fakeToolkitReady:
+    ## @param civo-talos-gpu-operator.fakeToolkitReady.enabled Enable/Disable fake toolkit ready daemonset.
+    enabled: true
     image:
       ## @param civo-talos-gpu-operator.fakeToolkitReady.image.repository Repository for the fake toolkit ready container.
       repository: "alpine"
@@ -1265,6 +1342,8 @@ generic-gpu-operator:
         value: 60s
       - name: GFD_FAIL_ON_INIT_ERROR
         value: "true"
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @param generic-gpu-operator.gfd.resources [object] Resources for the gpu feature discovery daemonset.
     resources:
       requests:
@@ -1378,13 +1457,38 @@ generic-gpu-operator:
   driver:
     ## @param generic-gpu-operator.driver.enabled Enable/Disable driver installation.
     enabled: true
+    ## @param generic-gpu-operator.driver.version Version of the driver.
+    version: "570.148.08"
+    ## @param generic-gpu-operator.driver.usePrecompiled Use precompiled driver.
+    usePrecompiled: true
+    ## @param generic-gpu-operator.driver.kernelModuleType Kernel module type.
+    kernelModuleType: "auto"
+    nvidiaDriverCRD:
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.enabled Enable/Disable nvidia driver CRD installation.
+      enabled: true
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.deployDefaultCR Deploy default CR.
+      deployDefaultCR: true
+      ## @param generic-gpu-operator.driver.nvidiaDriverCRD.nodeSelector Node selector.
+      nodeSelector: {}
+    upgradePolicy:
+      ## @param generic-gpu-operator.driver.upgradePolicy.autoUpgrade Enable/Disable auto upgrade.
+      autoUpgrade: true
+      ## @param generic-gpu-operator.driver.upgradePolicy.maxParallelUpgrades Max number of upgrades that can run in parallel.
+      maxParallelUpgrades: 1
+      gpuPodDeletion:
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.force Force GPU pod deletion.
+        force: false
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.timeoutSeconds Timeout for GPU pod deletion.
+        timeoutSeconds: 600
+        ## @param generic-gpu-operator.driver.upgradePolicy.gpuPodDeletion.deleteEmptyDir Delete empty dir.
+        deleteEmptyDir: true
 
   ## Toolkit configuration.
   toolkit:
     ## @param generic-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param generic-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.17.4-ubuntu20.04
+    version: v1.17.8-ubuntu20.04
     ## @skip generic-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -1412,6 +1516,8 @@ generic-gpu-operator:
         value: volume-mounts
       - name: DEVICE_ID_STRATEGY
         value: index
+      - name: NVIDIA_MIG_MONITOR_DEVICES
+        value: "all"
     ## @skip generic-gpu-operator.devicePlugin.config
     config:
       data:
@@ -1441,7 +1547,7 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param generic-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 3.3.9-1-ubuntu22.04
+    version: 4.3.1-1-ubuntu22.04
     ## @param generic-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -1456,10 +1562,10 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param generic-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 3.3.9-3.6.1-ubuntu22.04
+    version: 4.3.1-4.4.0-ubuntu22.04
     serviceMonitor:
       ## @param generic-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
-      enabled: false
+      enabled: true
       ## @skip generic-gpu-operator.dcgmExporter.serviceMonitor.honorLabels
       honorLabels: true
       ## @skip generic-gpu-operator.dcgmExporter.serviceMonitor.additionalLabels
@@ -1498,7 +1604,7 @@ generic-gpu-operator:
   ## MIG Configuration
   mig:
     ## @param generic-gpu-operator.mig.strategy migStrategy for mig node, single or mixed
-    strategy: none
+    strategy: mixed
 
   ## MIG Manager configuration.
   migManager:

@@ -4,14 +4,10 @@ kind: AlertmanagerConfig
 metadata:
   name: {{ .Values.monitoring.alertManager.name }}
   labels:
+    {{- include "monitoring.alertManagerLabels" . | nindent 4 }}
     release: prometheus
-  {{- with .Values.monitoring.alertManager.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.monitoring.alertManager.additionalAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "monitoring.alertManagerAnnotations" . | nindent 4 }}
 spec:
   route:
     receiver: "null"

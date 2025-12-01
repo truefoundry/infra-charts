@@ -1,0 +1,88 @@
+name: Validate Chart Template
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - 'charts/**'
+
+jobs:
+  validate-chart-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.17.3
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.7.0
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed_charts=$(ct list-changed --target-branch ${{ github.event.pull_request.base.ref }})
+          if [[ -n "$changed_charts" ]]; then
+            # Use the EOF syntax so that newlines are preserved
+            {
+              echo "changed_charts<<EOF"
+              echo "$changed_charts"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            fi
+
+      - name: Add helm repositories
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add clickhouse-operator https://docs.altinity.com/clickhouse-operator
+          helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
+          helm repo add dcgm-exporter https://nvidia.github.io/dcgm-exporter/helm-charts
+          helm repo add truefoundry https://truefoundry.github.io/infra-charts
+          helm repo add nats https://nats-io.github.io/k8s/helm/charts/
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add istio https://istio-release.storage.googleapis.com/charts
+          helm repo add altinity-clickhouse-operator https://docs.altinity.com/clickhouse-operator/
+          helm repo add victoria https://victoriametrics.github.io/helm-charts/
+          helm repo add eks-node-monitoring-agent https://aws.github.io/eks-node-monitoring-agent
+          helm repo add flyte-core https://helm.flyte.org/
+          helm repo update
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed_charts
+        run: |
+          ct lint --target-branch ${{ github.event.pull_request.base.ref }}
+
+      - name: Echo Changed Charts
+        if: steps.list-changed.outputs.changed_charts
+        run: |
+          echo "Changed charts: ${{ steps.list-changed.outputs.changed_charts }}"
+
+      - name: Validate Chart Templates
+        if: steps.list-changed.outputs.changed_charts
+        run: |
+          changed="${{ steps.list-changed.outputs.changed_charts }}"
+          echo "🛠️  Validating Helm chart templates for: $changed"
+
+          for chart in $changed; do
+            if [ -d "$chart" ]; then
+              echo "🛠️  Building dependencies for chart: $chart"
+              helm dependency build "$chart"
+
+              echo "🛠️  Rendering chart templates for: $chart"
+              helm template "$chart" --output-dir ./output --include-crds --debug
+              if [ $? -ne 0 ]; then
+                echo "❌ helm template failed for $chart."
+                exit 1
+              else
+                echo "✅ Chart template succeeded for $chart."
+              fi
+            else
+              echo "⚠️ Skipping validation for $chart: not a directory."
+            fi
+          done

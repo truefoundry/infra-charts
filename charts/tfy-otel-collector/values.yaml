@@ -6,28 +6,73 @@ global:
   resourceTier: "medium"
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
   affinity: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
   ## @param global.tolerations [array] Tolerations for pod scheduling on a node
   tolerations: []
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.name Service account name
+    name: "truefoundry"
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+  ## @param global.podAnnotations [object] Pod annotations
+  podAnnotations: {}
+  ## @param global.podLabels [object] Pod labels
+  podLabels: {}
+  ## @param global.serviceLabels [object] Service labels
+  serviceLabels: {}
+  ## @param global.deploymentLabels [object] Deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Service annotations
+  serviceAnnotations: {}
+  ## @param global.image.registry Image registry for tfyOtelCollector (defaults to global.image.registry if not set)
+  image:
+    registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
-  CLICKHOUSE_USER: user
-  CLICKHOUSE_PASSWORD: ${k8s-secret/truefoundry-clickhouse-secret/CLICKHOUSE_PASSWORD}
-  AUTH_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-  CLICKHOUSE_TCP_HOST: tcp://clickhouse-{{ .Release.Name }}.{{ .Release.Namespace }}.svc.cluster.local:9000
-  PROJECT_BASE_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
-  NATS_BASE_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
-  SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000/v1/x/tfy-otel-collector/nats-creds
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
+  TENANT_NAME: "{{ .Values.global.tenantName }}"
+  SENTRY_ENABLED: "true"
+  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ include "global.namespace" . }}.svc.cluster.local:8000
+  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+  SFY_SERVER_REQUEST_TIMEOUT: 30s
+  DELTAFUSION_INGESTOR_REQUEST_TIMEOUT: 60s
+  DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 60s
+  DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL: 10s
+  DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES: "2"
+  SFY_SERVER_REQUEST_MAX_RETRIES: "2"
+  SFY_SERVER_REQUEST_RETRY_INTERVAL: 10s
+  TFY_OTEL_EXPORTER_BATCH_WINDOW: 5s
+  TFY_OTEL_EXPORTER_BATCH_SIZE: "200"
+  TFY_OTEL_EXPORTER_QUEUE_SIZE: "100000"
+  TFY_OTEL_EXPORTER_REQUEST_TIMEOUT: 60s
+  TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES: "3"
+  TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL: 1s
+  TFY_OTEL_EXPORTER_TICKER_INTERVAL: 1s
 
-## Image configuration for llm-gateway
+## Image configuration for otel-collector
 image:
+  ## @param image.registry Image registry for tfyOTELCollector (defaults to global.image.registry if not set)
+  registry: ""
   ## @param image.repository Image repository for tfyOTELCollector
-  repository: tfy.jfrog.io/tfy-private-images/tfy-otel-collector
+  repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: cb790d028f3d1fcf98a96f2ed22b612c738effca
+  tag: v0.103.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -45,15 +90,21 @@ envSecretName: ""
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
-## @param podSecurityContext Pod security context
+## @param podSecurityContext [object] Pod security context
 podSecurityContext: {}
-## @param commonLabels Common labels
+## @param commonLabels [object] Common labels
 commonLabels: {}
+## @param podLabels [object] Pod annotations
+podLabels: {}
+## @param deploymentAnnotations [object] Deployment annotations
+deploymentAnnotations: {}
+## @param deploymentLabels [object] Deployment labels
+deploymentLabels: {}
 ## @param securityContext Security context configuration
 securityContext: {}
 ## Healthcheck configuration
@@ -93,7 +144,7 @@ healthcheck:
     ## @param healthcheck.liveness.failureThreshold Failure threshold
     failureThreshold: 3
 ## @skip resources [object] Resource configuration
-#resources:
+# resources:
 #  limits:
 #      cpu: 200m
 #      ephemeral-storage: 512Mi
@@ -120,14 +171,20 @@ service:
   port: 4318
   ## @param service.annotations Service annotations
   annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
-  create: true
+  create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
+  ## @param serviceAccount.labels Service account labels
+  labels: {}
   ## @param serviceAccount.name Service account name
   name: ""
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
+  automountServiceAccountToken: false
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts

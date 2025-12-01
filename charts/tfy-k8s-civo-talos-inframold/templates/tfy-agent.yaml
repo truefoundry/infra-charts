@@ -7,14 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-agent"
-    truefoundry.com/infra-migration-tag: "1007"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: tfy-agent
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.2.66
+    targetRevision: 0.2.82
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:

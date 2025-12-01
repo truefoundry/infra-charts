@@ -1,0 +1,59 @@
+{{- if .Values.tfyWorkflowPropeller.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-workflow-propeller
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "tfy-workflow-propeller"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
+spec:
+  destination:
+    namespace: tfy-workflow-propeller
+    server: 'https://kubernetes.default.svc'
+  source:
+    targetRevision: 0.0.6
+    repoURL: "tfy.jfrog.io/tfy-helm"
+    chart: tfy-workflow-propeller
+    helm:
+      values: |-
+        {{- if .Values.tfyWorkflowPropeller.valuesOverride }}
+        {{ .Values.tfyWorkflowPropeller.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        global:
+          tenantName: {{ .Values.tenantName }}
+          controlPlaneURL: {{ .Values.controlPlaneURL }}
+        flyte-core:
+          storage:
+            {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.storage | nindent 12 }}
+          configmap:
+            {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.configmap | nindent 12 }}
+            admin:
+              admin:
+                Command:
+                  - echo
+                  - "{{ .Values.tfyAgent.clusterToken }}"
+                endpoint: {{ .Values.controlPlaneURL }}
+          flytepropeller:
+            {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.flytepropeller | nindent 12 }}
+          {{- if and .Values.tfyWorkflowPropeller.tfySignedURLServer (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer "env") (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer.env "DEFAULT_CLOUD_PROVIDER") }}
+          tfySignedURLServer:
+            env:
+              {{ if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "aws" -}}
+              AWS_REGION: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.connection.region }}
+              S3_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
+              {{- else if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "gcp" -}}
+              GS_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
+              {{- end -}}
+              {{- toYaml .Values.tfyWorkflowPropeller.tfySignedURLServer.env | nindent 14 -}}
+          {{- end }}
+        {{- end }}
+  project: tfy-apps
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

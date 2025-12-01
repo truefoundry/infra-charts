@@ -1,6 +1,6 @@
 ## @section Global Parameters
 ## @param tenantName Parameters for tenantName
-## Tenant Name - This is same as the name of the organization used to sign up 
+## Tenant Name - This is same as the name of the organization used to sign up
 ## on Truefoundry
 ##
 tenantName: ""
@@ -17,20 +17,17 @@ clusterName: ""
 
 ## @param tolerations [array] Tolerations for the all chart components
 ##
-
 tolerations: []
-
 
 ## @param affinity [object] Affinity for the all chart components
 ##
 
 affinity: {}
 
-
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
 ## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
-## already installed in your cluster. Please make sure that the configuration of 
+## already installed in your cluster. Please make sure that the configuration of
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
@@ -61,7 +58,7 @@ argoWorkflows:
 
 ## @section argoRollouts parameters
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
-## Argo Rollouts is mandatory for Truefoundry to work. 
+## Argo Rollouts is mandatory for Truefoundry to work.
 ##
 argoRollouts:
   enabled: true
@@ -83,6 +80,12 @@ certManager:
   ## @param certManager.tolerations [array] Tolerations for Cert Manager
   ##
   tolerations: []
+  ## @param certManager.podLabels [object] Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well.
+  ##
+  podLabels: {}
+  serviceAccount:
+    ## @param certManager.serviceAccount.annotations [object] Service account annotations for Cert Manager.
+    annotations: {}
   ## @param certManager.affinity [object] Affinity for Cert Manager
   ##
   affinity: {}
@@ -94,7 +97,7 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-  ##@param metricsServer.enabled Flag to enable Metrics Server
+  ## @param metricsServer.enabled Flag to enable Metrics Server
   enabled: true
   ## @param metricsServer.tolerations [array] Tolerations for Metrics Server
   ##
@@ -109,8 +112,6 @@ metricsServer:
   ## @param metricsServer.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
-
-
 ## @section AWS parameters
 ## AWS parameters
 ##
@@ -138,7 +139,6 @@ aws:
     ##
     valuesOverride: {}
 
-
   ## @subsection karpenter parameters
   ## @param aws.karpenter.enabled Flag to enable Karpenter
   ##
@@ -163,10 +163,9 @@ aws:
     ##
     tolerations: []
 
-    ## @param aws.karpenter.webhook.enabled Flag to enable Karpenter webhook
+    ## @param aws.karpenter.kmsKeyID KMS Key ID for Karpenter
     ##
-    webhook:
-      enabled: true
+    kmsKeyID: ""
 
     ## @param aws.karpenter.interruptionQueue Interruption queue name for Karpenter
     ##
@@ -175,7 +174,7 @@ aws:
     ## @param aws.karpenter.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-    
+
     ## @param aws.karpenter.config.valuesOverride [object] Config override for karpenter config
     config:
       valuesOverride: {}
@@ -194,6 +193,9 @@ aws:
     ## @param aws.awsEbsCsiDriver.tolerations [array] Tolerations for AWS EBS CSI Driver
     ##
     tolerations: []
+    ## @param aws.awsEbsCsiDriver.kmsKeyID KMS Key ID for AWS EBS CSI Driver
+    ##
+    kmsKeyID: ""
     ## @param aws.awsEbsCsiDriver.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
@@ -218,8 +220,8 @@ aws:
     ## @param aws.awsEfsCsiDriver.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-  
-  ## @param aws.inferentia.enabled Flag to enable Inferentia 
+
+  ## @param aws.inferentia.enabled Flag to enable Inferentia
   inferentia:
     enabled: false
     ## @param aws.inferentia.affinity [object] Affinity for AWS EFS CSI Driver
@@ -231,8 +233,6 @@ aws:
     ## @param aws.inferentia.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-
-
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
 ##
@@ -292,11 +292,19 @@ truefoundry:
   ## For AWS EKS: eks.amazonaws.com/role-arn
   ## For GCP GKE: iam.gke.io/gcp-service-account
   ## For other providers: empty object
-  truefoundry_iam_role_arn_annotations: 
-    
+  truefoundry_iam_role_arn_annotations:
     eks.amazonaws.com/role-arn: ""
-    
-  
+
+  ## @param truefoundry.defaultCloudProvider Default cloud provider
+  defaultCloudProvider: "aws"
+  storageConfiguration:
+    ## @param truefoundry.storageConfiguration.awsS3BucketName AWS S3 bucket name
+    awsS3BucketName: ''
+    ## @param truefoundry.storageConfiguration.awsRegion AWS region
+    awsRegion: ''
+    ## @param truefoundry.storageConfiguration.awsAssumeRoleArn AWS assume role ARN
+    awsAssumeRoleArn: ''
+
   ## @param truefoundry.s3proxy.enabled Flag to enable S3 Proxy
   s3proxy:
     enabled: false
@@ -309,15 +317,13 @@ truefoundry:
 
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
   ##
-  
   tolerations:
   - key: "class.truefoundry.com/component"
     value: "control-plane"
     effect: "NoSchedule"
-  
+
   ## @param truefoundry.affinity [object] Affinity for the truefoundry components
   ##
-  
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -327,20 +333,18 @@ truefoundry:
                 operator: In
                 values:
                   - control-plane
-  
 
-## @section loki parameters
-## @param loki.enabled Flag to enable Loki
+## @section tfyLogs parameters
+## @param tfyLogs.enabled Flag to enable Tfy Logs
 ##
-loki:
+tfyLogs:
   enabled: true
-  ## @param loki.valuesOverride [object] Config override from default config values
+  ## @param tfyLogs.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
-  ## @param loki.affinity [object] Affinity for loki statefulset pod
+  ## @param tfyLogs.affinity [object] Affinity for tfyLogs statefulset pod
   ##
-  
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -350,16 +354,13 @@ loki:
                 operator: In
                 values:
                   - critical
-  
 
-  ## @param loki.tolerations [array] Tolerations for loki statefulset pod
+  ## @param tfyLogs.tolerations [array] Tolerations for tfyLogs statefulset pod
   ##
-  
   tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
-  
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
 
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
@@ -373,10 +374,9 @@ istio:
     ## @param istio.base.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-  
+
   ## @param istio.gateway.annotations [object] Annotations for Istio Gateway
   gateway:
-    
     annotations:
       "service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy": "ELBSecurityPolicy-TLS13-1-2-2021-06"
       "service.beta.kubernetes.io/aws-load-balancer-name": "<terragruntOutput.cluster.cluster_name.raw>"
@@ -389,11 +389,9 @@ istio:
         cluster-name=<terragruntOutput.cluster.cluster_name.raw>,  truefoundry.com/managed=true,
         owner=Truefoundry, application=tfy-istio-ingress
       "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled": "true"
-    
-    
+
     ## @param istio.gateway.affinity [object] Affinity for the gateway pods
     ##
-    
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -403,20 +401,18 @@ istio:
                   operator: In
                   values:
                     - critical
-    
-    
+
     ## @param istio.gateway.tolerations [array] Tolerations for the gateway pods
     ##
-    
     tolerations:
-    - key: "class.truefoundry.com/component"
-      value: "critical"
-      effect: "NoSchedule"
-    
+      - key: "class.truefoundry.com/component"
+        value: "critical"
+        effect: "NoSchedule"
 
     ## @param istio.gateway.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
+
   ## @section istio discovery parameters
   discovery:
     ## @param istio.discovery.hub Hub for the istio image
@@ -430,11 +426,14 @@ istio:
     ## @param istio.discovery.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
-  ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
+  ## @section istio tfyGateway parameters
   tfyGateway:
-    
+    ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
+    ##
     httpsRedirect: true
-    
+    ## @param istio.tfyGateway.domains [array] Domains for the gateway pods
+    ##
+    domains: ["*"]
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -496,12 +495,11 @@ prometheus:
       receivers:
         - name: tfy-agent
           webhook_configs:
-              - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
-                send_resolved: true
+            - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+              send_resolved: true
 
   ## @param prometheus.affinity [object] Affinity for prometheus statefulset pod
   ##
-  
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -511,23 +509,20 @@ prometheus:
                 operator: In
                 values:
                   - critical
-  
 
   ## @param prometheus.tolerations [array] Tolerations for prometheus statefulset pod
   ##
-  
   tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
-  
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
 
   ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
-  
+
   config:
-    ## @param prometheus.config.enabled Flag to enable prometheus config
+    ## @param prometheus.config.enabled Flag to enable prometheus config (requires prometheus.enabled to be true)
     ##
     enabled: true
 
@@ -564,17 +559,14 @@ tfyAgent:
   valuesOverride: {}
 
   ## @param tfyAgent.tolerations [array] Tolerations for the agent pods
-  ## 
-  
+  ##
   tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
-  
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
 
   ## @param tfyAgent.affinity [object] Affinity for the agent pods
-  ## 
-  
+  ##
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -584,7 +576,6 @@ tfyAgent:
                 operator: In
                 values:
                   - critical
-  
 
   ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
@@ -599,7 +590,7 @@ tfyAgent:
 ## @param elasti.enabled Flag to enable Elasti
 ##
 elasti:
-  enabled: false
+  enabled: true
   ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -616,7 +607,6 @@ jspolicy:
 
   ## @param jspolicy.affinity [object] Affinity for jspolicy
   ##
-  
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -626,19 +616,64 @@ jspolicy:
                 operator: In
                 values:
                   - critical
-  
 
   ## @param jspolicy.tolerations [array] Tolerations for jspolicy
   ##
-  
   tolerations:
-  - key: "class.truefoundry.com/component"
-    value: "critical"
-    effect: "NoSchedule"
-  
+    - key: "class.truefoundry.com/component"
+      value: "critical"
+      effect: "NoSchedule"
 
   ## @param jspolicy.config.valuesOverride [object] Config override from default config values
   ##
   config:
     valuesOverride: {}
 
+## @section tfy-workflow-propeller parameters
+## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
+##
+tfyWorkflowPropeller:
+  enabled: false
+  ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## tfyWorkflowPropeller.flyteCore configuration
+  flyteCore:
+    ## @skip tfyWorkflowPropeller.flyteCore.storage [object] Storage configuration for flyteCore
+    ##
+    storage:
+      type: s3
+      bucketName: <to_be_provided>
+      connection:
+        region: <to_be_provided>
+        auth-type: iam
+    ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
+    ##
+    configmap:
+      core:
+        propeller:
+          metadata-prefix: "<to_be_provided>"
+          rawoutput-prefix: "<to_be_provided>"
+      k8s:
+        plugins:
+          k8s:
+            default-env-vars:
+              - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
+    ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
+    ##
+    flytepropeller:
+      serviceAccount:
+        annotations:
+          eks.amazonaws.com/role-arn: "<to_be_provided>"
+  ## @skip tfyWorkflowPropeller.tfySignedURLServer [object] TfySignedURLServer configuration for flyteCore
+  ##
+  tfySignedURLServer:
+    enabled: true
+    env:
+      DEFAULT_CLOUD_PROVIDER: aws
+
+helm:
+  ## @param helm.resourcePolicy Resource policy for the helm chart
+  ##
+  resourcePolicy: keep

@@ -1,0 +1,114 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionIngestor.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "deltafusion-ingestor.fullname" . }}
+  labels: 
+    {{- include "deltafusion-ingestor.statefulsetLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-ingestor.statefulsetAnnotations" . | nindent 4 }}
+spec:
+  serviceName: {{ include "deltafusion-ingestor.fullname" . }}
+  replicas: {{- include "deltafusion-ingestor.replicas" . | indent 1 }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "deltafusion-ingestor.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "deltafusion-ingestor.podLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "deltafusion-ingestor.imagePullSecrets" . | nindent 8 }}
+      serviceAccountName: {{ include "deltafusion-ingestor.serviceAccountName" . }}
+      {{- with .Values.deltaFusionIngestor.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "deltafusion-ingestor"
+          {{- with .Values.deltaFusionIngestor.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.deltaFusionIngestor.image.optimized }}
+          image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}-optimized"
+          {{- else }}
+          image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.deltaFusionIngestor.imagePullPolicy }}
+          env:
+            {{- include "deltafusion-ingestor.env" . | trim | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.deltaFusionIngestor.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.deltaFusionIngestor.healthcheck.readiness.path }}
+              port: {{ .Values.deltaFusionIngestor.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.timeoutSeconds }}
+            successThreshold: {{ .Values.deltaFusionIngestor.healthcheck.readiness.successThreshold }}
+            failureThreshold: {{ .Values.deltaFusionIngestor.healthcheck.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.deltaFusionIngestor.healthcheck.liveness.path }}
+              port: {{ .Values.deltaFusionIngestor.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.timeoutSeconds }}
+            successThreshold: {{ .Values.deltaFusionIngestor.healthcheck.liveness.successThreshold }}
+            failureThreshold: {{ .Values.deltaFusionIngestor.healthcheck.liveness.failureThreshold }}
+          resources:
+            {{- include "deltafusion-ingestor.resources" . | nindent 12 }}
+          volumeMounts:
+            {{- include "deltafusion-ingestor.volumeMounts" . | nindent 12 }}
+      volumes:
+        {{- include "deltafusion-ingestor.volumes" . | nindent 8 }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionIngestor.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
+      nodeSelector:
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.deltaFusionIngestor.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.deltaFusionIngestor.topologySpreadConstraints }}
+        {{- toYaml .Values.deltaFusionIngestor.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 14 }}
+          {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.deltaFusionIngestor.tolerations }}
+        {{- .Values.deltaFusionIngestor.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+        {{- range .Values.deltaFusionIngestor.storage.accessModes }}
+          - {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.deltaFusionIngestor.storage.size }}
+        {{- if .Values.deltaFusionIngestor.storage.storageClassName }}
+        storageClassName: {{ .Values.deltaFusionIngestor.storage.storageClassName | quote }}
+        {{- end }}
+{{- end }}

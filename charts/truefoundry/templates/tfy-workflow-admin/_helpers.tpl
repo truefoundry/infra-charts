@@ -31,118 +31,142 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
+  Common labels - uses global truefoundry.labels function
+  */}}
+{{- define "tfy-workflow-admin.labels" -}}
+{{- include "truefoundry.labels" (dict "context" . "name" "tfy-workflow-admin") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "tfy-workflow-admin.commonLabels" -}}
+{{- $baseLabels := include "tfy-workflow-admin.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyWorkflowAdmin.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "tfy-workflow-admin.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.tfyWorkflowAdmin.commonAnnotations) }}
+{{- toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
 {{- define "tfy-workflow-admin.podLabels" -}}
-{{ include "tfy-workflow-admin.selectorLabels" . }}
-{{- if .Values.tfyWorkflowAdmin.image.tag }}
-app.kubernetes.io/version: {{ .Values.tfyWorkflowAdmin.image.tag | quote }}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyWorkflowAdmin.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-{{- range $name, $value := .Values.tfyWorkflowAdmin.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "tfy-workflow-admin.podAnnotations" -}}
+{{- $commonAnnotations := include "tfy-workflow-admin.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyWorkflowAdmin.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
 
 {{/*
   Server Pod Labels
   */}}
 {{- define "tfy-workflow-admin.server.podLabels" -}}
-{{ include "tfy-workflow-admin.podLabels" . }}
-app.kubernetes.io/workflow-component: server
-{{- end }}
-
-{{/*
-  Common labels
-  */}}
-{{- define "tfy-workflow-admin.labels" -}}
-helm.sh/chart: {{ include "tfy-workflow-admin.chart" . }}
-{{ include "tfy-workflow-admin.podLabels" . }}
-{{- if .Values.tfyWorkflowAdmin.commonLabels }}
-{{ toYaml .Values.tfyWorkflowAdmin.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
+{{- $podLabels := include "tfy-workflow-admin.podLabels" . | fromYaml }}
+{{- $serverLabels := mergeOverwrite $podLabels (dict "app.kubernetes.io/workflow-component" "server") }}
+{{- toYaml $serverLabels }}
 {{- end }}
 
 {{/*
   Scheduler Pod Labels
   */}}
 {{- define "tfy-workflow-admin.scheduler.podLabels" -}}
-{{- include "tfy-workflow-admin.podLabels" . }}
-app.kubernetes.io/workflow-component: scheduler
+{{- $podLabels := include "tfy-workflow-admin.podLabels" . | fromYaml }}
+{{- $schedulerLabels := mergeOverwrite $podLabels (dict "app.kubernetes.io/workflow-component" "scheduler") }}
+{{- toYaml $schedulerLabels }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Service Labels - merges commonLabels with service-specific labels
   */}}
-{{- define "tfy-workflow-admin.annotations" -}}
-{{- if .Values.tfyWorkflowAdmin.annotations }}
-{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- define "tfy-workflow-admin.serviceLabels" -}}
+{{- $commonLabels := include "tfy-workflow-admin.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.tfyWorkflowAdmin.service.labels }}
+{{- toYaml $serviceLabels }}
 {{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "tfy-workflow-admin.serviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-workflow-admin.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.tfyWorkflowAdmin.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "tfy-workflow-admin.serviceAccountLabels" -}}
+{{- $commonLabels := include "tfy-workflow-admin.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.tfyWorkflowAdmin.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "tfy-workflow-admin.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-workflow-admin.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.tfyWorkflowAdmin.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "tfy-workflow-admin.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-workflow-admin.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.tfyWorkflowAdmin.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-workflow-admin.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "tfy-workflow-admin.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.tfyWorkflowAdmin.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
 {{- end }}
 
 {{/*
   ConfigMap annotations
   */}}
 {{- define "tfy-workflow-admin.configMap.annotations" -}}
-{{- if .Values.tfyWorkflowAdmin.annotations }}
-{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- end }}
-argocd.argoproj.io/sync-options: PruneLast=true
+{{- $commonAnnotations := include "tfy-workflow-admin.commonAnnotations" . | fromYaml }}
+{{- $configMapAnnotations := mergeOverwrite $commonAnnotations (dict "argocd.argoproj.io/sync-options" "PruneLast=true") }}
+{{- toYaml $configMapAnnotations }}
 {{- end }}
 
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "tfy-workflow-admin.serviceAccountAnnotations" -}}
-{{- if .Values.tfyWorkflowAdmin.serviceAccount.annotations }}
-{{ toYaml .Values.tfyWorkflowAdmin.serviceAccount.annotations }}
-{{- else if .Values.tfyWorkflowAdmin.annotations }}
-{{ toYaml .Values.tfyWorkflowAdmin.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
 
-{{/*
-  Selector labels
-  */}}
-{{- define "tfy-workflow-admin.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-workflow-admin.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{/*
-  Server selector labels
-  */}}
-{{- define "tfy-workflow-admin.server.selectorLabels" -}}
-{{- include "tfy-workflow-admin.selectorLabels" . }}
-app.kubernetes.io/workflow-component: server
-{{- end }}
-
-{{/*
-  Scheduler selector labels
-  */}}
-{{- define "tfy-workflow-admin.scheduler.selectorLabels" -}}
-{{- include "tfy-workflow-admin.selectorLabels" . }}
-app.kubernetes.io/workflow-component: scheduler
-{{- end }}
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-workflow-admin.serviceAccountName" -}}
-{{- default (include "tfy-workflow-admin.fullname" .) "tfy-workflow-admin"}}
-
+{{- if .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- .Values.tfyWorkflowAdmin.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*
@@ -180,21 +204,29 @@ app.kubernetes.io/workflow-component: scheduler
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "tfy-workflow-admin.resourceTier" }}
+{{- $tier := .Values.tfyWorkflowAdmin.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "tfy-workflow-admin-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 {{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
+3
 {{- else if eq $tier "large" -}}
-2
+5
 {{- end }}
 {{- end }}
 
 {{- define "tfy-workflow-admin-scheduler.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 {{- if .Values.tfyWorkflowAdmin.replicaCount -}}
 {{ .Values.tfyWorkflowAdmin.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -273,7 +305,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-workflow-admin-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -299,7 +331,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-workflow-admin-scheduler.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-workflow-admin.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -322,4 +354,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged | indent 8 }}
+{{- end }}
+
+{{- define "tfy-workflow-admin.imagePullSecrets" -}}
+{{- if .Values.tfyWorkflowAdmin.imagePullSecrets -}}
+{{- toYaml .Values.tfyWorkflowAdmin.imagePullSecrets | indent 8 }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets | indent 8 }}
+{{- end -}}
 {{- end }}

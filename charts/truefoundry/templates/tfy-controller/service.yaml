@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "tfy-controller.fullname" . }}
   labels:
-    {{- include "tfy-controller.labels" . | nindent 4 }}
+    {{- include "tfy-controller.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-controller.annotations" . | indent 4 }}
+    {{- include "tfy-controller.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.tfyController.service.type }}
   ports:
@@ -14,5 +14,5 @@ spec:
       targetPort: {{ .Values.tfyController.service.port }}
       protocol: TCP
       name: port-{{ .Values.tfyController.service.port }}
-  selector: {{- include "tfy-controller.selectorLabels" . | nindent 4 }}
+  selector: {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | nindent 4 }}
 {{- end }}

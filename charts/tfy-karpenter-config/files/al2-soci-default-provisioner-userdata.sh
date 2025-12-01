@@ -1,9 +1,16 @@
 #!/bin/bash
 set -ex
 
+function version_lte() {
+    printf '%s\n' "$1" "$2" | sort -C -V
+}
+function version_lt() {
+    ! version_lte "$2" "$1"
+}
+
 function setup_soci() {
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-VERSION="0.9.0"
+VERSION="0.11.1"
 ARCHIVE="soci-snapshotter-$VERSION-linux-$ARCH.tar.gz"
 KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json"
 BACKUP_KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json.bak"

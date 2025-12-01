@@ -4,22 +4,20 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
   labels:
-    {{- include "tfy-k8s-controller.labels" . | nindent 4 }}
+    {{- include "tfy-k8s-controller.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-k8s-controller.annotations" . | indent 4 }}
+    {{- include "tfy-k8s-controller.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-k8s-controller.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-k8s-controller.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.tfyK8sController.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-k8s-controller.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-k8s-controller.labels" . | nindent 8 }}
+        {{- include "tfy-k8s-controller.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-k8s-controller.serviceAccountName" . }}
       {{- with .Values.tfyK8sController.podSecurityContext }}
@@ -34,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-k8s-controller.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyK8sController.image.repository }}:{{ .Values.tfyK8sController.image.tag }}"
+          image: "{{ .Values.tfyK8sController.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyK8sController.image.repository }}:{{ .Values.tfyK8sController.image.tag }}"
           imagePullPolicy: {{ .Values.tfyK8sController.imagePullPolicy }}
           ports:
             - name: http
@@ -62,15 +60,14 @@ spec:
             initialDelaySeconds: {{ .Values.tfyK8sController.readinessProbe.initialDelaySeconds }}
           volumeMounts:
             {{- include "tfy-k8s-controller.volumeMounts" . | nindent 12 }}
-      {{- with .Values.tfyK8sController.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-k8s-controller.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "tfy-k8s-controller.volumes" . | nindent 8 }}
-      {{- if .Values.tfyK8sController.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyK8sController.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyK8sController.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyK8sController.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -86,7 +83,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "tfy-k8s-controller.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-k8s-controller") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

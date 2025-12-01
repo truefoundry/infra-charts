@@ -7,13 +7,14 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "elasti"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: elasti
     server: 'https://kubernetes.default.svc'
   source:
-    targetRevision: 0.1.13
+    targetRevision: 0.1.18
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: elasti
     helm:
@@ -26,4 +27,7 @@ spec:
   project: tfy-apps
   syncPolicy:
     automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
 {{- end }}

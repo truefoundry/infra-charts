@@ -1,0 +1,18 @@
+{{- if .Values.oidc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-llm-gateway.fullname" . }}-oidc-cm
+  labels:
+      {{- include "tfy-llm-gateway.commonLabels" . | nindent 4 }}
+  annotations:
+      {{- include "tfy-llm-gateway.commonAnnotations" . | nindent 4 }}
+data:
+  config.json: |-
+    {{- if .Values.oidc.config }}
+    {{- toJson .Values.oidc.config | nindent 4 }}
+    {{- else }}
+    {}
+    {{- end }}
+{{- end }}
+

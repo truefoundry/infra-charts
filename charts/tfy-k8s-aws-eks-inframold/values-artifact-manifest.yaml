@@ -10,13 +10,10 @@ argoRollouts:
   enabled: true
 certManager:
   enabled: true
+  serviceAccount:
+    annotations: {}
 metricsServer:
-
   enabled: true
-
-
-
-  
 aws:
   awsLoadBalancerController:
     enabled: true
@@ -39,7 +36,6 @@ aws:
 
   inferentia:
     enabled: true
-  
 
 gpu:
   enabled: true
@@ -68,7 +64,8 @@ truefoundry:
   tfyApiKey: ""
   truefoundryImagePullConfigJSON: ""
 
-loki:
+
+tfyLogs:
   enabled: true
 
 istio:
@@ -93,6 +90,7 @@ istio:
     
     httpsRedirect: true
     
+    domains: ["*"]
 
 keda:
   enabled: true
@@ -118,3 +116,32 @@ elasti:
 
 jspolicy:
   enabled: true
+
+tfyWorkflowPropeller:
+  enabled: true
+
+  flyteCore:
+    storage:
+      type: s3
+      bucketName: ""
+      connection:
+        region: ""
+        auth-type: iam
+      configmap:
+        core:
+          propeller:
+            metadata-prefix: ""
+            rawoutput-prefix: ""
+        k8s:
+          plugins:
+            k8s:
+              default-env-vars:
+                - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
+      flytepropeller:
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: ""
+      tfySignedURLServer:
+        enabled: true
+        env:
+          DEFAULT_CLOUD_PROVIDER: aws

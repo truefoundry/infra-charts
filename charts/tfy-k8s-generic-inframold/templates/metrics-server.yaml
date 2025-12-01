@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "metrics-server"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: kube-system
@@ -33,6 +34,10 @@ spec:
         podAnnotations:
           "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
         replicas: 2
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: prometheus
         resources:
           limits:
             cpu: 200m

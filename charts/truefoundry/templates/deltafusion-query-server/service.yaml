@@ -1,0 +1,19 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "deltafusion-query-server.fullname" . }}
+  labels:
+    {{- include "deltafusion-query-server.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-query-server.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.deltaFusionQueryServer.service.type }}
+  ports:
+    - port: {{ .Values.deltaFusionQueryServer.service.port }}
+      targetPort: {{ .Values.deltaFusionQueryServer.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 4 }}
+{{- end }}

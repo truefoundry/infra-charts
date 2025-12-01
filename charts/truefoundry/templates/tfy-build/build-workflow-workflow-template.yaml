@@ -1,14 +1,16 @@
-{{- if .Values.tfyBuild.enabled }}
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuild.truefoundryWorkflows.enabled }}
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: build
   labels:
-    {{- include "tfy-build.labels" . | nindent 4 }}
+    {{- include "tfy-build.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-build.annotations" . | indent 4 }}
+    {{- include "tfy-build.commonAnnotations" . | nindent 4 }}
 spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
+  imagePullSecrets:
+    {{- include "tfy-build.imagePullSecrets" . | nindent 4 }}
   workflowMetadata:
     labelsFrom:
       "truefoundry.com/buildName":
@@ -217,7 +219,7 @@ spec:
                       path: {{ $path | replace "tfy-build-scripts/" "" }}
             {{- end}}
       script:
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
         source: |
           #!/bin/bash
@@ -313,7 +315,7 @@ spec:
             secretName: {{ $value.valueFrom.secretName }}
       {{- end }}
       script:
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
         env: 
           - name: BUILD_SOURCE
@@ -376,7 +378,7 @@ spec:
           )
       sidecars:
       - name: buildkitd
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.buildkitd.image.tag }}
         command:
           - /usr/local/bin/entrypoint.sh
         {{- with .Values.tfyBuild.truefoundryWorkflows.buildkitd.extraEnvs }}
@@ -484,7 +486,7 @@ spec:
             secretName: {{ $value.valueFrom.secretName }}
       {{- end }}
       script:
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
         env: 
           - name: BUILD_SOURCE
@@ -582,7 +584,7 @@ spec:
                       path: {{ $path | replace "tfy-build-scripts/" "" }}
             {{- end}}
       script:
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
         env:
           - name: CALLBACK_URL
@@ -688,7 +690,7 @@ spec:
             path: /tmp/result
       script:
         command: [bash]
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
         env:
           - name: DOCKER_REGISTRY_URL
             value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"
@@ -780,7 +782,7 @@ spec:
       {{- end }}
       script:
         command: [bash]
-        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+        image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
         env:
           - name: DOCKER_REGISTRY_URL
             value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"

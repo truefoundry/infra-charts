@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "mlfoundry-server.fullname" . }}
   labels:
-    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+    {{- include "mlfoundry-server.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "mlfoundry-server.annotations" . | indent 4 }}
+    {{- include "mlfoundry-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "mlfoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.mlfoundryServer.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "mlfoundry-server.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "mlfoundry-server.podLabels" . | nindent 8 }}
     spec:
@@ -34,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "mlfoundry-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.mlfoundryServer.image.repository }}:{{ .Values.mlfoundryServer.image.tag }}"
+          image: "{{ .Values.mlfoundryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.mlfoundryServer.image.repository }}:{{ .Values.mlfoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.mlfoundryServer.imagePullPolicy }}
           ports:
             - name: http
@@ -63,16 +61,15 @@ spec:
               port: {{ .Values.mlfoundryServer.service.port }}
               scheme: HTTP
           volumeMounts:
-          {{- toYaml .Values.mlfoundryServer.extraVolumeMounts | nindent 12 }}
-      {{- with .Values.mlfoundryServer.imagePullSecrets }}
+            {{- include "mlfoundry-server.volumeMounts" . | nindent 12 }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "mlfoundry-server.imagePullSecrets" . | nindent 8 }}
       volumes:
-      {{- toYaml .Values.mlfoundryServer.extraVolumes | nindent 8 }}
-      {{- if .Values.mlfoundryServer.nodeSelector }}
+        {{- include "mlfoundry-server.volumes" . | nindent 8 }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.mlfoundryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.mlfoundryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.mlfoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -88,7 +85,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "mlfoundry-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 14 }}
        {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

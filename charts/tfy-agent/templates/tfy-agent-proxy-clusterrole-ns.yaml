@@ -6,9 +6,9 @@ kind: ClusterRole
 metadata:
   name: {{ include "tfy-agent-proxy.fullname" . }}-ns
   labels:
-    {{- include "tfy-agent-proxy.labels" . | nindent 4 }}
+    {{- include "tfy-agent-proxy.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-agent-proxy.annotations" . | nindent 4 }}
+    {{- include "tfy-agent-proxy.commonAnnotations" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["namespaces"]
@@ -25,6 +25,10 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "patch"]
+
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
 
   - apiGroups: [""]
     resources: ["pods"]
@@ -47,7 +51,7 @@ rules:
     resources: ["prometheuses"]
     verbs: ["patch"]
   - apiGroups: ["monitoring.coreos.com"]
-    resources: ["prometheusrules"]
+    resources: ["prometheusrules", "alertmanagerconfigs"]
     verbs: ["get", "create", "delete", "patch"]
 
   - apiGroups: [""]

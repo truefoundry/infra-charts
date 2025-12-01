@@ -7,9 +7,9 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "istio-discovery"
-    truefoundry.com/infra-migration-tag: "1000"
 spec:
   destination:
     namespace: istio-system
@@ -18,7 +18,7 @@ spec:
   source:
     chart: istiod
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.25.1
+    targetRevision: 1.25.4
     helm:
       values: |-
         {{- if .Values.istio.discovery.valuesOverride }}

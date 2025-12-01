@@ -1,6 +1,6 @@
 ## @section Global Parameters
 ## @param tenantName Parameters for tenantName
-## Tenant Name - This is same as the name of the organization used to sign up 
+## Tenant Name - This is same as the name of the organization used to sign up
 ## on Truefoundry
 ##
 tenantName: ""
@@ -17,20 +17,17 @@ clusterName: ""
 
 ## @param tolerations [array] Tolerations for the all chart components
 ##
-
 tolerations: []
-
 
 ## @param affinity [object] Affinity for the all chart components
 ##
 
 affinity: {}
 
-
 ## @section argocd parameters
 ## @param argocd.enabled Flag to enable ArgoCD
 ## ArgoCD is mandatory for Truefoundry to work. You can make it false if ArgoCD is
-## already installed in your cluster. Please make sure that the configuration of 
+## already installed in your cluster. Please make sure that the configuration of
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
@@ -61,7 +58,7 @@ argoWorkflows:
 
 ## @section argoRollouts parameters
 ## @param argoRollouts.enabled Flag to enable Argo Rollouts
-## Argo Rollouts is mandatory for Truefoundry to work. 
+## Argo Rollouts is mandatory for Truefoundry to work.
 ##
 argoRollouts:
   enabled: true
@@ -79,10 +76,16 @@ argoRollouts:
 ## @param certManager.enabled Flag to enable Cert Manager
 ##
 certManager:
-  enabled: false
+  enabled: true
   ## @param certManager.tolerations [array] Tolerations for Cert Manager
   ##
   tolerations: []
+  ## @param certManager.podLabels [object] Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well.
+  ##
+  podLabels: {}
+  serviceAccount:
+    ## @param certManager.serviceAccount.annotations [object] Service account annotations for Cert Manager.
+    annotations: {}
   ## @param certManager.affinity [object] Affinity for Cert Manager
   ##
   affinity: {}
@@ -94,7 +97,7 @@ certManager:
 ## @param metricsServer.enabled Flag to enable Metrics Server
 ##
 metricsServer:
-  ##@param metricsServer.enabled Flag to enable Metrics Server
+  ## @param metricsServer.enabled Flag to enable Metrics Server
   enabled: false
   ## @param metricsServer.tolerations [array] Tolerations for Metrics Server
   ##
@@ -109,8 +112,6 @@ metricsServer:
   ## @param metricsServer.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
-
-
 
 ## @section gpu parameters
 ## @param gpu.enabled Flag to enable Tfy GPU Operator
@@ -171,11 +172,14 @@ truefoundry:
   ## For AWS EKS: eks.amazonaws.com/role-arn
   ## For GCP GKE: iam.gke.io/gcp-service-account
   ## For other providers: empty object
-  truefoundry_iam_role_arn_annotations: 
-    
+  truefoundry_iam_role_arn_annotations:
     {}
-    
-  
+
+  ## @param truefoundry.defaultCloudProvider Default cloud provider
+  defaultCloudProvider: "generic"
+  ## @param truefoundry.storageConfiguration Storage class for the storage configuration
+  storageConfiguration: {}
+
   ## @param truefoundry.s3proxy.enabled Flag to enable S3 Proxy
   s3proxy:
     enabled: false
@@ -188,35 +192,28 @@ truefoundry:
 
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
   ##
-  
   tolerations: []
-  
+
   ## @param truefoundry.affinity [object] Affinity for the truefoundry components
   ##
-  
   affinity: {}
-  
 
-## @section loki parameters
-## @param loki.enabled Flag to enable Loki
+## @section tfyLogs parameters
+## @param tfyLogs.enabled Flag to enable Tfy Logs
 ##
-loki:
+tfyLogs:
   enabled: true
-  ## @param loki.valuesOverride [object] Config override from default config values
+  ## @param tfyLogs.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
 
-  ## @param loki.affinity [object] Affinity for loki statefulset pod
+  ## @param tfyLogs.affinity [object] Affinity for tfyLogs statefulset pod
   ##
-  
   affinity: {}
-  
 
-  ## @param loki.tolerations [array] Tolerations for loki statefulset pod
+  ## @param tfyLogs.tolerations [array] Tolerations for tfyLogs statefulset pod
   ##
-  
   tolerations: []
-  
 
 ## @section istio parameters
 ## @param istio.enabled Flag to enable Istio
@@ -230,28 +227,23 @@ istio:
     ## @param istio.base.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
-  
+
   ## @param istio.gateway.annotations [object] Annotations for Istio Gateway
   gateway:
-    
     annotations: {}
-    
-    
+
     ## @param istio.gateway.affinity [object] Affinity for the gateway pods
     ##
-    
     affinity: {}
-    
-    
+
     ## @param istio.gateway.tolerations [array] Tolerations for the gateway pods
     ##
-    
     tolerations: []
-    
 
     ## @param istio.gateway.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
+
   ## @section istio discovery parameters
   discovery:
     ## @param istio.discovery.hub Hub for the istio image
@@ -265,11 +257,14 @@ istio:
     ## @param istio.discovery.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
-  ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
+  ## @section istio tfyGateway parameters
   tfyGateway:
-    
+    ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
+    ##
     httpsRedirect: false
-    
+    ## @param istio.tfyGateway.domains [array] Domains for the gateway pods
+    ##
+    domains: ["*"]
 
 ## @section keda parameters
 ## @param keda.enabled Flag to enable Keda
@@ -331,27 +326,23 @@ prometheus:
       receivers:
         - name: tfy-agent
           webhook_configs:
-              - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
-                send_resolved: true
+            - url: http://tfy-agent.tfy-agent.svc.cluster.local:3000/alerts
+              send_resolved: true
 
   ## @param prometheus.affinity [object] Affinity for prometheus statefulset pod
   ##
-  
   affinity: {}
-  
 
   ## @param prometheus.tolerations [array] Tolerations for prometheus statefulset pod
   ##
-  
   tolerations: []
-  
 
   ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
-  
+
   config:
-    ## @param prometheus.config.enabled Flag to enable prometheus config
+    ## @param prometheus.config.enabled Flag to enable prometheus config (requires prometheus.enabled to be true)
     ##
     enabled: true
 
@@ -388,16 +379,12 @@ tfyAgent:
   valuesOverride: {}
 
   ## @param tfyAgent.tolerations [array] Tolerations for the agent pods
-  ## 
-  
+  ##
   tolerations: []
-  
 
   ## @param tfyAgent.affinity [object] Affinity for the agent pods
-  ## 
-  
+  ##
   affinity: {}
-  
 
   ## @param tfyAgent.clusterToken cluster token
   ## Token for cluster authentication
@@ -412,7 +399,7 @@ tfyAgent:
 ## @param elasti.enabled Flag to enable Elasti
 ##
 elasti:
-  enabled: false
+  enabled: true
   ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -429,18 +416,65 @@ jspolicy:
 
   ## @param jspolicy.affinity [object] Affinity for jspolicy
   ##
-  
   affinity: {}
-  
 
   ## @param jspolicy.tolerations [array] Tolerations for jspolicy
   ##
-  
   tolerations: []
-  
 
   ## @param jspolicy.config.valuesOverride [object] Config override from default config values
   ##
   config:
     valuesOverride: {}
 
+## @section tfy-workflow-propeller parameters
+## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
+##
+tfyWorkflowPropeller:
+  enabled: false
+  ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
+  ##
+  valuesOverride: {}
+
+  ## tfyWorkflowPropeller.flyteCore configuration
+  flyteCore:
+    ## @skip tfyWorkflowPropeller.flyteCore.storage [object] Storage configuration for flyteCore
+    ##
+    storage:
+      type: custom
+      custom:
+        type: minio
+        container: <to_be_provided>
+        stow:
+          kind: s3
+          config:
+            auth_type: accesskey
+            region: <to_be_provided>
+            endpoint: <to_be_provided>
+            access_key_id: <to_be_provided>
+            secret_key: <to_be_provided>
+    ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
+    ##
+    configmap:
+      core:
+        propeller:
+          metadata-prefix: "<to_be_provided>"
+          rawoutput-prefix: "<to_be_provided>"
+      k8s:
+        plugins:
+          k8s:
+            default-env-vars:
+              - FLYTE_AWS_ENDPOINT: "<to_be_provided>"
+              - FLYTE_AWS_ACCESS_KEY_ID: "<to_be_provided>"
+              - FLYTE_AWS_SECRET_ACCESS_KEY: "<to_be_provided>"
+    ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
+    ##
+    flytepropeller:
+      serviceAccount:
+        annotations:
+          {}
+
+helm:
+  ## @param helm.resourcePolicy Resource policy for the helm chart
+  ##
+  resourcePolicy: keep

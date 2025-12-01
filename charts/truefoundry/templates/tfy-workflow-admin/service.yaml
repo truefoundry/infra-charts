@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-server
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
+    {{- include "tfy-workflow-admin.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.tfyWorkflowAdmin.service.type }}
   ports:
@@ -16,6 +16,6 @@ spec:
       appProtocol: grpc
       name: grpc
   selector:
-    {{- include "tfy-workflow-admin.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 4 }}
     app.kubernetes.io/workflow-component: server
   {{- end }}

@@ -31,74 +31,134 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "tfy-controller.podLabels" -}}
-{{ include "tfy-controller.selectorLabels" . }}
-{{- if .Values.tfyController.image.tag }}
-app.kubernetes.io/version: {{ .Values.tfyController.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.tfyController.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "tfy-controller.labels" -}}
-helm.sh/chart: {{ include "tfy-controller.chart" . }}
-{{ include "tfy-controller.podLabels" . }}
-{{- if .Values.tfyController.commonLabels }}
-{{ toYaml .Values.tfyController.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
-{{- end }}
+{{- include "truefoundry.labels" (dict "context" . "name" "tfy-controller") }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "tfy-controller.commonLabels" -}}
+{{- $baseLabels := include "tfy-controller.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.tfyController.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
   */}}
-{{- define "tfy-controller.annotations" -}}
-{{- if .Values.tfyController.annotations }}
-{{ toYaml .Values.tfyController.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- define "tfy-controller.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.tfyController.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Service Account Annotations
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
+  */}}
+{{- define "tfy-controller.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyController.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
+{{- end }}
+
+{{/*
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
+{{- define "tfy-controller.podAnnotations" -}}
+{{- $commonAnnotations := include "tfy-controller.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyController.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "tfy-controller.serviceLabels" -}}
+{{- $commonLabels := include "tfy-controller.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.tfyController.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "tfy-controller.serviceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-controller.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.tfyController.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "tfy-controller.serviceAccountLabels" -}}
+{{- $commonLabels := include "tfy-controller.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.tfyController.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
   */}}
 {{- define "tfy-controller.serviceAccountAnnotations" -}}
-{{- if .Values.tfyController.serviceAccount.annotations }}
-{{ toYaml .Values.tfyController.serviceAccount.annotations }}
-{{- else if .Values.tfyController.annotations }}
-{{ toYaml .Values.tfyController.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- $commonAnnotations := include "tfy-controller.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.tfyController.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
 {{- end }}
 
 {{/*
-  Selector labels
+  Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
-{{- define "tfy-controller.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-controller.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "tfy-controller.deploymentLabels" -}}
+{{- $commonLabels := include "tfy-controller.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.tfyController.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
 {{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "tfy-controller.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "tfy-controller.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.tfyController.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "tfy-controller.serviceMonitorLabels" -}}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $commonLabels := include "tfy-controller.commonLabels" . | fromYaml }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.tfyController.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  */}}
+{{- define "tfy-controller.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "tfy-controller.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.tfyController.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "tfy-controller.serviceAccountName" -}}
-{{- default (include "tfy-controller.fullname" .) "tfy-controller" }}
-
+{{- if .Values.tfyController.serviceAccount.name -}}
+{{- .Values.tfyController.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*
@@ -136,8 +196,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "tfy-controller.resourceTier" }}
+{{- $tier := .Values.tfyController.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "tfy-controller.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-controller.resourceTier" . }}
 {{- if .Values.tfyController.replicaCount -}}
 {{ .Values.tfyController.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -183,7 +251,7 @@ limits:
 {{- end }}
 
 {{- define "tfy-controller.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "tfy-controller.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -206,4 +274,12 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+{{- define "tfy-controller.imagePullSecrets"}}
+{{- if .Values.tfyController.imagePullSecrets -}}
+{{- toYaml .Values.tfyController.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

@@ -42,12 +42,14 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### certManager parameters
 
-| Name                         | Description                                | Value   |
-| ---------------------------- | ------------------------------------------ | ------- |
-| `certManager.enabled`        | Flag to enable Cert Manager                | `false` |
-| `certManager.tolerations`    | Tolerations for Cert Manager               | `[]`    |
-| `certManager.affinity`       | Affinity for Cert Manager                  | `{}`    |
-| `certManager.valuesOverride` | Config override from default config values | `{}`    |
+| Name                                     | Description                                                                       | Value   |
+| ---------------------------------------- | --------------------------------------------------------------------------------- | ------- |
+| `certManager.enabled`                    | Flag to enable Cert Manager                                                       | `false` |
+| `certManager.tolerations`                | Tolerations for Cert Manager                                                      | `[]`    |
+| `certManager.podLabels`                  | Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well. | `{}`    |
+| `certManager.serviceAccount.annotations` | Service account annotations for Cert Manager.                                     | `{}`    |
+| `certManager.affinity`                   | Affinity for Cert Manager                                                         | `{}`    |
+| `certManager.valuesOverride`             | Config override from default config values                                        | `{}`    |
 
 ### metricsServer parameters
 
@@ -77,7 +79,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.karpenter.defaultZones`                   | Default zones list for Karpenter            | `[]`    |
 | `aws.karpenter.affinity`                       | Affinity for Karpenter                      | `{}`    |
 | `aws.karpenter.tolerations`                    | Tolerations for Karpenter                   | `[]`    |
-| `aws.karpenter.webhook.enabled`                | Flag to enable Karpenter webhook            | `true`  |
+| `aws.karpenter.kmsKeyID`                       | KMS Key ID for Karpenter                    | `""`    |
 | `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
 | `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
 | `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
@@ -85,6 +87,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsEbsCsiDriver.roleArn`                  | Role ARN for AWS EBS CSI Driver             | `""`    |
 | `aws.awsEbsCsiDriver.affinity`                 | Affinity for AWS EBS CSI Driver             | `{}`    |
 | `aws.awsEbsCsiDriver.tolerations`              | Tolerations for AWS EBS CSI Driver          | `[]`    |
+| `aws.awsEbsCsiDriver.kmsKeyID`                 | KMS Key ID for AWS EBS CSI Driver           | `""`    |
 | `aws.awsEbsCsiDriver.valuesOverride`           | Config override from default config values  | `{}`    |
 | `aws.awsEfsCsiDriver.enabled`                  | Flag to enable AWS EFS CSI Driver           | `true`  |
 | `aws.awsEfsCsiDriver.fileSystemId`             | File system ID for AWS EFS CSI Driver       | `""`    |
@@ -129,29 +132,33 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### database. Can be left empty if using the dev mode parameters
 
-| Name                                               | Description                                                | Value   |
-| -------------------------------------------------- | ---------------------------------------------------------- | ------- |
-| `truefoundry.database.host`                        | Hostname of the database                                   | `""`    |
-| `truefoundry.database.name`                        | Name of the database                                       | `""`    |
-| `truefoundry.database.username`                    | Username of the database                                   | `""`    |
-| `truefoundry.database.password`                    | Password of the database                                   | `""`    |
-| `truefoundry.tfyApiKey`                            | API Key for TrueFoundry                                    | `""`    |
-| `truefoundry.truefoundryImagePullConfigJSON`       | Json config for authenticating to the TrueFoundry registry | `""`    |
-| `truefoundry.truefoundry_iam_role_arn_annotations` | IAM role annotations for service accounts                  | `{}`    |
-| `truefoundry.s3proxy.enabled`                      | Flag to enable S3 Proxy                                    | `false` |
-| `truefoundry.sparkHistoryServer.enabled`           | Flag to enable Spark History Server                        | `false` |
-| `truefoundry.tfyWorkflowAdmin.enabled`             | Flag to enable Tfy Workflow Admin                          | `false` |
-| `truefoundry.tolerations`                          | Tolerations for the truefoundry components                 | `[]`    |
-| `truefoundry.affinity`                             | Affinity for the truefoundry components                    | `{}`    |
+| Name                                                | Description                                                | Value   |
+| --------------------------------------------------- | ---------------------------------------------------------- | ------- |
+| `truefoundry.database.host`                         | Hostname of the database                                   | `""`    |
+| `truefoundry.database.name`                         | Name of the database                                       | `""`    |
+| `truefoundry.database.username`                     | Username of the database                                   | `""`    |
+| `truefoundry.database.password`                     | Password of the database                                   | `""`    |
+| `truefoundry.tfyApiKey`                             | API Key for TrueFoundry                                    | `""`    |
+| `truefoundry.truefoundryImagePullConfigJSON`        | Json config for authenticating to the TrueFoundry registry | `""`    |
+| `truefoundry.truefoundry_iam_role_arn_annotations`  | IAM role annotations for service accounts                  | `{}`    |
+| `truefoundry.defaultCloudProvider`                  | Default cloud provider                                     | `aws`   |
+| `truefoundry.storageConfiguration.awsS3BucketName`  | AWS S3 bucket name                                         | `""`    |
+| `truefoundry.storageConfiguration.awsRegion`        | AWS region                                                 | `""`    |
+| `truefoundry.storageConfiguration.awsAssumeRoleArn` | AWS assume role ARN                                        | `""`    |
+| `truefoundry.s3proxy.enabled`                       | Flag to enable S3 Proxy                                    | `false` |
+| `truefoundry.sparkHistoryServer.enabled`            | Flag to enable Spark History Server                        | `false` |
+| `truefoundry.tfyWorkflowAdmin.enabled`              | Flag to enable Tfy Workflow Admin                          | `false` |
+| `truefoundry.tolerations`                           | Tolerations for the truefoundry components                 | `[]`    |
+| `truefoundry.affinity`                              | Affinity for the truefoundry components                    | `{}`    |
 
-### loki parameters
+### tfyLogs parameters
 
-| Name                  | Description                                | Value  |
-| --------------------- | ------------------------------------------ | ------ |
-| `loki.enabled`        | Flag to enable Loki                        | `true` |
-| `loki.valuesOverride` | Config override from default config values | `{}`   |
-| `loki.affinity`       | Affinity for loki statefulset pod          | `{}`   |
-| `loki.tolerations`    | Tolerations for loki statefulset pod       | `[]`   |
+| Name                     | Description                                | Value  |
+| ------------------------ | ------------------------------------------ | ------ |
+| `tfyLogs.enabled`        | Flag to enable Tfy Logs                    | `true` |
+| `tfyLogs.valuesOverride` | Config override from default config values | `{}`   |
+| `tfyLogs.affinity`       | Affinity for tfyLogs statefulset pod       | `{}`   |
+| `tfyLogs.tolerations`    | Tolerations for tfyLogs statefulset pod    | `[]`   |
 
 ### istio parameters
 
@@ -167,13 +174,19 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### istio discovery parameters
 
-| Name                             | Description                                     | Value                  |
-| -------------------------------- | ----------------------------------------------- | ---------------------- |
-| `istio.discovery.hub`            | Hub for the istio image                         | `gcr.io/istio-release` |
-| `istio.discovery.tolerations`    | Tolerations for Istio Discovery                 | `[]`                   |
-| `istio.discovery.affinity`       | Affinity for Istio Discovery                    | `{}`                   |
-| `istio.discovery.valuesOverride` | Config override from default config values      | `{}`                   |
-| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true`                 |
+| Name                             | Description                                | Value                  |
+| -------------------------------- | ------------------------------------------ | ---------------------- |
+| `istio.discovery.hub`            | Hub for the istio image                    | `gcr.io/istio-release` |
+| `istio.discovery.tolerations`    | Tolerations for Istio Discovery            | `[]`                   |
+| `istio.discovery.affinity`       | Affinity for Istio Discovery               | `{}`                   |
+| `istio.discovery.valuesOverride` | Config override from default config values | `{}`                   |
+
+### istio tfyGateway parameters
+
+| Name                             | Description                                     | Value  |
+| -------------------------------- | ----------------------------------------------- | ------ |
+| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `true` |
+| `istio.tfyGateway.domains`       | Domains for the gateway pods                    | `[]`   |
 
 ### keda parameters
 
@@ -204,17 +217,17 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### prometheus parameters
 
-| Name                                 | Description                                | Value  |
-| ------------------------------------ | ------------------------------------------ | ------ |
-| `prometheus.enabled`                 | Flag to enable Prometheus                  | `true` |
-| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus   | `[]`   |
-| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus  | `{}`   |
-| `prometheus.affinity`                | Affinity for prometheus statefulset pod    | `{}`   |
-| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod | `[]`   |
-| `prometheus.valuesOverride`          | Config override from default config values | `{}`   |
-| `prometheus.config.enabled`          | Flag to enable prometheus config           | `true` |
-| `prometheus.config.valuesOverride`   | Config override from default config values | `{}`   |
-| `prometheus.config.extraObjects`     | Extra objects for prometheus config        | `[]`   |
+| Name                                 | Description                                                               | Value  |
+| ------------------------------------ | ------------------------------------------------------------------------- | ------ |
+| `prometheus.enabled`                 | Flag to enable Prometheus                                                 | `true` |
+| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus                                  | `[]`   |
+| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus                                 | `{}`   |
+| `prometheus.affinity`                | Affinity for prometheus statefulset pod                                   | `{}`   |
+| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod                                | `[]`   |
+| `prometheus.valuesOverride`          | Config override from default config values                                | `{}`   |
+| `prometheus.config.enabled`          | Flag to enable prometheus config (requires prometheus.enabled to be true) | `true` |
+| `prometheus.config.valuesOverride`   | Config override from default config values                                | `{}`   |
+| `prometheus.config.extraObjects`     | Extra objects for prometheus config                                       | `[]`   |
 
 ### grafana parameters
 
@@ -238,10 +251,10 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### elasti parameters
 
-| Name                    | Description                                | Value   |
-| ----------------------- | ------------------------------------------ | ------- |
-| `elasti.enabled`        | Flag to enable Elasti                      | `false` |
-| `elasti.valuesOverride` | Config override from default config values | `{}`    |
+| Name                    | Description                                | Value  |
+| ----------------------- | ------------------------------------------ | ------ |
+| `elasti.enabled`        | Flag to enable Elasti                      | `true` |
+| `elasti.valuesOverride` | Config override from default config values | `{}`   |
 
 ### jspolicy parameters
 
@@ -253,3 +266,11 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `jspolicy.affinity`              | Affinity for jspolicy                                    | `{}`    |
 | `jspolicy.tolerations`           | Tolerations for jspolicy                                 | `[]`    |
 | `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
+
+### tfy-workflow-propeller parameters
+
+| Name                                  | Description                                | Value   |
+| ------------------------------------- | ------------------------------------------ | ------- |
+| `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.         | `false` |
+| `tfyWorkflowPropeller.valuesOverride` | Config override from default config values | `{}`    |
+| `helm.resourcePolicy`                 | Resource policy for the helm chart         | `keep`  |

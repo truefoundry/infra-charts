@@ -7,7 +7,7 @@ from pathlib import Path
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-truefoundry_charts = ["truefoundry", "tfy-notebook-controller", "tfy-agent", "elasti"]
+truefoundry_charts = ["truefoundry", "tfy-agent", "elasti"]
 
 def load_json_file(file_path: str):
     """Load and return the contents of a JSON file."""

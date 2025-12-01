@@ -1,0 +1,217 @@
+# Default values for eks-node-monitoring-agent
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## @section Global parameters
+## @param imagePullSecrets [array] Image pull secret
+##
+imagePullSecrets: []
+## @param nameOverride Name override for the chart
+##
+nameOverride: "eks-node-monitoring-agent"
+## @param fullnameOverride Fullname override for the chart
+##
+fullnameOverride: "eks-node-monitoring-agent"
+
+serviceAccount:
+  ## @param serviceAccount.create Create the service account
+  ##
+  create: true
+  ## @param serviceAccount.name Name of the service account
+  ##
+  name:
+  ## @param serviceAccount.annotations [object] Annotations for the service account
+  ##
+  annotations: {}
+
+## @param updateStrategy [object] Update strategy for all daemon sets
+##
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: "10%"
+
+## @section Node agent parameters
+##
+nodeAgent:
+  image:
+    ## @param nodeAgent.image.tag Tag for the image
+    ##
+    tag: v1.2.0-eksbuild.1
+    ## @param nodeAgent.image.domain Domain for the image
+    ##
+    domain: amazonaws.com
+    ## @param nodeAgent.image.region Region for the image
+    ##
+    region: us-west-2
+    ## @param nodeAgent.image.endpoint Endpoint for the image
+    ##
+    endpoint: ecr
+    ## @param nodeAgent.image.account Account for the image
+    ##
+    account: "602401143452"
+    ## @param nodeAgent.image.pullPolicy Pull policy for the image
+    ##
+    pullPolicy: IfNotPresent
+  ## @param nodeAgent.additionalArgs [array] Additional arguments for the image
+  ##
+  additionalArgs: []
+  ## @param nodeAgent.affinity [object] Affinity for the image
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              # Don't schedule on special compute types
+            - key: eks.amazonaws.com/compute-type
+              operator: NotIn
+              values:
+                - fargate
+                - auto
+                - hybrid
+              # Don't schedule on hyperpod nodes
+            - key: sagemaker.amazonaws.com/compute-type
+              operator: NotIn
+              values:
+                - hyperpod
+              # Be explicit about supported archs
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
+                - arm64
+  ## @param nodeAgent.resources [object] Resources for the eks-node-monitoring-agent
+  ##
+  resources:
+    requests:
+      cpu: 10m
+      memory: 30Mi
+    limits:
+      cpu: 250m
+      memory: 100Mi
+  ## @param nodeAgent.securityContext [object] Security context for the eks-node-monitoring-agent
+  ##
+  securityContext:
+    privileged: true
+    capabilities:
+      add:
+        - NET_ADMIN
+  ## @param nodeAgent.tolerations [array] Tolerations for the eks-node-monitoring-agent
+  ##
+  tolerations:
+    - operator: Exists
+
+## @section DCGM agent parameters
+##
+dcgmAgent:
+  image:
+    ## @param dcgmAgent.image.tag Tag for the image
+    ##
+    tag: 3.3.7-3.5.0-ubuntu22.04
+    ## @param dcgmAgent.image.domain Domain for the image
+    ##
+    domain: amazonaws.com
+    ## @param dcgmAgent.image.region Region for the image
+    ##
+    region: us-west-2
+    ## @param dcgmAgent.image.endpoint Endpoint for the image
+    ##
+    endpoint: ecr
+    ## @param dcgmAgent.image.account Account for the image
+    ##
+    account: "602401143452"
+    ## @param dcgmAgent.image.pullPolicy Pull policy for the image
+    ##
+    pullPolicy: IfNotPresent
+  ## @param dcgmAgent.affinity [object] Affinity for the dcgm-exporter
+  ##
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+            # Only schedule on NVIDIA GPU nodes
+          - key: node.kubernetes.io/instance-type
+            operator: In
+            values: 
+              - p2.xlarge
+              - p2.8xlarge
+              - p2.16xlarge
+              - p3.2xlarge
+              - p3.8xlarge
+              - p3.16xlarge
+              - p3dn.24xlarge
+              - p4d.24xlarge
+              - p4de.24xlarge
+              - p5.4xlarge
+              - p5.48xlarge
+              - p5e.48xlarge
+              - p5en.48xlarge
+              - p6-b200.48xlarge
+              - g3.4xlarge
+              - g3.8xlarge
+              - g3.16xlarge
+              - g3s.xlarge
+              - g4dn.xlarge
+              - g4dn.2xlarge
+              - g4dn.4xlarge
+              - g4dn.8xlarge
+              - g4dn.16xlarge
+              - g4dn.12xlarge
+              - g4dn.metal
+              - g4dn.xlarge
+              - g5.xlarge
+              - g5.2xlarge
+              - g5.4xlarge
+              - g5.8xlarge
+              - g5.16xlarge
+              - g5.12xlarge
+              - g5.24xlarge
+              - g5.48xlarge
+              - g6f.large
+              - g6f.xlarge
+              - g6f.2xlarge
+              - g6f.4xlarge
+              - gr6f.4xlarge
+              - g6.xlarge
+              - g6.2xlarge
+              - g6.4xlarge
+              - g6.8xlarge
+              - g6.16xlarge
+              - g6.12xlarge
+              - g6.24xlarge
+              - g6.48xlarge
+              - gr6.4xlarge
+              - gr6.8xlarge
+              - g6e.xlarge
+              - g6e.2xlarge
+              - g6e.4xlarge
+              - g6e.8xlarge
+              - g6e.16xlarge
+              - g6e.12xlarge
+              - g6e.24xlarge
+              - g6e.48xlarge
+            # Don't schedule on special compute types
+          - key: eks.amazonaws.com/compute-type
+            operator: NotIn
+            values:
+              - fargate
+              - auto
+              - hybrid
+            # Don't schedule on hyperpod nodes
+          - key: sagemaker.amazonaws.com/compute-type
+            operator: NotIn
+            values:
+              - hyperpod
+            # Only schedule on amd64 nodes
+          - key: kubernetes.io/arch
+            operator: In
+            values:
+              - amd64
+  ## @param dcgmAgent.resources [object] Resources for the dcgm-exporter
+  ##
+  resources: {}
+  ## @param dcgmAgent.tolerations [array] Tolerations for the dcgm-exporter
+  ##
+  tolerations: []

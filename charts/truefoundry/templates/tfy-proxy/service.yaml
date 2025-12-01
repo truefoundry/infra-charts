@@ -1,0 +1,23 @@
+{{- if .Values.tfyProxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-proxy.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.serviceAnnotations" . | indent 4 }}
+spec:
+  type: {{ .Values.tfyProxy.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.tfyProxy.service.port }}
+      targetPort: {{ .Values.tfyProxy.service.port }}
+      protocol: TCP
+      appProtocol: tcp
+    - name: metrics
+      port: 2019
+      targetPort: metrics
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 4 }}
+{{- end }}

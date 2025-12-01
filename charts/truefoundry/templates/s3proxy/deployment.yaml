@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "s3proxy.fullname" . }}
   labels:
-    {{- include "s3proxy.labels" . | nindent 4 }}
+    {{- include "s3proxy.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "s3proxy.annotations" . | indent 4 }}
+    {{- include "s3proxy.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "s3proxy.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "s3proxy.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.s3proxy.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "s3proxy.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "s3proxy.podLabels" . | nindent 8 }}
     spec:
@@ -43,7 +41,7 @@ spec:
           {{- end }}
           env:
             {{- include "s3proxy.env" . | trim | nindent 12 }}
-          image: "{{ .Values.s3proxy.image.repository }}:{{ .Values.s3proxy.image.tag }}"
+          image: "{{ .Values.s3proxy.image.registry | default .Values.global.image.registry }}/{{ .Values.s3proxy.image.repository }}:{{ .Values.s3proxy.image.tag }}"
           imagePullPolicy: {{ .Values.s3proxy.imagePullPolicy }}
           ports:
             - name: http
@@ -74,15 +72,14 @@ spec:
           #     scheme: HTTP
           volumeMounts:
             {{- include "s3proxy.volumeMounts" . | nindent 12 }}
-      {{- with .Values.s3proxy.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "s3proxy.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "s3proxy.volumes" . | nindent 8 }}
-      {{- if .Values.s3proxy.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.s3proxy.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.s3proxy.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.s3proxy.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -98,7 +95,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "s3proxy.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

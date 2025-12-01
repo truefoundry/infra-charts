@@ -7,10 +7,10 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "aws-ebs-csi-driver"
-    truefoundry.com/infra-migration-tag: "1001"
   annotations:
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "-18"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: aws-ebs-csi-driver
@@ -35,7 +35,34 @@ spec:
         {{- end }}
         node:
           tolerateAllTaints: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 40Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
+        sidecars:
+          snapshotter:
+            resources:
+              requests:
+                cpu: 10m
+                memory: 40Mi
+              limits:
+                cpu: 100m
+                memory: 400Mi
         controller:
+          enableMetrics: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 40Mi
+            limits:
+              cpu: 100m
+              memory: 400Mi
+          serviceMonitor:
+            labels:
+              release: prometheus
           serviceAccount:
             name: ebs-csi-controller-sa
             annotations:
@@ -68,6 +95,9 @@ spec:
               type: gp3
               fsType: ext4
               encrypted: "true"
+              {{- if .Values.aws.awsEbsCsiDriver.kmsKeyID }}
+              kmsKeyId: {{ .Values.aws.awsEbsCsiDriver.kmsKeyID }}
+              {{- end }}
             annotations:
               storageclass.kubernetes.io/is-default-class: "true"
             provisioner: ebs.csi.aws.com

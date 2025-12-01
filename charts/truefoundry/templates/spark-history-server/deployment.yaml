@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "spark-history-server.fullname" . }}
   labels:
-    {{- include "spark-history-server.labels" . | nindent 4 }}
+    {{- include "spark-history-server.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "spark-history-server.annotations" . | indent 4 }}
+    {{- include "spark-history-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "spark-history-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "spark-history-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "spark-history-server") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.sparkHistoryServer.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "spark-history-server.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "spark-history-server.podLabels" . | nindent 8 }}
     spec:
@@ -34,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "spark-history-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.sparkHistoryServer.image.repository }}:{{ .Values.sparkHistoryServer.image.tag }}"
+          image: "{{ .Values.sparkHistoryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.sparkHistoryServer.image.repository }}:{{ .Values.sparkHistoryServer.image.tag }}"
           imagePullPolicy: {{ .Values.sparkHistoryServer.imagePullPolicy }}
           ports:
             - name: http
@@ -64,15 +62,14 @@ spec:
               scheme: HTTP
           volumeMounts:
             {{- include "spark-history-server.volumeMounts" . | nindent 12 }}
-      {{- with .Values.sparkHistoryServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "spark-history-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "spark-history-server.volumes" . | nindent 8 }}
-      {{- if .Values.sparkHistoryServer.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sparkHistoryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.sparkHistoryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.sparkHistoryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -88,7 +85,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "spark-history-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "spark-history-server") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

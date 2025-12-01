@@ -4,20 +4,18 @@ kind: Deployment
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}
   labels:
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- include "servicefoundry-server.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "servicefoundry-server.annotations" . | indent 4 }}
+    {{- include "servicefoundry-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "servicefoundry-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "servicefoundry-server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.servicefoundryServer.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "servicefoundry-server.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "servicefoundry-server.podLabels" . | nindent 8 }}
     spec:
@@ -34,7 +32,7 @@ spec:
           {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
-          image: "{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
+          image: "{{ .Values.servicefoundryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.servicefoundryServer.imagePullPolicy }}
           ports:
             - name: http
@@ -64,15 +62,14 @@ spec:
               scheme: HTTP
           volumeMounts:
             {{- include "servicefoundry-server.volumeMounts" . | nindent 12 }}
-      {{- with .Values.servicefoundryServer.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "servicefoundry-server.imagePullSecrets" . | nindent 8 }}
       volumes:
         {{- include "servicefoundry-server.volumes" . | nindent 8 }}
-      {{- if .Values.servicefoundryServer.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.servicefoundryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.servicefoundryServer.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.servicefoundryServer.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -88,7 +85,7 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "servicefoundry-server.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 14 }}
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}

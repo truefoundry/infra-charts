@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "spark-operator"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: spark-operator
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 2.1.1
+    targetRevision: 2.2.1
     repoURL: "https://kubeflow.github.io/spark-operator"
     chart: spark-operator
     helm:
@@ -30,8 +32,8 @@ spec:
         {{- if .Values.sparkOperator.affinity }}
         {{- $mergedAffinity = .Values.sparkOperator.affinity }}
         {{- end }}
-        resources:
-          operator:
+        controller:
+          resources:
             requests:
               cpu: 200m
               memory: 256Mi
@@ -40,6 +42,30 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
+        webhook:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 300Mi
+            requests:
+              cpu: 100m
+              memory: 300Mi
+          {{- if $mergedTolerations }}
+          tolerations:
+            {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- end }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- end }}
         spark:
           jobNamespaces:
             - ""

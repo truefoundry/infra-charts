@@ -1,0 +1,220 @@
+## @section Global configuration
+##
+global:
+  ## @param global.imagePullSecrets [array] Global image pull secrets
+  imagePullSecrets: []
+
+## @section Upstream VictoriaLogs configurations
+##
+victoria-logs-single:
+  ## @param victoria-logs-single.enabled Enable victoria-logs-single
+  enabled: true
+  global:
+    image:
+      ## @param victoria-logs-single.global.image.registry Image registry
+      registry: tfy.jfrog.io/tfy-mirror
+
+  server:
+    image:
+      ## @param victoria-logs-single.server.image.registry Image registry
+      registry: tfy.jfrog.io/tfy-mirror
+      ## @skip victoria-logs-single.server.serviceMonitor
+    serviceMonitor:
+      enabled: true
+      extraLabels:
+        release: prometheus
+    ## @param victoria-logs-single.server.retentionPeriod Retention period
+    retentionPeriod: 15d
+    ## @param victoria-logs-single.server.retentionDiskSpaceUsage Retention disk space usage, this is kept to be 6-8% smaller than the total disk space
+    retentionDiskSpaceUsage: 46
+    persistentVolume:
+      ## @param victoria-logs-single.server.persistentVolume.size Persistent volume size
+      size: 50Gi
+    ## @param victoria-logs-single.server.resources [object] Resources
+    resources:
+      requests:
+        cpu: 200m
+        memory: 400Mi
+      limits:
+        cpu: 800m
+        memory: 800Mi
+    ## @param victoria-logs-single.server.affinity Affinity
+    affinity: {}
+    ## @param victoria-logs-single.server.tolerations [array] Tolerations
+    tolerations: []
+  vector:
+    ## @param victoria-logs-single.vector.resources [object] Resources
+    resources:
+      requests:
+        cpu: 50m
+        memory: 80Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
+    ## @param victoria-logs-single.vector.podPriorityClassName Pod priority class name
+    podPriorityClassName: system-node-critical
+    image:
+      ## @param victoria-logs-single.vector.image.repository Image repository
+      repository: public.ecr.aws/truefoundrycloud/timberio/vector
+      ## @param victoria-logs-single.vector.image.tag Image tag
+      tag: v0.50.0
+    ## @param victoria-logs-single.vector.enabled Enable vector
+    enabled: true
+    ## @param victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
+    podSecurityContext: {}
+    ## @param victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - CAP_FOWNER
+    ## @param victoria-logs-single.vector.affinity [object] Affinity
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/os
+                  operator: In
+                  values:
+                    - linux
+    ## @param victoria-logs-single.vector.tolerations [array] Tolerations
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+        operator: Exists
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+    ## @param victoria-logs-single.vector.nodeSelector [object] Node selector
+    nodeSelector: {}
+    ## @param victoria-logs-single.vector.customConfig [object] Custom config
+    customConfig:
+      sinks:
+        vlogs:
+          type: elasticsearch
+          query:
+            _time_field: timestamp
+            _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_deployment_version,truefoundry_com_component_type,truefoundry_com_retry_number,job_name,sparkoperator_k8s_io_app_name,truefoundry_com_buildName
+          inputs:
+            - parser
+      transforms:
+        parser:
+          type: remap
+          inputs:
+            - k8s
+          source: >
+            if .message == "" {
+              .message = " "
+            }
+
+            # Extract basic pod information
+
+            .service = .kubernetes.container_name
+
+            .container = .kubernetes.container_name
+
+            .app = .kubernetes.container_name
+
+            .pod = .kubernetes.pod_name
+
+            .node = .kubernetes.pod_node_name
+
+            .namespace = .kubernetes.pod_namespace
+
+            .job_name = .kubernetes.job_name
+
+            # Extract ALL pod labels dynamically using for_each
+
+            pod_labels = object(.kubernetes.pod_labels) ?? {}
+
+            # Iterate through all pod labels and add them with a prefix
+
+            for_each(pod_labels) -> |key, value| {
+              label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
+              . = set!(., [label_key], string(value) ?? "")
+            }
+
+            # Clean up kubernetes metadata
+
+            del(.kubernetes)
+
+            del(.file)
+      sources:
+        k8s:
+          type: kubernetes_logs
+          glob_minimum_cooldown_ms: 1000
+## @section Windows Vector configurations
+##
+windowsVector:
+  ## @param windowsVector.enabled Enable Windows Vector daemon set for Windows node log collection
+  enabled: true
+  ## @param windowsVector.labels [object] Labels to add to the Windows Vector pods
+  labels: {}
+  ## @param windowsVector.annotations [object] Annotations to add to the Windows Vector pods
+  annotations: {}
+  image:
+    ## @param windowsVector.image.registry Image registry
+    registry: public.ecr.aws
+    ## @param windowsVector.image.repository Image repository
+    repository: truefoundrycloud/timberio/vector
+    ## @param windowsVector.image.tag Image tag
+    tag: v0.50.0
+    ## @param windowsVector.image.pullPolicy Image pull policy
+    pullPolicy: IfNotPresent
+  ## @param windowsVector.imagePullSecrets [array] Image pull secrets for Windows Vector pods
+  imagePullSecrets: []
+  ## @param windowsVector.env [array] Additional environment variables for Windows Vector pods
+  env: []
+  ## @param windowsVector.resources [object] Resources for Windows Vector pods
+  resources:
+    requests:
+      cpu: 50m
+      memory: 80Mi
+    limits:
+      cpu: 200m
+      memory: 200Mi
+  ## @param windowsVector.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## @param windowsVector.podPriorityClassName [string] Pod priority class name for Windows Vector pods
+  podPriorityClassName: "system-node-critical"
+  ## @param windowsVector.affinity [object] Affinity configuration for Windows Vector pods
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                  - windows
+  ## @param windowsVector.additionalVolumeMounts [array] Additional volume mounts for Windows Vector pods
+  additionalVolumeMounts: []
+  ## @param windowsVector.additionalVolumes [array] Additional volumes for Windows Vector pods
+  additionalVolumes: []
+## @section resourceQuota Add a ResourceQuota to enable priority class in a namespace.
+##
+## @section resourceQuota Add a ResourceQuota to enable priority class in a namespace.
+##
+resourceQuota:
+  ## @param resourceQuota.enabled Create the ResourceQuota.
+  enabled: true
+  ## @param resourceQuota.annotations Annotations to add to the ResourceQuota
+  ##
+  annotations: {}
+  ## @param resourceQuota.labels Labels to add to the ResourceQuota
+  ##
+  labels: {}
+  ## @param resourceQuota.priorityClasses PriorityClasses to enable.
+  priorityClasses:
+    - system-node-critical

@@ -1,0 +1,24 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled }}
+{{- if and .Values.deltaFusionQueryServer.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1alpha1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "deltafusion-query-server.fullname" . }}
+  labels:
+    {{- include "deltafusion-query-server.serviceMonitorLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-query-server.serviceMonitorAnnotations" . | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ include "global.namespace" . }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}
+  endpoints:
+    - targetPort: {{ .Values.deltaFusionQueryServer.service.port }}
+      path: {{ .Values.deltaFusionQueryServer.serviceMonitor.path }}
+      honorLabels: true
+      interval: {{ .Values.deltaFusionQueryServer.serviceMonitor.interval }}
+{{- end -}}
+{{- end }}

@@ -6,10 +6,9 @@ kind: VirtualService
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
-    {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.virtualserviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-llm-gateway.virtualservice.annotations" . | nindent 4 }}
-  namespace: {{ .Release.Namespace }}
+    {{- include "tfy-llm-gateway.virtualserviceAnnotations" . | nindent 4 }}
 spec:
   gateways:
   {{- range .Values.istio.virtualservice.gateways}}
@@ -20,9 +19,21 @@ spec:
   - {{ . }}
   {{- end }}
   http:
+  - match:
+    - uri:
+        prefix: /metrics
+    directResponse:
+      status: 403
+      body: 
+        string: "Access denied"
   - route:
     - destination:
-        host: {{ include "tfy-llm-gateway.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+        host: {{ include "tfy-llm-gateway.fullname" . }}.{{ include "global.namespace" . }}.svc.cluster.local
         port:
           number: {{ .Values.service.port }}
+    {{- if .Values.istio.virtualservice.retries.enabled }}
+    retries:
+      attempts: {{ .Values.istio.virtualservice.retries.attempts }}
+      retryOn: {{ .Values.istio.virtualservice.retries.retryOn }}
+    {{- end }}
 {{- end }}

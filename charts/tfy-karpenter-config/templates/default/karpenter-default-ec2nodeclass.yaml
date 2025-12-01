@@ -56,6 +56,9 @@ spec:
         volumeType: gp3
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.defaultNodeTemplate.encrypted }}
+        {{- if .Values.karpenter.defaultNodeTemplate.kmsKeyID }}
+        kmsKeyID: {{ .Values.karpenter.defaultNodeTemplate.kmsKeyID }}
+        {{- end }}
   {{- if and (.Values.karpenter.defaultNodeTemplate.enableSoci) (eq (include "defaultNodeTemplate.inferredAmiFamily" .) "al2023") }}
   userData: |
   {{- .Files.Get "files/al2023-soci-default-provisioner-userdata.sh" | nindent 4 }}

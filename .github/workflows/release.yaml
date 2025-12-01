@@ -24,9 +24,9 @@ jobs:
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4.2.0
+        uses: azure/setup-helm@v4.3.0
         with:
-          version: v3.9.2
+          version: v3.17.3
 
       - name: Add Helm dependencies
         run: |
@@ -37,9 +37,11 @@ jobs:
           helm repo add truefoundry https://truefoundry.github.io/infra-charts
           helm repo add nats https://nats-io.github.io/k8s/helm/charts/
           helm repo add bitnami https://charts.bitnami.com/bitnami
-
+          helm repo add victoria https://victoriametrics.github.io/helm-charts/
+          helm repo add flyte-core https://helm.flyte.org/
+          helm repo update
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: helm/chart-releaser-action@v1.7.0
         env:
           CR_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
           CR_SKIP_EXISTING: true

@@ -3,11 +3,13 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
   labels:
-    {{- include "tfy-llm-gateway.labels" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-llm-gateway.annotations" . | nindent 4 }}
+    {{- include "tfy-llm-gateway.deploymentAnnotations" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ include "tfy-llm-gateway.replicas" . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
@@ -23,8 +25,12 @@ spec:
       annotations:
         {{- include "tfy-llm-gateway.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-llm-gateway.labels" . | nindent 8 }}
+        {{- include "tfy-llm-gateway.podLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.dnsConfig }}
+      dnsConfig:
+        {{- toYaml .Values.dnsConfig | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -35,7 +41,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - name: http
@@ -67,17 +73,36 @@ spec:
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
+          {{- if .Values.oidc.enabled }}
+          - name: oidc-config
+            mountPath: /etc/oidc
+            readOnly: true
+          {{- end }}
+      imagePullSecrets:
+        {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 8 }}
       volumes:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- if .Values.oidc.enabled }}
+      - name: oidc-config
+        configMap:
+          name: {{ include "tfy-llm-gateway.fullname" . }}-oidc-cm
       {{- end }}
       nodeSelector:
         {{- include "tfy-llm-gateway.nodeSelector" . | nindent 8 }}
       affinity:
         {{- include "tfy-llm-gateway.affinity" . | nindent 8 }}
-      {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.topologySpreadConstraints }}
+        {{- toYaml .Values.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "tfy-llm-gateway.selectorLabels" . | nindent 14 }}
+        {{- end }}
       tolerations:
         {{- include "tfy-llm-gateway.tolerations" . | nindent 8 }}

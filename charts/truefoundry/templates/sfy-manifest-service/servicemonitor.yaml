@@ -4,22 +4,16 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "sfy-manifest-service.fullname" . }}
   labels:
-    release: prometheus
-    {{- include "sfy-manifest-service.labels" . | nindent 4 }}
-  {{- with .Values.sfyManifestService.serviceMonitor.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.sfyManifestService.serviceMonitor.additionalAnnotations }}
+    {{- include "sfy-manifest-service.serviceMonitorLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "sfy-manifest-service.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
-      {{- include "sfy-manifest-service.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 6 }}
   endpoints:
     - targetPort: 8080
       path: /metrics

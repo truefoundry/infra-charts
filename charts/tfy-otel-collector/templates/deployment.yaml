@@ -3,9 +3,9 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}
   labels:
-    {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+    {{- include "tfy-otel-collector.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
+    {{- include "tfy-otel-collector.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{ include "tfy-otel-collector.replicas" . }}
   selector:
@@ -23,7 +23,7 @@ spec:
       annotations:
         {{- include "tfy-otel-collector.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-otel-collector.labels" . | nindent 8 }}
+        {{- include "tfy-otel-collector.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
       securityContext:
@@ -35,8 +35,8 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           env:
             {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
-          command: ["./main", "--config", "/data/config.yaml"]
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          args: ["--config", "/data/config.yaml"]
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           ports:
             - name: http
@@ -75,6 +75,8 @@ spec:
           {{- end }}
           volumeMounts:
           {{- include "tfy-otel-collector.volumeMounts" . | nindent 12 }}
+      imagePullSecrets:
+        {{- include "tfy-otel-collector.imagePullSecrets" . | nindent 8 }}
       volumes:
       {{- include "tfy-otel-collector.volumes" . | nindent 8 }}
       nodeSelector:

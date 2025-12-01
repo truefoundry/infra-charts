@@ -5,11 +5,13 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### ALB Configuration
 
-| Name                           | Description                                | Value   |
-| ------------------------------ | ------------------------------------------ | ------- |
-| `alb.ingress.enabled`          | Enable ALB ingress                         | `false` |
-| `alb.ingress.ingressClassName` | Ingress class name for ALB                 | `alb`   |
-| `alb.ingress.annotations`      | Additional annotations for the ALB ingress | `{}`    |
+| Name                               | Description                                | Value   |
+| ---------------------------------- | ------------------------------------------ | ------- |
+| `alb.ingress.enabled`              | Enable ALB ingress                         | `false` |
+| `alb.ingress.ingressClassName`     | Ingress class name for ALB                 | `alb`   |
+| `alb.ingress.annotations`          | Additional annotations for the ALB ingress | `{}`    |
+| `alb.ingress.flyte.enabled`        | Enable HTTP2 ALB ingress path for Flyte    | `true`  |
+| `alb.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured    | `[]`    |
 
 ### Gateway Configuration
 
@@ -37,3 +39,10 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `tfyGateway.spec.servers[1].port.name`              | Name of the port.                       | `https-tfy-wildcard`  |
 | `tfyGateway.spec.servers[1].port.number`            | Port number for https.                  | `443`                 |
 | `tfyGateway.spec.servers[1].port.protocol`          | Protocol of the port.                   | `HTTPS`               |
+
+### telemetry Configuration for the telemetry.
+
+| Name                      | Description                       | Value   |
+| ------------------------- | --------------------------------- | ------- |
+| `telemetry.enabled`       | Enable telemetry.                 | `false` |
+| `telemetry.accessLogging` | Access logging for the telemetry. | `[]`    |

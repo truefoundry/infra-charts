@@ -3,9 +3,9 @@ kind: StatefulSet
 metadata:
   name: {{ include "buildkitd-service.fullname" . }}
   labels:
-    {{- include "buildkitd-service.labels" . | nindent 4 }}
+    {{- include "buildkitd-service.statefulsetLabels" . | nindent 4 }}
   annotations:
-    {{- include "buildkitd-service.annotations" . | nindent 4 }}
+    {{- include "buildkitd-service.statefulsetAnnotations" . | nindent 4 }}
 spec:
   serviceName: {{ include "buildkitd-service.fullname" . }}
   replicas: {{ include "buildkitd-service.replicas" . }}
@@ -17,7 +17,7 @@ spec:
       annotations:
         {{- include "buildkitd-service.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "buildkitd-service.selectorLabels" . | nindent 8 }}
+        {{- include "buildkitd-service.podLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -37,7 +37,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- with .Values.extraEnvs }}
           env:

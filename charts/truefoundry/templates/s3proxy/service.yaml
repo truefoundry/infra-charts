@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: {{ include "s3proxy.fullname" . }}
   labels:
-    {{- include "s3proxy.labels" . | nindent 4 }}
+    {{- include "s3proxy.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- include "s3proxy.annotations" . | indent 4 }}
+    {{- include "s3proxy.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.s3proxy.service.type }}
   ports:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "s3proxy.selectorLabels" . | nindent 4 }}
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "s3proxy") | nindent 4 }}
 {{- end }}

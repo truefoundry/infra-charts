@@ -30,74 +30,136 @@ Expand the name of the chart.
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{/*
-  Pod Labels
-  */}}
-{{- define "servicefoundry-server.podLabels" -}}
-{{ include "servicefoundry-server.selectorLabels" . }}
-{{- if .Values.servicefoundryServer.image.tag }}
-app.kubernetes.io/version: {{ .Values.servicefoundryServer.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.servicefoundryServer.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
+
 
 {{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "servicefoundry-server.labels" -}}
-{{- include "servicefoundry-server.podLabels" . }}
-helm.sh/chart: {{ include "servicefoundry-server.chart" . }}
-{{- if .Values.servicefoundryServer.commonLabels }}
-{{ toYaml .Values.servicefoundryServer.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "component" "servicefoundry-server" "name" "servicefoundry-server") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "servicefoundry-server.commonLabels" -}}
+{{- $baseLabels := include "servicefoundry-server.labels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.servicefoundryServer.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "servicefoundry-server.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.servicefoundryServer.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
-{{- define "servicefoundry-server.annotations" -}}
-{{- if .Values.servicefoundryServer.annotations }}
-{{ toYaml .Values.servicefoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- define "servicefoundry-server.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.servicefoundryServer.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
 
 {{/*
-  Selector labels
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
   */}}
-{{- define "servicefoundry-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "servicefoundry-server.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "servicefoundry-server.podAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.servicefoundryServer.podAnnotations }}
+{{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "servicefoundry-server.serviceLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.servicefoundryServer.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.servicefoundryServer.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service-account specific labels
+  */}}
+{{- define "servicefoundry-server.serviceAccountLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.servicefoundryServer.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service-account specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.servicefoundryServer.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
+  */}}
+{{- define "servicefoundry-server.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.servicefoundryServer.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor specific labels
+  */}}
+{{- define "servicefoundry-server.serviceMonitorLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.servicefoundryServer.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "servicefoundry-server.deploymentLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.servicefoundryServer.deploymentLabels }}
+{{- toYaml $mergedLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "servicefoundry-server.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "2" }}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $mergedAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.servicefoundryServer.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $mergedAnnotations }}
 {{- end }}
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "servicefoundry-server.serviceAccountName" -}}
-{{- default (include "servicefoundry-server.fullname" .) "servicefoundry-server" }}
-{{- end }}
-
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "servicefoundry-server.serviceAccountAnnotations" -}}
-{{- if .Values.servicefoundryServer.serviceAccount.annotations }}
-{{ toYaml .Values.servicefoundryServer.serviceAccount.annotations }}
-{{- else if .Values.servicefoundryServer.annotations }}
-{{ toYaml .Values.servicefoundryServer.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
+{{- if .Values.servicefoundryServer.serviceAccount.name -}}
+{{- .Values.servicefoundryServer.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
 {{/*
@@ -144,6 +206,7 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   */}}
 {{- define "servicefoundry-server.parseEnv" -}}
 {{- include "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" . }}
+{{- include "truefoundry.storage-credentials" . }}
 {{ tpl (.Values.servicefoundryServer.env | toYaml) . }}
 {{- end }}
 
@@ -190,10 +253,15 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
   value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
 {{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+- name: BUILD_JOB_TEMPLATE_PATH
+  value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
+{{- end }}
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
 {{- $volumes := list -}}
+{{- $volumes = append $volumes (dict "name" "truefoundry-tmpdir" "emptyDir" (dict)) -}}
 {{- if .Values.servicefoundryServer.extraVolumes }}
   {{- range .Values.servicefoundryServer.extraVolumes }}
     {{- $volumes = append $volumes . }}
@@ -211,6 +279,15 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
 {{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+  {{- $configMapName := "" }}
+  {{- if .Values.servicefoundryServer.configs.buildJobTemplate }}
+    {{- $configMapName = tpl .Values.servicefoundryServer.configs.buildJobTemplate . }}
+  {{- else }}
+    {{- $configMapName = printf "%s-job-template-cm" (include "tfy-build.fullname" .) }}
+  {{- end }}
+  {{- $volumes = append $volumes (dict "name" "configs-build-job-template" "configMap" (dict "name" $configMapName)) }}
+{{- end }}
 
 {{- $volumes | toYaml -}}
 {{- end -}}
@@ -218,6 +295,7 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 {{- define "servicefoundry-server.volumeMounts" -}}
 {{- $volumeMounts := list -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" "truefoundry-tmpdir" "mountPath" "/tmp") -}}
 {{- if .Values.servicefoundryServer.extraVolumeMounts }}
   {{- range .Values.servicefoundryServer.extraVolumeMounts }}
     {{- $volumeMounts = append $volumeMounts . }}
@@ -235,19 +313,30 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
 {{- end }}
+{{- if .Values.tfyBuild.jobTemplate.enabled }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
+{{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "servicefoundry-server.resourceTier" }}
+{{- $tier := .Values.servicefoundryServer.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "servicefoundry-server.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "servicefoundry-server.resourceTier" . }}
 {{- if .Values.servicefoundryServer.replicaCount -}}
 {{ .Values.servicefoundryServer.replicaCount }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}
-2
-{{- else if eq $tier "large" -}}
 3
+{{- else if eq $tier "large" -}}
+5
 {{- end }}
 {{- end }}
 
@@ -266,26 +355,26 @@ limits:
 requests:
   cpu: 500m
   memory: 1024Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 1000m
   memory: 2048Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 512Mi
 {{- end }}
 
 {{- define "servicefoundry-server.defaultResources.large" }}
 requests:
   cpu: 1000m
   memory: 2048Mi
-  ephemeral-storage: 128Mi
+  ephemeral-storage: 256Mi
 limits:
   cpu: 2000m
   memory: 4096Mi
-  ephemeral-storage: 256Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "servicefoundry-server.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "servicefoundry-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -308,4 +397,13 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+
+{{- define "servicefoundry-server.imagePullSecrets" -}}
+{{- if .Values.servicefoundryServer.imagePullSecrets -}}
+{{- toYaml .Values.servicefoundryServer.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

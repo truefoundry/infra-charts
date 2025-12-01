@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "argo-workflows"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: argo-workflows
@@ -32,11 +33,17 @@ spec:
         {{- $mergedAffinity = .Values.argoWorkflows.affinity }}
         {{- end }}
         controller:
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: prometheus
           workflowDefaults:
             spec:
               activeDeadlineSeconds: 432000
               ttlStrategy:
                 secondsAfterCompletion: 3600
+          namespaceParallelism: 1000
+          parallelism: 1000
           metricsConfig:
             enabled: true
           resources:

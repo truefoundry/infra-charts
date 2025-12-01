@@ -10,13 +10,10 @@ argoRollouts:
   enabled: true
 certManager:
   enabled: true
+  serviceAccount:
+    annotations: {}
 metricsServer:
-
   enabled: false
-
-
-
-  
 
 gpu:
   enabled: true
@@ -45,7 +42,8 @@ truefoundry:
   tfyApiKey: ""
   truefoundryImagePullConfigJSON: ""
 
-loki:
+
+tfyLogs:
   enabled: true
 
 istio:
@@ -60,6 +58,7 @@ istio:
     
     httpsRedirect: true
     
+    domains: ["*"]
 
 keda:
   enabled: true
@@ -85,3 +84,32 @@ elasti:
 
 jspolicy:
   enabled: true
+
+tfyWorkflowPropeller:
+  enabled: true
+
+  flyteCore:
+    storage:
+      type: custom
+      custom:
+        stow:
+          kind: azure
+          config:
+            account: ""
+            key: ""
+        container: ""
+      configmap:
+        core:
+          propeller:
+            metadata-prefix: ""
+            rawoutput-prefix: ""
+        k8s:
+          plugins:
+            k8s:
+              default-env-vars:
+                - AZURE_STORAGE_ACCOUNT_NAME: ""
+                - AZURE_STORAGE_ACCOUNT_KEY: ""
+      flytepropeller:
+        serviceAccount:
+          annotations:
+            {}

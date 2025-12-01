@@ -1,0 +1,17 @@
+{{- if and .Values.monitoring.enabled .Values.tfyNats.promExporter.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .Release.Name }}-tfy-nats
+  labels:
+    {{- include "monitoring.tfyNatsLabels" . | nindent 4 }}
+  annotations:
+    {{- include "monitoring.tfyNatsAnnotations" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+  - port: prom-metrics
+  selector:
+    matchLabels:
+      {{- include "monitoring.tfyNatsSelectorLabels" . | nindent 6 }}
+{{- end }}
+

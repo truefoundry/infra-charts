@@ -1,18 +1,20 @@
+{{- if .Values.s3proxy.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "s3proxy.configmapName" . }}
   labels:
-    {{- include "s3proxy.labels" . | nindent 4 }}
+    {{- include "s3proxy.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "s3proxy.annotations" . | indent 4 }}
+    {{- include "s3proxy.commonAnnotations" . | nindent 4 }}
 data:
   config.properties: |-
     s3proxy.endpoint=http://0.0.0.0:{{ .Values.s3proxy.service.port }}
     s3proxy.authorization=aws-v4
     s3proxy.identity=__dynamic__
     s3proxy.credential=__token__
-    jclouds.provider={{ .Values.s3proxy.config.jcloudsProvider }}
+    jclouds.provider={{ tpl .Values.s3proxy.config.jcloudsProvider . }}
     jclouds.identity=
     jclouds.credential=
-    jclouds.endpoint={{ .Values.s3proxy.config.jcloudsEndpoint }}
+    jclouds.endpoint={{ tpl .Values.s3proxy.config.jcloudsEndpoint . }}
+  {{- end }}

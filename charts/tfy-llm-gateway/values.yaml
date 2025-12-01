@@ -5,25 +5,57 @@ global:
   resourceTier: "medium"
   ## @param global.controlPlaneURL Control plane URL
   controlPlaneURL: ""
-  ## @param global.existingTruefoundryImagePullSecretName Existing truefoundry image pull secret name
-  existingTruefoundryImagePullSecretName: ""
+  ## @param global.controlPlaneChartVersion Control plane version
+  controlPlaneChartVersion: "0.98.2"
+  ## @param global.gatewayChartVersion Gateway version
+  gatewayChartVersion: "0.103.0"
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
   affinity: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
   ## @param global.tolerations [array] Tolerations for pod scheduling on a node
   tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
-
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.name Service account name
+    name: ""
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
+  ## @param global.image.registry Global image registry override
+  image:
+    registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 ## Image configuration for llm-gateway
 image:
+  ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
+  registry: ""
   ## @param image.repository Image repository for tfyLLMGateway
-  repository: tfy.jfrog.io/tfy-private-images/tfy-llm-gateway
+  repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: cce51615d8d9dd4b8b5e7f1ca959f6a28ed5c68f
-
+  tag: v0.103.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
-
 ## @skip replicaCount Number of replicas
 # replicaCount: 3
 
@@ -34,7 +66,7 @@ envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
@@ -43,8 +75,16 @@ commonAnnotations: {}
 podSecurityContext: {}
 ## @param commonLabels Common labels
 commonLabels: {}
+## @param podLabels Pod annotations
+podLabels: {}
+## @param deploymentLabels Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations Deployment annotations
+deploymentAnnotations: {}
 ## @param securityContext Security context configuration
 securityContext: {}
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
 ## Healthcheck configuration
 healthcheck:
   ## @param healthcheck.enabled Enable healthcheck
@@ -60,7 +100,7 @@ healthcheck:
     ## @param healthcheck.readiness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.readiness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
@@ -76,7 +116,7 @@ healthcheck:
     ## @param healthcheck.liveness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.liveness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.liveness.failureThreshold Failure threshold
@@ -100,8 +140,17 @@ affinity: {}
 ## @param topologySpreadConstraints Topology spread constraints
 topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
-terminationGracePeriodSeconds: 120
-
+terminationGracePeriodSeconds: 300
+## podDisruptionBudget configuration
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
+  maxUnavailable: 30%
 ## Ingress configuration
 ingress:
   ## @param ingress.enabled Enable ingress configuration
@@ -124,10 +173,20 @@ istio:
     enabled: false
     ## @param istio.virtualservice.annotations Virtual service annotations
     annotations: {}
+    ## @param istio.virtualservice.labels Virtual service labels
+    labels: {}
     ## @param istio.virtualservice.gateways Virtual service gateways
     gateways: []
     ## @param istio.virtualservice.hosts Virtual service hosts
     hosts: []
+    ## Retries configuration
+    retries:
+      ## @param istio.virtualservice.retries.enabled Enable retries
+      enabled: false
+      ## @param istio.virtualservice.retries.attempts Retries attempts
+      attempts: 3
+      ## @param istio.virtualservice.retries.retryOn Retries retry on
+      retryOn: "gateway-error"
 ## Service configuration
 service:
   ## @param service.type Service type
@@ -136,26 +195,33 @@ service:
   port: 8787
   ## @param service.annotations Service annotations
   annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
-  create: true
+  create: false
   ## @param serviceAccount.annotations Service account annotations
   annotations: {}
+  ## @param serviceAccount.labels Service account labels
+  labels: {}
   ## @param serviceAccount.name Service account name
-  name: tfy-llm-gateway
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token this will only be used if create is true
+  automountServiceAccountToken: false
 ## @param extraVolumes Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
+## @param dnsConfig DNS config
+dnsConfig: {}
 ## rbac configuration
 rbac:
   ## @param rbac.enabled Enable rbac
   enabled: true
-
 ## Autoscaling configuration
 autoscaling:
-  ## @param autoscaling.enabled Enable autoscaling  
+  ## @param autoscaling.enabled Enable autoscaling
   enabled: true
   ## @param autoscaling.minReplicas Minimum number of replicas
   minReplicas: 3
@@ -163,7 +229,6 @@ autoscaling:
   maxReplicas: 100
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
   targetCPUUtilizationPercentage: 60
-
 ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
@@ -172,17 +237,29 @@ rollout:
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 100%
-
 ## @skip env Environment variables for the llmGateway
 env:
-  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   LOG_LEVEL: info
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:4222
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
-
+  TENANT_NAME: "{{ .Values.global.tenantName }}"
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local:4318/v1/traces
+  USE_GLOBAL_STATE_V2: "true"
+  MULTITENANT: "false"
+  TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
+  AUTH_SERVER_URL: https://auth.truefoundry.com
+  RUN_IN_SINGLE_TENANT_MODE: "false"
+  CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
+  GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+  ENABLE_ZOD_VALIDATION: "false"
+  DEFAULT_GATEWAY_METADATA: "{}"
+  GATEWAY_AWS_ROLE_ARN: ""
+  GATEWAY_AWS_USER_ACCESS_KEY_ID: ""
+  GATEWAY_AWS_USER_SECRET_ACCESS_KEY: ""
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
@@ -191,3 +268,9 @@ serviceMonitor:
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
   additionalAnnotations: {}
+## OIDC configuration
+oidc:
+  ## @param oidc.enabled Enable OIDC configuration
+  enabled: false
+  ## @param oidc.config OIDC configuration
+  config: {}

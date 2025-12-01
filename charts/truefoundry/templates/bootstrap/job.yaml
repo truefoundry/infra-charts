@@ -4,36 +4,40 @@ kind: Job
 metadata:
   name: truefoundry-bootstrap-job
   annotations:
-    {{- include "bootstrap-annotations" (dict "hookWeight" "-1" "syncWave" "-1" "annotations" .Values.truefoundryBootstrap.annotations "globalAnnotations" .Values.global.annotations) | nindent 4 }}
+    {{- include "bootstrap.jobAnnotations" . | nindent 4 }}
   labels:
-    {{- include "bootstrap-labels" . | indent 4 }}
+    {{- include "bootstrap.commonLabels" . | nindent 4 }}
 spec:
   template:
     metadata:
       name: truefoundry-bootstrap-job
+      annotations:
+        {{- include "bootstrap.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "bootstrap.podlabels" . | nindent 8 }}
     spec:
-      {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+      {{- with .Values.truefoundryBootstrap.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.truefoundryBootstrap.securityContext.podSecurityContext | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: truefoundry-bootstrap-job-sa
+      serviceAccountName: {{ include "bootstrap.serviceAccountName" . }}
       containers:
       - name: truefoundry-bootstrap-job
-        {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
+        {{- with .Values.truefoundryBootstrap.securityContext }}
         securityContext:
-          {{- toYaml .Values.truefoundryBootstrap.securityContext.containerSecurityContext | nindent 10 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
-        image: {{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
+        image: {{ .Values.truefoundryBootstrap.image.registry | default .Values.global.image.registry }}/{{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
+        resources:
+          {{- include "bootstrap.resources" . | nindent 10 }}
         command: ["/truefoundry/truefoundry-bootstrap.sh"]
         env:
         - name: TRUEFOUNDRY_NATS_CONFIGMAP
           value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
         - name: TRUEFOUNDRY_NAMESPACE
-          value: "{{ .Release.Namespace }}"
+          value: {{ include "global.namespace" . }}
         - name: INSTALL_TLS_CERTIFICATES
           value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
-        - name: CLICKHOUSE_ENABLED
-          value: "{{ or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing }}"
         {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
         - name: {{ $val.name }}
           value: {{ $val.value }}
@@ -41,26 +45,29 @@ spec:
         volumeMounts:
         - name: truefoundry-bootstrap-script
           mountPath: "/truefoundry"
+        - name: workdir
+          mountPath: "/tmp/workdir"
         {{- if gt (len .Values.truefoundryBootstrap.extraVolumeMounts) 0 }}
         {{- toYaml .Values.truefoundryBootstrap.extraVolumeMounts | nindent 8 }}
         {{- end }}
-      {{- with .Values.truefoundryBootstrap.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "bootstrap.imagePullSecrets" . | nindent 8 }}
       volumes:
       - name: truefoundry-bootstrap-script
-        configMap:
-          name: truefoundry-bootstrap-cm
+        secret:
+          secretName: truefoundry-bootstrap-secret
           defaultMode: 0755
+      - name: workdir
+        emptyDir: {}
       {{- if gt (len .Values.truefoundryBootstrap.extraVolumes) 0 }}
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}
       restartPolicy: Never
-      {{- if .Values.truefoundryBootstrap.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.truefoundryBootstrap.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-          {{- toYaml .Values.truefoundryBootstrap.nodeSelector | nindent 8 }}
-        {{- end }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
       {{- $mergedAffinity := dict | merge .Values.truefoundryBootstrap.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
       affinity:

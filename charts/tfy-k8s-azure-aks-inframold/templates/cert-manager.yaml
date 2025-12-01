@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "cert-manager"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: cert-manager
@@ -16,7 +17,7 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: v1.15.5
+    targetRevision: v1.17.2
     helm:
       values: |-
         {{- if .Values.certManager.valuesOverride }}
@@ -31,31 +32,43 @@ spec:
         {{- if .Values.certManager.affinity }}
         {{- $mergedAffinity = .Values.certManager.affinity }}
         {{- end }}
-        installCRDs: true
+        extraArgs:
+        - --issuer-ambient-credentials
+        podLabels:
+          {{- toYaml .Values.certManager.podLabels | nindent 10 }}
+        serviceAccount:
+          create: true
+          labels:
+            {{- toYaml .Values.certManager.podLabels | nindent 12 }}
+          annotations:
+             {{- toYaml .Values.certManager.serviceAccount.annotations | nindent 12 }}
+        crds:
+          enabled: true
         {{- if $mergedTolerations }}
         tolerations:
-          {{- toYaml $mergedTolerations | nindent 14 }}
+          {{- toYaml $mergedTolerations | nindent 10 }}
         {{- end }}
         {{- if $mergedAffinity }}
         affinity:
-          {{- toYaml $mergedAffinity | nindent 14 }}
+          {{- toYaml $mergedAffinity | nindent 10 }}
         {{- end }}
         webhook:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-            ephemeral-storage: 64Mi
-          limits:
-            cpu: 100m
-            memory: 256Mi
-            ephemeral-storage: 256Mi
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         resources:
           requests:
@@ -67,32 +80,38 @@ spec:
             memory: 256Mi
             ephemeral-storage: 256Mi
         cainjector:
-          requests:
-            cpu: 20m
-            memory: 64Mi
-            ephemeral-storage: 64Mi
-          limits:
-            cpu: 100m
-            memory: 256Mi
-            ephemeral-storage: 256Mi
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         startupapicheck:
           enabled: true
           {{- if $mergedTolerations }}
           tolerations:
-            {{- toYaml $mergedTolerations | nindent 14 }}
+            {{- toYaml $mergedTolerations | nindent 10 }}
           {{- end }}
           {{- if $mergedAffinity }}
           affinity:
-            {{- toYaml $mergedAffinity | nindent 14 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
+        prometheus:
+          servicemonitor:
+            enabled: true
+            labels:
+              release: prometheus
         {{- end }}
   syncPolicy:
     automated: {}

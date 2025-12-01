@@ -7,7 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "aws-load-balancer-controller"
-    truefoundry.com/infra-migration-tag: "1001"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: aws-load-balancer-controller
@@ -32,6 +33,17 @@ spec:
         {{- $mergedAffinity = .Values.aws.awsLoadBalancerController.affinity }}
         {{- end }}
         clusterName: {{ .Values.clusterName | quote }}
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            release: prometheus
+        resources:
+          requests:
+            cpu: 10m
+            memory: 128Mi
+          limits:
+            cpu: 100m
+            memory: 400Mi
         serviceAccount:
           annotations:
             eks.amazonaws.com/role-arn: {{ .Values.aws.awsLoadBalancerController.roleArn }}

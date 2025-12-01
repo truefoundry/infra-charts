@@ -4,9 +4,9 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-agent.fullname" . }}
   labels:
-    {{- include "tfy-agent.labels" . | nindent 4 }}
+    {{- include "tfy-agent.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-agent.annotations" . | nindent 4 }}
+    {{- include "tfy-agent.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
@@ -15,9 +15,9 @@ spec:
   template:
     metadata:
       annotations:
-        {{- include "tfy-agent.annotations" . | nindent 8 }}
+        {{- include "tfy-agent.podAnnotations" . | nindent 8 }}
       labels:
-        {{- include "tfy-agent.selectorLabels" . | nindent 8 }}
+        {{- include "tfy-agent.podLabels" . | nindent 8 }}
     spec:
       {{- with .Values.tfyAgent.imagePullSecrets }}
       imagePullSecrets:

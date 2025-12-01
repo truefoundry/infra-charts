@@ -7,7 +7,8 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "keda"
-    truefoundry.com/infra-migration-tag: "1000"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: keda
@@ -16,7 +17,7 @@ spec:
   source:
     chart: keda
     repoURL: "https://kedacore.github.io/charts"
-    targetRevision: 2.16.1
+    targetRevision: 2.17.1
     helm:
       values: |-
         {{- if .Values.keda.valuesOverride }}
@@ -62,6 +63,10 @@ spec:
         prometheus:
           operator:
             enabled: true
+            serviceMonitor:
+              enabled: true
+              additionalLabels:
+                release: prometheus
         {{- if $mergedTolerations }}
         tolerations:
           {{- toYaml $mergedTolerations | nindent 14 }}

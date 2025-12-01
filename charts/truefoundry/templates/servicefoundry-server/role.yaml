@@ -2,16 +2,22 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ include "servicefoundry-server.serviceAccountName" . }}-role
+  name: {{ include "servicefoundry-server.fullname" . }}-role
   labels:
-    {{- include "servicefoundry-server.labels" . | nindent 4 }}
+    {{- include "servicefoundry-server.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "servicefoundry-server.annotations" . | indent 4 }}
+    {{- include "servicefoundry-server.commonAnnotations" . | nindent 4 }}
 rules:
   - apiGroups:
       - argoproj.io
     resources:
       - workflows
+    verbs:
+      - create
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
     verbs:
       - create
 {{- end}}

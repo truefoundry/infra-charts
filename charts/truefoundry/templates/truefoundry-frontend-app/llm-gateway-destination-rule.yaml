@@ -4,10 +4,9 @@ kind: DestinationRule
 metadata:
   name: llm-gateway-{{ include "truefoundry-frontend-app.fullname" . }}
   labels:
-    {{- include "truefoundry-frontend-app.labels" . | nindent 4 }}
+    {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "truefoundry-frontend-app.annotations" . | indent 4 }}
-  namespace: {{ .Release.Namespace }}
+    {{- include "truefoundry-frontend-app.commonAnnotations" . | indent 4 }}
 spec:
   host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
   trafficPolicy:

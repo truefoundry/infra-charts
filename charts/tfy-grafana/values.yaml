@@ -12,6 +12,8 @@ gateway: "istio-system/tfy-wildcard"
 
 ## @section grafana Configuration for Grafana deployment.
 grafana:
+  image:
+    registry: mirror.gcr.io
   grafana.ini:
     server:
       ## @param grafana.ini.server.domain Domain for Grafana.
@@ -26,7 +28,11 @@ grafana:
     - name: server-config
       mountPath: /etc/server-configs
       configMap: tfy-grafana-server-config
-  
+
+  ## @param grafana.plugins VictoriaLogs plugin for Grafana.
+  plugins:
+  - victoriametrics-logs-datasource
+
   ## @param grafana.replicas StatefulSet configuration for Grafana.
   ## @param grafana.useStatefulSet Replicas configuration for Grafana.
   #
@@ -42,16 +48,18 @@ grafana:
   resources:
     limits:
       cpu: 100m
-      memory: 128Mi
+      memory: 3172Mi
+      ephemeral-storage: 2048Mi
     requests:
       cpu: 100m
-      memory: 128Mi
+      memory: 1024Mi
+      ephemeral-storage: 512Mi
   ## Admin user and password for Grafana.
   ##
   ## @param grafana.adminUser Admin user for Grafana.
   ## @param grafana.adminPassword Admin password for Grafana.
   ##
-  adminUser: ''
+  adminUser: 'admin'
   adminPassword: ''
   ## Resource configuration for initializing chown data.
   ##
@@ -61,6 +69,8 @@ grafana:
   ## @param grafana.initChownData.resources.requests.memory Memory request for initializing chown data.
   ##
   initChownData:
+    image:
+      registry: mirror.gcr.io
     resources:
       limits:
         cpu: 100m
@@ -79,10 +89,10 @@ grafana:
     resources:
       limits:
         cpu: 100m
-        memory: 100Mi
+        memory: 256Mi
       requests:
         cpu: 50m
-        memory: 50Mi
+        memory: 128Mi
     ## @param grafana.sidecar.dashboards.enabled Whether to enable/disable dashboards
     ## @param grafana.sidecar.dashboards.label Label key for grafana dashboard configmap
     ## @param grafana.sidecar.dashboards.labelValue Label value for grafana dashboard configmap
@@ -90,6 +100,10 @@ grafana:
       enabled: true
       label: truefoundry_truevisibility
       labelValue: owner
+      folderAnnotation: grafana_folder
+      SCProvider: true
+      provider:
+        foldersFromFilesStructure: true
   ## Datasources configuration for Grafana.
   ##
   datasources:
@@ -100,10 +114,6 @@ grafana:
     ## @param grafana.datasources.datasources\.yaml.datasources[0].url URL for the Prometheus datasource.
     ## @param grafana.datasources.datasources\.yaml.datasources[0].access Access type for the Prometheus datasource.
     ## @param grafana.datasources.datasources\.yaml.datasources[0].isDefault Specify if the Prometheus datasource is the default.
-    ## @param grafana.datasources.datasources\.yaml.datasources[1].name Name of the Loki datasource.
-    ## @param grafana.datasources.datasources\.yaml.datasources[1].type Type of the Loki datasource.
-    ## @param grafana.datasources.datasources\.yaml.datasources[1].url URL for the Loki datasource.
-    ## @param grafana.datasources.datasources\.yaml.datasources[1].access Access type for the Loki datasource.
     ##
     datasources.yaml:
       apiVersion: 1
@@ -113,9 +123,9 @@ grafana:
         url: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
         access: proxy
         isDefault: true
-      - name: Loki
-        type: loki
-        url: http://loki.loki.svc.cluster.local:3100
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        url: http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428
         access: proxy
   ## Persistence configuration for Grafana.
   ##

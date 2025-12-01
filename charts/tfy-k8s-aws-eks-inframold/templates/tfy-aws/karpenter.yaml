@@ -7,16 +7,16 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   annotations:
     argocd.argoproj.io/sync-wave: "-2"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "karpenter"
-    truefoundry.com/infra-migration-tag: "1000"
 spec:
   destination:
     namespace: kube-system
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.5.0
+    targetRevision: 0.5.6
     chart: tfy-karpenter
     helm:
       values: |-
@@ -36,10 +36,8 @@ spec:
           serviceAccount:
             annotations:
               eks.amazonaws.com/role-arn: {{ .Values.aws.karpenter.roleArn }}
-          webhook:
-            enabled: {{ .Values.aws.karpenter.webhook.enabled }}
           settings:
-            clusterName: {{ .Values.clusterName }}
+            clusterName: {{ .Values.clusterName | default "cluster-name" }}
             clusterEndpoint: {{ .Values.aws.karpenter.clusterEndpoint }}
             defaultInstanceProfile: {{ .Values.aws.karpenter.instanceProfile }}
             interruptionQueue: {{ .Values.aws.karpenter.interruptionQueue }}

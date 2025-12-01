@@ -55,6 +55,9 @@ spec:
         volumeType: gp3
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.encrypted }}
+        {{- if .Values.karpenter.inferentiaDefaultNodeTemplate.kmsKeyID }}
+        kmsKeyID: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.kmsKeyID }}
+        {{- end }}
   {{- if not (eq .Values.karpenter.inferentiaDefaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.inferentiaDefaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}

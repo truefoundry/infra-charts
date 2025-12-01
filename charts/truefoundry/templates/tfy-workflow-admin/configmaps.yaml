@@ -4,9 +4,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-config
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-workflow-admin.configMap.annotations" . | indent 4 }}
+    {{- include "tfy-workflow-admin.configMap.annotations" . | nindent 4 }}
 data:
   flyteadmin-config.yaml: |
     server:
@@ -56,7 +56,7 @@ data:
         - cat
         - /etc/secrets/admin_api_key
       AuthType: ExternalCommand
-      endpoint: '{{ .Release.Name }}-tfy-workflow-admin-server.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.tfyWorkflowAdmin.service.port }}'
+      endpoint: '{{ .Release.Name }}-tfy-workflow-admin-server.{{ include "global.namespace" . }}.svc.cluster.local:{{ .Values.tfyWorkflowAdmin.service.port }}'
       insecure: true
       AuthorizationHeader: authorization
     event:

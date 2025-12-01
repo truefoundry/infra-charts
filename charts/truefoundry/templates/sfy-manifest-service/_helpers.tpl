@@ -31,75 +31,138 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  Pod Labels
-  */}}
-{{- define "sfy-manifest-service.podLabels" -}}
-{{ include "sfy-manifest-service.selectorLabels" . }}
-{{- if .Values.sfyManifestService.image.tag }}
-app.kubernetes.io/version: {{ .Values.sfyManifestService.image.tag | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- range $name, $value := .Values.sfyManifestService.commonLabels }}
-{{ $name }}: {{ tpl $value $ | quote }}
-{{- end }}
-{{- end }}
-
-{{/*
-  Common labels
+  Common labels - uses global truefoundry.labels function
   */}}
 {{- define "sfy-manifest-service.labels" -}}
-helm.sh/chart: {{ include "sfy-manifest-service.chart" . }}
-{{ include "sfy-manifest-service.podLabels" . }}
-{{- if .Values.sfyManifestService.commonLabels }}
-{{ toYaml .Values.sfyManifestService.commonLabels }}
-{{- else if .Values.global.labels }}
-{{ toYaml .Values.global.labels }}
+{{- include "truefoundry.labels" (dict "context" . "name" "sfy-manifest-service") }}
+{{- end }}
+
+{{/*
+  Common labels - merges global.labels with component-specific labels
+  Priority: ResourceLabels > CommonLabels > GlobalLabels
+    */}}
+{{- define "sfy-manifest-service.commonLabels" -}}
+{{- $baseLabels := include "sfy-manifest-service.labels" . | fromYaml }}
+{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.sfyManifestService.commonLabels }}
+{{- toYaml $commonLabels }}
+{{- end }}
+
+{{/*
+  Common annotations - merges global.annotations with component-specific annotations
+  */}}
+{{- define "sfy-manifest-service.commonAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.sfyManifestService.commonAnnotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end }}
 
 {{/*
-  Common annotations
+  Pod Labels - merges global and component labels, excludes commonLabels to prevent version-related restarts
   */}}
-{{- define "sfy-manifest-service.annotations" -}}
-{{- if .Values.sfyManifestService.annotations }}
-{{ toYaml .Values.sfyManifestService.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
+{{- define "sfy-manifest-service.podLabels" -}}
+{{- $selectorLabels := include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | fromYaml }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.sfyManifestService.podLabels $selectorLabels }}
+{{- toYaml $podLabels }}
 {{- end }}
-{{- end }}
-
 
 {{/*
-  Selector labels
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
   */}}
-{{- define "sfy-manifest-service.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "sfy-manifest-service.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "sfy-manifest-service.podAnnotations" -}}
+{{- $commonAnnotations := include "sfy-manifest-service.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.sfyManifestService.podAnnotations }}
+{{- toYaml $podAnnotations }}
 {{- end }}
+
+{{/*
+  Service Labels - merges commonLabels with service-specific labels
+  */}}
+{{- define "sfy-manifest-service.serviceLabels" -}}
+{{- $commonLabels := include "sfy-manifest-service.commonLabels" . | fromYaml }}
+{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.sfyManifestService.service.labels }}
+{{- toYaml $serviceLabels }}
+{{- end }}
+
+{{/*
+  Service Annotations - merges commonAnnotations with service-specific annotations
+  */}}
+{{- define "sfy-manifest-service.serviceAnnotations" -}}
+{{- $commonAnnotations := include "sfy-manifest-service.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.sfyManifestService.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end }}
+
+{{/*
+  Service Account Labels - merges commonLabels with service account-specific labels
+  */}}
+{{- define "sfy-manifest-service.serviceAccountLabels" -}}
+{{- $commonLabels := include "sfy-manifest-service.commonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.sfyManifestService.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end }}
+
+{{/*
+  Service Account Annotations - merges commonAnnotations with service account-specific annotations
+  */}}
+{{- define "sfy-manifest-service.serviceAccountAnnotations" -}}
+{{- $commonAnnotations := include "sfy-manifest-service.commonAnnotations" . | fromYaml }} 
+{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.sfyManifestService.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end }}
+
+{{/*
+  Deployment Labels - merges commonLabels with deployment-specific labels
+  */}}
+{{- define "sfy-manifest-service.deploymentLabels" -}}
+{{- $commonLabels := include "sfy-manifest-service.commonLabels" . | fromYaml }}
+{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.sfyManifestService.deploymentLabels }}
+{{- toYaml $deploymentLabels }}
+{{- end }}
+
+{{/*
+  Deployment annotations
+  */}}
+{{- define "sfy-manifest-service.deploymentAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "sfy-manifest-service.commonAnnotations" . | fromYaml }}
+{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.sfyManifestService.deploymentAnnotations $syncWaveAnnotation }}
+{{- toYaml $deploymentAnnotations }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Labels - merges commonLabels with servicemonitor-specific labels
+  */}}
+{{- define "sfy-manifest-service.serviceMonitorLabels" -}}
+{{- $commonLabels := include "sfy-manifest-service.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.sfyManifestService.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
+  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor-specific annotations
+  */}}
+{{- define "sfy-manifest-service.serviceMonitorAnnotations" -}}
+{{- $commonAnnotations := include "sfy-manifest-service.commonAnnotations" . | fromYaml }}
+{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.sfyManifestService.serviceMonitor.annotations }}
+{{- toYaml $serviceMonitorAnnotations }}
+{{- end }}
+
+
+
 
 {{/*
   Create the name of the service account to use
   */}}
 {{- define "sfy-manifest-service.serviceAccountName" -}}
-{{- default (include "sfy-manifest-service.fullname" .) "sfy-manifest-service"}}
+{{- if .Values.sfyManifestService.serviceAccount.name -}}
+{{- .Values.sfyManifestService.serviceAccount.name -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
 {{- end }}
 
-{{/*
-  Service Account Annotations
-  */}}
-{{- define "sfy-manifest-service.serviceAccountAnnotations" -}}
-{{- if .Values.sfyManifestService.serviceAccount.annotations }}
-{{ toYaml .Values.sfyManifestService.serviceAccount.annotations }}
-{{- else if .Values.sfyManifestService.annotations }}
-{{ toYaml .Values.sfyManifestService.annotations }}
-{{- else if .Values.global.annotations }}
-{{ toYaml .Values.global.annotations }}
-{{- else }}
-{}
-{{- end }}
-{{- end }}
+
 
 {{/*
   Parse env from template
@@ -136,8 +199,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
+{{/*
+Resource Tier
+*/}}
+{{- define "sfy-manifest-service.resourceTier" }}
+{{- $tier := .Values.sfyManifestService.resourceTierOverride | default (.Values.global.resourceTier | default "medium") }}
+{{- $tier }}
+{{- end }}
+
 {{- define "sfy-manifest-service.replicas" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "sfy-manifest-service.resourceTier" . }}
 {{- if .Values.sfyManifestService.replicaCount -}}
 {{ .Values.sfyManifestService.replicaCount }}
 {{- else if eq $tier "small" -}}
@@ -183,7 +254,7 @@ limits:
 {{- end }}
 
 {{- define "sfy-manifest-service.resources" }}
-{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $tier := include "sfy-manifest-service.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
 {{- if eq $tier "small" }}
@@ -206,4 +277,13 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
+{{- end }}
+
+
+{{- define "sfy-manifest-service.imagePullSecrets" -}}
+{{- if .Values.sfyManifestService.imagePullSecrets -}}
+{{- toYaml .Values.sfyManifestService.imagePullSecrets | nindent 2 -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

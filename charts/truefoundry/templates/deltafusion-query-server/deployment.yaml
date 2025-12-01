@@ -1,0 +1,115 @@
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "deltafusion-query-server.fullname" . }}
+  labels:
+    {{- include "deltafusion-query-server.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-query-server.deploymentAnnotations" . | nindent 4 }}
+spec:
+  replicas: {{- include "deltafusion-query-server.replicas" . | indent 1 }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.deltaFusionQueryServer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "deltafusion-query-server.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "deltafusion-query-server.serviceAccountName" . }}
+      {{- with .Values.deltaFusionQueryServer.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "deltafusion-query-server"
+          {{- with .Values.deltaFusionQueryServer.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
+          {{- if .Values.deltaFusionQueryServer.image.optimized }}
+          image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
+          {{- else }}
+          image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.deltaFusionQueryServer.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.deltaFusionQueryServer.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "deltafusion-query-server.resources" . | indent 12 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.path }}
+              port: {{ .Values.deltaFusionQueryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.timeoutSeconds }}
+            successThreshold: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.successThreshold }}
+            failureThreshold: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.path }}
+              port: {{ .Values.deltaFusionQueryServer.service.port }}
+              scheme: HTTP
+            initialDelaySeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.timeoutSeconds }}
+            successThreshold: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.successThreshold }}
+            failureThreshold: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.failureThreshold }}
+          volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
+            {{- if .Values.deltaFusionQueryServer.extraVolumeMounts }}
+            {{- include "deltafusion-query-server.volumeMounts" . | nindent 12 }}
+            {{- end }}
+      imagePullSecrets:
+        {{- include "deltafusion-query-server.imagePullSecrets" . | nindent 8 }}
+      volumes:
+        - name: tmp-dir
+          emptyDir:
+            sizeLimit: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
+        {{- if .Values.deltaFusionQueryServer.extraVolumes }}
+        {{- include "deltafusion-query-server.volumes" . | nindent 8 }}
+        {{- end }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionQueryServer.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
+      nodeSelector:
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.deltaFusionQueryServer.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.deltaFusionQueryServer.topologySpreadConstraints }}
+        {{- toYaml .Values.deltaFusionQueryServer.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 14 }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.deltaFusionQueryServer.tolerations }}
+        {{- .Values.deltaFusionQueryServer.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 10%
+      maxUnavailable: 0
+{{- end }}

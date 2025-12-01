@@ -1,0 +1,194 @@
+{{- if and .Values.tfyProxy.enabled (not .Values.tfyProxy.existingProxyConfigMapName) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  labels:
+    {{- include "tfy-proxy.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.commonAnnotations" . | nindent 4 }}
+data:
+  {{- if .Values.tfyProxy.proxyConfigOverride }}
+  Caddyfile: |
+    {{ .Values.tfyProxy.proxyConfigOverride | nindent 4 }}
+  {{- else }}
+  Caddyfile: |
+    {
+      log {
+        level {{ .Values.tfyProxy.logLevel }}
+        output stdout
+      }
+
+      auto_https disable_redirects
+
+      servers {
+        protocols h1 h2 h2c
+
+        timeouts {
+          write 0
+          idle 0
+          read_header 0
+          read_body 0
+        }
+        max_header_size 0
+      }
+
+      metrics {
+        per_host
+      }
+    }
+
+    :2019 {
+      handle /metrics {
+        metrics /metrics
+      }
+    }
+
+    :8080 {
+      # Serve static files
+      encode zstd gzip
+      root * /usr/share/caddy
+
+      handle /health {
+        respond "OK!" 200
+      }
+
+      # /api/svc/socket.io → /socket.io on upstream:3000
+      handle /api/svc/socket.io* {
+        uri strip_prefix /api/svc
+        rewrite * /socket.io{path}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      # /api/svc → / on upstream:3000
+      handle /api/svc/* {
+        uri strip_prefix /api/svc
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      handle /api/env {
+        uri strip_prefix /api/env
+        rewrite * /v1/fe-env
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      handle /api/auth/* {
+        uri strip_prefix /api/auth
+        reverse_proxy {{ tpl .Values.global.proxy.authServerURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.authServerURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+
+      {{- if .Values.global.proxy.trtEngineBuilderBaseURL }}
+      handle /api/trt-engine-builder/* {
+        uri strip_prefix /api/trt-engine-builder
+        reverse_proxy {{ tpl .Values.global.proxy.trtEngineBuilderBaseURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.trtEngineBuilderBaseURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.liveDemoTokenVendorURL }}
+      handle /api/live-demo-token-vendor/* {
+        uri strip_prefix /api/live-demo-token-vendor
+        reverse_proxy {{ tpl .Values.global.proxy.liveDemoTokenVendorURL . }} {
+            header_up Host {{ (tpl .Values.global.proxy.liveDemoTokenVendorURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.managedClusterOnboardingServiceURL }}
+      handle /api/managed-cluster-onboarding/* {
+        uri strip_prefix /api/managed-cluster-onboarding
+        reverse_proxy {{ tpl .Values.global.proxy.managedClusterOnboardingServiceURL . }} {
+            header_up Host {{ (tpl .Values.global.proxy.managedClusterOnboardingServiceURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- end }}
+
+      # /api/ml -> / on upstream:5000
+      handle /api/ml/* {
+        uri strip_prefix /api/ml
+        reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}
+      }
+
+      {{- if .Values.global.proxy.tfyLLMAgentURL }}
+      # /api/agent → / on upstream:8080
+      handle /api/agent/* {
+        uri strip_prefix /api/agent
+        reverse_proxy {{ tpl .Values.global.proxy.tfyLLMAgentURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.tfyLLMAgentURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.llmGateway.external }}
+      # /api/llm/ → / on upstream:8787
+      handle /api/llm/* {
+        uri strip_prefix /api/llm
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.llmGateway.backendURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
+      }
+      {{- else }}
+      # /api/llm/ → / on upstream:8787
+      handle /api/llm/* {
+        uri strip_prefix /api/llm
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}
+      }
+      {{- end }}
+
+      # /api/proxy-server/socket.io → /socket.io on upstream:8123
+      handle /api/proxy-server/socket.io* {
+        uri strip_prefix /api/proxy-server
+        rewrite * /socket.io{path}
+        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
+      }
+
+      # /api/proxy-server/ → / on upstream:8123
+      handle /api/proxy-server/* {
+        uri strip_prefix /api/proxy-server
+        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
+      }
+
+      # /api/s3proxy/ → / on upstream:8080
+      handle /api/s3proxy/* {
+        uri strip_prefix /api/s3proxy
+        reverse_proxy {{ tpl .Values.global.proxy.s3proxyHost . }}:{{ .Values.s3proxy.service.port }}
+      }
+
+      # /api/otel/ → / on upstream:4318
+      handle /api/otel/* {
+        uri strip_prefix /api/otel
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}
+      }
+
+      # NATS WS direct path
+      handle /nats-websocket/* {
+        reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
+      }
+
+      # Catch-all: WS first, then assets, then SPA
+      handle /* {
+        @websocket {
+          header_regexp Connection (?i).*upgrade.*
+          header Upgrade websocket
+        }
+
+        reverse_proxy @websocket {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
+
+        @assets {
+          path /assets/*
+        }
+
+        handle @assets {
+          try_files {path} {path}/
+          file_server
+        }
+
+        try_files {path} /index.html
+        file_server
+      }
+    }
+  {{- end }}
+{{- end -}}

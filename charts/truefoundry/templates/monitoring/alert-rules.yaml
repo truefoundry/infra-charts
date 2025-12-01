@@ -1,62 +1,59 @@
 {{- if and .Values.monitoring.enabled .Values.monitoring.alertRules.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+{{- $tenantName := .Values.global.tenantName -}} {{ if .Values.monitoring.tenantNameOverride }} {{- $tenantName = .Values.monitoring.tenantNameOverride -}} {{- end}}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ .Values.monitoring.alertRules.name }}
   labels:
+    {{- include "monitoring.alertRulesLabels" . | nindent 4 }}
     release: prometheus
-  {{- with .Values.monitoring.alertRules.additionalLabels }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-  {{- with .Values.monitoring.alertRules.additionalAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "monitoring.alertRulesAnnotations" . | nindent 4 }}
 spec:
   groups:
     - name: {{ .Values.monitoring.alertRules.name }}
       rules:
         - alert: PodNotHealthy
-          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ .Release.Namespace }}"}) > 0
+          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ include "global.namespace" . }}"}) > 0
           for: 5m
           labels:
             severity: warning
-            tenant: {{ .Values.global.tenantName }}
+            tenant: {{ $tenantName }}
             controlplane: "true"
           annotations:
-            summary: "[Tenant: {{ .Values.global.tenantName }}] Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})"
-            description: "[Tenant: {{ .Values.global.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a {{`{{ $labels.phase }}`}} state for more than 5 minutes."
+            summary: "[Tenant: {{ $tenantName }}] Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})"
+            description: "[Tenant: {{ $tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a {{`{{ $labels.phase }}`}} state for more than 5 minutes."
 
         - alert: PodCrashLooping
-          expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m]) > 0
+          expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m]) > 0
           for: 5m
           labels:
             severity: critical
-            tenant: {{ .Values.global.tenantName }}
+            tenant: {{ $tenantName }}
             controlplane: "true"
           annotations:
-            summary: "[Tenant: {{ .Values.global.tenantName }}] Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})"
-            description: "[Tenant: {{ .Values.global.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping"
+            summary: "[Tenant: {{ $tenantName }}] Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})"
+            description: "[Tenant: {{ $tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping"
 
         - alert: ContainerOOMKilled
-          expr: max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m])) > 0 and max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m]) > 0)
+          expr: max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m])) > 0 and max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m]) > 0)
           for: 5m
           labels:
             severity: critical
-            tenant: {{ .Values.global.tenantName }}
+            tenant: {{ $tenantName }}
             controlplane: "true"
           annotations:
-            summary: "[Tenant: {{ .Values.global.tenantName }}] Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})"
-            description: "[Tenant: {{ .Values.global.tenantName }}] Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been OOM killed"
+            summary: "[Tenant: {{ $tenantName }}] Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})"
+            description: "[Tenant: {{ $tenantName }}] Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been OOM killed"
 
         - alert: PersistentVolumeUsageHigh
-          expr: (sum(kubelet_volume_stats_used_bytes{job="kubelet", namespace=~"{{ .Release.Namespace }}"}) by (persistentvolumeclaim, namespace) / sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ .Release.Namespace }}"}) by (persistentvolumeclaim, namespace)) * 100 > 90
+          expr: (sum(kubelet_volume_stats_used_bytes{job="kubelet", namespace=~"{{ include "global.namespace" . }}"}) by (persistentvolumeclaim, namespace) / sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ include "global.namespace" . }}"}) by (persistentvolumeclaim, namespace)) * 100 > 70
           for: 5m
           labels:
             severity: critical
-            tenant: {{ .Values.global.tenantName }}
+            tenant: {{ $tenantName }}
             controlplane: "true"
           annotations:
-            summary: "[Tenant: {{ .Values.global.tenantName }}] Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})"
-            description: "[Tenant: {{ .Values.global.tenantName }}] Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}} is using more than 90% of its capacity"
+            summary: "[Tenant: {{ $tenantName }}] Persistent Volume usage is above 70% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})"
+            description: "[Tenant: {{ $tenantName }}] Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}} is using more than 70% of its capacity"
 {{- end -}}

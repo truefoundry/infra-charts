@@ -20,13 +20,6 @@ spec:
   javascript: |
     import { load } from 'js-yaml';
 
-    const excludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
-    const includedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
-    const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
-    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
-      exit()
-    }
-
     function parseYamlString(yamlString) {
       try {
         return load(yamlString);
@@ -34,6 +27,38 @@ spec:
         console.log("Error parsing YAML string:", e);
         return null;
       }
+    }
+
+    // get the namespaces from the input namespaces. If inputNamespace is a string, return the string. If inputNamespace is an array, return the array. If inputNamespace is a regex, return the namespaces that match the regex. Only basic regex is supported.
+    function getNamespaces(inputNamespace) {
+      let namespaceList = [];
+      let filteredNamespaces = [];
+      const allNamespaces = list("Namespace", "v1").map(namespace => namespace.metadata.name);
+      for (let i in inputNamespace) {
+        if (inputNamespace[i] === "*") {
+          namespaceList = allNamespaces;
+          break;
+        }
+        if (inputNamespace[i].includes("*")) {
+          const regex = new RegExp(inputNamespace[i]);
+          filteredNamespaces = allNamespaces.filter(namespace => regex.test(namespace));
+          namespaceList = [...namespaceList, ...filteredNamespaces];
+        } else {
+          namespaceList.push(inputNamespace[i]);
+        }
+      }
+      return namespaceList;
+    }
+
+    const inputExcludedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.excludeNamespaces | toYaml | nindent 4 }}`)
+    const inputInlcudedNamespaces = parseYamlString(`{{ .Values.replaceArgoHelmRepo.includeNamespaces | toYaml | nindent 4 }}`)
+    const includedNamespaces = getNamespaces(inputInlcudedNamespaces);
+    const excludedNamespaces = getNamespaces(inputExcludedNamespaces);
+    print("includedNamespaces", includedNamespaces);
+    print("excludedNamespaces", excludedNamespaces);
+    const registryReplacementMap = parseYamlString(`{{ .Values.replaceArgoHelmRepo.registryReplacementMap | toYaml | nindent 4 }}`)
+    if ((includedNamespaces.length > 0 && !includedNamespaces.includes(request.namespace)) || excludedNamespaces.includes(request.namespace) || !registryReplacementMap) {
+      exit()
     }
 
     function getNewRegistry(protocol, hostname) {

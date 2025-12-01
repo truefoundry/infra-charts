@@ -3,16 +3,19 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}-cm
   labels:
-      {{- include "tfy-otel-collector.labels" . | nindent 4 }}
+    {{- include "tfy-otel-collector.commonLabels" . | nindent 4 }}
   annotations:
-      {{- include "tfy-otel-collector.annotations" . | nindent 4 }}
+    {{- include "tfy-otel-collector.commonAnnotations" . | nindent 4 }}
 data:
   config.yaml: |-
     extensions:
       tfyauth: # Custom authorisation 
-        base_url: ${env:AUTH_BASE_URL}
-        project_base_url: ${env:PROJECT_BASE_URL}
+        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
         cache_ttl: 5m
+        tfy_api_key: ${env:TFY_API_KEY}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -39,47 +42,51 @@ data:
 
     exporters:
       debug:
-        verbosity: detailed # For debug. Have to add clickhouse exporter
+        verbosity: detailed # For debug output during troubleshooting
       nop:
-      clickhouse:
-        endpoint: ${env:CLICKHOUSE_TCP_HOST}
-        username: ${env:CLICKHOUSE_USER}
-        password: ${env:CLICKHOUSE_PASSWORD}
-        cluster_name: default 
-        timeout: 10s
-        sending_queue:
-          queue_size: 1000
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_interval: 30s
-          max_elapsed_time: 300s
-        fallback:
-          nats_baseurl: ${env:NATS_BASE_URL}
-          sfy_server_url: ${env:SFY_SERVER_URL}
-          tfy_api_key: ${env:TFY_API_KEY}
-          wait_time_between_pulls: 30s
-          nats_stream: "tfyotelcollector"
-          nats_subject: "tfyotelcollector.traces"
-          nats_consumer: "tyf-otel-collector-worker"    
+      datafusion:
+        deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
+        deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT}
+        deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES}
+        deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL}
+        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
+        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW}
+        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE}
+        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE}
+        tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT}
+        tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES}
+        tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL}
+        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL}
+        tfy_api_key: ${env:TFY_API_KEY}
+        cache_ttl: 5m
+
     processors:
       batch:
         timeout: 5s
         send_batch_size: 5000
       resource: # trace level attributes
         attributes:
+          - key: Authorization
+            from_context: Authorization
+            action: upsert
           - key: tfycreatedbysubject
             from_context: auth.tfysubject
             action: upsert    
-          - key: tfytenantid
+          - key: tfytenantname
             from_context: auth.tfytenant
             action: upsert
           - key: tfyproject
             from_context: auth.tfyproject
             action: upsert    
-          - key: service.name
-            from_context: auth.tfyServiceName
-            action: upsert    
+          - key: tfyservicename
+            from_context: auth.tfyservicename
+            action: upsert
+          - key: istfyllmgateway
+            from_context: auth.istfyllmgateway
+            action: upsert
     service:
       telemetry:
         metrics:
@@ -96,7 +103,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [resource, batch]
-          exporters: [clickhouse]
+          exporters: [datafusion]
         metrics:
           receivers: [otlp]
           processors: []

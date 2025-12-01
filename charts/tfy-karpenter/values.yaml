@@ -1,3 +1,32 @@
+## @section eks-node-monitoring-agent configurations
+##
+eks-node-monitoring-agent:
+  nodeAgent:
+    ## @param eks-node-monitoring-agent.nodeAgent.image.override Override the image for the eks-node-monitoring-agent
+    ##
+    image:
+      override: public.ecr.aws/truefoundrycloud/eks/eks-node-monitoring-agent:v1.2.0-eksbuild.1
+  dcgmAgent:
+    ## @param eks-node-monitoring-agent.dcgmAgent.image.override Override the image for the dcgm-exporter
+    ##
+    image:
+      override: tfy.jfrog.io/tfy-images/eks/observability/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04
+    ## @param eks-node-monitoring-agent.dcgmAgent.resources [object] Resources for eks-node-monitoring-agent
+    ##
+    resources:
+      requests:
+        cpu: 10m
+        memory: 30Mi
+      limits:
+        cpu: 250m
+        memory: 100Mi
+    ## @param eks-node-monitoring-agent.dcgmAgent.tolerations [array] Tolerations for eks-node-monitoring-agent
+    ##
+    tolerations:
+      - effect: NoSchedule
+        key: nvidia.com/gpu
+        operator: Exists
+
 ## @section Upstream karpenter configurations
 ##
 karpenter:
@@ -6,10 +35,14 @@ karpenter:
   serviceAccount:
     annotations:
       eks.amazonaws.com/role-arn: ""
+  ## @param karpenter.logLevel Log level for karpenter
+  ##
+  logLevel: "debug"
+
   settings:
     ## @param karpenter.settings.clusterName Name of the EKS cluster
     ##
-    clusterName: ""
+    clusterName: "cluster-name"
 
     ## @param karpenter.settings.clusterEndpoint Endpoint URL of the EKS cluster
     ##
@@ -22,6 +55,11 @@ karpenter:
     ## @param karpenter.settings.reservedENIs reserved ENIs for the custom networking CNI setup
     ##
     reservedENIs: "0"
+
+    ## @param karpenter.settings.featureGates.nodeRepair Enable node repair feature gate
+    ##
+    featureGates:
+      nodeRepair: true
   ## @param karpenter.controller.resources.requests.cpu CPU requests for karpenter container
   ## @param karpenter.controller.resources.requests.memory Memory requests for karpenter container
   ## @param karpenter.controller.resources.limits.cpu CPU limits for karpenter container
@@ -35,3 +73,7 @@ karpenter:
       limits:
         cpu: 1
         memory: 4000Mi
+  ## @param karpenter.serviceMonitor.enabled Enable service monitor for karpenter
+  ##
+  serviceMonitor:
+    enabled: true

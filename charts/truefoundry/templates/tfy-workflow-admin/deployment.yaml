@@ -4,20 +4,19 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-server
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
+    {{- include "tfy-workflow-admin.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-workflow-admin-server.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.server.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 6 }}
+      app.kubernetes.io/workflow-component: server
   template:
     metadata:
-      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-workflow-admin.server.podLabels" . | nindent 8 }}
     spec:
@@ -40,7 +39,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           ports:
             - name: http
@@ -75,10 +74,8 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
-      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
         - configMap:
             name: {{ include "tfy-workflow-admin.fullname" . }}-config
@@ -86,9 +83,10 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
-      {{- if .Values.tfyWorkflowAdmin.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyWorkflowAdmin.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}
@@ -104,7 +102,8 @@ spec:
           whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
-              app.kubernetes.io/name: {{ include "tfy-workflow-admin.name" . }}
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 14 }}
+              app.kubernetes.io/workflow-component: server
         {{- end }}
       tolerations:
         {{- .Values.global.tolerations | toYaml | nindent 8 }}
@@ -117,20 +116,19 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-scheduler
   labels:
-    {{- include "tfy-workflow-admin.labels" . | nindent 4 }}
+    {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-workflow-admin.annotations" . | indent 4 }}
+    {{- include "tfy-workflow-admin.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "tfy-workflow-admin-scheduler.replicas" . | indent 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-workflow-admin.scheduler.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-workflow-admin") | nindent 6 }}
+      app.kubernetes.io/workflow-component: scheduler
   template:
     metadata:
-      {{- with .Values.tfyWorkflowAdmin.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "tfy-workflow-admin.scheduler.podLabels" . | nindent 8 }}
     spec:
@@ -152,7 +150,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
-          image: "{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
+          image: "{{ .Values.tfyWorkflowAdmin.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyWorkflowAdmin.image.repository }}:{{ .Values.tfyWorkflowAdmin.image.tag }}"
           imagePullPolicy: {{ .Values.tfyWorkflowAdmin.imagePullPolicy }}
           resources:
             {{- include "tfy-workflow-admin-scheduler.resources" . | nindent 12 }}
@@ -163,10 +161,8 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
-      {{- with .Values.tfyWorkflowAdmin.imagePullSecrets }}
       imagePullSecrets:
-        {{- tpl (toYaml .) $ | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
         - configMap:
             name: {{ include "tfy-workflow-admin.fullname" . }}-config
@@ -174,9 +170,10 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
-      {{- if .Values.tfyWorkflowAdmin.nodeSelector }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
       nodeSelector:
-        {{- toYaml .Values.tfyWorkflowAdmin.nodeSelector | nindent 8 }}
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
       {{- $mergedAffinity := dict | merge .Values.tfyWorkflowAdmin.affinity .Values.global.affinity }}
       {{- if $mergedAffinity }}

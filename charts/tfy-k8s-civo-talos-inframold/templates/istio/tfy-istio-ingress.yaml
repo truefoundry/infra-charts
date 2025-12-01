@@ -7,9 +7,9 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-istio-ingress"
-    truefoundry.com/infra-migration-tag: "1000"
   annotations:
     helm.sh/hook: post-install
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: istio-system
@@ -18,7 +18,7 @@ spec:
   source:
     chart: tfy-istio-ingress
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.2.4
+    targetRevision: 0.3.2
     helm:
       values: |-
         {{- if .Values.istio.gateway.valuesOverride }}
@@ -53,15 +53,19 @@ spec:
               istio: 'tfy-istio-ingress'
             servers:
               - hosts:
-                - "*"
+                {{- range .Values.istio.tfyGateway.domains }}
+                - {{ . | quote}}
+                {{- end }}
                 port:
                   name: http-tfy-wildcard
                   number: 80
                   protocol: HTTP
                 tls:
                   httpsRedirect: {{ .Values.istio.tfyGateway.httpsRedirect }}
-              - hosts: 
-                - "*"
+              - hosts:
+                {{- range .Values.istio.tfyGateway.domains }}
+                - {{ . | quote}}
+                {{- end }}
                 port:
                   name: https-tfy-wildcard
                   number: 443

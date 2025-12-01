@@ -1,0 +1,175 @@
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuild.jobTemplate.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-build.fullname" . }}-job-template-cm
+  {{- $labels := include "tfy-build.commonLabels" . }}
+  {{- if and $labels (ne $labels "{}") }}
+  labels:
+    {{- $labels | nindent 4 }}
+  {{- end }}
+  {{- $annotations := include "tfy-build.commonAnnotations" . }}
+  {{- if and $annotations (ne $annotations "{}") }}
+  annotations:
+    {{- $annotations | nindent 4 }}
+  {{- end }}
+data:
+  build-job-template.yaml: |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: "{{ "{{ .BUILD_NAME }}" }}"
+      namespace: truefoundry
+      {{- $jobLabels := include "tfy-build.commonLabels" . }}
+      {{- if and $jobLabels (ne $jobLabels "{}") }}
+      labels:
+      {{- $jobLabels | nindent 8 }}
+      {{- end }}
+      {{- $jobAnnotations := include "tfy-build.commonAnnotations" . }}
+      {{- if and $jobAnnotations (ne $jobAnnotations "{}") }}
+      annotations:
+      {{- $jobAnnotations | nindent 8 }}
+      {{- end }}
+    spec:
+      activeDeadlineSeconds: {{ .Values.tfyBuild.jobTemplate.activeDeadlineSeconds | default 14400 }}
+      backoffLimit: 0
+      ttlSecondsAfterFinished: {{ .Values.tfyBuild.jobTemplate.ttlSecondsAfterFinished | default 3600 }}
+      template:
+        metadata:
+          {{- $podLabels := include "tfy-build.podLabels" . }}
+          {{- if and $podLabels (ne $podLabels "{}") }}
+          labels:
+          {{- $podLabels | nindent 12 }}
+          {{- end }}
+          annotations:
+            cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+            karpenter.sh/do-not-disrupt: "true"
+            karpenter.sh/do-not-evict: "true"
+            {{- $podAnnotations := include "tfy-build.podAnnotations" . }}
+            {{- if and $podAnnotations (ne $podAnnotations "{}") }}
+            {{- $podAnnotations | nindent 12 }}
+            {{- end }}
+        spec:
+          serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
+          imagePullSecrets:
+            {{- include "tfy-build.imagePullSecrets" . | nindent 12 }}
+          restartPolicy: Never
+          {{- if .Values.tfyBuild.jobTemplate.nodeSelector }}
+          nodeSelector:
+            {{- toYaml .Values.tfyBuild.jobTemplate.nodeSelector | nindent 12 }}
+          {{- end }}
+          {{- if .Values.tfyBuild.jobTemplate.affinity }}
+          affinity:
+            {{- toYaml .Values.tfyBuild.jobTemplate.affinity | nindent 12 }}
+          {{- end }}
+          {{- if .Values.tfyBuild.jobTemplate.tolerations }}
+          tolerations:
+            {{- toYaml .Values.tfyBuild.jobTemplate.tolerations | nindent 12 }}
+          {{- end }}
+          containers:
+          - name: build-container
+            image: {{ .Values.tfyBuild.jobTemplate.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.jobTemplate.image.repository }}:{{ .Values.tfyBuild.jobTemplate.image.tag }}
+            command: ["bash"]
+            env:
+            - name: BUILD_SOURCE
+              value: "{{ "{{ .BUILD_SOURCE }}" }}"
+            - name: BUILD_CONFIG
+              value: "{{ "{{ .BUILD_CONFIG }}" }}"
+            - name: DOCKER_REGISTRY_URL
+              value: "{{ "{{ .DOCKER_REGISTRY_URL }}" }}"
+            - name: DOCKER_REGISTRY_USERNAME
+              value: "{{ "{{ .DOCKER_REGISTRY_USERNAME }}" }}"
+            - name: DOCKER_REGISTRY_PASSWORD
+              value: "{{ "{{ .DOCKER_REGISTRY_PASSWORD }}" }}"
+            - name: DOCKER_REPO
+              value: "{{ "{{ .DOCKER_REPO }}" }}"
+            - name: DOCKER_TAG
+              value: "{{ "{{ .DOCKER_TAG }}" }}"
+            - name: BUILDKIT_SERVICE_URL
+              value: "{{ "{{ .BUILDKIT_SERVICE_URL }}" }}"
+            - name: CALLBACK_URL
+              value: "{{ "{{ .CALLBACK_URL }}" }}"
+            - name: APPLICATION_ID
+              value: "{{ "{{ .APPLICATION_ID }}" }}"
+            - name: DEPLOYMENT_ID
+              value: "{{ "{{ .DEPLOYMENT_ID }}" }}"
+            - name: DONE_MARKER
+              value: {{ .Values.tfyBuild.jobTemplate.logMarkers.done | quote }}
+            - name: FAILED_MARKER
+              value: {{ .Values.tfyBuild.jobTemplate.logMarkers.failed | quote }}
+            - name: TFY_BUILD_SECRETS
+              value: '{{ .Values.tfyBuild.jobTemplate.buildSecrets | toJson }}'
+            - name: SOURCE_CODE_DOWNLOAD_PATH
+              value: {{ .Values.tfyBuild.jobTemplate.sourceCodeDownloadPath | quote }}
+            - name: SIZE_THRESHOLD
+              value: {{ .Values.tfyBuild.jobTemplate.sizeThreshold | quote }}
+            {{- if .Values.tfyBuild.jobTemplate.extraEnvs }}
+            {{- toYaml .Values.tfyBuild.jobTemplate.extraEnvs | nindent 12 }}
+            {{- end }}
+            resources:
+              limits:
+                cpu: "{{ .Values.tfyBuild.jobTemplate.resources.limits.cpu | default "1" }}"
+                memory: "{{ .Values.tfyBuild.jobTemplate.resources.limits.memory | default "2Gi" }}"
+                ephemeral-storage: "{{ .Values.tfyBuild.jobTemplate.resources.limits.ephemeralStorage | default "20Gi" }}"
+              requests:
+                cpu: "{{ .Values.tfyBuild.jobTemplate.resources.requests.cpu | default "200m" }}"
+                memory: "{{ .Values.tfyBuild.jobTemplate.resources.requests.memory | default "500Mi" }}"
+                ephemeral-storage: "{{ .Values.tfyBuild.jobTemplate.resources.requests.ephemeralStorage | default "10Gi" }}"
+            volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+            {{- if ne .Values.tfyBuild.jobTemplate.baseImagePullSecret "" }}
+            - name: truefoundry-docker-config
+              mountPath: /root/.truefoundry/.docker/
+            {{- end }}
+            {{- range $value := .Values.tfyBuild.jobTemplate.buildSecrets }}
+            - name: {{ $value.id | replace "." "-" }}
+              mountPath: /truefoundry-build-secrets/
+            {{- end }}
+            {{- if .Values.tfyBuild.jobTemplate.extraVolumeMounts }}
+            {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+            args:
+            - -c
+            - |
+              {{ .Values.tfyBuild.jobTemplate.script | nindent 14 }}
+          volumes:
+          {{- if ne .Values.tfyBuild.jobTemplate.baseImagePullSecret "" }}
+          - name: truefoundry-docker-config
+            secret:
+              items:
+              - key: .dockerconfigjson
+                path: base_config.json
+              secretName: {{ .Values.tfyBuild.jobTemplate.baseImagePullSecret }}
+          {{- end }}
+          - name: scripts
+            projected:
+              defaultMode: 493
+              sources:
+              - configMap:
+                  name: tfy-build-scripts
+                  items:
+                  - key: download-code.sh
+                    path: download-code.sh
+                  - key: registry-login.sh
+                    path: registry-login.sh
+                  - key: build-and-push.sh
+                    path: build-and-push.sh
+                  - key: should-build-soci-index.sh
+                    path: should-build-soci-index.sh
+                  - key: build-soci-index.sh
+                    path: build-soci-index.sh
+                  - key: update-build.sh
+                    path: update-build.sh
+          {{- if .Values.tfyBuild.jobTemplate.extraVolumes }}
+          {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumes | nindent 10 }}
+          {{- end }}
+          {{- range $value := .Values.tfyBuild.jobTemplate.buildSecrets }}
+          - name: {{ $value.id | replace "." "-" }}
+            secret:
+              items:
+              - key: {{ $value.valueFrom.secretKey }}
+                path: {{ $value.id }}
+              secretName: {{ $value.valueFrom.secretName }}
+          {{- end }}
+{{- end }}

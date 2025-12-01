@@ -5,9 +5,9 @@ kind: ConfigMap
 metadata:
   name: {{ include "tfy-build.fullname" . }}-scripts
   labels:
-    {{- include "tfy-build.labels" . | nindent 4 }}
+    {{- include "tfy-build.commonLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-build.serviceAccountAnnotations" . | indent 4 }}
+    {{- include "tfy-build.commonAnnotations" . | nindent 4 }}
 data:
 {{ (.Files.Glob "tfy-build-scripts/*").AsConfig | indent 2 }}
 

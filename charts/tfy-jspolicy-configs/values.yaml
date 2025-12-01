@@ -10,10 +10,10 @@ global:
 replaceImageRegistry:
   ## @param replaceImageRegistry.enabled Enable or disable replacing the image registry
   enabled: false
-  ## @param replaceImageRegistry.excludeNamespaces [array] Namespaces to exclude from replacing the image registry
+  ## @param replaceImageRegistry.excludeNamespaces [array] Namespaces to exclude from replacing the image registry. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.
   excludeNamespaces: []
 
-  ## @param replaceImageRegistry.includeNamespaces [array] Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included
+  ## @param replaceImageRegistry.includeNamespaces [array] Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-.
   includeNamespaces: []
 
   ## @param replaceImageRegistry.registryReplacementMap [object] The image registry replacement map
@@ -22,14 +22,17 @@ replaceImageRegistry:
   ##   "*": "myjrog.io"
   registryReplacementMap: {}
 
+  ## @param replaceImageRegistry.excludeRegistries [array] Registries to exclude from replacing the image registry. Example ["docker.io", "ghcr.io"] will exclude docker.io and ghcr.io.
+  excludeRegistries: []
+
 ## @section replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 replaceArgoHelmRepo:
   ## @param replaceArgoHelmRepo.enabled Enable or disable replacing the Argo Helm repository
   enabled: false
-  ## @param replaceArgoHelmRepo.excludeNamespaces [array] Namespaces to exclude from replacing the argo helm repo
+  ## @param replaceArgoHelmRepo.excludeNamespaces [array] Namespaces to exclude from replacing the argo helm repo. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.
   excludeNamespaces: []
 
-  ## @param replaceArgoHelmRepo.includeNamespaces [array] Namespaces to include for replacing the argo helm repo. When non-empty, only these namespaces will be included
+  ## @param replaceArgoHelmRepo.includeNamespaces [array] Namespaces to include for replacing the argo helm repo. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-.
   includeNamespaces: []
 
   ## @param replaceArgoHelmRepo.registryReplacementMap [object] The argo helm repository replacement map
@@ -42,10 +45,10 @@ replaceArgoHelmRepo:
 syncSecrets:
   ## @param syncSecrets.enabled Enable or disable syncing secrets
   enabled: false
-  ## @param syncSecrets.excludeNamespaces [array] Namespaces to exclude from syncing secrets
+  ## @param syncSecrets.excludeNamespaces [array] Namespaces to exclude from syncing secrets. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.
   excludeNamespaces: []
 
-  ## @param syncSecrets.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included
+  ## @param syncSecrets.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-.
   includeNamespaces: []
 
   ## @param syncSecrets.secretNames [array] Label selector to filter secrets to sync
@@ -57,10 +60,10 @@ syncSecrets:
 syncConfigMaps:
   ## @param syncConfigMaps.enabled Enable or disable syncing secrets
   enabled: false
-  ## @param syncConfigMaps.excludeNamespaces [array] Namespaces to exclude from syncing secrets
+  ## @param syncConfigMaps.excludeNamespaces [array] Namespaces to exclude from syncing secrets. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.
   excludeNamespaces: []
 
-  ## @param syncConfigMaps.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included
+  ## @param syncConfigMaps.includeNamespaces [array] Namespaces to include for syncing secrets. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-.
   includeNamespaces: []
 
   ## @param syncConfigMaps.configMapNames [array] Label selector to filter secrets to sync
@@ -72,10 +75,10 @@ syncConfigMaps:
 podVolumeMounts:
   ## @param podVolumeMounts.enabled Enable or disable adding volume mounts to pods
   enabled: false
-  ## @param podVolumeMounts.excludeNamespaces [array] Namespaces to exclude from adding volume mounts to pods
+  ## @param podVolumeMounts.excludeNamespaces [array] Namespaces to exclude from adding volume mounts to pods. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will exclude namespace1 and all namespaces with prefix tfy-.
   excludeNamespaces: []
 
-  ## @param podVolumeMounts.includeNamespaces [array] Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included
+  ## @param podVolumeMounts.includeNamespaces [array] Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included. Only basic regular expression is supported. Example ["namespace1", "tfy-*"] will include namespace1 and all namespaces with prefix tfy-.
   includeNamespaces: []
 
   ## @param podVolumeMounts.mountDetails [array] The details of the volume mount to add
@@ -89,4 +92,3 @@ podVolumeMounts:
     ##   configMapName: my-configmap
     ##   mountPath: /my/configmap/path
     ##   subPath: my-subPath
-
