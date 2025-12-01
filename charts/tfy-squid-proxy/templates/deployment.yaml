@@ -1,55 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-squid-proxy
+  name: {{ include "tfy-squid-proxy.fullname" . }}-squid-proxy
   labels:
-    {{- include "tfy-squid-proxy.labels" . | nindent 4 }}
+    {{- include "tfy-squid-proxy.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-squid-proxy.deploymentAnnotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.squid.replicas | default 1 }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ include "tfy-squid-proxy.replicas" . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-squid-proxy.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "tfy-squid-proxy.selectorLabels" . | nindent 8 }}
+        {{- include "tfy-squid-proxy.podLabels" . | nindent 8 }}
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "tfy-squid-proxy.podAnnotations" . | nindent 8 }}
     spec:
-      {{- with .Values.squid.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.squid.nodeSelector }}
+        {{- include "tfy-squid-proxy.imagePullSecrets" . | nindent 8 }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.squid.affinity }}
+        {{- include "tfy-squid-proxy.nodeSelector" . | nindent 8 }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.squid.tolerations }}
+        {{- include "tfy-squid-proxy.affinity" . | nindent 8 }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-squid-proxy.tolerations" . | nindent 8 }}
       containers:
-        - name: squid-proxy
-          image: "{{ .Values.squid.image.repository }}:{{ .Values.squid.image.tag }}"
-          imagePullPolicy: {{ .Values.squid.image.pullPolicy }}
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/usr/sbin/squid"]
           args: ["-N", "-f", "/etc/squid/squid.conf"]
           ports:
             - name: proxy
-              containerPort: {{ .Values.squid.port }}
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           volumeMounts:
             - name: squid-config
               mountPath: /etc/squid/squid.conf
               subPath: squid.conf
           resources:
-            {{- toYaml .Values.squid.resources | nindent 12 }}
+            {{- include "tfy-squid-proxy.resources" . | nindent 12 }}
       volumes:
         - name: squid-config
           configMap:
-            name: {{ .Release.Name }}-squid-proxy-config
+            name: {{ include "tfy-squid-proxy.fullname" . }}-squid-proxy-config
 

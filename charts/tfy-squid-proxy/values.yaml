@@ -1,62 +1,117 @@
 ## @section Squid Proxy Configuration
 
-squid:
-  ## @param squid.replicas number of replicas of squid proxy service
-  replicas: 3
-
-  ## Image configuration
-  image:
-    ## @param squid.image.repository the docker image repository for squid proxy
-    repository: public.ecr.aws/ubuntu/squid
-    ## @param squid.image.tag the docker image tag for squid proxy
-    tag: "6.6-24.04_edge"
-    ## @param squid.image.pullPolicy Image pull policy
-    pullPolicy: IfNotPresent
-
-  ## @param squid.imagePullSecrets [array] Image pull secrets for squid proxy
+global:
+  ## @param global.resourceTier Resource deployment type
+  resourceTier: "medium"
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
-
-  ## @param squid.port the port on which squid proxy listens
-  port: 3128
-
-  ## @param squid.config the squid configuration file content
-  config: |
-    # ------------------------
-    # Listens on 3128
-    # ------------------------
-    http_port 3128
-
-    # No caching
-    cache deny all
-
-    # Allow all by default
-    http_access allow all
-
-  ## Resource limits and requests
-  resources:
-    limits:
-      ## @param squid.resources.limits.cpu The maximum amount of CPU the service can use
-      cpu: 200m
-      ## @param squid.resources.limits.memory The maximum amount of memory the service can use
-      memory: 256Mi
-    requests:
-      ## @param squid.resources.requests.cpu The amount of CPU the service requests
-      cpu: 100m
-      ## @param squid.resources.requests.memory The amount of memory the service requests
-      memory: 128Mi
-
-  ## @param squid.tolerations [array] Tolerations for the squid proxy service
-  tolerations: []
-
-  ## @param squid.affinity [object] Node affinity for squid proxy service
+  ## @param global.truefoundryImagePullConfigJSON Truefoundry image pull secret JSON
+  truefoundryImagePullConfigJSON: ""
+  ## @param global.affinity [object] Affinity rules for pod scheduling on a node
   affinity: {}
-
-  ## @param squid.nodeSelector [object] Node selector for squid proxy service
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
+  ## @param global.tolerations [array] Tolerations for pod scheduling on a node
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
 
-  ## Service configuration
-  service:
-    ## @param squid.service.type Service type for squid proxy
-    type: ClusterIP
-    ## @param squid.service.annotations Service annotations
-    annotations: {}
+  ## @param global.image.registry Global image registry override
+  image:
+    registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
+
+## @param fullnameOverride Full name override for the tfy-squid-proxy
+fullnameOverride: ""
+## @param nameOverride Name override
+nameOverride: ""
+
+## @param replicas Number of replicas of squid proxy service
+replicas: 3
+## @param commonLabels Common labels
+commonLabels: {}
+## @param commonAnnotations Common annotations
+commonAnnotations: {}
+## @param podLabels Pod labels
+podLabels: {}
+## @param podAnnotations Pod annotations
+podAnnotations: {}
+## @param deploymentLabels Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations Deployment annotations
+deploymentAnnotations: {}
+## Image configuration for squid proxy
+image:
+  ## @param image.registry Image registry for squid proxy
+  registry: ""
+  ## @param image.repository Image repository for squid proxy
+  repository: tfy-mirror/ubuntu/squid
+  ## @param image.tag Image tag for squid proxy
+  tag: "6.6-24.04_edge"
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+## Service configuration
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 3128
+  ## @param service.annotations Service annotations
+  annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
+
+## @param config Squid configuration file content
+config: |
+  # ------------------------
+  # Listens on 3128
+  # ------------------------
+  http_port 3128
+
+  # No caching
+  cache deny all
+
+  # Allow all by default
+  http_access allow all
+
+## @skip replicaCount Number of replicas
+# replicaCount: 1
+
+## Autoscaling configuration
+autoscaling:
+  ## @param autoscaling.enabled Enable autoscaling
+  enabled: false
+  ## @param autoscaling.minReplicas Minimum number of replicas
+  minReplicas: 3
+  ## @param autoscaling.maxReplicas Maximum number of replicas
+  maxReplicas: 100
+  ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 60
+
+## @param tolerations [array] Tolerations
+tolerations: []
+
+## @param affinity [object] Affinity
+affinity: {}
+
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
