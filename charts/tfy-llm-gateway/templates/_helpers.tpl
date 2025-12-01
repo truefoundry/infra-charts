@@ -220,7 +220,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- if .Values.global.redisEnabled }}
+{{- if .Values.redis.enabled }}
 - name: REDIS_HOST
   value: {{ printf "redis-master.%s.svc.cluster.local" (include "global.namespace" .) | quote }}
 {{- end }}
