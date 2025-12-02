@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.104.0"
+  gatewayChartVersion: "0.104.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.104.0
+  tag: v0.104.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -296,19 +296,7 @@ redis:
   master:
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
-      # Basic Redis config
-      appendonly yes                     # Enable AOF
-      appendfsync everysec               # Standard durability vs performance
-      balance
-      # AOF Rewrite (Consolidation) Settings
-      auto-aof-rewrite-percentage 100    # Default threshold
-      auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting
-      # Force AOF rewrite every 24 hours using system-based triggering
-      # by setting an active-expire-cycle to help reduce fragmentation
-      # and using cron-trigger for rewrite via Redis "CONFIG SET" supported:
-      aof-rewrite-incremental-fsync yes
-      # Optional: reduce memory fragmentation in long-running single-pod Redis
-      maxmemory-policy noeviction
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
     ## redis.master.persistence Persistence configuration
     persistence:
       ## @param redis.master.persistence.size Persistence volume size
