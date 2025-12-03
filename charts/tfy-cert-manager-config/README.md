@@ -18,5 +18,6 @@
 | `issuer.azureDNS.identity_client_id`  | Client ID of the user-assigned managed identity                             | `""`               |
 | `certificate.name`                    | Name of the certificate resource to create                                  | `""`               |
 | `certificate.secretName`              | Name of the Kubernetes secret where the TLS certificate will be stored      | `""`               |
+| `certificate.domain_names`            | List of domain names to include in the certificate                          | `[]`               |
 | `certificate.duration`                | Total lifetime of the certificate (default 90 days)                         | `2160h`            |
 | `certificate.renewBefore`             | Time before expiry when renewal should start (default 15 days)              | `360h`             |
