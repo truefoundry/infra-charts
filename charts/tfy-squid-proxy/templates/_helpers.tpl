@@ -29,6 +29,13 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+{{/*
 Selector labels
 */}}
 {{- define "tfy-squid-proxy.selectorLabels" -}}
