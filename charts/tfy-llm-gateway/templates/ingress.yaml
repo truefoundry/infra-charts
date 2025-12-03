@@ -10,7 +10,7 @@ metadata:
   annotations:
     {{- include "tfy-llm-gateway.ingressAnnotations" . | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  ingressClassName: {{ tpl .Values.ingress.ingressClassName $ }}
   rules:
     {{- range $host := .Values.ingress.hosts }}
     - host: {{ tpl $host $ }}
