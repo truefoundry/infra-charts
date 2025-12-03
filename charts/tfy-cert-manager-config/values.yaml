@@ -1,0 +1,38 @@
+## @section Configuration for certificate manager
+
+## @param namespace Namespace where cert-manager resources (Issuer/Certificate) will be created
+namespace: istio-system
+
+## issuer configuration
+issuer:
+  ## @param issuer.name Name of the cert-manager Issuer or ClusterIssuer to be created
+  name: ""
+  ## @param issuer.type DNS solver type to use for certificate challenges (cloudDNS | azureDNS)
+  type: ""
+  ## @param issuer.privateKeySecretRef Secret name that stores the Issuer private key (optional)
+  privateKeySecretRef: ""
+  cloudDNS:
+    ## @param issuer.cloudDNS.project GCP project ID used for DNS-01 challenge
+    project: ""
+  azureDNS:
+    ## @param issuer.azureDNS.hosted_zone_name DNS zone name to use for DNS-01 verification
+    hosted_zone_name: ""
+    ## @param issuer.azureDNS.resource_group_name Resource group name where the DNS zone is located
+    resource_group_name: ""
+    ## @param issuer.azureDNS.subscription_id Subscription ID for the Azure account
+    subscription_id: ""
+    ## @param issuer.azureDNS.environment Azure environment (e.g., AzurePublicCloud)
+    environment: "AzurePublicCloud"
+    ## @param issuer.azureDNS.identity_client_id Client ID of the user-assigned managed identity
+    identity_client_id: ""
+
+## certificate configuration
+certificate:
+  ## @param certificate.name Name of the certificate resource to create
+  name: ""
+  ## @param certificate.secretName Name of the Kubernetes secret where the TLS certificate will be stored
+  secretName: ""
+  ## @param certificate.duration Total lifetime of the certificate (default 90 days)
+  duration: 2160h
+  ## @param certificate.renewBefore Time before expiry when renewal should start (default 15 days)
+  renewBefore: 360h
