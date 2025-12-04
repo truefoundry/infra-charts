@@ -270,24 +270,24 @@ limits:
 
 {{- define "tfy-otel-collector.defaultResources.medium" }}
 requests:
-  cpu: 100m
-  memory: 256Mi
-  ephemeral-storage: 256Mi
-limits:
   cpu: 200m
   memory: 512Mi
   ephemeral-storage: 512Mi
+limits:
+  cpu: 400m
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
-  cpu: 200m
-  memory: 256Mi
-  ephemeral-storage: 256Mi
+  cpu: 500m
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 limits:
-  cpu: 400m
-  memory: 512Mi
-  ephemeral-storage: 512Mi
+  cpu: 1000m
+  memory: 2048Mi
+  ephemeral-storage: 2048Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}
