@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.issuer.name }}
+  namespace: {{ .Values.issuer.namespace }}
+spec:
+  acme:
+    email: $MAIL_ID
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ .Values.issuer.privateKeySecretRef }}
+    solvers:
+      - dns01:
+          {{- if eq .Values.issuer.type "cloudDNS" }}
+          cloudDNS:
+            project: {{ .Values.issuer.cloudDNS.project }}
+          {{- else if eq .Values.issuer.type "azureDNS" }}
+          azureDNS:
+            hostedZoneName: {{ .Values.issuer.azureDNS.hosted_zone_name }}
+            resourceGroupName: {{ .Values.issuer.azureDNS.resource_group_name }}
+            subscriptionID: {{ .Values.issuer.azureDNS.subscription_id }}
+            environment: {{ .Values.issuer.azureDNS.environment }}
+            managedIdentity:
+              clientID: {{ .Values.issuer.azureDNS.identity_client_id}}
+            {{- end }}
