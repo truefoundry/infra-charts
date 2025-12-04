@@ -66,10 +66,20 @@ spec:
                 {{- range .Values.istio.tfyGateway.domains }}
                 - {{ . | quote}}
                 {{- end }}
+                {{- if .Values.istio.tfyGateway.tls.enabled }}
+                port:
+                  name: https-tfy-wildcard
+                  number: 443
+                  protocol: HTTPS
+                tls:
+                  mode: {{ .Values.istio.tfyGateway.tls.mode }}
+                  credentialName: {{ .Values.istio.tfyGateway.tls.credentialName }}
+                {{- else }}
                 port:
                   name: https-tfy-wildcard
                   number: 443
                   protocol: HTTP
+                {{- end }}
         {{- end }}
   syncPolicy:
     automated: {}
