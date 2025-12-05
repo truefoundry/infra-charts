@@ -19,6 +19,10 @@ spec:
         k8s-app: dcgm-server
         version: v1
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.dcgmAgent.affinity }}
       affinity: {{- toYaml . | nindent 8 }}
       {{- end }}
