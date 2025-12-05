@@ -311,7 +311,7 @@ global:
 | `truefoundryFrontendApp.tolerations`                                 | Tolerations specific to the frontend app                                     | `[]`                                                                                                 |
 | `truefoundryFrontendApp.image.registry`                              | Registry for the frontend app image (overrides global.registry if specified) | `""`                                                                                                 |
 | `truefoundryFrontendApp.image.repository`                            | Image repository for the frontend app (without registry)                     | `tfy-private-images/truefoundry-frontend-app`                                                        |
-| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.105.0`                                                                                           |
+| `truefoundryFrontendApp.image.tag`                                   | Image tag for the frontend app                                               | `v0.105.1`                                                                                           |
 | `truefoundryFrontendApp.envSecretName`                               | Secret name for the frontend app environment variables                       | `truefoundry-frontend-app-env-secret`                                                                |
 | `truefoundryFrontendApp.imagePullPolicy`                             | Image pull policy for the frontend app                                       | `IfNotPresent`                                                                                       |
 | `truefoundryFrontendApp.nameOverride`                                | Override name for the frontend app                                           | `""`                                                                                                 |
@@ -1179,7 +1179,7 @@ fi
 | `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                         | `{}`                           |
 | `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)             | `""`                           |
 | `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                 | `tfy-private-images/tfy-proxy` |
-| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `v0.105.0`                     |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `v0.105.1`                     |
 | `tfyProxy.logLevel`                                      | Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal) | `info`                         |
 | `tfyProxy.existingProxyConfigMapName`                    | Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`) | `""`                           |
 | `tfyProxy.proxyConfigOverride`                           | Nginx proxy configuration override for tfyProxy                                      | `""`                           |
