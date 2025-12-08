@@ -30,7 +30,7 @@ Content-Type: text/x-shellscript; charset="us-ascii"
 set -ex
 # Set environment variables
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-version="0.11.1"
+version="0.12.0"
 ARCHIVE=soci-snapshotter-$version-linux-$ARCH.tar.gz
 
 pushd /tmp
@@ -46,11 +46,26 @@ rm ./$ARCHIVE.sha256sum
 mkdir -p /etc/soci-snapshotter-grpc
 cat <<EOF > /etc/soci-snapshotter-grpc/config.toml
 [cri_keychain]
-# This tells the soci-snapshotter to act as a proxy ImageService
-# and to cache credentials from requests to pull images.
-enable_keychain = true
-# This tells the soci-snapshotter where containerd's ImageService is located.
-image_service_path = "/run/containerd/containerd.sock"
+  enable_keychain = true
+  image_service_path = "/run/containerd/containerd.sock"
+[content_store]
+  type = "containerd"
+[pull_modes]
+  [pull_modes.soci_v1]
+    enable = true
+  [pull_modes.soci_v2]
+    enable = true
+  [pull_modes.parallel_pull_unpack]
+    enable = true
+    max_concurrent_downloads = -1
+    max_concurrent_downloads_per_image = 3
+    concurrent_download_chunk_size = "16mb"
+    max_concurrent_unpacks = -1
+    max_concurrent_unpacks_per_image = 1
+    discard_unpacked_layers = true
+  [pull_modes.parallel_pull_unpack.decompress_streams."gzip"]
+    path = "/usr/bin/unpigz"
+    args = ["-d", "-c"]
 EOF
 
 # Start the soci-snapshotter
