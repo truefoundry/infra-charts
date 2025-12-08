@@ -9,6 +9,6 @@ spec:
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: {{ $issuer.privateKeySecretRef }}
-    solvers: {}
+    solvers: {{ toYaml $issuer.solvers | nindent 6 }}
 ---
 {{- end }}
