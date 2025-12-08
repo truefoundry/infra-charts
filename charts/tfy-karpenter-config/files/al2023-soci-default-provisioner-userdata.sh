@@ -11,7 +11,7 @@ spec:
   kubelet:
     config:
       imageServiceEndpoint: unix:///run/soci-snapshotter-grpc/soci-snapshotter-grpc.sock
-  containerd: 
+  containerd:
     config: |
       [proxy_plugins.soci]
         type = "snapshot"
@@ -38,7 +38,7 @@ pushd /tmp
 curl --silent --location --fail --output $ARCHIVE https://github.com/awslabs/soci-snapshotter/releases/download/v$version/$ARCHIVE
 curl --silent --location --fail --output $ARCHIVE.sha256sum https://github.com/awslabs/soci-snapshotter/releases/download/v$version/$ARCHIVE.sha256sum
 sha256sum ./$ARCHIVE.sha256sum
-tar xzvf ./$ARCHIVE -C /usr/local/bin soci-snapshotter-grpc
+tar -xzvf ./$ARCHIVE -C /usr/local/bin soci-snapshotter-grpc
 rm ./$ARCHIVE
 rm ./$ARCHIVE.sha256sum
 
