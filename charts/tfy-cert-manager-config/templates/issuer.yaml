@@ -9,19 +9,6 @@ spec:
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: {{ $issuer.privateKeySecretRef }}
-    solvers:
-      - dns01:
-          {{- if eq $issuer.type "cloudDNS" }}
-          cloudDNS:
-            project: {{ $issuer.cloudDNS.project | quote }}
-          {{- else if eq $issuer.type "azureDNS" }}
-          azureDNS:
-            hostedZoneName: {{ $issuer.azureDNS.hosted_zone_name | quote }}
-            resourceGroupName: {{ $issuer.azureDNS.resource_group_name | quote }}
-            subscriptionID: {{ $issuer.azureDNS.subscription_id | quote }}
-            environment: {{ $issuer.azureDNS.environment | quote }}
-            managedIdentity:
-              clientID: {{ $issuer.azureDNS.identity_client_id | quote }}
-          {{- end }}
+    solvers: {}
 ---
 {{- end }}
