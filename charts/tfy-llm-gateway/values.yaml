@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.104.1"
+  gatewayChartVersion: "0.106.0"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.104.1
+  tag: v0.106.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -236,7 +236,7 @@ rollout:
   ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
-  maxSurge: 100%
+  maxSurge: 40%
 ## @skip env Environment variables for the llmGateway
 env:
   SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000

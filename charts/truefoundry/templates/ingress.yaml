@@ -11,14 +11,14 @@ metadata:
   annotations:
     {{- include "truefoundry.ingress.annotations" . | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ tpl .Values.global.ingress.ingressClassName $ }}
   {{- if .Values.global.ingress.tls }}
   tls:
-    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+    {{- tpl (.Values.global.ingress.tls | toYaml) $ | nindent 4 }}
   {{- end }}
   rules:
     {{- range $host := .Values.global.ingress.hosts }}
-    - host: {{ $host }}
+    - host: {{ tpl $host $ }}
       http:
         paths:
           - path: /
@@ -50,12 +50,12 @@ metadata:
 spec:
   {{- if .Values.global.ingress.tls }}
   tls:
-    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+    {{- tpl (.Values.global.ingress.tls | toYaml) $ | nindent 4 }}
   {{- end }}
-  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ tpl .Values.global.ingress.ingressClassName $ }}
   rules:
     {{- range $host := .Values.global.ingress.hosts }}
-    - host: {{ $host }}
+    - host: {{ tpl $host $ }}
       http:
         paths:
           - path: /api/svc/socket.io/

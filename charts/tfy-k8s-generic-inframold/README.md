@@ -142,10 +142,13 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 
 ### istio tfyGateway parameters
 
-| Name                             | Description                                     | Value   |
-| -------------------------------- | ----------------------------------------------- | ------- |
-| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `false` |
-| `istio.tfyGateway.domains`       | Domains for the gateway pods                    | `[]`    |
+| Name                                  | Description                                     | Value    |
+| ------------------------------------- | ----------------------------------------------- | -------- |
+| `istio.tfyGateway.httpsRedirect`      | Flag to enable HTTPS redirect for Istio Gateway | `false`  |
+| `istio.tfyGateway.tls.enabled`        | Flag to enable TLS for Istio Gateway            | `false`  |
+| `istio.tfyGateway.tls.mode`           | TLS mode for the Istio Gateway                  | `SIMPLE` |
+| `istio.tfyGateway.tls.credentialName` | Credential name for the TLS certificate         | `""`     |
+| `istio.tfyGateway.domains`            | Domains for the gateway pods                    | `[]`     |
 
 ### keda parameters
 
