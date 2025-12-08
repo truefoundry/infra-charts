@@ -1,40 +1,51 @@
 ## @section Configuration for certificate manager
+##
+## This section configures one or more cert-manager Issuers and their Certificates.
+## Each key under `issuers` (e.g. issuer1, issuer2) represents a separate Issuer +
+## Certificate pair that will be rendered by the chart.
 
-## @param namespace Namespace where cert-manager resources (Issuer/Certificate) will be created
-namespace: istio-system
+## @param issuers Map of issuers and their certificate configuration
+issuers:
+  ## Example issuer configuration (issuer1). Duplicate and rename (issuer2, issuer3, ...)
+  ## to manage multiple issuers and certificates.
+  issuer1:
+    ## @param issuers.issuer1.namespace Namespace where cert-manager resources (Issuer/Certificate) will be created
+    namespace: istio-system
 
-## issuer configuration
-issuer:
-  ## @param issuer.name Name of the cert-manager Issuer or ClusterIssuer to be created
-  name: ""
-  ## @param issuer.type DNS solver type to use for certificate challenges (cloudDNS | azureDNS)
-  type: ""
-  ## @param issuer.privateKeySecretRef Secret name that stores the Issuer private key (optional)
-  privateKeySecretRef: ""
-  cloudDNS:
-    ## @param issuer.cloudDNS.project GCP project ID used for DNS-01 challenge
-    project: ""
-  azureDNS:
-    ## @param issuer.azureDNS.hosted_zone_name DNS zone name to use for DNS-01 verification
-    hosted_zone_name: ""
-    ## @param issuer.azureDNS.resource_group_name Resource group name where the DNS zone is located
-    resource_group_name: ""
-    ## @param issuer.azureDNS.subscription_id Subscription ID for the Azure account
-    subscription_id: ""
-    ## @param issuer.azureDNS.environment Azure environment (e.g., AzurePublicCloud)
-    environment: "AzurePublicCloud"
-    ## @param issuer.azureDNS.identity_client_id Client ID of the user-assigned managed identity
-    identity_client_id: ""
+    ## issuer configuration
+    ## @param issuers.issuer1.name Name of the cert-manager Issuer or ClusterIssuer to be created
+    name: ""
+    ## @param issuers.issuer1.email Email address used for ACME registration and notifications
+    email: ""
+    ## @param issuers.issuer1.type DNS solver type to use for certificate challenges (cloudDNS | azureDNS)
+    type: ""
+    ## @param issuers.issuer1.privateKeySecretRef Secret name that stores the Issuer private key (optional)
+    privateKeySecretRef: ""
 
-## certificate configuration
-certificate:
-  ## @param certificate.name Name of the certificate resource to create
-  name: ""
-  ## @param certificate.secretName Name of the Kubernetes secret where the TLS certificate will be stored
-  secretName: ""
-  ## @param certificate.domain_names List of domain names to include in the certificate
-  domain_names: []
-  ## @param certificate.duration Total lifetime of the certificate (default 90 days)
-  duration: 2160h
-  ## @param certificate.renewBefore Time before expiry when renewal should start (default 15 days)
-  renewBefore: 360h
+    cloudDNS:
+      ## @param issuers.issuer1.cloudDNS.project GCP project ID used for DNS-01 challenge
+      project: ""
+    azureDNS:
+      ## @param issuers.issuer1.azureDNS.hosted_zone_name DNS zone name to use for DNS-01 verification
+      hosted_zone_name: ""
+      ## @param issuers.issuer1.azureDNS.resource_group_name Resource group name where the DNS zone is located
+      resource_group_name: ""
+      ## @param issuers.issuer1.azureDNS.subscription_id Subscription ID for the Azure account
+      subscription_id: ""
+      ## @param issuers.issuer1.azureDNS.environment Azure environment (e.g., AzurePublicCloud)
+      environment: "AzurePublicCloud"
+      ## @param issuers.issuer1.azureDNS.identity_client_id Client ID of the user-assigned managed identity
+      identity_client_id: ""
+
+    ## certificate configuration
+    certificate:
+      ## @param issuers.issuer1.certificate.name Name of the certificate resource to create
+      name: ""
+      ## @param issuers.issuer1.certificate.secretName Name of the Kubernetes secret where the TLS certificate will be stored
+      secretName: ""
+      ## @param issuers.issuer1.certificate.domain_names List of domain names to include in the certificate
+      domain_names: []
+      ## @param issuers.issuer1.certificate.duration Total lifetime of the certificate (default 90 days)
+      duration: 2160h
+      ## @param issuers.issuer1.certificate.renewBefore Time before expiry when renewal should start (default 15 days)
+      renewBefore: 360h
