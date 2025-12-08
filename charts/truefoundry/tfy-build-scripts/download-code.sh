@@ -44,7 +44,9 @@ elif [[ $BUILD_TYPE == "git" || $BUILD_TYPE == "github" ]]; then
     git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
     git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
-    git reset --hard "$GIT_REF"
+    # Resolve tag/branch/ref to actual commit SHA
+    COMMIT_SHA=$(git rev-parse "FETCH_HEAD^{commit}")
+    git reset --hard "$COMMIT_SHA"
     git submodule update --depth 1 --init --recursive
 
 elif [[ $BUILD_TYPE == "bitbucket" ]]; then
@@ -71,7 +73,9 @@ elif [[ $BUILD_TYPE == "bitbucket" ]]; then
     git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
     git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
-    git reset --hard "$GIT_REF"
+    # Resolve tag/branch/ref to actual commit SHA
+    COMMIT_SHA=$(git rev-parse "FETCH_HEAD^{commit}")
+    git reset --hard "$COMMIT_SHA"
     git submodule update --depth 1 --init --recursive
 
 elif [[ $BUILD_TYPE == "gitlab" ]]; then
@@ -99,7 +103,9 @@ elif [[ $BUILD_TYPE == "gitlab" ]]; then
     git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
     git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
-    git reset --hard "$GIT_REF"
+    # Resolve tag/branch/ref to actual commit SHA
+    COMMIT_SHA=$(git rev-parse "FETCH_HEAD^{commit}")
+    git reset --hard "$COMMIT_SHA"
     git submodule update --depth 1 --init --recursive
 
 elif [[ $BUILD_TYPE == "azure" ]]; then
@@ -125,7 +131,9 @@ elif [[ $BUILD_TYPE == "azure" ]]; then
     git init "$SOURCE_CODE_DOWNLOAD_PATH"
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
     git fetch --depth 1 --recurse-submodules "$TRIMMED_URL" "$GIT_REF"
-    git reset --hard "$GIT_REF"
+    # Resolve tag/branch/ref to actual commit SHA
+    COMMIT_SHA=$(git rev-parse "FETCH_HEAD^{commit}")
+    git reset --hard "$COMMIT_SHA"
     git submodule update --depth 1 --init --recursive
     
 elif [[ $BUILD_TYPE == "notebook_build" ]]; then

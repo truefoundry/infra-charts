@@ -496,16 +496,19 @@ limits:
 
 {{/*
 Resource Tied Envs
-spill is 0.9 x memory requests
+spill pool size is ~1/3rd of memory requests
 */}}
 {{- define "deltafusion-compaction.resourceTiedEnvs" }}
 {{- $tier := include "deltafusion-compaction.resourceTier" . }}
 {{- if eq $tier "small" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "1800"
+COMPACTION_MAX_SPILL_SIZE_MB: "650"
+DATAFUSION_EXECUTION_BATCH_SIZE: "512"
 {{- else if eq $tier "medium" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "3600"
+COMPACTION_MAX_SPILL_SIZE_MB: "1300"
+DATAFUSION_EXECUTION_BATCH_SIZE: "1024"
 {{- else if eq $tier "large" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "7200"
+COMPACTION_MAX_SPILL_SIZE_MB: "2600"
+DATAFUSION_EXECUTION_BATCH_SIZE: "2048"
 {{- end }}
 {{- end }}
 
