@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.103.0"
+  gatewayChartVersion: "0.106.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.103.0
+  tag: v0.106.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -236,7 +236,7 @@ rollout:
   ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
-  maxSurge: 100%
+  maxSurge: 40%
 ## @skip env Environment variables for the llmGateway
 env:
   SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
@@ -274,3 +274,55 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Redis dependency configuration
+redis:
+  ## @param redis.enabled Enable Redis dependency
+  enabled: false
+  ## redis.auth Authentication configuration
+  auth:
+    ## @param redis.auth.enabled Enable Redis authentication
+    enabled: false
+  ## redis.image Image configuration
+  image:
+    ## @param redis.image.tag Image tag
+    tag: 8.4.0
+    ## @param redis.image.registry Image registry
+    registry: public.ecr.aws
+    ## @param redis.image.pullPolicy Image pull policy
+    pullPolicy: IfNotPresent
+    ## @param redis.image.repository Image repository
+    repository: docker/library/redis
+  ## redis.master Master configuration
+  master:
+    ## @param redis.master.configmap Redis master configmap configuration
+    configmap: >-
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
+    ## redis.master.persistence Persistence configuration
+    persistence:
+      ## @param redis.master.persistence.size Persistence volume size
+      size: 8Gi
+      ## @param redis.master.persistence.enabled Enable persistence
+      enabled: true
+      ## @param redis.master.persistence.accessModes [array] Persistence access modes
+      accessModes:
+        - ReadWriteOnce
+      ## @param redis.master.persistence.storageClass Persistence storage class
+      storageClass: ""
+  ## redis.resources Resource configuration
+  resources:
+    ## redis.resources.limits Resource limits
+    limits:
+      ## @param redis.resources.limits.cpu CPU limit
+      cpu: 2000m
+      ## @param redis.resources.limits.memory Memory limit
+      memory: 6000Mi
+    ## redis.resources.requests Resource requests
+    requests:
+      ## @param redis.resources.requests.cpu CPU request
+      cpu: 1000m
+      ## @param redis.resources.requests.memory Memory request
+      memory: 4000Mi
+  ## @param redis.architecture Redis architecture
+  architecture: standalone
+  ## @param redis.replicaCount Redis replica count
+  replicaCount: 1

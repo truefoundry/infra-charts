@@ -105,6 +105,41 @@ certManager:
   ## @param certManager.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
+  ## @section certManager issuers parameters
+  config:
+    ## @param certManager.config.enabled Flag to enable certManager config
+    enabled: true
+    ## @param certManager.config.issuers [object] Map of issuers and their certificate configuration
+    issuers: {}
+#      issuer1:
+#        name: ""
+#        email: ""
+#        privateKeySecretRef: ""
+#        solvers:
+#          - dns01:
+#              ## Solver configuration for GCP Cloud DNS
+#              cloudDNS:
+#                ## GCP Project ID for Cloud DNS
+#                ##
+#                project: ""
+#              ## Solver configuration for Azure DNS
+#              azureDNS:
+#                resource_group_name: ""
+#                hosted_zone_name: ""
+#                subscription_id: ""
+#                environment: "AzurePublicCloud"
+#                identity_client_id: ""
+#        ## certManager.config.issuers.issuer1.certificate Certificate configuration
+#        ##
+#        certificate:
+#          name: ""
+#          secretName: ""
+#          duration: 2160h
+#          renewBefore: 360h
+#          domains: []
+    ## @param certManager.config.valuesOverride [object] Config override from default config values
+    ##
+    valuesOverride: {}
 
 ## @section metricsServer parameters
 ## @param metricsServer.enabled Flag to enable Metrics Server
@@ -313,6 +348,18 @@ istio:
     ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
     ##
     httpsRedirect: true
+    ## istio.tfyGateway.tls Parameters for TLS configuration for Istio Gateway
+    ##
+    tls:
+      ## @param istio.tfyGateway.tls.enabled Flag to enable TLS for Istio Gateway
+      ##
+      enabled: false
+      ## @param istio.tfyGateway.tls.mode TLS mode for the Istio Gateway
+      ##
+      mode: SIMPLE
+      ## @param istio.tfyGateway.tls.credentialName Credential name for the TLS certificate
+      ##
+      credentialName: ""
     ## @param istio.tfyGateway.domains [array] Domains for the gateway pods
     ##
     domains: ["*"]

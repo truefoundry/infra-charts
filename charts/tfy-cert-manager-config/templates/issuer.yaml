@@ -1,0 +1,14 @@
+{{- range $key, $issuer := .Values.issuers }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ $issuer.name }}
+spec:
+  acme:
+    email: {{ $issuer.email | quote }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $issuer.privateKeySecretRef }}
+    solvers: {{ toYaml $issuer.solvers | nindent 6 }}
+---
+{{- end }}

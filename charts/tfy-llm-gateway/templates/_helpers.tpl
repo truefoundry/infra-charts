@@ -220,6 +220,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
+{{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
+- name: REDIS_HOST
+  value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
+{{- end }}
 {{- end }}
 
 {{/*

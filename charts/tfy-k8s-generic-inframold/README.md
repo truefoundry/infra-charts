@@ -51,6 +51,14 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 | `certManager.affinity`                   | Affinity for Cert Manager                                                         | `{}`   |
 | `certManager.valuesOverride`             | Config override from default config values                                        | `{}`   |
 
+### certManager issuers parameters
+
+| Name                                | Description                                        | Value  |
+| ----------------------------------- | -------------------------------------------------- | ------ |
+| `certManager.config.enabled`        | Flag to enable certManager config                  | `true` |
+| `certManager.config.issuers`        | Map of issuers and their certificate configuration | `{}`   |
+| `certManager.config.valuesOverride` | Config override from default config values         | `{}`   |
+
 ### metricsServer parameters
 
 | Name                           | Description                                | Value   |
@@ -142,10 +150,13 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 
 ### istio tfyGateway parameters
 
-| Name                             | Description                                     | Value   |
-| -------------------------------- | ----------------------------------------------- | ------- |
-| `istio.tfyGateway.httpsRedirect` | Flag to enable HTTPS redirect for Istio Gateway | `false` |
-| `istio.tfyGateway.domains`       | Domains for the gateway pods                    | `[]`    |
+| Name                                  | Description                                     | Value    |
+| ------------------------------------- | ----------------------------------------------- | -------- |
+| `istio.tfyGateway.httpsRedirect`      | Flag to enable HTTPS redirect for Istio Gateway | `false`  |
+| `istio.tfyGateway.tls.enabled`        | Flag to enable TLS for Istio Gateway            | `false`  |
+| `istio.tfyGateway.tls.mode`           | TLS mode for the Istio Gateway                  | `SIMPLE` |
+| `istio.tfyGateway.tls.credentialName` | Credential name for the TLS certificate         | `""`     |
+| `istio.tfyGateway.domains`            | Domains for the gateway pods                    | `[]`     |
 
 ### keda parameters
 
