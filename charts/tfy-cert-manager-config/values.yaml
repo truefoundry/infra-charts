@@ -4,7 +4,7 @@
 ## Each key under `issuers` (e.g. issuer1, issuer2) represents a separate Issuer +
 ## Certificate pair that will be rendered by the chart.
 
-## issuers Map of issuers and their certificate configuration
+## @param issuers [object] Map of issuers and their certificate configuration
 issuers: {}
   ## Example issuer configuration (issuer1). Duplicate and rename (issuer2, issuer3, ...)
   ## to manage multiple issuers and certificates.
@@ -17,8 +17,20 @@ issuers: {}
 #    ## @param issuers.issuer1.privateKeySecretRef Secret name that stores the Issuer private key (optional)
 #    privateKeySecretRef: ""
 #    ## @param issuers.issuer1.solvers Solver configuration for the Issuer (optional, depending on type)
-#    solvers: {}
-#
+#    solvers:
+#       - dns01:
+#          ## Solver configuration for GCP Cloud DNS
+#          cloudDNS:
+#            ## GCP Project ID for Cloud DNS
+#            ##
+#            project: ""
+#          ## Solver configuration for Azure DNS
+#          azureDNS:
+#            resource_group_name: ""
+#            hosted_zone_name: ""
+#            subscription_id: ""
+#            environment: "AzurePublicCloud"
+#            identity_client_id: ""
 #    ## certificate configuration
 #    certificate:
 #      ## @param issuers.issuer1.certificate.name Name of the certificate resource to create
