@@ -51,6 +51,14 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 | `certManager.affinity`                   | Affinity for Cert Manager                                                         | `{}`   |
 | `certManager.valuesOverride`             | Config override from default config values                                        | `{}`   |
 
+### certManager issuers parameters
+
+| Name                                | Description                                        | Value  |
+| ----------------------------------- | -------------------------------------------------- | ------ |
+| `certManager.config.enabled`        | Flag to enable certManager config                  | `true` |
+| `certManager.config.issuers`        | Map of issuers and their certificate configuration | `{}`   |
+| `certManager.config.valuesOverride` | Config override from default config values         | `{}`   |
+
 ### metricsServer parameters
 
 | Name                           | Description                                | Value   |

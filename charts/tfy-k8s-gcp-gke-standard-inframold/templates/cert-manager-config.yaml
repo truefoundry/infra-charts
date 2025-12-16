@@ -1,0 +1,35 @@
+{{- if and .Values.certManager.enabled .Values.certManager.config.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tfy-cert-manager-config
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  labels:
+    truefoundry.com/infra-component: "cert-manager-config"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
+spec:
+  destination:
+    namespace: istio-system
+    server: https://kubernetes.default.svc
+  project: tfy-apps
+  source:
+    targetRevision: 0.1.1
+    repoURL: https://truefoundry.github.io/infra-charts/
+    chart: tfy-cert-manager-config
+    helm:
+      values: |-
+        {{- if .Values.certManager.config.valuesOverride }}
+        {{ .Values.certManager.config.valuesOverride | toYaml | nindent 8 }}
+        {{- else }}
+        issuers:
+          {{- toYaml .Values.certManager.config.issuers | nindent 10 }}
+        {{- end }}
+  syncPolicy:
+    automated: {}
+    retry: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

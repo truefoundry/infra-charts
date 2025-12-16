@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.106.0"
+  gatewayChartVersion: "0.108.0"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.106.0
+  tag: v0.108.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -276,6 +276,10 @@ oidc:
   config: {}
 ## Redis dependency configuration
 redis:
+  global:
+    security:
+      ## @param redis.global.security.allowInsecureImages Allow insecure images
+      allowInsecureImages: true
   ## @param redis.enabled Enable Redis dependency
   enabled: false
   ## redis.auth Authentication configuration
@@ -285,13 +289,13 @@ redis:
   ## redis.image Image configuration
   image:
     ## @param redis.image.tag Image tag
-    tag: 8.4.0
+    tag: 8.2.1-debian-12-r0
     ## @param redis.image.registry Image registry
-    registry: public.ecr.aws
+    registry: tfy.jfrog.io
     ## @param redis.image.pullPolicy Image pull policy
     pullPolicy: IfNotPresent
     ## @param redis.image.repository Image repository
-    repository: docker/library/redis
+    repository: tfy-mirror/bitnamilegacy/redis
   ## redis.master Master configuration
   master:
     ## @param redis.master.configmap Redis master configmap configuration
