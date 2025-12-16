@@ -10,7 +10,7 @@ function version_lt() {
 
 function setup_soci() {
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-VERSION="0.12.0"
+VERSION="0.12.1"
 ARCHIVE="soci-snapshotter-$VERSION-linux-$ARCH.tar.gz"
 KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json"
 BACKUP_KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json.bak"
@@ -38,7 +38,7 @@ cat <<EOF > /etc/soci-snapshotter-grpc/config.toml
   [pull_modes.soci_v2]
     enable = true
   [pull_modes.parallel_pull_unpack]
-    enable = true
+    enable = false
     max_concurrent_downloads = -1
     max_concurrent_downloads_per_image = 3
     concurrent_download_chunk_size = "16mb"
