@@ -5,12 +5,21 @@ on:
     branches:
       - 'main'
       - 'add-aws-ecr-login-step'
+    paths:
+      - '.github/workflows/upload-artifacts.yml'
+      - 'charts/tfy-k8s-aws-eks-inframold/**'
+      - 'charts/tfy-k8s-azure-aks-inframold/**'
+      - 'charts/tfy-k8s-civo-talos-inframold/**'
+      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+      - 'charts/tfy-k8s-generic-inframold/**'
+      - 'scripts/generate-artifacts-manifest/**'
+      - 'scripts/upload-artifacts/**'
 
 jobs:
   upload-artifacts:
     runs-on: ubuntu-latest
     permissions:
-      id-token: read
+      id-token: write
       contents: write
     env:
       ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
@@ -19,7 +28,7 @@ jobs:
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
