@@ -64,6 +64,13 @@ jobs:
           password: ${{ env.ARTIFACTORY_PASSWORD }}
           registry: tfy.jfrog.io
 
+      # this is to prevent rate limiting errors when pulling base images from public ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
       - name: Upload Artifacts
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
