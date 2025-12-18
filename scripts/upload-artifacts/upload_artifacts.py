@@ -121,7 +121,7 @@ def ensure_ecr_repository_exists(repository_name, region):
 
 def get_truefoundry_chart_images(manifest):
     """
-    Return a set of image URLs referenced by the `truefoundry` helm chart entry in the manifest.
+    Return a set of image URLs referenced by the `truefoundry` helm chart entry in the manifest json.
     """
     images = set()
     for item in manifest or []:
