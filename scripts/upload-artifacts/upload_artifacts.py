@@ -117,13 +117,50 @@ def ensure_ecr_repository_exists(repository_name, region):
         logging.error(f"Failed to ensure ECR repository exists: {e}")
         return False
 
+# function to get truefoundry chart images from manifest
+
+def get_truefoundry_chart_images(manifest):
+    """
+    Return a set of image URLs referenced by the `truefoundry` helm chart entry in the manifest.
+    """
+    images = set()
+    for item in manifest or []:
+        if item.get("type") != "helm":
+            continue
+
+        details = item.get("details") or {}
+        if details.get("chart") != "truefoundry":
+            continue
+
+        for img in details.get("images") or []:
+            if not img:
+                continue
+            img = str(img).strip()
+            if not img or img == "auto":
+                continue
+            images.add(img)
+
+    return images
 
 # function to pull and push images
 
 
-def pull_and_push_images(image_list, destination_registry, excluded_registries=[]):
+def pull_and_push_images(image_list, destination_registry, excluded_registries=None, excluded_images=None):
+
+    if excluded_registries is None:
+        excluded_registries = []
+    if excluded_images is None:
+        excluded_images = set()
+
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
+
+        if image_url in excluded_images:
+            logging.info(
+                f"Skipping image: {image_url} as it is referenced by the truefoundry chart in the manifest"
+            )
+            continue
+
         # Skip if image URL is in excluded registries
         image_exclude = False
         for registry in excluded_registries:
@@ -303,10 +340,16 @@ if __name__ == "__main__":
         logging.error("Manifest processing aborted due to errors")
         exit()
 
+    truefoundry_chart_images = get_truefoundry_chart_images(manifest)
+    if truefoundry_chart_images:
+        logging.info(
+            f"Found {len(truefoundry_chart_images)} images referenced by the truefoundry chart; these will be skipped during image upload"
+        )
+
     if artifact_type == "image":
         image_list = [item for item in manifest if item["type"] == "image"]
         if image_list:
-            pull_and_push_images(image_list, destination_registry, excluded_registries)
+            pull_and_push_images(image_list, destination_registry, excluded_registries, excluded_images=truefoundry_chart_images)
     elif artifact_type == "helm":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:
