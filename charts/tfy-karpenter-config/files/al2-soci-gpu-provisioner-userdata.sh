@@ -10,7 +10,7 @@ function version_lt() {
 
 function setup_soci() {
 ARCH=$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)
-VERSION="0.11.1"
+VERSION="0.12.1"
 ARCHIVE="soci-snapshotter-$VERSION-linux-$ARCH.tar.gz"
 KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json"
 BACKUP_KUBELET_CONFIG_FILEPATH="/etc/kubernetes/kubelet/kubelet-config.json.bak"
@@ -28,8 +28,26 @@ popd
 mkdir -p /etc/soci-snapshotter-grpc
 cat <<EOF > /etc/soci-snapshotter-grpc/config.toml
 [cri_keychain]
-enable_keychain = true
-image_service_path = "/run/containerd/containerd.sock"
+  enable_keychain = true
+  image_service_path = "/run/containerd/containerd.sock"
+[content_store]
+  type = "containerd"
+[pull_modes]
+  [pull_modes.soci_v1]
+    enable = true
+  [pull_modes.soci_v2]
+    enable = true
+  [pull_modes.parallel_pull_unpack]
+    enable = false
+    max_concurrent_downloads = -1
+    max_concurrent_downloads_per_image = 3
+    concurrent_download_chunk_size = "16mb"
+    max_concurrent_unpacks = -1
+    max_concurrent_unpacks_per_image = 1
+    discard_unpacked_layers = true
+  [pull_modes.parallel_pull_unpack.decompress_streams."gzip"]
+    path = "/usr/bin/unpigz"
+    args = ["-d", "-c"]
 EOF
 
 # --- Enable and start soci-snapshotter ---
