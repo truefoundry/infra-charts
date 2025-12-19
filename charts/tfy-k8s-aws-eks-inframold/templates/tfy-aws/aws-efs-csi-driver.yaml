@@ -31,6 +31,14 @@ spec:
         {{- if .Values.aws.awsEfsCsiDriver.affinity }}
         {{- $mergedAffinity = .Values.aws.awsEfsCsiDriver.affinity }}
         {{- end }}
+        {{ if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/efs-csi-driver/amazon/aws-efs-csi-driver
+        {{- end }}
+        {{- range .Values.imagePullSecrets }}
+        imagePullSecrets:
+          - {{ .name }}
+        {{- end }}
         node:
           resources:
             requests:
@@ -40,7 +48,16 @@ spec:
               cpu: 100m
               memory: 400Mi
         sidecars:
+          {{- if .Values.registry }}
+          csiProvisioner:
+            image:
+              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/external-provisioner
+          {{- end }}
           nodeDriverRegistrar:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/node-driver-registrar
+            {{- end }}
             resources:
               requests:
                 cpu: 10m
@@ -49,6 +66,10 @@ spec:
                 cpu: 100m
                 memory: 400Mi
           livenessProbe:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/livenessprobe
+            {{- end }}
             resources:
               requests:
                 cpu: 10m

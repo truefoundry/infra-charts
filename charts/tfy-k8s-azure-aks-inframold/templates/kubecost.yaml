@@ -32,6 +32,10 @@ spec:
         {{- if .Values.kubecost.affinity }}
         {{- $mergedAffinity = .Values.kubecost.affinity }}
         {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
         global:
           grafana:
             enabled: false
@@ -54,6 +58,9 @@ spec:
         forecasting:
           enabled: false
         kubecostFrontend:
+          {{- if .Values.registry }}
+          image: {{ .Values.registry }}/kubecost1/frontend
+          {{- end }}
           resources:
             limits:
               cpu: 100m
@@ -78,6 +85,9 @@ spec:
               cpu: 200m
               memory: 3Gi
         kubecostModel:
+          {{- if .Values.registry }}
+          image: {{ .Values.registry }}/kubecost1/cost-model
+          {{- end }}
           resources:
             limits:
               cpu: 256m

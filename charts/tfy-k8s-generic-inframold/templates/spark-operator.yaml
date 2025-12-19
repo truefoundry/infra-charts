@@ -32,6 +32,16 @@ spec:
         {{- if .Values.sparkOperator.affinity }}
         {{- $mergedAffinity = .Values.sparkOperator.affinity }}
         {{- end }}
+        {{- if or .Values.registry .Values.imagePullSecrets }}
+        image:
+          {{- if .Values.registry }}
+          registry: {{ .Values.registry }}
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          pullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
+          {{- end }}
         controller:
           resources:
             requests:

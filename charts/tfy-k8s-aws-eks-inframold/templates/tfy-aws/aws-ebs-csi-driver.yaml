@@ -33,6 +33,14 @@ spec:
         {{- if .Values.aws.awsEbsCsiDriver.affinity }}
         {{- $mergedAffinity = .Values.aws.awsEbsCsiDriver.affinity }}
         {{- end }}
+        {{- if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/ebs-csi-driver/aws-ebs-csi-driver
+        {{- end }}
+        {{- range .Values.imagePullSecrets }}
+        imagePullSecrets:
+          - {{ .name }}
+        {{- end }}
         nodeAllocatableUpdatePeriodSeconds: 0
         node:
           tolerateAllTaints: true
@@ -44,7 +52,31 @@ spec:
               cpu: 100m
               memory: 400Mi
         sidecars:
+          {{- if .Values.registry }}
+          resizer:
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-resizer
+          attacher:
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-attacher
+          provisioner:
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-provisioner
+          livenessProbe:
+            image:
+              repository: {{ .Values.registry }}/csi-components/livenessprobe
+          volumemodifier:
+            image:
+              repository: {{ .Values.registry }}/ebs-csi-driver/volume-modifier-for-k8s
+          nodeDriverRegistrar:
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-node-driver-registrar
+          {{- end }}
           snapshotter:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-snapshotter
+            {{- end }}
             resources:
               requests:
                 cpu: 10m
