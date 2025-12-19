@@ -34,6 +34,14 @@ spec:
         {{- if .Values.aws.awsLoadBalancerController.affinity }}
         {{- $mergedAffinity = .Values.aws.awsLoadBalancerController.affinity }}
         {{- end }}
+        {{- if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/eks/aws-load-balancer-controller
+        {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 10 }}
+        {{- end }}
         clusterName: {{ .Values.clusterName | quote }}
         serviceMonitor:
           enabled: true

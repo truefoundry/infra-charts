@@ -32,7 +32,17 @@ spec:
         {{- if .Values.argoWorkflows.affinity }}
         {{- $mergedAffinity = .Values.argoWorkflows.affinity }}
         {{- end }}
+
+        {{- if .Values.imagePullSecrets }}
+        images:
+          pullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
         controller:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           serviceMonitor:
             enabled: true
             additionalLabels:
@@ -64,6 +74,10 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         executor:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           resources:
             requests:
               cpu: 100m
@@ -74,6 +88,10 @@ spec:
               memory: 512Mi
               ephemeral-storage: 512Mi
         server:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           resources:
             requests:
               cpu: 100m

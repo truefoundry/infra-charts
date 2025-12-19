@@ -55,6 +55,13 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         global:
+          {{- if .Values.registry }}
+          hub: {{ .Values.registry }}/istio-release
+          {{- end }}
+          {{- range .Values.imagePullSecrets }}
+          imagePullSecrets:
+            - {{ .name }}
+          {{- end }}
           {{- if .Values.istio.discovery.hub }}
           hub: {{ .Values.istio.discovery.hub }}
           {{- end }}

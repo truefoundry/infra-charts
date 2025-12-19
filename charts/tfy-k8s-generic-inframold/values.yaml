@@ -15,6 +15,16 @@ controlPlaneURL: ""
 ##
 clusterName: ""
 
+## @param registry registry to override in the chart components
+##
+registry: ""
+
+## @param imagePullSecrets [array] imagePullSecrets to override in the chart components
+##
+## imagePullSecrets
+## - name: ""
+imagePullSecrets: []
+
 ## @param tolerations [array] Tolerations for the all chart components
 ##
 tolerations: []
@@ -446,6 +456,12 @@ tfyAgent:
 ##
 elasti:
   enabled: true
+  ## @param elasti.tolerations [array] Tolerations for Elasti
+  ##
+  tolerations: []
+  ## @param elasti.affinity [object] Affinity for Elasti
+  ##
+  affinity: {}
   ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}

@@ -31,6 +31,14 @@ spec:
         {{- if .Values.metricsServer.affinity }}
         {{- $mergedAffinity = .Values.metricsServer.affinity }}
         {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
+        {{- if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/metrics-server/metrics-server
+        {{- end }}
         podAnnotations:
           "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"
         replicas: 2
