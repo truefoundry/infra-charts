@@ -1,4 +1,5 @@
 {{- range $key, $issuer := .Values.issuers }}
+{{- $issuerName := $issuer.name }}
 {{- with $issuer.certificate }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -6,13 +7,13 @@ metadata:
   name: {{ .name }}
 spec:
   secretName: {{ .secretName }}
-  duration: {{ .duration }}
-  renewBefore: {{ .renewBefore }}
+  duration: {{ .duration | default "2160h" }}
+  renewBefore: {{ .renewBefore | default "360h" }}
   issuerRef:
-    name: {{ $issuer.name }}
+    name: {{ $issuerName }}
   dnsNames:
     {{- range .domains }}
-    - {{ . }}
+    - {{ . | quote }}
     {{- end }}
 ---
 {{- end }}

@@ -17,7 +17,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
-    targetRevision: 2.41.0
+    targetRevision: 2.53.0
     chart: aws-ebs-csi-driver
     helm:
       values: |-
@@ -33,6 +33,7 @@ spec:
         {{- if .Values.aws.awsEbsCsiDriver.affinity }}
         {{- $mergedAffinity = .Values.aws.awsEbsCsiDriver.affinity }}
         {{- end }}
+        nodeAllocatableUpdatePeriodSeconds: 0
         node:
           tolerateAllTaints: true
           resources:
