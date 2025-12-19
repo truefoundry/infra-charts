@@ -32,7 +32,24 @@ spec:
         {{- if .Values.aws.inferentia.affinity }}
         {{- $mergedAffinity = .Values.aws.inferentia.affinity }}
         {{- end }}
+        {{- if .Values.registry }}
+        devicePlugin:
+          image:
+            repository: {{ .Values.registry }}/neuron/neuron-device-plugin
+          {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 10 }}
+        {{- end }}
         scheduler:
+          {{- if .Values.registry }}
+          image:
+            repository: {{ .Values.registry }}/eks-distro/kubernetes/kube-scheduler
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
           {{- toYaml $mergedTolerations | nindent 12 }}
@@ -46,6 +63,10 @@ spec:
           affinity: {}
           {{- end }}
           extension:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/neuron/neuron-scheduler
+            {{- end }}
             {{- if $mergedTolerations }}
             tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
