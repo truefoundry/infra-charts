@@ -32,6 +32,15 @@ spec:
         {{- if .Values.keda.affinity }}
         {{- $mergedAffinity = .Values.keda.affinity }}
         {{- end }}
+        {{- if .Values.registry }}
+        global:
+          image:
+            registry: {{ .Values.registry }}
+        {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
         resources:
           operator:
             requests:

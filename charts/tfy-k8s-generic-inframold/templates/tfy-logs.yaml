@@ -34,6 +34,14 @@ spec:
         victoria-logs-single:
           enabled: true
           server:
+            {{- if .Values.registry }}
+            image:
+              registry: {{ .Values.registry }}/tfy-mirror
+            {{- end }}
+            {{- if .Values.imagePullSecrets }}
+            imagePullSecrets:
+              {{- toYaml .Values.imagePullSecrets | nindent 14 }}
+            {{- end }}
             retentionPeriod: 15d
             persistentVolume:
               size: 50Gi
@@ -53,6 +61,14 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
             {{- end }}
           vector:
+            {{- if .Values.registry }}
+            image:
+              registry: {{ .Values.registry }}/truefoundrycloud/timberio/vector
+            {{- end }}
+            {{- if .Values.imagePullSecrets }}
+            pullSecrets:
+              {{- toYaml .Values.imagePullSecrets | nindent 14 }}
+            {{- end }}
             enabled: true
         {{- end }}
   project: tfy-apps

@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.108.2
+    targetRevision: 0.109.2
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -34,9 +34,18 @@ spec:
         {{- $mergedAffinity = .Values.truefoundry.affinity }}
         {{- end }}
         global:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- else }}
+          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
+          {{- end }}
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
-          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
           tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
           database:
             host: {{ .Values.truefoundry.database.host }}
@@ -116,9 +125,16 @@ spec:
                   secret:
                     secretName: tfy-nats-accounts
                     defaultMode: 420
+              {{- if .Values.imagePullSecrets }}
+              - op: add
+                path: /spec/imagePullSecrets
+                value:
+                  {{- toYaml .Values.imagePullSecrets | nindent 18 }}
+              {{- else }}
               - op: add
                 path: /spec/imagePullSecrets
                 value: []
+              {{- end }}
               {{- if $mergedTolerations }}
               - op: add
                 path: /spec/tolerations
