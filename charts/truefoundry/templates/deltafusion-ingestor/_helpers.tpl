@@ -207,23 +207,23 @@ limits:
 
 {{- define "deltafusion-ingestor.defaultResources.medium" }}
 requests:
-  cpu: 500m
-  memory: 1500M
+  cpu: 1000m
+  memory: 2000M
   ephemeral-storage: 100M
 limits:
-  cpu: 1000m
-  memory: 1700M
+  cpu: 2000m
+  memory: 2400M
   ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.large" }}
 requests:
-  cpu: 500m
-  memory: 2000M
+  cpu: 2000m
+  memory: 4000M
   ephemeral-storage: 100M
 limits:
-  cpu: 1000m
-  memory: 2200M
+  cpu: 4000m
+  memory: 4800M
   ephemeral-storage: 100M
 {{- end }}
 
@@ -267,20 +267,43 @@ Tolerations for the deltafusion-ingestor service
 {{- end }}
 
 {{/*
+Resource Tied Envs
+tokio worker threads is cpu limits
+*/}}
+{{- define "deltafusion-ingestor.resourceTiedEnvs" }}
+{{- $tier := include "deltafusion-ingestor.resourceTier" . }}
+{{- if eq $tier "small" }}
+TOKIO_WORKER_THREADS: "2"
+{{- else if eq $tier "medium" }}
+TOKIO_WORKER_THREADS: "2"
+{{- else if eq $tier "large" }}
+TOKIO_WORKER_THREADS: "4"
+{{- end }}
+{{- end }}
+
+{{/*
   Parse env from template
   */}}
 {{- define "deltafusion-ingestor.parseEnv" -}}
 {{- include "truefoundry.storage-credentials" . }}
-DATASET_PATH: {{ .Values.deltaFusionIngestor.storage.mountPath }}
+TRUEFOUNDRY_CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
+IMAGE_TAG: "{{ .Values.deltaFusionIngestor.image.tag }}"
+DATASET_PATH: "{{ .Values.deltaFusionIngestor.storage.mountPath }}"
 PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{ tpl (.Values.deltaFusionIngestor.env | toYaml) . }}
+{{- end }}
+
+{{/*merge envs*/}}
+{{- define "deltafusion-ingestor.mergedEnvs" -}}
+{{- $merged := merge (include "deltafusion-ingestor.parseEnv" . | fromYaml) (include "deltafusion-ingestor.resourceTiedEnvs" . | fromYaml) }}
+{{- toYaml $merged }}
 {{- end }}
 
 {{/*
   Create the env file
   */}}
 {{- define "deltafusion-ingestor.env" }}
-{{- range $key, $val := (include "deltafusion-ingestor.parseEnv" .) | fromYaml }}
+{{- range $key, $val := (include "deltafusion-ingestor.mergedEnvs" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -497,18 +520,22 @@ limits:
 {{/*
 Resource Tied Envs
 spill pool size is ~1/3rd of memory requests
+tokio worker threads is cpu limits
 */}}
 {{- define "deltafusion-compaction.resourceTiedEnvs" }}
 {{- $tier := include "deltafusion-compaction.resourceTier" . }}
 {{- if eq $tier "small" }}
 COMPACTION_MAX_SPILL_SIZE_MB: "650"
 DATAFUSION_EXECUTION_BATCH_SIZE: "512"
+TOKIO_WORKER_THREADS: "2"
 {{- else if eq $tier "medium" }}
 COMPACTION_MAX_SPILL_SIZE_MB: "1300"
 DATAFUSION_EXECUTION_BATCH_SIZE: "1024"
+TOKIO_WORKER_THREADS: "4"
 {{- else if eq $tier "large" }}
 COMPACTION_MAX_SPILL_SIZE_MB: "2600"
 DATAFUSION_EXECUTION_BATCH_SIZE: "2048"
+TOKIO_WORKER_THREADS: "8"
 {{- end }}
 {{- end }}
 
@@ -539,11 +566,14 @@ DATAFUSION_EXECUTION_BATCH_SIZE: "2048"
 {{ toYaml $merged }}
 {{- end }}
 
+
 {{/*
   Parse env from template
   */}}
 {{- define "deltafusion-compaction.parseEnv" -}}
 {{- include "truefoundry.storage-credentials" . }}
+TRUEFOUNDRY_CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
+IMAGE_TAG: "{{ .Values.deltaFusionCompaction.image.tag }}"
 {{ tpl (.Values.deltaFusionCompaction.env | toYaml) . }}
 {{- end }}
 
