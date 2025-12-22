@@ -95,11 +95,12 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 
 ### Truefoundry virtual service parameters
 
-| Name                                  | Description                                        | Value   |
-| ------------------------------------- | -------------------------------------------------- | ------- |
-| `truefoundry.virtualservice.enabled`  | Flag to enable virtualservice                      | `false` |
-| `truefoundry.virtualservice.hosts`    | Hosts for truefoundry virtualservice               | `[]`    |
-| `truefoundry.virtualservice.gateways` | Istio gateways to be configured for virtualservice | `[]`    |
+| Name                                     | Description                                        | Value   |
+| ---------------------------------------- | -------------------------------------------------- | ------- |
+| `truefoundry.virtualservice.enabled`     | Flag to enable virtualservice                      | `false` |
+| `truefoundry.virtualservice.hosts`       | Hosts for truefoundry virtualservice               | `[]`    |
+| `truefoundry.virtualservice.gateways`    | Istio gateways to be configured for virtualservice | `[]`    |
+| `truefoundry.virtualservice.annotations` | Annotations for truefoundry virtualservice         | `{}`    |
 
 ### database. Can be left empty if using the dev mode parameters
 
