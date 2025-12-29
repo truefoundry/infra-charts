@@ -122,6 +122,23 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
 
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+*/}}
+{{- define "tfy-otel-collector.pdbAnnotations" -}}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations .Values.podDisruptionBudget.annotations }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+*/}}
+{{- define "tfy-otel-collector.pdbLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels .Values.podDisruptionBudget.labels }}
+{{- toYaml $pdbLabels }}
+{{- end }}
 
 {{/*
   Create the name of the service account to use
