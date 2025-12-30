@@ -152,6 +152,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+  Global namespace helper
+  */}}
+{{- define "global.namespace" -}}
+{{- if .Values.global.namespaceOverride -}}
+{{- .Values.global.namespaceOverride -}}
+{{- else -}}
+{{- .Release.Namespace -}}
+{{- end }}
+{{- end }}
+
+{{/*
   Parse env from template
   */}}
 {{- define "tfy-otel-collector.parseEnv" -}}
