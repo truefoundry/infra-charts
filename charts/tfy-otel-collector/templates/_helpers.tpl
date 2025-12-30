@@ -151,6 +151,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
+{{/*
+  Global namespace helper
+  */}}
+{{- define "global.namespace" -}}
+{{- if .Values.global.namespaceOverride -}}
+{{- .Values.global.namespaceOverride -}}
+{{- else -}}
+{{- .Release.Namespace -}}
+{{- end }}
+{{- end }}
 
 {{/*
   Parse env from template
