@@ -1,4 +1,11 @@
 {{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+{{/*
 Expand the name of the chart.
 */}}
 {{- define "tfy-otel-collector.name" -}}
@@ -148,17 +155,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- .Values.serviceAccount.name -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
-{{- end }}
-{{- end }}
-
-{{/*
-  Global namespace helper
-  */}}
-{{- define "global.namespace" -}}
-{{- if .Values.global.namespaceOverride -}}
-{{- .Values.global.namespaceOverride -}}
-{{- else -}}
-{{- .Release.Namespace -}}
 {{- end }}
 {{- end }}
 
