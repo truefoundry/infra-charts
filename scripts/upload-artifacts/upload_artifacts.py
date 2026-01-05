@@ -142,15 +142,73 @@ def get_truefoundry_chart_images(manifest):
 
     return images
 
-# function to pull and push images
+# function to pull and push images to a single destination
+def push_image_to_destination(image_url, destination_registry):
+    """Push a single image to a destination registry."""
+    new_image_url = parse_image_url(image_url, destination_registry)
+
+    # Check if the new_image_url already exists and has both architectures
+    image_exists, _ = check_image_exists_and_architectures(new_image_url)
+
+    if image_exists:
+        logging.info(f"Image {new_image_url} already exists Skipping push...")
+        return True
+
+    # Check if destination is ECR and ensure repository exists
+    if is_ecr_registry(destination_registry):
+        region = get_ecr_region(destination_registry)
+        if region:
+            # Extract repository name from new_image_url (without tag)
+            # Format: registry/path/to/image:tag -> need path/to/image
+            image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
+            registry_and_repo = image_url_parts.split("/", 1)
+            if len(registry_and_repo) > 1:
+                repo_name = registry_and_repo[1]  # Get everything after registry
+                
+                logging.info(f"Detected ECR registry. Ensuring repository exists: {repo_name}")
+                if not ensure_ecr_repository_exists(repo_name, region):
+                    logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
+                    return False
+
+    try:
+        # Use buildx imagetool create for multi-arch support
+        logging.info(f"Creating multi-arch image: {new_image_url}")
+        logging.info(
+            f"docker buildx imagetools create -t {new_image_url} {image_url}"
+        )
+        run_command(
+            f"docker buildx imagetools create -t {new_image_url} {image_url}"
+        )
+        logging.info(f"Successfully created multi-arch image: {new_image_url}")
+        return True
+    except Exception as e:
+        logging.error(
+            f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
+        )
+        return False
 
 
-def pull_and_push_images(image_list, destination_registry, excluded_registries=None, excluded_images=None):
-
+def pull_and_push_images(image_list, destination_registries, excluded_registries=None, excluded_images=None):
+    """
+    Push images to multiple destination registries.
+    
+    Args:
+        image_list: List of image items from manifest
+        destination_registries: List of destination registry URLs
+        excluded_registries: List of registries to exclude from source images
+        excluded_images: Set of image URLs to exclude
+    """
     if excluded_registries is None:
         excluded_registries = []
     if excluded_images is None:
         excluded_images = set()
+    
+    # Ensure destination_registries is a list
+    if isinstance(destination_registries, str):
+        destination_registries = [destination_registries]
+    
+    # Remove trailing slashes from all destination registries
+    destination_registries = [reg.rstrip("/") for reg in destination_registries]
 
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
@@ -180,45 +238,10 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=N
             logging.info("Skipping auto")
             continue
 
-        new_image_url = parse_image_url(image_url, destination_registry)
-
-        # Check if the new_image_url already exists and has both architectures
-        image_exists, _ = check_image_exists_and_architectures(new_image_url)
-
-        if image_exists:
-            logging.info(f"Image {new_image_url} already exists Skipping push...")
-            continue
-
-        # Check if destination is ECR and ensure repository exists
-        if is_ecr_registry(destination_registry):
-            region = get_ecr_region(destination_registry)
-            if region:
-                # Extract repository name from new_image_url (without tag)
-                # Format: registry/path/to/image:tag -> need path/to/image
-                image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
-                registry_and_repo = image_url_parts.split("/", 1)
-                if len(registry_and_repo) > 1:
-                    repo_name = registry_and_repo[1]  # Get everything after registry
-                    
-                    logging.info(f"Detected ECR registry. Ensuring repository exists: {repo_name}")
-                    if not ensure_ecr_repository_exists(repo_name, region):
-                        logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
-                        continue
-
-        try:
-            # Use buildx imagetool create for multi-arch support
-            logging.info(f"Creating multi-arch image: {new_image_url}")
-            logging.info(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
-            )
-            run_command(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
-            )
-            logging.info(f"Successfully created multi-arch image: {new_image_url}")
-        except Exception as e:
-            logging.error(
-                f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
-            )
+        # Push to each destination registry
+        for destination_registry in destination_registries:
+            logging.info(f"Processing image {image_url} for destination {destination_registry}")
+            push_image_to_destination(image_url, destination_registry)
 
 
 # function to download and push Helm charts
@@ -314,6 +337,12 @@ if __name__ == "__main__":
         default=[],
         help="List of registries to exclude from pushing",
     )
+    parser.add_argument(
+        "--additional-destinations",
+        nargs="*",
+        default=[],
+        help="Additional destination registries to push images to (only for image artifact type)",
+    )
 
     args = parser.parse_args()
 
@@ -321,8 +350,15 @@ if __name__ == "__main__":
     file_path = args.file_path
     destination_registry = args.destination_registry
     excluded_registries = args.exclude_registries
+    additional_destinations = args.additional_destinations
+    
+    # Collect all destination registries for images
+    all_destinations = [destination_registry]
+    if additional_destinations:
+        all_destinations.extend(additional_destinations)
+    
     logging.info(
-        f"Artifact type: {artifact_type}, File path: {file_path}, Destination registry: {destination_registry}, Excluded registries: {excluded_registries}"
+        f"Artifact type: {artifact_type}, File path: {file_path}, Destination registry: {destination_registry}, Additional destinations: {additional_destinations}, Excluded registries: {excluded_registries}"
     )
 
     # Remove trailing slash from destination_registry if present
@@ -349,7 +385,7 @@ if __name__ == "__main__":
     if artifact_type == "image":
         image_list = [item for item in manifest if item["type"] == "image"]
         if image_list:
-            pull_and_push_images(image_list, destination_registry, excluded_registries, excluded_images=truefoundry_chart_images)
+            pull_and_push_images(image_list, all_destinations, excluded_registries, excluded_images=truefoundry_chart_images)
     elif artifact_type == "helm":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:

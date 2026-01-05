@@ -2,17 +2,17 @@ name: Upload Inframold Charts Artifacts
 
 on:
   push:
-    branches:
-      - 'main'
-    paths:
-      - '.github/workflows/upload-artifacts.yml'
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
+    # branches:
+    #   - 'main'
+    # paths:
+    #   - '.github/workflows/upload-artifacts.yml'
+    #   - 'charts/tfy-k8s-aws-eks-inframold/**'
+    #   - 'charts/tfy-k8s-azure-aks-inframold/**'
+    #   - 'charts/tfy-k8s-civo-talos-inframold/**'
+    #   - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+    #   - 'charts/tfy-k8s-generic-inframold/**'
+    #   - 'scripts/generate-artifacts-manifest/**'
+    #   - 'scripts/upload-artifacts/**'
 
 jobs:
   upload-artifacts:
@@ -25,6 +25,7 @@ jobs:
       ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+      ECR_REGISTRY_URL: public.ecr.aws/truefoundrycloud
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -72,8 +73,8 @@ jobs:
           aws-region: us-east-1
 
       # this is to prevent rate limiting errors when pulling base images from public ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
+      - name: Login to Amazon ECR (Public)
+        id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
@@ -92,5 +93,6 @@ jobs:
               image \
               charts/$chart/artifacts-manifest.json \
               ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
-              --exclude-registries truefoundrycloud
+              --exclude-registries truefoundrycloud \
+              --additional-destinations ${{ env.ECR_REGISTRY_URL }}
           done
