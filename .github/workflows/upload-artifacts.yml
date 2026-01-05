@@ -2,17 +2,17 @@ name: Upload Inframold Charts Artifacts
 
 on:
   push:
-    # branches:
-    #   - 'main'
-    # paths:
-    #   - '.github/workflows/upload-artifacts.yml'
-    #   - 'charts/tfy-k8s-aws-eks-inframold/**'
-    #   - 'charts/tfy-k8s-azure-aks-inframold/**'
-    #   - 'charts/tfy-k8s-civo-talos-inframold/**'
-    #   - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-    #   - 'charts/tfy-k8s-generic-inframold/**'
-    #   - 'scripts/generate-artifacts-manifest/**'
-    #   - 'scripts/upload-artifacts/**'
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/upload-artifacts.yml'
+      - 'charts/tfy-k8s-aws-eks-inframold/**'
+      - 'charts/tfy-k8s-azure-aks-inframold/**'
+      - 'charts/tfy-k8s-civo-talos-inframold/**'
+      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+      - 'charts/tfy-k8s-generic-inframold/**'
+      - 'scripts/generate-artifacts-manifest/**'
+      - 'scripts/upload-artifacts/**'
 
 jobs:
   upload-artifacts:
@@ -96,18 +96,19 @@ jobs:
               ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
               --exclude-registries truefoundrycloud \
               --additional-destinations ${{ env.ECR_REGISTRY_URL }} \
-              --cache-file .github/cache/image-mappings.json
+              --cache-file .github/cache/image-mappings.json \
+              --failed-uploads-file .github/cache/failed-uploads.json
           done
 
-      - name: Commit and push image mappings cache
+      - name: Commit and push cache files
         if: always()
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .github/cache/image-mappings.json
+          git add .github/cache/image-mappings.json .github/cache/failed-uploads.json
           if git diff --staged --quiet; then
-            echo "No changes to image mappings cache"
+            echo "No changes to cache files"
           else
-            git commit -m "chore: update image mappings cache [skip ci]" || exit 0
+            git commit -m "chore: update image mappings and failed uploads cache [skip ci]" || exit 0
             git push || echo "Failed to push, but continuing..."
           fi

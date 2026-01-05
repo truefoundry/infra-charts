@@ -18,6 +18,10 @@ logging.basicConfig(
 _image_cache = None
 _cache_file_path = None
 
+# Global cache for failed uploads
+_failed_uploads = None
+_failed_uploads_file_path = None
+
 
 def load_image_cache(cache_file_path):
     """Load image cache from file."""
@@ -74,6 +78,82 @@ def update_image_cache(source_uri, destination_uri):
     if destination_uri not in _image_cache[source_uri]:
         _image_cache[source_uri].append(destination_uri)
         logging.info(f"Updated cache: {source_uri} -> {destination_uri}")
+
+
+def load_failed_uploads(failed_uploads_file_path):
+    """Load failed uploads cache from file."""
+    global _failed_uploads, _failed_uploads_file_path
+    _failed_uploads_file_path = failed_uploads_file_path
+    
+    if not failed_uploads_file_path:
+        _failed_uploads = {}
+        return {}
+    
+    if os.path.exists(failed_uploads_file_path):
+        try:
+            with open(failed_uploads_file_path, "r") as f:
+                _failed_uploads = json.load(f)
+                logging.info(f"Loaded failed uploads cache from {failed_uploads_file_path} with {len(_failed_uploads)} entries")
+                return _failed_uploads
+        except Exception as e:
+            logging.warning(f"Failed to load failed uploads cache: {e}. Starting with empty cache.")
+            _failed_uploads = {}
+            return {}
+    else:
+        _failed_uploads = {}
+        return {}
+
+
+def save_failed_uploads():
+    """Save failed uploads cache to file."""
+    global _failed_uploads, _failed_uploads_file_path
+    
+    if not _failed_uploads_file_path or _failed_uploads is None:
+        return
+    
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(_failed_uploads_file_path) if os.path.dirname(_failed_uploads_file_path) else ".", exist_ok=True)
+        
+        with open(_failed_uploads_file_path, "w") as f:
+            json.dump(_failed_uploads, f, indent=2)
+        logging.info(f"Saved failed uploads cache to {_failed_uploads_file_path} with {len(_failed_uploads)} entries")
+    except Exception as e:
+        logging.error(f"Failed to save failed uploads cache: {e}")
+
+
+def record_failed_upload(source_uri, destination_uri, reason):
+    """Record a failed upload with the reason."""
+    global _failed_uploads
+    from datetime import datetime
+    
+    if _failed_uploads is None:
+        _failed_uploads = {}
+    
+    if source_uri not in _failed_uploads:
+        _failed_uploads[source_uri] = []
+    
+    # Check if this destination already has a failure recorded
+    existing_failure = None
+    for failure in _failed_uploads[source_uri]:
+        if failure.get("destination") == destination_uri:
+            existing_failure = failure
+            break
+    
+    failure_entry = {
+        "destination": destination_uri,
+        "reason": reason,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+    
+    if existing_failure:
+        # Update existing failure
+        existing_failure.update(failure_entry)
+        logging.info(f"Updated failed upload record: {source_uri} -> {destination_uri}: {reason}")
+    else:
+        # Add new failure
+        _failed_uploads[source_uri].append(failure_entry)
+        logging.info(f"Recorded failed upload: {source_uri} -> {destination_uri}: {reason}")
 
 
 # function to run shell commands
@@ -292,10 +372,14 @@ def push_image_to_destination(image_url, destination_registry):
                 is_public = is_public_ecr_registry(destination_registry)
                 logging.info(f"Detected ECR registry ({'public' if is_public else 'private'}). Ensuring repository exists: {repo_name}")
                 if not ensure_ecr_repository_exists(repo_name, region, registry_url=destination_registry):
-                    logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
+                    error_reason = f"Failed to ensure ECR repository exists: {repo_name}"
+                    logging.error(error_reason)
+                    record_failed_upload(image_url, new_image_url, error_reason)
                     return False
             else:
-                logging.warning(f"Could not extract repository name from image URL: {new_image_url}")
+                error_reason = f"Could not extract repository name from image URL: {new_image_url}"
+                logging.warning(error_reason)
+                record_failed_upload(image_url, new_image_url, error_reason)
                 return False
 
     # Retry logic for rate limiting (429 errors)
@@ -333,14 +417,22 @@ def push_image_to_destination(image_url, destination_registry):
                 time.sleep(wait_time)
                 continue
             else:
-                logging.error(
-                    f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
-                )
+                # Determine failure reason
                 if is_rate_limit:
+                    failure_reason = f"Rate limit exceeded after {max_retries} attempts: {error_str}"
                     logging.error(
-                        f"Rate limit exceeded after {max_retries} attempts. "
+                        f"Failed to create multi-arch image: {new_image_url}. {failure_reason}"
+                    )
+                    logging.error(
                         f"Consider reducing push frequency or checking ECR rate limits."
                     )
+                else:
+                    failure_reason = f"Failed to push image: {error_str}"
+                    logging.error(
+                        f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
+                    )
+                
+                record_failed_upload(image_url, new_image_url, failure_reason)
                 return False
     
     return False
@@ -517,6 +609,11 @@ if __name__ == "__main__":
         default=None,
         help="Path to JSON file for caching image mappings (format: {source_uri: [destination_uri_1, destination_uri_2]})",
     )
+    parser.add_argument(
+        "--failed-uploads-file",
+        default=None,
+        help="Path to JSON file for tracking failed uploads (format: {source_uri: [{destination, reason, timestamp}]})",
+    )
 
     args = parser.parse_args()
 
@@ -526,6 +623,7 @@ if __name__ == "__main__":
     excluded_registries = args.exclude_registries
     additional_destinations = args.additional_destinations
     cache_file = args.cache_file
+    failed_uploads_file = args.failed_uploads_file
     
     # Collect all destination registries for images
     all_destinations = [destination_registry]
@@ -554,6 +652,10 @@ if __name__ == "__main__":
     # Load image cache if cache file is provided
     if cache_file:
         load_image_cache(cache_file)
+    
+    # Load failed uploads cache if file is provided
+    if failed_uploads_file:
+        load_failed_uploads(failed_uploads_file)
 
     truefoundry_chart_images = get_truefoundry_chart_images(manifest)
     if truefoundry_chart_images:
@@ -573,3 +675,7 @@ if __name__ == "__main__":
     # Save image cache at the end
     if cache_file:
         save_image_cache()
+    
+    # Save failed uploads cache at the end
+    if failed_uploads_file:
+        save_failed_uploads()
