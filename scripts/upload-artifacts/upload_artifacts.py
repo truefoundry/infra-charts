@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import subprocess
+import time
 from urllib.parse import urlparse
 
 import yaml
@@ -216,14 +217,25 @@ def ensure_ecr_repository_exists(repository_name, region, registry_url=None):
         except ClientError as e:
             if e.response["Error"]["Code"] == "RepositoryNotFoundException":
                 # Repository doesn't exist, create it
-                logging.info(f"Creating ECR repository: {repository_name}")
-                ecr_client.create_repository(repositoryName=repository_name)
-                logging.info(f"Successfully created ECR repository: {repository_name}")
-                return True
+                logging.info(f"Creating ECR repository: {repository_name} (public: {is_public})")
+                try:
+                    ecr_client.create_repository(repositoryName=repository_name)
+                    logging.info(f"Successfully created ECR repository: {repository_name}")
+                    return True
+                except ClientError as create_error:
+                    error_code = create_error.response.get("Error", {}).get("Code", "Unknown")
+                    error_msg = create_error.response.get("Error", {}).get("Message", str(create_error))
+                    logging.error(f"Failed to create ECR repository '{repository_name}': {error_code} - {error_msg}")
+                    return False
             else:
+                error_code = e.response.get("Error", {}).get("Code", "Unknown")
+                error_msg = e.response.get("Error", {}).get("Message", str(e))
+                logging.error(f"ECR describe_repositories failed for '{repository_name}': {error_code} - {error_msg}")
                 raise
     except Exception as e:
-        logging.error(f"Failed to ensure ECR repository exists: {e}")
+        logging.error(f"Failed to ensure ECR repository exists '{repository_name}': {type(e).__name__}: {e}")
+        import traceback
+        logging.debug(traceback.format_exc())
         return False
 
 # function to get truefoundry chart images from manifest
@@ -286,26 +298,52 @@ def push_image_to_destination(image_url, destination_registry):
                 logging.warning(f"Could not extract repository name from image URL: {new_image_url}")
                 return False
 
-    try:
-        # Use buildx imagetool create for multi-arch support
-        logging.info(f"Creating multi-arch image: {new_image_url}")
-        logging.info(
-            f"docker buildx imagetools create -t {new_image_url} {image_url}"
-        )
-        run_command(
-            f"docker buildx imagetools create -t {new_image_url} {image_url}"
-        )
-        logging.info(f"Successfully created multi-arch image: {new_image_url}")
-        
-        # Update cache with successful push
-        update_image_cache(image_url, new_image_url)
-        
-        return True
-    except Exception as e:
-        logging.error(
-            f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
-        )
-        return False
+    # Retry logic for rate limiting (429 errors)
+    max_retries = 3
+    retry_delay = 5  # Start with 5 seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Use buildx imagetool create for multi-arch support
+            logging.info(f"Creating multi-arch image: {new_image_url} (attempt {attempt + 1}/{max_retries})")
+            logging.info(
+                f"docker buildx imagetools create -t {new_image_url} {image_url}"
+            )
+            run_command(
+                f"docker buildx imagetools create -t {new_image_url} {image_url}"
+            )
+            logging.info(f"Successfully created multi-arch image: {new_image_url}")
+            
+            # Update cache with successful push
+            update_image_cache(image_url, new_image_url)
+            
+            return True
+        except Exception as e:
+            error_str = str(e)
+            # Check if it's a rate limit error (429)
+            is_rate_limit = "429" in error_str or "Too Many Requests" in error_str or "Rate exceeded" in error_str or "toomanyrequests" in error_str.lower()
+            
+            if is_rate_limit and attempt < max_retries - 1:
+                # Exponential backoff: 5s, 10s, 20s
+                wait_time = retry_delay * (2 ** attempt)
+                logging.warning(
+                    f"Rate limit error (429) when pushing {new_image_url}. "
+                    f"Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})"
+                )
+                time.sleep(wait_time)
+                continue
+            else:
+                logging.error(
+                    f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
+                )
+                if is_rate_limit:
+                    logging.error(
+                        f"Rate limit exceeded after {max_retries} attempts. "
+                        f"Consider reducing push frequency or checking ECR rate limits."
+                    )
+                return False
+    
+    return False
 
 
 def pull_and_push_images(image_list, destination_registries, excluded_registries=None, excluded_images=None):
@@ -361,7 +399,15 @@ def pull_and_push_images(image_list, destination_registries, excluded_registries
         # Push to each destination registry
         for destination_registry in destination_registries:
             logging.info(f"Processing image {image_url} for destination {destination_registry}")
-            push_image_to_destination(image_url, destination_registry)
+            success = push_image_to_destination(image_url, destination_registry)
+            if not success:
+                logging.warning(f"Failed to push {image_url} to {destination_registry}, but continuing with other destinations")
+            
+            # Add a small delay between pushes to avoid rate limiting, especially for ECR
+            if is_ecr_registry(destination_registry):
+                time.sleep(2)  # 2 second delay for ECR to avoid rate limits
+            else:
+                time.sleep(0.5)  # Smaller delay for other registries
 
 
 # function to download and push Helm charts
