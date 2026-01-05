@@ -31,7 +31,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Kubectl
         id: install-kubectl
@@ -94,5 +95,19 @@ jobs:
               charts/$chart/artifacts-manifest.json \
               ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
               --exclude-registries truefoundrycloud \
-              --additional-destinations ${{ env.ECR_REGISTRY_URL }}
+              --additional-destinations ${{ env.ECR_REGISTRY_URL }} \
+              --cache-file .github/cache/image-mappings.json
           done
+
+      - name: Commit and push image mappings cache
+        if: always()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/cache/image-mappings.json
+          if git diff --staged --quiet; then
+            echo "No changes to image mappings cache"
+          else
+            git commit -m "chore: update image mappings cache [skip ci]" || exit 0
+            git push || echo "Failed to push, but continuing..."
+          fi

@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 import re
 import subprocess
 from urllib.parse import urlparse
@@ -11,6 +12,67 @@ import yaml
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# Global cache for image mappings
+_image_cache = None
+_cache_file_path = None
+
+
+def load_image_cache(cache_file_path):
+    """Load image cache from file."""
+    global _image_cache, _cache_file_path
+    _cache_file_path = cache_file_path
+    
+    if not cache_file_path:
+        _image_cache = {}
+        return {}
+    
+    if os.path.exists(cache_file_path):
+        try:
+            with open(cache_file_path, "r") as f:
+                _image_cache = json.load(f)
+                logging.info(f"Loaded image cache from {cache_file_path} with {len(_image_cache)} entries")
+                return _image_cache
+        except Exception as e:
+            logging.warning(f"Failed to load image cache: {e}. Starting with empty cache.")
+            _image_cache = {}
+            return {}
+    else:
+        _image_cache = {}
+        return {}
+
+
+def save_image_cache():
+    """Save image cache to file."""
+    global _image_cache, _cache_file_path
+    
+    if not _cache_file_path or _image_cache is None:
+        return
+    
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(_cache_file_path) if os.path.dirname(_cache_file_path) else ".", exist_ok=True)
+        
+        with open(_cache_file_path, "w") as f:
+            json.dump(_image_cache, f, indent=2)
+        logging.info(f"Saved image cache to {_cache_file_path} with {len(_image_cache)} entries")
+    except Exception as e:
+        logging.error(f"Failed to save image cache: {e}")
+
+
+def update_image_cache(source_uri, destination_uri):
+    """Update the image cache with a new mapping."""
+    global _image_cache
+    
+    if _image_cache is None:
+        _image_cache = {}
+    
+    if source_uri not in _image_cache:
+        _image_cache[source_uri] = []
+    
+    if destination_uri not in _image_cache[source_uri]:
+        _image_cache[source_uri].append(destination_uri)
+        logging.info(f"Updated cache: {source_uri} -> {destination_uri}")
 
 
 # function to run shell commands
@@ -43,6 +105,33 @@ def parse_image_url(image_url, destination_registry):
                 image_name = "/".join(image_split[1:])
             else:
                 image_name = ref["name"]
+
+    # Handle tfy-images path transformation based on destination registry and source image
+    # If source has tfy-images and destination is ECR: remove tfy-images
+    # If source has truefoundrycloud and destination is JFrog: remove truefoundrycloud and add tfy-images
+    # If source has tfy-images and destination is JFrog (with tfy-images): remove to avoid duplication
+    path_parts = image_name.split("/")
+    source_has_truefoundrycloud = "truefoundrycloud" in path_parts
+    source_has_tfy_images = "tfy-images" in path_parts
+    
+    if "ecr.aws" in destination_registry or "truefoundrycloud" in destination_registry:
+        # For ECR destination, remove tfy-images from the path if it exists
+        if source_has_tfy_images:
+            path_parts = [part for part in path_parts if part != "tfy-images"]
+            image_name = "/".join(path_parts) if path_parts else image_name
+    elif "jfrog.io" in destination_registry:
+        # For JFrog destination
+        if source_has_truefoundrycloud:
+            # If source has truefoundrycloud, remove it and ensure tfy-images is present
+            path_parts = [part for part in path_parts if part != "truefoundrycloud"]
+            # Add tfy-images at the beginning if not already present
+            if "tfy-images" not in path_parts:
+                path_parts.insert(0, "tfy-images")
+            image_name = "/".join(path_parts) if path_parts else image_name
+        elif "tfy-images" in destination_registry and path_parts and path_parts[0] == "tfy-images":
+            # If destination already has tfy-images and source also starts with tfy-images, remove it to avoid duplication
+            path_parts = path_parts[1:]  # Remove the leading tfy-images
+            image_name = "/".join(path_parts) if path_parts else image_name
 
     new_image_url = f"{destination_registry}/{image_name}:{image_tag}"
     return new_image_url
@@ -77,14 +166,26 @@ def check_image_exists_and_architectures(image_url):
 
 # Helper function to check if registry is ECR
 def is_ecr_registry(registry_url):
-    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
-    ecr_pattern = r"^\d+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com"
-    return bool(re.match(ecr_pattern, registry_url))
+    # ECR URL patterns:
+    # Private: <account-id>.dkr.ecr.<region>.amazonaws.com
+    # Public: public.ecr.aws
+    private_ecr_pattern = r"^\d+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com"
+    public_ecr_pattern = r"^public\.ecr\.aws"
+    return bool(re.match(private_ecr_pattern, registry_url) or re.match(public_ecr_pattern, registry_url))
+
+
+# Helper function to check if registry is public ECR
+def is_public_ecr_registry(registry_url):
+    public_ecr_pattern = r"^public\.ecr\.aws"
+    return bool(re.match(public_ecr_pattern, registry_url))
 
 
 # Helper function to extract region from ECR URL
 def get_ecr_region(registry_url):
-    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
+    # For public ECR, use us-east-1 (required for public ECR API)
+    if is_public_ecr_registry(registry_url):
+        return "us-east-1"
+    # Private ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
     match = re.search(r"\.dkr\.ecr\.([a-z0-9-]+)\.amazonaws\.com", registry_url)
     if match:
         return match.group(1)
@@ -92,12 +193,20 @@ def get_ecr_region(registry_url):
 
 
 # Helper function to ensure ECR repository exists
-def ensure_ecr_repository_exists(repository_name, region):
+def ensure_ecr_repository_exists(repository_name, region, registry_url=None):
     try:
         import boto3
         from botocore.exceptions import ClientError
 
-        ecr_client = boto3.client("ecr", region_name=region)
+        # Auto-detect if it's public ECR from registry URL, or use region as fallback
+        # Public ECR always uses us-east-1 for API calls
+        is_public = is_public_ecr_registry(registry_url) if registry_url else (region == "us-east-1")
+        
+        # Use ecr-public client for public ECR, ecr client for private ECR
+        if is_public:
+            ecr_client = boto3.client("ecr-public", region_name="us-east-1")
+        else:
+            ecr_client = boto3.client("ecr", region_name=region)
         
         # Check if repository exists
         try:
@@ -152,11 +261,14 @@ def push_image_to_destination(image_url, destination_registry):
 
     if image_exists:
         logging.info(f"Image {new_image_url} already exists Skipping push...")
+        # Update cache even if image already exists
+        update_image_cache(image_url, new_image_url)
         return True
 
-    # Check if destination is ECR and ensure repository exists
+    # Check if destination is ECR and ensure repository exists BEFORE pushing
     if is_ecr_registry(destination_registry):
         region = get_ecr_region(destination_registry)
+        
         if region:
             # Extract repository name from new_image_url (without tag)
             # Format: registry/path/to/image:tag -> need path/to/image
@@ -165,10 +277,14 @@ def push_image_to_destination(image_url, destination_registry):
             if len(registry_and_repo) > 1:
                 repo_name = registry_and_repo[1]  # Get everything after registry
                 
-                logging.info(f"Detected ECR registry. Ensuring repository exists: {repo_name}")
-                if not ensure_ecr_repository_exists(repo_name, region):
+                is_public = is_public_ecr_registry(destination_registry)
+                logging.info(f"Detected ECR registry ({'public' if is_public else 'private'}). Ensuring repository exists: {repo_name}")
+                if not ensure_ecr_repository_exists(repo_name, region, registry_url=destination_registry):
                     logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
                     return False
+            else:
+                logging.warning(f"Could not extract repository name from image URL: {new_image_url}")
+                return False
 
     try:
         # Use buildx imagetool create for multi-arch support
@@ -180,6 +296,10 @@ def push_image_to_destination(image_url, destination_registry):
             f"docker buildx imagetools create -t {new_image_url} {image_url}"
         )
         logging.info(f"Successfully created multi-arch image: {new_image_url}")
+        
+        # Update cache with successful push
+        update_image_cache(image_url, new_image_url)
+        
         return True
     except Exception as e:
         logging.error(
@@ -289,12 +409,14 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         # Push chart to destination repo
         logging.info(f"Pushing Helm chart: {new_chart_url}")
         
-        # Check if destination is ECR and ensure repository exists
+        # Check if destination is ECR and ensure repository exists BEFORE pushing
         if is_ecr_registry(destination_registry):
             region = get_ecr_region(destination_registry)
+            
             if region:
                 # Extract path from destination_registry
                 # destination_registry format: account-id.dkr.ecr.region.amazonaws.com/path/to/repo
+                # or public.ecr.aws/path/to/repo
                 dest_registry_parts = destination_registry.split("/", 1)
                 dest_path = dest_registry_parts[1] if len(dest_registry_parts) > 1 else ""
                 
@@ -308,8 +430,9 @@ def download_and_push_helm_charts(helm_list, destination_registry):
                 path_parts.append(chart)
                 full_repo_path = "/".join(path_parts)
                 
-                logging.info(f"Detected ECR registry. Ensuring repository exists: {full_repo_path}")
-                if not ensure_ecr_repository_exists(full_repo_path, region):
+                is_public = is_public_ecr_registry(destination_registry)
+                logging.info(f"Detected ECR registry ({'public' if is_public else 'private'}). Ensuring repository exists: {full_repo_path}")
+                if not ensure_ecr_repository_exists(full_repo_path, region, registry_url=destination_registry):
                     logging.error(f"Failed to ensure ECR repository exists: {full_repo_path}")
                     exit("Cannot ensure ECR repository exists")
         
@@ -343,6 +466,11 @@ if __name__ == "__main__":
         default=[],
         help="Additional destination registries to push images to (only for image artifact type)",
     )
+    parser.add_argument(
+        "--cache-file",
+        default=None,
+        help="Path to JSON file for caching image mappings (format: {source_uri: [destination_uri_1, destination_uri_2]})",
+    )
 
     args = parser.parse_args()
 
@@ -351,6 +479,7 @@ if __name__ == "__main__":
     destination_registry = args.destination_registry
     excluded_registries = args.exclude_registries
     additional_destinations = args.additional_destinations
+    cache_file = args.cache_file
     
     # Collect all destination registries for images
     all_destinations = [destination_registry]
@@ -376,6 +505,10 @@ if __name__ == "__main__":
         logging.error("Manifest processing aborted due to errors")
         exit()
 
+    # Load image cache if cache file is provided
+    if cache_file:
+        load_image_cache(cache_file)
+
     truefoundry_chart_images = get_truefoundry_chart_images(manifest)
     if truefoundry_chart_images:
         logging.info(
@@ -390,3 +523,7 @@ if __name__ == "__main__":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:
             download_and_push_helm_charts(helm_list, destination_registry)
+    
+    # Save image cache at the end
+    if cache_file:
+        save_image_cache()
