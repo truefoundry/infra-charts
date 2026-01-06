@@ -291,16 +291,26 @@ def ensure_ecr_repository_exists(repository_name, region, registry_url=None):
         
         # Check if repository exists
         try:
-            ecr_client.describe_repositories(repositoryNames=[repository_name])
-            logging.info(f"ECR repository '{repository_name}' already exists")
-            return True
+            response = ecr_client.describe_repositories(repositoryNames=[repository_name])
+            if response.get("repositories"):
+                logging.info(f"ECR repository '{repository_name}' already exists")
+                return True
+            else:
+                # Repository not found, will create it
+                raise ClientError({"Error": {"Code": "RepositoryNotFoundException"}}, "describe_repositories")
         except ClientError as e:
             if e.response["Error"]["Code"] == "RepositoryNotFoundException":
                 # Repository doesn't exist, create it
+                # Note: For repository names with slashes (e.g., "argoproj/argocli"), 
+                # AWS ECR treats this as a single repository name - no need to create parent paths
                 logging.info(f"Creating ECR repository: {repository_name} (public: {is_public})")
                 try:
-                    ecr_client.create_repository(repositoryName=repository_name)
+                    create_response = ecr_client.create_repository(repositoryName=repository_name)
                     logging.info(f"Successfully created ECR repository: {repository_name}")
+                    # Verify it was created by describing it again
+                    time.sleep(0.5)  # Brief delay to ensure creation is propagated
+                    ecr_client.describe_repositories(repositoryNames=[repository_name])
+                    logging.info(f"Verified ECR repository '{repository_name}' exists after creation")
                     return True
                 except ClientError as create_error:
                     error_code = create_error.response.get("Error", {}).get("Code", "Unknown")
@@ -371,13 +381,28 @@ def push_image_to_destination(image_url, destination_registry):
                 
                 is_public = is_public_ecr_registry(destination_registry)
                 
-                # For both public and private ECR, use the full path as repository name
-                # This includes the namespace prefix (e.g., "truefoundrycloud/argoproj/argo-rollouts")
-                repo_name = full_repo_path
-                
+                # For public ECR, the namespace (e.g., "truefoundrycloud") is the registry ID
+                # AWS ECR Public API expects repository names WITHOUT the registry ID namespace
+                # However, you can include other namespace prefixes from the source image path
+                # Format: public.ecr.aws/registry-id/source-namespace/repo -> repository name is "source-namespace/repo"
+                # For private ECR, use the full path as repository name
                 if is_public:
-                    logging.info(f"Detected public ECR registry. Repository name (with namespace): {repo_name}")
+                    # Extract registry ID namespace from destination_registry (e.g., "public.ecr.aws/truefoundrycloud" -> "truefoundrycloud")
+                    dest_parts = destination_registry.split("/", 1)
+                    registry_id = dest_parts[1] if len(dest_parts) > 1 else None
+                    
+                    # Remove registry ID from the repository path if it's present
+                    # This is required because the registry ID is already part of the registry URL
+                    # But we keep any other namespace prefixes from the source image (e.g., "argoproj")
+                    if registry_id and full_repo_path.startswith(registry_id + "/"):
+                        repo_name = full_repo_path[len(registry_id) + 1:]  # Remove "registry-id/" prefix, keep rest
+                    else:
+                        repo_name = full_repo_path
+                    
+                    logging.info(f"Detected public ECR registry. Registry ID: {registry_id}, Repository name: {repo_name}")
                 else:
+                    # For private ECR, use the full path as repository name
+                    repo_name = full_repo_path
                     logging.info(f"Detected private ECR registry. Repository name: {repo_name}")
                 
                 logging.info(f"Ensuring ECR repository exists: {repo_name}")
