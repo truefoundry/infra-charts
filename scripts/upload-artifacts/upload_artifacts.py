@@ -367,15 +367,29 @@ def push_image_to_destination(image_url, destination_registry):
             image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
             registry_and_repo = image_url_parts.split("/", 1)
             if len(registry_and_repo) > 1:
-                repo_name = registry_and_repo[1]  # Get everything after registry
+                full_repo_path = registry_and_repo[1]  # Get everything after registry
                 
                 is_public = is_public_ecr_registry(destination_registry)
-                logging.info(f"Detected ECR registry ({'public' if is_public else 'private'}). Ensuring repository exists: {repo_name}")
+                
+                # For both public and private ECR, use the full path as repository name
+                # This includes the namespace prefix (e.g., "truefoundrycloud/argoproj/argo-rollouts")
+                repo_name = full_repo_path
+                
+                if is_public:
+                    logging.info(f"Detected public ECR registry. Repository name (with namespace): {repo_name}")
+                else:
+                    logging.info(f"Detected private ECR registry. Repository name: {repo_name}")
+                
+                logging.info(f"Ensuring ECR repository exists: {repo_name}")
                 if not ensure_ecr_repository_exists(repo_name, region, registry_url=destination_registry):
                     error_reason = f"Failed to ensure ECR repository exists: {repo_name}"
                     logging.error(error_reason)
                     record_failed_upload(image_url, new_image_url, error_reason)
                     return False
+                
+                # Add a small delay after repository creation to ensure it's fully available
+                if is_public:
+                    time.sleep(1)
             else:
                 error_reason = f"Could not extract repository name from image URL: {new_image_url}"
                 logging.warning(error_reason)
@@ -495,11 +509,11 @@ def pull_and_push_images(image_list, destination_registries, excluded_registries
             if not success:
                 logging.warning(f"Failed to push {image_url} to {destination_registry}, but continuing with other destinations")
             
-            # Add a small delay between pushes to avoid rate limiting, especially for ECR
+            # Add a delay between pushes to avoid rate limiting, especially for ECR
             if is_ecr_registry(destination_registry):
-                time.sleep(2)  # 2 second delay for ECR to avoid rate limits
+                time.sleep(5)  # 5 second delay for ECR to avoid rate limits
             else:
-                time.sleep(0.5)  # Smaller delay for other registries
+                time.sleep(1)  # 1 second delay for other registries
 
 
 # function to download and push Helm charts
