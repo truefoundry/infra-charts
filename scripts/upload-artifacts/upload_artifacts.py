@@ -187,13 +187,21 @@ def parse_image_url(image_url, destination_registry):
             else:
                 image_name = ref["name"]
 
-    # Handle tfy-images path transformation based on destination registry and source image
-    # If source has tfy-images and destination is ECR: remove tfy-images
-    # If source has truefoundrycloud and destination is JFrog: remove truefoundrycloud and add tfy-images
-    # If source has tfy-images and destination is JFrog (with tfy-images): remove to avoid duplication
+    # Handle path transformations based on destination registry and source image
+    # Remove tfy-mirror from all paths (it's an intermediate path that shouldn't be in final destination)
+    # Handle tfy-images: remove for ECR, handle duplication for JFrog
+    # Handle truefoundrycloud: remove and add tfy-images for JFrog
     path_parts = image_name.split("/")
     source_has_truefoundrycloud = "truefoundrycloud" in path_parts
     source_has_tfy_images = "tfy-images" in path_parts
+    source_has_tfy_mirror = "tfy-mirror" in path_parts
+    
+    # Remove tfy-mirror from path for all destinations
+    if source_has_tfy_mirror:
+        path_parts = [part for part in path_parts if part != "tfy-mirror"]
+        image_name = "/".join(path_parts) if path_parts else image_name
+        # Re-split after removing tfy-mirror to update path_parts
+        path_parts = image_name.split("/")
     
     if "ecr.aws" in destination_registry or "truefoundrycloud" in destination_registry:
         # For ECR destination, remove tfy-images from the path if it exists
@@ -412,9 +420,11 @@ def push_image_to_destination(image_url, destination_registry):
                     record_failed_upload(image_url, new_image_url, error_reason)
                     return False
                 
-                # Add a small delay after repository creation to ensure it's fully available
+                # Add a delay after repository creation to ensure it's fully available
+                # Also add a pre-push delay for ECR to avoid hitting rate limits immediately
                 if is_public:
-                    time.sleep(1)
+                    time.sleep(2)  # Wait after repo creation
+                    time.sleep(10)  # Additional delay before first push attempt to avoid rate limits
             else:
                 error_reason = f"Could not extract repository name from image URL: {new_image_url}"
                 logging.warning(error_reason)
@@ -424,7 +434,7 @@ def push_image_to_destination(image_url, destination_registry):
     # Retry logic for rate limiting (429 errors)
     # Increase retries and backoff to better handle ECR Public throttling
     max_retries = 5
-    retry_delay = 10  # Start with 10 seconds
+    retry_delay = 30  # Start with 30 seconds for ECR Public's strict rate limits
     
     for attempt in range(max_retries):
         try:
@@ -448,8 +458,8 @@ def push_image_to_destination(image_url, destination_registry):
             is_rate_limit = "429" in error_str or "Too Many Requests" in error_str or "Rate exceeded" in error_str or "toomanyrequests" in error_str.lower()
             
             if is_rate_limit and attempt < max_retries - 1:
-                # Exponential backoff: 10s, 20s, 40s, 80s, 160s (capped)
-                wait_time = min(retry_delay * (2 ** attempt), 160)
+                # Exponential backoff: 30s, 60s, 120s, 240s, 480s (capped at 5 minutes)
+                wait_time = min(retry_delay * (2 ** attempt), 300)
                 logging.warning(
                     f"Rate limit error (429) when pushing {new_image_url}. "
                     f"Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})"
@@ -536,8 +546,13 @@ def pull_and_push_images(image_list, destination_registries, excluded_registries
                 logging.warning(f"Failed to push {image_url} to {destination_registry}, but continuing with other destinations")
             
             # Add a delay between pushes to avoid rate limiting, especially for ECR
+            # ECR Public has very strict rate limits, so we need longer delays
             if is_ecr_registry(destination_registry):
-                time.sleep(5)  # 5 second delay for ECR to avoid rate limits
+                is_public_ecr = is_public_ecr_registry(destination_registry)
+                if is_public_ecr:
+                    time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                else:
+                    time.sleep(5)  # 5 second delay for private ECR
             else:
                 time.sleep(1)  # 1 second delay for other registries
 
