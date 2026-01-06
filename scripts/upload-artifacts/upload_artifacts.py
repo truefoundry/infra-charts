@@ -422,8 +422,9 @@ def push_image_to_destination(image_url, destination_registry):
                 return False
 
     # Retry logic for rate limiting (429 errors)
-    max_retries = 3
-    retry_delay = 5  # Start with 5 seconds
+    # Increase retries and backoff to better handle ECR Public throttling
+    max_retries = 5
+    retry_delay = 10  # Start with 10 seconds
     
     for attempt in range(max_retries):
         try:
@@ -447,8 +448,8 @@ def push_image_to_destination(image_url, destination_registry):
             is_rate_limit = "429" in error_str or "Too Many Requests" in error_str or "Rate exceeded" in error_str or "toomanyrequests" in error_str.lower()
             
             if is_rate_limit and attempt < max_retries - 1:
-                # Exponential backoff: 5s, 10s, 20s
-                wait_time = retry_delay * (2 ** attempt)
+                # Exponential backoff: 10s, 20s, 40s, 80s, 160s (capped)
+                wait_time = min(retry_delay * (2 ** attempt), 160)
                 logging.warning(
                     f"Rate limit error (429) when pushing {new_image_url}. "
                     f"Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})"
