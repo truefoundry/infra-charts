@@ -366,14 +366,31 @@ def push_image_to_destination(image_url, destination_registry):
     """Push a single image to a destination registry."""
     new_image_url = parse_image_url(image_url, destination_registry)
 
-    # Check if the new_image_url already exists and has both architectures
-    image_exists, _ = check_image_exists_and_architectures(new_image_url)
+    # First check cache to avoid unnecessary API calls and rate limiting
+    # If we've already successfully pushed this image, skip entirely
+    global _image_cache
+    if _image_cache and image_url in _image_cache:
+        if new_image_url in _image_cache[image_url]:
+            logging.info(f"Image {new_image_url} already in cache, skipping push (previously successful)")
+            return True
 
-    if image_exists:
-        logging.info(f"Image {new_image_url} already exists Skipping push...")
-        # Update cache even if image already exists
-        update_image_cache(image_url, new_image_url)
-        return True
+    # For ECR, skip manifest check to reduce API calls and rate limiting
+    # Rely on cache + push operation (which will handle existing images gracefully)
+    # For other registries, check manifest to avoid unnecessary uploads
+    is_ecr = is_ecr_registry(destination_registry)
+    
+    if not is_ecr:
+        # For non-ECR registries, check if image exists to avoid unnecessary uploads
+        image_exists, _ = check_image_exists_and_architectures(new_image_url)
+        if image_exists:
+            logging.info(f"Image {new_image_url} already exists in registry. Skipping push...")
+            # Update cache even if image already exists
+            update_image_cache(image_url, new_image_url)
+            return True
+    else:
+        # For ECR, skip manifest check to reduce rate limiting
+        # The push operation will handle existing images, and we rely on cache for efficiency
+        logging.info(f"Skipping manifest check for ECR to reduce API calls. Relying on cache and push operation.")
 
     # Check if destination is ECR and ensure repository exists BEFORE pushing
     if is_ecr_registry(destination_registry):
@@ -423,8 +440,7 @@ def push_image_to_destination(image_url, destination_registry):
                 # Add a delay after repository creation to ensure it's fully available
                 # Also add a pre-push delay for ECR to avoid hitting rate limits immediately
                 if is_public:
-                    time.sleep(2)  # Wait after repo creation
-                    time.sleep(10)  # Additional delay before first push attempt to avoid rate limits
+                    time.sleep(15)  # Wait after repo creation and before first push attempt to avoid rate limits
             else:
                 error_reason = f"Could not extract repository name from image URL: {new_image_url}"
                 logging.warning(error_reason)
