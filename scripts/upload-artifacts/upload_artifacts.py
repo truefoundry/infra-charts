@@ -363,7 +363,12 @@ def get_truefoundry_chart_images(manifest):
 
 # function to pull and push images to a single destination
 def push_image_to_destination(image_url, destination_registry):
-    """Push a single image to a destination registry."""
+    """Push a single image to a destination registry.
+    
+    Returns:
+        tuple: (success: bool, was_skipped: bool) - success indicates if operation succeeded,
+                was_skipped indicates if image was skipped (in cache) without any API calls
+    """
     new_image_url = parse_image_url(image_url, destination_registry)
 
     # First check cache to avoid unnecessary API calls and rate limiting
@@ -372,7 +377,7 @@ def push_image_to_destination(image_url, destination_registry):
     if _image_cache and image_url in _image_cache:
         if new_image_url in _image_cache[image_url]:
             logging.info(f"Image {new_image_url} already in cache, skipping push (previously successful)")
-            return True
+            return True, True  # (success, was_skipped)
 
     # For ECR, skip manifest check to reduce API calls and rate limiting
     # Rely on cache + push operation (which will handle existing images gracefully)
@@ -386,7 +391,7 @@ def push_image_to_destination(image_url, destination_registry):
             logging.info(f"Image {new_image_url} already exists in registry. Skipping push...")
             # Update cache even if image already exists
             update_image_cache(image_url, new_image_url)
-            return True
+            return True, False  # (success, was_skipped - we did a manifest check)
     else:
         # For ECR, skip manifest check to reduce rate limiting
         # The push operation will handle existing images, and we rely on cache for efficiency
@@ -435,7 +440,7 @@ def push_image_to_destination(image_url, destination_registry):
                     error_reason = f"Failed to ensure ECR repository exists: {repo_name}"
                     logging.error(error_reason)
                     record_failed_upload(image_url, new_image_url, error_reason)
-                    return False
+                    return False, False  # (success, was_skipped)
                 
                 # Add a delay after repository creation to ensure it's fully available
                 # Also add a pre-push delay for ECR to avoid hitting rate limits immediately
@@ -445,7 +450,7 @@ def push_image_to_destination(image_url, destination_registry):
                 error_reason = f"Could not extract repository name from image URL: {new_image_url}"
                 logging.warning(error_reason)
                 record_failed_upload(image_url, new_image_url, error_reason)
-                return False
+                return False, False  # (success, was_skipped)
 
     # Retry logic for rate limiting (429 errors)
     # Increase retries and backoff to better handle ECR Public throttling
@@ -467,7 +472,7 @@ def push_image_to_destination(image_url, destination_registry):
             # Update cache with successful push
             update_image_cache(image_url, new_image_url)
             
-            return True
+            return True, False  # (success, was_skipped - we actually pushed)
         except Exception as e:
             error_str = str(e)
             # Check if it's a rate limit error (429)
@@ -499,9 +504,9 @@ def push_image_to_destination(image_url, destination_registry):
                     )
                 
                 record_failed_upload(image_url, new_image_url, failure_reason)
-                return False
+                return False, False  # (success, was_skipped)
     
-    return False
+    return False, False  # (success, was_skipped)
 
 
 def pull_and_push_images(image_list, destination_registries, excluded_registries=None, excluded_images=None):
@@ -557,20 +562,32 @@ def pull_and_push_images(image_list, destination_registries, excluded_registries
         # Push to each destination registry
         for destination_registry in destination_registries:
             logging.info(f"Processing image {image_url} for destination {destination_registry}")
-            success = push_image_to_destination(image_url, destination_registry)
+            success, was_skipped = push_image_to_destination(image_url, destination_registry)
+            
             if not success:
                 logging.warning(f"Failed to push {image_url} to {destination_registry}, but continuing with other destinations")
-            
-            # Add a delay between pushes to avoid rate limiting, especially for ECR
-            # ECR Public has very strict rate limits, so we need longer delays
-            if is_ecr_registry(destination_registry):
-                is_public_ecr = is_public_ecr_registry(destination_registry)
-                if is_public_ecr:
-                    time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                # Add delay even on failure to avoid rate limiting
+                if is_ecr_registry(destination_registry):
+                    is_public_ecr = is_public_ecr_registry(destination_registry)
+                    if is_public_ecr:
+                        time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                    else:
+                        time.sleep(5)  # 5 second delay for private ECR
                 else:
-                    time.sleep(5)  # 5 second delay for private ECR
-            else:
-                time.sleep(1)  # 1 second delay for other registries
+                    time.sleep(1)  # 1 second delay for other registries
+            elif not was_skipped:
+                # Only delay if we actually pushed (not skipped from cache)
+                # Add a delay between pushes to avoid rate limiting, especially for ECR
+                # ECR Public has very strict rate limits, so we need longer delays
+                if is_ecr_registry(destination_registry):
+                    is_public_ecr = is_public_ecr_registry(destination_registry)
+                    if is_public_ecr:
+                        time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                    else:
+                        time.sleep(5)  # 5 second delay for private ECR
+                else:
+                    time.sleep(1)  # 1 second delay for other registries
+            # If was_skipped is True, no delay needed - image was in cache, no API calls made
 
 
 # function to download and push Helm charts
