@@ -185,7 +185,7 @@ Ephemeral Storage Limit
 
 {{/*
 Default Resources
-cpu limit is 100 because ideally we don't to set limit but some clusters may have policy which requires limit to be set
+cpu limit is not set explicitly. We want to allow it to use up to the node limits
 */}}
 {{- define "deltafusion-query-server.defaultResources.small" }}
 requests:
@@ -193,7 +193,6 @@ requests:
   memory: 4000M
   ephemeral-storage: 5000M
 limits:
-  cpu: 100
   memory: 8000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -204,7 +203,6 @@ requests:
   memory: 12000M
   ephemeral-storage: 20000M
 limits:
-  cpu: 100
   memory: 16000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -215,7 +213,6 @@ requests:
   memory: 28000M
   ephemeral-storage: 40000M
 limits:
-  cpu: 100
   memory: 32000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
