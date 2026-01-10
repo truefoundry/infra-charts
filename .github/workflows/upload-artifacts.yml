@@ -25,12 +25,14 @@ jobs:
       ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
+      ECR_REGISTRY_URL: public.ecr.aws/truefoundrycloud
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.head_ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Kubectl
         id: install-kubectl
@@ -72,8 +74,8 @@ jobs:
           aws-region: us-east-1
 
       # this is to prevent rate limiting errors when pulling base images from public ECR
-      - name: Login to Amazon ECR
-        id: login-ecr
+      - name: Login to Amazon ECR (Public)
+        id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
@@ -92,5 +94,21 @@ jobs:
               image \
               charts/$chart/artifacts-manifest.json \
               ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
-              --exclude-registries truefoundrycloud
+              --exclude-registries truefoundrycloud \
+              --additional-destinations ${{ env.ECR_REGISTRY_URL }} \
+              --cache-file .github/cache/image-mappings.json \
+              --failed-uploads-file .github/cache/failed-uploads.json
           done
+
+      - name: Commit and push cache files
+        if: always()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/cache/image-mappings.json .github/cache/failed-uploads.json
+          if git diff --staged --quiet; then
+            echo "No changes to cache files"
+          else
+            git commit -m "chore: update image mappings and failed uploads cache [skip ci]" || exit 0
+            git push || echo "Failed to push, but continuing..."
+          fi

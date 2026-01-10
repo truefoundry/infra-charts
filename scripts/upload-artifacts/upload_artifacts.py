@@ -1,8 +1,10 @@
 import argparse
 import json
 import logging
+import os
 import re
 import subprocess
+import time
 from urllib.parse import urlparse
 
 import yaml
@@ -11,6 +13,147 @@ import yaml
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
+# Global cache for image mappings
+_image_cache = None
+_cache_file_path = None
+
+# Global cache for failed uploads
+_failed_uploads = None
+_failed_uploads_file_path = None
+
+
+def load_image_cache(cache_file_path):
+    """Load image cache from file."""
+    global _image_cache, _cache_file_path
+    _cache_file_path = cache_file_path
+    
+    if not cache_file_path:
+        _image_cache = {}
+        return {}
+    
+    if os.path.exists(cache_file_path):
+        try:
+            with open(cache_file_path, "r") as f:
+                _image_cache = json.load(f)
+                logging.info(f"Loaded image cache from {cache_file_path} with {len(_image_cache)} entries")
+                return _image_cache
+        except Exception as e:
+            logging.warning(f"Failed to load image cache: {e}. Starting with empty cache.")
+            _image_cache = {}
+            return {}
+    else:
+        _image_cache = {}
+        return {}
+
+
+def save_image_cache():
+    """Save image cache to file."""
+    global _image_cache, _cache_file_path
+    
+    if not _cache_file_path or _image_cache is None:
+        return
+    
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(_cache_file_path) if os.path.dirname(_cache_file_path) else ".", exist_ok=True)
+        
+        with open(_cache_file_path, "w") as f:
+            json.dump(_image_cache, f, indent=2)
+        logging.info(f"Saved image cache to {_cache_file_path} with {len(_image_cache)} entries")
+    except Exception as e:
+        logging.error(f"Failed to save image cache: {e}")
+
+
+def update_image_cache(source_uri, destination_uri):
+    """Update the image cache with a new mapping."""
+    global _image_cache
+    
+    if _image_cache is None:
+        _image_cache = {}
+    
+    if source_uri not in _image_cache:
+        _image_cache[source_uri] = []
+    
+    if destination_uri not in _image_cache[source_uri]:
+        _image_cache[source_uri].append(destination_uri)
+        logging.info(f"Updated cache: {source_uri} -> {destination_uri}")
+
+
+def load_failed_uploads(failed_uploads_file_path):
+    """Load failed uploads cache from file."""
+    global _failed_uploads, _failed_uploads_file_path
+    _failed_uploads_file_path = failed_uploads_file_path
+    
+    if not failed_uploads_file_path:
+        _failed_uploads = {}
+        return {}
+    
+    if os.path.exists(failed_uploads_file_path):
+        try:
+            with open(failed_uploads_file_path, "r") as f:
+                _failed_uploads = json.load(f)
+                logging.info(f"Loaded failed uploads cache from {failed_uploads_file_path} with {len(_failed_uploads)} entries")
+                return _failed_uploads
+        except Exception as e:
+            logging.warning(f"Failed to load failed uploads cache: {e}. Starting with empty cache.")
+            _failed_uploads = {}
+            return {}
+    else:
+        _failed_uploads = {}
+        return {}
+
+
+def save_failed_uploads():
+    """Save failed uploads cache to file."""
+    global _failed_uploads, _failed_uploads_file_path
+    
+    if not _failed_uploads_file_path or _failed_uploads is None:
+        return
+    
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(_failed_uploads_file_path) if os.path.dirname(_failed_uploads_file_path) else ".", exist_ok=True)
+        
+        with open(_failed_uploads_file_path, "w") as f:
+            json.dump(_failed_uploads, f, indent=2)
+        logging.info(f"Saved failed uploads cache to {_failed_uploads_file_path} with {len(_failed_uploads)} entries")
+    except Exception as e:
+        logging.error(f"Failed to save failed uploads cache: {e}")
+
+
+def record_failed_upload(source_uri, destination_uri, reason):
+    """Record a failed upload with the reason."""
+    global _failed_uploads
+    from datetime import datetime
+    
+    if _failed_uploads is None:
+        _failed_uploads = {}
+    
+    if source_uri not in _failed_uploads:
+        _failed_uploads[source_uri] = []
+    
+    # Check if this destination already has a failure recorded
+    existing_failure = None
+    for failure in _failed_uploads[source_uri]:
+        if failure.get("destination") == destination_uri:
+            existing_failure = failure
+            break
+    
+    failure_entry = {
+        "destination": destination_uri,
+        "reason": reason,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+    
+    if existing_failure:
+        # Update existing failure
+        existing_failure.update(failure_entry)
+        logging.info(f"Updated failed upload record: {source_uri} -> {destination_uri}: {reason}")
+    else:
+        # Add new failure
+        _failed_uploads[source_uri].append(failure_entry)
+        logging.info(f"Recorded failed upload: {source_uri} -> {destination_uri}: {reason}")
 
 
 # function to run shell commands
@@ -43,6 +186,41 @@ def parse_image_url(image_url, destination_registry):
                 image_name = "/".join(image_split[1:])
             else:
                 image_name = ref["name"]
+
+    # Handle path transformations based on destination registry and source image
+    # Remove tfy-mirror from all paths (it's an intermediate path that shouldn't be in final destination)
+    # Handle tfy-images: remove for ECR, handle duplication for JFrog
+    # Handle truefoundrycloud: remove and add tfy-images for JFrog
+    path_parts = image_name.split("/")
+    source_has_truefoundrycloud = "truefoundrycloud" in path_parts
+    source_has_tfy_images = "tfy-images" in path_parts
+    source_has_tfy_mirror = "tfy-mirror" in path_parts
+    
+    # Remove tfy-mirror from path for all destinations
+    if source_has_tfy_mirror:
+        path_parts = [part for part in path_parts if part != "tfy-mirror"]
+        image_name = "/".join(path_parts) if path_parts else image_name
+        # Re-split after removing tfy-mirror to update path_parts
+        path_parts = image_name.split("/")
+    
+    if "ecr.aws" in destination_registry or "truefoundrycloud" in destination_registry:
+        # For ECR destination, remove tfy-images from the path if it exists
+        if source_has_tfy_images:
+            path_parts = [part for part in path_parts if part != "tfy-images"]
+            image_name = "/".join(path_parts) if path_parts else image_name
+    elif "jfrog.io" in destination_registry:
+        # For JFrog destination
+        if source_has_truefoundrycloud:
+            # If source has truefoundrycloud, remove it and ensure tfy-images is present
+            path_parts = [part for part in path_parts if part != "truefoundrycloud"]
+            # Add tfy-images at the beginning if not already present
+            if "tfy-images" not in path_parts:
+                path_parts.insert(0, "tfy-images")
+            image_name = "/".join(path_parts) if path_parts else image_name
+        elif "tfy-images" in destination_registry and path_parts and path_parts[0] == "tfy-images":
+            # If destination already has tfy-images and source also starts with tfy-images, remove it to avoid duplication
+            path_parts = path_parts[1:]  # Remove the leading tfy-images
+            image_name = "/".join(path_parts) if path_parts else image_name
 
     new_image_url = f"{destination_registry}/{image_name}:{image_tag}"
     return new_image_url
@@ -77,14 +255,26 @@ def check_image_exists_and_architectures(image_url):
 
 # Helper function to check if registry is ECR
 def is_ecr_registry(registry_url):
-    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
-    ecr_pattern = r"^\d+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com"
-    return bool(re.match(ecr_pattern, registry_url))
+    # ECR URL patterns:
+    # Private: <account-id>.dkr.ecr.<region>.amazonaws.com
+    # Public: public.ecr.aws
+    private_ecr_pattern = r"^\d+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com"
+    public_ecr_pattern = r"^public\.ecr\.aws"
+    return bool(re.match(private_ecr_pattern, registry_url) or re.match(public_ecr_pattern, registry_url))
+
+
+# Helper function to check if registry is public ECR
+def is_public_ecr_registry(registry_url):
+    public_ecr_pattern = r"^public\.ecr\.aws"
+    return bool(re.match(public_ecr_pattern, registry_url))
 
 
 # Helper function to extract region from ECR URL
 def get_ecr_region(registry_url):
-    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
+    # For public ECR, use us-east-1 (required for public ECR API)
+    if is_public_ecr_registry(registry_url):
+        return "us-east-1"
+    # Private ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
     match = re.search(r"\.dkr\.ecr\.([a-z0-9-]+)\.amazonaws\.com", registry_url)
     if match:
         return match.group(1)
@@ -92,29 +282,58 @@ def get_ecr_region(registry_url):
 
 
 # Helper function to ensure ECR repository exists
-def ensure_ecr_repository_exists(repository_name, region):
+def ensure_ecr_repository_exists(repository_name, region, registry_url=None):
     try:
         import boto3
         from botocore.exceptions import ClientError
 
-        ecr_client = boto3.client("ecr", region_name=region)
+        # Auto-detect if it's public ECR from registry URL, or use region as fallback
+        # Public ECR always uses us-east-1 for API calls
+        is_public = is_public_ecr_registry(registry_url) if registry_url else (region == "us-east-1")
+        
+        # Use ecr-public client for public ECR, ecr client for private ECR
+        if is_public:
+            ecr_client = boto3.client("ecr-public", region_name="us-east-1")
+        else:
+            ecr_client = boto3.client("ecr", region_name=region)
         
         # Check if repository exists
         try:
-            ecr_client.describe_repositories(repositoryNames=[repository_name])
-            logging.info(f"ECR repository '{repository_name}' already exists")
-            return True
+            response = ecr_client.describe_repositories(repositoryNames=[repository_name])
+            if response.get("repositories"):
+                logging.info(f"ECR repository '{repository_name}' already exists")
+                return True
+            else:
+                # Repository not found, will create it
+                raise ClientError({"Error": {"Code": "RepositoryNotFoundException"}}, "describe_repositories")
         except ClientError as e:
             if e.response["Error"]["Code"] == "RepositoryNotFoundException":
                 # Repository doesn't exist, create it
-                logging.info(f"Creating ECR repository: {repository_name}")
-                ecr_client.create_repository(repositoryName=repository_name)
-                logging.info(f"Successfully created ECR repository: {repository_name}")
-                return True
+                # Note: For repository names with slashes (e.g., "argoproj/argocli"), 
+                # AWS ECR treats this as a single repository name - no need to create parent paths
+                logging.info(f"Creating ECR repository: {repository_name} (public: {is_public})")
+                try:
+                    create_response = ecr_client.create_repository(repositoryName=repository_name)
+                    logging.info(f"Successfully created ECR repository: {repository_name}")
+                    # Verify it was created by describing it again
+                    time.sleep(0.5)  # Brief delay to ensure creation is propagated
+                    ecr_client.describe_repositories(repositoryNames=[repository_name])
+                    logging.info(f"Verified ECR repository '{repository_name}' exists after creation")
+                    return True
+                except ClientError as create_error:
+                    error_code = create_error.response.get("Error", {}).get("Code", "Unknown")
+                    error_msg = create_error.response.get("Error", {}).get("Message", str(create_error))
+                    logging.error(f"Failed to create ECR repository '{repository_name}': {error_code} - {error_msg}")
+                    return False
             else:
+                error_code = e.response.get("Error", {}).get("Code", "Unknown")
+                error_msg = e.response.get("Error", {}).get("Message", str(e))
+                logging.error(f"ECR describe_repositories failed for '{repository_name}': {error_code} - {error_msg}")
                 raise
     except Exception as e:
-        logging.error(f"Failed to ensure ECR repository exists: {e}")
+        logging.error(f"Failed to ensure ECR repository exists '{repository_name}': {type(e).__name__}: {e}")
+        import traceback
+        logging.debug(traceback.format_exc())
         return False
 
 # function to get truefoundry chart images from manifest
@@ -142,15 +361,175 @@ def get_truefoundry_chart_images(manifest):
 
     return images
 
-# function to pull and push images
+# function to pull and push images to a single destination
+def push_image_to_destination(image_url, destination_registry):
+    """Push a single image to a destination registry.
+    
+    Returns:
+        tuple: (success: bool, was_skipped: bool) - success indicates if operation succeeded,
+                was_skipped indicates if image was skipped (in cache) without any API calls
+    """
+    new_image_url = parse_image_url(image_url, destination_registry)
+
+    # First check cache to avoid unnecessary API calls and rate limiting
+    # If we've already successfully pushed this image, skip entirely
+    global _image_cache
+    if _image_cache and image_url in _image_cache:
+        if new_image_url in _image_cache[image_url]:
+            logging.info(f"Image {new_image_url} already in cache, skipping push (previously successful)")
+            return True, True  # (success, was_skipped)
+
+    # For ECR, skip manifest check to reduce API calls and rate limiting
+    # Rely on cache + push operation (which will handle existing images gracefully)
+    # For other registries, check manifest to avoid unnecessary uploads
+    is_ecr = is_ecr_registry(destination_registry)
+    
+    if not is_ecr:
+        # For non-ECR registries, check if image exists to avoid unnecessary uploads
+        image_exists, _ = check_image_exists_and_architectures(new_image_url)
+        if image_exists:
+            logging.info(f"Image {new_image_url} already exists in registry. Skipping push...")
+            # Update cache even if image already exists
+            update_image_cache(image_url, new_image_url)
+            return True, False  # (success, was_skipped - we did a manifest check)
+    else:
+        # For ECR, skip manifest check to reduce rate limiting
+        # The push operation will handle existing images, and we rely on cache for efficiency
+        logging.info(f"Skipping manifest check for ECR to reduce API calls. Relying on cache and push operation.")
+
+    # Check if destination is ECR and ensure repository exists BEFORE pushing
+    if is_ecr_registry(destination_registry):
+        region = get_ecr_region(destination_registry)
+        
+        if region:
+            # Extract repository name from new_image_url (without tag)
+            # Format: registry/path/to/image:tag -> need path/to/image
+            image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
+            registry_and_repo = image_url_parts.split("/", 1)
+            if len(registry_and_repo) > 1:
+                full_repo_path = registry_and_repo[1]  # Get everything after registry
+                
+                is_public = is_public_ecr_registry(destination_registry)
+                
+                # For public ECR, the namespace (e.g., "truefoundrycloud") is the registry ID
+                # AWS ECR Public API expects repository names WITHOUT the registry ID namespace
+                # However, you can include other namespace prefixes from the source image path
+                # Format: public.ecr.aws/registry-id/source-namespace/repo -> repository name is "source-namespace/repo"
+                # For private ECR, use the full path as repository name
+                if is_public:
+                    # Extract registry ID namespace from destination_registry (e.g., "public.ecr.aws/truefoundrycloud" -> "truefoundrycloud")
+                    dest_parts = destination_registry.split("/", 1)
+                    registry_id = dest_parts[1] if len(dest_parts) > 1 else None
+                    
+                    # Remove registry ID from the repository path if it's present
+                    # This is required because the registry ID is already part of the registry URL
+                    # But we keep any other namespace prefixes from the source image (e.g., "argoproj")
+                    if registry_id and full_repo_path.startswith(registry_id + "/"):
+                        repo_name = full_repo_path[len(registry_id) + 1:]  # Remove "registry-id/" prefix, keep rest
+                    else:
+                        repo_name = full_repo_path
+                    
+                    logging.info(f"Detected public ECR registry. Registry ID: {registry_id}, Repository name: {repo_name}")
+                else:
+                    # For private ECR, use the full path as repository name
+                    repo_name = full_repo_path
+                    logging.info(f"Detected private ECR registry. Repository name: {repo_name}")
+                
+                logging.info(f"Ensuring ECR repository exists: {repo_name}")
+                if not ensure_ecr_repository_exists(repo_name, region, registry_url=destination_registry):
+                    error_reason = f"Failed to ensure ECR repository exists: {repo_name}"
+                    logging.error(error_reason)
+                    record_failed_upload(image_url, new_image_url, error_reason)
+                    return False, False  # (success, was_skipped)
+                
+                # Add a delay after repository creation to ensure it's fully available
+                # Also add a pre-push delay for ECR to avoid hitting rate limits immediately
+                if is_public:
+                    time.sleep(15)  # Wait after repo creation and before first push attempt to avoid rate limits
+            else:
+                error_reason = f"Could not extract repository name from image URL: {new_image_url}"
+                logging.warning(error_reason)
+                record_failed_upload(image_url, new_image_url, error_reason)
+                return False, False  # (success, was_skipped)
+
+    # Retry logic for rate limiting (429 errors)
+    # Increase retries and backoff to better handle ECR Public throttling
+    max_retries = 5
+    retry_delay = 30  # Start with 30 seconds for ECR Public's strict rate limits
+    
+    for attempt in range(max_retries):
+        try:
+            # Use buildx imagetool create for multi-arch support
+            logging.info(f"Creating multi-arch image: {new_image_url} (attempt {attempt + 1}/{max_retries})")
+            logging.info(
+                f"docker buildx imagetools create -t {new_image_url} {image_url}"
+            )
+            run_command(
+                f"docker buildx imagetools create -t {new_image_url} {image_url}"
+            )
+            logging.info(f"Successfully created multi-arch image: {new_image_url}")
+            
+            # Update cache with successful push
+            update_image_cache(image_url, new_image_url)
+            
+            return True, False  # (success, was_skipped - we actually pushed)
+        except Exception as e:
+            error_str = str(e)
+            # Check if it's a rate limit error (429)
+            is_rate_limit = "429" in error_str or "Too Many Requests" in error_str or "Rate exceeded" in error_str or "toomanyrequests" in error_str.lower()
+            
+            if is_rate_limit and attempt < max_retries - 1:
+                # Exponential backoff: 30s, 60s, 120s, 240s, 480s (capped at 5 minutes)
+                wait_time = min(retry_delay * (2 ** attempt), 300)
+                logging.warning(
+                    f"Rate limit error (429) when pushing {new_image_url}. "
+                    f"Retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})"
+                )
+                time.sleep(wait_time)
+                continue
+            else:
+                # Determine failure reason
+                if is_rate_limit:
+                    failure_reason = f"Rate limit exceeded after {max_retries} attempts: {error_str}"
+                    logging.error(
+                        f"Failed to create multi-arch image: {new_image_url}. {failure_reason}"
+                    )
+                    logging.error(
+                        f"Consider reducing push frequency or checking ECR rate limits."
+                    )
+                else:
+                    failure_reason = f"Failed to push image: {error_str}"
+                    logging.error(
+                        f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
+                    )
+                
+                record_failed_upload(image_url, new_image_url, failure_reason)
+                return False, False  # (success, was_skipped)
+    
+    return False, False  # (success, was_skipped)
 
 
-def pull_and_push_images(image_list, destination_registry, excluded_registries=None, excluded_images=None):
-
+def pull_and_push_images(image_list, destination_registries, excluded_registries=None, excluded_images=None):
+    """
+    Push images to multiple destination registries.
+    
+    Args:
+        image_list: List of image items from manifest
+        destination_registries: List of destination registry URLs
+        excluded_registries: List of registries to exclude from source images
+        excluded_images: Set of image URLs to exclude
+    """
     if excluded_registries is None:
         excluded_registries = []
     if excluded_images is None:
         excluded_images = set()
+    
+    # Ensure destination_registries is a list
+    if isinstance(destination_registries, str):
+        destination_registries = [destination_registries]
+    
+    # Remove trailing slashes from all destination registries
+    destination_registries = [reg.rstrip("/") for reg in destination_registries]
 
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
@@ -180,45 +559,35 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=N
             logging.info("Skipping auto")
             continue
 
-        new_image_url = parse_image_url(image_url, destination_registry)
-
-        # Check if the new_image_url already exists and has both architectures
-        image_exists, _ = check_image_exists_and_architectures(new_image_url)
-
-        if image_exists:
-            logging.info(f"Image {new_image_url} already exists Skipping push...")
-            continue
-
-        # Check if destination is ECR and ensure repository exists
-        if is_ecr_registry(destination_registry):
-            region = get_ecr_region(destination_registry)
-            if region:
-                # Extract repository name from new_image_url (without tag)
-                # Format: registry/path/to/image:tag -> need path/to/image
-                image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
-                registry_and_repo = image_url_parts.split("/", 1)
-                if len(registry_and_repo) > 1:
-                    repo_name = registry_and_repo[1]  # Get everything after registry
-                    
-                    logging.info(f"Detected ECR registry. Ensuring repository exists: {repo_name}")
-                    if not ensure_ecr_repository_exists(repo_name, region):
-                        logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
-                        continue
-
-        try:
-            # Use buildx imagetool create for multi-arch support
-            logging.info(f"Creating multi-arch image: {new_image_url}")
-            logging.info(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
-            )
-            run_command(
-                f"docker buildx imagetools create -t {new_image_url} {image_url}"
-            )
-            logging.info(f"Successfully created multi-arch image: {new_image_url}")
-        except Exception as e:
-            logging.error(
-                f"Failed to create multi-arch image: {new_image_url}. Error: {e}"
-            )
+        # Push to each destination registry
+        for destination_registry in destination_registries:
+            logging.info(f"Processing image {image_url} for destination {destination_registry}")
+            success, was_skipped = push_image_to_destination(image_url, destination_registry)
+            
+            if not success:
+                logging.warning(f"Failed to push {image_url} to {destination_registry}, but continuing with other destinations")
+                # Add delay even on failure to avoid rate limiting
+                if is_ecr_registry(destination_registry):
+                    is_public_ecr = is_public_ecr_registry(destination_registry)
+                    if is_public_ecr:
+                        time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                    else:
+                        time.sleep(5)  # 5 second delay for private ECR
+                else:
+                    time.sleep(1)  # 1 second delay for other registries
+            elif not was_skipped:
+                # Only delay if we actually pushed (not skipped from cache)
+                # Add a delay between pushes to avoid rate limiting, especially for ECR
+                # ECR Public has very strict rate limits, so we need longer delays
+                if is_ecr_registry(destination_registry):
+                    is_public_ecr = is_public_ecr_registry(destination_registry)
+                    if is_public_ecr:
+                        time.sleep(15)  # 15 second delay for public ECR to avoid rate limits
+                    else:
+                        time.sleep(5)  # 5 second delay for private ECR
+                else:
+                    time.sleep(1)  # 1 second delay for other registries
+            # If was_skipped is True, no delay needed - image was in cache, no API calls made
 
 
 # function to download and push Helm charts
@@ -266,12 +635,14 @@ def download_and_push_helm_charts(helm_list, destination_registry):
         # Push chart to destination repo
         logging.info(f"Pushing Helm chart: {new_chart_url}")
         
-        # Check if destination is ECR and ensure repository exists
+        # Check if destination is ECR and ensure repository exists BEFORE pushing
         if is_ecr_registry(destination_registry):
             region = get_ecr_region(destination_registry)
+            
             if region:
                 # Extract path from destination_registry
                 # destination_registry format: account-id.dkr.ecr.region.amazonaws.com/path/to/repo
+                # or public.ecr.aws/path/to/repo
                 dest_registry_parts = destination_registry.split("/", 1)
                 dest_path = dest_registry_parts[1] if len(dest_registry_parts) > 1 else ""
                 
@@ -285,8 +656,9 @@ def download_and_push_helm_charts(helm_list, destination_registry):
                 path_parts.append(chart)
                 full_repo_path = "/".join(path_parts)
                 
-                logging.info(f"Detected ECR registry. Ensuring repository exists: {full_repo_path}")
-                if not ensure_ecr_repository_exists(full_repo_path, region):
+                is_public = is_public_ecr_registry(destination_registry)
+                logging.info(f"Detected ECR registry ({'public' if is_public else 'private'}). Ensuring repository exists: {full_repo_path}")
+                if not ensure_ecr_repository_exists(full_repo_path, region, registry_url=destination_registry):
                     logging.error(f"Failed to ensure ECR repository exists: {full_repo_path}")
                     exit("Cannot ensure ECR repository exists")
         
@@ -314,6 +686,22 @@ if __name__ == "__main__":
         default=[],
         help="List of registries to exclude from pushing",
     )
+    parser.add_argument(
+        "--additional-destinations",
+        nargs="*",
+        default=[],
+        help="Additional destination registries to push images to (only for image artifact type)",
+    )
+    parser.add_argument(
+        "--cache-file",
+        default=None,
+        help="Path to JSON file for caching image mappings (format: {source_uri: [destination_uri_1, destination_uri_2]})",
+    )
+    parser.add_argument(
+        "--failed-uploads-file",
+        default=None,
+        help="Path to JSON file for tracking failed uploads (format: {source_uri: [{destination, reason, timestamp}]})",
+    )
 
     args = parser.parse_args()
 
@@ -321,8 +709,17 @@ if __name__ == "__main__":
     file_path = args.file_path
     destination_registry = args.destination_registry
     excluded_registries = args.exclude_registries
+    additional_destinations = args.additional_destinations
+    cache_file = args.cache_file
+    failed_uploads_file = args.failed_uploads_file
+    
+    # Collect all destination registries for images
+    all_destinations = [destination_registry]
+    if additional_destinations:
+        all_destinations.extend(additional_destinations)
+    
     logging.info(
-        f"Artifact type: {artifact_type}, File path: {file_path}, Destination registry: {destination_registry}, Excluded registries: {excluded_registries}"
+        f"Artifact type: {artifact_type}, File path: {file_path}, Destination registry: {destination_registry}, Additional destinations: {additional_destinations}, Excluded registries: {excluded_registries}"
     )
 
     # Remove trailing slash from destination_registry if present
@@ -340,6 +737,14 @@ if __name__ == "__main__":
         logging.error("Manifest processing aborted due to errors")
         exit()
 
+    # Load image cache if cache file is provided
+    if cache_file:
+        load_image_cache(cache_file)
+    
+    # Load failed uploads cache if file is provided
+    if failed_uploads_file:
+        load_failed_uploads(failed_uploads_file)
+
     truefoundry_chart_images = get_truefoundry_chart_images(manifest)
     if truefoundry_chart_images:
         logging.info(
@@ -349,8 +754,16 @@ if __name__ == "__main__":
     if artifact_type == "image":
         image_list = [item for item in manifest if item["type"] == "image"]
         if image_list:
-            pull_and_push_images(image_list, destination_registry, excluded_registries, excluded_images=truefoundry_chart_images)
+            pull_and_push_images(image_list, all_destinations, excluded_registries, excluded_images=truefoundry_chart_images)
     elif artifact_type == "helm":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:
             download_and_push_helm_charts(helm_list, destination_registry)
+    
+    # Save image cache at the end
+    if cache_file:
+        save_image_cache()
+    
+    # Save failed uploads cache at the end
+    if failed_uploads_file:
+        save_failed_uploads()
