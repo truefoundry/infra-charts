@@ -223,6 +223,20 @@ limits:
 {{- end }}
 {{- end }}
 
+
+{{- define "buildkitd-service.imagePullSecrets" -}}
+{{- if .Values.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
+
+
 {{/*
 Affinity for the buildkitd service
 */}}

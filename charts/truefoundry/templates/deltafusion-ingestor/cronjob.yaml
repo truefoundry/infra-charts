@@ -48,8 +48,12 @@ spec:
               imagePullPolicy: {{ .Values.deltaFusionCompaction.imagePullPolicy }}
               env:
                 {{- include "deltafusion-compaction.env" . | trim | nindent 16 }}
+              {{- if .Values.deltaFusionCompaction.command }}
               command: {{ .Values.deltaFusionCompaction.command }}
+              {{- end }}
+              {{- if .Values.deltaFusionCompaction.args }}
               args: {{ .Values.deltaFusionCompaction.args }}
+              {{- end }}
               resources:
                 {{- include "deltafusion-compaction.resources" . | nindent 16 }}
               volumeMounts:
