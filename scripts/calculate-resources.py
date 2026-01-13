@@ -598,6 +598,20 @@ def main():
     if show_markdown:
         components = aggregate_by_component(details)
         
+        # Print summary at the top
+        print("**Summary:**")
+        print("")
+        print("| Resource | Request | Limit |")
+        print("|----------|---------|-------|")
+        print(f"| CPU | {format_cpu(totals['cpu_request'])} | {format_cpu(totals['cpu_limit'])} |")
+        print(f"| Memory | {format_memory(totals['memory_request'])} | {format_memory(totals['memory_limit'])} |")
+        print(f"| Ephemeral Storage | {format_storage(totals['ephemeral_request'])} | {format_storage(totals['ephemeral_limit'])} |")
+        print(f"| PVC Storage | {format_storage(totals['pvc_storage'])} | - |")
+        print("")
+        print("<details>")
+        print("<summary>Component Breakdown</summary>")
+        print("")
+        
         # Print component table
         print("| Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |")
         print("|-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|")
@@ -612,12 +626,8 @@ def main():
                   f"{format_storage(comp['ephemeral_request'])} | {format_storage(comp['ephemeral_limit'])} | "
                   f"{format_storage(comp['pvc_storage'])} |")
         
-        # Print totals row
-        print(f"| **TOTAL** | - | - | "
-              f"**{format_cpu(totals['cpu_request'])}** | **{format_cpu(totals['cpu_limit'])}** | "
-              f"**{format_memory(totals['memory_request'])}** | **{format_memory(totals['memory_limit'])}** | "
-              f"**{format_storage(totals['ephemeral_request'])}** | **{format_storage(totals['ephemeral_limit'])}** | "
-              f"**{format_storage(totals['pvc_storage'])}** |")
+        print("")
+        print("</details>")
         return
     
     print(f"Analyzing resources from: {file_path}\n")
