@@ -1,0 +1,291 @@
+name: Generate Resource Requirements
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/generate-resource-requirements.yml'
+      - '.github/control-plane/**'
+      - 'charts/truefoundry/**'
+      - 'charts/tfy-llm-gateway/**'
+      - 'scripts/calculate-resources.py'
+
+jobs:
+  generate-resources:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        resource_tier: [small, medium, large]
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.17.3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Add Helm Repositories
+        run: |
+          helm repo add truefoundry https://truefoundry.github.io/infra-charts/
+          helm repo update truefoundry
+
+      - name: Update Helm Dependencies
+        run: |
+          helm dependency update charts/truefoundry
+          helm dependency update charts/tfy-llm-gateway
+
+      - name: Generate Templates for Control Plane Only (${{ matrix.resource_tier }})
+        run: |
+          mkdir -p output/${{ matrix.resource_tier }}
+          helm template truefoundry charts/truefoundry \
+            -f .github/control-plane/control-plane-only.yaml \
+            --set global.resourceTier=${{ matrix.resource_tier }} \
+            > output/${{ matrix.resource_tier }}/control-plane-only.yaml
+
+      - name: Generate Templates for Control Plane + Gateway (${{ matrix.resource_tier }})
+        run: |
+          helm template truefoundry charts/truefoundry \
+            -f .github/control-plane/control-plane-gateway.yaml \
+            --set global.resourceTier=${{ matrix.resource_tier }} \
+            > output/${{ matrix.resource_tier }}/control-plane-gateway.yaml
+
+      - name: Generate Templates for LLM Gateway (${{ matrix.resource_tier }})
+        run: |
+          helm template tfy-llm-gateway charts/tfy-llm-gateway \
+            -f .github/control-plane/gateway.yaml \
+            --set global.resourceTier=${{ matrix.resource_tier }} \
+            > output/${{ matrix.resource_tier }}/gateway.yaml
+
+      - name: Calculate Resources
+        run: |
+          echo "=== Control Plane Only (${{ matrix.resource_tier }}) ===" > output/${{ matrix.resource_tier }}/resources.txt
+          python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/control-plane-only.yaml >> output/${{ matrix.resource_tier }}/resources.txt
+          
+          echo "" >> output/${{ matrix.resource_tier }}/resources.txt
+          echo "=== Control Plane + Gateway (${{ matrix.resource_tier }}) ===" >> output/${{ matrix.resource_tier }}/resources.txt
+          python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/control-plane-gateway.yaml >> output/${{ matrix.resource_tier }}/resources.txt
+          
+          echo "" >> output/${{ matrix.resource_tier }}/resources.txt
+          echo "=== LLM Gateway Only (${{ matrix.resource_tier }}) ===" >> output/${{ matrix.resource_tier }}/resources.txt
+          python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/gateway.yaml >> output/${{ matrix.resource_tier }}/resources.txt
+
+      - name: Extract Resource Values
+        id: extract
+        run: |
+          # Function to extract values from calculate-resources.py output
+          extract_values() {
+            local file=$1
+            python3 scripts/calculate-resources.py "$file" 2>/dev/null | grep -E "^(CPU Requests:|CPU Limits:|Memory Requests:|Memory Limits:|Ephemeral Storage Req:|PVC Storage:)" | while read line; do
+              # Extract the formatted value (second column)
+              echo "$line" | awk -F: '{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); split($2, a, " "); print a[1], a[2]}'
+            done
+          }
+          
+          # Control Plane Only
+          CP_ONLY=$(python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/control-plane-only.yaml 2>/dev/null)
+          CP_ONLY_CPU_REQ=$(echo "$CP_ONLY" | grep "CPU Requests:" | awk '{print $3}')
+          CP_ONLY_CPU_LIM=$(echo "$CP_ONLY" | grep "CPU Limits:" | awk '{print $3}')
+          CP_ONLY_MEM_REQ=$(echo "$CP_ONLY" | grep "Memory Requests:" | awk '{print $3}')
+          CP_ONLY_MEM_LIM=$(echo "$CP_ONLY" | grep "Memory Limits:" | awk '{print $3}')
+          CP_ONLY_EPH_REQ=$(echo "$CP_ONLY" | grep "Ephemeral Storage Req:" | awk '{print $4}')
+          CP_ONLY_PVC=$(echo "$CP_ONLY" | grep "PVC Storage:" | awk '{print $3}')
+          
+          # Control Plane + Gateway
+          CP_GW=$(python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/control-plane-gateway.yaml 2>/dev/null)
+          CP_GW_CPU_REQ=$(echo "$CP_GW" | grep "CPU Requests:" | awk '{print $3}')
+          CP_GW_CPU_LIM=$(echo "$CP_GW" | grep "CPU Limits:" | awk '{print $3}')
+          CP_GW_MEM_REQ=$(echo "$CP_GW" | grep "Memory Requests:" | awk '{print $3}')
+          CP_GW_MEM_LIM=$(echo "$CP_GW" | grep "Memory Limits:" | awk '{print $3}')
+          CP_GW_EPH_REQ=$(echo "$CP_GW" | grep "Ephemeral Storage Req:" | awk '{print $4}')
+          CP_GW_PVC=$(echo "$CP_GW" | grep "PVC Storage:" | awk '{print $3}')
+          
+          # LLM Gateway Only
+          GW=$(python3 scripts/calculate-resources.py output/${{ matrix.resource_tier }}/gateway.yaml 2>/dev/null)
+          GW_CPU_REQ=$(echo "$GW" | grep "CPU Requests:" | awk '{print $3}')
+          GW_CPU_LIM=$(echo "$GW" | grep "CPU Limits:" | awk '{print $3}')
+          GW_MEM_REQ=$(echo "$GW" | grep "Memory Requests:" | awk '{print $3}')
+          GW_MEM_LIM=$(echo "$GW" | grep "Memory Limits:" | awk '{print $3}')
+          GW_EPH_REQ=$(echo "$GW" | grep "Ephemeral Storage Req:" | awk '{print $4}')
+          GW_PVC=$(echo "$GW" | grep "PVC Storage:" | awk '{print $3}')
+          
+          # Save to file for aggregation
+          cat > output/${{ matrix.resource_tier }}/values.json << EOF
+          {
+            "tier": "${{ matrix.resource_tier }}",
+            "control_plane_only": {
+              "cpu_req": "$CP_ONLY_CPU_REQ",
+              "cpu_lim": "$CP_ONLY_CPU_LIM",
+              "mem_req": "$CP_ONLY_MEM_REQ",
+              "mem_lim": "$CP_ONLY_MEM_LIM",
+              "eph_req": "$CP_ONLY_EPH_REQ",
+              "pvc": "$CP_ONLY_PVC"
+            },
+            "control_plane_gateway": {
+              "cpu_req": "$CP_GW_CPU_REQ",
+              "cpu_lim": "$CP_GW_CPU_LIM",
+              "mem_req": "$CP_GW_MEM_REQ",
+              "mem_lim": "$CP_GW_MEM_LIM",
+              "eph_req": "$CP_GW_EPH_REQ",
+              "pvc": "$CP_GW_PVC"
+            },
+            "gateway_only": {
+              "cpu_req": "$GW_CPU_REQ",
+              "cpu_lim": "$GW_CPU_LIM",
+              "mem_req": "$GW_MEM_REQ",
+              "mem_lim": "$GW_MEM_LIM",
+              "eph_req": "$GW_EPH_REQ",
+              "pvc": "$GW_PVC"
+            }
+          }
+          EOF
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: resources-${{ matrix.resource_tier }}
+          path: output/${{ matrix.resource_tier }}/
+
+  update-readme:
+    runs-on: ubuntu-latest
+    needs: generate-resources
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: output/
+          pattern: resources-*
+          merge-multiple: false
+
+      - name: Generate README Section
+        run: |
+          # Create the resource requirements markdown
+          cat > resource-requirements.md << 'EOF'
+          ## Resource Requirements
+          
+          This section shows the resource requirements for different deployment configurations and resource tiers.
+          Resource tiers control the default CPU, memory, and storage allocations for all components.
+          
+          ### Control Plane Only
+          
+          Minimal control plane deployment without LLM Gateway components.
+          
+          | Resource Tier | CPU Requests | CPU Limits | Memory Requests | Memory Limits | Ephemeral Storage | PVC Storage |
+          |---------------|--------------|------------|-----------------|---------------|-------------------|-------------|
+          EOF
+          
+          # Add rows for each tier
+          for tier in small medium large; do
+            if [ -f "output/resources-$tier/values.json" ]; then
+              cpu_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep 'cpu_req' | cut -d'"' -f4)
+              cpu_lim=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep 'cpu_lim' | cut -d'"' -f4)
+              mem_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep 'mem_req' | cut -d'"' -f4)
+              mem_lim=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep 'mem_lim' | cut -d'"' -f4)
+              eph_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep 'eph_req' | cut -d'"' -f4)
+              pvc=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_only"' | grep '"pvc"' | cut -d'"' -f4)
+              echo "| $tier | $cpu_req | $cpu_lim | $mem_req | $mem_lim | $eph_req | $pvc |" >> resource-requirements.md
+            fi
+          done
+          
+          cat >> resource-requirements.md << 'EOF'
+          
+          ### Control Plane + LLM Gateway
+          
+          Full control plane deployment with LLM Gateway components enabled.
+          
+          | Resource Tier | CPU Requests | CPU Limits | Memory Requests | Memory Limits | Ephemeral Storage | PVC Storage |
+          |---------------|--------------|------------|-----------------|---------------|-------------------|-------------|
+          EOF
+          
+          for tier in small medium large; do
+            if [ -f "output/resources-$tier/values.json" ]; then
+              cpu_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep 'cpu_req' | cut -d'"' -f4)
+              cpu_lim=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep 'cpu_lim' | cut -d'"' -f4)
+              mem_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep 'mem_req' | cut -d'"' -f4)
+              mem_lim=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep 'mem_lim' | cut -d'"' -f4)
+              eph_req=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep 'eph_req' | cut -d'"' -f4)
+              pvc=$(cat output/resources-$tier/values.json | grep -A6 '"control_plane_gateway"' | grep '"pvc"' | cut -d'"' -f4)
+              echo "| $tier | $cpu_req | $cpu_lim | $mem_req | $mem_lim | $eph_req | $pvc |" >> resource-requirements.md
+            fi
+          done
+          
+          cat >> resource-requirements.md << 'EOF'
+          
+          ### LLM Gateway Only (Agent Mode)
+          
+          Standalone LLM Gateway deployment connecting to an external control plane.
+          
+          | Resource Tier | CPU Requests | CPU Limits | Memory Requests | Memory Limits | Ephemeral Storage | PVC Storage |
+          |---------------|--------------|------------|-----------------|---------------|-------------------|-------------|
+          EOF
+          
+          for tier in small medium large; do
+            if [ -f "output/resources-$tier/values.json" ]; then
+              cpu_req=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep 'cpu_req' | cut -d'"' -f4)
+              cpu_lim=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep 'cpu_lim' | cut -d'"' -f4)
+              mem_req=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep 'mem_req' | cut -d'"' -f4)
+              mem_lim=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep 'mem_lim' | cut -d'"' -f4)
+              eph_req=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep 'eph_req' | cut -d'"' -f4)
+              pvc=$(cat output/resources-$tier/values.json | grep -A6 '"gateway_only"' | grep '"pvc"' | cut -d'"' -f4)
+              echo "| $tier | $cpu_req | $cpu_lim | $mem_req | $mem_lim | $eph_req | $pvc |" >> resource-requirements.md
+            fi
+          done
+          
+          cat >> resource-requirements.md << 'EOF'
+          
+          > **Note:** These values are automatically generated from the Helm charts. Actual resource usage may vary based on workload.
+          > 
+          > - **small**: Suitable for development and testing environments
+          > - **medium**: Suitable for small production workloads
+          > - **large**: Suitable for production environments with higher traffic
+          EOF
+
+      - name: Update README
+        run: |
+          # Check if Resource Requirements section exists
+          if grep -q "## Resource Requirements" README.md; then
+            # Remove existing section (from ## Resource Requirements to next ## or end of file)
+            sed -i '/^## Resource Requirements/,/^## [^R]/{ /^## [^R]/!d; }' README.md
+            # If the section was at the end, we need different handling
+            if grep -q "## Resource Requirements" README.md; then
+              sed -i '/^## Resource Requirements/,$d' README.md
+            fi
+          fi
+          
+          # Append new section
+          echo "" >> README.md
+          cat resource-requirements.md >> README.md
+
+      - name: Commit & Push Updates
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "[CI] Update resource requirements in README" --signoff
+            git pull origin --rebase
+            git push
+          fi
