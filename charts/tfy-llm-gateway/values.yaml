@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.111.0"
+  gatewayChartVersion: "0.112.0-rc.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.111.0
+  tag: v0.112.0-rc.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -251,6 +251,7 @@ env:
   USE_GLOBAL_STATE_V2: "true"
   MULTITENANT: "false"
   TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
+  USE_NEW_WATCHER_SYSTEM: "true"
   AUTH_SERVER_URL: https://auth.truefoundry.com
   RUN_IN_SINGLE_TENANT_MODE: "false"
   CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
