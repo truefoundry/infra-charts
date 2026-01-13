@@ -25,6 +25,18 @@ Minimal control plane deployment without LLM Gateway components.
 
 #### SMALL
 
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 800m | 1.60 cores |
+| Memory | 1.94 GiB | 3.88 GiB |
+| Ephemeral Storage | 4.00 GiB | 8.00 GiB |
+| PVC Storage | 30.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
+
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
 | frontend-app | Deployment | 1 | 50m | 100m | 128 MiB | 256 MiB | 128 MiB | 256 MiB | - |
@@ -35,9 +47,22 @@ Minimal control plane deployment without LLM Gateway components.
 | tfy-k8s-controller | Deployment | 1 | 100m | 200m | 128 MiB | 256 MiB | 128 MiB | 256 MiB | - |
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-proxy | Deployment | 1 | 50m | 100m | 64 MiB | 128 MiB | 256 MiB | 512 MiB | - |
-| **TOTAL** | - | - | **800m** | **1.60 cores** | **1.94 GiB** | **3.88 GiB** | **4.00 GiB** | **8.00 GiB** | **30.00 GiB** |
+
+</details>
 
 #### MEDIUM
+
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 6.00 cores | 12.00 cores |
+| Memory | 16.67 GiB | 33.34 GiB |
+| Ephemeral Storage | 5.60 GiB | 11.10 GiB |
+| PVC Storage | 230.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
 
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
@@ -50,9 +75,22 @@ Minimal control plane deployment without LLM Gateway components.
 | tfy-k8s-controller | Deployment | 1 | 500m | 1.00 cores | 512 MiB | 1.00 GiB | 128 MiB | 256 MiB | - |
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-proxy | Deployment | 1 | 100m | 200m | 128 MiB | 256 MiB | 512 MiB | 1.00 GiB | - |
-| **TOTAL** | - | - | **6.00 cores** | **12.00 cores** | **16.67 GiB** | **33.34 GiB** | **5.60 GiB** | **11.10 GiB** | **230.00 GiB** |
+
+</details>
 
 #### LARGE
+
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 14.00 cores | 28.00 cores |
+| Memory | 32.06 GiB | 64.12 GiB |
+| Ephemeral Storage | 7.10 GiB | 16.60 GiB |
+| PVC Storage | 230.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
 
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
@@ -65,13 +103,26 @@ Minimal control plane deployment without LLM Gateway components.
 | tfy-k8s-controller | Deployment | 1 | 500m | 1.00 cores | 800 MiB | 1.56 GiB | 128 MiB | 256 MiB | - |
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-proxy | Deployment | 1 | 500m | 1.00 cores | 512 MiB | 1.00 GiB | 1.00 GiB | 2.00 GiB | - |
-| **TOTAL** | - | - | **14.00 cores** | **28.00 cores** | **32.06 GiB** | **64.12 GiB** | **7.10 GiB** | **16.60 GiB** | **230.00 GiB** |
+
+</details>
 
 ### Control Plane with Gateway
 
 Full control plane deployment with LLM Gateway components enabled.
 
 #### SMALL
+
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 3.95 cores | 5.90 cores |
+| Memory | 10.12 GiB | 17.12 GiB |
+| Ephemeral Storage | 18.97 GiB | 27.98 GiB |
+| PVC Storage | 40.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
 
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
@@ -86,9 +137,22 @@ Full control plane deployment with LLM Gateway components enabled.
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-otel-collector | Deployment | 1 | 50m | 100m | 128 MiB | 256 MiB | 256 MiB | 512 MiB | - |
 | tfy-proxy | Deployment | 1 | 50m | 100m | 64 MiB | 128 MiB | 256 MiB | 512 MiB | - |
-| **TOTAL** | - | - | **3.95 cores** | **5.90 cores** | **10.12 GiB** | **17.12 GiB** | **18.97 GiB** | **27.98 GiB** | **40.00 GiB** |
+
+</details>
 
 #### MEDIUM
+
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 11.90 cores | 17.80 cores |
+| Memory | 31.20 GiB | 48.34 GiB |
+| Ephemeral Storage | 46.13 GiB | 53.01 GiB |
+| PVC Storage | 40.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
 
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
@@ -103,9 +167,22 @@ Full control plane deployment with LLM Gateway components enabled.
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-otel-collector | Deployment | 3 | 600m | 1.20 cores | 1.50 GiB | 3.00 GiB | 1.50 GiB | 3.00 GiB | - |
 | tfy-proxy | Deployment | 1 | 100m | 200m | 128 MiB | 256 MiB | 512 MiB | 1.00 GiB | - |
-| **TOTAL** | - | - | **11.90 cores** | **17.80 cores** | **31.20 GiB** | **48.34 GiB** | **46.13 GiB** | **53.01 GiB** | **40.00 GiB** |
+
+</details>
 
 #### LARGE
+
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 29.30 cores | 44.60 cores |
+| Memory | 73.03 GiB | 110.12 GiB |
+| Ephemeral Storage | 90.20 GiB | 104.57 GiB |
+| PVC Storage | 40.00 GiB | - |
+
+<details>
+<summary>Component Breakdown</summary>
 
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
@@ -120,7 +197,8 @@ Full control plane deployment with LLM Gateway components enabled.
 | tfy-nats | StatefulSet | 3 | 300m | 600m | 384 MiB | 768 MiB | 3.00 GiB | 6.00 GiB | 30.00 GiB |
 | tfy-otel-collector | Deployment | 5 | 2.50 cores | 5.00 cores | 5.00 GiB | 10.00 GiB | 5.00 GiB | 10.00 GiB | - |
 | tfy-proxy | Deployment | 1 | 500m | 1.00 cores | 512 MiB | 1.00 GiB | 1.00 GiB | 2.00 GiB | - |
-| **TOTAL** | - | - | **29.30 cores** | **44.60 cores** | **73.03 GiB** | **110.12 GiB** | **90.20 GiB** | **104.57 GiB** | **40.00 GiB** |
+
+</details>
 
 ### Gateway Only
 
@@ -128,22 +206,61 @@ Standalone LLM Gateway deployment connecting to an external control plane.
 
 #### SMALL
 
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 200m | 400m |
+| Memory | 512 MiB | 1.00 GiB |
+| Ephemeral Storage | 128 MiB | 256 MiB |
+| PVC Storage | - | - |
+
+<details>
+<summary>Component Breakdown</summary>
+
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
 | tfy-llm-gateway | Deployment | 1 | 200m | 400m | 512 MiB | 1.00 GiB | 128 MiB | 256 MiB | - |
-| **TOTAL** | - | - | **200m** | **400m** | **512 MiB** | **1.00 GiB** | **128 MiB** | **256 MiB** | **-** |
+
+</details>
 
 #### MEDIUM
 
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 1.00 cores | 2.00 cores |
+| Memory | 2.00 GiB | 4.00 GiB |
+| Ephemeral Storage | 256 MiB | 512 MiB |
+| PVC Storage | - | - |
+
+<details>
+<summary>Component Breakdown</summary>
+
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
 | tfy-llm-gateway | Deployment | 1 | 1.00 cores | 2.00 cores | 2.00 GiB | 4.00 GiB | 256 MiB | 512 MiB | - |
-| **TOTAL** | - | - | **1.00 cores** | **2.00 cores** | **2.00 GiB** | **4.00 GiB** | **256 MiB** | **512 MiB** | **-** |
+
+</details>
 
 #### LARGE
 
+**Summary:**
+
+| Resource | Request | Limit |
+|----------|---------|-------|
+| CPU | 1.00 cores | 2.00 cores |
+| Memory | 2.00 GiB | 4.00 GiB |
+| Ephemeral Storage | 256 MiB | 512 MiB |
+| PVC Storage | - | - |
+
+<details>
+<summary>Component Breakdown</summary>
+
 | Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |
 |-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|
 | tfy-llm-gateway | Deployment | 1 | 1.00 cores | 2.00 cores | 2.00 GiB | 4.00 GiB | 256 MiB | 512 MiB | - |
-| **TOTAL** | - | - | **1.00 cores** | **2.00 cores** | **2.00 GiB** | **4.00 GiB** | **256 MiB** | **512 MiB** | **-** |
+
+</details>
 
