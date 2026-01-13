@@ -19,9 +19,8 @@ This section shows the resource requirements for different deployment configurat
 
 > **Note:** Values shown are totals (per-pod resources × replica count).
 
-### Control Plane Only
-
-Minimal control plane deployment without LLM Gateway components.
+<details>
+<summary><strong>Control Plane Only</strong> - Minimal control plane deployment without LLM Gateway components</summary>
 
 #### SMALL
 
@@ -106,9 +105,10 @@ Minimal control plane deployment without LLM Gateway components.
 
 </details>
 
-### Control Plane with Gateway
+</details>
 
-Full control plane deployment with LLM Gateway components enabled.
+<details>
+<summary><strong>Control Plane with Gateway</strong> - Full control plane deployment with LLM Gateway components enabled</summary>
 
 #### SMALL
 
@@ -200,9 +200,10 @@ Full control plane deployment with LLM Gateway components enabled.
 
 </details>
 
-### Gateway Only
+</details>
 
-Standalone LLM Gateway deployment connecting to an external control plane.
+<details>
+<summary><strong>Gateway Only</strong> - Standalone LLM Gateway deployment connecting to an external control plane</summary>
 
 #### SMALL
 
@@ -264,3 +265,4 @@ Standalone LLM Gateway deployment connecting to an external control plane.
 
 </details>
 
+</details>
