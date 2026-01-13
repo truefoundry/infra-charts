@@ -576,23 +576,51 @@ def aggregate_by_component(details):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 scripts/calculate-resources.py <path-to-yaml-file> [--detailed|--verbose]")
+        print("Usage: python3 scripts/calculate-resources.py <path-to-yaml-file> [--detailed|--verbose|--markdown]")
         print("\nFlags:")
         print("  --detailed  Show per-container breakdown")
-        print("  --verbose    Show per-component/service aggregation")
+        print("  --verbose   Show per-component/service aggregation")
+        print("  --markdown  Output as markdown table (for documentation)")
         sys.exit(1)
     
     file_path = sys.argv[1]
     show_detailed = '--detailed' in sys.argv
     show_verbose = '--verbose' in sys.argv
+    show_markdown = '--markdown' in sys.argv
     
     if not Path(file_path).exists():
         print(f"Error: File not found: {file_path}")
         sys.exit(1)
     
-    print(f"Analyzing resources from: {file_path}\n")
-    
     totals, details = process_yaml_file(file_path)
+    
+    # Markdown output mode
+    if show_markdown:
+        components = aggregate_by_component(details)
+        
+        # Print component table
+        print("| Component | Kind | Replicas | CPU Req | CPU Lim | Mem Req | Mem Lim | Eph Req | Eph Lim | PVC |")
+        print("|-----------|------|----------|---------|---------|---------|---------|---------|---------|-----|")
+        
+        for comp_name in sorted(components.keys()):
+            comp = components[comp_name]
+            kinds_str = '/'.join(comp['kinds'])
+            replicas_str = '/'.join(str(r) for r in comp['replicas'])
+            print(f"| {comp_name} | {kinds_str} | {replicas_str} | "
+                  f"{format_cpu(comp['cpu_request'])} | {format_cpu(comp['cpu_limit'])} | "
+                  f"{format_memory(comp['memory_request'])} | {format_memory(comp['memory_limit'])} | "
+                  f"{format_storage(comp['ephemeral_request'])} | {format_storage(comp['ephemeral_limit'])} | "
+                  f"{format_storage(comp['pvc_storage'])} |")
+        
+        # Print totals row
+        print(f"| **TOTAL** | - | - | "
+              f"**{format_cpu(totals['cpu_request'])}** | **{format_cpu(totals['cpu_limit'])}** | "
+              f"**{format_memory(totals['memory_request'])}** | **{format_memory(totals['memory_limit'])}** | "
+              f"**{format_storage(totals['ephemeral_request'])}** | **{format_storage(totals['ephemeral_limit'])}** | "
+              f"**{format_storage(totals['pvc_storage'])}** |")
+        return
+    
+    print(f"Analyzing resources from: {file_path}\n")
     
     # Print summary
     print("=" * 100)
