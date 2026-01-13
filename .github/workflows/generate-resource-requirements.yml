@@ -85,11 +85,12 @@ jobs:
 
           > **Note:** Values shown are totals (per-pod resources × replica count).
 
-          ### Control Plane Only
-
-          Minimal control plane deployment without LLM Gateway components.
-
           HEADER
+          
+          # Control Plane Only
+          echo "<details>" >> resource-section.md
+          echo "<summary><strong>Control Plane Only</strong> - Minimal control plane deployment without LLM Gateway components</summary>" >> resource-section.md
+          echo "" >> resource-section.md
           
           for tier in small medium large; do
             TIER_UPPER=$(echo "$tier" | tr '[:lower:]' '[:upper:]')
@@ -99,10 +100,12 @@ jobs:
             echo "" >> resource-section.md
           done
           
-          # Control Plane with Gateway
-          echo "### Control Plane with Gateway" >> resource-section.md
+          echo "</details>" >> resource-section.md
           echo "" >> resource-section.md
-          echo "Full control plane deployment with LLM Gateway components enabled." >> resource-section.md
+          
+          # Control Plane with Gateway
+          echo "<details>" >> resource-section.md
+          echo "<summary><strong>Control Plane with Gateway</strong> - Full control plane deployment with LLM Gateway components enabled</summary>" >> resource-section.md
           echo "" >> resource-section.md
           
           for tier in small medium large; do
@@ -113,10 +116,12 @@ jobs:
             echo "" >> resource-section.md
           done
           
-          # Gateway Only
-          echo "### Gateway Only" >> resource-section.md
+          echo "</details>" >> resource-section.md
           echo "" >> resource-section.md
-          echo "Standalone LLM Gateway deployment connecting to an external control plane." >> resource-section.md
+          
+          # Gateway Only
+          echo "<details>" >> resource-section.md
+          echo "<summary><strong>Gateway Only</strong> - Standalone LLM Gateway deployment connecting to an external control plane</summary>" >> resource-section.md
           echo "" >> resource-section.md
           
           for tier in small medium large; do
@@ -126,6 +131,8 @@ jobs:
             python3 scripts/calculate-resources.py "output/gateway-only-$tier.yaml" --markdown >> resource-section.md
             echo "" >> resource-section.md
           done
+          
+          echo "</details>" >> resource-section.md
 
       - name: Update README
         run: |
