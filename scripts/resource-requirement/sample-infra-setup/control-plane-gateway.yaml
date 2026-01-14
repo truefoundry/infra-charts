@@ -1,0 +1,50 @@
+global:
+  # Domain to map the platform to
+  controlPlaneURL: https://example.com
+  # Ask TrueFoundry team to provide these
+  tenantName: <TENANT_NAME>
+  # Choose the resource tier as per your needs
+  resourceTier: large # or small or medium or large
+  # This is the reference to the secrets we created in the previous step
+  existingTruefoundryCredsSecret: "truefoundry-creds"
+  imagePullSecrets:
+    - name: "truefoundry-image-pull-secret"
+  ## Add if you have restricted public registry access
+  # image:
+  #   pullSecretNames:
+  #   - "truefoundry-image-pull-secret"
+
+  config:
+    defaultCloudProvider: "aws"
+    storageConfiguration:
+      awsS3BucketName: "<AWS_S3_BUCKET_NAME>"
+      awsRegion: "<AWS_REGION>"
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: <CONTROL_PLANE_IAM_ROLE_ARN>
+  ingress:
+    hosts:
+      - example.com
+    enabled: true
+    annotations: {}
+    ingressClassName: nginx # Replace with your ingress class name
+# In case, you want to spin up PostgreSQL on kubernetes, enable this
+# Please add creds and host details in the secret `truefoundry-creds` in the previous step
+devMode:
+  enabled: false
+tfyProxy:
+  enabled: true
+tags:
+  llmGateway: true
+  llmGatewayRequestLogging: true
+# Disable few dependencies for only LLM Gateway setup
+tfyBuild:
+  enabled: false
+sfyManifestService:
+  enabled: false
+tfyController:
+  enabled: false
+tfy-buildkitd-service:
+  enabled: false
+tfy-clickhouse:
+  enabled: false
