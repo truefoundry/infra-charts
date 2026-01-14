@@ -6,10 +6,9 @@ on:
       - 'main'
     paths:
       - '.github/workflows/generate-resource-requirements.yml'
-      - '.github/control-plane/**'
+      - 'scripts/resource-requirement/**'
       - 'charts/truefoundry/**'
       - 'charts/tfy-llm-gateway/**'
-      - 'scripts/calculate-resources.py'
 
 jobs:
   generate-resources:
@@ -54,19 +53,19 @@ jobs:
             
             # Control Plane Only
             helm template truefoundry charts/truefoundry \
-              -f .github/control-plane/control-plane-only.yaml \
+              -f scripts/resource-requirement/sample-infra-setup/control-plane-only.yaml \
               --set global.resourceTier=$tier \
               > output/control-plane-only-$tier.yaml
             
             # Control Plane + Gateway
             helm template truefoundry charts/truefoundry \
-              -f .github/control-plane/control-plane-gateway.yaml \
+              -f scripts/resource-requirement/sample-infra-setup/control-plane-gateway.yaml \
               --set global.resourceTier=$tier \
               > output/control-plane-gateway-$tier.yaml
             
             # Gateway Only
             helm template tfy-llm-gateway charts/tfy-llm-gateway \
-              -f .github/control-plane/gateway.yaml \
+              -f scripts/resource-requirement/sample-infra-setup/gateway.yaml \
               --set global.resourceTier=$tier \
               > output/gateway-only-$tier.yaml
           done
@@ -96,7 +95,7 @@ jobs:
             TIER_UPPER=$(echo "$tier" | tr '[:lower:]' '[:upper:]')
             echo "#### $TIER_UPPER" >> resource-section.md
             echo "" >> resource-section.md
-            python3 scripts/calculate-resources.py "output/control-plane-only-$tier.yaml" --markdown >> resource-section.md
+            python3 scripts/resource-requirement/calculate-resources.py "output/control-plane-only-$tier.yaml" --markdown >> resource-section.md
             echo "" >> resource-section.md
           done
           
@@ -112,7 +111,7 @@ jobs:
             TIER_UPPER=$(echo "$tier" | tr '[:lower:]' '[:upper:]')
             echo "#### $TIER_UPPER" >> resource-section.md
             echo "" >> resource-section.md
-            python3 scripts/calculate-resources.py "output/control-plane-gateway-$tier.yaml" --markdown >> resource-section.md
+            python3 scripts/resource-requirement/calculate-resources.py "output/control-plane-gateway-$tier.yaml" --markdown >> resource-section.md
             echo "" >> resource-section.md
           done
           
@@ -128,7 +127,7 @@ jobs:
             TIER_UPPER=$(echo "$tier" | tr '[:lower:]' '[:upper:]')
             echo "#### $TIER_UPPER" >> resource-section.md
             echo "" >> resource-section.md
-            python3 scripts/calculate-resources.py "output/gateway-only-$tier.yaml" --markdown >> resource-section.md
+            python3 scripts/resource-requirement/calculate-resources.py "output/gateway-only-$tier.yaml" --markdown >> resource-section.md
             echo "" >> resource-section.md
           done
           
