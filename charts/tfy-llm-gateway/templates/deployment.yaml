@@ -27,6 +27,10 @@ spec:
       labels:
         {{- include "tfy-llm-gateway.podLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 8 }}
+      {{- end }}
       {{- if .Values.dnsConfig }}
       dnsConfig:
         {{- toYaml .Values.dnsConfig | nindent 8 }}
