@@ -651,3 +651,50 @@ Tolerations for the deltafusion-compaction service
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine if optimized image should be used for deltaFusionCompaction
+Now that we merge affinities, we should use optimized image when karpenter is available,
+regardless of whether user affinity is also defined.
+*/}}
+{{- define "deltafusion-compaction.useOptimized" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionCompaction.karpenterAffinity.enabledIfAvailable -}}
+{{- $optimized := toString .Values.deltaFusionCompaction.image.optimized -}}
+
+{{- if $karpenterEnabled -}}
+  {{- if or (eq $optimized "auto") (eq $optimized "true") -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- else -}}
+  {{- if eq $optimized "true" -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get affinity for deltaFusionCompaction (merged: Karpenter affinity + user affinity)
+Note: We MERGE Karpenter affinity with user-defined affinity.
+User affinity takes precedence over Karpenter affinity when both are defined.
+Merge order: karpenterAffinity -> global.affinity -> component.affinity (rightmost wins)
+*/}}
+{{- define "deltafusion-compaction.affinity" -}}
+{{- $useOptimized := include "deltafusion-compaction.useOptimized" . | trim -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionCompaction.karpenterAffinity.enabledIfAvailable -}}
+
+{{- $baseAffinity := dict -}}
+{{- if and (eq $useOptimized "true") $karpenterEnabled -}}
+  {{- $baseAffinity = deepCopy .Values.deltaFusionCompaction.karpenterAffinity.affinity -}}
+{{- end -}}
+
+{{- $mergedAffinity := mergeOverwrite (deepCopy $baseAffinity) (deepCopy .Values.global.affinity) (deepCopy .Values.deltaFusionCompaction.affinity) -}}
+{{- if $mergedAffinity -}}
+{{ toYaml $mergedAffinity }}
+{{- end -}}
+{{- end -}}
