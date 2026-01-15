@@ -397,3 +397,50 @@ Image Pull Secrets
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine if optimized image should be used for deltaFusionQueryServer
+Now that we merge affinities, we should use optimized image when karpenter is available,
+regardless of whether user affinity is also defined.
+*/}}
+{{- define "deltafusion-query-server.useOptimized" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
+{{- $optimized := toString .Values.deltaFusionQueryServer.image.optimized -}}
+
+{{- if $karpenterEnabled -}}
+  {{- if or (eq $optimized "auto") (eq $optimized "true") -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- else -}}
+  {{- if eq $optimized "true" -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get affinity for deltaFusionQueryServer (merged: Karpenter affinity + user affinity)
+Note: We MERGE Karpenter affinity with user-defined affinity.
+User affinity takes precedence over Karpenter affinity when both are defined.
+Merge order: karpenterAffinity -> global.affinity -> component.affinity (rightmost wins)
+*/}}
+{{- define "deltafusion-query-server.affinity" -}}
+{{- $useOptimized := include "deltafusion-query-server.useOptimized" . | trim -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
+
+{{- $baseAffinity := dict -}}
+{{- if and (eq $useOptimized "true") $karpenterEnabled -}}
+  {{- $baseAffinity = deepCopy .Values.deltaFusionQueryServer.karpenterAffinity.affinity -}}
+{{- end -}}
+
+{{- $mergedAffinity := mergeOverwrite (deepCopy $baseAffinity) (deepCopy .Values.global.affinity) (deepCopy .Values.deltaFusionQueryServer.affinity) -}}
+{{- if $mergedAffinity -}}
+{{ toYaml $mergedAffinity }}
+{{- end -}}
+{{- end -}}
