@@ -31,7 +31,7 @@ cat <<EOF > /etc/soci-snapshotter-grpc/config.toml
   enable_keychain = true
   image_service_path = "/run/containerd/containerd.sock"
 [content_store]
-  type = "containerd"
+  type = "soci"
 [pull_modes]
   [pull_modes.soci_v1]
     enable = true

@@ -17,7 +17,7 @@ spec:
   source:
     chart: argo-rollouts
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 2.39.5
+    targetRevision: 2.40.5
     helm:
       values: |-
         {{- if .Values.argoRollouts.valuesOverride }}
@@ -32,7 +32,16 @@ spec:
         {{- if .Values.argoRollouts.affinity }}
         {{- $mergedAffinity = .Values.argoRollouts.affinity }}
         {{- end }}
+
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 10 }}
+        {{- end }}
         controller:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           metrics:
             enabled: true
             serviceMonitor:

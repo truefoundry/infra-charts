@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.108.2
+    targetRevision: 0.113.2
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -34,15 +34,44 @@ spec:
         {{- $mergedAffinity = .Values.truefoundry.affinity }}
         {{- end }}
         global:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- else }}
+          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
+          {{- end }}
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
-          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
           tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
           database:
             host: {{ .Values.truefoundry.database.host }}
             name: {{ .Values.truefoundry.database.name }}
             username: {{ .Values.truefoundry.database.username }}
             password: {{ .Values.truefoundry.database.password }}
+          proxy:
+            enabled: true
+          virtualservice:
+            enabled: {{ .Values.truefoundry.virtualservice.enabled }}
+            {{- if .Values.truefoundry.virtualservice.hosts }}
+            hosts:
+            {{- range $v := .Values.truefoundry.virtualservice.hosts }}
+            - {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.truefoundry.virtualservice.gateways }}
+            gateways:
+            {{- range $v := .Values.truefoundry.virtualservice.gateways }}
+            - {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.truefoundry.virtualservice.annotations }}
+            annotations:
+              {{- toYaml .Values.truefoundry.virtualservice.annotations | nindent 14 }}
+            {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
@@ -88,23 +117,9 @@ spec:
             affinity: {}
             {{- end }}
         {{- end }}
-        
+
         truefoundryFrontendApp:
-          istio:
-            virtualservice:
-              enabled: {{ .Values.truefoundry.virtualservice.enabled }}
-              {{- if .Values.truefoundry.virtualservice.hosts }}
-              hosts:
-              {{- range $v := .Values.truefoundry.virtualservice.hosts }}
-              - {{ $v | quote }}
-              {{- end }}
-              {{- end }}
-              {{- if .Values.truefoundry.virtualservice.gateways }}
-              gateways:
-              {{- range $v := .Values.truefoundry.virtualservice.gateways }}
-              - {{ $v | quote }}
-              {{- end }}
-              {{- end }}
+          enabled: false
 
         tfyNats:
           podTemplate:
@@ -116,9 +131,16 @@ spec:
                   secret:
                     secretName: tfy-nats-accounts
                     defaultMode: 420
+              {{- if .Values.imagePullSecrets }}
+              - op: add
+                path: /spec/imagePullSecrets
+                value:
+                  {{- toYaml .Values.imagePullSecrets | nindent 18 }}
+              {{- else }}
               - op: add
                 path: /spec/imagePullSecrets
                 value: []
+              {{- end }}
               {{- if $mergedTolerations }}
               - op: add
                 path: /spec/tolerations
@@ -187,48 +209,6 @@ spec:
           {{- else }}
           affinity: {}
           {{- end }}
-        tfy-clickhouse:
-          enabled: false
-          clickhouse:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-          altinity-clickhouse-operator:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-          zookeeper:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-
         {{- end }}
 
   syncPolicy:

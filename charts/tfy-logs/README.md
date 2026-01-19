@@ -52,7 +52,7 @@ The solution consists of two main components:
 | `victoria-logs-single.vector.resources`               | Resources                                                                             | `{}`                                              |
 | `victoria-logs-single.vector.podPriorityClassName`    | Pod priority class name                                                               | `system-node-critical`                            |
 | `victoria-logs-single.vector.image.repository`        | Image repository                                                                      | `public.ecr.aws/truefoundrycloud/timberio/vector` |
-| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `v0.50.0`                                         |
+| `victoria-logs-single.vector.image.tag`               | Image tag                                                                             | `v0.52.0`                                         |
 | `victoria-logs-single.vector.enabled`                 | Enable vector                                                                         | `true`                                            |
 | `victoria-logs-single.vector.podSecurityContext`      | Pod-level security context for Vector                                                 | `{}`                                              |
 | `victoria-logs-single.vector.securityContext`         | Container-level security context for Vector                                           | `{}`                                              |

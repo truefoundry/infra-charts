@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-otel-collector.deploymentLabels" . | nindent 4 }}
   annotations:

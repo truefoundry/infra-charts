@@ -1,6 +1,13 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
 {{- define "buildkitd-service.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -222,6 +229,20 @@ limits:
 200Gi
 {{- end }}
 {{- end }}
+
+
+{{- define "buildkitd-service.imagePullSecrets" -}}
+{{- if .Values.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
+
 
 {{/*
 Affinity for the buildkitd service

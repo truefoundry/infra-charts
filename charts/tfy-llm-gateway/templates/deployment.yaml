@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.deploymentLabels" . | nindent 4 }}
   annotations:
@@ -27,6 +28,10 @@ spec:
       labels:
         {{- include "tfy-llm-gateway.podLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 8 }}
+      {{- end }}
       {{- if .Values.dnsConfig }}
       dnsConfig:
         {{- toYaml .Values.dnsConfig | nindent 8 }}

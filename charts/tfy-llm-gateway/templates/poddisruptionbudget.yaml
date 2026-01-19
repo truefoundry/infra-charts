@@ -3,6 +3,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.pdbLabels" . | nindent 4 }}
   annotations:
