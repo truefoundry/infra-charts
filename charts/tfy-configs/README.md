@@ -3,6 +3,12 @@ TFY Configs is a Helm chart that allows configuring TrueFoundry Platform Feature
 
 ## Parameters
 
+### Global prameters for Various Configurations
+
+| Name                       | Description                                                                      | Value |
+| -------------------------- | -------------------------------------------------------------------------------- | ----- |
+| `global.namespaceOverride` | Override namespace for the image configurations (defaults to .Release.Namespace) | `""`  |
+
 ### configs Various Configurations
 
 | Name                                          | Description                                                                                                                                                                                                                                 | Value     |
