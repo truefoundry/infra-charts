@@ -95,12 +95,13 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### Truefoundry virtual service parameters
 
-| Name                                     | Description                                        | Value   |
-| ---------------------------------------- | -------------------------------------------------- | ------- |
-| `truefoundry.virtualservice.enabled`     | Flag to enable virtualservice                      | `false` |
-| `truefoundry.virtualservice.hosts`       | Hosts for truefoundry virtualservice               | `[]`    |
-| `truefoundry.virtualservice.gateways`    | Istio gateways to be configured for virtualservice | `[]`    |
-| `truefoundry.virtualservice.annotations` | Annotations for truefoundry virtualservice         | `{}`    |
+| Name                                         | Description                                        | Value   |
+| -------------------------------------------- | -------------------------------------------------- | ------- |
+| `truefoundry.virtualservice.enabled`         | Flag to enable virtualservice                      | `false` |
+| `truefoundry.virtualservice.hosts`           | Hosts for truefoundry virtualservice               | `[]`    |
+| `truefoundry.virtualservice.gateways`        | Istio gateways to be configured for virtualservice | `[]`    |
+| `truefoundry.virtualservice.annotations`     | Annotations for truefoundry virtualservice         | `{}`    |
+| `truefoundry.existingTruefoundryCredsSecret` | Secret name for existing Truefoundry creds         | `""`    |
 
 ### database. Can be left empty if using the dev mode parameters
 
@@ -111,6 +112,7 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 | `truefoundry.database.username`                                            | Username of the database                                   | `""`    |
 | `truefoundry.database.password`                                            | Password of the database                                   | `""`    |
 | `truefoundry.tfyApiKey`                                                    | API Key for TrueFoundry                                    | `""`    |
+| `truefoundry.imagePullSecrets`                                             | Image pull secrets for TrueFoundry                         | `[]`    |
 | `truefoundry.truefoundryImagePullConfigJSON`                               | Json config for authenticating to the TrueFoundry registry | `""`    |
 | `truefoundry.truefoundry_iam_role_arn_annotations`                         | IAM role annotations for service accounts                  | `{}`    |
 | `truefoundry.defaultCloudProvider`                                         | Default cloud provider                                     | `gcp`   |
