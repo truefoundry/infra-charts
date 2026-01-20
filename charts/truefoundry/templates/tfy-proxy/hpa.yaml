@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "tfy-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-proxy.hpaLabels" . | nindent 4 }}
   annotations:

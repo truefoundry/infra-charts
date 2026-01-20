@@ -3,6 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
   name: build
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-build.commonLabels" . | nindent 4 }}
   annotations:

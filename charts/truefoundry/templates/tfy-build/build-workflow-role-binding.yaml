@@ -3,6 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ include "tfy-build.fullname" . }}-role-binding
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-build.commonLabels" . | nindent 4 }}
   annotations:

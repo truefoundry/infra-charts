@@ -4,6 +4,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ include "deltafusion-compaction.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "deltafusion-compaction.cronJobLabels" . | nindent 4 }}
   annotations:
