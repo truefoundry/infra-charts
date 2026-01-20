@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-k8s-controller.deploymentLabels" . | nindent 4 }}
   annotations:

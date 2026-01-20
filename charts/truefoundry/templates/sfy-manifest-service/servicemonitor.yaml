@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "sfy-manifest-service.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "sfy-manifest-service.serviceMonitorLabels" . | nindent 4 }}
   annotations:

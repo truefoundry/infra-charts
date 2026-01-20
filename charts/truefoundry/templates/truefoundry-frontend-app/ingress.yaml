@@ -3,6 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "truefoundry-frontend-app.fullname" . }}-ingress
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry-frontend-app.ingress.labels" . | nindent 4 }}
   annotations:

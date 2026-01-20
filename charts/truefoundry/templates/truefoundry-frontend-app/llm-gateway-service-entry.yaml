@@ -3,6 +3,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
   name: llm-gateway-{{ include "truefoundry-frontend-app.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
   annotations:
