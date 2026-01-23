@@ -39,10 +39,10 @@
         "details": {
             "chart": "tfy-grafana",
             "repoURL": "https://truefoundry.github.io/infra-charts/",
-            "targetRevision": "0.1.19",
+            "targetRevision": "0.1.21",
             "images": [
-                "quay.io/kiwigrid/k8s-sidecar:1.30.3",
-                "mirror.gcr.io/grafana/grafana:12.0.2",
+                "quay.io/kiwigrid/k8s-sidecar:2.1.2",
+                "mirror.gcr.io/grafana/grafana:12.3.0",
                 "mirror.gcr.io/library/busybox:1.31.1",
                 "docker.io/bats/bats:v1.4.1"
             ]
@@ -130,14 +130,16 @@
         "details": {
             "chart": "kube-prometheus-stack",
             "repoURL": "https://prometheus-community.github.io/helm-charts",
-            "targetRevision": "69.6.0",
+            "targetRevision": "81.2.0",
             "images": [
-                "quay.io/prometheus/node-exporter:v1.9.0",
-                "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0",
-                "quay.io/prometheus-operator/prometheus-operator:v0.80.1",
-                "quay.io/prometheus/alertmanager:v0.28.0",
-                "quay.io/prometheus/prometheus:v3.2.1",
-                "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.1"
+                "quay.io/prometheus/node-exporter:v1.10.2",
+                "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0",
+                "quay.io/prometheus-operator/prometheus-operator:v0.88.0",
+                "quay.io/prometheus/alertmanager:v0.30.1",
+                "quay.io/prometheus/prometheus:v3.9.1",
+                "registry.k8s.io/kubectl:v1.32.0",
+                "tfy.jfrog.io/tfy-mirror/busybox:latest",
+                "ghcr.io/jkroepke/kube-webhook-certgen:1.7.4"
             ]
         }
     },
@@ -266,19 +268,19 @@
         "details": {
             "chart": "truefoundry",
             "repoURL": "oci://tfy.jfrog.io/tfy-helm",
-            "targetRevision": "0.114.1",
+            "targetRevision": "0.115.0",
             "images": [
-                "tfy.jfrog.io/tfy-private-images/tfy-llm-gateway:v0.114.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-otel-collector:v0.114.0",
-                "tfy.jfrog.io/tfy-private-images/deltafusion-query-server:v0.111.1",
+                "tfy.jfrog.io/tfy-private-images/tfy-llm-gateway:v0.115.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-otel-collector:v0.115.0",
+                "tfy.jfrog.io/tfy-private-images/deltafusion-query-server:v0.115.0",
                 "tfy.jfrog.io/tfy-private-images/mlfoundry-server:v0.114.0",
                 "tfy.jfrog.io/tfy-private-images/s3proxy:v0.57.0",
-                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.114.0",
+                "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.115.0",
                 "tfy.jfrog.io/tfy-private-images/sfy-manifest-service:v0.111.0",
                 "tfy.jfrog.io/tfy-private-images/spark-history-server:v0.105.0",
                 "tfy.jfrog.io/tfy-private-images/tfy-controller:v0.99.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.113.0",
-                "tfy.jfrog.io/tfy-private-images/tfy-proxy:v0.114.1",
+                "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.115.0",
+                "tfy.jfrog.io/tfy-private-images/tfy-proxy:v0.115.0",
                 "tfy.jfrog.io/tfy-private-images/tfy-workflow-admin:v0.80.0",
                 "tfy.jfrog.io/tfy-images/postgresql:16.6.0-debian-12-r2",
                 "tfy.jfrog.io/tfy-mirror/moby/buildkit:v0.26.2",
@@ -424,7 +426,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/kiwigrid/k8s-sidecar:1.30.3",
+            "registryURL": "quay.io/kiwigrid/k8s-sidecar:2.1.2",
             "platforms": [
                 {
                     "os": "linux",
@@ -437,14 +439,6 @@
                 {
                     "os": "linux",
                     "architecture": "arm"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "ppc64le"
-                },
-                {
-                    "os": "linux",
-                    "architecture": "s390x"
                 }
             ]
         }
@@ -452,7 +446,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "mirror.gcr.io/grafana/grafana:12.0.2",
+            "registryURL": "mirror.gcr.io/grafana/grafana:12.3.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -716,7 +710,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/node-exporter:v1.9.0",
+            "registryURL": "quay.io/prometheus/node-exporter:v1.10.2",
             "platforms": [
                 {
                     "os": "linux",
@@ -744,7 +738,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0",
+            "registryURL": "registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -772,7 +766,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus-operator/prometheus-operator:v0.80.1",
+            "registryURL": "quay.io/prometheus-operator/prometheus-operator:v0.88.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -800,21 +794,87 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/alertmanager:v0.28.0",
-            "platforms": []
+            "registryURL": "quay.io/prometheus/alertmanager:v0.30.1",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "quay.io/prometheus/prometheus:v3.2.1",
-            "platforms": []
+            "registryURL": "quay.io/prometheus/prometheus:v3.9.1",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
         }
     },
     {
         "type": "image",
         "details": {
-            "registryURL": "registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.5.1",
+            "registryURL": "registry.k8s.io/kubectl:v1.32.0",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "tfy.jfrog.io/tfy-mirror/busybox:latest",
             "platforms": [
                 {
                     "os": "linux",
@@ -826,7 +886,51 @@
                 },
                 {
                     "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm"
+                },
+                {
+                    "os": "linux",
                     "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "386"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "ppc64le"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "riscv64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
+                }
+            ]
+        }
+    },
+    {
+        "type": "image",
+        "details": {
+            "registryURL": "ghcr.io/jkroepke/kube-webhook-certgen:1.7.4",
+            "platforms": [
+                {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "arm64"
+                },
+                {
+                    "os": "linux",
+                    "architecture": "s390x"
                 }
             ]
         }
@@ -1215,7 +1319,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-llm-gateway:v0.114.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-llm-gateway:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -1231,7 +1335,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-otel-collector:v0.114.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-otel-collector:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -1247,7 +1351,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/deltafusion-query-server:v0.111.1",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/deltafusion-query-server:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -1295,7 +1399,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.114.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/servicefoundry-server:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -1359,7 +1463,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.113.0",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-k8s-controller:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
@@ -1375,7 +1479,7 @@
     {
         "type": "image",
         "details": {
-            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-proxy:v0.114.1",
+            "registryURL": "tfy.jfrog.io/tfy-private-images/tfy-proxy:v0.115.0",
             "platforms": [
                 {
                     "os": "linux",
