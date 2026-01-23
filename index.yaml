@@ -27290,6 +27290,52 @@ entries:
     version: 0.0.1
   truefoundry:
   - apiVersion: v2
+    created: "2026-01-23T14:22:07.388809955Z"
+    dependencies:
+    - condition: servicefoundryServer.enabled
+      name: tfy-configs
+      repository: https://truefoundry.github.io/infra-charts
+      version: 0.1.23
+    - alias: tfyNats
+      condition: tfyNats.enabled
+      name: nats
+      repository: https://nats-io.github.io/k8s/helm/charts/
+      version: 1.3.9
+    - condition: devMode.enabled
+      name: postgresql
+      repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
+      version: 18.1.1
+    - condition: tfy-buildkitd-service.enabled
+      name: tfy-buildkitd-service
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.16
+    - alias: extraResources
+      condition: extraResources.enabled
+      name: tfy-manifests-template
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.0
+    - condition: tfy-llm-gateway.enabled
+      name: tfy-llm-gateway
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - llmGateway
+      version: 0.115.1
+    - condition: tfy-otel-collector.enabled
+      name: tfy-otel-collector
+      repository: https://truefoundry.github.io/infra-charts/
+      tags:
+      - tracing
+      - llmGatewayRequestLogging
+      version: 0.115.1
+    description: TrueFoundry Control Plane Components
+    digest: 6b0591f7f883768f52161d1bf7a32dcfee581db5bac8bb1d7bf1825f9e92e449
+    maintainers:
+    - name: truefoundry
+    name: truefoundry
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.115.2/truefoundry-0.115.2.tgz
+    version: 0.115.2
+  - apiVersion: v2
     created: "2026-01-23T09:57:08.370743524Z"
     dependencies:
     - condition: servicefoundryServer.enabled
@@ -38524,4 +38570,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-configs-0.1.0-rc.1/truefoundry-configs-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2026-01-23T13:42:08.675939344Z"
+generated: "2026-01-23T14:22:07.391994246Z"
