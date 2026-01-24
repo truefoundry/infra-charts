@@ -70,10 +70,13 @@ spec:
           return;
         }
         print("Adding volume " + mountDetail.secretName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
-        request.object.spec.volumes = request.object.spec.volumes.concat({
+        if (request.object.spec.volumes === undefined) {
+          request.object.spec.volumes = [];
+        }
+        request.object.spec.volumes.push({
           name: mountDetail.secretName,
-        secret: {
-          secretName: mountDetail.secretName
+          secret: {
+            secretName: mountDetail.secretName
           }
         });
       }
@@ -84,7 +87,10 @@ spec:
           return;
         }
         print("Adding volume " + mountDetail.configMapName + " to the pod " + request.object.metadata.name + " in namespace " + request.namespace);
-        request.object.spec.volumes = request.object.spec.volumes.concat({
+        if (request.object.spec.volumes === undefined) {
+          request.object.spec.volumes = [];
+        }
+        request.object.spec.volumes.push({
           name: mountDetail.configMapName,
           configMap: {
             name: mountDetail.configMapName
@@ -117,7 +123,10 @@ spec:
         }
         print("Adding volume mount " + volumeName + " to the container " + container.name + " in the pod " + request.object.metadata.name + " in namespace " + request.namespace);
         print("Mount details: " + JSON.stringify(mountDetail));
-        container.volumeMounts = container.volumeMounts.concat({
+        if (container.volumeMounts === undefined) {
+          container.volumeMounts = [];
+        }
+        container.volumeMounts.push({
           name: volumeName,
           mountPath: mountDetail.mountPath,
           subPath: mountDetail.subPath || "",
