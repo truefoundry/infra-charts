@@ -190,17 +190,17 @@ Truefoundry virtual service fullname
   VirtualService labels
   */}}
 {{- define "truefoundry.virtualservice.labels" -}}
-{{- include "truefoundry.labels" (dict "context" . "name" "truefoundry-virtualservice") }}
-{{- end }}
+{{- $base := include "truefoundry.labels" (dict "context" . "name" "truefoundry-virtualservice") | fromYaml -}}
+{{- $virtualServiceLabels := mergeOverwrite $base (deepCopy .Values.global.virtualservice.labels) -}}
+{{- toYaml $virtualServiceLabels -}}
+{{- end -}}
 
 {{/*
   Truefoundry virtualService annotations
   */}}
 {{- define "truefoundry.virtualservice.annotations" -}}
-{{- include "global.annotations" . -}}
-{{- with .Values.global.virtualservice.annotations }}
-{{ toYaml . }}
-{{- end }}
+{{- $virtualServiceAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.global.virtualservice.annotations }}
+{{- toYaml $virtualServiceAnnotations }}
 {{- end }}
 
 

@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.112.0"
+  gatewayChartVersion: "0.118.0"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.112.0
+  tag: v0.118.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -215,6 +215,13 @@ extraVolumes: []
 extraVolumeMounts: []
 ## @param dnsConfig DNS config
 dnsConfig: {}
+## @param hostAliases Host aliases
+## Example
+# hostAliases:
+# - ip: 127.0.0.1
+#   hostnames:
+#   - myadded.examplehostname
+hostAliases: []
 ## rbac configuration
 rbac:
   ## @param rbac.enabled Enable rbac
@@ -229,7 +236,9 @@ autoscaling:
   maxReplicas: 100
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
   targetCPUUtilizationPercentage: 60
-## Rollout configuration
+  ## @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
+  # targetMemoryUtilizationPercentage: 70
+  ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
   enabled: true
@@ -251,7 +260,6 @@ env:
   USE_GLOBAL_STATE_V2: "true"
   MULTITENANT: "false"
   TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
-  USE_NEW_WATCHER_SYSTEM: "true"
   AUTH_SERVER_URL: https://auth.truefoundry.com
   RUN_IN_SINGLE_TENANT_MODE: "false"
   CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"

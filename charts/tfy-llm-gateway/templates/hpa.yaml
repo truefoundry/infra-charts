@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.commonLabels" . | nindent 4 }}
   annotations:
@@ -21,4 +22,12 @@ spec:
       target:
         type: Utilization
         averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+{{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+{{- end }}
 {{- end }}

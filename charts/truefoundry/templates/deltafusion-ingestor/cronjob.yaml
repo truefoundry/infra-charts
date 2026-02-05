@@ -4,6 +4,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ include "deltafusion-compaction.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "deltafusion-compaction.cronJobLabels" . | nindent 4 }}
   annotations:
@@ -40,7 +41,8 @@ spec:
               securityContext:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- if .Values.deltaFusionCompaction.image.optimized }}
+              {{- $useOptimized := include "deltafusion-compaction.useOptimized" . | trim }}
+              {{- if eq $useOptimized "true" }}
               image: "{{ .Values.deltaFusionCompaction.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionCompaction.image.repository }}:{{ .Values.deltaFusionCompaction.image.tag }}-optimized"
               {{- else }}
               image: "{{ .Values.deltaFusionCompaction.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionCompaction.image.repository }}:{{ .Values.deltaFusionCompaction.image.tag }}"
@@ -65,10 +67,10 @@ spec:
           nodeSelector:
             {{- toYaml $mergedNodeSelector | nindent 12 }}
           {{- end }}
-          {{- $mergedAffinity := dict | merge .Values.deltaFusionCompaction.affinity .Values.global.affinity }}
+          {{- $mergedAffinity := include "deltafusion-compaction.affinity" . | fromYaml }}
           {{- if $mergedAffinity }}
           affinity:
-          {{- toYaml $mergedAffinity | nindent 12 }}
+            {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
           tolerations:
             {{- .Values.global.tolerations | toYaml | nindent 12 }}

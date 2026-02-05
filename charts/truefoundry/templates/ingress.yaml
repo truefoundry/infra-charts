@@ -6,6 +6,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "truefoundry.ingress.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry.ingress.labels" . | nindent 4 }}
   annotations:
@@ -43,6 +44,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "truefoundry.ingress.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry.ingress.labels" . | nindent 4 }}
   annotations:

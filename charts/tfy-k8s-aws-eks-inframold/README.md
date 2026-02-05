@@ -134,12 +134,13 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### Truefoundry virtual service parameters
 
-| Name                                     | Description                                        | Value   |
-| ---------------------------------------- | -------------------------------------------------- | ------- |
-| `truefoundry.virtualservice.enabled`     | Flag to enable virtualservice                      | `false` |
-| `truefoundry.virtualservice.hosts`       | Hosts for truefoundry virtualservice               | `[]`    |
-| `truefoundry.virtualservice.gateways`    | Istio gateways to be configured for virtualservice | `[]`    |
-| `truefoundry.virtualservice.annotations` | Annotations for truefoundry virtualservice         | `{}`    |
+| Name                                         | Description                                        | Value   |
+| -------------------------------------------- | -------------------------------------------------- | ------- |
+| `truefoundry.virtualservice.enabled`         | Flag to enable virtualservice                      | `false` |
+| `truefoundry.virtualservice.hosts`           | Hosts for truefoundry virtualservice               | `[]`    |
+| `truefoundry.virtualservice.gateways`        | Istio gateways to be configured for virtualservice | `[]`    |
+| `truefoundry.virtualservice.annotations`     | Annotations for truefoundry virtualservice         | `{}`    |
+| `truefoundry.existingTruefoundryCredsSecret` | Secret name for existing Truefoundry creds         | `""`    |
 
 ### database. Can be left empty if using the dev mode parameters
 
@@ -150,6 +151,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `truefoundry.database.username`                     | Username of the database                                   | `""`    |
 | `truefoundry.database.password`                     | Password of the database                                   | `""`    |
 | `truefoundry.tfyApiKey`                             | API Key for TrueFoundry                                    | `""`    |
+| `truefoundry.imagePullSecrets`                      | Image pull secrets for TrueFoundry                         | `[]`    |
 | `truefoundry.truefoundryImagePullConfigJSON`        | Json config for authenticating to the TrueFoundry registry | `""`    |
 | `truefoundry.truefoundry_iam_role_arn_annotations`  | IAM role annotations for service accounts                  | `{}`    |
 | `truefoundry.defaultCloudProvider`                  | Default cloud provider                                     | `aws`   |
@@ -159,6 +161,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `truefoundry.s3proxy.enabled`                       | Flag to enable S3 Proxy                                    | `false` |
 | `truefoundry.sparkHistoryServer.enabled`            | Flag to enable Spark History Server                        | `false` |
 | `truefoundry.tfyWorkflowAdmin.enabled`              | Flag to enable Tfy Workflow Admin                          | `false` |
+| `truefoundry.gateway.enabled`                       | Flag to enable Gateway                                     | `false` |
 | `truefoundry.tolerations`                           | Tolerations for the truefoundry components                 | `[]`    |
 | `truefoundry.affinity`                              | Affinity for the truefoundry components                    | `{}`    |
 

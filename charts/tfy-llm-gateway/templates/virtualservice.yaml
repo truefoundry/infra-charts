@@ -5,6 +5,7 @@ apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.virtualserviceLabels" . | nindent 4 }}
   annotations:

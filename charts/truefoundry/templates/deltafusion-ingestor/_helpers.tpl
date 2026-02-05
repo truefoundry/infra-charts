@@ -651,3 +651,55 @@ Tolerations for the deltafusion-compaction service
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine if optimized image should be used for deltaFusionCompaction
+- image.optimized=true → always use optimized
+- image.optimized=false → never use optimized
+- image.optimized=auto → use optimized only if Karpenter affinity will be applied (no user affinity override)
+*/}}
+{{- define "deltafusion-compaction.useOptimized" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionCompaction.karpenterAffinity.enabledIfAvailable -}}
+{{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionCompaction.affinity) 0) -}}
+{{- $optimized := toString .Values.deltaFusionCompaction.image.optimized -}}
+
+{{- if eq $optimized "true" -}}
+true
+{{- else if eq $optimized "false" -}}
+false
+{{- else if eq $optimized "auto" -}}
+  {{- if and $karpenterEnabled (not $hasUserAffinity) -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get affinity for deltaFusionCompaction (override strategy)
+User affinity (global + component) completely overrides Karpenter affinity.
+If no user affinity: use Karpenter affinity (when Karpenter is available and enabled)
+If user affinity exists: merge global.affinity + component.affinity (component wins, Karpenter skipped)
+*/}}
+{{- define "deltafusion-compaction.affinity" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionCompaction.karpenterAffinity.enabledIfAvailable -}}
+{{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionCompaction.affinity) 0) -}}
+
+{{- $result := dict -}}
+{{- if $hasUserAffinity -}}
+  {{- /* User affinity takes precedence - merge global + component */ -}}
+  {{- $result = mergeOverwrite (deepCopy .Values.global.affinity) (deepCopy .Values.deltaFusionCompaction.affinity) -}}
+{{- else if $karpenterEnabled -}}
+  {{- /* No user affinity - use Karpenter affinity for optimized scheduling */ -}}
+  {{- $result = .Values.deltaFusionCompaction.karpenterAffinity.affinity -}}
+{{- end -}}
+
+{{- if $result -}}
+{{ toYaml $result }}
+{{- end -}}
+{{- end -}}
