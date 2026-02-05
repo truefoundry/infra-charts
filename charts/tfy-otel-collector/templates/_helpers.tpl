@@ -330,6 +330,19 @@ limits:
 {{- end }}
 {{- end }}
 
+{{- define "tfy-otel-collector.hpaMinReplicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.minReplicas -}}
+{{ .Values.minReplicas }}
+{{- else if eq $tier "small" -}}
+1
+{{- else if eq $tier "medium" -}}
+3
+{{- else if eq $tier "large" -}}
+5
+{{- end }}
+{{- end }}
+
 {{- define  "tfy-otel-collector.hpaMaxReplicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.autoscaling.maxReplicas -}}

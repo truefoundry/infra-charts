@@ -13,7 +13,7 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "tfy-otel-collector.fullname" . }}
-    minReplicas: {{ include "tfy-otel-collector.replicas" . }}
+    minReplicas: {{ include "tfy-otel-collector.hpaMinReplicas" . }}
     maxReplicas: {{ include "tfy-otel-collector.hpaMaxReplicas" . }}
     metrics:
         {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
