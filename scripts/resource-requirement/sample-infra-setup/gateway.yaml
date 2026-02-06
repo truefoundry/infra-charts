@@ -1,0 +1,18 @@
+global:
+  # This is the reference to the secrets we created in the previous step
+  imagePullSecrets:
+    - name: "truefoundry-image-pull-secret"
+  # Choose the resource tier as per your needs
+  resourceTier: large # or small or large
+env:
+  # CONTROL_PLANE_URL format: company-name.truefoundry.cloud (e.g., example-company.truefoundry.cloud)
+  CONTROL_PLANE_NATS_URL: wss://<CONTROL_PLANE_URL>:443
+  TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  # CONTROL_PLANE_URL format: company-name.truefoundry.cloud (e.g., example-company.truefoundry.cloud)
+  SERVICEFOUNDRY_SERVER_URL: https://<CONTROL_PLANE_URL>/api/svc
+  # CONTROL_PLANE_URL format: company-name.truefoundry.cloud (e.g., example-company.truefoundry.cloud)
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: https://<CONTROL_PLANE_URL>/api/otel/v1/traces
+  # CONTROL_PLANE_URL format: company-name.truefoundry.cloud (e.g., example-company.truefoundry.cloud)
+  PUBLIC_CONTROL_PLANE_URL: https://<CONTROL_PLANE_URL>
+  TENANT_NAME: <TENANT_NAME>
+  RUN_IN_SINGLE_TENANT_MODE: 'true'
