@@ -24,7 +24,7 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.tfyProxy.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
-    {{- if .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- if and (ne .Values.global.resourceTier "small") .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory
