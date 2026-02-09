@@ -71,68 +71,47 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `metricsServer.affinity`       | Affinity for Metrics Server                | `{}`   |
 | `metricsServer.valuesOverride` | Config override from default config values | `{}`   |
 
-### AWS Load Balancer Controller Wait Job
-
-When both `aws.awsLoadBalancerController.enabled` and `istio.enabled` are `true`, the chart
-includes a Helm `post-install`/`post-upgrade` Job (`wait-for-alb-controller`) that blocks
-the Istio Gateway Application (tfy-istio-ingress) from being created until the AWS Load
-Balancer Controller deployment is ready. This prevents a race where the Istio ingress
-LoadBalancer Service is created before the controller can provision it.
-
-- **Two-phase wait**: (1) Wait for the deployment to exist (e.g. after ArgoCD syncs the ALB controller App), then (2) wait for it to become available.
-- **Timeouts**: Configurable via `aws.awsLoadBalancerController.waitJob.existTimeout` (default 300s) and `aws.awsLoadBalancerController.waitJob.timeout` (default 600s for availability).
-- **Namespace**: `aws-load-balancer-controller`
-- **RBAC**: Namespace-scoped Role (get/list/watch deployments). The ServiceAccount, Role, and RoleBinding persist across runs so Helm applies them on upgrade instead of failing with "already exists".
-- **Retries**: Job has `backoffLimit: 0`; a failed run exits non-zero and blocks subsequent post-install/upgrade hooks until the controller is ready.
-
-To observe the Job during install:
-
-```bash
-kubectl get jobs -n aws-load-balancer-controller -w
-kubectl logs -n aws-load-balancer-controller job/wait-for-alb-controller
-```
-
 ### AWS parameters
 
-| Name                                           | Description                                 | Value   |
-| ---------------------------------------------- | ------------------------------------------- | ------- |
-| `aws.awsLoadBalancerController.enabled`        | Flag to enable AWS Load Balancer Controller | `true`  |
-| `aws.awsLoadBalancerController.roleArn`        | Role ARN for AWS Load Balancer Controller   | `""`    |
-| `aws.awsLoadBalancerController.vpcId`          | VPC ID of AWS EKS cluster                   | `""`    |
-| `aws.awsLoadBalancerController.region`         | region of AWS EKS cluster                   | `""`    |
-| `aws.awsLoadBalancerController.affinity`       | Affinity for AWS LoadBalancer               | `{}`    |
-| `aws.awsLoadBalancerController.tolerations`    | Tolerations for AWS LoadBalancer            | `[]`    |
-| `aws.awsLoadBalancerController.valuesOverride` | Config override from default config values  | `{}`    |
-| `aws.awsLoadBalancerController.waitJob.imageRepo` | Kubectl image for the ALB wait Job (match cluster k8s version) | `public.ecr.aws/bitnami/kubectl` |
-| `aws.awsLoadBalancerController.waitJob.timeout` | Timeout in seconds for deployment to become available           | `600`   |
-| `aws.awsLoadBalancerController.waitJob.existTimeout` | Timeout in seconds for deployment to appear (e.g. after ArgoCD sync) | `300`   |
-| `aws.karpenter.enabled`                        | Flag to enable Karpenter                    | `true`  |
-| `aws.karpenter.clusterEndpoint`                | Cluster endpoint for Karpenter              | `""`    |
-| `aws.karpenter.roleArn`                        | Role ARN for Karpenter                      | `""`    |
-| `aws.karpenter.instanceProfile`                | Instance profile for Karpenter              | `""`    |
-| `aws.karpenter.defaultZones`                   | Default zones list for Karpenter            | `[]`    |
-| `aws.karpenter.affinity`                       | Affinity for Karpenter                      | `{}`    |
-| `aws.karpenter.tolerations`                    | Tolerations for Karpenter                   | `[]`    |
-| `aws.karpenter.kmsKeyID`                       | KMS Key ID for Karpenter                    | `""`    |
-| `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
-| `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
-| `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
-| `aws.awsEbsCsiDriver.enabled`                  | Flag to enable AWS EBS CSI Driver           | `true`  |
-| `aws.awsEbsCsiDriver.roleArn`                  | Role ARN for AWS EBS CSI Driver             | `""`    |
-| `aws.awsEbsCsiDriver.affinity`                 | Affinity for AWS EBS CSI Driver             | `{}`    |
-| `aws.awsEbsCsiDriver.tolerations`              | Tolerations for AWS EBS CSI Driver          | `[]`    |
-| `aws.awsEbsCsiDriver.kmsKeyID`                 | KMS Key ID for AWS EBS CSI Driver           | `""`    |
-| `aws.awsEbsCsiDriver.valuesOverride`           | Config override from default config values  | `{}`    |
-| `aws.awsEfsCsiDriver.enabled`                  | Flag to enable AWS EFS CSI Driver           | `true`  |
-| `aws.awsEfsCsiDriver.fileSystemId`             | File system ID for AWS EFS CSI Driver       | `""`    |
-| `aws.awsEfsCsiDriver.roleArn`                  | Role ARN for AWS EFS CSI Driver             | `""`    |
-| `aws.awsEfsCsiDriver.affinity`                 | Affinity for AWS EFS CSI Driver             | `{}`    |
-| `aws.awsEfsCsiDriver.tolerations`              | Tolerations for AWS EFS CSI Driver          | `[]`    |
-| `aws.awsEfsCsiDriver.valuesOverride`           | Config override from default config values  | `{}`    |
-| `aws.inferentia.enabled`                       | Flag to enable Inferentia                   | `false` |
-| `aws.inferentia.affinity`                      | Affinity for AWS EFS CSI Driver             | `{}`    |
-| `aws.inferentia.tolerations`                   | Tolerations for AWS EFS CSI Driver          | `[]`    |
-| `aws.inferentia.valuesOverride`                | Config override from default config values  | `{}`    |
+| Name                                                 | Description                                                                                                  | Value                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| `aws.awsLoadBalancerController.enabled`              | Flag to enable AWS Load Balancer Controller                                                                  | `true`                           |
+| `aws.awsLoadBalancerController.roleArn`              | Role ARN for AWS Load Balancer Controller                                                                    | `""`                             |
+| `aws.awsLoadBalancerController.vpcId`                | VPC ID of AWS EKS cluster                                                                                    | `""`                             |
+| `aws.awsLoadBalancerController.region`               | region of AWS EKS cluster                                                                                    | `""`                             |
+| `aws.awsLoadBalancerController.affinity`             | Affinity for AWS LoadBalancer                                                                                | `{}`                             |
+| `aws.awsLoadBalancerController.tolerations`          | Tolerations for AWS LoadBalancer                                                                             | `[]`                             |
+| `aws.awsLoadBalancerController.valuesOverride`       | Config override from default config values                                                                   | `{}`                             |
+| `aws.awsLoadBalancerController.waitJob.imageRepo`    | kubectl image for the ALB wait Job (should match cluster k8s version)                                        | `public.ecr.aws/bitnami/kubectl` |
+| `aws.awsLoadBalancerController.waitJob.timeout`      | Timeout in seconds for the ALB wait Job (waiting for deployment to become available)                         | `600`                            |
+| `aws.awsLoadBalancerController.waitJob.existTimeout` | Timeout in seconds to wait for the ALB controller deployment to appear (e.g. when installed by another tool) | `300`                            |
+| `aws.karpenter.enabled`                              | Flag to enable Karpenter                                                                                     | `true`                           |
+| `aws.karpenter.clusterEndpoint`                      | Cluster endpoint for Karpenter                                                                               | `""`                             |
+| `aws.karpenter.roleArn`                              | Role ARN for Karpenter                                                                                       | `""`                             |
+| `aws.karpenter.instanceProfile`                      | Instance profile for Karpenter                                                                               | `""`                             |
+| `aws.karpenter.defaultZones`                         | Default zones list for Karpenter                                                                             | `[]`                             |
+| `aws.karpenter.affinity`                             | Affinity for Karpenter                                                                                       | `{}`                             |
+| `aws.karpenter.tolerations`                          | Tolerations for Karpenter                                                                                    | `[]`                             |
+| `aws.karpenter.kmsKeyID`                             | KMS Key ID for Karpenter                                                                                     | `""`                             |
+| `aws.karpenter.interruptionQueue`                    | Interruption queue name for Karpenter                                                                        | `""`                             |
+| `aws.karpenter.valuesOverride`                       | Config override from default config values                                                                   | `{}`                             |
+| `aws.karpenter.config.valuesOverride`                | Config override for karpenter config                                                                         | `{}`                             |
+| `aws.awsEbsCsiDriver.enabled`                        | Flag to enable AWS EBS CSI Driver                                                                            | `true`                           |
+| `aws.awsEbsCsiDriver.roleArn`                        | Role ARN for AWS EBS CSI Driver                                                                              | `""`                             |
+| `aws.awsEbsCsiDriver.affinity`                       | Affinity for AWS EBS CSI Driver                                                                              | `{}`                             |
+| `aws.awsEbsCsiDriver.tolerations`                    | Tolerations for AWS EBS CSI Driver                                                                           | `[]`                             |
+| `aws.awsEbsCsiDriver.kmsKeyID`                       | KMS Key ID for AWS EBS CSI Driver                                                                            | `""`                             |
+| `aws.awsEbsCsiDriver.valuesOverride`                 | Config override from default config values                                                                   | `{}`                             |
+| `aws.awsEfsCsiDriver.enabled`                        | Flag to enable AWS EFS CSI Driver                                                                            | `true`                           |
+| `aws.awsEfsCsiDriver.fileSystemId`                   | File system ID for AWS EFS CSI Driver                                                                        | `""`                             |
+| `aws.awsEfsCsiDriver.roleArn`                        | Role ARN for AWS EFS CSI Driver                                                                              | `""`                             |
+| `aws.awsEfsCsiDriver.affinity`                       | Affinity for AWS EFS CSI Driver                                                                              | `{}`                             |
+| `aws.awsEfsCsiDriver.tolerations`                    | Tolerations for AWS EFS CSI Driver                                                                           | `[]`                             |
+| `aws.awsEfsCsiDriver.valuesOverride`                 | Config override from default config values                                                                   | `{}`                             |
+| `aws.inferentia.enabled`                             | Flag to enable Inferentia                                                                                    | `false`                          |
+| `aws.inferentia.affinity`                            | Affinity for AWS EFS CSI Driver                                                                              | `{}`                             |
+| `aws.inferentia.tolerations`                         | Tolerations for AWS EFS CSI Driver                                                                           | `[]`                             |
+| `aws.inferentia.valuesOverride`                      | Config override from default config values                                                                   | `{}`                             |
 
 ### gpu parameters
 
