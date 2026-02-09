@@ -71,6 +71,27 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `metricsServer.affinity`       | Affinity for Metrics Server                | `{}`   |
 | `metricsServer.valuesOverride` | Config override from default config values | `{}`   |
 
+### AWS Load Balancer Controller Wait Job
+
+When both `aws.awsLoadBalancerController.enabled` and `istio.enabled` are `true`, the chart
+includes a Helm `post-install`/`post-upgrade` Job (`wait-for-alb-controller`) that blocks
+the Istio Gateway Application (tfy-istio-ingress) from being created until the AWS Load
+Balancer Controller deployment is ready. This prevents a race where the Istio ingress
+LoadBalancer Service is created before the controller can provision it.
+
+- **Two-phase wait**: (1) Wait for the deployment to exist (e.g. after ArgoCD syncs the ALB controller App), then (2) wait for it to become available.
+- **Timeouts**: Configurable via `aws.awsLoadBalancerController.waitJob.existTimeout` (default 300s) and `aws.awsLoadBalancerController.waitJob.timeout` (default 600s for availability).
+- **Namespace**: `aws-load-balancer-controller`
+- **RBAC**: Namespace-scoped Role (get/list/watch deployments). The ServiceAccount, Role, and RoleBinding persist across runs so Helm applies them on upgrade instead of failing with "already exists".
+- **Retries**: Job has `backoffLimit: 0`; a failed run exits non-zero and blocks subsequent post-install/upgrade hooks until the controller is ready.
+
+To observe the Job during install:
+
+```bash
+kubectl get jobs -n aws-load-balancer-controller -w
+kubectl logs -n aws-load-balancer-controller job/wait-for-alb-controller
+```
+
 ### AWS parameters
 
 | Name                                           | Description                                 | Value   |
@@ -82,6 +103,9 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.awsLoadBalancerController.affinity`       | Affinity for AWS LoadBalancer               | `{}`    |
 | `aws.awsLoadBalancerController.tolerations`    | Tolerations for AWS LoadBalancer            | `[]`    |
 | `aws.awsLoadBalancerController.valuesOverride` | Config override from default config values  | `{}`    |
+| `aws.awsLoadBalancerController.waitJob.imageRepo` | Kubectl image for the ALB wait Job (match cluster k8s version) | `public.ecr.aws/bitnami/kubectl` |
+| `aws.awsLoadBalancerController.waitJob.timeout` | Timeout in seconds for deployment to become available           | `600`   |
+| `aws.awsLoadBalancerController.waitJob.existTimeout` | Timeout in seconds for deployment to appear (e.g. after ArgoCD sync) | `300`   |
 | `aws.karpenter.enabled`                        | Flag to enable Karpenter                    | `true`  |
 | `aws.karpenter.clusterEndpoint`                | Cluster endpoint for Karpenter              | `""`    |
 | `aws.karpenter.roleArn`                        | Role ARN for Karpenter                      | `""`    |

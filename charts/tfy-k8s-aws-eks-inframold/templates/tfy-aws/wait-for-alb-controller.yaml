@@ -1,0 +1,110 @@
+{{- if and .Values.aws.awsLoadBalancerController.enabled .Values.istio.enabled }}
+# Namespace hardening: ensure aws-load-balancer-controller namespace exists before
+# post-install hooks run. This is a normal resource (no helm.sh/hook annotations)
+# so it is created in the main phase and never deleted by Helm.
+# ArgoCD's CreateNamespace=true on the ALB controller App is idempotent.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aws-load-balancer-controller
+  labels:
+    truefoundry.com/infra-component: "aws-load-balancer-controller"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alb-wait-sa
+  namespace: aws-load-balancer-controller
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "-2"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: alb-wait-role
+  namespace: aws-load-balancer-controller
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "-2"
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alb-wait-binding
+  namespace: aws-load-balancer-controller
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "-2"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: alb-wait-role
+subjects:
+- kind: ServiceAccount
+  name: alb-wait-sa
+  namespace: aws-load-balancer-controller
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wait-for-alb-controller
+  namespace: aws-load-balancer-controller
+  labels:
+    truefoundry.com/infra-component: "wait-for-alb-controller"
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "-1"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: alb-wait-sa
+      restartPolicy: Never
+      containers:
+      - name: wait
+        image: {{ .Values.aws.awsLoadBalancerController.waitJob.imageRepo }}:{{ .Capabilities.KubeVersion.Major }}.{{ .Capabilities.KubeVersion.Minor | trimSuffix "+" }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          DEPLOY="deployment/aws-load-balancer-controller"
+          NS="aws-load-balancer-controller"
+          WAIT_TIMEOUT="{{ .Values.aws.awsLoadBalancerController.waitJob.timeout | default 600 }}"
+          EXIST_TIMEOUT="{{ .Values.aws.awsLoadBalancerController.waitJob.existTimeout | default 300 }}"
+          
+          echo "Waiting for AWS Load Balancer Controller deployment to exist (timeout ${EXIST_TIMEOUT}s)..."
+
+          kubectl get "$DEPLOY" -n "$NS"
+          
+          # Logic: Retry loop to wait for the Deployment object to appear in the API
+          elapsed=0
+          while ! kubectl get "$DEPLOY" -n "$NS" >/dev/null 2>&1; do
+            if [ "$elapsed" -ge "$EXIST_TIMEOUT" ]; then
+              echo "ERROR: Deployment $DEPLOY never appeared in namespace $NS after ${EXIST_TIMEOUT}s."
+              exit 1
+            fi
+            echo "Waiting for deployment to be created... (${elapsed}s elapsed)"
+            sleep 2
+            elapsed=$((elapsed + 2))
+          done
+
+          echo "Deployment found! Waiting for availability..."
+          
+          # Logic: Native wait for the condition
+          if ! kubectl wait --for=condition=available "$DEPLOY" -n "$NS" --timeout="${WAIT_TIMEOUT}s"; then
+            echo "ERROR: Deployment did not become available within ${WAIT_TIMEOUT}s."
+            exit 1
+          fi
+          
+          echo "AWS Load Balancer Controller is ready!"
+{{- end }}

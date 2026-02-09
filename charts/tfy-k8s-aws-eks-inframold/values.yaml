@@ -183,6 +183,16 @@ aws:
     ##
     valuesOverride: {}
 
+    ## @subsection waitJob parameters
+    ## @param aws.awsLoadBalancerController.waitJob.image [string] kubectl image for the ALB wait Job (should match cluster k8s version)
+    ## @param aws.awsLoadBalancerController.waitJob.timeout [number] Timeout in seconds for the ALB wait Job (waiting for deployment to become available)
+    ## @param aws.awsLoadBalancerController.waitJob.existTimeout [number] Timeout in seconds to wait for the ALB controller deployment to appear (e.g. when installed by another tool)
+    ##
+    waitJob:
+      imageRepo: "public.ecr.aws/bitnami/kubectl"
+      timeout: 600 # 10 minutes
+      existTimeout: 300 # 5 minutes to wait for deployment to exist
+
   ## @subsection karpenter parameters
   ## @param aws.karpenter.enabled Flag to enable Karpenter
   ##
