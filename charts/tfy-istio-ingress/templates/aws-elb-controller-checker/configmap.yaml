@@ -1,0 +1,36 @@
+{{- if .Values.awsElbControllerChecker.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aws-elb-controller-checker.fullname" . }}-script
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "aws-elb-controller-checker.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  check.sh: |
+    #!/bin/sh
+    set -e
+    DEPLOYMENT_NAME="${DEPLOYMENT_NAME:?DEPLOYMENT_NAME is required}"
+    NAMESPACE="${NAMESPACE:?NAMESPACE is required}"
+    WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
+    REQUIRED_READY=2
+    INTERVAL=10
+    end_time=$(($(date +%s) + WAIT_TIMEOUT_SECONDS))
+    echo "Waiting up to ${WAIT_TIMEOUT_SECONDS}s for deployment $DEPLOYMENT_NAME in $NAMESPACE to have $REQUIRED_READY ready pod(s)..."
+    while [ $(date +%s) -lt $end_time ]; do
+      ready=$(kubectl get deployment -n "$NAMESPACE" "$DEPLOYMENT_NAME" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+      if [ -z "$ready" ]; then
+        ready=0
+      fi
+      echo "Deployment $DEPLOYMENT_NAME in $NAMESPACE has $ready ready replica(s) (required: $REQUIRED_READY)"
+      if [ "$ready" -ge "$REQUIRED_READY" ]; then
+        echo "Check passed."
+        exit 0
+      fi
+      echo "Retrying in ${INTERVAL}s..."
+      sleep $INTERVAL
+    done
+    echo "Check failed: did not reach $REQUIRED_READY ready pods within ${WAIT_TIMEOUT_SECONDS}s."
+    exit 1
+{{- end }}

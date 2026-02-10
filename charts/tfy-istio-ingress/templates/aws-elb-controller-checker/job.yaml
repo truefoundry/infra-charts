@@ -1,0 +1,48 @@
+{{- if .Values.awsElbControllerChecker.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "aws-elb-controller-checker.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "aws-elb-controller-checker.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  backoffLimit: {{ .Values.awsElbControllerChecker.backoffLimit }}
+  template:
+    metadata:
+      name: {{ include "aws-elb-controller-checker.fullname" . }}
+      labels:
+        app.kubernetes.io/name: {{ include "aws-elb-controller-checker.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "aws-elb-controller-checker.serviceAccountName" . }}
+      restartPolicy: Never
+      containers:
+        - name: checker
+          image: "{{ .Values.awsElbControllerChecker.image.repository }}:{{ .Values.awsElbControllerChecker.image.tag }}"
+          imagePullPolicy: {{ .Values.awsElbControllerChecker.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - /scripts/check.sh
+          env:
+            - name: DEPLOYMENT_NAME
+              value: {{ .Values.awsElbControllerChecker.deploymentName | quote }}
+            - name: NAMESPACE
+              value: {{ .Values.awsElbControllerChecker.namespace | quote }}
+            - name: WAIT_TIMEOUT_SECONDS
+              value: {{ .Values.awsElbControllerChecker.waitTimeoutSeconds | default 180 | quote }}
+          volumeMounts:
+            - name: check-script
+              mountPath: /scripts
+              readOnly: true
+          {{- with .Values.awsElbControllerChecker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: check-script
+          configMap:
+            name: {{ include "aws-elb-controller-checker.fullname" . }}-script
+            defaultMode: 0755
+{{- end }}
