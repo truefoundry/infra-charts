@@ -8,7 +8,9 @@ metadata:
   annotations:
     {{- include "tfy-otel-collector.deploymentAnnotations" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ include "tfy-otel-collector.replicas" . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
