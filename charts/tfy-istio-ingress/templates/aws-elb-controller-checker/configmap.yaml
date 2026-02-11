@@ -9,8 +9,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
   check.sh: |
-    #!/bin/sh
+    #!/bin/bash
     set -e
+    
     DEPLOYMENT_NAME="${DEPLOYMENT_NAME:?DEPLOYMENT_NAME is required}"
     NAMESPACE="${NAMESPACE:?NAMESPACE is required}"
     WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
