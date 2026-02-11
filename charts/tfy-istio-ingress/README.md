@@ -51,6 +51,10 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 | Name                                            | Description                                                                                | Value                                        |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `awsElbControllerChecker.labels`                | Labels for the aws-load-balancer-controller checker job.                                   | `{}`                                         |
+| `awsElbControllerChecker.annotations`           | Annotations for the aws-load-balancer-controller checker job.                              | `{}`                                         |
+| `awsElbControllerChecker.jobLabels`             | Labels for the aws-load-balancer-controller checker job.                                   | `{}`                                         |
+| `awsElbControllerChecker.jobAnnotations`        | Annotations for the aws-load-balancer-controller checker job.                              | `{}`                                         |
 | `awsElbControllerChecker.enabled`               | Enable the aws-load-balancer-controller checker job.                                       | `true`                                       |
 | `awsElbControllerChecker.deploymentName`        | Name of the aws-load-balancer-controller deployment to check.                              | `aws-load-balancer-controller`               |
 | `awsElbControllerChecker.namespace`             | Namespace where the aws-load-balancer-controller deployment runs.                          | `aws-load-balancer-controller`               |
