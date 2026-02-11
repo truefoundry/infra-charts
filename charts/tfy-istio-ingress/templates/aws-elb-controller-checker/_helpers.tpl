@@ -14,7 +14,9 @@ helm.sh/hook: "pre-install,pre-upgrade"
   aws-elb-controller-checker annotations
 */}}
 {{- define "aws-elb-controller-checker.annotations" -}}
-{{- with .Values.awsElbControllerChecker.annotations }}
-{{ toYaml . }}
+{{- if .Values.awsElbControllerChecker.annotations }}
+{{ toYaml .Values.awsElbControllerChecker.annotations }}
+{{- else }}
+{}
 {{- end -}}
 {{- end -}}
