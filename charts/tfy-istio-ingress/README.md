@@ -52,8 +52,8 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | Name                                            | Description                                                                                | Value                                        |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- |
 | `awsElbControllerChecker.enabled`               | Enable the aws-load-balancer-controller checker job.                                       | `true`                                       |
-| `awsElbControllerChecker.deploymentName`        | Name of the aws-load-balancer-controller deployment to check.                              | `""`                                         |
-| `awsElbControllerChecker.namespace`             | Namespace where the aws-load-balancer-controller deployment runs.                          | `""`                                         |
+| `awsElbControllerChecker.deploymentName`        | Name of the aws-load-balancer-controller deployment to check.                              | `aws-load-balancer-controller`               |
+| `awsElbControllerChecker.namespace`             | Namespace where the aws-load-balancer-controller deployment runs.                          | `aws-load-balancer-controller`               |
 | `awsElbControllerChecker.waitTimeoutSeconds`    | Time in seconds to wait for aws-load-balancer-controller pods to come up (default 3 mins). | `180`                                        |
 | `awsElbControllerChecker.image.repository`      | Repository for the checker job (helm-kubectl-based).                                       | `tfy.jfrog.io/tfy-mirror/dtzar/helm-kubectl` |
 | `awsElbControllerChecker.image.tag`             | Tag for the checker job (helm-kubectl-based).                                              | `3.19.1`                                     |
