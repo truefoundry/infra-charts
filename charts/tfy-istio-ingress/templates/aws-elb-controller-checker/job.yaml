@@ -5,9 +5,9 @@ metadata:
   name: {{ include "aws-elb-controller-checker.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "aws-elb-controller-checker.labels" . | nindent 4 }}
+    {{- include "aws-elb-controller-checker.jobLabels" . | nindent 4 }}
   annotations:
-    {{- include "aws-elb-controller-checker.annotations" . | nindent 4 }}
+    {{- include "aws-elb-controller-checker.jobAnnotations" . | nindent 4 }}
 spec:
   backoffLimit: {{ .Values.awsElbControllerChecker.backoffLimit }}
   template:

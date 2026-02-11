@@ -4,8 +4,9 @@ kind: ClusterRole
 metadata:
   name: {{ include "aws-elb-controller-checker.fullname" . }}
   labels:
-    app.kubernetes.io/name: {{ include "aws-elb-controller-checker.fullname" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "aws-elb-controller-checker.labels" . | nindent 4 }}
+  annotations:
+    {{- include "aws-elb-controller-checker.annotations" . | nindent 4 }}
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
