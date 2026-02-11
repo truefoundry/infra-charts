@@ -31,14 +31,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-  aws-elb-controller-checker annotations
+  aws-elb-controller-checker job annotations
 */}}
-{{- define "aws-elb-controller-checker.annotations" -}}
+{{- define "aws-elb-controller-checker.jobAnnotations" -}}
 helm.sh/hook: pre-install,pre-upgrade
-{{- with .Values.awsElbControllerChecker.annotations }}
+{{- with .Values.awsElbControllerChecker.jobAnnotations }}
 {{ toYaml . }}
 {{- end -}}
 {{- end -}}
-
-# 1. labels
-# 2. annotations
