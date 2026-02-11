@@ -7,7 +7,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 helm.sh/hook: "pre-install,pre-upgrade"
 {{- with .Values.awsElbControllerChecker.labels }}
 {{ toYaml . }}
-{{- end }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -16,4 +16,5 @@ helm.sh/hook: "pre-install,pre-upgrade"
 {{- define "aws-elb-controller-checker.annotations" -}}
 {{- with .Values.awsElbControllerChecker.annotations }}
 {{ toYaml . }}
-{{- end }}
+{{- end -}}
+{{- end -}}
