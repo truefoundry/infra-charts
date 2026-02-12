@@ -288,8 +288,9 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### tfy-workflow-propeller parameters
 
-| Name                                  | Description                                | Value   |
-| ------------------------------------- | ------------------------------------------ | ------- |
-| `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.         | `false` |
-| `tfyWorkflowPropeller.valuesOverride` | Config override from default config values | `{}`    |
-| `helm.resourcePolicy`                 | Resource policy for the helm chart         | `keep`  |
+| Name                                        | Description                                | Value   |
+| ------------------------------------------- | ------------------------------------------ | ------- |
+| `tfyWorkflowPropeller.enabled`              | Flag to enable workflow-propeller.         | `false` |
+| `tfyWorkflowPropeller.valuesOverride`       | Config override from default config values | `{}`    |
+| `tfyWorkflowPropeller.flyteCore.flyteadmin` | Flyteadmin configuration for flyteCore     | `{}`    |
+| `helm.resourcePolicy`                       | Resource policy for the helm chart         | `keep`  |
