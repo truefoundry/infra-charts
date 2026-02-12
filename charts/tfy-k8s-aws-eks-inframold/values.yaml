@@ -724,6 +724,7 @@ tfyWorkflowPropeller:
       connection:
         region: <to_be_provided>
         auth-type: iam
+      enable-multicontainer: true
     ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
     ##
     configmap:
@@ -731,13 +732,13 @@ tfyWorkflowPropeller:
         propeller:
           metadata-prefix: "<to_be_provided>"
           rawoutput-prefix: "<to_be_provided>"
-      k8s:
-        plugins:
-          k8s:
-            default-env-vars:
-              - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
     ##
+    ## @param tfyWorkflowPropeller.flyteCore.flyteadmin [object] Flyteadmin configuration for flyteCore
+    ##
+    flyteadmin:
+      serviceAccount:
+        alwaysCreate: true
     flytepropeller:
       serviceAccount:
         annotations:
