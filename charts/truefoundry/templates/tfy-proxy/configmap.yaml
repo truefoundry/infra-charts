@@ -39,6 +39,34 @@ data:
       }
     }
 
+    {{- if .Values.global.proxy.enforceSecurityHeaders }}
+    (security_headers) {
+        header {
+            # Enable HSTS to force HTTPS
+            
+            Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+            
+            # Prevent MIME type sniffing
+            X-Content-Type-Options "nosniff"
+            
+            # Prevent clickjacking (alternative: use CSP frame-ancestors)
+            X-Frame-Options "SAMEORIGIN"
+
+            # Content Security Policy
+            # Content-Security-Policy "script-src 'self' 'unsafe-inline';"
+
+            # Control referrer information sending
+            Referrer-Policy "strict-origin-when-cross-origin"
+            
+
+            # Remove headers
+            -Server
+            -X-Powered-By
+            -Via
+        }
+    }
+    {{- end }}
+
     :2019 {
       handle /metrics {
         metrics /metrics
@@ -46,6 +74,10 @@ data:
     }
 
     :8080 {
+      {{- if .Values.global.proxy.enforceSecurityHeaders }}
+      import security_headers
+
+      {{- end }}
       # Serve static files
       encode zstd gzip
       root * /usr/share/caddy
