@@ -315,8 +315,28 @@ redis:
       - key: class.truefoundry.io/control-plane
         effect: NoSchedule
         operator: Exists
-    ## @param redis.master.affinity [object] Affinity rules for Redis master pods
-    affinity: {}
+    ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: karpenter.sh/capacity-type
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: eks.amazonaws.com/capacityType
+                  operator: NotIn
+                  values:
+                    - SPOT
+                - key: cloud.google.com/gke-provisioning
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: kubernetes.azure.com/scalesetpriority
+                  operator: NotIn
+                  values:
+                    - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
       # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
