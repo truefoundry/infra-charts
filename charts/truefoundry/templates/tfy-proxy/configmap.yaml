@@ -39,6 +39,39 @@ data:
       }
     }
 
+    {{- if .Values.global.proxy.cors.enabled }}
+    (cors) {
+      @cors_preflight method OPTIONS
+      handle @cors_preflight {
+        {{- if .Values.global.proxy.cors.allowedOrigins }}
+        @origin_allowed {
+          expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+        }
+        header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
+        {{- else }}
+        header Access-Control-Allow-Origin "{http.request.header.Origin}"
+        {{- end }}
+        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+        header Access-Control-Allow-Credentials "true"
+        header Access-Control-Max-Age "3600"
+        respond "" 204
+      }
+      {{- if .Values.global.proxy.cors.allowedOrigins }}
+      @origin {
+        expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+      }
+      header @origin Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header @origin Access-Control-Allow-Credentials "true"
+      header @origin Vary "Origin"
+      {{- else }}
+      header Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header Access-Control-Allow-Credentials "true"
+      header Vary "Origin"
+      {{- end }}
+    }
+    {{- end }}
+
     {{- if .Values.global.proxy.enforceSecurityHeaders }}
     (security_headers) {
         header {
@@ -81,6 +114,10 @@ data:
       # Serve static files
       encode zstd gzip
       root * /usr/share/caddy
+
+      {{- if .Values.global.proxy.cors.enabled }}
+      import cors
+      {{- end }}
 
       handle /health {
         respond "OK!" 200
