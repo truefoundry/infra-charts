@@ -39,6 +39,8 @@ global:
   ## @param global.image.registry Image registry for tfyOtelCollector (defaults to global.image.registry if not set)
   image:
     registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
@@ -46,8 +48,8 @@ env:
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: "true"
-  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ .Release.Namespace }}.svc.cluster.local:8000
-  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ include "global.namespace" . }}.svc.cluster.local:8000
+  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
   SFY_SERVER_REQUEST_TIMEOUT: 30s
   DELTAFUSION_INGESTOR_REQUEST_TIMEOUT: 60s
   DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 60s
@@ -62,6 +64,7 @@ env:
   TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES: "3"
   TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL: 1s
   TFY_OTEL_EXPORTER_TICKER_INTERVAL: 1s
+  TFY_OTEL_EXPORTER_TIMEOUT: 60s
 
 ## Image configuration for otel-collector
 image:
@@ -70,7 +73,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.96.0
+  tag: v0.120.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -88,7 +91,7 @@ envSecretName: ""
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
@@ -205,3 +208,20 @@ serviceMonitor:
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
   additionalAnnotations: {}
+
+## Autoscaling configuration
+autoscaling:
+  ## @param autoscaling.enabled Enable autoscaling
+  enabled: true
+  # @param autoscaling.minReplicas Minimum number of replicas
+  # minReplicas: 1
+  # @param autoscaling.maxReplicas Maximum number of replicas
+  # maxReplicas: 3
+  ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 70
+  ## @param autoscaling.targetMemoryUtilizationPercentage Target Memory utilization percentage
+  targetMemoryUtilizationPercentage: 70
+  ## @param autoscaling.labels Autoscaling labels
+  labels: {}
+  ## @param autoscaling.annotations Autoscaling annotations
+  annotations: {}

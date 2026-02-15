@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "truefoundry"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: truefoundry
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.96.1
+    targetRevision: 0.120.2
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -32,15 +34,51 @@ spec:
         {{- $mergedAffinity = .Values.truefoundry.affinity }}
         {{- end }}
         global:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
+          {{- if .Values.truefoundry.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.truefoundry.imagePullSecrets | nindent 12 }}
+          {{- else if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- else }}
+          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
+          {{- end }}
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
-          truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
+          {{- if .Values.truefoundry.existingTruefoundryCredsSecret }}
+          existingTruefoundryCredsSecret: {{ .Values.truefoundry.existingTruefoundryCredsSecret }}
+          {{- else }}
           tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
           database:
             host: {{ .Values.truefoundry.database.host }}
             name: {{ .Values.truefoundry.database.name }}
             username: {{ .Values.truefoundry.database.username }}
             password: {{ .Values.truefoundry.database.password }}
+          {{- end }}
+          proxy:
+            enabled: true
+          virtualservice:
+            enabled: {{ .Values.truefoundry.virtualservice.enabled }}
+            {{- if .Values.truefoundry.virtualservice.hosts }}
+            hosts:
+            {{- range $v := .Values.truefoundry.virtualservice.hosts }}
+            - {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.truefoundry.virtualservice.gateways }}
+            gateways:
+            {{- range $v := .Values.truefoundry.virtualservice.gateways }}
+            - {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.truefoundry.virtualservice.annotations }}
+            annotations:
+              {{- toYaml .Values.truefoundry.virtualservice.annotations | nindent 14 }}
+            {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 12 }}
@@ -61,6 +99,12 @@ spec:
             defaultCloudProvider: {{ .Values.truefoundry.defaultCloudProvider }}
             storageConfiguration:
               {{- toYaml .Values.truefoundry.storageConfiguration | nindent 14 }}
+
+        {{- if .Values.truefoundry.gateway.enabled }}
+        tags:
+          llmGateway: true
+          llmGatewayRequestLogging: true
+        {{- end }}
 
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
@@ -86,23 +130,9 @@ spec:
             affinity: {}
             {{- end }}
         {{- end }}
-        
+
         truefoundryFrontendApp:
-          istio:
-            virtualservice:
-              enabled: {{ .Values.truefoundry.virtualservice.enabled }}
-              {{- if .Values.truefoundry.virtualservice.hosts }}
-              hosts:
-              {{- range $v := .Values.truefoundry.virtualservice.hosts }}
-              - {{ $v | quote }}
-              {{- end }}
-              {{- end }}
-              {{- if .Values.truefoundry.virtualservice.gateways }}
-              gateways:
-              {{- range $v := .Values.truefoundry.virtualservice.gateways }}
-              - {{ $v | quote }}
-              {{- end }}
-              {{- end }}
+          enabled: false
 
         tfyNats:
           podTemplate:
@@ -114,9 +144,16 @@ spec:
                   secret:
                     secretName: tfy-nats-accounts
                     defaultMode: 420
+              {{- if .Values.imagePullSecrets }}
+              - op: add
+                path: /spec/imagePullSecrets
+                value:
+                  {{- toYaml .Values.imagePullSecrets | nindent 18 }}
+              {{- else }}
               - op: add
                 path: /spec/imagePullSecrets
                 value: []
+              {{- end }}
               {{- if $mergedTolerations }}
               - op: add
                 path: /spec/tolerations
@@ -140,93 +177,12 @@ spec:
               - op: add
                 path: /spec/nodeSelector
                 value: {}
-        tfy-buildkitd-service:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
         s3proxy:
           enabled: {{ .Values.truefoundry.s3proxy.enabled }}
         sparkHistoryServer:
           enabled: {{ .Values.truefoundry.sparkHistoryServer.enabled }}
         tfyWorkflowAdmin:
           enabled: {{ .Values.truefoundry.tfyWorkflowAdmin.enabled }}
-        tfy-llm-gateway:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
-        tfy-otel-collector:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
-        tfy-clickhouse:
-          enabled: false
-          clickhouse:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-          altinity-clickhouse-operator:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-          zookeeper:
-            {{- if $mergedTolerations }}
-            tolerations:
-              {{- toYaml $mergedTolerations | nindent 14 }}
-            {{- else }}
-            tolerations: []
-            {{- end }}
-            {{- if $mergedAffinity }}
-            affinity:
-              {{- toYaml $mergedAffinity | nindent 14 }}
-            {{- else }}
-            affinity: {}
-            {{- end }}
-
         {{- end }}
 
   syncPolicy:

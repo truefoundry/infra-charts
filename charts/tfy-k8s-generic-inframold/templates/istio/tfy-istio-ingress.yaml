@@ -9,6 +9,7 @@ metadata:
     truefoundry.com/infra-component: "tfy-istio-ingress"
   annotations:
     helm.sh/hook: post-install
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: istio-system
@@ -17,7 +18,7 @@ spec:
   source:
     chart: tfy-istio-ingress
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.3.2
+    targetRevision: 0.3.4
     helm:
       values: |-
         {{- if .Values.istio.gateway.valuesOverride }}
@@ -65,10 +66,20 @@ spec:
                 {{- range .Values.istio.tfyGateway.domains }}
                 - {{ . | quote}}
                 {{- end }}
+                {{- if .Values.istio.tfyGateway.tls.enabled }}
+                port:
+                  name: https-tfy-wildcard
+                  number: 443
+                  protocol: HTTPS
+                tls:
+                  mode: {{ .Values.istio.tfyGateway.tls.mode }}
+                  credentialName: {{ .Values.istio.tfyGateway.tls.credentialName }}
+                {{- else }}
                 port:
                   name: https-tfy-wildcard
                   number: 443
                   protocol: HTTP
+                {{- end }}
         {{- end }}
   syncPolicy:
     automated: {}

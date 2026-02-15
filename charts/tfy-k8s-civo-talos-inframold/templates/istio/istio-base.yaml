@@ -6,7 +6,8 @@ metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "-11"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "istio-base"
 spec:
@@ -17,7 +18,7 @@ spec:
   source:
     chart: base
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.25.4
+    targetRevision: 1.28.2
     helm:
       {{- if .Values.istio.base.valuesOverride }}
       values: |-

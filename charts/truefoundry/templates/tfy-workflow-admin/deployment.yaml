@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-server
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:
@@ -115,6 +116,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-workflow-admin.fullname" . }}-scheduler
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-workflow-admin.deploymentLabels" . | nindent 4 }}
   annotations:

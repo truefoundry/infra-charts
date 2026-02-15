@@ -7,6 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "argo-workflows"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: argo-workflows
@@ -15,7 +17,7 @@ spec:
   source:
     chart: argo-workflows
     repoURL: "https://argoproj.github.io/argo-helm"
-    targetRevision: 0.45.12
+    targetRevision: 0.46.2
     helm:
       values: |-
         {{- if .Values.argoWorkflows.valuesOverride }}
@@ -30,7 +32,17 @@ spec:
         {{- if .Values.argoWorkflows.affinity }}
         {{- $mergedAffinity = .Values.argoWorkflows.affinity }}
         {{- end }}
+
+        {{- if .Values.imagePullSecrets }}
+        images:
+          pullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
         controller:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           serviceMonitor:
             enabled: true
             additionalLabels:
@@ -62,6 +74,10 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         executor:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           resources:
             requests:
               cpu: 100m
@@ -72,6 +88,10 @@ spec:
               memory: 512Mi
               ephemeral-storage: 512Mi
         server:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}
+          {{- end }}
           resources:
             requests:
               cpu: 100m

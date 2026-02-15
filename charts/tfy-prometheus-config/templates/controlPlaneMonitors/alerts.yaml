@@ -3,11 +3,8 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: {{ .Values.controlPlaneMonitors.alerts.alertManager.name }}
-  {{- $labels := include "controlPlaneAlertManager.labels" . | fromYaml }}
-  {{- if $labels }}
   labels:
-    {{- toYaml $labels | nindent 4 }}
-  {{- end }}
+    {{- include "controlPlaneAlertManager.labels" . | nindent 4 }}
   {{- $annotations := include "controlPlaneAlertManager.annotations" . | fromYaml }}
   {{- if $annotations }}
   annotations:

@@ -3,6 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ include "servicefoundry-server.fullname" . }}-role-binding
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "servicefoundry-server.commonLabels" . | nindent 4 }}
   annotations:
@@ -13,6 +14,6 @@ roleRef:
   name: {{ include "servicefoundry-server.fullname" . }}-role
 subjects:
   - kind: ServiceAccount
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ include "global.namespace" . }}
     name: {{ include "servicefoundry-server.serviceAccountName" . }}
 {{- end}}

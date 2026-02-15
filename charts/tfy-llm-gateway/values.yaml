@@ -5,6 +5,10 @@ global:
   resourceTier: "medium"
   ## @param global.controlPlaneURL Control plane URL
   controlPlaneURL: ""
+  ## @param global.controlPlaneChartVersion Control plane version
+  controlPlaneChartVersion: "0.98.2"
+  ## @param global.gatewayChartVersion Gateway version
+  gatewayChartVersion: "0.120.2"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -40,7 +44,8 @@ global:
   ## @param global.image.registry Global image registry override
   image:
     registry: "tfy.jfrog.io"
-
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
 ## Image configuration for llm-gateway
 image:
   ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
@@ -48,11 +53,9 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.96.1
-
+  tag: v0.120.2
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
-
 ## @skip replicaCount Number of replicas
 # replicaCount: 3
 
@@ -63,7 +66,7 @@ envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
 ## @param nameOverride Name override
-nameOverride: ''
+nameOverride: ""
 ## @param podAnnotations Pod annotations
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
@@ -97,7 +100,7 @@ healthcheck:
     ## @param healthcheck.readiness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.readiness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
@@ -113,7 +116,7 @@ healthcheck:
     ## @param healthcheck.liveness.periodSeconds Period in seconds
     periodSeconds: 10
     ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param healthcheck.liveness.successThreshold Success threshold
     successThreshold: 1
     ## @param healthcheck.liveness.failureThreshold Failure threshold
@@ -148,7 +151,6 @@ podDisruptionBudget:
   labels: {}
   ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
   maxUnavailable: 30%
-
 ## Ingress configuration
 ingress:
   ## @param ingress.enabled Enable ingress configuration
@@ -177,6 +179,14 @@ istio:
     gateways: []
     ## @param istio.virtualservice.hosts Virtual service hosts
     hosts: []
+    ## Retries configuration
+    retries:
+      ## @param istio.virtualservice.retries.enabled Enable retries
+      enabled: false
+      ## @param istio.virtualservice.retries.attempts Retries attempts
+      attempts: 3
+      ## @param istio.virtualservice.retries.retryOn Retries retry on
+      retryOn: "gateway-error"
 ## Service configuration
 service:
   ## @param service.type Service type
@@ -203,11 +213,19 @@ serviceAccount:
 extraVolumes: []
 ## @param extraVolumeMounts Extra volume mounts
 extraVolumeMounts: []
+## @param dnsConfig DNS config
+dnsConfig: {}
+## @param hostAliases Host aliases
+## Example
+# hostAliases:
+# - ip: 127.0.0.1
+#   hostnames:
+#   - myadded.examplehostname
+hostAliases: []
 ## rbac configuration
 rbac:
   ## @param rbac.enabled Enable rbac
   enabled: true
-
 ## Autoscaling configuration
 autoscaling:
   ## @param autoscaling.enabled Enable autoscaling
@@ -218,33 +236,40 @@ autoscaling:
   maxReplicas: 100
   ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
   targetCPUUtilizationPercentage: 60
-
-## Rollout configuration
+  # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
+  # targetMemoryUtilizationPercentage: 70
+  ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
   enabled: true
   ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
   maxUnavailable: 0
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
-  maxSurge: 100%
-
+  maxSurge: 40%
 ## @skip env Environment variables for the llmGateway
 env:
-  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+  SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   LOG_LEVEL: info
   DEPLOYED_LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
-  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+  CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:4222
   ENABLE_EXTERNAL_OAUTH: "false"
   REQUEST_LOGGING_MODE: HEADER_CONTROLLED
   TENANT_NAME: "{{ .Values.global.tenantName }}"
-  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318/v1/traces
+  TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local:4318/v1/traces
   USE_GLOBAL_STATE_V2: "true"
   MULTITENANT: "false"
   TIME_PER_OUTPUT_TOKEN_THRESHOLD_MINIMUM_SAMPLE_SIZE: "3"
   AUTH_SERVER_URL: https://auth.truefoundry.com
   RUN_IN_SINGLE_TENANT_MODE: "false"
-
+  CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
+  GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+  ENABLE_ZOD_VALIDATION: "false"
+  DEFAULT_GATEWAY_METADATA: "{}"
+  GATEWAY_AWS_ROLE_ARN: ""
+  GATEWAY_AWS_USER_ACCESS_KEY_ID: ""
+  GATEWAY_AWS_USER_SECRET_ACCESS_KEY: ""
+  PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
@@ -253,10 +278,65 @@ serviceMonitor:
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
   additionalAnnotations: {}
-
 ## OIDC configuration
 oidc:
   ## @param oidc.enabled Enable OIDC configuration
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Redis dependency configuration
+redis:
+  global:
+    security:
+      ## @param redis.global.security.allowInsecureImages Allow insecure images
+      allowInsecureImages: true
+  ## @param redis.enabled Enable Redis dependency
+  enabled: false
+  ## redis.auth Authentication configuration
+  auth:
+    ## @param redis.auth.enabled Enable Redis authentication
+    enabled: false
+  ## redis.image Image configuration
+  image:
+    ## @param redis.image.tag Image tag
+    tag: 8.2.1-debian-12-r0
+    ## @param redis.image.registry Image registry
+    registry: tfy.jfrog.io
+    ## @param redis.image.pullPolicy Image pull policy
+    pullPolicy: IfNotPresent
+    ## @param redis.image.repository Image repository
+    repository: tfy-mirror/bitnamilegacy/redis
+  ## redis.master Master configuration
+  master:
+    ## @param redis.master.configmap Redis master configmap configuration
+    configmap: >-
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
+    ## redis.master.persistence Persistence configuration
+    persistence:
+      ## @param redis.master.persistence.size Persistence volume size
+      size: 8Gi
+      ## @param redis.master.persistence.enabled Enable persistence
+      enabled: true
+      ## @param redis.master.persistence.accessModes [array] Persistence access modes
+      accessModes:
+        - ReadWriteOnce
+      ## @param redis.master.persistence.storageClass Persistence storage class
+      storageClass: ""
+  ## redis.resources Resource configuration
+  resources:
+    ## redis.resources.limits Resource limits
+    limits:
+      ## @param redis.resources.limits.cpu CPU limit
+      cpu: 2000m
+      ## @param redis.resources.limits.memory Memory limit
+      memory: 6000Mi
+    ## redis.resources.requests Resource requests
+    requests:
+      ## @param redis.resources.requests.cpu CPU request
+      cpu: 1000m
+      ## @param redis.resources.requests.memory Memory request
+      memory: 4000Mi
+  ## @param redis.architecture Redis architecture
+  architecture: standalone
+  ## @param redis.replicaCount Redis replica count
+  replicaCount: 1

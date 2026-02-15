@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "tfy-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-proxy.commonLabels" . | nindent 4 }}
   annotations:
@@ -38,6 +39,67 @@ data:
       }
     }
 
+    {{- if .Values.global.proxy.cors.enabled }}
+    (cors) {
+      @cors_preflight method OPTIONS
+      handle @cors_preflight {
+        {{- if .Values.global.proxy.cors.allowedOrigins }}
+        @origin_allowed {
+          expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+        }
+        header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
+        {{- else }}
+        header Access-Control-Allow-Origin "{http.request.header.Origin}"
+        {{- end }}
+        header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+        header Access-Control-Allow-Credentials "true"
+        header Access-Control-Max-Age "3600"
+        respond "" 204
+      }
+      {{- if .Values.global.proxy.cors.allowedOrigins }}
+      @origin {
+        expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+      }
+      header @origin Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header @origin Access-Control-Allow-Credentials "true"
+      header @origin Vary "Origin"
+      {{- else }}
+      header Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header Access-Control-Allow-Credentials "true"
+      header Vary "Origin"
+      {{- end }}
+    }
+    {{- end }}
+
+    {{- if .Values.global.proxy.enforceSecurityHeaders }}
+    (security_headers) {
+        header {
+            # Enable HSTS to force HTTPS
+            
+            Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+            
+            # Prevent MIME type sniffing
+            X-Content-Type-Options "nosniff"
+            
+            # Prevent clickjacking (alternative: use CSP frame-ancestors)
+            X-Frame-Options "SAMEORIGIN"
+
+            # Content Security Policy
+            # Content-Security-Policy "script-src 'self' 'unsafe-inline';"
+
+            # Control referrer information sending
+            Referrer-Policy "strict-origin-when-cross-origin"
+            
+
+            # Remove headers
+            -Server
+            -X-Powered-By
+            -Via
+        }
+    }
+    {{- end }}
+
     :2019 {
       handle /metrics {
         metrics /metrics
@@ -45,9 +107,17 @@ data:
     }
 
     :8080 {
+      {{- if .Values.global.proxy.enforceSecurityHeaders }}
+      import security_headers
+
+      {{- end }}
       # Serve static files
       encode zstd gzip
       root * /usr/share/caddy
+
+      {{- if .Values.global.proxy.cors.enabled }}
+      import cors
+      {{- end }}
 
       handle /health {
         respond "OK!" 200
@@ -69,6 +139,27 @@ data:
       handle /api/env {
         uri strip_prefix /api/env
         rewrite * /v1/fe-env
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      # OAuth2 MCP routes - reroute clean external URLs to internal service paths
+      # External clients access clean URLs that get rewritten to upstream paths:
+      # - /.well-known/* → /oauth2-mcp/.well-known/*
+      # - /oauth2/authorize → /oauth2-mcp/authorize
+      # - /oauth2/token → /oauth2-mcp/token
+      # - /oauth2/register → /oauth2-mcp/register
+      # - /oauth2/callback → /oauth2-mcp/callback
+
+      # /.well-known/* → /oauth2-mcp/.well-known/*
+      handle /.well-known/* {
+        rewrite * /oauth2-mcp{path}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      # /oauth2/* → /oauth2-mcp/* (authorize, token, register, callback)
+      handle /oauth2/* {
+        uri strip_prefix /oauth2
+        rewrite * /oauth2-mcp{path}
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 

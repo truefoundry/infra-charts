@@ -7,20 +7,42 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "elasti"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: elasti
     server: 'https://kubernetes.default.svc'
   source:
-    targetRevision: 0.1.16
+    targetRevision: 0.1.19
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: elasti
     helm:
-      {{- if .Values.elasti.valuesOverride }}
       values: |-
+      {{- if .Values.elasti.valuesOverride }}
       {{ .Values.elasti.valuesOverride | toYaml | nindent 8 }}
       {{- else }}
-      values: ""
+      {{- $mergedTolerations := .Values.tolerations }}
+      {{- if .Values.elasti.tolerations }}
+      {{- $mergedTolerations = .Values.elasti.tolerations }}
+      {{- end }}
+
+      {{- $mergedAffinity := .Values.affinity }}
+      {{- if .Values.elasti.affinity }}
+      {{- $mergedAffinity = .Values.elasti.affinity }}
+      {{- end }}
+      # Will add support for tolerations and affinity in the future
+      {{- if or .Values.registry .Values.imagePullSecrets }}
+      global:
+        {{- if .Values.registry }}
+        image:
+          registry: {{ .Values.registry }}
+        {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
+        {{- end }}
       {{- end }}
   project: tfy-apps
   syncPolicy:

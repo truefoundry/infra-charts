@@ -7,6 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "grafana"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: grafana
@@ -15,7 +17,7 @@ spec:
   source:
     chart: tfy-grafana
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.1.14
+    targetRevision: 0.1.21
     helm:
       values: |-
         {{- if .Values.grafana.valuesOverride }}
@@ -33,6 +35,16 @@ spec:
         # Host for the grafana dashboard
         host: <to_be_provided>
         grafana:
+          {{- if or .Values.registry .Values.imagePullSecrets }}
+          global:
+            {{- if .Values.registry }}
+            imageRegistry: {{ .Values.registry }}
+            {{- end }}
+            {{- if .Values.imagePullSecrets }}
+            imagePullSecrets:
+              {{- toYaml .Values.imagePullSecrets | nindent 14 }}
+            {{- end }}
+          {{- end }}
           # Username for grafana dashboard
           adminUser: <to_be_provided>
           # Password for grafana dashboard

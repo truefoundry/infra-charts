@@ -7,6 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "cert-manager"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: cert-manager
@@ -15,7 +17,7 @@ spec:
   source:
     chart: cert-manager
     repoURL: https://charts.jetstack.io
-    targetRevision: v1.17.2
+    targetRevision: v1.19.2
     helm:
       values: |-
         {{- if .Values.certManager.valuesOverride }}
@@ -38,6 +40,8 @@ spec:
           create: true
           labels:
             {{- toYaml .Values.certManager.podLabels | nindent 12 }}
+          annotations:
+             {{- toYaml .Values.certManager.serviceAccount.annotations | nindent 12 }}
         crds:
           enabled: true
         {{- if $mergedTolerations }}

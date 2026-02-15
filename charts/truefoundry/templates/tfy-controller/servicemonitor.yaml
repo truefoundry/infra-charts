@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-controller.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-controller.serviceMonitorLabels" . | nindent 4 }}
   annotations:
@@ -10,7 +11,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-controller") | nindent 6 }}

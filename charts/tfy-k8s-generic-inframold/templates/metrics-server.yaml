@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "metrics-server"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: kube-system
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: 'https://kubernetes-sigs.github.io/metrics-server/'
-    targetRevision: 3.12.1
+    targetRevision: 3.13.0
     chart: metrics-server
     helm:
       values: |-
@@ -28,6 +30,14 @@ spec:
         {{- $mergedAffinity := .Values.affinity }}
         {{- if .Values.metricsServer.affinity }}
         {{- $mergedAffinity = .Values.metricsServer.affinity }}
+        {{- end }}
+        {{- if .Values.imagePullSecrets }}
+        imagePullSecrets:
+          {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+        {{- end }}
+        {{- if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/metrics-server/metrics-server
         {{- end }}
         podAnnotations:
           "cluster-autoscaler.kubernetes.io/safe-to-evict": "true"

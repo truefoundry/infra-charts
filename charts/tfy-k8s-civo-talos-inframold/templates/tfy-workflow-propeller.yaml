@@ -7,12 +7,14 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-workflow-propeller"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: tfy-workflow-propeller
     server: 'https://kubernetes.default.svc'
   source:
-    targetRevision: 0.0.6
+    targetRevision: 0.1.0
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: tfy-workflow-propeller
     helm:
@@ -34,6 +36,10 @@ spec:
                   - echo
                   - "{{ .Values.tfyAgent.clusterToken }}"
                 endpoint: {{ .Values.controlPlaneURL }}
+          {{- if .Values.tfyWorkflowPropeller.flyteCore.flyteadmin }}
+          flyteadmin:
+            {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.flyteadmin | nindent 12 }}
+          {{- end }}
           flytepropeller:
             {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.flytepropeller | nindent 12 }}
           {{- if and .Values.tfyWorkflowPropeller.tfySignedURLServer (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer "env") (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer.env "DEFAULT_CLOUD_PROVIDER") }}

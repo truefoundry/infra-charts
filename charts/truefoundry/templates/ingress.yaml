@@ -1,24 +1,25 @@
 {{- $tfyProxyServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyProxyHost) .)) 0 -}}
 {{- $tfyWorkflowAdminServiceName := index (splitList "." (tpl (.Values.global.proxy.tfyWorkflowAdminHost) .)) 0 -}}
----
 {{- if and .Values.global.ingress.enabled .Values.global.proxy.enabled -}}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "truefoundry.ingress.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry.ingress.labels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry.ingress.annotations" . | nindent 4 }}
 spec:
-  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ tpl .Values.global.ingress.ingressClassName $ }}
   {{- if .Values.global.ingress.tls }}
   tls:
-    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+    {{- tpl (.Values.global.ingress.tls | toYaml) $ | nindent 4 }}
   {{- end }}
   rules:
     {{- range $host := .Values.global.ingress.hosts }}
-    - host: {{ $host }}
+    - host: {{ tpl $host $ }}
       http:
         paths:
           - path: /
@@ -28,40 +29,22 @@ spec:
                 name: {{ $tfyProxyServiceName }}
                 port:
                   number: {{ $.Values.tfyProxy.service.port }}
-    {{- end }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ include "truefoundry.ingress.fullname" . }}-workflow
-  labels:
-    {{- include "truefoundry.ingress.workflow.labels" . | nindent 4 }}
-  annotations:
-    {{- include "truefoundry.ingress.workflow.annotations" . | nindent 4 }}
-spec:
-  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
-  {{- if .Values.global.ingress.tls }}
-  tls:
-    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
-  {{- end }}
-  rules:
-    {{- range $host := .Values.global.ingress.hosts }}
-    - host: {{ $host }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
+          {{- if $.Values.tfyWorkflowAdmin.enabled }}
+          - path: /flyteidl.service.AdminService/
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: {{ $tfyWorkflowAdminServiceName }}
                 port:
                   number: {{ $.Values.tfyWorkflowAdmin.service.port }}
+          {{- end }}
     {{- end }}
 {{- else if and .Values.global.ingress.enabled (not .Values.global.proxy.enabled) -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "truefoundry.ingress.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry.ingress.labels" . | nindent 4 }}
   annotations:
@@ -69,16 +52,16 @@ metadata:
 spec:
   {{- if .Values.global.ingress.tls }}
   tls:
-    {{- toYaml .Values.global.ingress.tls | nindent 4 }}
+    {{- tpl (.Values.global.ingress.tls | toYaml) $ | nindent 4 }}
   {{- end }}
-  ingressClassName: {{ .Values.global.ingress.ingressClassName }}
+  ingressClassName: {{ tpl .Values.global.ingress.ingressClassName $ }}
   rules:
     {{- range $host := .Values.global.ingress.hosts }}
-    - host: {{ $host }}
+    - host: {{ tpl $host $ }}
       http:
         paths:
           - path: /api/svc/socket.io/
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: {{ $.Release.Name }}-servicefoundry-server
@@ -99,7 +82,7 @@ spec:
                 port:
                   number: 8123
           - path: /flyteidl.service.AdminService/
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: {{ $.Release.Name }}-tfy-workflow-admin-server

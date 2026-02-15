@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "tfy-k8s-controller.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-k8s-controller.serviceLabels" . | nindent 4 }}
   annotations:

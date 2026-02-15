@@ -3,11 +3,11 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: llm-gateway-{{ include "truefoundry-frontend-app.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "truefoundry-frontend-app.commonLabels" . | nindent 4 }}
   annotations:
     {{- include "truefoundry-frontend-app.commonAnnotations" . | indent 4 }}
-  namespace: {{ .Release.Namespace }}
 spec:
   host: {{ tpl .Values.truefoundryFrontendApp.llmGateway.backendHost . }}
   trafficPolicy:

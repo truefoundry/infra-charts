@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "aws-efs-csi-driver"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: aws-efs-csi-driver
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: https://kubernetes-sigs.github.io/aws-efs-csi-driver/
-    targetRevision: 3.1.8
+    targetRevision: 3.2.6
     chart: aws-efs-csi-driver
     helm:
       values: |-
@@ -29,6 +31,14 @@ spec:
         {{- if .Values.aws.awsEfsCsiDriver.affinity }}
         {{- $mergedAffinity = .Values.aws.awsEfsCsiDriver.affinity }}
         {{- end }}
+        {{ if .Values.registry }}
+        image:
+          repository: {{ .Values.registry }}/efs-csi-driver/amazon/aws-efs-csi-driver
+        {{- end }}
+        {{- range .Values.imagePullSecrets }}
+        imagePullSecrets:
+          - {{ .name }}
+        {{- end }}
         node:
           resources:
             requests:
@@ -38,7 +48,16 @@ spec:
               cpu: 100m
               memory: 400Mi
         sidecars:
+          {{- if .Values.registry }}
+          csiProvisioner:
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-provisioner
+          {{- end }}
           nodeDriverRegistrar:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/csi-components/csi-node-driver-registrar
+            {{- end }}
             resources:
               requests:
                 cpu: 10m
@@ -47,6 +66,10 @@ spec:
                 cpu: 100m
                 memory: 400Mi
           livenessProbe:
+            {{- if .Values.registry }}
+            image:
+              repository: {{ .Values.registry }}/csi-components/livenessprobe
+            {{- end }}
             resources:
               requests:
                 cpu: 10m

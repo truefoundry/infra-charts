@@ -3,6 +3,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-llm-gateway.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.serviceMonitorLabels" . | nindent 4 }}
   annotations:
@@ -10,7 +11,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}

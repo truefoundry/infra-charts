@@ -6,9 +6,10 @@ metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "-20"
     helm.sh/hook: pre-install
     helm.sh/hook-weight: "-20"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "argocd"
 spec:
@@ -33,6 +34,14 @@ spec:
         {{- $mergedAffinity := .Values.affinity }}
         {{- if .Values.argocd.affinity }}
         {{- $mergedAffinity = .Values.argocd.affinity }}
+        {{- end }}
+
+        {{- if .Values.registry }}
+        global:
+          image:
+            repository: {{ .Values.registry }}/argoproj/argocd
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
         {{- end }}
         extraObjects: 
         - apiVersion: argoproj.io/v1alpha1
@@ -135,6 +144,10 @@ spec:
               cpu: 400m
               memory: 512Mi
               ephemeral-storage: 512Mi
+          {{- if .Values.registry }}
+          image:
+            repository: {{ .Values.registry }}/docker/library/redis
+          {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}

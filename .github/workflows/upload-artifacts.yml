@@ -5,7 +5,7 @@ on:
     branches:
       - 'main'
     paths:
-      - '.github/workflows/update-artifacts.yml'
+      - '.github/workflows/upload-artifacts.yml'
       - 'charts/tfy-k8s-aws-eks-inframold/**'
       - 'charts/tfy-k8s-azure-aks-inframold/**'
       - 'charts/tfy-k8s-civo-talos-inframold/**'
@@ -18,6 +18,7 @@ jobs:
   upload-artifacts:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: write
     env:
       ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
@@ -26,7 +27,7 @@ jobs:
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
@@ -63,6 +64,19 @@ jobs:
           username: ${{ env.ARTIFACTORY_USERNAME }}
           password: ${{ env.ARTIFACTORY_PASSWORD }}
           registry: tfy.jfrog.io
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # this is to prevent rate limiting errors when pulling base images from public ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
 
       - name: Upload Artifacts
         run: |

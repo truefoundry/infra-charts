@@ -1,0 +1,45 @@
+## @section Configuration for certificate manager
+##
+## This section configures one or more cert-manager Issuers and their Certificates.
+## Each key under `issuers` (e.g. issuer1, issuer2) represents a separate Issuer +
+## Certificate pair that will be rendered by the chart.
+
+## @param issuers [object] Map of issuers and their certificate configuration
+issuers: {}
+  ## Example issuer configuration (issuer1). Duplicate and rename (issuer2, issuer3, ...)
+  ## to manage multiple issuers and certificates.
+#  issuer1:
+#    ## issuer configuration
+#    ## @param issuers.issuer1.name Name of the cert-manager Issuer or ClusterIssuer to be created
+#    name: ""
+#    ## @param issuers.issuer1.privateKeySecretRef Secret name that stores the Issuer private key (optional)
+#    privateKeySecretRef: ""
+#    ## @param issuers.issuer1.solvers Solver configuration for the Issuer (optional, depending on type)
+#    solvers:
+#       - dns01:
+#          ## Solver configuration for GCP Cloud DNS
+#          cloudDNS:
+#            ## GCP Project ID for Cloud DNS
+#            ##
+#            project: ""
+#            hostedZoneName: ""
+#          ## Solver configuration for Azure DNS
+#          azureDNS:
+#            resourceGroupName: ""
+#            hostedZoneName: ""
+#            subscriptionID: ""
+#            environment: ""
+#            identity_client_id:
+#              clientID: ""
+#    ## certificate configuration
+#    certificate:
+#      ## @param issuers.issuer1.certificate.name Name of the certificate resource to create
+#      name: ""
+#      ## @param issuers.issuer1.certificate.secretName Name of the Kubernetes secret where the TLS certificate will be stored
+#      secretName: ""
+#      ## @param issuers.issuer1.certificate.domains List of domain names to include in the certificate
+#      domains: []
+#      ## @param issuers.issuer1.certificate.duration Total lifetime of the certificate (default 90 days)
+#      duration: 2160h
+#      ## @param issuers.issuer1.certificate.renewBefore Time before expiry when renewal should start (default 15 days)
+#      renewBefore: 360h

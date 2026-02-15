@@ -7,13 +7,15 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "tfy-agent"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   destination:
     namespace: tfy-agent
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.2.82
+    targetRevision: 0.2.86
     repoURL: https://truefoundry.github.io/infra-charts/
     chart: tfy-agent
     helm:
@@ -31,12 +33,21 @@ spec:
         {{- if .Values.tfyAgent.affinity }}
         {{- $mergedAffinity = .Values.tfyAgent.affinity }}
         {{- end }}
+
         config:
           clusterToken: {{ .Values.tfyAgent.clusterToken }}
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
           clusterTokenSecret: {{ .Values.tfyAgent.clusterTokenSecret }}
         tfyAgent:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}/tfy-images/tfy-agent
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
           resources:
             limits:
               cpu: 500m
@@ -55,6 +66,14 @@ spec:
             {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         tfyAgentProxy:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}/tfy-images/tfy-agent-proxy
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
           resources:
             limits:
               cpu: 500m
@@ -73,6 +92,14 @@ spec:
             {{- toYaml $mergedAffinity | nindent 12 }}
           {{- end }}
         sdsServer:
+          {{- if .Values.registry }}
+          image:
+            registry: {{ .Values.registry }}/tfy-images/sds-server
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
           resources:
             limits:
               cpu: 200m

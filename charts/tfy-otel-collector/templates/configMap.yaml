@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}-cm
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-otel-collector.commonLabels" . | nindent 4 }}
   annotations:
@@ -62,7 +63,7 @@ data:
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
-
+        timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT}
     processors:
       batch:
         timeout: 5s
@@ -80,7 +81,7 @@ data:
             action: upsert
           - key: tfyproject
             from_context: auth.tfyproject
-            action: upsert    
+            action: upsert
           - key: tfyservicename
             from_context: auth.tfyservicename
             action: upsert

@@ -7,6 +7,8 @@ metadata:
   - resources-finalizer.argocd.argoproj.io
   labels:
     truefoundry.com/infra-component: "prometheus"
+  annotations:
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
 spec:
   project: tfy-apps
   destination:
@@ -20,7 +22,7 @@ spec:
       - ServerSideApply=true
   source:
     repoURL: "https://prometheus-community.github.io/helm-charts"
-    targetRevision: 69.6.0
+    targetRevision: 81.2.0
     chart: kube-prometheus-stack
     helm:
       values: |-
@@ -36,6 +38,24 @@ spec:
         {{- if .Values.prometheus.affinity }}
         {{- $mergedAffinity = .Values.prometheus.affinity }}
         {{- end }}
+        {{- if or .Values.registry .Values.imagePullSecrets }}
+        global:
+          {{- if .Values.registry }}
+          imageRegistry: {{ .Values.registry }}
+          {{- end }}
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        crds:
+          enabled: true
+          upgradeJob:
+            image:
+              busybox:
+                registry: tfy.jfrog.io/tfy-mirror
+            enabled: true # will be removed once it is upgraded everywhere
+            forceConflicts: true # will be removed once it is upgraded everywhere
         defaultRules:
           enabled: false
         coreDns:

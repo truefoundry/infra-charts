@@ -1,3 +1,28 @@
+## @section Global parameters for tfy-agent
+## @param global.labels Global labels to add to all resources
+## @param global.annotations Global annotations to add to all resources
+## @param global.podLabels Global labels to add to all pods
+## @param global.podAnnotations Global annotations to add to all pods
+## @param global.deploymentLabels Global labels to add to all deployments
+## @param global.deploymentAnnotations Global annotations to add to all deployments
+## @param global.serviceLabels Global labels to add to all services
+## @param global.serviceAnnotations Global annotations to add to all services
+## @param global.serviceAccount.name Global service account name to use as fallback when component-specific service account is not created and no name is specified
+## @param global.serviceAccount.labels Global labels to add to all service accounts
+##
+global:
+  labels: {}
+  annotations: {}
+  podLabels: {}
+  podAnnotations: {}
+  deploymentLabels: {}
+  deploymentAnnotations: {}
+  serviceLabels: {}
+  serviceAnnotations: {}
+  serviceAccount:
+    name: ""
+    labels: {}
+
 ## @section Configuration parameters
 ## Parameters to configure tfyAgent and tfyAgentProxy
 ##
@@ -24,7 +49,7 @@ config:
 
   ## @param config.controlPlaneClusterIP ClusterIP of the control plane to connect agent (format: `http://`)
   ##
-  controlPlaneClusterIP: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
+  controlPlaneClusterIP: "http://truefoundry-tfy-proxy.truefoundry.svc.cluster.local:8080"
   ## @param config.controlPlaneControllerClusterIP ClusterIP of the control plane controller to connect proxy (format: `http://`)
   ##
   controlPlaneControllerClusterIP: "http://truefoundry-tfy-controller.truefoundry.svc.cluster.local:8123"
@@ -90,11 +115,35 @@ tfyAgent:
   ## value kept for future use, kept 1
   # replicaCount: 1
 
-  ## @param tfyAgent.annotations Add annotations to tfyAgent pods
+  ## @param tfyAgent.commonLabels Common labels for tfyAgent resources
+  ##
+  commonLabels: {}
+
+  ## @param tfyAgent.commonAnnotations Common annotations for tfyAgent resources
+  ##
+  commonAnnotations: {}
+
+  ## @param tfyAgent.podLabels Add labels to tfyAgent pods
+  ##
+  podLabels: {}
+
+  ## @param tfyAgent.podAnnotations Add annotations to tfyAgent pods
+  ##
+  podAnnotations: {}
+
+  ## @param tfyAgent.deploymentLabels Deployment-specific labels for tfyAgent
+  ##
+  deploymentLabels: {}
+
+  ## @param tfyAgent.deploymentAnnotations Deployment-specific annotations for tfyAgent
+  ##
+  deploymentAnnotations: {}
+
+  ## @param tfyAgent.annotations  Annotations for tfyAgent pods (DEPRECATED: Use tfyAgent.podAnnotations instead)
   ##
   annotations: {}
 
-  ## @param tfyAgent.labels Add labels to tfyAgent pods
+  ## @param tfyAgent.labels  Labels for tfyAgent pods (DEPRECATED: Use tfyAgent.podLabels instead)
   ##
   labels: {}
 
@@ -151,7 +200,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "907252d56fd38a47c7fa10522456ce43525b8223"
+    tag: "890fef89f214bc65bb7eb37cdbf0219fbd9da99e"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -286,6 +335,9 @@ tfyAgent:
     ## @param tfyAgent.serviceAccount.annotations Annotations to add to the serviceAccount
     ##
     annotations: {}
+    ## @param tfyAgent.serviceAccount.labels Labels to add to the serviceAccount
+    ##
+    labels: {}
     ## @param tfyAgent.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ##
     name: ""
@@ -304,11 +356,35 @@ tfyAgentProxy:
   ## value kept for future use, ketp 1
   # replicaCount: 1
 
-  ## @param tfyAgentProxy.annotations Add annotations to tfyAgentProxy pods
+  ## @param tfyAgentProxy.commonLabels Common labels for tfyAgentProxy resources
+  ##
+  commonLabels: {}
+
+  ## @param tfyAgentProxy.commonAnnotations Common annotations for tfyAgentProxy resources
+  ##
+  commonAnnotations: {}
+
+  ## @param tfyAgentProxy.podLabels Add labels to tfyAgentProxy pods
+  ##
+  podLabels: {}
+
+  ## @param tfyAgentProxy.podAnnotations Add annotations to tfyAgentProxy pods
+  ##
+  podAnnotations: {}
+
+  ## @param tfyAgentProxy.deploymentLabels Deployment-specific labels for tfyAgentProxy
+  ##
+  deploymentLabels: {}
+
+  ## @param tfyAgentProxy.deploymentAnnotations Deployment-specific annotations for tfyAgentProxy
+  ##
+  deploymentAnnotations: {}
+
+  ## @param tfyAgentProxy.annotations Annotations for tfyAgentProxy pods (DEPRECATED: Use tfyAgentProxy.podAnnotations instead)
   ##
   annotations: {}
 
-  ## @param tfyAgentProxy.labels Add labels to tfyAgentProxy pods
+  ## @param tfyAgentProxy.labels Labels for tfyAgentProxy pods (DEPRECATED: Use tfyAgentProxy.podLabels instead)
   ##
   labels: {}
 
@@ -422,6 +498,10 @@ tfyAgentProxy:
     ##
     annotations: {}
 
+    ## @param tfyAgentProxy.serviceAccount.labels Labels to add to the serviceAccount
+    ##
+    labels: {}
+
     ## @param tfyAgentProxy.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ##
     name: ""
@@ -461,10 +541,16 @@ tfyAgentProxy:
 resourceQuota:
   ## @param resourceQuota.enabled Create the ResourceQuota.
   enabled: true
-  ## @param resourceQuota.annotations Annotations to add to the ResourceQuota
+  ## @param resourceQuota.commonLabels Common labels for ResourceQuota
+  ##
+  commonLabels: {}
+  ## @param resourceQuota.commonAnnotations Common annotations for ResourceQuota
+  ##
+  commonAnnotations: {}
+  ## @param resourceQuota.annotations Annotations for ResourceQuota (DEPRECATED: Use resourceQuota.commonAnnotations instead)
   ##
   annotations: {}
-  ## @param resourceQuota.labels Labels to add to the ResourceQuota
+  ## @param resourceQuota.labels Labels for ResourceQuota (DEPRECATED: Use resourceQuota.commonLabels instead)
   ##
   labels: {}
   ## @param resourceQuota.priorityClasses PriorityClasses to enable.
@@ -482,11 +568,35 @@ sdsServer:
   ##
   replicas: 2
 
-  ## @param sdsServer.annotations Add annotations to sdsServer pods
+  ## @param sdsServer.commonLabels Common labels for sdsServer resources
+  ##
+  commonLabels: {}
+
+  ## @param sdsServer.commonAnnotations Common annotations for sdsServer resources
+  ##
+  commonAnnotations: {}
+
+  ## @param sdsServer.podLabels Add labels to sdsServer pods
+  ##
+  podLabels: {}
+
+  ## @param sdsServer.podAnnotations Add annotations to sdsServer pods
+  ##
+  podAnnotations: {}
+
+  ## @param sdsServer.deploymentLabels Deployment-specific labels for sdsServer
+  ##
+  deploymentLabels: {}
+
+  ## @param sdsServer.deploymentAnnotations Deployment-specific annotations for sdsServer
+  ##
+  deploymentAnnotations: {}
+
+  ## @param sdsServer.annotations Annotations for sdsServer pods (DEPRECATED: Use sdsServer.podAnnotations instead)
   ##
   annotations: {}
 
-  ## @param sdsServer.labels Add labels to sdsServer pods
+  ## @param sdsServer.labels Labels for sdsServer pods (DEPRECATED: Use sdsServer.podLabels instead)
   ##
   labels: {}
 
@@ -504,6 +614,10 @@ sdsServer:
     ## @param sdsServer.serviceAccount.annotations Annotations to add to the serviceAccount
     ##
     annotations: {}
+
+    ## @param sdsServer.serviceAccount.labels Labels to add to the serviceAccount
+    ##
+    labels: {}
 
     ## @param sdsServer.serviceAccount.name Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template
     ##

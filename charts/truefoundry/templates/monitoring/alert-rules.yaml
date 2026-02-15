@@ -4,6 +4,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ .Values.monitoring.alertRules.name }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "monitoring.alertRulesLabels" . | nindent 4 }}
     release: prometheus
@@ -14,7 +15,7 @@ spec:
     - name: {{ .Values.monitoring.alertRules.name }}
       rules:
         - alert: PodNotHealthy
-          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ .Release.Namespace }}"}) > 0
+          expr: sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ include "global.namespace" . }}"}) > 0
           for: 5m
           labels:
             severity: warning
@@ -25,7 +26,7 @@ spec:
             description: "[Tenant: {{ $tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a {{`{{ $labels.phase }}`}} state for more than 5 minutes."
 
         - alert: PodCrashLooping
-          expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m]) > 0
+          expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m]) > 0
           for: 5m
           labels:
             severity: critical
@@ -36,7 +37,7 @@ spec:
             description: "[Tenant: {{ $tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping"
 
         - alert: ContainerOOMKilled
-          expr: max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m])) > 0 and max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Release.Namespace }}"}[5m]) > 0)
+          expr: max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m])) > 0 and max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ include "global.namespace" . }}"}[5m]) > 0)
           for: 5m
           labels:
             severity: critical
@@ -47,7 +48,7 @@ spec:
             description: "[Tenant: {{ $tenantName }}] Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been OOM killed"
 
         - alert: PersistentVolumeUsageHigh
-          expr: (sum(kubelet_volume_stats_used_bytes{job="kubelet", namespace=~"{{ .Release.Namespace }}"}) by (persistentvolumeclaim, namespace) / sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ .Release.Namespace }}"}) by (persistentvolumeclaim, namespace)) * 100 > 70
+          expr: (sum(kubelet_volume_stats_used_bytes{job="kubelet", namespace=~"{{ include "global.namespace" . }}"}) by (persistentvolumeclaim, namespace) / sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ include "global.namespace" . }}"}) by (persistentvolumeclaim, namespace)) * 100 > 70
           for: 5m
           labels:
             severity: critical

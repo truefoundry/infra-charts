@@ -4,6 +4,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "deltafusion-ingestor.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "deltafusion-ingestor.serviceMonitorLabels" . | nindent 4 }}
   annotations:
@@ -11,7 +12,7 @@ metadata:
 spec:
   namespaceSelector:
     matchNames:
-      - {{ .Release.Namespace }}
+      - {{ include "global.namespace" . }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 6 }}

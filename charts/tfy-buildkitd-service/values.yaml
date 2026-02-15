@@ -33,6 +33,8 @@ global:
   ## @param global.image.registry Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)
   image:
     registry: "tfy.jfrog.io"
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
 
 ## @skip replicaCount Number of replicas of  Value kept for future use, kept 1
 # replicaCount: 1
@@ -49,7 +51,7 @@ image:
   pullPolicy: IfNotPresent
   ## @param image.tag Image tag whose default is the chart appVersion.
   ##
-  tag: "v0.23.2"
+  tag: "v0.26.2"
 
 ## @param commonLabels Labels to be added to the tfyBuildkitdService
 ##
@@ -202,7 +204,8 @@ nodeSelector: {}
 ##
 ## @param tolerations Taints that pod can tolerate
 ##
-tolerations: []
+tolerations:
+  []
   # - key: "key"
   #   operator: "Equal"
   #   value: "value"

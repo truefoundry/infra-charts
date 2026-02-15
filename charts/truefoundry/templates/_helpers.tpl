@@ -1,5 +1,12 @@
 {{/* vim: set filetype=mustache: */}}
 {{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
+{{/*
   Global Labels
 */}}
 {{- define "global.labels" }}
@@ -20,7 +27,6 @@
 {}
 {{- end }}
 {{- end }}
-
 
 {{/*
   Service Account Annotations
@@ -184,17 +190,17 @@ Truefoundry virtual service fullname
   VirtualService labels
   */}}
 {{- define "truefoundry.virtualservice.labels" -}}
-{{- include "truefoundry.labels" (dict "context" . "name" "truefoundry-virtualservice") }}
-{{- end }}
+{{- $base := include "truefoundry.labels" (dict "context" . "name" "truefoundry-virtualservice") | fromYaml -}}
+{{- $virtualServiceLabels := mergeOverwrite $base (deepCopy .Values.global.virtualservice.labels) -}}
+{{- toYaml $virtualServiceLabels -}}
+{{- end -}}
 
 {{/*
   Truefoundry virtualService annotations
   */}}
 {{- define "truefoundry.virtualservice.annotations" -}}
-{{- include "global.annotations" . -}}
-{{- with .Values.global.virtualservice.annotations }}
-{{ toYaml . }}
-{{- end }}
+{{- $virtualServiceAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.global.virtualservice.annotations }}
+{{- toYaml $virtualServiceAnnotations }}
 {{- end }}
 
 
@@ -253,21 +259,3 @@ AZURE_STORAGE_CONNECTION_STRING: {{ .Values.global.config.storageConfiguration.a
 {{- end }}
 {{- end }}
 {{- end }}
-
-
-
-{{- define "truefoundry.clickhouseRequestLogging.enabled" -}}
-{{- if and (hasKey .Values "tfy-clickhouse") (hasKey (index .Values "tfy-clickhouse") "enabled") -}}
-{{- /*Key is set*/ -}}
-{{- if not (index .Values "tfy-clickhouse" "enabled") -}}
-{{- /*Key is set with value false*/ -}}
-false
-{{- else -}}
-{{- /*Key is set with value true, only enable if llmGatewayRequestLogging is true*/ -}}
-{{- .Values.tags.llmGatewayRequestLogging -}}
-{{- end -}}
-{{- else -}}
-{{- /*Key is not set, enable if llmGatewayRequestLogging is true*/ -}}
-{{- .Values.tags.llmGatewayRequestLogging -}}
-{{- end -}}
-{{- end -}}

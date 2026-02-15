@@ -1,0 +1,17 @@
+{{- if .Values.awsElbControllerChecker.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "aws-elb-controller-checker.fullname" . }}
+  labels:
+    {{- include "aws-elb-controller-checker.labels" . | nindent 4 }}
+  annotations:
+    {{- include "aws-elb-controller-checker.annotations" . | nindent 4 }}
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+{{- end }}

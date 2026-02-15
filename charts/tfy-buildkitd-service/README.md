@@ -3,7 +3,317 @@ Tfy-buildkitd-service is a Helm chart provided by TrueFoundry that facilitates t
 
 ## Parameters
 
-############################################################# Parameters for tfyBuildkitdService
+################################################################### Parameters for tfyBuildkitdService
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                                                       | `[]`                        |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.26.2`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                                                       | `[]`                        |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.26.2`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                                                       | `[]`                        |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.26.2`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `global.imagePullSecrets`                     | Existing truefoundry image pull secret name                                                                       | `[]`                        |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.26.2`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.26.2`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
+
+| Name                                          | Description                                                                                                       | Value                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `global.resourceTier`                         | Resource deployment type                                                                                          | `""`                        |
+| `global.affinity`                             | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `global.tolerations`                          | Tolerations for pod scheduling on a node                                                                          | `[]`                        |
+| `global.nodeSelector`                         | Node selector                                                                                                     | `{}`                        |
+| `global.annotations`                          | Global annotations to be added to all resources                                                                   | `{}`                        |
+| `global.labels`                               | Global labels to be added to all resources                                                                        | `{}`                        |
+| `global.podLabels`                            | Labels to be added to statefulset pods                                                                            | `{}`                        |
+| `global.podAnnotations`                       | Annotations to be added to statefulset pods                                                                       | `{}`                        |
+| `global.statefulsetLabels`                    | Labels to be added to statefulset                                                                                 | `{}`                        |
+| `global.statefulsetAnnotations`               | Annotations to be added to statefulset                                                                            | `{}`                        |
+| `global.serviceAccount.name`                  | Service account name                                                                                              | `""`                        |
+| `global.serviceAccount.labels`                | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `global.serviceAccount.annotations`           | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `global.image.registry`                       | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `tfy.jfrog.io`              |
+| `image.registry`                              | Image registry for tfyBuildkitdService (defaults to global.image.registry if not set)                             | `""`                        |
+| `image.repository`                            | tfyBuildkitdService repository                                                                                    | `tfy-mirror/moby/buildkit`  |
+| `image.pullPolicy`                            | Pull policy for tfyBuildkitdService                                                                               | `IfNotPresent`              |
+| `image.tag`                                   | Image tag whose default is the chart appVersion.                                                                  | `v0.17.0`                   |
+| `commonLabels`                                | Labels to be added to the tfyBuildkitdService                                                                     | `{}`                        |
+| `commonAnnotations`                           | Annotations to be added to the tfyBuildkitdService                                                                | `{}`                        |
+| `statefulsetLabels`                           | Labels to be added to the tfyBuildkitdService statefulset                                                         | `{}`                        |
+| `statefulsetAnnotations`                      | Annotations to be added to the tfyBuildkitdService statefulset                                                    | `{}`                        |
+| `storage.enabled`                             | Bool to enable storage for tfyBuildkitdService                                                                    | `true`                      |
+| `storage.accessModes`                         | Access mode for tfyBuildkitdService                                                                               | `["ReadWriteOnce"]`         |
+| `storage.storageClassName`                    | Storage class name for tfyBuildkitdService                                                                        | `""`                        |
+| `imagePullSecrets`                            | Secrets to pull images                                                                                            | `[]`                        |
+| `nameOverride`                                | String to override partial name passed in helm install command                                                    | `""`                        |
+| `fullnameOverride`                            | String to override full name passed in helm install command                                                       | `""`                        |
+| `serviceAccount.create`                       | Bool to enable serviceAccount creation                                                                            | `false`                     |
+| `serviceAccount.annotations`                  | Annotations to add to the serviceAccount                                                                          | `{}`                        |
+| `serviceAccount.labels`                       | Labels to add to the serviceAccount                                                                               | `{}`                        |
+| `serviceAccount.automountServiceAccountToken` | Automount service account token                                                                                   | `false`                     |
+| `serviceAccount.name`                         | Name of the serviceAccount to use. If not set and create is true, a name is generated using the fullname template | `""`                        |
+| `podLabels`                                   | Labels to be added to the tfyBuildkitdService pod                                                                 | `{}`                        |
+| `podAnnotations`                              | Annotations to be added to the pod                                                                                | `{}`                        |
+| `podSecurityContext`                          | Security context for the pod                                                                                      | `{}`                        |
+| `securityContext.privileged`                  | Security Context for the tfyBuildkitdServiceProxy container                                                       | `true`                      |
+| `service.type`                                | Type for tfyBuildkitdService Service                                                                              | `ClusterIP`                 |
+| `service.port`                                | Port for tfyBuildkitdService service                                                                              | `1234`                      |
+| `extraVolumes`                                | List of Volumes to attach to tfyBuildkitdService container                                                        | `[]`                        |
+| `extraVolumeMounts`                           | List of Volume Mounts to attach to tfyBuildkitdService container                                                  | `[]`                        |
+| `extraEnvs`                                   | List of Environment Variables to attach to tfyBuildkitdService container                                          | `[]`                        |
+| `nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                              | `{}`                        |
+| `tolerations`                                 | Taints that pod can tolerate                                                                                      | `[]`                        |
+| `affinity`                                    | Affinity rules for pod scheduling on a node                                                                       | `{}`                        |
+| `tls.buildkitDaemonCertsSecretName`           | Name of secret containing the buildkit daemon certs                                                               | `tfy-buildkit-daemon-certs` |
+| `tls.buildkitClientCertsSecretName`           | Name of secret containing the buildkit client certs                                                               | `tfy-buildkit-client-certs` |
+| `tls.enabled`                                 | Enable TLS for buildkitd                                                                                          | `false`                     |
 
 | Name                                          | Description                                                                                                       | Value                       |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------- |

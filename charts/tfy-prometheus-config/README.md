@@ -15,6 +15,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                                              | Description                              | Value               |
 | ------------------------------------------------- | ---------------------------------------- | ------------------- |
+| `scrapeConfigs.labels`                            | Labels for scrape configs                | `{}`                |
 | `scrapeConfigs.envoy.enabled`                     | Enable scrape config for envoy           | `true`              |
 | `scrapeConfigs.envoy.name`                        | Name of the scrape config                | `envoy-stats`       |
 | `scrapeConfigs.envoy.jobName`                     | Job name for envoy                       | `envoy-stats`       |
@@ -36,8 +37,10 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                               | Description                        | Value                     |
 | ---------------------------------- | ---------------------------------- | ------------------------- |
+| `alertManagers.labels`             | Labels for alert managers          | `{}`                      |
 | `alertManagers.tfyAgent.enabled`   | Enable alert manager for tfy-agent | `true`                    |
 | `alertManagers.tfyAgent.name`      | Name of the alert manager          | `tfy-alertmanager-config` |
+| `alertManagers.tfyAgent.labels`    | Label for tfy-agent                | `{}`                      |
 | `alertManagers.tfyAgent.route`     | Route for the alert manager        | `{}`                      |
 | `alertManagers.tfyAgent.receivers` | Receivers for the alert manager    | `[]`                      |
 
@@ -45,6 +48,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 
 | Name                                         | Description                          | Value                                    |
 | -------------------------------------------- | ------------------------------------ | ---------------------------------------- |
+| `prometheusRules.labels`                     | Labels for prometheus rules          | `{}`                                     |
 | `prometheusRules.containerRules.enabled`     | Enable prometheus rules for alerts   | `true`                                   |
 | `prometheusRules.containerRules.name`        | Name of the prometheus rules         | `tfy-alertmanager-config-alerting-rules` |
 | `prometheusRules.containerRules.labels`      | Labels for the prometheus rules      | `{}`                                     |
@@ -153,6 +157,7 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | Name                                                       | Description                                     | Value                                     |
 | ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
 | `serviceMonitors.enabled`                                  | Enable service monitors for prometheus          | `true`                                    |
+| `serviceMonitors.labels`                                   | Labels for service monitors                     | `{}`                                      |
 | `serviceMonitors.alertManager.enabled`                     | Enable service monitor for alert manager        | `true`                                    |
 | `serviceMonitors.alertManager.name`                        | Name of the service monitor                     | `prometheus-kube-prometheus-alertmanager` |
 | `serviceMonitors.alertManager.labels`                      | Labels for alert manager                        | `{}`                                      |
@@ -252,4 +257,10 @@ This chart is used to configure prometheus. It is used to configure the scrape c
 | `serviceMonitors.prometheusOperator.endpoints`             | Endpoints for prometheus operator               | `[]`                                      |
 | `serviceMonitors.prometheusOperator.serviceSelectorLabels` | Service selector labels for prometheus operator | `{}`                                      |
 | `serviceMonitors.prometheusOperator.namespaceSelector`     | Namespace selector for prometheus operator      | `{}`                                      |
-| `extraObjects`                                             | Extra objects for prometheus                    | `[]`                                      |
+
+### podMonitors Pod monitors for prometheus
+
+| Name                 | Description                  | Value |
+| -------------------- | ---------------------------- | ----- |
+| `podMonitors.labels` | Labels for pod monitors      | `{}`  |
+| `extraObjects`       | Extra objects for prometheus | `[]`  |

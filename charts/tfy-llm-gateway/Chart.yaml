@@ -1,6 +1,11 @@
 apiVersion: v2
 name: tfy-llm-gateway
-version: 0.96.1
+version: 0.120.2
 description: "Truefoundry LLM Gateway deployment chart"
 maintainers:
   - name: truefoundry
+dependencies:
+  - name: redis
+    version: 24.0.0
+    repository: oci://tfy.jfrog.io/tfy-helm
+    condition: redis.enabled

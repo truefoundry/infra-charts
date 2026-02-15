@@ -1,6 +1,13 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
 {{- define "tfy-otel-collector.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -35,8 +42,9 @@ Expand the name of the chart.
   */}}
 {{- define "tfy-otel-collector.labels" -}}
 helm.sh/chart: {{ include "tfy-otel-collector.chart" . }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
+{{ include "tfy-otel-collector.selectorLabels" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/version: {{ .Values.image.tag | quote }}
 {{- end }}
 
 {{/*
@@ -187,10 +195,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Pod Annotations
-*/}}
+  Pod Annotations - merges commonAnnotations with pod-specific annotations
+  */}}
 {{- define "tfy-otel-collector.podAnnotations" -}}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations ) .Values.podAnnotations }}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end }}
 
@@ -203,6 +212,26 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end }}
+
+{{/*
+  HPA Labels - merges commonLabels with hpa-specific labels
+  */}}
+{{- define "tfy-otel-collector.hpaLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $hpaLabels := mergeOverwrite $commonLabels .Values.autoscaling.labels }}
+{{- toYaml $hpaLabels }}
+{{- end }}
+
+{{/*
+  HPA annotations
+  */}}
+{{- define "tfy-otel-collector.hpaAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $hpaAnnotations := mergeOverwrite $commonAnnotations $syncWaveAnnotation .Values.autoscaling.annotations }}
+{{- toYaml $hpaAnnotations }}
+{{- end }}
+
 
 {{/*
 Deployment Volumes
@@ -268,24 +297,24 @@ limits:
 
 {{- define "tfy-otel-collector.defaultResources.medium" }}
 requests:
-  cpu: 100m
-  memory: 256Mi
-  ephemeral-storage: 256Mi
-limits:
   cpu: 200m
   memory: 512Mi
   ephemeral-storage: 512Mi
+limits:
+  cpu: 400m
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
-  cpu: 200m
-  memory: 256Mi
-  ephemeral-storage: 256Mi
+  cpu: 500m
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 limits:
-  cpu: 400m
-  memory: 512Mi
-  ephemeral-storage: 512Mi
+  cpu: 1000m
+  memory: 2048Mi
+  ephemeral-storage: 2048Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}
@@ -298,6 +327,32 @@ limits:
 3
 {{- else if eq $tier "large" -}}
 5
+{{- end }}
+{{- end }}
+
+{{- define "tfy-otel-collector.hpaMinReplicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.minReplicas -}}
+{{ .Values.minReplicas }}
+{{- else if eq $tier "small" -}}
+1
+{{- else if eq $tier "medium" -}}
+3
+{{- else if eq $tier "large" -}}
+5
+{{- end }}
+{{- end }}
+
+{{- define  "tfy-otel-collector.hpaMaxReplicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.autoscaling.maxReplicas -}}
+{{ .Values.autoscaling.maxReplicas }}
+{{- else if eq $tier "small" -}}
+3
+{{- else if eq $tier "medium" -}}
+5
+{{- else if eq $tier "large" -}}
+7
 {{- end }}
 {{- end }}
 
@@ -340,6 +395,8 @@ Node Selector for tfy-otel-collector deployment
 {{- toYaml .Values.imagePullSecrets }}
 {{- else if .Values.global.imagePullSecrets -}}
 {{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
 {{- else -}}
 []
 {{- end }}

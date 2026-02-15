@@ -3,14 +3,15 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: truefoundry-bootstrap-job-rolebinding
+  namespace: {{ include "global.namespace" . }}
   annotations:
     {{- include "bootstrap.commonAnnotations" . | nindent 4 }}
   labels:
     {{- include "bootstrap.commonLabels" . | nindent 4 }}
 subjects:
 - kind: ServiceAccount
-  name: truefoundry-bootstrap-job-sa
-  namespace: "{{ .Release.Namespace }}"
+  name: {{ include "bootstrap.serviceAccountName" . }}
+  namespace: "{{ include "global.namespace" . }}"
 roleRef:
   kind: Role
   name: truefoundry-bootstrap-job-role

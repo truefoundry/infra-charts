@@ -6,7 +6,8 @@ metadata:
   finalizers:
   - resources-finalizer.argocd.argoproj.io
   annotations:
-    argocd.argoproj.io/sync-wave: "-2"
+    argocd.argoproj.io/sync-wave: "-10"
+    helm.sh/resource-policy: {{ .Values.helm.resourcePolicy }}
   labels:
     truefoundry.com/infra-component: "istio-discovery"
 spec:
@@ -17,7 +18,7 @@ spec:
   source:
     chart: istiod
     repoURL: https://istio-release.storage.googleapis.com/charts
-    targetRevision: 1.25.4
+    targetRevision: 1.28.2
     helm:
       values: |-
         {{- if .Values.istio.discovery.valuesOverride }}
@@ -54,6 +55,13 @@ spec:
             {{- toYaml $mergedAffinity | nindent 14 }}
           {{- end }}
         global:
+          {{- if .Values.registry }}
+          hub: {{ .Values.registry }}/istio-release
+          {{- end }}
+          {{- range .Values.imagePullSecrets }}
+          imagePullSecrets:
+            - {{ .name }}
+          {{- end }}
           {{- if .Values.istio.discovery.hub }}
           hub: {{ .Values.istio.discovery.hub }}
           {{- end }}

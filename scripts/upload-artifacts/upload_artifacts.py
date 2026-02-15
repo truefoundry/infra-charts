@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import re
 import subprocess
 from urllib.parse import urlparse
 
@@ -74,12 +75,92 @@ def check_image_exists_and_architectures(image_url):
         return False, False
 
 
+# Helper function to check if registry is ECR
+def is_ecr_registry(registry_url):
+    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
+    ecr_pattern = r"^\d+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com"
+    return bool(re.match(ecr_pattern, registry_url))
+
+
+# Helper function to extract region from ECR URL
+def get_ecr_region(registry_url):
+    # ECR URL pattern: <account-id>.dkr.ecr.<region>.amazonaws.com
+    match = re.search(r"\.dkr\.ecr\.([a-z0-9-]+)\.amazonaws\.com", registry_url)
+    if match:
+        return match.group(1)
+    return None
+
+
+# Helper function to ensure ECR repository exists
+def ensure_ecr_repository_exists(repository_name, region):
+    try:
+        import boto3
+        from botocore.exceptions import ClientError
+
+        ecr_client = boto3.client("ecr", region_name=region)
+        
+        # Check if repository exists
+        try:
+            ecr_client.describe_repositories(repositoryNames=[repository_name])
+            logging.info(f"ECR repository '{repository_name}' already exists")
+            return True
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "RepositoryNotFoundException":
+                # Repository doesn't exist, create it
+                logging.info(f"Creating ECR repository: {repository_name}")
+                ecr_client.create_repository(repositoryName=repository_name)
+                logging.info(f"Successfully created ECR repository: {repository_name}")
+                return True
+            else:
+                raise
+    except Exception as e:
+        logging.error(f"Failed to ensure ECR repository exists: {e}")
+        return False
+
+# function to get truefoundry chart images from manifest
+
+def get_truefoundry_chart_images(manifest):
+    """
+    Return a set of image URLs referenced by the `truefoundry` helm chart entry in the manifest json.
+    """
+    images = set()
+    for item in manifest or []:
+        if item.get("type") != "helm":
+            continue
+
+        details = item.get("details") or {}
+        if details.get("chart") != "truefoundry":
+            continue
+
+        for img in details.get("images") or []:
+            if not img:
+                continue
+            img = str(img).strip()
+            if not img or img == "auto":
+                continue
+            images.add(img)
+
+    return images
+
 # function to pull and push images
 
 
-def pull_and_push_images(image_list, destination_registry, excluded_registries=[]):
+def pull_and_push_images(image_list, destination_registry, excluded_registries=None, excluded_images=None):
+
+    if excluded_registries is None:
+        excluded_registries = []
+    if excluded_images is None:
+        excluded_images = set()
+
     for image in image_list:
         image_url = image["details"]["registryURL"].strip()
+
+        if image_url in excluded_images:
+            logging.info(
+                f"Skipping image: {image_url} as it is referenced by the truefoundry chart in the manifest"
+            )
+            continue
+
         # Skip if image URL is in excluded registries
         image_exclude = False
         for registry in excluded_registries:
@@ -107,6 +188,22 @@ def pull_and_push_images(image_list, destination_registry, excluded_registries=[
         if image_exists:
             logging.info(f"Image {new_image_url} already exists Skipping push...")
             continue
+
+        # Check if destination is ECR and ensure repository exists
+        if is_ecr_registry(destination_registry):
+            region = get_ecr_region(destination_registry)
+            if region:
+                # Extract repository name from new_image_url (without tag)
+                # Format: registry/path/to/image:tag -> need path/to/image
+                image_url_parts = new_image_url.split(":", 1)[0]  # Remove tag
+                registry_and_repo = image_url_parts.split("/", 1)
+                if len(registry_and_repo) > 1:
+                    repo_name = registry_and_repo[1]  # Get everything after registry
+                    
+                    logging.info(f"Detected ECR registry. Ensuring repository exists: {repo_name}")
+                    if not ensure_ecr_repository_exists(repo_name, region):
+                        logging.error(f"Failed to ensure ECR repository exists: {repo_name}")
+                        continue
 
         try:
             # Use buildx imagetool create for multi-arch support
@@ -168,6 +265,31 @@ def download_and_push_helm_charts(helm_list, destination_registry):
 
         # Push chart to destination repo
         logging.info(f"Pushing Helm chart: {new_chart_url}")
+        
+        # Check if destination is ECR and ensure repository exists
+        if is_ecr_registry(destination_registry):
+            region = get_ecr_region(destination_registry)
+            if region:
+                # Extract path from destination_registry
+                # destination_registry format: account-id.dkr.ecr.region.amazonaws.com/path/to/repo
+                dest_registry_parts = destination_registry.split("/", 1)
+                dest_path = dest_registry_parts[1] if len(dest_registry_parts) > 1 else ""
+                
+                # Construct the full repository path
+                # The path includes: dest_path + registry_path (from source) + chart name
+                path_parts = []
+                if dest_path:
+                    path_parts.append(dest_path)
+                if registry_path:
+                    path_parts.append(registry_path)
+                path_parts.append(chart)
+                full_repo_path = "/".join(path_parts)
+                
+                logging.info(f"Detected ECR registry. Ensuring repository exists: {full_repo_path}")
+                if not ensure_ecr_repository_exists(full_repo_path, region):
+                    logging.error(f"Failed to ensure ECR repository exists: {full_repo_path}")
+                    exit("Cannot ensure ECR repository exists")
+        
         try:
             run_command(f"helm push {chart_package} {new_chart_url}")
         except Exception as e:
@@ -218,10 +340,16 @@ if __name__ == "__main__":
         logging.error("Manifest processing aborted due to errors")
         exit()
 
+    truefoundry_chart_images = get_truefoundry_chart_images(manifest)
+    if truefoundry_chart_images:
+        logging.info(
+            f"Found {len(truefoundry_chart_images)} images referenced by the truefoundry chart; these will be skipped during image upload"
+        )
+
     if artifact_type == "image":
         image_list = [item for item in manifest if item["type"] == "image"]
         if image_list:
-            pull_and_push_images(image_list, destination_registry, excluded_registries)
+            pull_and_push_images(image_list, destination_registry, excluded_registries, excluded_images=truefoundry_chart_images)
     elif artifact_type == "helm":
         helm_list = [item for item in manifest if item["type"] == "helm"]
         if helm_list:

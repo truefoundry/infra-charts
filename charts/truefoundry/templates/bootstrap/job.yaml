@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: truefoundry-bootstrap-job
+  namespace: {{ include "global.namespace" . }}
   annotations:
     {{- include "bootstrap.jobAnnotations" . | nindent 4 }}
   labels:
@@ -11,6 +12,7 @@ spec:
   template:
     metadata:
       name: truefoundry-bootstrap-job
+      namespace: {{ include "global.namespace" . }}
       annotations:
         {{- include "bootstrap.podAnnotations" . | nindent 8 }}
       labels:
@@ -20,7 +22,7 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: truefoundry-bootstrap-job-sa
+      serviceAccountName: {{ include "bootstrap.serviceAccountName" . }}
       containers:
       - name: truefoundry-bootstrap-job
         {{- with .Values.truefoundryBootstrap.securityContext }}
@@ -35,11 +37,9 @@ spec:
         - name: TRUEFOUNDRY_NATS_CONFIGMAP
           value: "{{ .Values.truefoundryBootstrap.natsConfigmapName }}"
         - name: TRUEFOUNDRY_NAMESPACE
-          value: "{{ .Release.Namespace }}"
+          value: {{ include "global.namespace" . }}
         - name: INSTALL_TLS_CERTIFICATES
           value: "{{ .Values.truefoundryBootstrap.createdBuildkitServiceTlsCerts }}"
-        - name: CLICKHOUSE_ENABLED
-          value: "{{ or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing }}"
         {{- range $val := .Values.truefoundryBootstrap.extraEnvVars }}
         - name: {{ $val.name }}
           value: {{ $val.value }}

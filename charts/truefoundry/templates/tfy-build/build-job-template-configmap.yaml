@@ -19,7 +19,7 @@ data:
     kind: Job
     metadata:
       name: "{{ "{{ .BUILD_NAME }}" }}"
-      namespace: truefoundry
+      namespace: {{ include "global.namespace" . }}
       {{- $jobLabels := include "tfy-build.commonLabels" . }}
       {{- if and $jobLabels (ne $jobLabels "{}") }}
       labels:

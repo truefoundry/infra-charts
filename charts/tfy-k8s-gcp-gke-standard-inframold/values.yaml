@@ -15,6 +15,16 @@ controlPlaneURL: ""
 ##
 clusterName: ""
 
+## @param registry registry to override in the chart components
+##
+registry: ""
+
+## @param imagePullSecrets [array] imagePullSecrets to override in the chart components
+##
+## imagePullSecrets
+## - name: ""
+imagePullSecrets: []
+
 ## @param tolerations [array] Tolerations for the all chart components
 ##
 tolerations:
@@ -95,12 +105,49 @@ certManager:
   ## @param certManager.podLabels [object] Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well.
   ##
   podLabels: {}
+  serviceAccount:
+    ## @param certManager.serviceAccount.annotations [object] Service account annotations for Cert Manager.
+    annotations: {}
   ## @param certManager.affinity [object] Affinity for Cert Manager
   ##
   affinity: {}
   ## @param certManager.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
+  ## @section certManager issuers parameters
+  config:
+    ## @param certManager.config.enabled Flag to enable certManager config
+    enabled: true
+    ## @param certManager.config.issuers [object] Map of issuers and their certificate configuration
+    issuers: {}
+#      issuer1:
+#        name: ""
+#        privateKeySecretRef: ""
+#        solvers:
+#          - dns01:
+#              ## Solver configuration for GCP Cloud DNS
+#              cloudDNS:
+#                ## GCP Project ID for Cloud DNS
+#                ##
+#                project: ""
+#              ## Solver configuration for Azure DNS
+#              azureDNS:
+#                resource_group_name: ""
+#                hosted_zone_name: ""
+#                subscription_id: ""
+#                environment: "AzurePublicCloud"
+#                identity_client_id: ""
+#        ## certManager.config.issuers.issuer1.certificate Certificate configuration
+#        ##
+#        certificate:
+#          name: ""
+#          secretName: ""
+#          duration: 2160h
+#          renewBefore: 360h
+#          domains: []
+    ## @param certManager.config.valuesOverride [object] Config override from default config values
+    ##
+    valuesOverride: {}
 
 ## @section metricsServer parameters
 ## @param metricsServer.enabled Flag to enable Metrics Server
@@ -161,6 +208,12 @@ truefoundry:
     hosts: []
     ## @param truefoundry.virtualservice.gateways [array] Istio gateways to be configured for virtualservice
     gateways: []
+    ## @param truefoundry.virtualservice.annotations [object] Annotations for truefoundry virtualservice
+    annotations: {}
+
+  ## @param truefoundry.existingTruefoundryCredsSecret Secret name for existing Truefoundry creds
+  ##
+  existingTruefoundryCredsSecret: ""
 
   ## @section database. Can be left empty if using the dev mode parameters
   database:
@@ -174,6 +227,10 @@ truefoundry:
     password: ""
   ## @param truefoundry.tfyApiKey API Key for TrueFoundry
   tfyApiKey: ""
+
+  ## @param truefoundry.imagePullSecrets Image pull secrets for TrueFoundry
+  ##
+  imagePullSecrets: []
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
   ## @param truefoundry.truefoundry_iam_role_arn_annotations [object] IAM role annotations for service accounts
@@ -203,6 +260,10 @@ truefoundry:
     enabled: false
   ## @param truefoundry.tfyWorkflowAdmin.enabled Flag to enable Tfy Workflow Admin
   tfyWorkflowAdmin:
+    enabled: false
+
+  ## @param truefoundry.gateway.enabled Flag to enable Gateway
+  gateway:
     enabled: false
 
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
@@ -310,6 +371,18 @@ istio:
     ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
     ##
     httpsRedirect: true
+    ## istio.tfyGateway.tls Parameters for TLS configuration for Istio Gateway
+    ##
+    tls:
+      ## @param istio.tfyGateway.tls.enabled Flag to enable TLS for Istio Gateway
+      ##
+      enabled: false
+      ## @param istio.tfyGateway.tls.mode TLS mode for the Istio Gateway
+      ##
+      mode: SIMPLE
+      ## @param istio.tfyGateway.tls.credentialName Credential name for the TLS certificate
+      ##
+      credentialName: ""
     ## @param istio.tfyGateway.domains [array] Domains for the gateway pods
     ##
     domains: ["*"]
@@ -470,6 +543,12 @@ tfyAgent:
 ##
 elasti:
   enabled: true
+  ## @param elasti.tolerations [array] Tolerations for Elasti
+  ##
+  tolerations: []
+  ## @param elasti.affinity [object] Affinity for Elasti
+  ##
+  affinity: {}
   ## @param elasti.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -533,11 +612,6 @@ tfyWorkflowPropeller:
         propeller:
           metadata-prefix: "<to_be_provided>"
           rawoutput-prefix: "<to_be_provided>"
-      k8s:
-        plugins:
-          k8s:
-            default-env-vars:
-              - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
     ##
     flytepropeller:
@@ -550,3 +624,8 @@ tfyWorkflowPropeller:
     enabled: true
     env:
       DEFAULT_CLOUD_PROVIDER: gcp
+
+helm:
+  ## @param helm.resourcePolicy Resource policy for the helm chart
+  ##
+  resourcePolicy: keep
