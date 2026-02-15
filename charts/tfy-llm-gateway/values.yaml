@@ -308,6 +308,35 @@ redis:
     repository: tfy-mirror/bitnamilegacy/redis
   ## redis.master Master configuration
   master:
+    ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
+    nodeSelector: {}
+    ## @skip redis.master.tolerations Tolerations for Redis master pods
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+    ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: karpenter.sh/capacity-type
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: eks.amazonaws.com/capacityType
+                  operator: NotIn
+                  values:
+                    - SPOT
+                - key: cloud.google.com/gke-provisioning
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: kubernetes.azure.com/scalesetpriority
+                  operator: NotIn
+                  values:
+                    - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
       # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
@@ -322,20 +351,20 @@ redis:
         - ReadWriteOnce
       ## @param redis.master.persistence.storageClass Persistence storage class
       storageClass: ""
-  ## redis.resources Resource configuration
-  resources:
-    ## redis.resources.limits Resource limits
-    limits:
-      ## @param redis.resources.limits.cpu CPU limit
-      cpu: 2000m
-      ## @param redis.resources.limits.memory Memory limit
-      memory: 6000Mi
-    ## redis.resources.requests Resource requests
-    requests:
-      ## @param redis.resources.requests.cpu CPU request
-      cpu: 1000m
-      ## @param redis.resources.requests.memory Memory request
-      memory: 4000Mi
+    ## redis.master.resources Resource configuration
+    resources:
+      ## redis.master.resources.limits Resource limits
+      limits:
+        ## @param redis.master.resources.limits.cpu CPU limit
+        cpu: 2000m
+        ## @param redis.master.resources.limits.memory Memory limit
+        memory: 6000Mi
+      ## redis.master.resources.requests Resource requests
+      requests:
+        ## @param redis.master.resources.requests.cpu CPU request
+        cpu: 1000m
+        ## @param redis.master.resources.requests.memory Memory request
+        memory: 4000Mi
   ## @param redis.architecture Redis architecture
   architecture: standalone
   ## @param redis.replicaCount Redis replica count
