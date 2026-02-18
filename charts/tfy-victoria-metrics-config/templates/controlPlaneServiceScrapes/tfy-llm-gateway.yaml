@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.llmGateway.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.llmGateway.name }}
+  labels:
+    {{- include "llmGateway.labels" . | nindent 4 }}
+  annotations:
+    {{- include "llmGateway.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.llmGateway.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.llmGateway.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.llmGateway.name }}
+      {{- if .Values.controlPlaneMonitors.llmGateway.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.llmGateway.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}

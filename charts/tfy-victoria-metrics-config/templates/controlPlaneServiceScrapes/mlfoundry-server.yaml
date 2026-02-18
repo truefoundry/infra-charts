@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.mlfoundryServer.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.mlfoundryServer.name }}
+  labels:
+    {{- include "mlfoundry.labels" . | nindent 4 }}
+  annotations:
+    {{- include "mlfoundry.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.mlfoundryServer.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.mlfoundryServer.name }}
+      {{- if .Values.controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}
