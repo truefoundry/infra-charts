@@ -102,33 +102,6 @@ controlPlaneMonitors:
                 }}){{ else }} RESOLVED ({{ .Alerts.Resolved | len }}){{ end }}
                 Control Plane Alerts
 
-  # controlPlaneMonitors.clickHouseOperator Service scrape for ClickHouse operator
-  clickHouseOperator:
-    ## @param controlPlaneMonitors.clickHouseOperator.enabled Enable service scrape for ClickHouse operator
-    enabled: true
-    ## @param controlPlaneMonitors.clickHouseOperator.name Name of the service scrape
-    name: tfy-clickhouse-operator
-    ## @param controlPlaneMonitors.clickHouseOperator.labels [object] Labels for ClickHouse operator
-    labels: {}
-    ## @param controlPlaneMonitors.clickHouseOperator.annotations [object] Annotations for ClickHouse operator
-    annotations: {}
-    ## @param controlPlaneMonitors.clickHouseOperator.jobLabel Job label for ClickHouse operator
-    jobLabel: app.kubernetes.io/name
-    ## @param controlPlaneMonitors.clickHouseOperator.endpoints [array] Endpoints for ClickHouse operator
-    endpoints:
-      - path: /metrics
-        targetPort: 8888
-        honorLabels: true
-      - path: /metrics
-        targetPort: 9999
-        honorLabels: true
-    ## @param controlPlaneMonitors.clickHouseOperator.namespaceSelector [object] Namespace selector for ClickHouse operator
-    namespaceSelector:
-      matchNames:
-        - truefoundry
-    ## @param controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels [object] Service selector labels for ClickHouse operator
-    serviceSelectorLabels:
-      app.kubernetes.io/name: altinity-clickhouse-operator
 
   # controlPlaneMonitors.servicefoundryServer Service scrape for servicefoundry server
   servicefoundryServer:
