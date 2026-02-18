@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.tfyOtelCollector.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.tfyOtelCollector.name }}
+  labels:
+    {{- include "tfyOtelCollector.labels" . | nindent 4 }}
+  annotations:
+    {{- include "tfyOtelCollector.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.tfyOtelCollector.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.tfyOtelCollector.name }}
+      {{- if .Values.controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}

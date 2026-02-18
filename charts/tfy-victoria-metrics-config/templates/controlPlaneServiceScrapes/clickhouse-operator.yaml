@@ -1,0 +1,19 @@
+{{- if and .Values.controlPlaneMonitors.clickHouseOperator.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.clickHouseOperator.name }}
+  labels:
+    {{- include "clickhouseOperator.labels" . | nindent 4 }}
+  annotations:
+    {{- include "clickhouseOperator.annotations" . | nindent 4 }}
+spec:
+  jobLabel: {{ .Values.controlPlaneMonitors.clickHouseOperator.jobLabel }}
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.clickHouseOperator.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.serviceSelectorLabels | nindent 6 }}
+{{- end -}}
