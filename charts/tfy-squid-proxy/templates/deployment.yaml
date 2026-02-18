@@ -44,8 +44,11 @@ spec:
               subPath: squid.conf
           resources:
             {{- include "tfy-squid-proxy.resources" . | nindent 12 }}
+          securityContext:
+            {{- include "tfy-squid-proxy.containerSecurityContext" . | nindent 12 }}
       volumes:
         - name: squid-config
           configMap:
             name: {{ include "tfy-squid-proxy.fullname" . }}-squid-proxy-config
-
+      securityContext:
+        {{- include "tfy-squid-proxy.podSecurityContext" . | nindent 8 }}
