@@ -172,7 +172,7 @@ global:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                    | `""`                                                                                                 |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                   | `""`                                                                                                 |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                             | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000`                     |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.122.0`                                                                                            |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.122.0-rc.1`                                                                                       |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                                                                                                        | `""`                                                                                                 |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                         | `false`                                                                                              |
 | `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                                                                                                            | `{}`                                                                                                 |
@@ -1004,6 +1004,13 @@ fi
 
 ### tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
 
+
+### victoriaMetricsMonitoring TrueFoundry VictoriaMetrics Config settings
+
+| Name                                                     | Description                                   | Value  |
+| -------------------------------------------------------- | --------------------------------------------- | ------ |
+| `victoriaMetricsMonitoring.enabled`                      | Bool to enable the VictoriaMetrics Monitoring | `true` |
+| `victoriaMetricsMonitoring.controlPlaneMonitors.enabled` | Bool to enable the control plane monitoring   | `true` |
 
 ### deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 
