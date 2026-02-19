@@ -4,8 +4,8 @@ kind: VMAlertmanagerConfig
 metadata:
   name: {{ .Values.controlPlaneMonitors.alerts.alertManager.name }}
   labels:
-    {{- include "controlPlaneAlertManager.labels" . | nindent 4 }}
-  {{- $annotations := include "controlPlaneAlertManager.annotations" . | fromYaml }}
+    {{- include "vmconfig.controlPlaneAlertManager.labels" . | nindent 4 }}
+  {{- $annotations := include "vmconfig.controlPlaneAlertManager.annotations" . | fromYaml }}
   {{- if $annotations }}
   annotations:
     {{- toYaml $annotations | nindent 4 }}
@@ -25,12 +25,12 @@ apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
 metadata:
   name: {{ .Values.controlPlaneMonitors.alerts.alertRules.name }}
-  {{- $labels := include "controlPlaneAlertRules.labels" . | fromYaml }}
+  {{- $labels := include "vmconfig.controlPlaneAlertRules.labels" . | fromYaml }}
   {{- if $labels }}
   labels:
     {{- toYaml $labels | nindent 4 }}
   {{- end }}
-  {{- $annotations := include "controlPlaneAlertRules.annotations" . | fromYaml }}
+  {{- $annotations := include "vmconfig.controlPlaneAlertRules.annotations" . | fromYaml }}
   {{- if $annotations }}
   annotations:
     {{- toYaml $annotations | nindent 4 }}

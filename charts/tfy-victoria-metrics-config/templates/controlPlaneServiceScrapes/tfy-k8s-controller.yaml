@@ -4,9 +4,9 @@ kind: VMServiceScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.tfyK8sController.name }}
   labels:
-    {{- include "tfyK8sController.labels" . | nindent 4 }}
+    {{- include "vmconfig.tfyK8sController.labels" . | nindent 4 }}
   annotations:
-    {{- include "tfyK8sController.annotations" . | nindent 4 }}
+    {{- include "vmconfig.tfyK8sController.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.endpoints | nindent 2 }}

@@ -4,9 +4,9 @@ kind: VMPodScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.nats.name }}
   labels:
-    {{- include "nats.labels" . | nindent 4 }}
+    {{- include "vmconfig.nats.labels" . | nindent 4 }}
   annotations:
-    {{- include "nats.annotations" . | nindent 4 }}
+    {{- include "vmconfig.nats.annotations" . | nindent 4 }}
 spec:
   podMetricsEndpoints:
     {{- toYaml .Values.controlPlaneMonitors.nats.podMetricsEndpoints | nindent 2 }}
