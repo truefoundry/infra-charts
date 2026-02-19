@@ -15,7 +15,7 @@ This chart is used to configure the scrape configs, alert managers, rules, and s
 
 | Name                                                              | Description                                           | Value                                    |
 | ----------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------- |
-| `controlPlaneMonitors.enabled`                                    | Enable service scrapes for control plane components   | `true`                                   |
+| `controlPlaneMonitors.enabled`                                    | Enable service scrapes for control plane components   | `false`                                  |
 | `controlPlaneMonitors.releaseNamespace`                           | Release namespace for the control plane               | `truefoundry`                            |
 | `controlPlaneMonitors.tenantName`                                 | Tenant name for the control plane                     | `<to_be_provided>`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors     | `{}`                                     |
