@@ -1005,6 +1005,13 @@ fi
 ### tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
 
 
+### victoriaMetricsMonitoring TrueFoundry VictoriaMetrics Config settings
+
+| Name                                                     | Description                                   | Value  |
+| -------------------------------------------------------- | --------------------------------------------- | ------ |
+| `victoriaMetricsMonitoring.enabled`                      | Bool to enable the VictoriaMetrics Monitoring | `true` |
+| `victoriaMetricsMonitoring.controlPlaneMonitors.enabled` | Bool to enable the control plane monitoring   | `true` |
+
 ### deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
 
 | Name                                                              | Description                                                                                | Value                                     |
