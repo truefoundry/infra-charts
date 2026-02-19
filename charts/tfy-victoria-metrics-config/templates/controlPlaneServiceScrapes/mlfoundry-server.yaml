@@ -4,9 +4,9 @@ kind: VMServiceScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.mlfoundryServer.name }}
   labels:
-    {{- include "mlfoundry.labels" . | nindent 4 }}
+    {{- include "vmconfig.mlfoundry.labels" . | nindent 4 }}
   annotations:
-    {{- include "mlfoundry.annotations" . | nindent 4 }}
+    {{- include "vmconfig.mlfoundry.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.endpoints | nindent 2 }}

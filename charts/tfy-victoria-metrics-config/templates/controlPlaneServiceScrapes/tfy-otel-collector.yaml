@@ -4,9 +4,9 @@ kind: VMServiceScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.tfyOtelCollector.name }}
   labels:
-    {{- include "tfyOtelCollector.labels" . | nindent 4 }}
+    {{- include "vmconfig.tfyOtelCollector.labels" . | nindent 4 }}
   annotations:
-    {{- include "tfyOtelCollector.annotations" . | nindent 4 }}
+    {{- include "vmconfig.tfyOtelCollector.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.endpoints | nindent 2 }}

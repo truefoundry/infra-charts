@@ -1,7 +1,7 @@
 {{/*
   LLM Gateway service scrape labels
 */}}
-{{- define "llmGateway.labels" -}}
+{{- define "vmconfig.llmGateway.labels" -}}
 {{- if .Values.controlPlaneMonitors.llmGateway.labels }}
 {{- toYaml .Values.controlPlaneMonitors.llmGateway.labels }}
 {{- else if .Values.global.labels }}
@@ -14,7 +14,7 @@
 {{/*
   LLM Gateway service scrape annotations
 */}}
-{{- define "llmGateway.annotations" -}}
+{{- define "vmconfig.llmGateway.annotations" -}}
 {{- if .Values.controlPlaneMonitors.llmGateway.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.llmGateway.annotations }}
 {{- else if .Values.global.annotations }}
@@ -27,7 +27,7 @@
 {{/*
   Servicefoundry server service scrape labels
 */}}
-{{- define "servicefoundry.labels" -}}
+{{- define "vmconfig.servicefoundry.labels" -}}
 {{- if .Values.controlPlaneMonitors.servicefoundryServer.labels }}
 {{- toYaml .Values.controlPlaneMonitors.servicefoundryServer.labels }}
 {{- else if .Values.global.labels }}
@@ -40,7 +40,7 @@
 {{/*
   Servicefoundry server service scrape annotations
 */}}
-{{- define "servicefoundry.annotations" -}}
+{{- define "vmconfig.servicefoundry.annotations" -}}
 {{- if .Values.controlPlaneMonitors.servicefoundryServer.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.servicefoundryServer.annotations }}
 {{- else if .Values.global.annotations }}
@@ -53,7 +53,7 @@
 {{/*
   MLFoundry server service scrape labels
 */}}
-{{- define "mlfoundry.labels" -}}
+{{- define "vmconfig.mlfoundry.labels" -}}
 {{- if .Values.controlPlaneMonitors.mlfoundryServer.labels }}
 {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.labels }}
 {{- else if .Values.global.labels }}
@@ -66,7 +66,7 @@
 {{/*
   MLFoundry server service scrape annotations
 */}}
-{{- define "mlfoundry.annotations" -}}
+{{- define "vmconfig.mlfoundry.annotations" -}}
 {{- if .Values.controlPlaneMonitors.mlfoundryServer.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.mlfoundryServer.annotations }}
 {{- else if .Values.global.annotations }}
@@ -79,7 +79,7 @@
 {{/*
   Sfy-manifests service scrape labels
 */}}
-{{- define "sfyManifestService.labels" -}}
+{{- define "vmconfig.sfyManifestService.labels" -}}
 {{- if .Values.controlPlaneMonitors.sfyManifestService.labels }}
 {{- toYaml .Values.controlPlaneMonitors.sfyManifestService.labels }}
 {{- else if .Values.global.labels }}
@@ -92,7 +92,7 @@
 {{/*
   Sfy-manifests service scrape annotations
 */}}
-{{- define "sfyManifestService.annotations" -}}
+{{- define "vmconfig.sfyManifestService.annotations" -}}
 {{- if .Values.controlPlaneMonitors.sfyManifestService.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.sfyManifestService.annotations }}
 {{- else if .Values.global.annotations }}
@@ -105,7 +105,7 @@
 {{/*
   NATS pod scrape labels
 */}}
-{{- define "nats.labels" -}}
+{{- define "vmconfig.nats.labels" -}}
 {{- if .Values.controlPlaneMonitors.nats.labels }}
 {{- toYaml .Values.controlPlaneMonitors.nats.labels }}
 {{- else if .Values.global.labels }}
@@ -118,7 +118,7 @@
 {{/*
   NATS pod scrape annotations
 */}}
-{{- define "nats.annotations" -}}
+{{- define "vmconfig.nats.annotations" -}}
 {{- if .Values.controlPlaneMonitors.nats.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.nats.annotations }}
 {{- else if .Values.global.annotations }}
@@ -131,7 +131,7 @@
 {{/*
   TFY Controller service scrape labels
 */}}
-{{- define "tfyController.labels" -}}
+{{- define "vmconfig.tfyController.labels" -}}
 {{- if .Values.controlPlaneMonitors.tfyController.labels }}
 {{- toYaml .Values.controlPlaneMonitors.tfyController.labels }}
 {{- else if .Values.global.labels }}
@@ -144,7 +144,7 @@
 {{/*
   TFY Controller service scrape annotations
 */}}
-{{- define "tfyController.annotations" -}}
+{{- define "vmconfig.tfyController.annotations" -}}
 {{- if .Values.controlPlaneMonitors.tfyController.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.tfyController.annotations }}
 {{- else if .Values.global.annotations }}
@@ -157,7 +157,7 @@
 {{/*
   TFY K8S Controller service scrape labels
 */}}
-{{- define "tfyK8sController.labels" -}}
+{{- define "vmconfig.tfyK8sController.labels" -}}
 {{- if .Values.controlPlaneMonitors.tfyK8sController.labels }}
 {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.labels }}
 {{- else if .Values.global.labels }}
@@ -170,7 +170,7 @@
 {{/*
   TFY K8S Controller service scrape annotations
 */}}
-{{- define "tfyK8sController.annotations" -}}
+{{- define "vmconfig.tfyK8sController.annotations" -}}
 {{- if .Values.controlPlaneMonitors.tfyK8sController.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.annotations }}
 {{- else if .Values.global.annotations }}
@@ -183,7 +183,7 @@
 {{/*
   TFY Otel Collector service scrape labels
 */}}
-{{- define "tfyOtelCollector.labels" -}}
+{{- define "vmconfig.tfyOtelCollector.labels" -}}
 {{- if .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
 {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
 {{- else if .Values.global.labels }}
@@ -196,7 +196,7 @@
 {{/*
   Otel Collector service scrape annotations
 */}}
-{{- define "tfyOtelCollector.annotations" -}}
+{{- define "vmconfig.tfyOtelCollector.annotations" -}}
 {{- if .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
 {{- else if .Values.global.annotations }}
@@ -209,7 +209,7 @@
 {{/*
   Altinity ClickHouse Operator service scrape labels
 */}}
-{{- define "clickhouseOperator.labels" -}}
+{{- define "vmconfig.clickhouseOperator.labels" -}}
 {{- if .Values.controlPlaneMonitors.clickHouseOperator.labels }}
 {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.labels }}
 {{- else if .Values.global.labels }}
@@ -222,7 +222,7 @@
 {{/*
   Altinity ClickHouse Operator service scrape annotations
 */}}
-{{- define "clickhouseOperator.annotations" -}}
+{{- define "vmconfig.clickhouseOperator.annotations" -}}
 {{- if .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
 {{- else if .Values.global.annotations }}
@@ -235,7 +235,7 @@
 {{/*
 Control Plane Alert Rules Labels
 */}}
-{{- define "controlPlaneAlertRules.labels" -}}
+{{- define "vmconfig.controlPlaneAlertRules.labels" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertRules.labels }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.labels }}
 {{- else if .Values.global.labels }}
@@ -248,7 +248,7 @@ Control Plane Alert Rules Labels
 {{/*
 Control Plane Alert Rules Annotations
 */}}
-{{- define "controlPlaneAlertRules.annotations" -}}
+{{- define "vmconfig.controlPlaneAlertRules.annotations" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertRules.annotations }}
 {{- else if .Values.global.annotations }}
@@ -261,7 +261,7 @@ Control Plane Alert Rules Annotations
 {{/*
 Control Plane Alert Manager Labels
 */}}
-{{- define "controlPlaneAlertManager.labels" -}}
+{{- define "vmconfig.controlPlaneAlertManager.labels" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertManager.labels }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.labels }}
 {{- else if .Values.global.labels }}
@@ -274,7 +274,7 @@ Control Plane Alert Manager Labels
 {{/*
 Control Plane Alert Manager Annotations
 */}}
-{{- define "controlPlaneAlertManager.annotations" -}}
+{{- define "vmconfig.controlPlaneAlertManager.annotations" -}}
 {{- if .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
 {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.annotations }}
 {{- else if .Values.global.annotations }}

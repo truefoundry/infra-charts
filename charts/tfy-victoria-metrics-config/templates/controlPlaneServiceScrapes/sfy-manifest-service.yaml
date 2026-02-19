@@ -4,9 +4,9 @@ kind: VMServiceScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.sfyManifestService.name }}
   labels:
-    {{- include "sfyManifestService.labels" . | nindent 4 }}
+    {{- include "vmconfig.sfyManifestService.labels" . | nindent 4 }}
   annotations:
-    {{- include "sfyManifestService.annotations" . | nindent 4 }}
+    {{- include "vmconfig.sfyManifestService.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.sfyManifestService.endpoints | nindent 2 }}

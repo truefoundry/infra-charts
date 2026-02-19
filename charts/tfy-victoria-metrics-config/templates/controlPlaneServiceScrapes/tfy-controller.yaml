@@ -4,9 +4,9 @@ kind: VMServiceScrape
 metadata:
   name: {{ .Values.controlPlaneMonitors.tfyController.name }}
   labels:
-    {{- include "tfyController.labels" . | nindent 4 }}
+    {{- include "vmconfig.tfyController.labels" . | nindent 4 }}
   annotations:
-    {{- include "tfyController.annotations" . | nindent 4 }}
+    {{- include "vmconfig.tfyController.annotations" . | nindent 4 }}
 spec:
   endpoints:
   {{- toYaml .Values.controlPlaneMonitors.tfyController.endpoints | nindent 2 }}
