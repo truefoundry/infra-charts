@@ -600,7 +600,7 @@ global:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                             | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified) | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                     | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.122.0-rc.1`                         |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.122.0`                              |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                            | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                       | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                       | `IfNotPresent`                          |
