@@ -6,10 +6,11 @@ This chart is used to configure the scrape configs, alert managers, rules, and s
 
 ### global Global settings
 
-| Name                 | Description | Value |
-| -------------------- | ----------- | ----- |
-| `global.labels`      |             | `{}`  |
-| `global.annotations` |             | `{}`  |
+| Name                 | Description                       | Value |
+| -------------------- | --------------------------------- | ----- |
+| `global.labels`      |                                   | `{}`  |
+| `global.annotations` |                                   | `{}`  |
+| `global.tenantName`  | Tenant name for the control plane | `""`  |
 
 ### controlPlaneMonitors service scrapes for control plane components
 
@@ -17,7 +18,6 @@ This chart is used to configure the scrape configs, alert managers, rules, and s
 | ----------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------- |
 | `controlPlaneMonitors.enabled`                                    | Enable service scrapes for control plane components   | `false`                                  |
 | `controlPlaneMonitors.releaseNamespace`                           | Release namespace for the control plane               | `truefoundry`                            |
-| `controlPlaneMonitors.tenantName`                                 | Tenant name for the control plane                     | `<to_be_provided>`                       |
 | `controlPlaneMonitors.namespaceSelector`                          | Namespace selector for the control plane monitors     | `{}`                                     |
 | `controlPlaneMonitors.serviceSelectorLabel`                       | Service selector label for the control plane monitors | `app.kubernetes.io/name`                 |
 | `controlPlaneMonitors.alerts.enabled`                             | Enable alerts for control plane                       | `false`                                  |
