@@ -7,15 +7,14 @@ global:
   ## @param global.annotations
   ##
   annotations: {}
-
+  ## @param global.tenantName Tenant name for the control plane
+  tenantName: ""
 ## @section controlPlaneMonitors service scrapes for control plane components
 controlPlaneMonitors:
   ## @param controlPlaneMonitors.enabled Enable service scrapes for control plane components
   enabled: false
   ## @param controlPlaneMonitors.releaseNamespace Release namespace for the control plane
   releaseNamespace: truefoundry
-  ## @param controlPlaneMonitors.tenantName Tenant name for the control plane
-  tenantName: "<to_be_provided>"
   ## @param controlPlaneMonitors.namespaceSelector [object] Namespace selector for the control plane monitors
   namespaceSelector:
     matchNames:
@@ -121,9 +120,7 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
     serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.servicefoundryServer.namespaceSelector [object] Namespace selector for servicefoundry server
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
 
   # controlPlaneMonitors.mlfoundryServer Service scrape for mlfoundry server
   mlfoundryServer:
@@ -143,9 +140,7 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
     serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
 
   # controlPlaneMonitors.sfyManifestService Service scrape for sfy manifest service
   sfyManifestService:
@@ -165,9 +160,7 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
     serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
 
   # controlPlaneMonitors.tfyController Service scrape for tfy-controller
   tfyController:
@@ -187,9 +180,7 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
     serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.tfyController.namespaceSelector [object] Namespace selector for tfy-controller
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
 
   # controlPlaneMonitors.tfyK8sController Service scrape for tfy-k8s-controller
   tfyK8sController:
@@ -211,9 +202,7 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
     serviceSelectorLabels: {}
     ## @param controlPlaneMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
 
   # controlPlaneMonitors.tfyOtelCollector Service scrape for tfy-otel-collector
   tfyOtelCollector:
@@ -231,9 +220,7 @@ controlPlaneMonitors:
         path: /metrics
         targetPort: 8888
     ## @param controlPlaneMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
     ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
     serviceSelectorLabels: {}
 
@@ -253,9 +240,7 @@ controlPlaneMonitors:
         targetPort: 8787
         honorLabels: true
     ## @param controlPlaneMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
     ## @param controlPlaneMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
     serviceSelectorLabels: {}
 
@@ -277,6 +262,4 @@ controlPlaneMonitors:
     podSelectorLabels:
       app.kubernetes.io/component: nats
     ## @param controlPlaneMonitors.nats.namespaceSelector [object] Namespace selector for nats
-    namespaceSelector:
-      matchNames:
-        - truefoundry
+    namespaceSelector: {}
