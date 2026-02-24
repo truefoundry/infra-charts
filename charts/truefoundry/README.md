@@ -7,14 +7,12 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 The TrueFoundry Helm chart components are installed in the following order:
 
 1. **Bootstrap Resources**
-
    - ConfigMap
    - ServiceAccount
    - Role
    - RoleBinding
 
 2. **Sync-wave: 0**
-
    - All stateful dependencies and non-Deployment resources including:
      - Namespace
      - ServiceAccount
@@ -26,7 +24,6 @@ The TrueFoundry Helm chart components are installed in the following order:
      - Any component without a defined sync-wave
 
 3. **Sync-wave: 1**
-
    - Deployment of servicefoundry-server
 
 4. **Sync-wave: 2**
@@ -172,7 +169,7 @@ global:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                    | `""`                                                                                                 |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                   | `""`                                                                                                 |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                             | `http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000`                     |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.122.2`                                                                                            |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.122.3`                                                                                            |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                                                                                                        | `""`                                                                                                 |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                         | `false`                                                                                              |
 | `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                                                                                                            | `{}`                                                                                                 |
@@ -1130,7 +1127,7 @@ fi
 | `deltaFusionQueryServer.deploymentAnnotations`                       | Annotations for the deltaFusionQueryServer deployment                                                                                                            | `{}`                                          |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified)                                                                           | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                                                                                               | `tfy-private-images/deltafusion-query-server` |
-| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                                                         | `v0.121.0`                                    |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                                                         | `v0.122.0`                                    |
 | `deltaFusionQueryServer.image.optimized`                             | Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable) | `auto`                                        |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                                                                                                  | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                                                                                                 | `deltafusion-query-env-secret`                |
