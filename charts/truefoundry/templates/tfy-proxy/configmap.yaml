@@ -48,26 +48,38 @@ data:
           expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
         }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
+        header @origin_allowed Access-Control-Allow-Credentials "true"
         {{- else }}
         header Access-Control-Allow-Origin "{http.request.header.Origin}"
+        header Access-Control-Allow-Credentials "true"
         {{- end }}
         header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
-        header Access-Control-Allow-Credentials "true"
         header Access-Control-Max-Age "3600"
         respond "" 204
       }
+
       {{- if .Values.global.proxy.cors.allowedOrigins }}
       @origin {
         expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
       }
-      header @origin Access-Control-Allow-Origin "{http.request.header.Origin}"
-      header @origin Access-Control-Allow-Credentials "true"
-      header @origin Vary "Origin"
+      # > replaces upstream value instead of stacking alongside it
+      header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header @origin >Access-Control-Allow-Credentials "true"
+      header @origin >Vary "Origin"
+
+      # Disallowed origin — strip upstream *
+      @not_origin {
+        not expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+        expression {http.request.header.Origin} != ""
+      }
+      header @not_origin -Access-Control-Allow-Origin
+      header @not_origin -Access-Control-Allow-Credentials
+
       {{- else }}
-      header Access-Control-Allow-Origin "{http.request.header.Origin}"
-      header Access-Control-Allow-Credentials "true"
-      header Vary "Origin"
+      header >Access-Control-Allow-Origin "{http.request.header.Origin}"
+      header >Access-Control-Allow-Credentials "true"
+      header >Vary "Origin"
       {{- end }}
     }
     {{- end }}
@@ -76,12 +88,11 @@ data:
     (security_headers) {
         header {
             # Enable HSTS to force HTTPS
-            
             Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-            
+
             # Prevent MIME type sniffing
             X-Content-Type-Options "nosniff"
-            
+
             # Prevent clickjacking (alternative: use CSP frame-ancestors)
             X-Frame-Options "SAMEORIGIN"
 
@@ -90,7 +101,6 @@ data:
 
             # Control referrer information sending
             Referrer-Policy "strict-origin-when-cross-origin"
-            
 
             # Remove headers
             -Server
