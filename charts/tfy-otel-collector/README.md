@@ -64,6 +64,10 @@ Tfy-Otel_collector Helm Chart
 | `affinity`                                      | Affinity                                                                           | `{}`                                    |
 | `topologySpreadConstraints`                     | Topology spread constraints                                                        | `{}`                                    |
 | `terminationGracePeriodSeconds`                 | Termination grace period in seconds                                                | `120`                                   |
+| `podDisruptionBudget.enabled`                   | Enable PodDisruptionBudget                                                         | `true`                                  |
+| `podDisruptionBudget.annotations`               | PDB annotations                                                                    | `{}`                                    |
+| `podDisruptionBudget.labels`                    | PDB labels                                                                         | `{}`                                    |
+| `podDisruptionBudget.maxUnavailable`            | Maximum number of unavailable replicas                                             | `30%`                                   |
 | `service.type`                                  | Service type                                                                       | `ClusterIP`                             |
 | `service.port`                                  | Service port                                                                       | `4318`                                  |
 | `service.annotations`                           | Service annotations                                                                | `{}`                                    |
