@@ -15,7 +15,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: https://kubernetes-sigs.github.io/aws-efs-csi-driver/
-    targetRevision: 3.1.8
+    targetRevision: 3.2.6
     chart: aws-efs-csi-driver
     helm:
       values: |-
@@ -51,12 +51,12 @@ spec:
           {{- if .Values.registry }}
           csiProvisioner:
             image:
-              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/external-provisioner
+              repository: {{ .Values.registry }}/csi-components/csi-provisioner
           {{- end }}
           nodeDriverRegistrar:
             {{- if .Values.registry }}
             image:
-              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/node-driver-registrar
+              repository: {{ .Values.registry }}/csi-components/csi-node-driver-registrar
             {{- end }}
             resources:
               requests:
@@ -68,7 +68,7 @@ spec:
           livenessProbe:
             {{- if .Values.registry }}
             image:
-              repository: {{ .Values.registry }}/eks-distro/kubernetes-csi/livenessprobe
+              repository: {{ .Values.registry }}/csi-components/livenessprobe
             {{- end }}
             resources:
               requests:

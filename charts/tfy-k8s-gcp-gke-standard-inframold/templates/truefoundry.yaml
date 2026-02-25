@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.110.1
+    targetRevision: 0.125.1
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -38,7 +38,10 @@ spec:
           image:
             registry: {{ .Values.registry }}
           {{- end }}
-          {{- if .Values.imagePullSecrets }}
+          {{- if .Values.truefoundry.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.truefoundry.imagePullSecrets | nindent 12 }}
+          {{- else if .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml .Values.imagePullSecrets | nindent 12 }}
           {{- else }}
@@ -46,12 +49,16 @@ spec:
           {{- end }}
           tenantName: {{ .Values.tenantName }}
           controlPlaneURL: {{ .Values.controlPlaneURL }}
+          {{- if .Values.truefoundry.existingTruefoundryCredsSecret }}
+          existingTruefoundryCredsSecret: {{ .Values.truefoundry.existingTruefoundryCredsSecret }}
+          {{- else }}
           tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
           database:
             host: {{ .Values.truefoundry.database.host }}
             name: {{ .Values.truefoundry.database.name }}
             username: {{ .Values.truefoundry.database.username }}
             password: {{ .Values.truefoundry.database.password }}
+          {{- end }}
           proxy:
             enabled: true
           virtualservice:
@@ -92,6 +99,12 @@ spec:
             defaultCloudProvider: {{ .Values.truefoundry.defaultCloudProvider }}
             storageConfiguration:
               {{- toYaml .Values.truefoundry.storageConfiguration | nindent 14 }}
+
+        {{- if .Values.truefoundry.gateway.enabled }}
+        tags:
+          llmGateway: true
+          llmGatewayRequestLogging: true
+        {{- end }}
 
         devMode:
           enabled: {{ .Values.truefoundry.devMode.enabled }}
@@ -164,51 +177,12 @@ spec:
               - op: add
                 path: /spec/nodeSelector
                 value: {}
-        tfy-buildkitd-service:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
         s3proxy:
           enabled: {{ .Values.truefoundry.s3proxy.enabled }}
         sparkHistoryServer:
           enabled: {{ .Values.truefoundry.sparkHistoryServer.enabled }}
         tfyWorkflowAdmin:
           enabled: {{ .Values.truefoundry.tfyWorkflowAdmin.enabled }}
-        tfy-llm-gateway:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
-        tfy-otel-collector:
-          {{- if $mergedTolerations }}
-          tolerations:
-            {{- toYaml $mergedTolerations | nindent 12 }}
-          {{- else }}
-          tolerations: []
-          {{- end }}
-          {{- if $mergedAffinity }}
-          affinity:
-            {{- toYaml $mergedAffinity | nindent 12 }}
-          {{- else }}
-          affinity: {}
-          {{- end }}
         {{- end }}
 
   syncPolicy:

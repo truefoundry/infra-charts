@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ include "deltafusion-ingestor.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels: 
     {{- include "deltafusion-ingestor.statefulsetLabels" . | nindent 4 }}
   annotations:
@@ -41,6 +42,12 @@ spec:
           imagePullPolicy: {{ .Values.deltaFusionIngestor.imagePullPolicy }}
           env:
             {{- include "deltafusion-ingestor.env" . | trim | nindent 12 }}
+          {{- if .Values.deltaFusionIngestor.command }}
+          command: {{ .Values.deltaFusionIngestor.command }}
+          {{- end }}
+          {{- if .Values.deltaFusionIngestor.args }}
+          args: {{ .Values.deltaFusionIngestor.args }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.deltaFusionIngestor.service.port }}

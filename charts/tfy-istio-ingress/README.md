@@ -46,3 +46,23 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | ------------------------- | --------------------------------- | ------- |
 | `telemetry.enabled`       | Enable telemetry.                 | `false` |
 | `telemetry.accessLogging` | Access logging for the telemetry. | `[]`    |
+
+### awsElbControllerChecker Job that verifies aws-load-balancer-controller deployment has 2 pods up.
+
+| Name                                            | Description                                                                                | Value                                        |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- |
+| `awsElbControllerChecker.enabled`               | Enable the aws-load-balancer-controller checker job.                                       | `false`                                      |
+| `awsElbControllerChecker.labels`                | Labels for the aws-load-balancer-controller checker job.                                   | `{}`                                         |
+| `awsElbControllerChecker.annotations`           | Annotations for the aws-load-balancer-controller checker job.                              | `{}`                                         |
+| `awsElbControllerChecker.jobLabels`             | Labels for the aws-load-balancer-controller checker job.                                   | `{}`                                         |
+| `awsElbControllerChecker.jobAnnotations`        | Annotations for the aws-load-balancer-controller checker job.                              | `{}`                                         |
+| `awsElbControllerChecker.deploymentName`        | Name of the aws-load-balancer-controller deployment to check.                              | `aws-load-balancer-controller`               |
+| `awsElbControllerChecker.namespace`             | Namespace where the aws-load-balancer-controller deployment runs.                          | `aws-load-balancer-controller`               |
+| `awsElbControllerChecker.waitTimeoutSeconds`    | Time in seconds to wait for aws-load-balancer-controller pods to come up (default 3 mins). | `180`                                        |
+| `awsElbControllerChecker.image.repository`      | Repository for the checker job (helm-kubectl-based).                                       | `tfy.jfrog.io/tfy-mirror/dtzar/helm-kubectl` |
+| `awsElbControllerChecker.image.tag`             | Tag for the checker job (helm-kubectl-based).                                              | `3.19.1`                                     |
+| `awsElbControllerChecker.image.pullPolicy`      | Pull policy for the checker job (helm-kubectl-based).                                      | `IfNotPresent`                               |
+| `awsElbControllerChecker.serviceAccount.create` | Create a dedicated ServiceAccount for the checker job.                                     | `true`                                       |
+| `awsElbControllerChecker.serviceAccount.name`   | Name of existing ServiceAccount to use when create is false.                               | `""`                                         |
+| `awsElbControllerChecker.resources`             | Resource limits/requests for the checker job.                                              | `{}`                                         |
+| `awsElbControllerChecker.backoffLimit`          | Number of retries before the job is marked failed.                                         | `3`                                          |

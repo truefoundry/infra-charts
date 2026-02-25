@@ -2,12 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "tfy-otel-collector.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-otel-collector.deploymentLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-otel-collector.deploymentAnnotations" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ include "tfy-otel-collector.replicas" . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}

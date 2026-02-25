@@ -22,7 +22,7 @@ spec:
       - ServerSideApply=true
   source:
     repoURL: "https://prometheus-community.github.io/helm-charts"
-    targetRevision: 69.6.0
+    targetRevision: 81.2.0
     chart: kube-prometheus-stack
     helm:
       values: |-
@@ -48,6 +48,14 @@ spec:
             {{- toYaml .Values.imagePullSecrets | nindent 12 }}
           {{- end }}
         {{- end }}
+        crds:
+          enabled: true
+          upgradeJob:
+            image:
+              busybox:
+                registry: tfy.jfrog.io/tfy-mirror
+            enabled: true # will be removed once it is upgraded everywhere
+            forceConflicts: true # will be removed once it is upgraded everywhere
         defaultRules:
           enabled: false
         coreDns:

@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "deltafusion-query-server.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "deltafusion-query-server.deploymentLabels" . | nindent 4 }}
   annotations:
@@ -34,7 +35,8 @@ spec:
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
-          {{- if .Values.deltaFusionQueryServer.image.optimized }}
+          {{- $useOptimized := include "deltafusion-query-server.useOptimized" . | trim }}
+          {{- if eq $useOptimized "true" }}
           image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
           {{- else }}
           image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}"
@@ -86,10 +88,10 @@ spec:
       nodeSelector:
         {{- toYaml $mergedNodeSelector | nindent 8 }}
       {{- end }}
-      {{- $mergedAffinity := dict | merge .Values.deltaFusionQueryServer.affinity .Values.global.affinity }}
+      {{- $mergedAffinity := include "deltafusion-query-server.affinity" . | fromYaml }}
       {{- if $mergedAffinity }}
       affinity:
-      {{- toYaml $mergedAffinity | nindent 8 }}
+        {{- toYaml $mergedAffinity | nindent 8 }}
       {{- end }}
       topologySpreadConstraints:
         {{- if .Values.deltaFusionQueryServer.topologySpreadConstraints }}

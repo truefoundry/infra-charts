@@ -112,3 +112,53 @@ telemetry:
   accessLogging:
     - providers:
       - name: envoy
+
+
+## @section awsElbControllerChecker Job that verifies aws-load-balancer-controller deployment has 2 pods up.
+##
+awsElbControllerChecker:
+  ## @param awsElbControllerChecker.enabled Enable the aws-load-balancer-controller checker job.
+  ##
+  enabled: false
+  ## @param awsElbControllerChecker.labels Labels for the aws-load-balancer-controller checker job.
+  ##
+  labels: {}
+  ## @param awsElbControllerChecker.annotations Annotations for the aws-load-balancer-controller checker job.
+  ##
+  annotations: {}
+  ## @param awsElbControllerChecker.jobLabels Labels for the aws-load-balancer-controller checker job.
+  ##
+  jobLabels: {}
+  ## @param awsElbControllerChecker.jobAnnotations Annotations for the aws-load-balancer-controller checker job.
+  ##
+  jobAnnotations: {}
+  ## @param awsElbControllerChecker.deploymentName Name of the aws-load-balancer-controller deployment to check.
+  ##
+  deploymentName: "aws-load-balancer-controller"
+  ## @param awsElbControllerChecker.namespace Namespace where the aws-load-balancer-controller deployment runs.
+  ##
+  namespace: "aws-load-balancer-controller"
+  ## @param awsElbControllerChecker.waitTimeoutSeconds Time in seconds to wait for aws-load-balancer-controller pods to come up (default 3 mins).
+  ##
+  waitTimeoutSeconds: 180
+  image:
+    ## @param awsElbControllerChecker.image.repository Repository for the checker job (helm-kubectl-based).
+    repository: tfy.jfrog.io/tfy-mirror/dtzar/helm-kubectl
+    ## @param awsElbControllerChecker.image.tag Tag for the checker job (helm-kubectl-based).
+    ##
+    tag: "3.19.1"
+    ## @param awsElbControllerChecker.image.pullPolicy Pull policy for the checker job (helm-kubectl-based).
+    ##
+    pullPolicy: IfNotPresent
+  ## @param awsElbControllerChecker.serviceAccount.create Create a dedicated ServiceAccount for the checker job.
+  ## @param awsElbControllerChecker.serviceAccount.name Name of existing ServiceAccount to use when create is false.
+  ##
+  serviceAccount:
+    create: true
+    name: ""
+  ## @param awsElbControllerChecker.resources Resource limits/requests for the checker job.
+  ##
+  resources: {}
+  ## @param awsElbControllerChecker.backoffLimit Number of retries before the job is marked failed.
+  ##
+  backoffLimit: 3

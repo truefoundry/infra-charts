@@ -26,3 +26,21 @@ Annotations
 {}
 {{- end }}
 {{- end }}
+
+{{/*
+aws-elb-controller-checker fullname
+*/}}
+{{- define "aws-elb-controller-checker.fullname" -}}
+{{- printf "%s-aws-elb-controller-checker" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+aws-elb-controller-checker ServiceAccount name
+*/}}
+{{- define "aws-elb-controller-checker.serviceAccountName" -}}
+{{- if .Values.awsElbControllerChecker.serviceAccount.create }}
+{{- include "aws-elb-controller-checker.fullname" . }}
+{{- else }}
+{{- .Values.awsElbControllerChecker.serviceAccount.name | default "default" }}
+{{- end }}
+{{- end }}

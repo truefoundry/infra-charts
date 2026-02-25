@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "tfy-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-proxy.hpaLabels" . | nindent 4 }}
   annotations:
@@ -23,7 +24,7 @@ spec:
           type: Utilization
           averageUtilization: {{ .Values.tfyProxy.autoscaling.targetCPUUtilizationPercentage }}
     {{- end }}
-    {{- if .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- if and (ne .Values.global.resourceTier "small") .Values.tfyProxy.autoscaling.targetMemoryUtilizationPercentage }}
     - type: Resource
       resource:
         name: memory

@@ -257,6 +257,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: BUILD_JOB_TEMPLATE_PATH
   value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
 {{- end }}
+- name: K8S_SERVICE_ACCOUNT_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.serviceAccountName
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}

@@ -1,0 +1,265 @@
+## Configuration for tfy-victoria-metrics-config
+## @section global Global settings
+global:
+  ## @param global.labels
+  ##
+  labels: {}
+  ## @param global.annotations
+  ##
+  annotations: {}
+  ## @param global.tenantName Tenant name for the control plane
+  tenantName: ""
+## @section controlPlaneMonitors service scrapes for control plane components
+controlPlaneMonitors:
+  ## @param controlPlaneMonitors.enabled Enable service scrapes for control plane components
+  enabled: false
+  ## @param controlPlaneMonitors.releaseNamespace Release namespace for the control plane
+  releaseNamespace: truefoundry
+  ## @param controlPlaneMonitors.namespaceSelector [object] Namespace selector for the control plane monitors
+  namespaceSelector:
+    matchNames:
+      - truefoundry
+  ## @param controlPlaneMonitors.serviceSelectorLabel Service selector label for the control plane monitors
+  serviceSelectorLabel: app.kubernetes.io/name
+  # controlPlaneMonitors.alerts Alert configuration for control plane
+  alerts:
+    ## @param controlPlaneMonitors.alerts.enabled Enable alerts for control plane
+    enabled: false
+    # controlPlaneMonitors.alerts.alertRules Alert rules configuration
+    alertRules:
+      ## @param controlPlaneMonitors.alerts.alertRules.labels [object] Labels for control plane alert rules
+      labels: {}
+      ## @param controlPlaneMonitors.alerts.alertRules.annotations [object] Annotations for control plane alert rules
+      annotations: {}
+      ## @param controlPlaneMonitors.alerts.alertRules.enabled Enable alert rules for control plane
+      enabled: true
+      ## @param controlPlaneMonitors.alerts.alertRules.name Name of the alert rules
+      name: tfy-control-plane-alerting-rules
+    # controlPlaneMonitors.alerts.alertManager Alert manager configuration
+    alertManager:
+      ## @param controlPlaneMonitors.alerts.alertManager.enabled Enable alert manager for control plane
+      enabled: true
+      ## @param controlPlaneMonitors.alerts.alertManager.labels [object] Labels for control plane alert manager
+      labels: {}
+      ## @param controlPlaneMonitors.alerts.alertManager.annotations [object] Annotations for control plane alert manager
+      annotations: {}
+      ## @param controlPlaneMonitors.alerts.alertManager.name Name of the alert manager
+      name: tfy-control-plane-alert-manager
+      ## controlPlaneMonitors.alerts.alertManager.secret Secret for the alert manager
+      secret:
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.create Create a secret for the alert manager
+        create: false
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.name Name of the secret for the alert manager
+        name: tfy-control-plane-alert-manager-secret
+        ## @param controlPlaneMonitors.alerts.alertManager.secret.data [object] Data for the secret for the alert manager
+        data: {}
+        # API_URL: <url>
+        # BOT_TOKEN: <token>
+      ## @param controlPlaneMonitors.alerts.alertManager.route [object] Route for the alert manager
+      route:
+        routes:
+          - receiver: tfy-control-plane-alerts-receiver
+            continue: true
+            matchers:
+              - name: severity
+                matchType: '=~'
+                value: "warning|critical"
+              - name: controlplane
+                matchType: '='
+                value: "true"
+            repeatInterval: 15m
+      ## @param controlPlaneMonitors.alerts.alertManager.receivers [array] Receivers for the alert manager
+      receivers:
+        - name: tfy-control-plane-alerts-receiver
+          slackConfigs:
+            - channel: "#alerts"
+              iconEmoji: ":alert:"
+              apiURL:
+                key: "API_URL"
+                name: tfy-control-plane-alert-manager-secret
+              sendResolved: true
+              text: >-
+                {{ range .Alerts }}
+
+                {{ if eq .Status "firing" }}:warning:{{ else
+                }}:white_check_mark:{{ end }} *Alert:* {{ .Annotations.summary
+                }}
+
+                *Severity:* `{{ .Labels.severity }}`
+
+                *Description:* {{ .Annotations.description }}
+
+                *Details:*
+
+                {{ range.Labels.SortedPairs }}
+                • *{{ .Name }}:* `{{ .Value }}`
+                {{ end }}
+
+                {{ end }}
+              title: >-
+                {{ if eq .Status "firing" }} FIRING ({{ .Alerts.Firing | len
+                }}){{ else }} RESOLVED ({{ .Alerts.Resolved | len }}){{ end }}
+                Control Plane Alerts
+
+
+  # controlPlaneMonitors.servicefoundryServer Service scrape for servicefoundry server
+  servicefoundryServer:
+    ## @param controlPlaneMonitors.servicefoundryServer.enabled Enable service scrape for servicefoundry server
+    enabled: true
+    ## @param controlPlaneMonitors.servicefoundryServer.name Name of the service scrape
+    name: servicefoundry-server
+    ## @param controlPlaneMonitors.servicefoundryServer.labels [object] Labels for servicefoundry server
+    labels: {}
+    ## @param controlPlaneMonitors.servicefoundryServer.annotations [object] Annotations for servicefoundry server
+    annotations: {}
+    ## @param controlPlaneMonitors.servicefoundryServer.endpoints [array] Endpoints for servicefoundry server
+    endpoints:
+      - targetPort: 3000
+        path: /metrics
+        honorLabels: true
+    ## @param controlPlaneMonitors.servicefoundryServer.serviceSelectorLabels [object] Service selector labels for servicefoundry server
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.servicefoundryServer.namespaceSelector [object] Namespace selector for servicefoundry server
+    namespaceSelector: {}
+
+  # controlPlaneMonitors.mlfoundryServer Service scrape for mlfoundry server
+  mlfoundryServer:
+    ## @param controlPlaneMonitors.mlfoundryServer.enabled Enable service scrape for mlfoundry server
+    enabled: true
+    ## @param controlPlaneMonitors.mlfoundryServer.name Name of the service scrape
+    name: mlfoundry-server
+    ## @param controlPlaneMonitors.mlfoundryServer.labels [object] Labels for mlfoundry server
+    labels: {}
+    ## @param controlPlaneMonitors.mlfoundryServer.annotations [object] Annotations for mlfoundry server
+    annotations: {}
+    ## @param controlPlaneMonitors.mlfoundryServer.endpoints [array] Endpoints for mlfoundry server
+    endpoints:
+      - targetPort: 5000
+        path: /metrics
+        honorLabels: true
+    ## @param controlPlaneMonitors.mlfoundryServer.serviceSelectorLabels [object] Service selector labels for mlfoundry server
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.mlfoundryServer.namespaceSelector [object] Namespace selector for mlfoundry server
+    namespaceSelector: {}
+
+  # controlPlaneMonitors.sfyManifestService Service scrape for sfy manifest service
+  sfyManifestService:
+    ## @param controlPlaneMonitors.sfyManifestService.enabled Enable service scrape for sfy manifest service
+    enabled: true
+    ## @param controlPlaneMonitors.sfyManifestService.name Name of the service scrape
+    name: sfy-manifest-service
+    ## @param controlPlaneMonitors.sfyManifestService.labels [object] Labels for sfy manifest service
+    labels: {}
+    ## @param controlPlaneMonitors.sfyManifestService.annotations [object] Annotations for sfy manifest service
+    annotations: {}
+    ## @param controlPlaneMonitors.sfyManifestService.endpoints [array] Endpoints for sfy manifest service
+    endpoints:
+      - targetPort: 8080
+        path: /metrics
+        honorLabels: true
+    ## @param controlPlaneMonitors.sfyManifestService.serviceSelectorLabels [object] Service selector labels for sfy manifest service
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.sfyManifestService.namespaceSelector [object] Namespace selector for sfy manifest service
+    namespaceSelector: {}
+
+  # controlPlaneMonitors.tfyController Service scrape for tfy-controller
+  tfyController:
+    ## @param controlPlaneMonitors.tfyController.enabled Enable service scrape for tfy-controller
+    enabled: true
+    ## @param controlPlaneMonitors.tfyController.name Name of the service scrape
+    name: tfy-controller
+    ## @param controlPlaneMonitors.tfyController.labels [object] Labels for tfy-controller
+    labels: {}
+    ## @param controlPlaneMonitors.tfyController.annotations [object] Annotations for tfy-controller
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyController.endpoints [array] Endpoints for tfy-controller
+    endpoints:
+      - path: /metrics
+        targetPort: 8123
+        honorLabels: true
+    ## @param controlPlaneMonitors.tfyController.serviceSelectorLabels [object] Service selector labels for tfy-controller
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.tfyController.namespaceSelector [object] Namespace selector for tfy-controller
+    namespaceSelector: {}
+
+  # controlPlaneMonitors.tfyK8sController Service scrape for tfy-k8s-controller
+  tfyK8sController:
+    ## @param controlPlaneMonitors.tfyK8sController.enabled Enable service scrape for tfy-k8s-controller
+    enabled: true
+    ## @param controlPlaneMonitors.tfyK8sController.name Name of the service scrape
+    name: tfy-k8s-controller
+    ## @param controlPlaneMonitors.tfyK8sController.labels [object] Labels for tfy-k8s-controller
+    labels: {}
+    ## @param controlPlaneMonitors.tfyK8sController.annotations [object] Annotations for tfy-k8s-controller
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyK8sController.jobLabel Job label for tfy-k8s-controller
+    jobLabel: app.kubernetes.io/name
+    ## @param controlPlaneMonitors.tfyK8sController.endpoints [array] Endpoints for tfy-k8s-controller
+    endpoints:
+      - path: /metrics
+        targetPort: 3002
+        honorLabels: true
+    ## @param controlPlaneMonitors.tfyK8sController.serviceSelectorLabels [object] Service selector labels for tfy-k8s-controller
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.tfyK8sController.namespaceSelector [object] Namespace selector for tfy-k8s-controller
+    namespaceSelector: {}
+
+  # controlPlaneMonitors.tfyOtelCollector Service scrape for tfy-otel-collector
+  tfyOtelCollector:
+    ## @param controlPlaneMonitors.tfyOtelCollector.enabled Enable service scrape for tfy-otel-collector
+    enabled: true
+    ## @param controlPlaneMonitors.tfyOtelCollector.name Name of the service scrape
+    name: tfy-otel-collector
+    ## @param controlPlaneMonitors.tfyOtelCollector.labels [object] Labels for otel collector
+    labels: {}
+    ## @param controlPlaneMonitors.tfyOtelCollector.annotations [object] Annotations for otel collector
+    annotations: {}
+    ## @param controlPlaneMonitors.tfyOtelCollector.endpoints [array] Endpoints for otel collector
+    endpoints:
+      - honorLabels: true
+        path: /metrics
+        targetPort: 8888
+    ## @param controlPlaneMonitors.tfyOtelCollector.namespaceSelector [object] Namespace selector for otel collector
+    namespaceSelector: {}
+    ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
+    serviceSelectorLabels: {}
+
+  # controlPlaneMonitors.llmGateway Service scrape for llm gateway
+  llmGateway:
+    ## @param controlPlaneMonitors.llmGateway.enabled Enable service scrape for llm gateway
+    enabled: true
+    ## @param controlPlaneMonitors.llmGateway.name Name of the service scrape
+    name: tfy-llm-gateway
+    ## @param controlPlaneMonitors.llmGateway.labels [object] Labels for llm gateway
+    labels: {}
+    ## @param controlPlaneMonitors.llmGateway.annotations [object] Annotations for llm gateway
+    annotations: {}
+    ## @param controlPlaneMonitors.llmGateway.endpoints [array] Endpoints for llm gateway
+    endpoints:
+      - path: /metrics
+        targetPort: 8787
+        honorLabels: true
+    ## @param controlPlaneMonitors.llmGateway.namespaceSelector [object] Namespace selector for llm gateway
+    namespaceSelector: {}
+    ## @param controlPlaneMonitors.llmGateway.serviceSelectorLabels [object] Service selector labels for llm gateway
+    serviceSelectorLabels: {}
+
+  # controlPlaneMonitors.nats Pod scrape for nats
+  nats:
+    ## @param controlPlaneMonitors.nats.enabled Enable pod scrape for nats
+    enabled: true
+    ## @param controlPlaneMonitors.nats.name Name of the pod scrape
+    name: truefoundry-tfy-nats
+    ## @param controlPlaneMonitors.nats.labels [object] Labels for nats
+    labels: {}
+    ## @param controlPlaneMonitors.nats.annotations [object] Annotations for nats
+    annotations: {}
+    ## @param controlPlaneMonitors.nats.podMetricsEndpoints [array] Pod metrics endpoints for nats
+    podMetricsEndpoints:
+      - targetPort: 7777
+        honorLabels: true
+    ## @param controlPlaneMonitors.nats.podSelectorLabels [object] Pod selector labels for nats
+    podSelectorLabels:
+      app.kubernetes.io/component: nats
+    ## @param controlPlaneMonitors.nats.namespaceSelector [object] Namespace selector for nats
+    namespaceSelector: {}

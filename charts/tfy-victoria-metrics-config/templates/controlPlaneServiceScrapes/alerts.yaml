@@ -1,0 +1,107 @@
+{{- if and .Values.controlPlaneMonitors.enabled .Values.controlPlaneMonitors.alerts.enabled .Values.controlPlaneMonitors.alerts.alertManager.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanagerConfig
+metadata:
+  name: {{ .Values.controlPlaneMonitors.alerts.alertManager.name }}
+  labels:
+    {{- include "vmconfig.controlPlaneAlertManager.labels" . | nindent 4 }}
+  {{- $annotations := include "vmconfig.controlPlaneAlertManager.annotations" . | fromYaml }}
+  {{- if $annotations }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+  {{- end }}
+spec:
+  route:
+    receiver: "null"
+    routes:
+      {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.route.routes | nindent 6 }}
+  receivers:
+    - name: "null"
+    {{- toYaml .Values.controlPlaneMonitors.alerts.alertManager.receivers | nindent 4 }}
+---
+{{- end }}
+{{- if and .Values.controlPlaneMonitors.enabled .Values.controlPlaneMonitors.alerts.enabled .Values.controlPlaneMonitors.alerts.alertRules.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: {{ .Values.controlPlaneMonitors.alerts.alertRules.name }}
+  {{- $labels := include "vmconfig.controlPlaneAlertRules.labels" . | fromYaml }}
+  {{- if $labels }}
+  labels:
+    {{- toYaml $labels | nindent 4 }}
+  {{- end }}
+  {{- $annotations := include "vmconfig.controlPlaneAlertRules.annotations" . | fromYaml }}
+  {{- if $annotations }}
+  annotations:
+    {{- toYaml $annotations | nindent 4 }}
+  {{- end }}
+spec:
+  groups:
+  - name: control-plane-alerting-rules
+    rules:
+    - for: 15m
+      expr: >-
+        sum by (namespace, pod)
+        (kube_pod_status_phase{job="kube-state-metrics", phase=~"Pending|Unknown", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) > 0
+      alert: PodNotHealthy
+      labels:
+        tenant: {{ .Values.global.tenantName }}
+        entity: pod
+        severity: critical
+        controlplane: "true"
+      annotations:
+        summary: >-
+          [Tenant: {{ .Values.global.tenantName }}] Pod not healthy ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+        description: >-
+          [Tenant: {{ .Values.global.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} has been in a
+          non-running state for longer than 15 minutes.
+            VALUE = {{`{{ $value }}`}}
+    - for: 2m
+      expr: increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m]) > 0
+      alert: PodCrashLooping
+      labels:
+        tenant: {{ .Values.global.tenantName }}
+        entity: pod
+        severity: critical
+        controlplane: "true"
+      annotations:
+        summary: >-
+          [Tenant: {{ .Values.global.tenantName }}] Pod crash looping ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}})
+        description: |-
+          [Tenant: {{ .Values.global.tenantName }}] Pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} is crash looping
+            VALUE = {{`{{ $value }}`}}
+    - for: 2m
+      expr: >-
+        max by (container, pod, namespace) (max_over_time(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m])) > 0
+        and
+        max by (container, pod, namespace) (increase(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}[5m]) > 0)
+      alert: ContainerOOMKilled
+      labels:
+        tenant: {{ .Values.global.tenantName }}
+        entity: container
+        severity: critical
+        controlplane: "true"
+      annotations:
+        summary: >-
+          [Tenant: {{ .Values.global.tenantName }}] Container OOM Killed ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}/{{`{{ $labels.container }}`}})
+        description: |-
+          [Tenant: {{ .Values.global.tenantName }}] Container {{`{{ $labels.container }}`}} in pod {{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}}
+          has been OOM killed in the last 5 minutes
+    - for: 10m
+      expr: >-
+        (sum(kubelet_volume_stats_used_bytes{job="kubelet", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) by (persistentvolumeclaim, namespace) /
+        sum(kubelet_volume_stats_capacity_bytes{job="kubelet", namespace=~"{{ .Values.controlPlaneMonitors.releaseNamespace }}"}) by (persistentvolumeclaim, namespace)) * 100 > 90
+      alert: PersistentVolumeUsageHigh
+      labels:
+        tenant: {{ .Values.global.tenantName }}
+        entity: persistentVolume
+        severity: critical
+        controlplane: "true"
+      annotations:
+        summary: >-
+          [Tenant: {{ .Values.global.tenantName }}] Persistent Volume usage is above 90% ({{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}})
+        description: |-
+          [Tenant: {{ .Values.global.tenantName }}] Persistent Volume {{`{{ $labels.persistentvolumeclaim }}`}} in namespace {{`{{ $labels.namespace }}`}}
+          is using more than 90% of its capacity.
+            VALUE = {{`{{ $value }}`}}%
+{{- end }}

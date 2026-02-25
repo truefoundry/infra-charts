@@ -319,6 +319,10 @@ truefoundry:
     ## @param truefoundry.virtualservice.annotations [object] Annotations for truefoundry virtualservice
     annotations: {}
 
+  ## @param truefoundry.existingTruefoundryCredsSecret Secret name for existing Truefoundry creds
+  ##
+  existingTruefoundryCredsSecret: ""
+
   ## @section database. Can be left empty if using the dev mode parameters
   database:
     ## @param truefoundry.database.host Hostname of the database
@@ -331,6 +335,10 @@ truefoundry:
     password: ""
   ## @param truefoundry.tfyApiKey API Key for TrueFoundry
   tfyApiKey: ""
+
+  ## @param truefoundry.imagePullSecrets Image pull secrets for TrueFoundry
+  ##
+  imagePullSecrets: []
   ## @param truefoundry.truefoundryImagePullConfigJSON Json config for authenticating to the TrueFoundry registry
   truefoundryImagePullConfigJSON: ""
   ## @param truefoundry.truefoundry_iam_role_arn_annotations [object] IAM role annotations for service accounts
@@ -359,6 +367,10 @@ truefoundry:
     enabled: false
   ## @param truefoundry.tfyWorkflowAdmin.enabled Flag to enable Tfy Workflow Admin
   tfyWorkflowAdmin:
+    enabled: false
+
+  ## @param truefoundry.gateway.enabled Flag to enable Gateway
+  gateway:
     enabled: false
 
   ## @param truefoundry.tolerations [array] Tolerations for the truefoundry components
@@ -712,6 +724,7 @@ tfyWorkflowPropeller:
       connection:
         region: <to_be_provided>
         auth-type: iam
+      enable-multicontainer: true
     ## @skip tfyWorkflowPropeller.flyteCore.configmap [object] Configmap configuration for flyteCore
     ##
     configmap:
@@ -719,13 +732,13 @@ tfyWorkflowPropeller:
         propeller:
           metadata-prefix: "<to_be_provided>"
           rawoutput-prefix: "<to_be_provided>"
-      k8s:
-        plugins:
-          k8s:
-            default-env-vars:
-              - TFY_INTERNAL_SIGNED_URL_SERVER_HOST: http://tfy-signed-url-server.tfy-workflow-propeller.svc.cluster.local:3001
     ## @skip tfyWorkflowPropeller.flyteCore.flytepropeller [object] Flytepropeller configuration for flyteCore
     ##
+    ## @param tfyWorkflowPropeller.flyteCore.flyteadmin [object] Flyteadmin configuration for flyteCore
+    ##
+    flyteadmin:
+      serviceAccount:
+        alwaysCreate: true
     flytepropeller:
       serviceAccount:
         annotations:

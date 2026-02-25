@@ -8,6 +8,13 @@
 {{/*
 Expand the name of the chart.
 */}}
+{{/*
+  Namespace
+*/}}
+{{- define "global.namespace" }}
+{{- default .Release.Namespace .Values.global.namespaceOverride }}
+{{- end }}
+
 {{- define "tfy-otel-collector.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
@@ -231,6 +238,26 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+  HPA Labels - merges commonLabels with hpa-specific labels
+  */}}
+{{- define "tfy-otel-collector.hpaLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $hpaLabels := mergeOverwrite $commonLabels .Values.autoscaling.labels }}
+{{- toYaml $hpaLabels }}
+{{- end }}
+
+{{/*
+  HPA annotations
+  */}}
+{{- define "tfy-otel-collector.hpaAnnotations" -}}
+{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $hpaAnnotations := mergeOverwrite $commonAnnotations $syncWaveAnnotation .Values.autoscaling.annotations }}
+{{- toYaml $hpaAnnotations }}
+{{- end }}
+
+
+{{/*
 Deployment Volumes
 */}}
 {{- define "tfy-otel-collector.volumes" -}}
@@ -324,6 +351,32 @@ limits:
 3
 {{- else if eq $tier "large" -}}
 5
+{{- end }}
+{{- end }}
+
+{{- define "tfy-otel-collector.hpaMinReplicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.minReplicas -}}
+{{ .Values.minReplicas }}
+{{- else if eq $tier "small" -}}
+1
+{{- else if eq $tier "medium" -}}
+3
+{{- else if eq $tier "large" -}}
+5
+{{- end }}
+{{- end }}
+
+{{- define  "tfy-otel-collector.hpaMaxReplicas" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.autoscaling.maxReplicas -}}
+{{ .Values.autoscaling.maxReplicas }}
+{{- else if eq $tier "small" -}}
+3
+{{- else if eq $tier "medium" -}}
+5
+{{- else if eq $tier "large" -}}
+7
 {{- end }}
 {{- end }}
 

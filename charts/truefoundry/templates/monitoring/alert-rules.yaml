@@ -4,6 +4,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: {{ .Values.monitoring.alertRules.name }}
+  namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "monitoring.alertRulesLabels" . | nindent 4 }}
     release: prometheus

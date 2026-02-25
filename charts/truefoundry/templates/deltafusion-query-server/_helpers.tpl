@@ -185,7 +185,7 @@ Ephemeral Storage Limit
 
 {{/*
 Default Resources
-cpu limit is 100 because ideally we don't to set limit but some clusters may have policy which requires limit to be set
+cpu limit is not set explicitly. We want to allow it to use up to the node limits
 */}}
 {{- define "deltafusion-query-server.defaultResources.small" }}
 requests:
@@ -193,7 +193,6 @@ requests:
   memory: 4000M
   ephemeral-storage: 5000M
 limits:
-  cpu: 100
   memory: 8000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -204,7 +203,6 @@ requests:
   memory: 12000M
   ephemeral-storage: 20000M
 limits:
-  cpu: 100
   memory: 16000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -215,7 +213,6 @@ requests:
   memory: 28000M
   ephemeral-storage: 40000M
 limits:
-  cpu: 100
   memory: 32000M
   ephemeral-storage: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
 {{- end }}
@@ -400,3 +397,55 @@ Image Pull Secrets
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
 {{- end }}
+
+{{/*
+Determine if optimized image should be used for deltaFusionQueryServer
+- image.optimized=true → always use optimized
+- image.optimized=false → never use optimized
+- image.optimized=auto → use optimized only if Karpenter affinity will be applied (no user affinity override)
+*/}}
+{{- define "deltafusion-query-server.useOptimized" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
+{{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionQueryServer.affinity) 0) -}}
+{{- $optimized := toString .Values.deltaFusionQueryServer.image.optimized -}}
+
+{{- if eq $optimized "true" -}}
+true
+{{- else if eq $optimized "false" -}}
+false
+{{- else if eq $optimized "auto" -}}
+  {{- if and $karpenterEnabled (not $hasUserAffinity) -}}
+true
+  {{- else -}}
+false
+  {{- end -}}
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+Get affinity for deltaFusionQueryServer (override strategy)
+User affinity (global + component) completely overrides Karpenter affinity.
+If no user affinity: use Karpenter affinity (when Karpenter is available and enabled)
+If user affinity exists: merge global.affinity + component.affinity (component wins, Karpenter skipped)
+*/}}
+{{- define "deltafusion-query-server.affinity" -}}
+{{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
+{{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
+{{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionQueryServer.affinity) 0) -}}
+
+{{- $result := dict -}}
+{{- if $hasUserAffinity -}}
+  {{- /* User affinity takes precedence - merge global + component */ -}}
+  {{- $result = mergeOverwrite (deepCopy .Values.global.affinity) (deepCopy .Values.deltaFusionQueryServer.affinity) -}}
+{{- else if $karpenterEnabled -}}
+  {{- /* No user affinity - use Karpenter affinity for optimized scheduling */ -}}
+  {{- $result = .Values.deltaFusionQueryServer.karpenterAffinity.affinity -}}
+{{- end -}}
+
+{{- if $result -}}
+{{ toYaml $result }}
+{{- end -}}
+{{- end -}}
