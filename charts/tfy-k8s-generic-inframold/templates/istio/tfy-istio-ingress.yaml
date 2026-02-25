@@ -33,6 +33,8 @@ spec:
         {{- if .Values.istio.gateway.affinity }}
         {{- $mergedAffinity = .Values.istio.gateway.affinity }}
         {{- end }}
+        awsElbControllerChecker:
+          enabled: {{ .Values.istio.awsElbControllerChecker.enabled }}
         gateway:
           {{- with .Values.istio.gateway.annotations }}
           annotations:

@@ -135,15 +135,16 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 
 ### istio parameters
 
-| Name                           | Description                                | Value  |
-| ------------------------------ | ------------------------------------------ | ------ |
-| `istio.enabled`                | Flag to enable Istio                       | `true` |
-| `istio.enabled`                | Flag to enable Istio Base                  | `true` |
-| `istio.base.valuesOverride`    | Config override from default config values | `{}`   |
-| `istio.gateway.annotations`    | Annotations for Istio Gateway              | `{}`   |
-| `istio.gateway.affinity`       | Affinity for the gateway pods              | `{}`   |
-| `istio.gateway.tolerations`    | Tolerations for the gateway pods           | `[]`   |
-| `istio.gateway.valuesOverride` | Config override from default config values | `{}`   |
+| Name                                    | Description                                | Value   |
+| --------------------------------------- | ------------------------------------------ | ------- |
+| `istio.enabled`                         | Flag to enable Istio                       | `true`  |
+| `istio.enabled`                         | Flag to enable Istio Base                  | `true`  |
+| `istio.base.valuesOverride`             | Config override from default config values | `{}`    |
+| `istio.awsElbControllerChecker.enabled` | Flag to enable AWS ELB Controller Checker  | `false` |
+| `istio.gateway.annotations`             | Annotations for Istio Gateway              | `{}`    |
+| `istio.gateway.affinity`                | Affinity for the gateway pods              | `{}`    |
+| `istio.gateway.tolerations`             | Tolerations for the gateway pods           | `[]`    |
+| `istio.gateway.valuesOverride`          | Config override from default config values | `{}`    |
 
 ### istio discovery parameters
 
