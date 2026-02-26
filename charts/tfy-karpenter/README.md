@@ -7,7 +7,7 @@ A Helm chart for Karpenter, an open-source node provisioning project built for K
 
 | Name                                                 | Description                                          | Value                                                                             |
 | ---------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `eks-node-monitoring-agent.nodeAgent.image.override` | Override the image for the eks-node-monitoring-agent | `public.ecr.aws/truefoundrycloud/eks/eks-node-monitoring-agent:v1.2.0-eksbuild.1` |
+| `eks-node-monitoring-agent.nodeAgent.image.override` | Override the image for the eks-node-monitoring-agent | `public.ecr.aws/truefoundrycloud/eks/eks-node-monitoring-agent:v1.5.1-eksbuild.1` |
 | `eks-node-monitoring-agent.dcgmAgent.image.override` | Override the image for the dcgm-exporter             | `tfy.jfrog.io/tfy-images/eks/observability/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04` |
 | `eks-node-monitoring-agent.dcgmAgent.resources`      | Resources for eks-node-monitoring-agent              | `{}`                                                                              |
 | `eks-node-monitoring-agent.dcgmAgent.tolerations`    | Tolerations for eks-node-monitoring-agent            | `[]`                                                                              |
