@@ -1,14 +1,14 @@
-{{- $replicas := include "tfy-llm-gateway.replicas" . | trim | int -}}
+{{- $replicas := include "tfy-otel-collector.replicas" . | trim | int -}}
 {{- if and .Values.podDisruptionBudget.enabled (gt $replicas 1) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "tfy-llm-gateway.fullname" . }}
+  name: {{ include "tfy-otel-collector.fullname" . }}
   namespace: {{ include "global.namespace" . }}
   labels:
-    {{- include "tfy-llm-gateway.pdbLabels" . | nindent 4 }}
+    {{- include "tfy-otel-collector.pdbLabels" . | nindent 4 }}
   annotations:
-    {{- include "tfy-llm-gateway.pdbAnnotations" . | nindent 4 }}
+    {{- include "tfy-otel-collector.pdbAnnotations" . | nindent 4 }}
 spec:
   {{- if .Values.podDisruptionBudget.minAvailable }}
   minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
@@ -17,5 +17,5 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
 {{- end }}
