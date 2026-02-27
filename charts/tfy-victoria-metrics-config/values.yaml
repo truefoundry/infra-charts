@@ -224,6 +224,45 @@ controlPlaneMonitors:
     ## @param controlPlaneMonitors.tfyOtelCollector.serviceSelectorLabels [object] Service selector labels for otel collector
     serviceSelectorLabels: {}
 
+  # controlPlaneMonitors.deltafusionIngestor Service monitor for deltafusion ingestor
+  deltafusionIngestor:
+    ## @param controlPlaneMonitors.deltafusionIngestor.enabled Enable service monitor for deltafusion ingestor
+    enabled: true
+    ## @param controlPlaneMonitors.deltafusionIngestor.name Name of the service monitor
+    name: deltafusion-ingestor
+    ## @param controlPlaneMonitors.deltafusionIngestor.labels [object] Labels for deltafusion ingestor
+    labels: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.annotations [object] Annotations for deltafusion ingestor
+    annotations: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.endpoints [array] Endpoints for deltafusion ingestor
+    endpoints:
+      - path: /metrics
+        targetPort: 8000
+        honorLabels: true
+    ## @param controlPlaneMonitors.deltafusionIngestor.serviceSelectorLabels [object] Service selector labels for deltafusion ingestor service
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.namespaceSelector [object] Namespace selector for deltafusion ingestor service
+    namespaceSelector: {}
+  # controlPlaneMonitors.deltafusionQueryServer Service monitor for deltafusion ingestor
+  deltafusionQueryServer:
+    ## @param controlPlaneMonitors.deltafusionQueryServer.enabled Enable service monitor for deltafusion query server
+    enabled: true
+    ## @param controlPlaneMonitors.deltafusionQueryServer.name Name of the service monitor
+    name: deltafusion-query-server
+    ## @param controlPlaneMonitors.deltafusionQueryServer.labels [object] Labels for deltafusion query server
+    labels: {}
+    ## @param controlPlaneMonitors.deltafusionQueryServer.annotations [object] Annotations for deltafusion query server
+    annotations: {}
+    ## @param controlPlaneMonitors.deltafusionQueryServer.endpoints [array] Endpoints for deltafusion query server
+    endpoints:
+      - path: /metrics
+        targetPort: 8080
+        honorLabels: true
+    ## @param controlPlaneMonitors.deltafusionIngestor.serviceSelectorLabels [object] Service selector labels for eltafusion query server service
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.namespaceSelector [object] Namespace selector for eltafusion query server service
+    namespaceSelector: {}
+
   # controlPlaneMonitors.llmGateway Service scrape for llm gateway
   llmGateway:
     ## @param controlPlaneMonitors.llmGateway.enabled Enable service scrape for llm gateway

@@ -206,6 +206,33 @@
 {{- end }}
 {{- end }}
 
+
+{{/*
+  TFY Otel Collector service scrape labels
+*/}}
+{{- define "vmconfig.tfyOtelCollector.labels" -}}
+{{- if .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
+{{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Otel Collector service scrape annotations
+*/}}
+{{- define "vmconfig.tfyOtelCollector.annotations" -}}
+{{- if .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.tfyOtelCollector.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
 {{/*
   Altinity ClickHouse Operator service scrape labels
 */}}

@@ -1,0 +1,22 @@
+{{- if and .Values.controlPlaneMonitors.deltafusionQueryServer.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Values.controlPlaneMonitors.deltafusionQueryServer.name }}
+  labels:
+    {{- include "deltafusionQueryServer.labels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusionQueryServer.annotations" . | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      {{- toYaml (or .Values.controlPlaneMonitors.deltafusionQueryServer.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{ .Values.controlPlaneMonitors.serviceSelectorLabel }}: {{ .Values.controlPlaneMonitors.deltafusionQueryServer.name }}
+      {{- if .Values.controlPlaneMonitors.deltafusionQueryServer.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+  endpoints:
+    {{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.endpoints | nindent 4 }}
+  {{- end -}}
