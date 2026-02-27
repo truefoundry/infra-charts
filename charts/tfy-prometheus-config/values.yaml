@@ -372,6 +372,48 @@ controlPlaneMonitors:
     namespaceSelector:
       matchNames:
         - truefoundry
+  # controlPlaneMonitors.deltafusionIngestor Service monitor for deltafusion ingestor
+  deltafusionIngestor:
+    ## @param controlPlaneMonitors.deltafusionIngestor.enabled Enable service monitor for deltafusion ingestor
+    enabled: true
+    ## @param controlPlaneMonitors.deltafusionIngestor.name Name of the service monitor
+    name: deltafusion-ingestor
+    ## @param controlPlaneMonitors.deltafusionIngestor.labels [object] Labels for deltafusion ingestor
+    labels: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.annotations [object] Annotations for deltafusion ingestor
+    annotations: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.endpoints [array] Endpoints for deltafusion ingestor
+    endpoints:
+      - path: /metrics
+        targetPort: 8000
+        honorLabels: true
+    ## @param controlPlaneMonitors.deltafusionIngestor.serviceSelectorLabels [object] Service selector labels for sfy manifest service
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.deltafusionIngestor.namespaceSelector [object] Namespace selector for sfy manifest service
+    namespaceSelector:
+      matchNames:
+        - truefoundry
+  # controlPlaneMonitors.deltafusionQueryServer Service monitor for deltafusion ingestor
+  deltafusionQueryServer:
+    ## @param controlPlaneMonitors.deltafusionQueryServer.enabled Enable service monitor for deltafusion ingestor
+    enabled: true
+    ## @param controlPlaneMonitors.deltafusionQueryServer.name Name of the service monitor
+    name: deltafusion-query-server
+    ## @param controlPlaneMonitors.deltafusionQueryServer.labels [object] Labels for deltafusion ingestor
+    labels: {}
+    ## @param controlPlaneMonitors.deltafusionQueryServer.annotations [object] Annotations for deltafusion ingestor
+    annotations: {}
+    ## @param controlPlaneMonitors.deltafusionQueryServer.endpoints [array] Endpoints for deltafusion ingestor
+    endpoints:
+      - path: /metrics
+        targetPort: 8080
+        honorLabels: true
+    ## @param controlPlaneMonitors.deltafusionQueryServer.serviceSelectorLabels [object] Service selector labels for sfy manifest service
+    serviceSelectorLabels: {}
+    ## @param controlPlaneMonitors.deltafusionQueryServer.namespaceSelector [object] Namespace selector for sfy manifest service
+    namespaceSelector:
+      matchNames:
+        - truefoundry
   # controlPlaneMonitors.tfyController Service monitor for tfy-controller
   tfyController:
     ## @param controlPlaneMonitors.tfyController.enabled Enable service monitor for tfy-controller

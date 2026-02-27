@@ -206,12 +206,13 @@
 {{- end }}
 {{- end }}
 
+
 {{/*
-  Altinity ClickHouse Operator service scrape labels
+  Deltafusion Ingestor service scrape labels
 */}}
-{{- define "vmconfig.clickhouseOperator.labels" -}}
-{{- if .Values.controlPlaneMonitors.clickHouseOperator.labels }}
-{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.labels }}
+{{- define "vmconfig.deltafusionIngestor.labels" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionIngestor.labels }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionIngestor.labels }}
 {{- else if .Values.global.labels }}
 {{- toYaml .Values.global.labels }}
 {{- else }}
@@ -220,11 +221,37 @@
 {{- end }}
 
 {{/*
-  Altinity ClickHouse Operator service scrape annotations
+  Deltafusion ingestor service scrape annotations
 */}}
-{{- define "vmconfig.clickhouseOperator.annotations" -}}
-{{- if .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
-{{- toYaml .Values.controlPlaneMonitors.clickHouseOperator.annotations }}
+{{- define "vmconfig.deltafusionIngestor.annotations" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionIngestor.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionIngestor.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Deltafusion query server service scrape labels
+*/}}
+{{- define "vmconfig.deltafusionQueryServer.labels" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionQueryServer.labels }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.labels }}
+{{- else if .Values.global.labels }}
+{{- toYaml .Values.global.labels }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+  Deltafusion query server service scrape annotations
+*/}}
+{{- define "vmconfig.deltafusionIngestor.annotations" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionQueryServer.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.annotations }}
 {{- else if .Values.global.annotations }}
 {{- toYaml .Values.global.annotations }}
 {{- else }}

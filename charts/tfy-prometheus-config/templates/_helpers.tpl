@@ -670,6 +670,50 @@ Container rules annotations
 {{- end }}
 
 {{/*
+  Deltafusion Ingestor service monitor labels
+*/}}
+{{- define "deltafusionIngestor.labels" -}}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $tfyOtelCollectorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionIngestor.labels) }}
+{{- toYaml $tfyOtelCollectorLabels }}
+{{- end }}
+
+{{/*
+  Deltafusion Ingestor service monitor annotations
+*/}}
+{{- define "deltafusionIngestor.annotations" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionIngestor.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionIngestor.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+
+{{/*
+  Deltafusion Query Server service monitor labels
+*/}}
+{{- define "deltafusionQueryServer.labels" -}}
+{{- $base := include "serviceMonitors.labels" . | fromYaml }}
+{{- $tfyOtelCollectorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionQueryServer.labels) }}
+{{- toYaml $tfyOtelCollectorLabels }}
+{{- end }}
+
+{{/*
+  Deltafusion Query Server service monitor annotations
+*/}}
+{{- define "deltafusionQueryServer.annotations" -}}
+{{- if .Values.controlPlaneMonitors.deltafusionQueryServer.annotations }}
+{{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.annotations }}
+{{- else if .Values.global.annotations }}
+{{- toYaml .Values.global.annotations }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+{{/*
   Altinity ClickHouse Operator service monitor labels
 */}}
 {{- define "clickhouseOperator.labels" -}}
