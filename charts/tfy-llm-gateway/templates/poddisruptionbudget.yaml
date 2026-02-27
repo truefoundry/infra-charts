@@ -1,4 +1,5 @@
-{{- if .Values.podDisruptionBudget.enabled }}
+{{- $replicas := include "tfy-llm-gateway.replicas" . | trim | int -}}
+{{- if and .Values.podDisruptionBudget.enabled (gt $replicas 1) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
