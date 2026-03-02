@@ -31,9 +31,11 @@ spec:
           imagePullSecrets:
             {{- include "deltafusion-compaction.imagePullSecrets" . | nindent 12 }}
           serviceAccountName: {{ include "deltafusion-compaction.serviceAccountName" . }}
+          {{- if .Values.deltaFusionCompaction.podSecurityContext.enabled }}
           {{- with .Values.deltaFusionCompaction.podSecurityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           containers:
             - name: "deltafusion-compaction"

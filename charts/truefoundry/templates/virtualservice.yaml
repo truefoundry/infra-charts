@@ -17,7 +17,6 @@ spec:
   {{- range .Values.global.virtualservice.hosts }}
     - {{ . }}
   {{- end }}
-  {{- if $.Values.global.proxy.enabled }}
   http:
     - match:
         - uri:
@@ -33,74 +32,4 @@ spec:
             host: {{ tpl .Values.global.proxy.tfyProxyHost . }}
             port:
               number: 8080
-  {{- else }}
-  http:
-    - match:
-        - uri:
-            prefix: "/api/svc/socket.io"
-      rewrite:
-        uri: /socket.io
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.servicefoundryServerHost . }}
-            port:
-              number: 3000
-    - match:
-        - uri:
-            prefix: "/api/llm/"
-      rewrite:
-        uri: /
-      {{- if .Values.global.proxy.llmGateway.external }}
-        authority: {{ tpl .Values.global.proxy.llmGateway.backendHost . }}
-      {{- end }}
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.llmGateway.backendHost . }}
-            port:
-              number: {{ .Values.global.proxy.llmGateway.backendPort }}
-    - match:
-        - uri:
-            prefix: /api/proxy-server/
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.proxyServerHost . }}
-            port:
-              number: 8123
-    - match:
-        - uri:
-            prefix: "/flyteidl.service.AdminService/"
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.tfyWorkflowAdminHost . }}
-            port:
-              number: 8089
-          weight: 100
-    - match:
-        - uri:
-            prefix: "/api/s3proxy/"
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.s3proxyHost . }}
-            port:
-              number: {{ .Values.s3proxy.service.port }}
-    - match:
-        - uri:
-            prefix: "/api/otel/"
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}
-            port:
-              number: 4318
-    - route:
-        - destination:
-            host: {{ tpl .Values.global.proxy.truefoundryFrontendAppHost . }}
-            port:
-              number: 5000
-  {{- end }}
 {{- end }}

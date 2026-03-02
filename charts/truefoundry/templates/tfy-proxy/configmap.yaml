@@ -162,14 +162,13 @@ data:
 
       # /.well-known/* → /oauth2-mcp/.well-known/*
       handle /.well-known/* {
-        rewrite * /oauth2-mcp{path}
+        uri replace /.well-known /oauth2-mcp/.well-known
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
       # /oauth2/* → /oauth2-mcp/* (authorize, token, register, callback)
       handle /oauth2/* {
-        uri strip_prefix /oauth2
-        rewrite * /oauth2-mcp{path}
+        uri replace /oauth2 /oauth2-mcp
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
