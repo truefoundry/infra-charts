@@ -674,8 +674,8 @@ Container rules annotations
 */}}
 {{- define "deltafusionIngestor.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $tfyOtelCollectorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionIngestor.labels) }}
-{{- toYaml $tfyOtelCollectorLabels }}
+{{- $deltaFusionIngLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionIngestor.labels) }}
+{{- toYaml $deltaFusionIngLabels }}
 {{- end }}
 
 {{/*
@@ -697,8 +697,8 @@ Container rules annotations
 */}}
 {{- define "deltafusionQueryServer.labels" -}}
 {{- $base := include "serviceMonitors.labels" . | fromYaml }}
-{{- $tfyOtelCollectorLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionQueryServer.labels) }}
-{{- toYaml $tfyOtelCollectorLabels }}
+{{- $deltaFusionQSLabels := mergeOverwrite (deepCopy $base) (.Values.controlPlaneMonitors.deltafusionQueryServer.labels) }}
+{{- toYaml $deltaFusionQSLabels }}
 {{- end }}
 
 {{/*
