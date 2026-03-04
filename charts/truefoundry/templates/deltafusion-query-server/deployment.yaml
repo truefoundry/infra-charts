@@ -35,6 +35,17 @@ spec:
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
+            {{- if .Values.deltaFusionQueryServer.enableLiveLogs }}
+            {{- $replicas := include "deltafusion-ingestor.replicas" . | trim | int }}
+            {{- $ingestorName := include "deltafusion-ingestor.fullname" . }}
+            {{- $namespace := include "global.namespace" . }}
+            {{- $endpoints := list }}
+            {{- range $i := until $replicas }}
+            {{- $endpoints = append $endpoints (printf "http://%s-%d.%s.%s.svc.cluster.local:%s" $ingestorName $i $ingestorName $namespace (toString $.Values.deltaFusionIngestor.env.GRPC_PORT)) }}
+            {{- end }}
+            - name: INGESTOR_ENDPOINTS
+              value: {{ join "," $endpoints | quote }}
+            {{- end }}
           {{- $useOptimized := include "deltafusion-query-server.useOptimized" . | trim }}
           {{- if eq $useOptimized "true" }}
           image: "{{ .Values.deltaFusionQueryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionQueryServer.image.repository }}:{{ .Values.deltaFusionQueryServer.image.tag }}-optimized"
