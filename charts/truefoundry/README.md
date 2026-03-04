@@ -7,14 +7,12 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 The TrueFoundry Helm chart components are installed in the following order:
 
 1. **Bootstrap Resources**
-
    - ConfigMap
    - ServiceAccount
    - Role
    - RoleBinding
 
 2. **Sync-wave: 0**
-
    - All stateful dependencies and non-Deployment resources including:
      - Namespace
      - ServiceAccount
@@ -26,7 +24,6 @@ The TrueFoundry Helm chart components are installed in the following order:
      - Any component without a defined sync-wave
 
 3. **Sync-wave: 1**
-
    - Deployment of servicefoundry-server
 
 4. **Sync-wave: 2**
@@ -172,7 +169,7 @@ global:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                    | `""`                                                                                                 |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                   | `""`                                                                                                 |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                             | `http://tfy-proxy.truefoundry.svc.cluster.local:8080`                                                |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.125.8`                                                                                            |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.125.10`                                                                                           |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                                                                                                        | `""`                                                                                                 |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                         | `false`                                                                                              |
 | `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                                                                                                            | `{}`                                                                                                 |
@@ -421,7 +418,7 @@ global:
 | `servicefoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the servicefoundry server                                                                                                                           | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified)                                                                                                   | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                                                                                                                       | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                                                                                                                                 | `v0.125.3`                                              |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                                                                                                                                 | `v0.125.4`                                              |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                                                                                                                          | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                                                                                                                         | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                                                                                                                         | `IfNotPresent`                                          |
