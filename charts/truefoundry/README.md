@@ -7,12 +7,14 @@ truefoundry is an applications that gets deployed on the kubernetes cluster to s
 The TrueFoundry Helm chart components are installed in the following order:
 
 1. **Bootstrap Resources**
+
    - ConfigMap
    - ServiceAccount
    - Role
    - RoleBinding
 
 2. **Sync-wave: 0**
+
    - All stateful dependencies and non-Deployment resources including:
      - Namespace
      - ServiceAccount
@@ -24,6 +26,7 @@ The TrueFoundry Helm chart components are installed in the following order:
      - Any component without a defined sync-wave
 
 3. **Sync-wave: 1**
+
    - Deployment of servicefoundry-server
 
 4. **Sync-wave: 2**
@@ -169,7 +172,7 @@ global:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                    | `""`                                                                                                 |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                   | `""`                                                                                                 |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                             | `http://tfy-proxy.truefoundry.svc.cluster.local:8080`                                                |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.125.10`                                                                                           |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                       | `0.126.0-rc.2`                                                                                       |
 | `global.existingTruefoundryCredsSecret`                                      | Name of the existing truefoundry creds secret                                                                                                                        | `""`                                                                                                 |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                         | `false`                                                                                              |
 | `global.ingress.annotations`                                                 | Annotations for the control plane ingress                                                                                                                            | `{}`                                                                                                 |
@@ -315,7 +318,7 @@ global:
 | `mlfoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the mlfoundry server                         | `{}`                                  |
 | `mlfoundryServer.image.registry`                              | Registry for the mlfoundry server image (overrides global.registry if specified) | `""`                                  |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server (without registry)                     | `tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.125.0`                            |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                               | `v0.126.0`                            |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                                        | `default`                             |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables                       | `mlfoundry-server-env-secret`         |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                                       | `IfNotPresent`                        |
@@ -418,7 +421,7 @@ global:
 | `servicefoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the servicefoundry server                                                                                                                           | `{}`                                                    |
 | `servicefoundryServer.image.registry`                              | Registry for the servicefoundry server image (overrides global.registry if specified)                                                                                                   | `""`                                                    |
 | `servicefoundryServer.image.repository`                            | Image repository for the servicefoundry server (without registry)                                                                                                                       | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                                                                                                                                 | `v0.125.4`                                              |
+| `servicefoundryServer.image.tag`                                   | Image tag for the servicefoundry server                                                                                                                                                 | `v0.126.0`                                              |
 | `servicefoundryServer.environmentName`                             | Environment name for the servicefoundry server                                                                                                                                          | `default`                                               |
 | `servicefoundryServer.envSecretName`                               | Secret name for the servicefoundry server environment variables                                                                                                                         | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.imagePullPolicy`                             | Image pull policy for the servicefoundry server                                                                                                                                         | `IfNotPresent`                                          |
@@ -526,7 +529,7 @@ global:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                             | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified) | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                     | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.122.0`                              |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                               | `v0.126.0`                              |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                            | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                       | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                       | `IfNotPresent`                          |
@@ -946,7 +949,7 @@ fi
 | `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                                    | `true`                                    |
 | `deltaFusionIngestor.image.registry`                              | Registry for the DeltaFusion Ingestor image (overrides global.image.registry if specified) | `""`                                      |
 | `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor (without registry)                           | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.125.0`                                |
+| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.126.0`                                |
 | `deltaFusionIngestor.image.optimized`                             | Use optimized image tag for the DeltaFusion Ingestor                                       | `false`                                   |
 | `deltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                             | `IfNotPresent`                            |
 | `deltaFusionIngestor.statefulsetLabels`                           | Labels to apply to the DeltaFusion Ingestor statefulset                                    | `{}`                                      |
@@ -1010,7 +1013,7 @@ fi
 | `deltaFusionCompaction.enabled`                                     | Bool to enable the compaction cron job. Only applies if deltaFusionIngestor.enabled is true                                                                     | `true`                                    |
 | `deltaFusionCompaction.image.registry`                              | Registry for the deltaFusionCompaction image (overrides global.image.registry if specified)                                                                     | `""`                                      |
 | `deltaFusionCompaction.image.repository`                            | Image repository for the deltaFusionCompaction image (without registry)                                                                                         | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                         | `v0.125.0`                                |
+| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                         | `v0.126.0`                                |
 | `deltaFusionCompaction.image.pullPolicy`                            | Image pull policy for the deltaFusionCompaction                                                                                                                 | `IfNotPresent`                            |
 | `deltaFusionCompaction.image.optimized`                             | Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable) | `auto`                                    |
 | `deltaFusionCompaction.schedule`                                    | Schedule for the deltaFusionCompaction cron job                                                                                                                 | `*/30 * * * *`                            |
@@ -1059,7 +1062,7 @@ fi
 | `deltaFusionQueryServer.deploymentAnnotations`                       | Annotations for the deltaFusionQueryServer deployment                                                                                                            | `{}`                                          |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified)                                                                           | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                                                                                               | `tfy-private-images/deltafusion-query-server` |
-| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                                                         | `v0.125.0`                                    |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                                                         | `v0.126.0`                                    |
 | `deltaFusionQueryServer.image.optimized`                             | Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable) | `auto`                                        |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                                                                                                  | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                                                                                                 | `deltafusion-query-env-secret`                |
@@ -1107,6 +1110,7 @@ fi
 | `deltaFusionQueryServer.extraVolumeMounts`                           | Extra volume mounts for the deltaFusionQueryServer server                                                                                                        | `[]`                                          |
 | `deltaFusionQueryServer.extraVolumes`                                | Extra volumes for the deltaFusionQueryServer server                                                                                                              | `[]`                                          |
 | `deltaFusionQueryServer.env`                                         | Environment variables for the deltaFusionQueryServer                                                                                                             | `{}`                                          |
+| `deltaFusionQueryServer.enableLiveLogs`                              | Bool to enable live logs feature for the deltaFusionQueryServer                                                                                                  | `false`                                       |
 
 ### tfyProxy Truefoundry tfy proxy values
 
@@ -1117,7 +1121,7 @@ fi
 | `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                         | `{}`                           |
 | `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)             | `""`                           |
 | `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                 | `tfy-private-images/tfy-proxy` |
-| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `v0.125.5`                     |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                           | `v0.126.0`                     |
 | `tfyProxy.logLevel`                                      | Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal) | `info`                         |
 | `tfyProxy.existingProxyConfigMapName`                    | Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`) | `""`                           |
 | `tfyProxy.proxyConfigOverride`                           | Nginx proxy configuration override for tfyProxy                                      | `""`                           |
