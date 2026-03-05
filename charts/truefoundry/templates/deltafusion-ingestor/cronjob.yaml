@@ -19,6 +19,10 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
+      {{- if ge .Capabilities.KubeVersion.Minor "31" }}
+      podFailurePolicy:
+        {{- toYaml .Values.deltaFusionCompaction.podFailurePolicy | nindent 8 }}
+      {{- end }}
       ttlSecondsAfterFinished: {{ .Values.deltaFusionCompaction.ttlSecondsAfterFinished }}
       template:
         metadata:

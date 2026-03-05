@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://tfy-proxy.truefoundry.svc.cluster.local:8080"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.126.0
+  controlPlaneChartVersion: 0.126.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -2367,6 +2367,14 @@ deltaFusionCompaction:
   restartPolicy: Never
   ## @param deltaFusionCompaction.backoffLimit Backoff limit for the deltaFusionCompaction cron job
   backoffLimit: 1
+  ## @skip deltaFusionCompaction.podFailurePolicy Pod failure policy for the deltaFusionCompaction cron job. Exit code 8 = job finished but some tables had errors (do not retry).
+  podFailurePolicy:
+    rules:
+      - action: FailJob
+        onExitCodes:
+          containerName: "deltafusion-compaction"
+          operator: In
+          values: [8]
   ## @param deltaFusionCompaction.ttlSecondsAfterFinished TTL seconds after finished for the deltaFusionCompaction cron job
   ttlSecondsAfterFinished: 604800
   ## @param deltaFusionCompaction.successfulJobsHistoryLimit Successful jobs history limit for the deltaFusionCompaction cron job
