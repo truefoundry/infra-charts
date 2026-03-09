@@ -133,6 +133,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "servicefoundry-server.pdbLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.servicefoundryServer.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "servicefoundry-server.pdbAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.servicefoundryServer.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "servicefoundry-server.deploymentLabels" -}}
@@ -292,6 +310,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   {{- end }}
   {{- $volumes = append $volumes (dict "name" "configs-build-job-template" "configMap" (dict "name" $configMapName)) }}
 {{- end }}
+{{- if .Values.servicefoundryServer.tfyK8sSecretName }}
+  {{- $volumes = append $volumes (dict "name" "tfy-k8s-secrets" "secret" (dict "secretName" (tpl .Values.servicefoundryServer.tfyK8sSecretName .))) }}
+{{- end }}
 
 {{- $volumes | toYaml -}}
 {{- end -}}
@@ -319,6 +340,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
+{{- end }}
+{{- if .Values.servicefoundryServer.k8sSecretsSecretName }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "tfy-k8s-secrets" "mountPath" "/opt/truefoundry/tfy-k8s-secrets" "readOnly" true) }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}

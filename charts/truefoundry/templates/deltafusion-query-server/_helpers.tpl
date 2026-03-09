@@ -111,6 +111,24 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "deltafusion-query-server.pdbLabels" -}}
+{{- $commonLabels := include "deltafusion-query-server.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.deltaFusionQueryServer.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "deltafusion-query-server.pdbAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-query-server.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.deltaFusionQueryServer.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "deltafusion-query-server.deploymentLabels" -}}
