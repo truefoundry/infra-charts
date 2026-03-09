@@ -1,0 +1,21 @@
+{{- $replicas := include "mlfoundry-server.replicas" . | trim | int }}
+{{- if and .Values.mlfoundryServer.enabled .Values.mlfoundryServer.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mlfoundry-server.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "mlfoundry-server.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "mlfoundry-server.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.mlfoundryServer.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.mlfoundryServer.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.mlfoundryServer.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.mlfoundryServer.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "mlfoundry-server") | nindent 6 }}
+{{- end }}

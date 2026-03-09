@@ -23,7 +23,7 @@ global:
   ## @param global.controlPlaneURL URL of the control plane
   controlPlaneURL: "http://tfy-proxy.truefoundry.svc.cluster.local:8080"
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.126.1
+  controlPlaneChartVersion: 0.126.2
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -470,6 +470,18 @@ mlfoundryServer:
     labels: {}
     ## @param mlfoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the mlfoundry server
     automountServiceAccountToken: true
+  ## mlfoundryServer.podDisruptionBudget PodDisruptionBudget settings for the mlfoundry server
+  podDisruptionBudget:
+    ## @param mlfoundryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the mlfoundry server
+    enabled: true
+    ## @param mlfoundryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param mlfoundryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param mlfoundryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -658,6 +670,8 @@ servicefoundryServer:
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
   envSecretName: servicefoundry-server-env-secret
+  ## @param servicefoundryServer.tfyK8sSecretName Secret name for K8s secrets mounted at /opt/truefoundry/tfy-k8s-secrets. If set, the secret is mounted as a volume; if empty, no volume is attached.
+  tfyK8sSecretName: ""
   ## @param servicefoundryServer.imagePullPolicy Image pull policy for the servicefoundry server
   imagePullPolicy: IfNotPresent
   ## @param servicefoundryServer.nameOverride Override name for the servicefoundry server
@@ -717,6 +731,18 @@ servicefoundryServer:
   affinity: {}
   ## @param servicefoundryServer.topologySpreadConstraints Topology spread constraints for the servicefoundry server
   topologySpreadConstraints: []
+  ## servicefoundryServer.podDisruptionBudget PodDisruptionBudget settings for the servicefoundry server
+  podDisruptionBudget:
+    ## @param servicefoundryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the servicefoundry server
+    enabled: true
+    ## @param servicefoundryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param servicefoundryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param servicefoundryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## servicefoundryServer.service Service settings for the servicefoundry server
   service:
     ## @param servicefoundryServer.service.type Service type for the servicefoundry server
@@ -2325,6 +2351,18 @@ deltaFusionIngestor:
   affinity: {}
   ## @param deltaFusionIngestor.topologySpreadConstraints Topology spread constraints
   topologySpreadConstraints: []
+  ## deltaFusionIngestor.podDisruptionBudget PodDisruptionBudget settings for the deltaFusionIngestor
+  podDisruptionBudget:
+    ## @param deltaFusionIngestor.podDisruptionBudget.enabled Enable PodDisruptionBudget for the deltaFusionIngestor
+    enabled: true
+    ## @param deltaFusionIngestor.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param deltaFusionIngestor.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param deltaFusionIngestor.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     RUST_LOG: info
@@ -2336,6 +2374,8 @@ deltaFusionIngestor:
     SENTRY_ENABLED: "true"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "false"
+    ENABLE_ARROW_FLIGHT_SERVER: "{{ or .Values.global.enableArrowFlightServer .Values.deltaFusionQueryServer.enableLiveLogs }}"
+    GRPC_PORT: 8001
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -2367,6 +2407,8 @@ deltaFusionCompaction:
   restartPolicy: Never
   ## @param deltaFusionCompaction.backoffLimit Backoff limit for the deltaFusionCompaction cron job
   backoffLimit: 1
+  ## @param deltaFusionCompaction.activeDeadlineSeconds Max TTL in seconds for the compaction job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
   ## @skip deltaFusionCompaction.podFailurePolicy Pod failure policy for the deltaFusionCompaction cron job. Exit code 8 = job finished but some tables had errors (do not retry).
   podFailurePolicy:
     rules:
@@ -2606,6 +2648,20 @@ deltaFusionQueryServer:
                     - r7a
   ## @param deltaFusionQueryServer.topologySpreadConstraints Topology spread constraints for the deltaFusionQueryServer
   topologySpreadConstraints: []
+  ## deltaFusionQueryServer.podDisruptionBudget PodDisruptionBudget settings for the deltaFusionQueryServer
+  ## Note: PDB is disabled by default since deltaFusionQueryServer runs with 1 replica.
+  ## A PDB with minAvailable=1 and 1 replica prevents pod eviction during node drains.
+  podDisruptionBudget:
+    ## @param deltaFusionQueryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the deltaFusionQueryServer
+    enabled: true
+    ## @param deltaFusionQueryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param deltaFusionQueryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param deltaFusionQueryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## deltaFusionQueryServer.service Service settings for the deltaFusionQueryServer
   service:
     ## @param deltaFusionQueryServer.service.type Service type for the deltaFusionQueryServer
@@ -2771,6 +2827,18 @@ tfyProxy:
   affinity: {}
   ## @param tfyProxy.topologySpreadConstraints [object] Topology spread constraints for the tfyProxy
   topologySpreadConstraints: {}
+  ## tfyProxy.podDisruptionBudget PodDisruptionBudget settings for the tfyProxy
+  podDisruptionBudget:
+    ## @param tfyProxy.podDisruptionBudget.enabled Enable PodDisruptionBudget for the tfyProxy
+    enabled: true
+    ## @param tfyProxy.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param tfyProxy.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param tfyProxy.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## tfyProxy.service Service settings for the tfyProxy
   service:
     ## @param tfyProxy.service.type Service type for the tfyProxy

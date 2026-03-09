@@ -1,0 +1,21 @@
+{{- $replicas := include "deltafusion-query-server.replicas" . | trim | int }}
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled .Values.deltaFusionQueryServer.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "deltafusion-query-server.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "deltafusion-query-server.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-query-server.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.deltaFusionQueryServer.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.deltaFusionQueryServer.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.deltaFusionQueryServer.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.deltaFusionQueryServer.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-query-server") | nindent 6 }}
+{{- end }}

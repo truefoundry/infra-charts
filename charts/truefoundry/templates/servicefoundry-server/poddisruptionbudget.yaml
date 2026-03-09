@@ -1,0 +1,21 @@
+{{- $replicas := include "servicefoundry-server.replicas" . | trim | int }}
+{{- if and .Values.servicefoundryServer.enabled .Values.servicefoundryServer.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "servicefoundry-server.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "servicefoundry-server.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.servicefoundryServer.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.servicefoundryServer.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.servicefoundryServer.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.servicefoundryServer.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 6 }}
+{{- end }}

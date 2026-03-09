@@ -111,6 +111,24 @@ Create chart name and version as used by the chart label.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "deltafusion-ingestor.pdbLabels" -}}
+{{- $commonLabels := include "deltafusion-ingestor.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.deltaFusionIngestor.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "deltafusion-ingestor.pdbAnnotations" -}}
+{{- $commonAnnotations := include "deltafusion-ingestor.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.deltaFusionIngestor.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   StatefulSet Labels - merges commonLabels with statefulset-specific labels
   */}}
 {{- define "deltafusion-ingestor.statefulsetLabels" -}}

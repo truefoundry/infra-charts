@@ -19,6 +19,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.deltaFusionCompaction.activeDeadlineSeconds }}
       {{- if ge .Capabilities.KubeVersion.Minor "31" }}
       podFailurePolicy:
         {{- toYaml .Values.deltaFusionCompaction.podFailurePolicy | nindent 8 }}

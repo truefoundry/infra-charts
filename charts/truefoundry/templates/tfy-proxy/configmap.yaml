@@ -44,8 +44,22 @@ data:
       @cors_preflight method OPTIONS
       handle @cors_preflight {
         {{- if .Values.global.proxy.cors.allowedOrigins }}
+        {{- $regexParts := list }}
+        {{- range .Values.global.proxy.cors.allowedOrigins }}
+        {{- $origin := . }}
+        {{- if eq $origin "*" }}
+          {{- $regexParts = append $regexParts ".*" }}
+        {{- else if contains "://" $origin }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts $escaped }}
+        {{- else }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+        {{- end }}
+        {{- end }}
+        {{- $regex := $regexParts | join "|" }}
         @origin_allowed {
-          expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
         header @origin_allowed Access-Control-Allow-Credentials "true"
@@ -60,21 +74,37 @@ data:
       }
 
       {{- if .Values.global.proxy.cors.allowedOrigins }}
+      {{- $regexParts := list }}
+      {{- range .Values.global.proxy.cors.allowedOrigins }}
+      {{- $origin := . }}
+      {{- if eq $origin "*" }}
+        {{- $regexParts = append $regexParts ".*" }}
+      {{- else if contains "://" $origin }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts $escaped }}
+      {{- else }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+      {{- end }}
+      {{- end }}
+      {{- $regex := $regexParts | join "|" }}
       @origin {
-        expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
       }
-      # > replaces upstream value instead of stacking alongside it
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header @origin >Access-Control-Allow-Credentials "true"
       header @origin >Vary "Origin"
 
-      # Disallowed origin — strip upstream *
       @not_origin {
-        not expression {http.request.header.Origin} in [{{ range $i, $o := .Values.global.proxy.cors.allowedOrigins }}{{ if $i }}, {{ end }}"{{ $o }}"{{ end }}]
-        expression {http.request.header.Origin} != ""
+        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $regex }})$")
       }
       header @not_origin -Access-Control-Allow-Origin
       header @not_origin -Access-Control-Allow-Credentials
+
+      @no_origin {
+        expression {http.request.header.Origin} == ""
+      }
+      header @no_origin -Access-Control-Allow-Origin
 
       {{- else }}
       header >Access-Control-Allow-Origin "{http.request.header.Origin}"
