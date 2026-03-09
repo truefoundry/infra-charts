@@ -4,27 +4,3 @@ version: 0.126.1
 description: 'Truefoundry tfy-otel-collector chart'
 maintainers:
   - name: truefoundry
-
-apiVersion: networking.istio.io/v1
-kind: VirtualService
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"networking.istio.io/v1beta1","kind":"VirtualService","metadata":{"annotations":{},"name":"argocd-vs","namespace":"argocd"},"spec":{"gateways":["istio-system/tfy-wildcard"],"hosts":["argocd.develop.truefoundry.tech"],"http":[{"route":[{"destination":{"host":"argocd-server.argocd.svc.cluster.local","port":{"number":80}}}]}]}}
-  creationTimestamp: "2024-06-27T17:53:37Z"
-  generation: 1
-  name: argocd-vs
-  namespace: argocd
-  resourceVersion: "54089172"
-  uid: ecab9dd1-f68a-4793-b8bd-e9545e94f6a3
-spec:
-  gateways:
-    - istio-system/tfy-wildcard
-  hosts:
-    - argocd.develop.truefoundry.tech
-  http:
-    - route:
-        - destination:
-            host: argocd-server.argocd.svc.cluster.local
-            port:
-              number: 80
