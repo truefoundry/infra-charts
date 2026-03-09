@@ -244,9 +244,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   HPA annotations
   */}}
 {{- define "tfy-otel-collector.hpaAnnotations" -}}
-{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
 {{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
-{{- $hpaAnnotations := mergeOverwrite $commonAnnotations $syncWaveAnnotation .Values.autoscaling.annotations }}
+{{- $hpaAnnotations := mergeOverwrite $commonAnnotations .Values.autoscaling.annotations }}
 {{- toYaml $hpaAnnotations }}
 {{- end }}
 
