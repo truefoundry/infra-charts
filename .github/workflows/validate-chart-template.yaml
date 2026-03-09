@@ -39,7 +39,8 @@ jobs:
             fi
 
       - name: Run chart-testing (lint)
-        run: ct lint --check-version-increment=false --target-branch ${{ github.event.pull_request.base.ref }} --config=config.yaml
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --check-version-increment=false --target-branch ${{ github.event.pull_request.base.ref }}
 
       - name: Add helm repositories
         run: |
