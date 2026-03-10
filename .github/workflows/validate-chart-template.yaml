@@ -38,10 +38,6 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             fi
 
-      - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed == 'true'
-        run: ct lint --check-version-increment=false --target-branch ${{ github.event.pull_request.base.ref }}
-
       - name: Add helm repositories
         run: |
           helm repo add grafana https://grafana.github.io/helm-charts
@@ -61,7 +57,7 @@ jobs:
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed_charts
         run: |
-          ct lint --target-branch ${{ github.event.pull_request.base.ref }}
+          ct lint --target-branch ${{ github.event.pull_request.base.ref }} --check-version-increment=false
 
       - name: Echo Changed Charts
         if: steps.list-changed.outputs.changed_charts
