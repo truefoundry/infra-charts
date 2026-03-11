@@ -114,6 +114,12 @@ victoria-logs-single:
           inputs:
             - k8s
           source: >
+            pod_labels = object(.kubernetes.pod_labels) ?? {}
+
+            if pod_labels."class.truefoundry.com/logging" == "disabled" {
+              abort
+            }
+
             if .message == "" {
               .message = " "
             }
@@ -133,11 +139,7 @@ victoria-logs-single:
             .namespace = .kubernetes.pod_namespace
 
             .job_name = .kubernetes.job_name
-
-            # Extract ALL pod labels dynamically using for_each
-
-            pod_labels = object(.kubernetes.pod_labels) ?? {}
-
+            
             # Iterate through all pod labels and add them with a prefix
 
             for_each(pod_labels) -> |key, value| {
