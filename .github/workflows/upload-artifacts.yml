@@ -3,19 +3,28 @@ name: Upload Inframold Charts Artifacts
 on:
   push:
     branches:
-      - 'main'
+      - "main"
+      - "md_optimize_artifact_upload_action"
     paths:
-      - '.github/workflows/upload-artifacts.yml'
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
+      - ".github/workflows/upload-artifacts.yml"
+      - "charts/tfy-k8s-aws-eks-inframold/**"
+      - "charts/tfy-k8s-azure-aks-inframold/**"
+      - "charts/tfy-k8s-civo-talos-inframold/**"
+      - "charts/tfy-k8s-gcp-gke-standard-inframold/**"
+      - "charts/tfy-k8s-generic-inframold/**"
+      - "scripts/generate-artifacts-manifest/**"
+      - "scripts/upload-artifacts/**"
 
 jobs:
   upload-artifacts:
+    strategy:
+      fail-fast: false
+      matrix:
+        chart:
+          - tfy-k8s-aws-eks-inframold
+          - tfy-k8s-azure-aks-inframold
+          - tfy-k8s-gcp-gke-standard-inframold
+          - tfy-k8s-generic-inframold
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -36,7 +45,7 @@ jobs:
         id: install-kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: 'v1.28.0'
+          version: "v1.28.0"
 
       - name: Setup Helm
         uses: azure/setup-helm@v4.2.0
@@ -45,7 +54,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install python dependencies
         run: |
@@ -80,17 +89,14 @@ jobs:
 
       - name: Upload Artifacts
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-generic-inframold")
-          for chart in "${charts_list[@]}";
-          do
-            python scripts/upload-artifacts/upload_artifacts.py \
-              helm \
-              charts/$chart/artifacts-manifest.json \
-              ${{ env.ARTIFACTORY_HELM_REGISTRY_URL}}
-            
-            python scripts/upload-artifacts/upload_artifacts.py \
-              image \
-              charts/$chart/artifacts-manifest.json \
-              ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
-              --exclude-registries truefoundrycloud
-          done
+          chart="${{ matrix.chart }}"
+          python scripts/upload-artifacts/upload_artifacts.py \
+            helm \
+            charts/$chart/artifacts-manifest.json \
+            ${{ env.ARTIFACTORY_HELM_REGISTRY_URL }}
+
+          python scripts/upload-artifacts/upload_artifacts.py \
+            image \
+            charts/$chart/artifacts-manifest.json \
+            ${{ env.ARTIFACTORY_REPOSITORY_URL }} \
+            --exclude-registries truefoundrycloud
