@@ -41,14 +41,17 @@ kind: OpenTelemetryCollector
 metadata:
   name: "{{ .Release.Name }}-otel-metrics-forwarder"
 spec:
-  mode: statefulset
-  replicas: 1
+  {{- $replicas := index .Values "otel-metrics-forwarder" "replicas" | default 1 | int }}
+  mode: {{ if gt $replicas 1 }}statefulset{{ else }}deployment{{ end }}
+  replicas: {{ $replicas }}
   serviceAccount: "{{ .Release.Name }}-otel-metrics-forwarder"
+  {{- if gt $replicas 1 }}
   targetAllocator:
     enabled: true
     serviceAccount: "{{ .Release.Name }}-otel-metrics-forwarder"
     prometheusCR:
       enabled: false
+  {{- end }}
   config:
     receivers:
       prometheus:
@@ -92,10 +95,5 @@ spec:
       value: {{ tpl $value $ | quote }}
     {{- end }}
   resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 200m
-      memory: 512Mi
+    {{- toYaml (index .Values "otel-metrics-forwarder" "resources") | nindent 4 }}
 {{- end }}
