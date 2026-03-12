@@ -355,3 +355,18 @@ redis:
   architecture: standalone
   ## @param redis.replicaCount Redis replica count
   replicaCount: 1
+
+# Otel collector for forwarding metrics
+otel-metrics-forwarder:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+  env:
+      TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+      TFY_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://{{ .Release.Name }}-tfy-otel-collector.{{ .Release.Namespace }}.svc.cluster.local:4318/v1/metrics
