@@ -19,7 +19,7 @@ spec:
     {{- end }}
     route:
       - destination:
-          host: grafana.{{ .Release.Namespace }}.svc.cluster.local
+          host: {{ include "grafana.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
           port:
             number: 80
 {{- end }}
