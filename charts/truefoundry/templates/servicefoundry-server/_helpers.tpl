@@ -341,7 +341,7 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
 {{- end }}
-{{- if .Values.servicefoundryServer.k8sSecretsSecretName }}
+{{- if .Values.servicefoundryServer.tfyK8sSecretName }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "tfy-k8s-secrets" "mountPath" "/opt/truefoundry/tfy-k8s-secrets" "readOnly" true) }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
