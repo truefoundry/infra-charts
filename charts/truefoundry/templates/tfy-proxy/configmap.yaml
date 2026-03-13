@@ -190,6 +190,23 @@ data:
       # - /oauth2/register → /oauth2-mcp/register
       # - /oauth2/callback → /oauth2-mcp/callback
 
+      {{- if .Values.global.proxy.llmGateway.external }}
+      handle /.well-known/oauth-protected-resource/api/llm/* {
+        uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.llmGateway.backendURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
+        }
+      }
+      {{- else }}
+      handle /.well-known/oauth-protected-resource/api/llm/* {
+        uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
+        }
+      }
+      {{- end }}
+
       # /.well-known/* → /oauth2-mcp/.well-known/*
       handle /.well-known/* {
         uri replace /.well-known /oauth2-mcp/.well-known
