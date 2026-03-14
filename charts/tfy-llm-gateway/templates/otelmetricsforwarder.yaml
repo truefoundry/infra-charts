@@ -1,0 +1,101 @@
+{{- if (index .Values "otel-metrics-forwarder" "enabled") }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ .Release.Name }}-otel-metrics-forwarder"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "{{ .Release.Name }}-otel-metrics-forwarder"
+rules:
+  - apiGroups: [""]
+    resources: [pods, nodes, services, endpoints, namespaces, configmaps, nodes/metrics]
+    verbs: [get, list, watch]
+  - apiGroups: [monitoring.coreos.com]
+    resources: [servicemonitors, podmonitors, scrapeconfigs, probes]
+    verbs: ["*"]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    verbs: [get, list, watch]
+  - apiGroups: [discovery.k8s.io]
+    resources: [endpointslices]
+    verbs: [get, list, watch]
+  - nonResourceURLs: [/metrics, /api, /api/*, /apis, /apis/*]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ .Release.Name }}-otel-metrics-forwarder"
+subjects:
+  - kind: ServiceAccount
+    name: "{{ .Release.Name }}-otel-metrics-forwarder"
+roleRef:
+  kind: ClusterRole
+  name: "{{ .Release.Name }}-otel-metrics-forwarder"
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: "{{ .Release.Name }}-otel-metrics-forwarder"
+spec:
+  {{- $replicas := index .Values "otel-metrics-forwarder" "replicas" | default 1 | int }}
+  # For replicas >1, only stateful set can be used because pod names are used to shard metrics
+  mode: {{ if gt $replicas 1 }}statefulset{{ else }}deployment{{ end }}
+  replicas: {{ $replicas }}
+  serviceAccount: "{{ .Release.Name }}-otel-metrics-forwarder"
+  # Need to use target allocator for replicas >1 so that same metrics are not scraped by all pods
+  {{- if gt $replicas 1 }}
+  targetAllocator:
+    enabled: true
+    serviceAccount: "{{ .Release.Name }}-otel-metrics-forwarder"
+    prometheusCR:
+      enabled: false
+  {{- end }}
+  config:
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: tfy-llm-gateway
+              scrape_interval: 30s
+              honor_labels: true
+              kubernetes_sd_configs:
+                - role: pod
+                  namespaces:
+                    names:
+                      - truefoundry
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_label_truefoundry_com_component]
+                  regex: ^tfy-llm-gateway$
+                  action: keep
+                - source_labels: [__meta_kubernetes_pod_ip]
+                  regex: (.+)
+                  target_label: __address__
+                  replacement: $1:8787
+    exporters:
+      otlphttp:
+        endpoint: ${env:TFY_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT}
+        headers:
+          Authorization: Bearer ${env:TFY_API_KEY}
+          Tfy-Service-Name: tfy-llm-gateway
+    processors:
+      batch:
+        timeout: 30s
+        send_batch_size: 1000
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus]
+          processors: [batch]
+          exporters: [otlphttp]
+  env:
+    {{- range $name, $value := index .Values "otel-metrics-forwarder" "env" }}
+    - name: {{ $name }}
+      value: {{ tpl $value $ | quote }}
+    {{- end }}
+  resources:
+    {{- toYaml (index .Values "otel-metrics-forwarder" "resources") | nindent 4 }}
+{{- end }}
