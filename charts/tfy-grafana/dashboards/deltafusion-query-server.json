@@ -296,7 +296,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(container_memory_working_set_bytes{namespace=\"truefoundry\",container!=\"POD\",container!=\"\",pod!=\"\", pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(container_memory_working_set_bytes{namespace=\"$namespace\",container!=\"POD\",container!=\"\",pod!=\"\", pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Used",
           "range": true,
           "refId": "Used"
@@ -307,7 +307,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"truefoundry\",pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"$namespace\",pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Requested",
           "range": true,
           "refId": "Requested"
@@ -318,7 +318,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"truefoundry\",pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"$namespace\",pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Limits",
           "range": true,
           "refId": "Limits"
