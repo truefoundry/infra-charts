@@ -207,11 +207,11 @@ Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if tfy-buildkitd-service is enabl
 {{- if index .Values "tfy-buildkitd-service" "enabled" }}
 {{ $urls := "" }}
 {{ $replicas := index .Values "tfy-buildkitd-service" "replicaCount" | int}}
-{{ $namespace := .Release.Namespace }}
+{{ $namespace := include "global.namespace" . }}
 {{ $portNumber := index .Values "tfy-buildkitd-service" "service" "port" | int }}
 {{ $buildkitdServiceName := (include "tfy-buildkitd.buildkitdServiceName" .) }}
 {{- range $i := until $replicas}}
-  {{- $url := printf "%s-%d.%s.%s.svc.cluster.local:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
+  {{- $url := printf "%s-%d.%s.%s:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
   {{- $urls = printf "%s,%s" $urls $url }}
 {{- end }}
 GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
