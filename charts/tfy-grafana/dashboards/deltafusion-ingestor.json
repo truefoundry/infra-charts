@@ -2692,7 +2692,7 @@
             "uid": "${DS_VICTORIALOGS}"
           },
           "editorMode": "code",
-          "expr": "namespace:\"$namespace\" -container:(\"wait\" OR \"init\") app_kubernetes_io_name:\"$app_kubernetes_io_name\" !~ \"/health|/metrics\" ~\"$query\"",
+          "expr": "namespace:\"$namespace\" -container:(\"wait\" OR \"init\") app_kubernetes_io_name:\"$app_kubernetes_io_name\" _msg:!~ \"/health|/metrics\" ~\"$query\"",
           "queryType": "instant",
           "refId": "A"
         }
@@ -2722,6 +2722,32 @@
         ],
         "query": "",
         "type": "textbox"
+      },
+      {
+        "current": {},
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "includeAll": false,
+        "label": "VictoriaLogs",
+        "multi": false,
+        "name": "DS_VICTORIALOGS",
+        "options": [],
+        "query": "victoriametrics-logs-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
       },
       {
         "current": {},
