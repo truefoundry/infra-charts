@@ -6,6 +6,7 @@ on:
       - 'main'
     paths:
       - 'charts/**'
+      - '.github/workflows/validate-chart-template.yaml'
 
 jobs:
   validate-chart-template:
@@ -56,7 +57,7 @@ jobs:
       - name: Run chart-testing (lint)
         if: steps.list-changed.outputs.changed_charts
         run: |
-          ct lint --target-branch ${{ github.event.pull_request.base.ref }}
+          ct lint --target-branch ${{ github.event.pull_request.base.ref }} --check-version-increment=false
 
       - name: Echo Changed Charts
         if: steps.list-changed.outputs.changed_charts

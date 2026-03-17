@@ -133,6 +133,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "servicefoundry-server.pdbLabels" -}}
+{{- $commonLabels := include "servicefoundry-server.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.servicefoundryServer.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "servicefoundry-server.pdbAnnotations" -}}
+{{- $commonAnnotations := include "servicefoundry-server.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.servicefoundryServer.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "servicefoundry-server.deploymentLabels" -}}
@@ -189,11 +207,11 @@ Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if tfy-buildkitd-service is enabl
 {{- if index .Values "tfy-buildkitd-service" "enabled" }}
 {{ $urls := "" }}
 {{ $replicas := index .Values "tfy-buildkitd-service" "replicaCount" | int}}
-{{ $namespace := .Release.Namespace }}
+{{ $namespace := include "global.namespace" . }}
 {{ $portNumber := index .Values "tfy-buildkitd-service" "service" "port" | int }}
 {{ $buildkitdServiceName := (include "tfy-buildkitd.buildkitdServiceName" .) }}
 {{- range $i := until $replicas}}
-  {{- $url := printf "%s-%d.%s.%s.svc.cluster.local:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
+  {{- $url := printf "%s-%d.%s.%s:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
   {{- $urls = printf "%s,%s" $urls $url }}
 {{- end }}
 GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
@@ -261,6 +279,10 @@ FE_ENABLE_SPARK_JOBS: "true"
 - name: BUILD_JOB_TEMPLATE_PATH
   value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
 {{- end }}
+- name: K8S_SERVICE_ACCOUNT_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.serviceAccountName
 {{- end }}
 
 {{- define "servicefoundry-server.volumes" -}}
@@ -292,6 +314,9 @@ FE_ENABLE_SPARK_JOBS: "true"
   {{- end }}
   {{- $volumes = append $volumes (dict "name" "configs-build-job-template" "configMap" (dict "name" $configMapName)) }}
 {{- end }}
+{{- if .Values.servicefoundryServer.tfyK8sSecretName }}
+  {{- $volumes = append $volumes (dict "name" "tfy-k8s-secrets" "secret" (dict "secretName" (tpl .Values.servicefoundryServer.tfyK8sSecretName .))) }}
+{{- end }}
 
 {{- $volumes | toYaml -}}
 {{- end -}}
@@ -319,6 +344,9 @@ FE_ENABLE_SPARK_JOBS: "true"
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
+{{- end }}
+{{- if .Values.servicefoundryServer.tfyK8sSecretName }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "tfy-k8s-secrets" "mountPath" "/opt/truefoundry/tfy-k8s-secrets" "readOnly" true) }}
 {{- end }}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}

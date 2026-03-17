@@ -130,6 +130,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "mlfoundry-server.pdbLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.mlfoundryServer.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "mlfoundry-server.pdbAnnotations" -}}
+{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.mlfoundryServer.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   Create the name of the service account to use
   */}}
 {{- define "mlfoundry-server.serviceAccountName" -}}

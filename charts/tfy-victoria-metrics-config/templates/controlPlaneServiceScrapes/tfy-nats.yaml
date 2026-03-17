@@ -1,0 +1,18 @@
+{{- if and .Values.controlPlaneMonitors.nats.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.nats.name }}
+  labels:
+    {{- include "vmconfig.nats.labels" . | nindent 4 }}
+  annotations:
+    {{- include "vmconfig.nats.annotations" . | nindent 4 }}
+spec:
+  podMetricsEndpoints:
+    {{- toYaml .Values.controlPlaneMonitors.nats.podMetricsEndpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.nats.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.nats.podSelectorLabels | nindent 6 }}
+{{- end -}}

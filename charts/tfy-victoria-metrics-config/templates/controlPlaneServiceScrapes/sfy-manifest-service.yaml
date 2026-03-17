@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.sfyManifestService.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.sfyManifestService.name }}
+  labels:
+    {{- include "vmconfig.sfyManifestService.labels" . | nindent 4 }}
+  annotations:
+    {{- include "vmconfig.sfyManifestService.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.sfyManifestService.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.sfyManifestService.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.sfyManifestService.name }}
+      {{- if .Values.controlPlaneMonitors.sfyManifestService.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.sfyManifestService.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}

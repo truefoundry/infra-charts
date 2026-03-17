@@ -21,9 +21,10 @@ global:
   ## @param global.tenantName Name of the tenant
   tenantName: ""
   ## @param global.controlPlaneURL URL of the control plane
-  controlPlaneURL: "http://truefoundry-truefoundry-frontend-app.truefoundry.svc.cluster.local:5000"
+  controlPlaneURL: >-
+    http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.119.4
+  controlPlaneChartVersion: 0.129.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -63,22 +64,26 @@ global:
   ## global.proxy Global proxy configuration
   proxy:
     ## @param global.proxy.enabled Bool to enable proxy for the control plane
-    enabled: false
+    enabled: true
+    ## @param global.proxy.enforceSecurityHeaders Bool to enforce security headers for the proxy
+    enforceSecurityHeaders: false
+    ## @param global.proxy.contentSecurityPolicy Content-Security-Policy header value used when enforceSecurityHeaders is true
+    contentSecurityPolicy: "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://widget.usepylon.com; worker-src 'self' blob:;"
     ## @param global.proxy.servicefoundryServerHost Servicefoundry server host for service routing
     servicefoundryServerHost: >-
-      {{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-servicefoundry-server
     ## @param global.proxy.mlfoundryHost mlfoundry server host for service routing
     mlfoundryHost: >-
-      {{ .Release.Name }}-mlfoundry-server.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-mlfoundry-server
     ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
-      {{ .Release.Name }}-tfy-workflow-admin-server.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-tfy-workflow-admin-server
     ## @param global.proxy.s3proxyHost s3 proxy host for service routing
     s3proxyHost: >-
-      {{ .Release.Name }}-s3proxy.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-s3proxy
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
-      {{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-tfy-otel-collector
     ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
     managedClusterOnboardingServiceURL: ""
     ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
@@ -93,7 +98,7 @@ global:
     tfyNats:
       ## @param global.proxy.tfyNats.host nats host for nats service
       host: >-
-        {{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local
+        {{ .Release.Name }}-tfy-nats
       ## @param global.proxy.tfyNats.port nats port for nats service
       port: 8080
     ## global.proxy.llmGateway LLM gateway settings for service routing
@@ -102,7 +107,7 @@ global:
       external: false
       ## @param global.proxy.llmGateway.backendHost Backend Host for the LLM gateway
       backendHost: >-
-        {{ .Release.Name }}-tfy-llm-gateway.{{ include "global.namespace" . }}.svc.cluster.local
+        {{ .Release.Name }}-tfy-llm-gateway
       ## @param global.proxy.llmGateway.backendURL Backend URL for the LLM gateway
       backendURL: ""
       ## @param global.proxy.llmGateway.backendPort Backend Port for the LLM gateway
@@ -111,18 +116,21 @@ global:
     tfyOtelCollector:
       ## @param global.proxy.tfyOtelCollector.host OTEL collector host for OTEL collector service
       host: >-
-        {{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local
+        {{ .Release.Name }}-tfy-otel-collector
       ## @param global.proxy.tfyOtelCollector.port OTEL collector port for OTEL collector service
       port: 4318
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: >-
-      {{ .Release.Name }}-tfy-controller.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-tfy-controller
     ## @param global.proxy.tfyProxyHost tfy proxy host for service routing
     tfyProxyHost: >-
-      {{ .Release.Name }}-tfy-proxy.{{ include "global.namespace" . }}.svc.cluster.local
-    ## @param global.proxy.truefoundryFrontendAppHost truefoundry frontend app host for service routing
-    truefoundryFrontendAppHost: >-
-      {{ .Release.Name }}-truefoundry-frontend-app.{{ include "global.namespace" . }}.svc.cluster.local
+      {{ .Release.Name }}-tfy-proxy
+    ## global.proxy.cors CORS configuration for the proxy
+    cors:
+      ## @param global.proxy.cors.enabled Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list, all origins are allowed. When specific origins are listed, only those are allowed.
+      enabled: true
+      ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS (e.g. ["https://example.com"]). Leave empty to allow all origins when CORS is enabled.
+      allowedOrigins: []
   ## global.database Database configuration when dev mode is not enabled
   database:
     ## @param global.database.host Control plane database hostname when dev mode is not enabled
@@ -225,6 +233,8 @@ global:
       googleCloudServiceAccountKeyFileContent: ""
   ## @param global.namespaceOverride Override namespace for the control plane (defaults to .Release.Namespace)
   namespaceOverride: ""
+  ## @param global.enableSentry Bool to enable Sentry integration for the control plane
+  enableSentry: true
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -356,189 +366,6 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.createdBuildkitServiceTlsCerts Bool to install TLS certificates
   createdBuildkitServiceTlsCerts: true
 ###################################################################################################################
-####################################### Truefoundry Frontend App ##################################################
-###################################################################################################################
-## @section Truefoundry Frontend App values
-truefoundryFrontendApp:
-  ## @param truefoundryFrontendApp.enabled Bool to enable the frontend app
-  enabled: true
-  ## @param truefoundryFrontendApp.tolerations Tolerations specific to the frontend app
-  tolerations: []
-  ## @skip truefoundryFrontendApp.replicaCount Number of replicas for the frontend app
-  #  replicaCount: 1
-  ## truefoundryFrontendApp.image Image for the frontend app
-  image:
-    ## @param truefoundryFrontendApp.image.registry Registry for the frontend app image (overrides global.registry if specified)
-    registry: ""
-    ## @param truefoundryFrontendApp.image.repository Image repository for the frontend app (without registry)
-    repository: "tfy-private-images/truefoundry-frontend-app"
-    ## @param truefoundryFrontendApp.image.tag Image tag for the frontend app
-    tag: "v0.119.2"
-  ## @param truefoundryFrontendApp.envSecretName Secret name for the frontend app environment variables
-  envSecretName: truefoundry-frontend-app-env-secret
-  ## @param truefoundryFrontendApp.imagePullPolicy Image pull policy for the frontend app
-  imagePullPolicy: IfNotPresent
-  ## @param truefoundryFrontendApp.nameOverride Override name for the frontend app
-  nameOverride: ""
-  ## @param truefoundryFrontendApp.fullnameOverride Full name override for the frontend app
-  fullnameOverride: ""
-  ## @param truefoundryFrontendApp.podAnnotations Annotations for the frontend app pods
-  podAnnotations: {}
-  ## @param truefoundryFrontendApp.podLabels [object] Labels for the frontend app pods
-  podLabels: {}
-  ## @param truefoundryFrontendApp.podSecurityContext Security context for the frontend app pods
-  podSecurityContext: {}
-  ## @param truefoundryFrontendApp.commonLabels Common labels for the frontend app pods
-  commonLabels: {}
-  ## @param truefoundryFrontendApp.commonAnnotations [object] Common annotations for the frontend app pods
-  commonAnnotations: {}
-  ## @param truefoundryFrontendApp.deploymentLabels [object] Deployment-specific labels for the frontend app
-  deploymentLabels: {}
-  ## @param truefoundryFrontendApp.deploymentAnnotations [object] Deployment-specific annotations for the frontend app
-  deploymentAnnotations: {}
-  ## truefoundryFrontendApp.securityContext Security context for the frontend app
-  securityContext:
-    ## @param truefoundryFrontendApp.securityContext.readOnlyRootFilesystem Read only root filesystem for the frontend app
-    readOnlyRootFilesystem: true
-  ## @param truefoundryFrontendApp.resourceTierOverride Resource tier override for the truefoundryFrontendApp
-  resourceTierOverride: ""
-  ## @param truefoundryFrontendApp.resources Resource requests and limits for the frontend app
-  resources: {}
-  # resources:
-  #  limits:
-  #    cpu: 200m
-  #    memory: 512Mi
-  #    ephemeral-storage: 256Mi
-  #  requests:
-  #    cpu: 50m
-  #    memory: 256Mi
-  #    ephemeral-storage: 128Mi
-  ## truefoundryFrontendApp.livenessProbe Liveness probe settings for the frontend app
-  livenessProbe:
-    ## @param truefoundryFrontendApp.livenessProbe.initialDelaySeconds Initial delay seconds for the liveness probe
-    initialDelaySeconds: 600
-    ## @param truefoundryFrontendApp.livenessProbe.periodSeconds Period seconds for the liveness probe
-    periodSeconds: 30
-    ## @param truefoundryFrontendApp.livenessProbe.timeoutSeconds Timeout seconds for the liveness probe
-    timeoutSeconds: 5
-    ## @param truefoundryFrontendApp.livenessProbe.failureThreshold Failure threshold for the liveness probe
-    failureThreshold: 3
-    ## @param truefoundryFrontendApp.livenessProbe.successThreshold Success threshold for the liveness probe
-    successThreshold: 1
-  ## truefoundryFrontendApp.readinessProbe Readiness probe settings for the frontend app
-  readinessProbe:
-    ## @param truefoundryFrontendApp.readinessProbe.initialDelaySeconds Initial delay seconds for the readiness probe
-    initialDelaySeconds: 30
-    ## @param truefoundryFrontendApp.readinessProbe.periodSeconds Period seconds for the readiness probe
-    periodSeconds: 30
-    ## @param truefoundryFrontendApp.readinessProbe.timeoutSeconds Timeout seconds for the readiness probe
-    timeoutSeconds: 5
-    ## @param truefoundryFrontendApp.readinessProbe.failureThreshold Failure threshold for the readiness probe
-    failureThreshold: 3
-    ## @param truefoundryFrontendApp.readinessProbe.successThreshold Success threshold for the readiness probe
-    successThreshold: 1
-  ## @param truefoundryFrontendApp.nodeSelector Node selector for the frontend app
-  nodeSelector: {}
-  ## @param truefoundryFrontendApp.affinity Affinity settings for the frontend app
-  affinity: {}
-  ## @param truefoundryFrontendApp.topologySpreadConstraints Topology spread constraints for the frontend app
-  topologySpreadConstraints: []
-  ## truefoundryFrontendApp.service Service settings for the frontend app
-  service:
-    ## @param truefoundryFrontendApp.service.type Service type for the frontend app
-    type: ClusterIP
-    ## @param truefoundryFrontendApp.service.port Service port for the frontend app
-    port: 5000
-    ## @param truefoundryFrontendApp.service.annotations Annotations for the frontend app service
-    annotations: {}
-    ## @param truefoundryFrontendApp.service.labels [object] Labels for the frontend app service
-    labels: {}
-  ## truefoundryFrontendApp.ingress Ingress settings for the frontend app
-  ingress:
-    ## @param truefoundryFrontendApp.ingress.enabled Enable ingress for the frontend app
-    enabled: false
-    ## @param truefoundryFrontendApp.ingress.annotations Annotations for the frontend app ingress
-    annotations: {}
-    ## @param truefoundryFrontendApp.ingress.labels Labels for the frontend app ingress
-    labels: {}
-    ## @param truefoundryFrontendApp.ingress.ingressClassName Ingress class name for the frontend app
-    ingressClassName: istio
-    ## @param truefoundryFrontendApp.ingress.tls TLS settings for the frontend app
-    tls: []
-    ## @param truefoundryFrontendApp.ingress.hosts Hosts for the frontend app
-    hosts: []
-  ## truefoundryFrontendApp.istio Istio virtual service settings for the frontend app
-  istio:
-    ## truefoundryFrontendApp.istio.virtualservice Enable virtual service for the frontend app
-    virtualservice:
-      ## @param truefoundryFrontendApp.istio.virtualservice.enabled Enable virtual service for the frontend app
-      enabled: false
-      ## @param truefoundryFrontendApp.istio.virtualservice.annotations Annotations for the frontend app virtual service
-      annotations: {}
-      ## @param truefoundryFrontendApp.istio.virtualservice.gateways Gateways for the frontend app virtual service
-      gateways: []
-      ## @param truefoundryFrontendApp.istio.virtualservice.hosts Hosts for the frontend app virtual service
-      hosts: []
-  ## @param truefoundryFrontendApp.servicefoundryServerHost Servicefoundry server host for the frontend app
-  servicefoundryServerHost: >-
-    {{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local
-  ## @param truefoundryFrontendApp.mlfoundryHost mlfoundry server host for the frontend app
-  mlfoundryHost: >-
-    {{ .Release.Name }}-mlfoundry-server.{{ include "global.namespace" . }}.svc.cluster.local
-  ## @param truefoundryFrontendApp.tfyWorkflowAdminHost tfy workflow admin host for the frontend app
-  tfyWorkflowAdminHost: >-
-    {{ .Release.Name }}-tfy-workflow-admin-server.{{ include "global.namespace" . }}.svc.cluster.local
-  ## @param truefoundryFrontendApp.s3proxyHost s3 proxy host for the frontend app
-  s3proxyHost: >-
-    {{ .Release.Name }}-s3proxy.{{ include "global.namespace" . }}.svc.cluster.local
-  ## @param truefoundryFrontendApp.tfyOtelCollectorHost otel collector host for the frontend app
-  tfyOtelCollectorHost: >-
-    {{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local
-  ## @param truefoundryFrontendApp.tfyNatsHost nats host for the frontend app
-  tfyNatsHost: >-
-    {{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local
-  ## truefoundryFrontendApp.llmGateway LLM gateway settings for the frontend app
-  llmGateway:
-    ## @param truefoundryFrontendApp.llmGateway.external Make LLMGateway external
-    external: false
-    ## @param truefoundryFrontendApp.llmGateway.backendHost Backend Host for the LLM gateway
-    backendHost: >-
-      {{ .Release.Name }}-tfy-llm-gateway.{{ include "global.namespace" . }}.svc.cluster.local
-    ## @param truefoundryFrontendApp.llmGateway.backendPort Backend Port for the LLM gateway
-    backendPort: 8787
-  ## @param truefoundryFrontendApp.proxyServerHost Proxy server host for the frontend app
-  proxyServerHost: >-
-    {{ .Release.Name }}-tfy-controller.{{ include "global.namespace" . }}.svc.cluster.local
-  ## truefoundryFrontendApp.serviceAccount Service account settings for the frontend app
-  serviceAccount:
-    ## @param truefoundryFrontendApp.serviceAccount.create Bool to create a service account for the frontend app
-    create: true
-    ## @param truefoundryFrontendApp.serviceAccount.name Name of the frontend app service account
-    name: "truefoundry-frontend-app"
-    ## @param truefoundryFrontendApp.serviceAccount.annotations [object] Annotations for the frontend app service account
-    annotations: {}
-    ## @param truefoundryFrontendApp.serviceAccount.labels [object] Labels for the frontend app service account
-    labels: {}
-    ## @param truefoundryFrontendApp.serviceAccount.automountServiceAccountToken Automount service account token for the frontend app
-    automountServiceAccountToken: false
-  ## @param truefoundryFrontendApp.extraVolumes Extra volumes for the frontend app
-  extraVolumes: []
-  ## @param truefoundryFrontendApp.extraVolumeMounts Extra volume mounts for the frontend app
-  extraVolumeMounts: []
-  ## @param truefoundryFrontendApp.imagePullSecrets Image pull secrets for the frontend app
-  ##
-  imagePullSecrets: []
-  ## @param truefoundryFrontendApp.env [object] Environment variables for the frontend app
-  env:
-    AUTH_SERVER_URL: https://auth.truefoundry.com
-    NATS_URL: ws://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:8080
-    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:5000
-    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
-    TFY_CONTROLLER_URL: http://{{ .Release.Name }}-tfy-controller.{{ include "global.namespace" . }}.svc.cluster.local:8123
-    DEBUGGING_AGENT_URL: http://tfy-llm-agent.{{ include "global.namespace" . }}.svc.cluster.local:8080
-    TFY_OTEL_COLLECTOR_URL: http://{{ .Release.Name }}-tfy-otel-collector.{{ include "global.namespace" . }}.svc.cluster.local:4318
-    TRT_ENGINE_BUILDER_BASE_URL: https://tfy-trt-llm-engine-builder.tfy-ctl-euwe1-production.production.truefoundry.com
-###################################################################################################################
 ####################################### MLfoundry Server ##########################################################
 ###################################################################################################################
 ## @section mlfoundryServer Truefoundry mlfoundry server values
@@ -562,7 +389,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.116.0"
+    tag: "v0.129.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -650,6 +477,18 @@ mlfoundryServer:
     labels: {}
     ## @param mlfoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the mlfoundry server
     automountServiceAccountToken: true
+  ## mlfoundryServer.podDisruptionBudget PodDisruptionBudget settings for the mlfoundry server
+  podDisruptionBudget:
+    ## @param mlfoundryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the mlfoundry server
+    enabled: true
+    ## @param mlfoundryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param mlfoundryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param mlfoundryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
@@ -673,7 +512,7 @@ mlfoundryServer:
     MULTITENANT: "false"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     LLM_GATEWAY_URL: LM_GATEWAY_URL="{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
 ###################################################################################################################
@@ -806,7 +645,7 @@ s3proxy:
     jcloudsProvider: aws-s3
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
   env:
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
 ###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
@@ -833,11 +672,13 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.119.1"
+    tag: "v0.129.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
   envSecretName: servicefoundry-server-env-secret
+  ## @param servicefoundryServer.tfyK8sSecretName Secret name for K8s secrets mounted at /opt/truefoundry/tfy-k8s-secrets. If set, the secret is mounted as a volume; if empty, no volume is attached.
+  tfyK8sSecretName: ""
   ## @param servicefoundryServer.imagePullPolicy Image pull policy for the servicefoundry server
   imagePullPolicy: IfNotPresent
   ## @param servicefoundryServer.nameOverride Override name for the servicefoundry server
@@ -897,6 +738,18 @@ servicefoundryServer:
   affinity: {}
   ## @param servicefoundryServer.topologySpreadConstraints Topology spread constraints for the servicefoundry server
   topologySpreadConstraints: []
+  ## servicefoundryServer.podDisruptionBudget PodDisruptionBudget settings for the servicefoundry server
+  podDisruptionBudget:
+    ## @param servicefoundryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the servicefoundry server
+    enabled: true
+    ## @param servicefoundryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param servicefoundryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param servicefoundryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## servicefoundryServer.service Service settings for the servicefoundry server
   service:
     ## @param servicefoundryServer.service.type Service type for the servicefoundry server
@@ -956,14 +809,14 @@ servicefoundryServer:
     AUTH_SERVER_URL: https://auth.truefoundry.com
     CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{ include "global.namespace" . }}.svc.cluster.local:8080
-    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:5000
+    MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service:8080
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
     NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-tfy-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
-    NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:4222
+    NATS_URL: http://{{ .Release.Name }}-tfy-nats:4222
     NATS_QGROUP_NAME: ""
-    FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server.{{ include "global.namespace" . }}.svc.cluster.local:8089
-    CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ include "global.namespace" . }}.svc.cluster.local:8123
-    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server:8089
+    CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller:8123
+    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     LLM_GATEWAY_ENABLED: "{{ .Values.tags.llmGateway }}"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
@@ -978,7 +831,7 @@ servicefoundryServer:
     GITLAB_SCOPE: ""
     AZURE_CLIENT_ID: ""
     AZURE_CLIENT_SECRET: ""
-    MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
+    MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/v2/prod/
     OAUTH_PROVIDER_TYPE: TRUEFOUNDRY
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
@@ -994,8 +847,8 @@ servicefoundryServer:
     FE_TENANT_NAME: "{{ .Values.global.tenantName }}"
     FE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
     FE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
-    DELTAFUSION_QUERY_URL: http://{{ .Release.Name }}-deltafusion-query-server.{{ include "global.namespace" . }}.svc.cluster.local:8080
-    SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server.{{ include "global.namespace" . }}.svc.cluster.local:18080
+    DELTAFUSION_QUERY_URL: http://{{ .Release.Name }}-deltafusion-query-server:8080
+    SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server:18080
     TFY_AI_GATEWAY_BASE_URL: https://gateway.truefoundry.ai
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
@@ -1158,7 +1011,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.119.0"
+    tag: "v0.129.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1271,12 +1124,12 @@ tfyK8sController:
   imagePullSecrets: []
   ## @param tfyK8sController.env [object] Environment variables for the tfyK8sController
   env:
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
-    MLFOUNDRY_SERVER_URL: https://{{ .Release.Name }}.mlfoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:5000
-    CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats.{{ include "global.namespace" . }}.svc.cluster.local:4222
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
+    CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats:4222
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller.{{ include "global.namespace" . }}.svc.cluster.local:8123
+    CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller:8123
     CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
     ANALYTICS_SERVER_URL: https://analytics.truefoundry.com
     AUTH_SERVER_URL: https://auth.truefoundry.com
@@ -1287,8 +1140,9 @@ tfyK8sController:
     RUN_CLUSTER_STATUS_CRON: "true"
     MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     RUN_MODEL_COST_SYNC_CRON: "true"
-    DELTAFUSION_INGESTOR_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ include "global.namespace" . }}.svc.cluster.local:8000
-    DELTAFUSION_QUERY_SERVER_URL: http://{{ .Release.Name }}-deltafusion-query-server.{{ include "global.namespace" . }}.svc.cluster.local:8080
+    RUN_MODEL_PARAMS_SYNC_CRON: "true"
+    DELTAFUSION_INGESTOR_URL: http://{{ .Release.Name }}-deltafusion-ingestor:8000
+    DELTAFUSION_QUERY_SERVER_URL: http://{{ .Release.Name }}-deltafusion-query-server:8080
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1422,8 +1276,8 @@ sfyManifestService:
   env:
     GIN_MODE: release
     PORT: "8080"
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
-    MLF_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    MLF_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PROCESS_TICKER_PERIOD_SECONDS: "5"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
@@ -1434,7 +1288,7 @@ sfyManifestService:
     TFY_NOTIFICATION_SENDER_IMAGE: tfy.jfrog.io/tfy-images/tfy-notification-sender:0.0.4
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
-    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats:4222
     AUTOPILOT_PROCESSOR_NATS_PULL_MAX_BYTES: "10485760"
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
@@ -1510,7 +1364,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository Repository for the sfyBuilder (without registry)
         repository: "tfy-images/sfy-builder"
         ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag Tag for the sfyBuilder
-        tag: v0.8.22
+        tag: v0.8.23
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.imagePullSecrets Image pull secrets for the sfyBuilder
       ##
       imagePullSecrets: []
@@ -1617,7 +1471,7 @@ tfyBuild:
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository Repository for the SOCI index build and push (without registry)
         repository: "tfy-images/sfy-builder"
         ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag Tag for the SOCI index build and push
-        tag: v0.8.22
+        tag: v0.8.23
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imagePullSecrets Image pull secrets for the sociIndexBuildAndPush
       ##
       imagePullSecrets: []
@@ -1640,7 +1494,7 @@ tfyBuild:
       ## @param tfyBuild.jobTemplate.image.repository Repository for the build job (without registry)
       repository: "tfy-images/sfy-builder"
       ## @param tfyBuild.jobTemplate.image.tag Tag for the build job
-      tag: v0.8.22
+      tag: v0.8.23
     ## @param tfyBuild.jobTemplate.activeDeadlineSeconds Active deadline seconds for the build job
     activeDeadlineSeconds: 14400
     ## @param tfyBuild.jobTemplate.ttlSecondsAfterFinished TTL seconds after finished for the build job
@@ -1842,7 +1696,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.118.0
+    tag: v0.129.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -1952,9 +1806,9 @@ tfyController:
   ## @param tfyController.env [object] Environment variables for the tfyController
   env:
     GIN_MODE: release
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    SFY_MANIFEST_SERVER_URL: http://{{ .Release.Name }}-sfy-manifest-service.{{ .Release.Namespace }}.svc.cluster.local:8080
+    SFY_MANIFEST_SERVER_URL: http://{{ .Release.Name }}-sfy-manifest-service:8080
     PROXY_SERVER_PORT: "{{ .Values.tfyController.service.port }}"
     PROXY_SERVER_ENABLED: "true"
     DEPLOYMENT_CONTROLLER_ENABLED: "true"
@@ -1967,7 +1821,7 @@ tfyController:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     TFY_AGENT_STATE_BUFFER_PROCESSOR_ENABLED: "true"
-    TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
+    TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats:4222
     DELETE_APPLICATIONS_CONTROLLER_ENABLED: "true"
     DEPLOYMENT_PROCESSING_CONCURRENCY_LIMIT: "5"
 ###################################################################################################################
@@ -2329,6 +2183,10 @@ tfy-llm-gateway:
   ## @param tfy-llm-gateway.commonAnnotations [object] Annotations for the tfy-llm-gateway
   commonAnnotations:
     argocd.argoproj.io/sync-wave: "5"
+  ## @param tfy-llm-gateway.env [object] Environment variables for tfy-llm-gateway
+  env:
+    CONTROL_PLANE_URL: http://{{ .Release.Name }}-tfy-proxy:8080
+    PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
 ###################################################################################################################
 ####################################### TrueFoundry OTel Collector ################################################
 ###################################################################################################################
@@ -2337,6 +2195,17 @@ tfy-otel-collector:
   ## @skip tfy-otel-collector.commonAnnotations Common annotations for the tfy-otel-collector
   commonAnnotations:
     argocd.argoproj.io/sync-wave: "4"
+###################################################################################################################
+####################################### TrueFoundry VictoriaMetrics Config #########################################
+###################################################################################################################
+## @section victoriaMetricsMonitoring TrueFoundry VictoriaMetrics Config settings
+victoriaMetricsMonitoring:
+  ## @param victoriaMetricsMonitoring.enabled Bool to enable the VictoriaMetrics Monitoring
+  enabled: false
+  ## victoriaMetricsMonitoring.controlPlaneMonitors Control plane monitoring service scrapes
+  controlPlaneMonitors:
+    ## @param victoriaMetricsMonitoring.controlPlaneMonitors.enabled Bool to enable the control plane monitoring
+    enabled: true
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
@@ -2353,7 +2222,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.119.0"
+    tag: "v0.129.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2429,6 +2298,9 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
   podAnnotations: {}
   podSecurityContext:
+    ## @param deltaFusionIngestor.podSecurityContext.enabled Bool to enable pod security context
+    # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
+    enabled: true
     ## @skip deltaFusionIngestor.podSecurityContext.fsGroup
     fsGroup: 100
   ## deltaFusionIngestor.securityContext Security context for the container
@@ -2487,17 +2359,31 @@ deltaFusionIngestor:
   affinity: {}
   ## @param deltaFusionIngestor.topologySpreadConstraints Topology spread constraints
   topologySpreadConstraints: []
+  ## deltaFusionIngestor.podDisruptionBudget PodDisruptionBudget settings for the deltaFusionIngestor
+  podDisruptionBudget:
+    ## @param deltaFusionIngestor.podDisruptionBudget.enabled Enable PodDisruptionBudget for the deltaFusionIngestor
+    enabled: true
+    ## @param deltaFusionIngestor.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param deltaFusionIngestor.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param deltaFusionIngestor.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
     RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PAYLOAD_SIZE_LIMIT: "1073741824"
-    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     SENTRY_ENABLED: "true"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "false"
+    GRPC_PORT: "8001"
+    ENABLE_ARROW_FLIGHT_SERVER: "{{ .Values.deltaFusionQueryServer.enableLiveLogs }}"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -2512,7 +2398,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.119.0"
+    tag: "v0.129.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -2529,6 +2415,17 @@ deltaFusionCompaction:
   restartPolicy: Never
   ## @param deltaFusionCompaction.backoffLimit Backoff limit for the deltaFusionCompaction cron job
   backoffLimit: 1
+  ## @param deltaFusionCompaction.activeDeadlineSeconds Max TTL in seconds for the compaction job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
+  ## @skip deltaFusionCompaction.podFailurePolicy Pod failure policy for the deltaFusionCompaction cron job. Exit code 8 = job finished but some tables had errors (do not retry).
+  podFailurePolicy:
+    rules:
+      - action: FailJob
+        onExitCodes:
+          containerName: "deltafusion-compaction"
+          operator: In
+          values:
+            - 8
   ## @param deltaFusionCompaction.ttlSecondsAfterFinished TTL seconds after finished for the deltaFusionCompaction cron job
   ttlSecondsAfterFinished: 604800
   ## @param deltaFusionCompaction.successfulJobsHistoryLimit Successful jobs history limit for the deltaFusionCompaction cron job
@@ -2564,6 +2461,9 @@ deltaFusionCompaction:
   podAnnotations: {}
   ## deltaFusionCompaction.podSecurityContext Security context for the deltaFusionCompaction cron job
   podSecurityContext:
+    ## @param deltaFusionCompaction.podSecurityContext.enabled Bool to enable pod security context
+    # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
+    enabled: true
     ## @skip deltaFusionCompaction.podSecurityContext.fsGroup
     fsGroup: 100
   ## deltaFusionCompaction.securityContext Security context for the deltaFusionCompaction cron job
@@ -2628,7 +2528,7 @@ deltaFusionCompaction:
     DATASET_PATH: /tmp
     RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
     SENTRY_ENABLED: "true"
@@ -2660,7 +2560,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.118.0
+    tag: v0.129.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
     optimized: auto
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2757,6 +2657,20 @@ deltaFusionQueryServer:
                     - r7a
   ## @param deltaFusionQueryServer.topologySpreadConstraints Topology spread constraints for the deltaFusionQueryServer
   topologySpreadConstraints: []
+  ## deltaFusionQueryServer.podDisruptionBudget PodDisruptionBudget settings for the deltaFusionQueryServer
+  ## Note: PDB is disabled by default since deltaFusionQueryServer runs with 1 replica.
+  ## A PDB with minAvailable=1 and 1 replica prevents pod eviction during node drains.
+  podDisruptionBudget:
+    ## @param deltaFusionQueryServer.podDisruptionBudget.enabled Enable PodDisruptionBudget for the deltaFusionQueryServer
+    enabled: true
+    ## @param deltaFusionQueryServer.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param deltaFusionQueryServer.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param deltaFusionQueryServer.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## deltaFusionQueryServer.service Service settings for the deltaFusionQueryServer
   service:
     ## @param deltaFusionQueryServer.service.type Service type for the deltaFusionQueryServer
@@ -2807,9 +2721,11 @@ deltaFusionQueryServer:
     DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
     MAX_FILES_IN_FILE_GROUP: "10"
     RUST_LOG: info
-    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
+  ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
+  enableLiveLogs: false
 ## @section tfyProxy Truefoundry tfy proxy values
 tfyProxy:
   ## @param tfyProxy.enabled Bool to enable the tfyProxy
@@ -2827,7 +2743,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.119.2"
+    tag: "v0.129.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
@@ -2920,6 +2836,18 @@ tfyProxy:
   affinity: {}
   ## @param tfyProxy.topologySpreadConstraints [object] Topology spread constraints for the tfyProxy
   topologySpreadConstraints: {}
+  ## tfyProxy.podDisruptionBudget PodDisruptionBudget settings for the tfyProxy
+  podDisruptionBudget:
+    ## @param tfyProxy.podDisruptionBudget.enabled Enable PodDisruptionBudget for the tfyProxy
+    enabled: true
+    ## @param tfyProxy.podDisruptionBudget.minAvailable Minimum number of pods that must be available during disruptions
+    minAvailable: 1
+    ## Maximum number of pods that can be unavailable during disruptions (alternative to minAvailable)
+    # maxUnavailable: 1
+    ## @param tfyProxy.podDisruptionBudget.annotations PDB annotations
+    annotations: {}
+    ## @param tfyProxy.podDisruptionBudget.labels PDB labels
+    labels: {}
   ## tfyProxy.service Service settings for the tfyProxy
   service:
     ## @param tfyProxy.service.type Service type for the tfyProxy

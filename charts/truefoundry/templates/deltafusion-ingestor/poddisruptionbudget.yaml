@@ -1,0 +1,21 @@
+{{- $replicas := include "deltafusion-ingestor.replicas" . | trim | int }}
+{{- if and (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionIngestor.enabled .Values.deltaFusionIngestor.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "deltafusion-ingestor.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "deltafusion-ingestor.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-ingestor.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.deltaFusionIngestor.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.deltaFusionIngestor.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.deltaFusionIngestor.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.deltaFusionIngestor.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "deltafusion-ingestor") | nindent 6 }}
+{{- end }}

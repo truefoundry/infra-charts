@@ -1,0 +1,21 @@
+{{- $replicas := include "tfy-proxy.replicas" . | trim | int }}
+{{- if and .Values.tfyProxy.enabled .Values.tfyProxy.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tfy-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-proxy.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-proxy.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.tfyProxy.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.tfyProxy.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.tfyProxy.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.tfyProxy.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 6 }}
+{{- end }}

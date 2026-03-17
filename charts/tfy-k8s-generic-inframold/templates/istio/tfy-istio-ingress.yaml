@@ -18,7 +18,7 @@ spec:
   source:
     chart: tfy-istio-ingress
     repoURL: https://truefoundry.github.io/infra-charts/
-    targetRevision: 0.3.4
+    targetRevision: 0.3.5
     helm:
       values: |-
         {{- if .Values.istio.gateway.valuesOverride }}
@@ -33,6 +33,8 @@ spec:
         {{- if .Values.istio.gateway.affinity }}
         {{- $mergedAffinity = .Values.istio.gateway.affinity }}
         {{- end }}
+        awsElbControllerChecker:
+          enabled: {{ .Values.istio.awsElbControllerChecker.enabled }}
         gateway:
           {{- with .Values.istio.gateway.annotations }}
           annotations:
