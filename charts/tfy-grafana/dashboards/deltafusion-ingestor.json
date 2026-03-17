@@ -290,7 +290,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(container_memory_working_set_bytes{namespace=\"truefoundry\",container!=\"POD\",container!=\"\",pod!=\"\", pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(container_memory_working_set_bytes{namespace=\"$namespace\",container!=\"POD\",container!=\"\",pod!=\"\", pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Used",
           "range": true,
           "refId": "Used"
@@ -301,7 +301,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"truefoundry\",pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(kube_pod_container_resource_requests{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"$namespace\",pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Requested",
           "range": true,
           "refId": "Requested"
@@ -312,7 +312,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "round((sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"truefoundry\",pod=~\"$podpattern\"}))/1000000, 0.001)",
+          "expr": "round((sum(kube_pod_container_resource_limits{job=\"kube-state-metrics\",resource=\"memory\",namespace=\"$namespace\",pod=~\"$podpattern\"}))/1000000, 0.001)",
           "legendFormat": "Limits",
           "range": true,
           "refId": "Limits"
@@ -2692,7 +2692,7 @@
             "uid": "${DS_VICTORIALOGS}"
           },
           "editorMode": "code",
-          "expr": "namespace:\"$namespace\" -container:(\"wait\" OR \"init\") app_kubernetes_io_name:\"$app_kubernetes_io_name\" !~ \"/health|/metrics\" ~\"$query\"",
+          "expr": "namespace:\"$namespace\" -container:(\"wait\" OR \"init\") app_kubernetes_io_name:\"$app_kubernetes_io_name\" _msg:!~ \"/health|/metrics\" ~\"$query\"",
           "queryType": "instant",
           "refId": "A"
         }
@@ -2722,6 +2722,32 @@
         ],
         "query": "",
         "type": "textbox"
+      },
+      {
+        "current": {},
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "includeAll": false,
+        "label": "VictoriaLogs",
+        "multi": false,
+        "name": "DS_VICTORIALOGS",
+        "options": [],
+        "query": "victoriametrics-logs-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
       },
       {
         "current": {},

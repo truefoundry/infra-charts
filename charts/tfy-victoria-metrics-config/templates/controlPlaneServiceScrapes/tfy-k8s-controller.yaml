@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.tfyK8sController.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.tfyK8sController.name }}
+  labels:
+    {{- include "vmconfig.tfyK8sController.labels" . | nindent 4 }}
+  annotations:
+    {{- include "vmconfig.tfyK8sController.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.tfyK8sController.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.tfyK8sController.name }}
+      {{- if .Values.controlPlaneMonitors.tfyK8sController.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.tfyK8sController.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}

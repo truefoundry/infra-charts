@@ -48,8 +48,8 @@ env:
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: "true"
-  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor.{{ include "global.namespace" . }}.svc.cluster.local:8000
-  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+  DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor:8000
+  SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
   SFY_SERVER_REQUEST_TIMEOUT: 30s
   DELTAFUSION_INGESTOR_REQUEST_TIMEOUT: 60s
   DELTAFUSION_INGESTER_REQUEST_TIMEOUT: 60s
@@ -73,7 +73,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.120.0
+  tag: v0.129.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -164,6 +164,16 @@ affinity: {}
 topologySpreadConstraints: {}
 ## @param terminationGracePeriodSeconds Termination grace period in seconds
 terminationGracePeriodSeconds: 120
+## podDisruptionBudget configuration
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
+  maxUnavailable: 30%
 ## Service configuration
 service:
   ## @param service.type Service type

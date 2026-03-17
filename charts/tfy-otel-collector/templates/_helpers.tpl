@@ -1,12 +1,13 @@
 {{/*
-Expand the name of the chart.
-*/}}
-{{/*
   Namespace
 */}}
 {{- define "global.namespace" }}
 {{- default .Release.Namespace .Values.global.namespaceOverride }}
 {{- end }}
+
+{{/*
+Expand the name of the chart.
+*/}}
 
 {{- define "tfy-otel-collector.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
@@ -129,6 +130,23 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- toYaml $serviceMonitorAnnotations }}
 {{- end }}
 
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+*/}}
+{{- define "tfy-otel-collector.pdbAnnotations" -}}
+{{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations .Values.podDisruptionBudget.annotations }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+*/}}
+{{- define "tfy-otel-collector.pdbLabels" -}}
+{{- $commonLabels := include "tfy-otel-collector.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels .Values.podDisruptionBudget.labels }}
+{{- toYaml $pdbLabels }}
+{{- end }}
 
 {{/*
   Create the name of the service account to use
@@ -226,9 +244,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   HPA annotations
   */}}
 {{- define "tfy-otel-collector.hpaAnnotations" -}}
-{{- $syncWaveAnnotation := dict "argocd.argoproj.io/sync-wave" "3" }}
 {{- $commonAnnotations := include "tfy-otel-collector.commonAnnotations" . | fromYaml }}
-{{- $hpaAnnotations := mergeOverwrite $commonAnnotations $syncWaveAnnotation .Values.autoscaling.annotations }}
+{{- $hpaAnnotations := mergeOverwrite $commonAnnotations .Values.autoscaling.annotations }}
 {{- toYaml $hpaAnnotations }}
 {{- end }}
 
@@ -332,8 +349,8 @@ limits:
 
 {{- define "tfy-otel-collector.hpaMinReplicas" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- if .Values.minReplicas -}}
-{{ .Values.minReplicas }}
+{{- if .Values.autoscaling.minReplicas -}}
+{{ .Values.autoscaling.minReplicas }}
 {{- else if eq $tier "small" -}}
 1
 {{- else if eq $tier "medium" -}}

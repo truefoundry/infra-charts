@@ -120,6 +120,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  PDB Labels - merges commonLabels with pdb-specific labels
+  */}}
+{{- define "tfy-proxy.pdbLabels" -}}
+{{- $commonLabels := include "tfy-proxy.commonLabels" . | fromYaml }}
+{{- $pdbLabels := mergeOverwrite $commonLabels (default dict .Values.tfyProxy.podDisruptionBudget.labels) }}
+{{- toYaml $pdbLabels }}
+{{- end }}
+
+{{/*
+  PDB Annotations - merges commonAnnotations with pdb-specific annotations
+  */}}
+{{- define "tfy-proxy.pdbAnnotations" -}}
+{{- $commonAnnotations := include "tfy-proxy.commonAnnotations" . | fromYaml }}
+{{- $pdbAnnotations := mergeOverwrite $commonAnnotations (default dict .Values.tfyProxy.podDisruptionBudget.annotations) }}
+{{- toYaml $pdbAnnotations }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "tfy-proxy.deploymentLabels" -}}

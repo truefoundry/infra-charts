@@ -19,6 +19,11 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.deltaFusionCompaction.activeDeadlineSeconds }}
+      {{- if ge .Capabilities.KubeVersion.Minor "31" }}
+      podFailurePolicy:
+        {{- toYaml .Values.deltaFusionCompaction.podFailurePolicy | nindent 8 }}
+      {{- end }}
       ttlSecondsAfterFinished: {{ .Values.deltaFusionCompaction.ttlSecondsAfterFinished }}
       template:
         metadata:
@@ -31,9 +36,11 @@ spec:
           imagePullSecrets:
             {{- include "deltafusion-compaction.imagePullSecrets" . | nindent 12 }}
           serviceAccountName: {{ include "deltafusion-compaction.serviceAccountName" . }}
+          {{- if .Values.deltaFusionCompaction.podSecurityContext.enabled }}
           {{- with .Values.deltaFusionCompaction.podSecurityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           containers:
             - name: "deltafusion-compaction"

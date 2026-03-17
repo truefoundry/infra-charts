@@ -1,0 +1,21 @@
+{{- if and .Values.controlPlaneMonitors.deltafusionQueryServer.enabled .Values.controlPlaneMonitors.enabled }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: {{ .Values.controlPlaneMonitors.deltafusionQueryServer.name }}
+  labels:
+    {{- include "vmconfig.deltafusionQueryServer.labels" . | nindent 4 }}
+  annotations:
+    {{- include "vmconfig.deltafusionQueryServer.annotations" . | nindent 4 }}
+spec:
+  endpoints:
+  {{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.endpoints | nindent 2 }}
+  namespaceSelector:
+    {{- toYaml (or .Values.controlPlaneMonitors.deltafusionQueryServer.namespaceSelector .Values.controlPlaneMonitors.namespaceSelector) | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.controlPlaneMonitors.serviceSelectorLabel | nindent 6 }}: {{ .Values.controlPlaneMonitors.deltafusionQueryServer.name }}
+      {{- if .Values.controlPlaneMonitors.deltafusionQueryServer.serviceSelectorLabels }}
+      {{- toYaml .Values.controlPlaneMonitors.deltafusionQueryServer.serviceSelectorLabels | nindent 6 }}
+      {{- end }}
+{{- end -}}

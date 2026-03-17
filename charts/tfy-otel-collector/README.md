@@ -29,7 +29,7 @@ Tfy-Otel_collector Helm Chart
 | `env`                                           | Environment variables for the tfyOtelCollector                                     | `{}`                                    |
 | `image.registry`                                | Image registry for tfyOTELCollector (defaults to global.image.registry if not set) | `""`                                    |
 | `image.repository`                              | Image repository for tfyOTELCollector                                              | `tfy-private-images/tfy-otel-collector` |
-| `image.tag`                                     | Image tag for the tfyOTELCollector                                                 | `v0.120.0`                              |
+| `image.tag`                                     | Image tag for the tfyOTELCollector                                                 | `v0.129.0`                              |
 | `imagePullSecrets`                              | List of secrets to pull images                                                     | `[]`                                    |
 | `fullnameOverride`                              | Full name override for the tfy-otel-collector                                      | `""`                                    |
 | `environmentName`                               | The environment name                                                               | `default`                               |
@@ -64,6 +64,10 @@ Tfy-Otel_collector Helm Chart
 | `affinity`                                      | Affinity                                                                           | `{}`                                    |
 | `topologySpreadConstraints`                     | Topology spread constraints                                                        | `{}`                                    |
 | `terminationGracePeriodSeconds`                 | Termination grace period in seconds                                                | `120`                                   |
+| `podDisruptionBudget.enabled`                   | Enable PodDisruptionBudget                                                         | `true`                                  |
+| `podDisruptionBudget.annotations`               | PDB annotations                                                                    | `{}`                                    |
+| `podDisruptionBudget.labels`                    | PDB labels                                                                         | `{}`                                    |
+| `podDisruptionBudget.maxUnavailable`            | Maximum number of unavailable replicas                                             | `30%`                                   |
 | `service.type`                                  | Service type                                                                       | `ClusterIP`                             |
 | `service.port`                                  | Service port                                                                       | `4318`                                  |
 | `service.annotations`                           | Service annotations                                                                | `{}`                                    |
