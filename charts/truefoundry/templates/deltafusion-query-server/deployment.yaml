@@ -41,7 +41,7 @@ spec:
             {{- $namespace := include "global.namespace" . }}
             {{- $endpoints := list }}
             {{- range $i := until $replicas }}
-            {{- $endpoints = append $endpoints (printf "http://%s-%d.%s.%s.svc.cluster.local:%s" $ingestorName $i $ingestorName $namespace (toString $.Values.deltaFusionIngestor.env.GRPC_PORT)) }}
+            {{- $endpoints = append $endpoints (printf "http://%s-%d.%s.%s:%s" $ingestorName $i $ingestorName $namespace (toString $.Values.deltaFusionIngestor.env.GRPC_PORT)) }}
             {{- end }}
             - name: INGESTOR_ENDPOINTS
               value: {{ join "," $endpoints | quote }}
