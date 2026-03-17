@@ -207,6 +207,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- define "servicefoundry-server.parseEnv" -}}
 {{- include "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" . }}
 {{- include "truefoundry.storage-credentials" . }}
+{{- if .Values.tags.sparkJobs }}
+SPARK_JOBS_ENABLED: "true"
+FE_ENABLE_SPARK_JOBS: "true"
+{{- end }}
 {{ tpl (.Values.servicefoundryServer.env | toYaml) . }}
 {{- end }}
 
