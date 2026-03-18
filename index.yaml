@@ -2988,6 +2988,42 @@ entries:
     version: 0.1.0
   tfy-gpu-operator:
   - apiVersion: v2
+    created: "2026-03-18T05:57:39.947518267Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v25.3.4
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 4.4.0
+    - alias: azure-aks-gpu-operator
+      condition: clusterType.azureAks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v25.3.4
+    - alias: civo-talos-gpu-operator
+      condition: clusterType.civoTalos
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v25.3.4
+    - alias: generic-gpu-operator
+      condition: clusterType.generic
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v25.3.4
+    description: Truefoundry GPU Operator
+    digest: b24f5915a316a8fcf263edba84d3dc9a97079e7a5e2259d313052704daa9402f
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.4.7-rc.1/tfy-gpu-operator-0.4.7-rc.1.tgz
+    version: 0.4.7-rc.1
+  - apiVersion: v2
     created: "2025-12-05T13:15:25.826887576Z"
     dependencies:
     - alias: aws-eks-gpu-operator
@@ -20940,6 +20976,30 @@ entries:
   tfy-karpenter:
   - apiVersion: v2
     appVersion: 1.5.0
+    created: "2026-03-18T05:57:40.139092962Z"
+    dependencies:
+    - name: karpenter-crd
+      repository: oci://public.ecr.aws/karpenter
+      version: 1.5.0
+    - name: karpenter
+      repository: oci://public.ecr.aws/karpenter
+      version: 1.5.0
+    - alias: eks-node-monitoring-agent
+      condition: eks-node-monitoring-agent.enabled
+      name: eks-node-monitoring-agent
+      repository: file://charts/eks-node-monitoring-agent
+      version: 1.5.1
+    description: Truefoundry helm chart to provision karpenter for EKS
+    digest: e1ef78c15e6d43f7647f60fce74674de7ca1207fd39d5288fc92858eaf9973ac
+    maintainers:
+    - name: truefoundry
+    name: tfy-karpenter
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-0.5.10-rc.1/tfy-karpenter-0.5.10-rc.1.tgz
+    version: 0.5.10-rc.1
+  - apiVersion: v2
+    appVersion: 1.5.0
     created: "2026-02-27T07:45:59.572756125Z"
     dependencies:
     - name: karpenter-crd
@@ -21497,6 +21557,17 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-0.1.0/tfy-karpenter-0.1.0.tgz
     version: 0.1.0
   tfy-karpenter-config:
+  - apiVersion: v2
+    created: "2026-03-18T05:57:40.312825654Z"
+    description: Karpenter resources to manage workloads
+    digest: 60f5799908aaf70e5f2bf014ce4f3b2e971c9516895f305850d7c3bfab58782c
+    maintainers:
+    - name: truefoundry
+    name: tfy-karpenter-config
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-karpenter-config-0.1.55-rc.1/tfy-karpenter-config-0.1.55-rc.1.tgz
+    version: 0.1.55-rc.1
   - apiVersion: v2
     created: "2026-02-11T11:02:28.272848077Z"
     description: Karpenter resources to manage workloads
@@ -43400,4 +43471,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-configs-0.1.0-rc.1/truefoundry-configs-0.1.0-rc.1.tgz
     version: 0.1.0-rc.1
-generated: "2026-03-18T04:42:20.894901884Z"
+generated: "2026-03-18T05:57:40.317833098Z"
