@@ -8,8 +8,8 @@ tfy-gpu-operator is a Helm chart that facilitates the deployment and management 
 
 If you are applying this chart using ArgoCD, you need to apply the following CRDs:
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.0/deployments/gpu-operator/crds/nvidia.com_nvidiadrivers.yaml
-kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.0/deployments/gpu-operator/crds/nvidia.com_clusterpolicies.yaml
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.1/deployments/gpu-operator/crds/nvidia.com_nvidiadrivers.yaml
+kubectl apply -f https://raw.githubusercontent.com/NVIDIA/gpu-operator/refs/tags/v25.10.1/deployments/gpu-operator/crds/nvidia.com_clusterpolicies.yaml
 ```
 
 ## Parameters
