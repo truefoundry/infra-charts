@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.129.1"
+  gatewayChartVersion: "0.130.0-rc.1"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -53,7 +53,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.129.1
+  tag: v0.130.0-rc.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -294,6 +294,7 @@ redis:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
       - "--maxmemory-policy allkeys-lru"
+      - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
     ## @skip redis.master.tolerations Tolerations for Redis master pods
@@ -348,9 +349,9 @@ redis:
       ## redis.master.resources.requests Resource requests
       requests:
         ## @param redis.master.resources.requests.cpu CPU request
-        cpu: 1000m
+        cpu: 2000m
         ## @param redis.master.resources.requests.memory Memory request
-        memory: 4000Mi
+        memory: 6000Mi
   ## @param redis.architecture Redis architecture
   architecture: standalone
   ## @param redis.replicaCount Redis replica count
