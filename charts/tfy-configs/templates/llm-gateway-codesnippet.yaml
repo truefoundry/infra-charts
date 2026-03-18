@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-chat-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.chat }}
+  {{- range $key, $value := .Values.configs.codeSnippet.chat }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/chat/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-embedding-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.embedding }}
+  {{- range $key, $value := .Values.configs.codeSnippet.embedding }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/embedding/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.image }}
+  {{- range $key, $value := .Values.configs.codeSnippet.image }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/image/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-realtime-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.realtime }}
+  {{- range $key, $value := .Values.configs.codeSnippet.realtime }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/realtime/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-rerank-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.rerank }}
+  {{- range $key, $value := .Values.configs.codeSnippet.rerank }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/rerank/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-speech-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.speech }}
+  {{- range $key, $value := .Values.configs.codeSnippet.speech }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/speech/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-transcription-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.transcription }}
+  {{- range $key, $value := .Values.configs.codeSnippet.transcription }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/transcription/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-translation-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if .Values.configs.codeSnippet.translation }}
+  {{- range $key, $value := .Values.configs.codeSnippet.translation }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/translation/*.yaml").AsConfig | indent 2 }}
+{{- end }}
