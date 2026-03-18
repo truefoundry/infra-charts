@@ -1,0 +1,100 @@
+<%
+	const USE_STREAM = (stream === true);
+	const USE_PROMPT_FQN = (prompt_fqn && prompt_fqn.trim() !== '');
+-%>
+package main
+
+import (
+	"context"<% if ((output_schema && output_schema.structuredOutputResponse) || (extra_body && extra_body.mcp_servers && extra_body.mcp_servers.length > 0)) { %>
+	"encoding/json" <% } %>
+	"fmt"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
+)
+
+func main() {
+	baseURL := "<%= endpoint %>"
+	apiKey := "<%= api_key %>"<% if (extra_body && extra_body.mcp_servers && extra_body.mcp_servers.length > 0) { %>
+	mcpServersJson := `<%- JSON.stringify(extra_body.mcp_servers) %>`
+	var mcpServers any
+	if err := json.Unmarshal([]byte(mcpServersJson), &mcpServers); err != nil {
+		panic(fmt.Errorf("Error unmarshaling JSON: %s", err))
+	}<% } %>
+
+	client := openai.NewClient(
+		option.WithBaseURL(baseURL),
+		option.WithAPIKey(apiKey),
+		option.WithHeader("X-TFY-METADATA", `<%- JSON.stringify(custom_metadata) %>`),
+		option.WithHeader("X-TFY-LOGGING-CONFIG", `{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}`),<% if (include_guardrails) { %>
+		option.WithHeader("X-TFY-GUARDRAILS", `<%- JSON.stringify({llm_input_guardrails: input_guardrails,
+			llm_output_guardrails: output_guardrails}) %>`),<% } %><% if (include_routing_config) { %>
+		option.WithHeader("X-TFY-ROUTING-CONFIG", `<%- JSON.stringify(routing_config) %>`),<% } %><% if (include_cache_config) { %>
+		option.WithHeader("X-TFY-CACHE-CONFIG", `<%- JSON.stringify(cache_config) %>`),<% } %>
+	)
+
+	ctx := context.Background()<% if (use_prompt_fqn) { %>
+	messages := []openai.ChatCompletionMessageParamUnion{}
+	<% } else { %>
+	messages := []openai.ChatCompletionMessageParamUnion{
+		openai.SystemMessage("You are an AI bot."),
+		openai.UserMessage("<%= prompt %>"),
+	}<% } %>
+
+	params := openai.ChatCompletionNewParams{
+		Messages: messages,
+		Model:    "<%= model %>",<% if (params && params.temperature !== undefined && !use_prompt_fqn) { %>
+		Temperature: openai.Float(<%= params.temperature %>),<% } %><% if (params && params.max_tokens !== undefined && !use_prompt_fqn) { %>
+		MaxTokens: openai.Int(<%= params.max_tokens %>),<% } %>
+	}
+
+	extras := map[string]any{}<% if (use_prompt_fqn) { %>
+	extras["prompt_version_fqn"] = "<%= prompt_fqn %>"<% if (input_variables && Object.keys(input_variables).length > 0) { %>
+	extras["prompt_variables"] = <%- JSON.stringify(input_variables) %><% } %><% } else if (extra_body && extra_body.mcp_servers && extra_body.mcp_servers.length > 0) { %>
+	extras["mcp_servers"] = mcpServers
+	extras["iteration_limit"] = <%= extra_body.iteration_limit %><% } %><% if (include_output_schema) { %>
+	var schema map[string]any
+	if err := json.Unmarshal([]byte(`<%- JSON.stringify(JSON.parse(output_schema.structuredOutputResponse)) %>`), &schema); err != nil {
+		panic(fmt.Errorf("Error parsing output schema: %s", err))
+	}
+	extras["response_format"] = map[string]any{
+		"type": "json_schema",
+		"json_schema": map[string]any{
+			"name": "<%- output_schema.name %>",
+			"schema": schema,
+		},
+	}
+	<% } %>
+	if len(extras) > 0 {
+		params.SetExtraFields(extras)
+	}
+	<% if (USE_STREAM) { %>
+	stream := client.Chat.Completions.NewStreaming(ctx, params)
+	acc := openai.ChatCompletionAccumulator{}
+	for stream.Next() {
+		chunk := stream.Current()
+		acc.AddChunk(chunk)
+		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+			fmt.Print(chunk.Choices[0].Delta.Content)
+		}
+	}
+	if err := stream.Err(); err != nil {
+		panic(err)
+	}
+	<% } else { %>
+	resp, err := client.Chat.Completions.New(ctx, params)
+	if err != nil {
+		panic(err)
+	}
+	if len(resp.Choices) > 0 {
+		content := resp.Choices[0].Message.Content<% if (include_output_schema) { %>
+		var parsed any
+		if err := json.Unmarshal([]byte(content), &parsed); err == nil {
+			jsonBytes, _ := json.MarshalIndent(parsed, "", "  ")
+			fmt.Println(string(jsonBytes))
+		} else {
+			fmt.Println(content)
+		}<% } else { %>
+		fmt.Println(content)<% } %>
+	}<% } %>
+}
+

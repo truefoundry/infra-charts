@@ -1,0 +1,277 @@
+<% const USE_STREAM=(stream===true); const USE_PROMPT_FQN=(prompt_fqn && prompt_fqn.trim() !=='' ); -%>
+    // compatible with async-openai v0.29.2
+    use async_openai::{
+    types::{ChatCompletionRequestMessage, CreateChatCompletionRequestArgs, ChatCompletionRequestSystemMessage,
+    ChatCompletionRequestUserMessage, ResponseFormat, ResponseFormatJsonSchema},
+    Client, config::OpenAIConfig,
+    };
+    use std::io::Write;
+    use serde_json::{json, Value};
+    use reqwest::header::{HeaderMap, HeaderValue};
+
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+        "X-TFY-METADATA",
+        HeaderValue::from_static(r#"<%- JSON.stringify(custom_metadata) %>"#)
+            );
+            headers.insert(
+            "X-TFY-LOGGING-CONFIG",
+            HeaderValue::from_static(r#"{"enabled": <%- request_logging %>
+                <% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%=
+                        request_logging_tracing_project_fqn %>"<% } %>}"#)
+                            );
+                            <% if ((input_guardrails && input_guardrails.length> 0) ||
+                                (output_guardrails && output_guardrails.length > 0)) { %>
+                                headers.insert(
+                                "X-TFY-GUARDRAILS",
+                                HeaderValue::from_static(r#"<%- JSON.stringify({llm_input_guardrails: input_guardrails,
+                                    llm_output_guardrails: output_guardrails}).replace(/"/g, "\\\"") %>" #) );<% } %><% if (routing_config && routing_config.type &&
+                                        routing_config.load_balance_targets.length> 0) { %>
+                                        headers.insert(
+                                        "X-TFY-ROUTING-CONFIG",
+                                        HeaderValue::from_static(r#"<%-
+                                            JSON.stringify(routing_config).replace(/"/g, "\\\"") %>" #) );<% } %><% if (include_cache_config) { %>
+                                                headers.insert(
+                                                "X-TFY-CACHE-CONFIG",
+                                                HeaderValue::from_static(r#"<%-
+                                                    JSON.stringify(cache_config).replace(/"/g, "\\\"") %>" #) ); <% } %>
+                                                    let http_client = reqwest::Client::builder()
+                                                    .default_headers(headers)
+                                                    .build()?;
+
+                                                    let config = OpenAIConfig::default()
+                                                    .with_api_key("<%= api_key %>")
+                                                        .with_api_base("<%= endpoint %>");
+                                                            <% if (include_output_schema) { %>
+                                                                let response_schema = json!(<%-
+                                                                    JSON.stringify(JSON.parse(output_schema.structuredOutputResponse))
+                                                                    %>);<% } %>
+
+                                                                        <% if (include_output_schema) { %>
+                                                                            let response_format =
+                                                                            ResponseFormat::JsonSchema {
+                                                                            json_schema: ResponseFormatJsonSchema {
+                                                                            name: "<%= output_schema.name %>
+                                                                                ".to_string(),
+                                                                                description: None,
+                                                                                strict: None,
+                                                                                schema: Some(response_schema),
+                                                                                }
+                                                                                };<% } %>
+
+                                                                                    let client =
+                                                                                    Client::with_config(config).with_http_client(http_client);
+
+                                                                                    let request =
+                                                                                    CreateChatCompletionRequestArgs::default()
+                                                                                    .model("<%= model %>")<% if
+                                                                                            (USE_PROMPT_FQN) { %>
+                                                                                            .messages([])<% } else { %>
+                                                                                                .messages([
+                                                                                                ChatCompletionRequestMessage::System(
+                                                                                                ChatCompletionRequestSystemMessage
+                                                                                                {
+                                                                                                content: "You are an AI
+                                                                                                bot.".into(),
+                                                                                                name: None,
+                                                                                                }
+                                                                                                ),
+                                                                                                ChatCompletionRequestMessage::User(
+                                                                                                ChatCompletionRequestUserMessage
+                                                                                                {
+                                                                                                content: "<%= prompt %>
+                                                                                                    ".into(),
+                                                                                                    name: None,
+                                                                                                    }
+                                                                                                    ),
+                                                                                                    ])<% } %>
+                                                                                                        <%_ if (params
+                                                                                                            &&
+                                                                                                            params.temperature
+                                                                                                            !==undefined)
+                                                                                                            { _%>
+                                                                                                            .temperature(
+                                                                                                            <%= params.temperature
+                                                                                                                %>)
+                                                                                                                <%_ }
+                                                                                                                    _%>
+                                                                                                                    <%_ if
+                                                                                                                        (params
+                                                                                                                        &&
+                                                                                                                        params.max_tokens
+                                                                                                                        !==undefined)
+                                                                                                                        {
+                                                                                                                        _%>
+                                                                                                                        .max_tokens(
+                                                                                                                        <%=
+                                                                                                                            params.max_tokens%>
+                                                                                                                            u32)
+                                                                                                                            <%_ }
+                                                                                                                                _%>
+                                                                                                                                <%_ if
+                                                                                                                                    (!USE_PROMPT_FQN
+                                                                                                                                    &&
+                                                                                                                                    output_schema
+                                                                                                                                    &&
+                                                                                                                                    output_schema.structuredOutputResponse)
+                                                                                                                                    {
+                                                                                                                                    _%>
+                                                                                                                                    .response_format(response_format)
+                                                                                                                                    <%_ }
+                                                                                                                                        _%>
+                                                                                                                                        .build()?;
+
+                                                                                                                                        let
+                                                                                                                                        mut
+                                                                                                                                        request_json
+                                                                                                                                        =
+                                                                                                                                        serde_json::to_value(&request)?;
+                                                                                                                                        <% if
+                                                                                                                                            (USE_PROMPT_FQN)
+                                                                                                                                            {
+                                                                                                                                            %>
+                                                                                                                                            request_json["prompt_version_fqn"]
+                                                                                                                                            =
+                                                                                                                                            serde_json::json!("
+                                                                                                                                            <%= prompt_fqn
+                                                                                                                                                %>
+                                                                                                                                                ");
+                                                                                                                                                <% if
+                                                                                                                                                    (input_variables
+                                                                                                                                                    &&
+                                                                                                                                                    Object.keys(input_variables).length>
+                                                                                                                                                    0)
+                                                                                                                                                    {
+                                                                                                                                                    %>
+                                                                                                                                                    request_json["prompt_variables"]
+                                                                                                                                                    =
+                                                                                                                                                    serde_json::json!(<%-
+                                                                                                                                                        JSON.stringify(input_variables)
+                                                                                                                                                        %>);
+                                                                                                                                                        <% }
+                                                                                                                                                            %>
+                                                                                                                                                            <% } else
+                                                                                                                                                                if
+                                                                                                                                                                (extra_body
+                                                                                                                                                                &&
+                                                                                                                                                                extra_body.mcp_servers.length>
+                                                                                                                                                                0)
+                                                                                                                                                                {
+                                                                                                                                                                %>
+                                                                                                                                                                let
+                                                                                                                                                                mcp_servers
+                                                                                                                                                                =
+                                                                                                                                                                serde_json::json!([
+                                                                                                                                                                <% extra_body.mcp_servers.forEach((server,
+                                                                                                                                                                    index)=>
+                                                                                                                                                                    {
+                                                                                                                                                                    %>
+                                                                                                                                                                    {
+                                                                                                                                                                    "integration_fqn":
+                                                                                                                                                                    "
+                                                                                                                                                                    <%= server.integration_fqn
+                                                                                                                                                                        %>
+                                                                                                                                                                        ",
+                                                                                                                                                                        "enable_all_tools":
+                                                                                                                                                                        <%= server.enable_all_tools
+                                                                                                                                                                            ? 'true'
+                                                                                                                                                                            : 'false'
+                                                                                                                                                                            %>
+                                                                                                                                                                            <% if
+                                                                                                                                                                                (server.tools
+                                                                                                                                                                                &&
+                                                                                                                                                                                server.tools.length>
+                                                                                                                                                                                0)
+                                                                                                                                                                                {
+                                                                                                                                                                                %>,
+                                                                                                                                                                                "tools":
+                                                                                                                                                                                [
+                                                                                                                                                                                <% server.tools.forEach((tool,
+                                                                                                                                                                                    toolIndex)=>
+                                                                                                                                                                                    {
+                                                                                                                                                                                    %>{"name":
+                                                                                                                                                                                    "
+                                                                                                                                                                                    <%= tool.name
+                                                                                                                                                                                        %>
+                                                                                                                                                                                        "}
+                                                                                                                                                                                        <% if
+                                                                                                                                                                                            (toolIndex
+                                                                                                                                                                                            <
+                                                                                                                                                                                            server.tools.length
+                                                                                                                                                                                            -
+                                                                                                                                                                                            1)
+                                                                                                                                                                                            {
+                                                                                                                                                                                            %>
+                                                                                                                                                                                            ,
+                                                                                                                                                                                            <% }
+                                                                                                                                                                                                %>
+                                                                                                                                                                                                <% });
+                                                                                                                                                                                                    %>
+                                                                                                                                                                                                    ]
+                                                                                                                                                                                                    <% }
+                                                                                                                                                                                                        %>
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        <% if
+                                                                                                                                                                                                            (index
+                                                                                                                                                                                                            <
+                                                                                                                                                                                                            extra_body.mcp_servers.length
+                                                                                                                                                                                                            -
+                                                                                                                                                                                                            1)
+                                                                                                                                                                                                            {
+                                                                                                                                                                                                            %>
+                                                                                                                                                                                                            ,
+                                                                                                                                                                                                            <% }
+                                                                                                                                                                                                                %>
+                                                                                                                                                                                                                <% });
+                                                                                                                                                                                                                    %>
+                                                                                                                                                                                                                    ]);
+                                                                                                                                                                                                                    request_json["mcp_servers"]
+                                                                                                                                                                                                                    =
+                                                                                                                                                                                                                    mcp_servers;
+                                                                                                                                                                                                                    request_json["iteration_limit"]
+                                                                                                                                                                                                                    =
+                                                                                                                                                                                                                    serde_json::json!(
+                                                                                                                                                                                                                    <%= extra_body.iteration_limit
+                                                                                                                                                                                                                        %>
+                                                                                                                                                                                                                        );
+                                                                                                                                                                                                                        <% }
+                                                                                                                                                                                                                            %>
+                                                                                                                                                                                                                            <% if
+                                                                                                                                                                                                                                (!USE_STREAM)
+                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                %>
+                                                                                                                                                                                                                                let
+                                                                                                                                                                                                                                response:Value
+                                                                                                                                                                                                                                =
+                                                                                                                                                                                                                                client.chat().create_byot(request_json).await?;
+                                                                                                                                                                                                                                if
+                                                                                                                                                                                                                                let
+                                                                                                                                                                                                                                Some(content)
+                                                                                                                                                                                                                                =
+                                                                                                                                                                                                                                response["choices"][0]["message"]["content"].as_str()
+                                                                                                                                                                                                                                {
+                                                                                                                                                                                                                                println!("{}",
+                                                                                                                                                                                                                                content);
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                <% } else
+                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                    %>
+                                                                                                                                                                                                                                    let
+                                                                                                                                                                                                                                    response:Value
+                                                                                                                                                                                                                                    =
+                                                                                                                                                                                                                                    client.chat().create_byot(request_json).await?;
+                                                                                                                                                                                                                                    if
+                                                                                                                                                                                                                                    let
+                                                                                                                                                                                                                                    Some(content)
+                                                                                                                                                                                                                                    =
+                                                                                                                                                                                                                                    response["choices"][0]["message"]["content"].as_str()
+                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                    println!("{}",
+                                                                                                                                                                                                                                    content);
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                    <% }
+                                                                                                                                                                                                                                        %>
+                                                                                                                                                                                                                                        Ok(())
+                                                                                                                                                                                                                                        }

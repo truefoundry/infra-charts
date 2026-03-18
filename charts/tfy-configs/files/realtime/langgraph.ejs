@@ -1,0 +1,61 @@
+import json
+import langgraph.graph as lg
+import asyncio
+import websockets
+
+async def realtime(state):
+    BASE_URL = "<%= endpoint %>/v1/realtime?model=<%= model %>"
+    headers = {
+        "Authorization": "Bearer <%= api_key %>",
+        "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+        "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+
+    async with websockets.connect(BASE_URL, additional_headers=headers) as ws:
+        print("WebSocket connection established!")
+
+        session_update = {
+            "type": "session.update",
+            "session": {
+                "modalities": ["text"],
+                "model": "<%= model %>",
+            },
+        }
+        await ws.send(json.dumps(session_update))
+        print("Session updated!")
+
+        message = {
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": "Say Hello!"}],
+            },
+        }
+        await ws.send(json.dumps(message))
+        print("Conversation item created!")
+
+        response_request = {"type": "response.create"}
+        await ws.send(json.dumps(response_request))
+        print("Response requested!")
+
+        async for msg in ws:
+            event = json.loads(msg)
+
+            if event.get("type") == "response.text.delta":
+                print(event["delta"], end="", flush=True)
+            elif event.get("type") == "response.text.done":
+                print("\nResponse completed.")
+            elif event.get("type") == "response.done":
+                print("Session complete, closing connection.")
+                break
+
+graph = lg.Graph()
+graph.add_node("realtime", lambda state: asyncio.run(realtime(state)))
+graph.set_entry_point("realtime")
+
+app = graph.compile()
+
+if __name__ == "__main__":
+    for output in app.stream({}):
+        pass

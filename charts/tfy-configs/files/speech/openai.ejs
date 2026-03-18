@@ -1,0 +1,22 @@
+from pathlib import Path
+from openai import OpenAI
+
+BASE_URL = "<%= endpoint %>"
+API_KEY = "<%= api_key %>"
+
+client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+
+# For Groq TTS, choose a voice supported by your model:
+#   canopylabs-orpheus-v1-english: autumn, diana, hannah, austin, daniel, troy
+#   canopylabs-orpheus-arabic-saudi: fahad, sultan, noura, lulwa, aisha
+
+output_path = Path(__file__).parent / "output.mp3"
+with client.audio.speech.with_streaming_response.create(
+    model="<%= model %>",
+    voice="<%= voice %>",
+    input="Hello, how are you?",
+    response_format="wav",
+) as response:
+    response.stream_to_file(output_path)
+
+print(output_path)

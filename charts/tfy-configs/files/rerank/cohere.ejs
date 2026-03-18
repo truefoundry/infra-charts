@@ -1,0 +1,14 @@
+import cohere
+
+co = cohere.ClientV2(
+    api_key="<%= api_key %>",
+    base_url="<%= endpoint %>",
+)
+
+response = co.rerank(
+    model="<%= model %>",
+    query="<%= query %>",
+    documents=<%- JSON.stringify(documents) %>,
+    top_n=<%= top_n %>,
+)
+print(response)
