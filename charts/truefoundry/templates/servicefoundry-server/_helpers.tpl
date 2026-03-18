@@ -208,10 +208,11 @@ Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if tfy-buildkitd-service is enabl
 {{ $urls := "" }}
 {{ $replicas := index .Values "tfy-buildkitd-service" "replicaCount" | int}}
 {{ $namespace := include "global.namespace" . }}
+{{ $clusterDomain := default "cluster.local" .Values.global.clusterDomain }}
 {{ $portNumber := index .Values "tfy-buildkitd-service" "service" "port" | int }}
 {{ $buildkitdServiceName := (include "tfy-buildkitd.buildkitdServiceName" .) }}
 {{- range $i := until $replicas}}
-  {{- $url := printf "%s-%d.%s.%s:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $portNumber }}
+  {{- $url := printf "%s-%d.%s.%s.svc.%s:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $clusterDomain $portNumber }}
   {{- $urls = printf "%s,%s" $urls $url }}
 {{- end }}
 GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
@@ -225,10 +226,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- define "servicefoundry-server.parseEnv" -}}
 {{- include "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" . }}
 {{- include "truefoundry.storage-credentials" . }}
-{{- if .Values.tags.sparkJobs }}
-SPARK_JOBS_ENABLED: "true"
-FE_ENABLE_SPARK_JOBS: "true"
-{{- end }}
 {{ tpl (.Values.servicefoundryServer.env | toYaml) . }}
 {{- end }}
 

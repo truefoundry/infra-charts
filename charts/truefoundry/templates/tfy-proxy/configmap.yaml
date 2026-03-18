@@ -275,13 +275,16 @@ data:
         uri strip_prefix /api/llm
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
           header_up Host {{ (tpl .Values.global.proxy.llmGateway.backendURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
         }
       }
       {{- else }}
       # /api/llm/ → / on upstream:8787
       handle /api/llm/* {
         uri strip_prefix /api/llm
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
+        }
       }
       {{- end }}
 
