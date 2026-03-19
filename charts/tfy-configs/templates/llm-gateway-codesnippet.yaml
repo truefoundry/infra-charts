@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-chat-cm
+  name: {{ .Release.Name }}-chat-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.chat }}
@@ -10,7 +10,7 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/chat/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/chat/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 
@@ -18,7 +18,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-embedding-cm
+  name: {{ .Release.Name }}-embedding-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.embedding }}
@@ -27,14 +27,14 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/embedding/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/embedding/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-image-cm
+  name: {{ .Release.Name }}-image-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.image }}
@@ -43,14 +43,14 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/image/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/image/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-realtime-cm
+  name: {{ .Release.Name }}-realtime-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.realtime }}
@@ -59,14 +59,14 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/realtime/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/realtime/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-rerank-cm
+  name: {{ .Release.Name }}-rerank-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.rerank }}
@@ -75,14 +75,14 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/rerank/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/rerank/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-speech-cm
+  name: {{ .Release.Name }}-speech-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.speech }}
@@ -91,13 +91,13 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/speech/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/speech/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-transcription-cm
+  name: {{ .Release.Name }}-transcription-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.transcription }}
@@ -106,14 +106,14 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/transcription/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/transcription/*.ejs").AsConfig | indent 2 }}
 {{- end }}
 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-translation-cm
+  name: {{ .Release.Name }}-translation-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
 {{- if .Values.configs.codeSnippet.translation }}
@@ -122,5 +122,5 @@ data:
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
-{{ (.Files.Glob "files/translation/*.ejs").AsConfig | indent 2 }}
+{{ (.Files.Glob "files/codesnippet/translation/*.ejs").AsConfig | indent 2 }}
 {{- end }}
