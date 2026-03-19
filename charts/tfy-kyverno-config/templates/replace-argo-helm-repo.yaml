@@ -1,48 +1,85 @@
 {{- if .Values.replaceArgoHelmRepo.enabled -}}
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+{{- $overrides := dict }}
+{{- $wildcard := "" }}
+{{- range $source, $target := .Values.replaceArgoHelmRepo.registryReplacementMap }}
+  {{- if eq $source "*" }}
+    {{- $wildcard = $target }}
+  {{- else }}
+    {{- $_ := set $overrides $source $target }}
+  {{- end }}
+{{- end }}
+{{- $url := "object.spec.source.repoURL" }}
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
 metadata:
   name: {{ include "tfy-kyverno.fullname" . }}-replace-argo-helm-repo
   namespace: {{ .Release.Namespace }}
 spec:
-  background: false
-  rules:
-  - name: replace-argo-helm-repo
-    exclude:
-      resources:
-        namespaces:
-        - kube-system
-        - kube-public
-        - kube-node-lease
-        {{- range .Values.replaceArgoHelmRepo.excludeNamespaces }}
-        - {{.}}
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kube-public
+            - kube-node-lease
+            {{- range .Values.replaceArgoHelmRepo.excludeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- if .Values.replaceArgoHelmRepo.includeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            {{- range .Values.replaceArgoHelmRepo.includeNamespaces }}
+            - {{ . }}
+            {{- end }}
         {{- end }}
-    context:
-      - name: newRegistry
-        variable:
-          value: {{ .Values.replaceArgoHelmRepo.newRegistry }}
-    match:
-      any:
-      - resources:
-          kinds:
-            - argoproj.io/v1alpha1/Application
-          operations:
-            - CREATE
-            - UPDATE
-          {{- if .Values.replaceArgoHelmRepo.includeNamespaces }}
-          namespaces:
-          {{- range .Values.replaceArgoHelmRepo.includeNamespaces }}
-            - {{.}}
-          {{- end }}
-          {{- end }}
-    preconditions:
-      all:
-        - key: "{{`'{{request.object.spec.source.helm}}'`}}"
-          operator: NotEquals
-          value: ""
-    mutate:
-      patchStrategicMerge:
-        spec:
-          source:
-            repoURL: {{`"{{ regex_replace_all_literal('^(https?://)?[^/]+', '{{request.object.spec.source.repoURL}}', '{{newRegistry}}' )}}"`}}
+    resourceRules:
+      - apiGroups:
+          - argoproj.io
+        apiVersions:
+          - v1alpha1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - applications
+  matchConditions:
+    - name: has-helm-source
+      expression: "has(object.spec.source) && has(object.spec.source.helm)"
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >
+          Object{
+            spec: Object.spec{
+              source: Object.spec.source{
+                repoURL:
+                {{- range $source, $target := $overrides }}
+                  {{ $url }}.startsWith({{ $source | quote }})
+                  ? {{ $target | quote }}
+                :
+                {{- end }}
+                {{- if $wildcard }}
+                  {{ $url }}.startsWith({{ $wildcard | quote }})
+                  ? {{ $url }}
+                  : {{ $wildcard | quote }} + {{ $url }}.substring(
+                      {{ $url }}.contains("://")
+                        ? {{ $url }}.indexOf("/", {{ $url }}.indexOf("://") + 3)
+                        : {{ $url }}.indexOf("/"),
+                      {{ $url }}.endsWith("/")
+                        ? {{ $url }}.size() - 1
+                        : {{ $url }}.size())
+                {{- else }}
+                  {{ $url }}
+                {{- end }}
+              }
+            }
+          }
+  evaluation:
+    admission:
+      enabled: true
+  webhookConfiguration:
+    timeoutSeconds: 10
 {{- end -}}
