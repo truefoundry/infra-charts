@@ -1,62 +1,91 @@
 {{- if .Values.replaceImageRegistry.enabled -}}
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+{{- $overrides := dict }}
+{{- $wildcard := "" }}
+{{- range $source, $target := .Values.replaceImageRegistry.registryReplacementMap }}
+  {{- if eq $source "*" }}
+    {{- $wildcard = $target }}
+  {{- else }}
+    {{- $_ := set $overrides $source $target }}
+  {{- end }}
+{{- end }}
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
 metadata:
   name: {{ include "tfy-kyverno.fullname" . }}-replace-image-registry
   namespace: {{ .Release.Namespace }}
 spec:
-  background: false
-  rules:
-  - name: redirect-docker
-    exclude:
-      resources:
-        namespaces:
-        - kube-system
-        - kube-public
-        - kube-node-lease
-        {{- range .Values.replaceImageRegistry.excludeNamespaces }}
-        - {{.}}
+  matchConstraints:
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            - kube-system
+            - kube-public
+            - kube-node-lease
+            {{- range .Values.replaceImageRegistry.excludeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- if .Values.replaceImageRegistry.includeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            {{- range .Values.replaceImageRegistry.includeNamespaces }}
+            - {{ . }}
+            {{- end }}
         {{- end }}
-    match:
-      any:
-      - resources:
-          kinds:
-            - Pod
-          operations:
-            - CREATE
-            - UPDATE
-          {{- if .Values.replaceImageRegistry.includeNamespaces }}
-          namespaces:
-          {{- range .Values.replaceImageRegistry.includeNamespaces }}
-          - {{.}}
-          {{- end }}
-          {{- end }}
-    mutate:
-      foreach:
-      - list: "request.object.spec.containers"
-        context:
-          - name: newRegistry
-            variable:
-              value: {{ .Values.replaceImageRegistry.newRegistry }}
-          - name: normalizedImageURL
-            variable:
-              value: {{`"{{image_normalize('{{ regex_replace_all_literal('@.*$', '{{element.image}}', '')}}')}}"`}}
-        patchStrategicMerge:
-          spec:
-            containers:
-            - name: {{`"{{ element.name }}"`}}
-              image: {{`"{{ regex_replace_all_literal('^[^/]+', '{{normalizedImageURL}}', '{{newRegistry}}' )}}"`}}
-      - list: "request.object.spec.initContainers || []"
-        context:
-          - name: newRegistry
-            variable:
-              value: {{ .Values.replaceImageRegistry.newRegistry }}
-          - name: normalizedImageURL
-            variable:
-              value: {{`"{{image_normalize('{{ regex_replace_all_literal('@.*$', '{{element.image}}', '')}}')}}"`}}
-        patchStrategicMerge:
-          spec:
-            initContainers:
-            - name: {{`"{{ element.name }}"`}}
-              image: {{`"{{ regex_replace_all_literal('^[^/]+', '{{normalizedImageURL}}', '{{newRegistry}}' )}}"`}}
+    resourceRules:
+      - apiGroups:
+          - ""
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: |
+          Object{
+            spec: Object.spec{
+              containers: object.spec.containers.map(c,
+                Object.spec.containers{
+                  name: c.name,
+                  image:
+                  {{- range $source, $target := $overrides }}
+                    c.image.startsWith('{{ $source }}/') ? '{{ $target }}/' + c.image.substring({{ add (len $source) 1 }}) :
+                  {{- end }}
+                  {{- if $wildcard }}
+                    c.image.startsWith('{{ $wildcard }}/') ? c.image :
+                    '{{ $wildcard }}/' + (c.image.contains('/') ? c.image.substring(c.image.indexOf('/') + 1) : c.image)
+                  {{- else }}
+                    c.image
+                  {{- end }}
+                }
+              ),
+              initContainers: has(object.spec.initContainers) ?
+                object.spec.initContainers.map(c,
+                  Object.spec.initContainers{
+                    name: c.name,
+                    image:
+                    {{- range $source, $target := $overrides }}
+                      c.image.startsWith('{{ $source }}/') ? '{{ $target }}/' + c.image.substring({{ add (len $source) 1 }}) :
+                    {{- end }}
+                    {{- if $wildcard }}
+                      c.image.startsWith('{{ $wildcard }}/') ? c.image :
+                      '{{ $wildcard }}/' + (c.image.contains('/') ? c.image.substring(c.image.indexOf('/') + 1) : c.image)
+                    {{- else }}
+                      c.image
+                    {{- end }}
+                  }
+                ) : []
+            }
+          }
+  evaluation:
+    admission:
+      enabled: true
+  webhookConfiguration:
+    timeoutSeconds: 10
 {{- end -}}

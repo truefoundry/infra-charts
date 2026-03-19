@@ -35,10 +35,14 @@ replaceImageRegistry:
   excludeNamespaces: []
 
   ## @param replaceImageRegistry.includeNamespaces Namespaces to include from replacing the image registry. When non-empty, only these namespaces will be included
-  includeNamespaces: [""]
+  includeNamespaces: []
 
-  ## @param replaceImageRegistry.newRegistry The new image registry to use
-  newRegistry: "random.example.com"
+  ## @param replaceImageRegistry.registryReplacementMap Map of source registry prefixes to target registries.
+  ## Use "*" as wildcard default (strips source registry, keeps image path). Per-source overrides take priority.
+  ## Example:
+  ##   "*": "registry.organization.com"
+  ##   "docker.io": "registry.organization.com/dockerhub-mirror"
+  registryReplacementMap: {}
 
 ## @section replaceArgoHelmRepo Configuration options for replacing the Argo Helm repository
 replaceArgoHelmRepo:
@@ -48,10 +52,14 @@ replaceArgoHelmRepo:
   excludeNamespaces: []
 
   ## @param replaceArgoHelmRepo.includeNamespaces Namespaces to include for replacing the argo helm repo. When non-empty, only these namespaces will be included
-  includeNamespaces: [""]
+  includeNamespaces: []
 
-  ## @param replaceArgoHelmRepo.newRegistry The new Argo Helm registry URL
-  newRegistry: ""
+  ## @param replaceArgoHelmRepo.registryReplacementMap Map of source repoURL prefixes to target registries.
+  ## Use "*" as wildcard default (strips host, keeps path). Per-source overrides take priority.
+  ## Example:
+  ##   "*": "registry.organization.com"
+  ##   "https://truefoundry.github.io/infra-charts/": "registry.organization.com/helm/infra-charts"
+  registryReplacementMap: {}
 
 ## @param additionalKyvernoPolicies Additional Kyverno clusterpolicies to apply
 additionalKyvernoPolicies: []
