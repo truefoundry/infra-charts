@@ -3,7 +3,7 @@ TFY Configs is a Helm chart that allows configuring TrueFoundry Platform Feature
 
 ## Parameters
 
-### Global parameters for Various Configurations
+### Global prameters for Various Configurations
 
 | Name                       | Description                                                                      | Value |
 | -------------------------- | -------------------------------------------------------------------------------- | ----- |
