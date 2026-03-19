@@ -3,7 +3,7 @@ TFY Configs is a Helm chart that allows configuring TrueFoundry Platform Feature
 
 ## Parameters
 
-### Global parameters for Various Configurations
+### Global prameters for Various Configurations
 
 | Name                       | Description                                                                      | Value |
 | -------------------------- | -------------------------------------------------------------------------------- | ----- |
@@ -17,11 +17,3 @@ TFY Configs is a Helm chart that allows configuring TrueFoundry Platform Feature
 | `configs.imageMutationPolicyOverride`         | Image mutation configuration. Please refer to files/image-mutation-policy.yaml for default values and format.                                                                                                                               | `{}`      |
 | `configs.k8sManifestValidationPolicyOverride` | K8s manifest validation policy configuration. Please refer to files/k8s-manifest-validation-policy.yaml for default values and format.                                                                                                      | `{}`      |
 | `configs.cicdTemplates`                       | CICD templates configuration. Please refer to files/cicd-templates.yaml for default values and format. key of this map is yaml file name and value is the file contents. You must have a key named `cicd-providers.yaml` in this dictionary | `{}`      |
-| `configs.codeSnippet.chat`                    | Chat templates configuration. Please refer to files/chat.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                              | `{}`      |
-| `configs.codeSnippet.embedding`               | Embedding templates configuration. Please refer to files/embedding.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                    | `{}`      |
-| `configs.codeSnippet.image`                   | Image templates configuration. Please refer to files/image.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                            | `{}`      |
-| `configs.codeSnippet.realtime`                | Realtime templates configuration. Please refer to files/realtime.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                      | `{}`      |
-| `configs.codeSnippet.rerank`                  | Rerank templates configuration. Please refer to files/rerank.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                          | `{}`      |
-| `configs.codeSnippet.speech`                  | Speech templates configuration. Please refer to files/speech.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                          | `{}`      |
-| `configs.codeSnippet.transcription`           | Transcription templates configuration. Please refer to files/transcription.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                            | `{}`      |
-| `configs.codeSnippet.translation`             | Translation templates configuration. Please refer to files/translation.yaml for default values and format. key of this map is yaml file name and value is the file contents.                                                                | `{}`      |
