@@ -1,5 +1,5 @@
-apiVersion: karpenter.k8s.aws/v1
-kind: EC2NodeClass
+apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
+kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
   name: {{ .Values.karpenter.defaultNodeTemplate.name }}
 spec:
@@ -21,10 +21,6 @@ spec:
         {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
-  {{- if .Values.karpenter.defaultNodeTemplate.metadataOptions }}
-  metadataOptions:
-    {{- toYaml .Values.karpenter.defaultNodeTemplate.metadataOptions | nindent 4 }}
-  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: default
@@ -32,6 +28,17 @@ spec:
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.eksAutoMode.enabled }}
+  ephemeralStorage:
+    size: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize | quote }}
+    {{- if .Values.karpenter.defaultNodeTemplate.kmsKeyID }}
+    kmsKeyID: {{ .Values.karpenter.defaultNodeTemplate.kmsKeyID }}
+    {{- end }}
+  {{- else }}
+  {{- if .Values.karpenter.defaultNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.defaultNodeTemplate.metadataOptions | nindent 4 }}
   {{- end }}
   {{- if .Values.karpenter.defaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
@@ -69,4 +76,5 @@ spec:
   {{- end }}
   {{- if not (eq .Values.karpenter.defaultNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.defaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}
   {{- end }}

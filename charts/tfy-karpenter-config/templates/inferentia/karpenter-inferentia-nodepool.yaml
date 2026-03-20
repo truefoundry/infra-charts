@@ -39,7 +39,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.inferentiaNodePool.instanceFamilies.allowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
           {{- range .Values.karpenter.inferentiaNodePool.instanceFamilies.allowed }}
@@ -47,7 +47,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
@@ -55,7 +55,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.inferentiaNodePool.instanceSizes.allowed }}
-        - key: karpenter.k8s.aws/instance-size
+        - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
           operator: In
           values:
           {{- range .Values.karpenter.inferentiaNodePool.instanceSizes.allowed  }}
@@ -63,7 +63,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.inferentiaNodePool.instanceSizes.notAllowed }}
-        - key: karpenter.k8s.aws/instance-size
+        - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.inferentiaNodePool.instanceSizes.notAllowed  }}
@@ -77,8 +77,8 @@ spec:
         - key: "aws.amazon.com/neuron"
           effect: "NoSchedule"
       nodeClassRef:
-        group: karpenter.k8s.aws
-        kind: EC2NodeClass
+        group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
+        kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
         name: {{ .Values.karpenter.inferentiaDefaultNodeTemplate.name }}
   {{- if .Values.karpenter.inferentiaNodePool.weight }}
   weight: {{ .Values.karpenter.inferentiaNodePool.weight }}
