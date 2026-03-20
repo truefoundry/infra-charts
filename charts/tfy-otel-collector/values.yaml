@@ -47,7 +47,7 @@ env:
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
-  SENTRY_ENABLED: "true"
+  SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
   DELTAFUSION_INGESTOR_BASE_URL: http://{{ .Release.Name }}-deltafusion-ingestor:8000
   SFY_SERVER_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
   SFY_SERVER_REQUEST_TIMEOUT: 30s
@@ -73,7 +73,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.129.0
+  tag: v0.130.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
