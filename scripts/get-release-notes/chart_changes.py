@@ -17,7 +17,7 @@ GITHUB_API_HEADERS = {
 
 image_repo_mapping = {
     "tfy-workflow-admin": "tfy-flyte",
-    "spark-history-server": "spark",
+    "tfy-proxy": "truefoundry-frontend-app"
 }
 
 
@@ -79,16 +79,82 @@ def extract_pr_number(message: str) -> Optional[str]:
     return match.group(1) or match.group(2) if match else None
 
 
+# Bugbot wraps the summary in HTML comments; attribution uses a markdown link, e.g.
+# Written by [Cursor Bugbot](https://cursor.com/...), so a plain "written by cursor bugbot" substring fails.
+_CURSOR_SUMMARY_RE = re.compile(
+    r"<!--\s*CURSOR_SUMMARY\s*-->\s*(.*?)\s*<!--\s*/CURSOR_SUMMARY\s*-->",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def _get_pr_body(repo: str, pull_number: str) -> str:
+    """PR description (what GitHub deep-links as #issue-<node> on the PR page)."""
+    url = f"https://api.github.com/repos/truefoundry/{repo}/pulls/{pull_number}"
+    try:
+        resp = requests.get(url, headers=GITHUB_API_HEADERS)
+        resp.raise_for_status()
+        return (resp.json().get("body") or "").strip()
+    except requests.RequestException as e:
+        print(f"⚠️ Failed to get PR body for {repo}#{pull_number}: {e}")
+        return ""
+
+
+def _strip_coderabbit_tail(text: str) -> str:
+    """Drop CodeRabbit's appended section so mixed bodies stay Cursor-only."""
+    parts = re.split(
+        r"<!--\s*This is an auto-generated comment:\s*release notes by coderabbit\.ai\s*-->",
+        text,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )
+    text = parts[0]
+    parts = re.split(r"##\s*Summary by CodeRabbit\b", text, maxsplit=1, flags=re.IGNORECASE)
+    return parts[0].rstrip()
+
+
+def _clean_cursor_summary_text(text: str) -> str:
+    """Normalize extracted Bugbot markdown: leading rule, HTML <sup> footer."""
+    text = text.strip()
+    text = re.sub(r"^[\s\r\n]*---+[\s\r\n]+", "", text)
+    text = re.sub(r"<sup\b[^>]*>.*?</sup>\s*", "", text, flags=re.DOTALL | re.IGNORECASE)
+    return text.strip()
+
+
+def _trim_to_note_block_if_present(text: str) -> str:
+    """If the body still has a PR template above the Bugbot note, keep from > [!NOTE] onward."""
+    m = re.search(r"^>\s*\[!NOTE\]", text, re.MULTILINE)
+    return text[m.start() :].strip() if m else text
+
+
+def get_cursor_pr_description(repo: str, pr_number: str) -> str:
+    pr_body = _get_pr_body(repo, pr_number)
+    if not pr_body:
+        return ""
+
+    m = _CURSOR_SUMMARY_RE.search(pr_body)
+    if m:
+        return _clean_cursor_summary_text(m.group(1))
+
+    if re.search(r"cursor\s*bugbot", pr_body, re.IGNORECASE):
+        text = _strip_coderabbit_tail(pr_body)
+        text = _clean_cursor_summary_text(text)
+        return _trim_to_note_block_if_present(text)
+
+    return ""
+
+
 def enrich_commit(commit: dict, repo: str) -> Dict:
     commit_info = {
         "author": commit.get("commit", {}).get("author", {}),
         "message": commit.get("commit", {}).get("message", ""),
         "commit_url": commit.get("html_url", ""),
-        "pull_request": ""
+        "pull_request": "",
+        "description": "",
     }
     pr_num = extract_pr_number(commit_info["message"])
     if pr_num:
         commit_info["pull_request"] = f"https://github.com/truefoundry/{repo}/pull/{pr_num}"
+        commit_info["description"] = get_cursor_pr_description(repo, pr_num)
     return commit_info
 
 
