@@ -1,6 +1,15 @@
 # karpenter-config helm chart packaged by TrueFoundry
 A Helm chart for Karpenter provisioners.
 
+## EKS Auto Mode
+
+Set `karpenter.eksAutoMode.enabled=true` to render `eks.amazonaws.com/v1` `NodeClass` resources and update `NodePool.spec.template.spec.nodeClassRef` to:
+
+- `group: eks.amazonaws.com`
+- `kind: NodeClass`
+
+When `karpenter.eksAutoMode.enabled=false` (default), the chart continues to render `karpenter.k8s.aws/v1` `EC2NodeClass` resources.
+
 ## Soci
 
 You can add [soci-snapshotter](https://github.com/awslabs/soci-snapshotter) in the nodes brought up by Karpenter using the `userData` field in the `EC2NodeClass` resource.
@@ -65,6 +74,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | Name                                                             | Description                                                                                                                                                                                                 | Value                        |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | `karpenter.instanceProfile`                                      | Instance profile of the karpenter                                                                                                                                                                           | `""`                         |
+| `karpenter.eksAutoMode.enabled`                                  | Enable EKS Auto Mode NodeClass rendering (NodeClass) instead of Karpenter EC2NodeClass.                                                                                                                     | `false`                      |
 | `karpenter.defaultNodeTemplate.name`                             | Name of the AWS node class                                                                                                                                                                                  | `default`                    |
 | `karpenter.defaultNodeTemplate.instanceProfile`                  | Instance profile override for the node template                                                                                                                                                             | `""`                         |
 | `karpenter.defaultNodeTemplate.rootVolumeSize`                   | Size for the root volume attached to node                                                                                                                                                                   | `100Gi`                      |
@@ -195,7 +205,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 | `karpenter.critical.instanceSizes.notAllowed`         | Not allowed instance sizes for the critical node pool                                  | `[]`                    |
 | `karpenter.critical.limits`                           | compute limits for the critical node pool                                              | `{}`                    |
 | `karpenter.critical.additionalRequirements`           | List of additional requirements for critical node pool                                 | `[]`                    |
-| `karpenter.critical.nodeclass.create`                 | Specifies if the EC2 nodeclass with nodeclass.name should be created                   | `true`                  |
+| `karpenter.critical.nodeclass.create`                 | Specifies if a nodeclass with nodeclass.name should be created                         | `true`                  |
 | `karpenter.critical.nodeclass.name`                   | Name of the nodeclass. If create is not set, existing nodeclass is used.               | `[]`                    |
 | `karpenter.critical.nodeclass.instanceProfile`        | Instance profile override for the node template                                        | `""`                    |
 | `karpenter.critical.nodeclass.rootVolumeSize`         | Size for the root volume attached to the node                                          | `100Gi`                 |

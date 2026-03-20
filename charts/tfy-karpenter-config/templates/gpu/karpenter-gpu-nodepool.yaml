@@ -24,8 +24,8 @@ spec:
         {{- end }}
     spec:
       nodeClassRef:
-        group: karpenter.k8s.aws
-        kind: EC2NodeClass
+        group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
+        kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
         name: {{ .Values.karpenter.gpuDefaultNodeTemplate.name }}
       requirements:
         {{- if .Values.karpenter.gpuNodePool.capacityTypes }}
@@ -53,7 +53,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
           {{- range .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
@@ -61,7 +61,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed  }}
@@ -69,7 +69,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.gpuNodePool.instanceSizes.notAllowed }}
-        - key: karpenter.k8s.aws/instance-size
+        - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.gpuNodePool.instanceSizes.notAllowed }}

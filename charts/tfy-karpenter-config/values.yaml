@@ -12,6 +12,11 @@ karpenter:
   ##
   instanceProfile: ""
 
+  eksAutoMode:
+    ## @param karpenter.eksAutoMode.enabled Enable EKS Auto Mode NodeClass rendering (NodeClass) instead of Karpenter EC2NodeClass.
+    ##
+    enabled: false
+
   ## Default Node Template Config
   defaultNodeTemplate:
     ## @param karpenter.defaultNodeTemplate.name Name of the AWS node class
@@ -428,7 +433,7 @@ karpenter:
     additionalRequirements: []
 
     nodeclass:
-      ## @param karpenter.critical.nodeclass.create Specifies if the EC2 nodeclass with nodeclass.name should be created
+      ## @param karpenter.critical.nodeclass.create Specifies if a nodeclass with nodeclass.name should be created
       create: true
       ## @param karpenter.critical.nodeclass.name [array] Name of the nodeclass. If create is not set, existing nodeclass is used.
       name: "tfy-critical-node-template"

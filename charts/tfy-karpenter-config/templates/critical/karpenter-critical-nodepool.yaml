@@ -10,8 +10,8 @@ spec:
         {{- .Values.karpenter.critical.labels | toYaml | nindent 8 }}
     spec:
       nodeClassRef:
-        group: karpenter.k8s.aws
-        kind: EC2NodeClass
+        group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
+        kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
         name: {{ .Values.karpenter.critical.nodeclass.name }}
       requirements:
         {{- if .Values.karpenter.critical.capacityTypes }}
@@ -38,16 +38,18 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
+        {{- if not .Values.karpenter.eksAutoMode.enabled }}
         - key: kubernetes.io/os
           operator: In
           values:
           - linux
-        - key: karpenter.k8s.aws/instance-generation
+        {{- end }}
+        - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
             - "4"
         {{- if .Values.karpenter.critical.instanceFamilies.allowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
           {{- range .Values.karpenter.critical.instanceFamilies.allowed }}
@@ -55,7 +57,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.critical.instanceFamilies.notAllowed }}
-        - key: karpenter.k8s.aws/instance-family
+        - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.critical.instanceFamilies.notAllowed }}
@@ -63,7 +65,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.critical.instanceSizes.allowed }}
-        - key: karpenter.k8s.aws/instance-size
+        - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
           operator: In
           values:
           {{- range .Values.karpenter.critical.instanceSizes.allowed  }}
@@ -71,7 +73,7 @@ spec:
           {{- end }}
         {{- end }}
         {{- if .Values.karpenter.critical.instanceSizes.notAllowed }}
-        - key: karpenter.k8s.aws/instance-size
+        - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
           operator: NotIn
           values:
           {{- range .Values.karpenter.critical.instanceSizes.notAllowed  }}

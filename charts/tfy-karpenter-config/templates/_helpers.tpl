@@ -120,3 +120,51 @@ Control plane taints
     al2023
   {{- end -}}
 {{- end -}}
+
+{{- define "tfyKarpenterConfig.nodeClassApiVersion" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com/v1
+{{- else -}}
+karpenter.k8s.aws/v1
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.nodeClassKind" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+NodeClass
+{{- else -}}
+EC2NodeClass
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.nodeClassGroup" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com
+{{- else -}}
+karpenter.k8s.aws
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.instanceFamilyRequirementKey" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com/instance-family
+{{- else -}}
+karpenter.k8s.aws/instance-family
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.instanceSizeRequirementKey" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com/instance-size
+{{- else -}}
+karpenter.k8s.aws/instance-size
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.instanceGenerationRequirementKey" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com/instance-generation
+{{- else -}}
+karpenter.k8s.aws/instance-generation
+{{- end -}}
+{{- end -}}
