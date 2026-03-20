@@ -44,7 +44,7 @@ The solution consists of two main components:
 | `victoria-logs-single.global.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                         |
 | `victoria-logs-single.server.image.registry`          | Image registry                                                                        | `tfy.jfrog.io/tfy-mirror`                         |
 | `victoria-logs-single.server.retentionPeriod`         | Retention period                                                                      | `15d`                                             |
-| `victoria-logs-single.server.retentionDiskSpaceUsage` | Retention disk space usage, this is kept to be 6-8% smaller than the total disk space | `46`                                              |
+| `victoria-logs-single.server.retentionMaxDiskUsagePercent` | Maximum disk usage percentage for retention                                           | `85`                                              |
 | `victoria-logs-single.server.persistentVolume.size`   | Persistent volume size                                                                | `50Gi`                                            |
 | `victoria-logs-single.server.resources`               | Resources                                                                             | `{}`                                              |
 | `victoria-logs-single.server.affinity`                | Affinity                                                                              | `{}`                                              |
