@@ -1,0 +1,97 @@
+<%const USE_STREAM = (stream === true);%>
+<% if (USE_STREAM) { %>
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;<% } else { %>
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;<% } %>
+import dev.langchain4j.model.output.Response;
+import java.util.Map;
+import java.util.HashMap;
+
+public class LangChain4jExample {
+  <% if (USE_STREAM) { %>
+  public static class StreamingChatService {
+    private final StreamingChatLanguageModel model;
+
+    public StreamingChatService() {
+        Map<String, String> customHeaders = createCustomHeaders();
+
+        this.model = OpenAiStreamingChatModel.builder()
+            .apiKey("<%= api_key %>")
+            .baseUrl("<%= endpoint %>")
+            .modelName("<%= model %>")
+            .customHeaders(customHeaders)<% if (params && params.temperature !== undefined) { %>
+            .temperature(<%= params.temperature %>)<% } %><% if (params && params.max_tokens !== undefined) { %>
+            .maxTokens(<%= params.max_tokens %>)<% } %>
+            .logRequests(true)
+            .logResponses(true)
+            .build();
+    }
+
+    public void generateStreamingResponse(String prompt) {
+        model.generate(prompt, new StreamingResponseHandler<AiMessage>() {
+            @Override
+            public void onNext(String token) {
+                System.out.print(token);
+                System.out.flush();
+            }
+
+            @Override
+            public void onComplete(Response<AiMessage> response) {
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                error.printStackTrace();
+            }
+        });
+    }
+  }
+  <% } else { %>
+  public static class NonStreamingChatService {
+    private final ChatLanguageModel model;
+
+    public NonStreamingChatService() {
+        Map<String, String> customHeaders = createCustomHeaders();
+
+        this.model = OpenAiChatModel.builder()
+            .apiKey("<%= api_key %>")
+            .baseUrl("<%= endpoint %>")
+            .modelName("<%= model %>")
+            .customHeaders(customHeaders)<% if (params && params.temperature !== undefined) { %>
+            .temperature(<%= params.temperature %>)<% } %><% if (params && params.max_tokens !== undefined) { %>
+            .maxTokens(<%= params.max_tokens %>)<% } %>
+            .logRequests(true)
+            .logResponses(true)
+            .build();
+    }
+
+    public void generateResponse(String prompt) {
+        System.out.println(model.generate(prompt));
+    }
+  }
+  <% } %>
+  private static Map<String, String> createCustomHeaders() {
+    Map<String, String> customHeaders = new HashMap<>();
+    customHeaders.put("X-TFY-METADATA", "<%- JSON.stringify(custom_metadata).replace(/"/g, '\\"') %>");
+    <% if ((input_guardrails && input_guardrails.length> 0) || (output_guardrails && output_guardrails.length > 0)) { %>
+    customHeaders.put("X-TFY-GUARDRAILS", "<%- JSON.stringify({llm_input_guardrails: input_guardrails,
+      llm_output_guardrails: output_guardrails}).replace(/"/g, '\\"' ) %>");<% } %><% if (routing_config && routing_config.type && routing_config.load_balance_targets.length > 0) { %>
+    customHeaders.put("X-TFY-ROUTING-CONFIG", "<%- JSON.stringify(routing_config).replace(/"/g, '\\"') %>");<% } %><% if (include_cache_config) { %>
+    customHeaders.put("X-TFY-CACHE-CONFIG", "<%- JSON.stringify(cache_config).replace(/"/g, '\\"') %>");<% } %>
+    customHeaders.put("X-TFY-LOGGING-CONFIG", "{\"enabled\": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, \"tracing_project_fqn\": \"<%= request_logging_tracing_project_fqn %>\"<% } %>}");
+    return customHeaders;
+  }
+
+  public static void main(String[] args) {
+    <% if (USE_STREAM) { %>
+    StreamingChatService streamingService = new StreamingChatService();
+    streamingService.generateStreamingResponse("<%= prompt %>");
+    <% } else { %>
+    NonStreamingChatService syncService = new NonStreamingChatService();
+    syncService.generateResponse("<%= prompt %>");
+    <% } %>
+  }
+}

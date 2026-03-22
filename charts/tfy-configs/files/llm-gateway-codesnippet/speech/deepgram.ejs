@@ -1,0 +1,27 @@
+from deepgram import DeepgramClient
+from deepgram.environment import DeepgramClientEnvironment
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+env = DeepgramClientEnvironment(
+    base=BASE_URL,
+    production="",
+    agent="",
+)
+
+client = DeepgramClient(
+    api_key=TFY_API_KEY,
+    environment=env,
+)
+
+response = client.speak.v1.audio.generate(
+    text="Hello! This is a test of Deepgram text to speech via SDK through the gateway.",
+    model="<%= model %>",
+)
+
+with open("speech.mp3", "wb") as f:
+    for chunk in response:
+        f.write(chunk)
+
+print("Audio saved to speech.mp3")

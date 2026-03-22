@@ -1,0 +1,40 @@
+import requests
+import langgraph.graph as lg
+
+def embedding(state):
+    try:
+        response = requests.post(
+            "<%= endpoint %>/embeddings",
+            headers={
+                "Authorization": "Bearer <%= api_key %>",
+                "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+                "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',
+                "Content-Type": "application/json"
+            },
+            json={
+                "input": "<%= prompt %>",
+                "model": "<%= model %>"
+            }
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        print(result)
+
+        return result
+    except Exception as e:
+        print("An error occurred:", str(e))
+        return state
+
+graph = lg.Graph()
+graph.add_node("embedding", embedding)
+graph.set_entry_point("embedding")
+
+app = graph.compile()
+
+if __name__ == "__main__":
+    try:
+        for output in app.stream({}):
+            pass
+    except Exception as e:
+        print("An error occurred:", str(e))
