@@ -1,126 +1,182 @@
+{{- $chat := .Values.configs.codeSnippet.chat }}
+{{- if $chat.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-chat-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.chat }}
-  {{- range $key, $value := .Values.configs.codeSnippet.chat }}
+{{- if $chat.override }}
+  {{- range $key, $value := $chat.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/chat/*.ejs").AsConfig | indent 2 }}
 {{- end }}
-
+{{- range $key, $value := $chat.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $embedding := .Values.configs.codeSnippet.embedding }}
+{{- if $embedding.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-embedding-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.embedding }}
-  {{- range $key, $value := .Values.configs.codeSnippet.embedding }}
+{{- if $embedding.override }}
+  {{- range $key, $value := $embedding.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/embedding/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $embedding.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $image := .Values.configs.codeSnippet.image }}
+{{- if $image.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-image-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.image }}
-  {{- range $key, $value := .Values.configs.codeSnippet.image }}
+{{- if $image.override }}
+  {{- range $key, $value := $image.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/image/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $image.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $realtime := .Values.configs.codeSnippet.realtime }}
+{{- if $realtime.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-realtime-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.realtime }}
-  {{- range $key, $value := .Values.configs.codeSnippet.realtime }}
+{{- if $realtime.override }}
+  {{- range $key, $value := $realtime.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/realtime/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $realtime.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $rerank := .Values.configs.codeSnippet.rerank }}
+{{- if $rerank.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-rerank-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.rerank }}
-  {{- range $key, $value := .Values.configs.codeSnippet.rerank }}
+{{- if $rerank.override }}
+  {{- range $key, $value := $rerank.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/rerank/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $rerank.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $speech := .Values.configs.codeSnippet.speech }}
+{{- if $speech.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-speech-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.speech }}
-  {{- range $key, $value := .Values.configs.codeSnippet.speech }}
+{{- if $speech.override }}
+  {{- range $key, $value := $speech.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/speech/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $speech.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+
 ---
+{{- $transcription := .Values.configs.codeSnippet.transcription }}
+{{- if $transcription.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-transcription-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.transcription }}
-  {{- range $key, $value := .Values.configs.codeSnippet.transcription }}
+{{- if $transcription.override }}
+  {{- range $key, $value := $transcription.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/transcription/*.ejs").AsConfig | indent 2 }}
 {{- end }}
+{{- range $key, $value := $transcription.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
 
 ---
+{{- $translation := .Values.configs.codeSnippet.translation }}
+{{- if $translation.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-translation-codesnippet-cm
   namespace: {{ include "global.namespace" . }}
 data:
-{{- if .Values.configs.codeSnippet.translation }}
-  {{- range $key, $value := .Values.configs.codeSnippet.translation }}
+{{- if $translation.override }}
+  {{- range $key, $value := $translation.override }}
   {{ $key }}: |
 {{ $value | indent 4 }}
   {{- end }}
 {{- else }}
 {{ (.Files.Glob "files/llm-gateway-codesnippet/translation/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $translation.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
 {{- end }}
