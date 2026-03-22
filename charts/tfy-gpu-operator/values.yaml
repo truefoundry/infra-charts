@@ -69,7 +69,7 @@ aws-eks-gpu-operator:
   ## CDI configuration.
   cdi:
     ## @param aws-eks-gpu-operator.cdi.enabled Enable/Disable CDI installation.
-    enabled: false
+    enabled: true
 
   ## Toolkit configuration.
   toolkit:
@@ -81,8 +81,6 @@ aws-eks-gpu-operator:
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
         value: "false"
-      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: "true"
     ## @param aws-eks-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
     resources:
       requests:
@@ -101,7 +99,7 @@ aws-eks-gpu-operator:
       - name: PASS_DEVICE_SPECS
         value: "true"
       - name: DEVICE_LIST_STRATEGY
-        value: "volume-mounts,cdi-annotations"
+        value: "cdi-annotations,cdi-cri"
       - name: DEVICE_ID_STRATEGY
         value: index
       - name: NVIDIA_MIG_MONITOR_DEVICES
@@ -1490,7 +1488,7 @@ generic-gpu-operator:
   ## CDI configuration.
   cdi:
     ## @param generic-gpu-operator.cdi.enabled Enable/Disable CDI installation.
-    enabled: false
+    enabled: true
 
   ## Driver configuration
   driver:
@@ -1532,8 +1530,6 @@ generic-gpu-operator:
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
         value: "false"
-      - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_AS_VOLUME_MOUNTS
-        value: "true"
     ## @param generic-gpu-operator.toolkit.resources [object] Resources for the container toolkit.
     resources:
       requests:
@@ -1552,7 +1548,7 @@ generic-gpu-operator:
       - name: PASS_DEVICE_SPECS
         value: "true"
       - name: DEVICE_LIST_STRATEGY
-        value: "volume-mounts,cdi-annotations"
+        value: "cdi-annotations,cdi-cri"
       - name: DEVICE_ID_STRATEGY
         value: index
       - name: NVIDIA_MIG_MONITOR_DEVICES
