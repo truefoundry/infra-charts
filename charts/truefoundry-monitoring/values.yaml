@@ -33,39 +33,51 @@ prometheus:
   ## @param prometheus.enabled Install a dedicated Prometheus for control plane monitoring
   enabled: true
 
-  ## Clean object names (avoids redundant suffixes like -prometheus-prometheus)
+  ## @param prometheus.cleanPrometheusOperatorObjectNames Clean object names (avoids redundant suffixes)
   cleanPrometheusOperatorObjectNames: true
 
   ## Disable components not needed for control plane monitoring
+  ## @skip prometheus.grafana
   grafana:
     enabled: false
+  ## @skip prometheus.nodeExporter
   nodeExporter:
     enabled: false
+  ## @skip prometheus.windowsMonitoring
   windowsMonitoring:
     enabled: false
+  ## @skip prometheus.kubeApiServer
   kubeApiServer:
     enabled: false
+  ## @skip prometheus.kubeControllerManager
   kubeControllerManager:
     enabled: false
+  ## @skip prometheus.kubeEtcd
   kubeEtcd:
     enabled: false
+  ## @skip prometheus.kubeScheduler
   kubeScheduler:
     enabled: false
+  ## @skip prometheus.kubeProxy
   kubeProxy:
     enabled: false
+  ## @skip prometheus.coreDns
   coreDns:
     enabled: false
 
   ## kube-state-metrics provides kube_pod_*, kube_deployment_*, kube_statefulset_*
   ## metrics needed by the control plane dashboard.
+  ## @param prometheus.kubeStateMetrics.enabled Enable kube-state-metrics
   kubeStateMetrics:
     enabled: true
+  ## @param prometheus.kube-state-metrics.metricLabelsAllowlist [array] Metric labels to allow in kube-state-metrics
   kube-state-metrics:
     metricLabelsAllowlist:
       - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/deployment-version]
 
   ## kubelet/cadvisor provides container_cpu_*, container_memory_*,
   ## container_network_*, container_fs_* metrics needed by the control plane dashboard.
+  ## @param prometheus.kubelet.enabled Enable kubelet/cadvisor metrics collection
   kubelet:
     enabled: true
 
@@ -324,6 +336,7 @@ grafana:
   ## @param grafana.adminPassword Admin password for Grafana (generate a random password if empty)
   adminPassword: ""
 
+  ## @param grafana.initChownData.resources [object] Resources for init-chown-data container
   initChownData:
     resources:
       limits:
@@ -334,6 +347,7 @@ grafana:
         memory: 128Mi
 
   ## Sidecar configuration for dashboard and datasource discovery
+  ## @param grafana.sidecar.resources [object] Resources for Grafana sidecar
   sidecar:
     resources:
       requests:
@@ -345,6 +359,9 @@ grafana:
     ## @param grafana.sidecar.dashboards.enabled Enable dashboard sidecar
     ## @param grafana.sidecar.dashboards.label Label key for dashboard ConfigMaps
     ## @param grafana.sidecar.dashboards.labelValue Label value for dashboard ConfigMaps
+    ## @param grafana.sidecar.dashboards.folderAnnotation Annotation key used to determine dashboard folder
+    ## @param grafana.sidecar.dashboards.SCProvider Enable sidecar provider
+    ## @param grafana.sidecar.dashboards.provider.foldersFromFilesStructure Use folder structure from files
     dashboards:
       enabled: true
       label: truefoundry_monitoring

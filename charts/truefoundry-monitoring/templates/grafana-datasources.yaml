@@ -13,7 +13,7 @@ data:
       - name: Prometheus
         type: prometheus
         {{- if .Values.prometheus.enabled }}
-        url: http://{{ .Release.Name }}-pro-prometheus:9090
+        url: http://{{ include "truefoundry-monitoring.prometheus.serviceName" . }}:9090
         {{- else }}
         url: {{ .Values.externalServices.prometheus.url }}
         {{- end }}
