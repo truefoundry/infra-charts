@@ -1,0 +1,30 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "truefoundry-monitoring.fullname" . }}-datasources
+  labels:
+    {{- include "truefoundry-monitoring.labels" . | nindent 4 }}
+    {{ .Values.grafana.sidecar.datasources.label }}: {{ .Values.grafana.sidecar.datasources.labelValue | quote }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        {{- if .Values.prometheus.enabled }}
+        url: http://{{ .Release.Name }}-pro-prometheus:9090
+        {{- else }}
+        url: {{ .Values.externalServices.prometheus.url }}
+        {{- end }}
+        access: proxy
+        isDefault: true
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        {{- if .Values.logs.enabled }}
+        url: http://{{ .Release.Name }}-logs-server:9428
+        {{- else }}
+        url: {{ .Values.externalServices.victoriaLogs.url }}
+        {{- end }}
+        access: proxy
+{{- end }}
