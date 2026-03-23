@@ -1,0 +1,98 @@
+{{- if .Values.addCaCertificateVolume.enabled -}}
+{{- range $index, $injectionConfig := .Values.addCaCertificateVolume.injectionConfigs }}
+---
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" $ }}-add-ca-cert-volume-{{ $index }}
+spec:
+  matchConstraints:
+    objectSelector:
+      matchLabels:
+        {{ $injectionConfig.label.key }}: {{ $injectionConfig.label.value }}
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['pods']
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: |
+          Object{
+            spec: Object.spec{
+              volumes: [
+                Object.spec.volumes{
+                  name: "ca-bundle-cert",
+                  configMap: Object.spec.volumes.configMap{
+                    name: "{{ $.Values.addCaCertificateVolume.sourceConfigMap.name }}",
+                    defaultMode: 420
+                  }
+                }
+              ],
+              containers: object.spec.containers.map(c,
+                Object.spec.containers{
+                  name: c.name,
+                  {{- if $.Values.addCaCertificateVolume.envs }}
+                  env: [
+                    {{- range $ei, $env := $.Values.addCaCertificateVolume.envs }}
+                    {{- if $ei }},{{ end }}
+                    Object.spec.containers.env{
+                      name: "{{ $env.name }}",
+                      value: "{{ $env.value }}"
+                    }
+                    {{- end }}
+                  ],
+                  {{- end }}
+                  volumeMounts: [
+                    {{- range $mi, $mountPath := $injectionConfig.mountPaths }}
+                    {{- if $mi }},{{ end }}
+                    Object.spec.containers.volumeMounts{
+                      name: "ca-bundle-cert",
+                      mountPath: "{{ $mountPath }}"
+                      {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }},
+                      subPath: "{{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}"
+                      {{- end }}
+                    }
+                    {{- end }}
+                  ]
+                }
+              ),
+              initContainers: has(object.spec.initContainers) ?
+                object.spec.initContainers.map(c,
+                  Object.spec.initContainers{
+                    name: c.name,
+                    {{- if $.Values.addCaCertificateVolume.envs }}
+                    env: [
+                      {{- range $ei, $env := $.Values.addCaCertificateVolume.envs }}
+                      {{- if $ei }},{{ end }}
+                      Object.spec.initContainers.env{
+                        name: "{{ $env.name }}",
+                        value: "{{ $env.value }}"
+                      }
+                      {{- end }}
+                    ],
+                    {{- end }}
+                    volumeMounts: [
+                      {{- range $mi, $mountPath := $injectionConfig.mountPaths }}
+                      {{- if $mi }},{{ end }}
+                      Object.spec.initContainers.volumeMounts{
+                        name: "ca-bundle-cert",
+                        mountPath: "{{ $mountPath }}"
+                        {{- if $.Values.addCaCertificateVolume.sourceConfigMap.subPath }},
+                        subPath: "{{ $.Values.addCaCertificateVolume.sourceConfigMap.subPath }}"
+                        {{- end }}
+                      }
+                      {{- end }}
+                    ]
+                  }
+                ) : []
+            }
+          }
+  evaluation:
+    admission:
+      enabled: true
+  webhookConfiguration:
+    timeoutSeconds: 10
+{{- end }}
+{{- end -}}
