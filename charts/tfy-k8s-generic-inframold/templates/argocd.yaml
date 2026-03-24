@@ -20,7 +20,7 @@ spec:
   source:
     chart: argo-cd
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 7.8.26
+    targetRevision: 9.4.14
     helm:
       values: |-
         {{- if .Values.argocd.valuesOverride }}
@@ -66,6 +66,9 @@ spec:
           enabled: false
         configs:
           cm:
+            application.instanceLabelKey: argocd.argoproj.io/instance
+            application.resourceTrackingMethod: label
+            controller.resource.health.persist: 'true'
             resource.customizations.ignoreDifferences.storage.k8s.io_CSIDriver: |
               jqPathExpressions:
               - '.spec.seLinuxMount'
