@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.131.0
+  controlPlaneChartVersion: 0.132.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -672,7 +672,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.131.0"
+    tag: "v0.132.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1011,7 +1011,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.131.0"
+    tag: "v0.132.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1449,6 +1449,8 @@ tfyBuild:
       error: \033[31m[Error]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.done Done log marker for the tfyBuild server
       done: \033[32m[Done]\033[0m
+      ## @param tfyBuild.truefoundryWorkflows.logMarkers.failed Failed log marker for the tfyBuild server (workflow script env; must be a non-empty string for Argo CRD validation)
+      failed: \033[31m[Error]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.start Start log marker for the tfyBuild server
       start: \033[36m[Start]\033[0m
       ## @param tfyBuild.truefoundryWorkflows.logMarkers.clientPrefix Client prefix for the tfyBuild server
@@ -2749,7 +2751,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.131.0"
+    tag: "v0.132.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
