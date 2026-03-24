@@ -259,6 +259,7 @@ logs:
 
               if .message == "" {
 
+
                 .message = " "
               }
 
@@ -275,6 +276,7 @@ logs:
               .namespace = .kubernetes.pod_namespace
 
               for_each(pod_labels) -> |key, value| {
+
 
                 label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
                 . = set!(., [label_key], string(value) ?? "")
@@ -323,11 +325,11 @@ grafana:
   ## @param grafana.grafana\.ini [object] Grafana INI configuration overrides
   grafana.ini:
     server:
-      ## @param grafana.grafana\.ini.server.domain Domain for Grafana
+      ## @param grafana.grafana.ini.server.domain Domain for Grafana
       domain: ""
-      ## @param grafana.grafana\.ini.server.root_url Root URL for Grafana (include the subpath)
+      ## @param grafana.grafana.ini.server.root_url Root URL for Grafana (include the subpath)
       root_url: ""
-      ## @param grafana.grafana\.ini.server.serve_from_sub_path Serve Grafana from a subpath
+      ## @param grafana.grafana.ini.server.serve_from_sub_path Serve Grafana from a subpath
       serve_from_sub_path: true
   ## @param grafana.adminUser Admin user for Grafana
   adminUser: admin
