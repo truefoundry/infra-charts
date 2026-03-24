@@ -13,60 +13,65 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 
 ### External Services
 
-| Name                                | Description                              | Value                                                                            |
-| ----------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- |
-| `externalServices.prometheus.url`   | URL of an existing Prometheus instance   | `http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090` |
-| `externalServices.victoriaLogs.url` | URL of an existing VictoriaLogs instance | `http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428`    |
+| Name                                | Description                                                                                                                                                              | Value |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| `externalServices.prometheus.url`   | URL of an existing Prometheus instance. Must be set if prometheus.enabled=false. Example: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090 | `""`  |
+| `externalServices.victoriaLogs.url` | URL of an existing VictoriaLogs instance. Must be set if logs.enabled=false. Example: http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428        | `""`  |
 
 ### Prometheus (kube-prometheus-stack) configuration
 
-| Name                                                                   | Description                                                 | Value   |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------- | ------- |
-| `prometheus.enabled`                                                   | Install a dedicated Prometheus for control plane monitoring | `true`  |
-| `prometheus.cleanPrometheusOperatorObjectNames`                        | Clean object names (avoids redundant suffixes)              | `true`  |
-| `prometheus.kubeStateMetrics.enabled`                                  | Enable kube-state-metrics                                   | `true`  |
-| `prometheus.kube-state-metrics.metricLabelsAllowlist`                  | Metric labels to allow in kube-state-metrics                | `[]`    |
-| `prometheus.kubelet.enabled`                                           | Enable kubelet/cadvisor metrics collection                  | `true`  |
-| `prometheus.crds.enabled`                                              | Set to false if Prometheus Operator CRDs already exist      | `true`  |
-| `prometheus.alertmanager.enabled`                                      | Enable alertmanager                                         | `false` |
-| `prometheus.prometheusOperator.enabled`                                | Enable Prometheus Operator                                  | `true`  |
-| `prometheus.prometheusOperator.resources`                              | Resources for Prometheus Operator                           | `{}`    |
-| `prometheus.prometheus.prometheusSpec.retention`                       | Data retention period                                       | `15d`   |
-| `prometheus.prometheus.prometheusSpec.retentionSize`                   | Maximum storage size before oldest data is removed          | `""`    |
-| `prometheus.prometheus.prometheusSpec.resources`                       | Resources for Prometheus server                             | `{}`    |
-| `prometheus.prometheus.prometheusSpec.storageSpec`                     | Storage configuration                                       | `{}`    |
-| `prometheus.prometheus.prometheusSpec.serviceMonitorNamespaceSelector` | Namespace selector for ServiceMonitors                      | `{}`    |
-| `prometheus.prometheus.prometheusSpec.podMonitorNamespaceSelector`     | Namespace selector for PodMonitors                          | `{}`    |
-| `prometheus.prometheus.prometheusSpec.ruleNamespaceSelector`           | Namespace selector for PrometheusRules                      | `{}`    |
-| `prometheus.prometheus.prometheusSpec.additionalScrapeConfigsSecret`   | Reference to the generated scrape config Secret             | `{}`    |
-| `prometheus.prometheus.prometheusSpec.affinity`                        | Affinity for Prometheus pods                                | `{}`    |
-| `prometheus.prometheus.prometheusSpec.tolerations`                     | Tolerations for Prometheus pods                             | `[]`    |
-| `prometheus.prometheus.prometheusSpec.nodeSelector`                    | Node selector for Prometheus pods                           | `{}`    |
+| Name                                                                   | Description                                                                                                                                                                                                                            | Value        |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `prometheus.enabled`                                                   | Install a dedicated Prometheus for control plane monitoring                                                                                                                                                                            | `true`       |
+| `prometheus.nameOverride`                                              | Override the subchart name so the parent chart helpers can predict service names correctly. The kube-prometheus-stack subchart's .Chart.Name is "kube-prometheus-stack" regardless of the alias, so this override keeps names aligned. | `prometheus` |
+| `prometheus.fullnameOverride`                                          | Override the subchart fullname. Leave empty to use the default (<release>-<nameOverride>) naming.                                                                                                                                      | `""`         |
+| `prometheus.cleanPrometheusOperatorObjectNames`                        | Clean object names (avoids redundant suffixes)                                                                                                                                                                                         | `true`       |
+| `prometheus.kubeStateMetrics.enabled`                                  | Enable kube-state-metrics                                                                                                                                                                                                              | `true`       |
+| `prometheus.crds.enabled`                                              | Set to false if Prometheus Operator CRDs already exist                                                                                                                                                                                 | `true`       |
+| `prometheus.alertmanager.enabled`                                      | Enable alertmanager                                                                                                                                                                                                                    | `false`      |
+| `prometheus.prometheusOperator.enabled`                                | Enable Prometheus Operator                                                                                                                                                                                                             | `true`       |
+| `prometheus.prometheusOperator.resources`                              | Resources for Prometheus Operator                                                                                                                                                                                                      | `{}`         |
+| `prometheus.prometheus.prometheusSpec.retention`                       | Data retention period                                                                                                                                                                                                                  | `15d`        |
+| `prometheus.prometheus.prometheusSpec.retentionSize`                   | Maximum storage size before oldest data is removed                                                                                                                                                                                     | `""`         |
+| `prometheus.prometheus.prometheusSpec.resources`                       | Resources for Prometheus server                                                                                                                                                                                                        | `{}`         |
+| `prometheus.prometheus.prometheusSpec.storageSpec`                     | Storage configuration                                                                                                                                                                                                                  | `{}`         |
+| `prometheus.prometheus.prometheusSpec.serviceMonitorNamespaceSelector` | Namespace selector for ServiceMonitors                                                                                                                                                                                                 | `{}`         |
+| `prometheus.prometheus.prometheusSpec.podMonitorNamespaceSelector`     | Namespace selector for PodMonitors                                                                                                                                                                                                     | `{}`         |
+| `prometheus.prometheus.prometheusSpec.ruleNamespaceSelector`           | Namespace selector for PrometheusRules                                                                                                                                                                                                 | `{}`         |
+| `prometheus.prometheus.prometheusSpec.additionalScrapeConfigsSecret`   | Reference to the generated scrape config Secret                                                                                                                                                                                        | `{}`         |
+| `prometheus.prometheus.prometheusSpec.affinity`                        | Affinity for Prometheus pods                                                                                                                                                                                                           | `{}`         |
+| `prometheus.prometheus.prometheusSpec.tolerations`                     | Tolerations for Prometheus pods                                                                                                                                                                                                        | `[]`         |
+| `prometheus.prometheus.prometheusSpec.nodeSelector`                    | Node selector for Prometheus pods                                                                                                                                                                                                      | `{}`         |
 
-### Logs (victoria-logs-single) configuration
+### Logs (tfy-logs) configuration
 
-| Name                                       | Description                                                      | Value                                             |
-| ------------------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------- |
-| `logs.enabled`                             | Install a dedicated VictoriaLogs + Vector for control plane logs | `true`                                            |
-| `logs.global.image.registry`               | Image registry                                                   | `tfy.jfrog.io/tfy-mirror`                         |
-| `logs.server.image.registry`               | Image registry                                                   | `tfy.jfrog.io/tfy-mirror`                         |
-| `logs.server.retentionPeriod`              | Retention period for logs                                        | `15d`                                             |
-| `logs.server.retentionMaxDiskUsagePercent` | Maximum disk usage percentage for retention                      | `85`                                              |
-| `logs.server.persistentVolume.size`        | Persistent volume size                                           | `50Gi`                                            |
-| `logs.server.resources`                    | Resources for VictoriaLogs server                                | `{}`                                              |
-| `logs.server.affinity`                     | Affinity for VictoriaLogs server                                 | `{}`                                              |
-| `logs.server.tolerations`                  | Tolerations for VictoriaLogs server                              | `[]`                                              |
-| `logs.vector.enabled`                      | Enable Vector for log collection                                 | `true`                                            |
-| `logs.vector.podPriorityClassName`         | Pod priority class name                                          | `system-node-critical`                            |
-| `logs.vector.image.repository`             | Image repository                                                 | `public.ecr.aws/truefoundrycloud/timberio/vector` |
-| `logs.vector.image.tag`                    | Image tag                                                        | `v0.52.0`                                         |
-| `logs.vector.resources`                    | Resources for Vector                                             | `{}`                                              |
-| `logs.vector.podSecurityContext`           | Pod-level security context for Vector                            | `{}`                                              |
-| `logs.vector.securityContext`              | Container-level security context for Vector                      | `{}`                                              |
-| `logs.vector.affinity`                     | Affinity for Vector pods                                         | `{}`                                              |
-| `logs.vector.tolerations`                  | Tolerations for Vector pods                                      | `[]`                                              |
-| `logs.vector.nodeSelector`                 | Node selector for Vector pods                                    | `{}`                                              |
-| `logs.vector.customConfig`                 | Custom Vector config scoped to control plane                     | `{}`                                              |
+| Name           | Description                                                      | Value  |
+| -------------- | ---------------------------------------------------------------- | ------ |
+| `logs.enabled` | Install a dedicated VictoriaLogs + Vector for control plane logs | `true` |
+
+### logs.victoria-logs-single VictoriaLogs subchart configuration
+
+| Name                                                            | Description                                  | Value                                             |
+| --------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------- |
+| `logs.victoria-logs-single.global.image.registry`               | Image registry for VictoriaLogs              | `tfy.jfrog.io/tfy-mirror`                         |
+| `logs.victoria-logs-single.server.image.registry`               | Image registry                               | `tfy.jfrog.io/tfy-mirror`                         |
+| `logs.victoria-logs-single.server.retentionPeriod`              | Retention period for logs                    | `15d`                                             |
+| `logs.victoria-logs-single.server.retentionMaxDiskUsagePercent` | Maximum disk usage percentage for retention  | `85`                                              |
+| `logs.victoria-logs-single.server.persistentVolume.size`        | Persistent volume size                       | `50Gi`                                            |
+| `logs.victoria-logs-single.server.resources`                    | Resources for VictoriaLogs server            | `{}`                                              |
+| `logs.victoria-logs-single.server.affinity`                     | Affinity for VictoriaLogs server             | `{}`                                              |
+| `logs.victoria-logs-single.server.tolerations`                  | Tolerations for VictoriaLogs server          | `[]`                                              |
+| `logs.victoria-logs-single.vector.enabled`                      | Enable Vector for log collection             | `true`                                            |
+| `logs.victoria-logs-single.vector.podPriorityClassName`         | Pod priority class name                      | `system-node-critical`                            |
+| `logs.victoria-logs-single.vector.image.repository`             | Image repository                             | `public.ecr.aws/truefoundrycloud/timberio/vector` |
+| `logs.victoria-logs-single.vector.image.tag`                    | Image tag                                    | `v0.52.0`                                         |
+| `logs.victoria-logs-single.vector.resources`                    | Resources for Vector                         | `{}`                                              |
+| `logs.victoria-logs-single.vector.podSecurityContext`           | Pod-level security context for Vector        | `{}`                                              |
+| `logs.victoria-logs-single.vector.securityContext`              | Container-level security context for Vector  | `{}`                                              |
+| `logs.victoria-logs-single.vector.affinity`                     | Affinity for Vector pods                     | `{}`                                              |
+| `logs.victoria-logs-single.vector.tolerations`                  | Tolerations for Vector pods                  | `[]`                                              |
+| `logs.victoria-logs-single.vector.nodeSelector`                 | Node selector for Vector pods                | `{}`                                              |
+| `logs.victoria-logs-single.vector.customConfig`                 | Custom Vector config scoped to control plane | `{}`                                              |
 
 ### Grafana configuration
 
@@ -77,6 +82,10 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 | `grafana.replicas`                                              | Number of Grafana replicas                                       | `1`                                 |
 | `grafana.useStatefulSet`                                        | Use StatefulSet for Grafana                                      | `true`                              |
 | `grafana.resources`                                             | Resources for Grafana                                            | `{}`                                |
+| `grafana.grafana\.ini`                                          | Grafana INI configuration overrides                              | `{}`                                |
+| `grafana.grafana.ini.server.domain`                             | Domain for Grafana                                               | `""`                                |
+| `grafana.grafana.ini.server.root_url`                           | Root URL for Grafana (include the subpath)                       | `""`                                |
+| `grafana.grafana.ini.server.serve_from_sub_path`                | Serve Grafana from a subpath                                     | `true`                              |
 | `grafana.adminUser`                                             | Admin user for Grafana                                           | `admin`                             |
 | `grafana.adminPassword`                                         | Admin password for Grafana (generate a random password if empty) | `""`                                |
 | `grafana.initChownData.resources`                               | Resources for init-chown-data container                          | `{}`                                |
