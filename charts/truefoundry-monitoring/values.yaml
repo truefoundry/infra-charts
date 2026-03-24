@@ -331,6 +331,18 @@ grafana:
       memory: 1Gi
       ephemeral-storage: 1Gi
 
+  ## Grafana server configuration for path-based routing.
+  ## Set domain and root_url to match your ingress configuration.
+  ## @param grafana.grafana\.ini [object] Grafana INI configuration overrides
+  grafana.ini:
+    server:
+      ## @param grafana.grafana\.ini.server.domain Domain for Grafana
+      domain: ""
+      ## @param grafana.grafana\.ini.server.root_url Root URL for Grafana (include the subpath)
+      root_url: ""
+      ## @param grafana.grafana\.ini.server.serve_from_sub_path Serve Grafana from a subpath
+      serve_from_sub_path: false
+
   ## @param grafana.adminUser Admin user for Grafana
   adminUser: admin
   ## @param grafana.adminPassword Admin password for Grafana (generate a random password if empty)
