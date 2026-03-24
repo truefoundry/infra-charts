@@ -15,17 +15,17 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   matchConstraints:
+    {{- if or .Values.replaceImageRegistry.excludeNamespaces .Values.replaceImageRegistry.includeNamespaces }}
     namespaceSelector:
       matchExpressions:
+        {{- if .Values.replaceImageRegistry.excludeNamespaces }}
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
-            - kube-system
-            - kube-public
-            - kube-node-lease
             {{- range .Values.replaceImageRegistry.excludeNamespaces }}
             - {{ . }}
             {{- end }}
+        {{- end }}
         {{- if .Values.replaceImageRegistry.includeNamespaces }}
         - key: kubernetes.io/metadata.name
           operator: In
@@ -34,6 +34,7 @@ spec:
             - {{ . }}
             {{- end }}
         {{- end }}
+    {{- end }}
     resourceRules:
       - apiGroups:
           - ""

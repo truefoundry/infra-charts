@@ -2,23 +2,22 @@
 apiVersion: policies.kyverno.io/v1
 kind: GeneratingPolicy
 metadata:
-  name: {{ include "tfy-kyverno.fullname" . }}-clone-ca-cert-configmap-
+  name: {{ include "tfy-kyverno.fullname" . }}-clone-ca-cert-configmap
 spec:
   evaluation:
     synchronize:
       enabled: true
   matchConstraints:
+    {{- if .Values.addCaCertificateVolume.excludeNamespaces }}
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
-            - kube-system
-            - kube-public
-            - kube-node-lease
             {{- range .Values.addCaCertificateVolume.excludeNamespaces }}
             - {{ . }}
             {{- end }}
+    {{- end }}
     resourceRules:
       - apiGroups: ['']
         apiVersions: ['v1']

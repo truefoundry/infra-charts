@@ -16,17 +16,17 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   matchConstraints:
+    {{- if or .Values.replaceArgoHelmRepo.excludeNamespaces .Values.replaceArgoHelmRepo.includeNamespaces }}
     namespaceSelector:
       matchExpressions:
+        {{- if .Values.replaceArgoHelmRepo.excludeNamespaces }}
         - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
-            - kube-system
-            - kube-public
-            - kube-node-lease
             {{- range .Values.replaceArgoHelmRepo.excludeNamespaces }}
             - {{ . }}
             {{- end }}
+        {{- end }}
         {{- if .Values.replaceArgoHelmRepo.includeNamespaces }}
         - key: kubernetes.io/metadata.name
           operator: In
@@ -35,6 +35,7 @@ spec:
             - {{ . }}
             {{- end }}
         {{- end }}
+    {{- end }}
     resourceRules:
       - apiGroups:
           - argoproj.io
