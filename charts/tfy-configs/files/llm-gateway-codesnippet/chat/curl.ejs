@@ -1,0 +1,59 @@
+<%
+  const indent = '    '.repeat(2);
+  let args = '';
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'stream') {
+        return;
+      }
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          args += `${indent}"${key}": "${value}",\n`;
+        } else if (Array.isArray(value)) {
+          args += `${indent}"${key}": ${JSON.stringify(value)},\n`;
+        } else {
+          args += `${indent}"${key}": ${value},\n`;
+        }
+      }
+    });
+  }
+  args += `${indent}"stream": ${stream ? 'true' : 'false'}`;
+-%>
+curl -X POST "<%= endpoint %>/chat/completions" \
+    -H 'Authorization: Bearer <%= api_key %>' \
+    -H 'Content-Type: application/json' \
+    -H 'X-TFY-METADATA: <%- JSON.stringify(custom_metadata) %>' \<% if (include_guardrails) { %>
+    -H 'X-TFY-GUARDRAILS: <%- JSON.stringify({llm_input_guardrails: input_guardrails, llm_output_guardrails:
+      output_guardrails}) %>' \<% } %><% if (include_routing_config) { %>
+    -H 'X-TFY-ROUTING-CONFIG: <%- JSON.stringify(routing_config) %>' \<% } %><% if (include_cache_config) { %>
+    -H 'X-TFY-CACHE-CONFIG: <%- JSON.stringify(cache_config) %>' \<% } %>
+    -H 'X-TFY-LOGGING-CONFIG: {"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}' \
+    -d '{<% if (use_prompt_fqn) { %>
+        "model": "<%= model %>",
+        "messages": [],
+        "stream": <%= stream ? 'true' : 'false' %>,
+        "prompt_version_fqn": "<%= prompt_fqn %>"<% if (input_variables && Object.keys(input_variables).length > 0) { %>,
+        "prompt_variables": <%- JSON.stringify(input_variables) %><% } %><% } else { %>
+        "model": "<%= model %>",<% if (include_output_schema) { %>
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "<%- output_schema.name %>",
+                "schema": <%- JSON.stringify(JSON.parse(output_schema.structuredOutputResponse)) %>
+            }
+        },<% } %>
+        "messages": [
+            {"role": "system", "content": "You are an AI bot."},
+            {"role": "user", "content": "<%= prompt %>"}
+        ],<% if (extra_body && extra_body.mcp_servers.length > 0) { %>
+        "mcp_servers": [
+            <%- extra_body.mcp_servers.map(server => `{
+                "integration_fqn": "${server.integration_fqn}",
+                "enable_all_tools": ${server.enable_all_tools ? 'true' : 'false'}${server.tools && server.tools.length > 0 ? `,
+                "tools": [${server.tools.map(tool => `{"name": "${tool.name}"}`).join(', ')}]` : ''}
+            }`).join(',\n            ') %>
+        ],
+        "iteration_limit": <%= extra_body.iteration_limit %>,<% } %>
+<%- args %><% } %>
+    }'

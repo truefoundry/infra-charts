@@ -1,0 +1,118 @@
+<%
+  const indent = '    '.repeat(4);
+  const USE_STREAM = (stream === true);
+  let args = '';
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'stream') {
+        return;
+      }
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          args += `${indent}"${key}": "${value}",\n`;
+        } else if (Array.isArray(value)) {
+          args += `${indent}"${key}": ${JSON.stringify(value)},\n`;
+        } else if (typeof value === 'boolean') {
+          args += `${indent}"${key}": ${value ? 'True' : 'False'},\n`;
+        } else {
+          args += `${indent}"${key}": ${value},\n`;
+        }
+      }
+    });
+  }
+
+  args += `${indent}"stream": ${USE_STREAM ? 'True' : 'False'}`;
+-%>
+import requests
+import json
+# Note: compatible with langgraph v0.6.7
+import langgraph.graph as lg
+import json
+<% if (include_output_schema) { %>
+response_schema = json.loads('''<%- output_schema.structuredOutputResponse %>''')<% } %>
+def chat_completion(state):
+    try:
+        response = requests.post(
+            "<%= endpoint %>/chat/completions",
+            headers={
+                "Authorization": "Bearer <%= api_key %>",
+                "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+                "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',<% if (include_guardrails) { %>
+                "X-TFY-GUARDRAILS": '<%- JSON.stringify({llm_input_guardrails: input_guardrails, llm_output_guardrails:
+                  output_guardrails}) %>',<% } %><% if (include_routing_config) { %>
+                "X-TFY-ROUTING-CONFIG": '<%- JSON.stringify(routing_config) %>',<% } %><% if (include_cache_config) { %>
+                "X-TFY-CACHE-CONFIG": '<%- JSON.stringify(cache_config) %>',<% } %>
+                "Content-Type": "application/json"
+            },
+            json={<% if (use_prompt_fqn) { %>
+                "model": "<%= model %>",
+                "messages": [],
+                "stream": <%- USE_STREAM ? 'True' : 'False' %>,
+                "prompt_version_fqn": "<%= prompt_fqn %>"<% if (input_variables && Object.keys(input_variables).length > 0) { %>,
+                "prompt_variables": <%- JSON.stringify(input_variables) %><% } %><% } else { %>
+                "model": "<%= model %>",<% if (include_output_schema) { %>
+                "response_format": {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "<%- output_schema.name %>",
+                        "schema": response_schema
+                    }
+                },<% } %>
+                "messages": [
+                    {"role": "system", "content": "You are an AI bot."},
+                    {"role": "user", "content": "<%= prompt %>"}
+                ],<% if (extra_body && extra_body.mcp_servers.length > 0) { %>
+                "mcp_servers": [
+                    <%- extra_body.mcp_servers.map(server => `{
+                        "integration_fqn": "${server.integration_fqn}",
+                        "enable_all_tools": ${server.enable_all_tools ? 'True' : 'False'}${server.tools && server.tools.length > 0 ? `,
+                        "tools": [${server.tools.map(tool => `{"name": "${tool.name}"}`).join(', ')}]` : ''}
+                    }`).join(',\n            ') %>
+                ],
+                "iteration_limit": <%- extra_body.iteration_limit %>,<% } %>
+<%- args %><% } %>
+            },
+            stream=<%- USE_STREAM ? 'True' : 'False' %>
+        )
+        response.raise_for_status()
+        content = ""
+        <% if (USE_STREAM) { %>
+        for line in response.iter_lines(decode_unicode=True):
+            if line.startswith("data: "):
+                line = line[6:]
+            if not line or line.strip() == "[DONE]":
+                continue
+            data = json.loads(line)
+            choices = data.get("choices", [])
+            if choices and len(choices) > 0:
+                delta = choices[0].get("delta", {}).get("content")
+                if delta:
+                    content += delta
+                    print(delta, end="", flush=True)
+
+        <% } else { %>
+        data = response.json()
+        content = data['choices'][0]['message']['content']
+        print(content)
+        <% } %>
+
+        return state
+
+    except Exception as e:
+        print("An error occurred:", str(e))
+        return state
+
+
+# LangGraph setup
+graph = lg.StateGraph(dict)
+graph.add_node("chat_completion", chat_completion)
+graph.set_entry_point("chat_completion")
+app = graph.compile()
+
+if __name__ == "__main__":
+    try:
+        for output in app.stream({}):
+            pass
+    except Exception as e:
+        print("An error occurred:", str(e))

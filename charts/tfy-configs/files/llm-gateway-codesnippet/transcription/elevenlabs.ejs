@@ -1,0 +1,25 @@
+import httpx
+from elevenlabs import ElevenLabs
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+client = ElevenLabs(
+    api_key="dummy",
+    base_url=BASE_URL,
+    httpx_client=httpx.Client(
+        headers={
+            "x-tfy-api-key": TFY_API_KEY,
+        },
+    ),
+)
+
+with open("audio.mp3", "rb") as audio_file:
+    response = client.speech_to_text.convert(
+        file=audio_file,
+        model_id="<%= model %>",
+        tag_audio_events=True,
+        timestamps_granularity="word",
+    )
+
+print(response.model_dump_json(indent=2))

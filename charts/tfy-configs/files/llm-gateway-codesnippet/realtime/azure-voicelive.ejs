@@ -1,0 +1,63 @@
+<%
+const providerAccount = model.split('/')[0];
+const modelName = model.split('/')[1];
+const wsEndpoint = endpoint.replace('https', 'wss') + '/live/' + providerAccount;
+%># Reference: https://learn.microsoft.com/en-us/python/api/overview/azure/ai-voicelive-readme
+# pip install "azure-ai-voicelive[aiohttp]"
+
+import asyncio
+from azure.core.credentials import AccessToken
+from azure.ai.voicelive.aio import connect
+from azure.ai.voicelive.models import (
+    RequestSession, Modality, InputAudioFormat, OutputAudioFormat,
+    ServerVad, ServerEventType,
+)
+
+API_KEY = "<%= api_key %>"
+MODEL = "<%= modelName %>"
+ENDPOINT = "<%= wsEndpoint %>"
+
+
+class BearerTokenCredential:
+    """Sends token as Authorization: Bearer header instead of api-key header."""
+    def __init__(self, token: str):
+        self._token = token
+
+    async def get_token(self, *scopes, **kwargs):
+        return AccessToken(self._token, 0)
+
+    async def close(self):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        pass
+
+
+async def main():
+    async with connect(
+        endpoint=ENDPOINT,
+        credential=BearerTokenCredential(API_KEY),
+        model=MODEL,
+    ) as conn:
+        session = RequestSession(
+            modalities=[Modality.TEXT, Modality.AUDIO],
+            instructions="You are a helpful assistant.",
+            input_audio_format=InputAudioFormat.PCM16,
+            output_audio_format=OutputAudioFormat.PCM16,
+            turn_detection=ServerVad(
+                threshold=0.5,
+                prefix_padding_ms=300,
+                silence_duration_ms=500,
+            ),
+        )
+        await conn.session.update(session=session)
+
+        async for evt in conn:
+            print(f"Event: {evt.type}")
+            if evt.type == ServerEventType.RESPONSE_DONE:
+                break
+
+asyncio.run(main())
