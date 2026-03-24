@@ -21,7 +21,7 @@ data:
       - name: VictoriaLogs
         type: victoriametrics-logs-datasource
         {{- if .Values.logs.enabled }}
-        url: http://{{ .Release.Name }}-logs-server:9428
+        url: http://{{ include "truefoundry-monitoring.logs.serviceName" . }}:9428
         {{- else }}
         url: {{ .Values.externalServices.victoriaLogs.url }}
         {{- end }}

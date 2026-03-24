@@ -1,3 +1,7 @@
+## @param nameOverride Override the chart name used in resource names
+nameOverride: ""
+## @param fullnameOverride Override the full resource name prefix (ignores release name and chart name)
+fullnameOverride: ""
 ## @section Global configuration
 ##
 global:
@@ -5,7 +9,6 @@ global:
   controlPlaneNamespace: truefoundry
   ## @param global.imagePullSecrets [array] Global image pull secrets
   imagePullSecrets: []
-
 ## =============================================================================
 ## @section External Services
 ## Configure URLs for existing Prometheus / VictoriaLogs instances.
@@ -14,13 +17,12 @@ global:
 ## the release name and does not need to be set here.
 ## =============================================================================
 externalServices:
-  ## @param externalServices.prometheus.url URL of an existing Prometheus instance
+  ## @param externalServices.prometheus.url URL of an existing Prometheus instance. Must be set if prometheus.enabled=false. Example: http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090
   prometheus:
-    url: "http://prometheus-kube-prometheus-prometheus.prometheus.svc.cluster.local:9090"
-  ## @param externalServices.victoriaLogs.url URL of an existing VictoriaLogs instance
+    url: ""
+  ## @param externalServices.victoriaLogs.url URL of an existing VictoriaLogs instance. Must be set if logs.enabled=false. Example: http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428
   victoriaLogs:
-    url: "http://tfy-logs-victoria-logs-single-server.tfy-logs.svc.cluster.local:9428"
-
+    url: ""
 ## =============================================================================
 ## @section Prometheus (kube-prometheus-stack) configuration
 ## Set enabled=true only when no Prometheus instance exists in the cluster.
@@ -32,13 +34,12 @@ externalServices:
 prometheus:
   ## @param prometheus.enabled Install a dedicated Prometheus for control plane monitoring
   enabled: true
-
   ## @param prometheus.nameOverride Override the subchart name so the parent chart helpers can predict service names correctly. The kube-prometheus-stack subchart's .Chart.Name is "kube-prometheus-stack" regardless of the alias, so this override keeps names aligned.
   nameOverride: "prometheus"
-
+  ## @param prometheus.fullnameOverride Override the subchart fullname. Leave empty to use the default (<release>-<nameOverride>) naming.
+  fullnameOverride: ""
   ## @param prometheus.cleanPrometheusOperatorObjectNames Clean object names (avoids redundant suffixes)
   cleanPrometheusOperatorObjectNames: true
-
   ## Disable components not needed for control plane monitoring
   ## @skip prometheus.grafana
   grafana:
@@ -67,31 +68,17 @@ prometheus:
   ## @skip prometheus.coreDns
   coreDns:
     enabled: false
-
   ## kube-state-metrics provides kube_pod_*, kube_deployment_*, kube_statefulset_*
   ## metrics needed by the control plane dashboard.
   ## @param prometheus.kubeStateMetrics.enabled Enable kube-state-metrics
   kubeStateMetrics:
     enabled: true
-  ## @param prometheus.kube-state-metrics.metricLabelsAllowlist [array] Metric labels to allow in kube-state-metrics
-  kube-state-metrics:
-    metricLabelsAllowlist:
-      - pods=[truefoundry.com/application,truefoundry.com/component-type,truefoundry.com/deployment-version]
-
-  ## kubelet/cadvisor provides container_cpu_*, container_memory_*,
-  ## container_network_*, container_fs_* metrics needed by the control plane dashboard.
-  ## @param prometheus.kubelet.enabled Enable kubelet/cadvisor metrics collection
-  kubelet:
-    enabled: true
-
   ## @param prometheus.crds.enabled Set to false if Prometheus Operator CRDs already exist
   crds:
     enabled: true
-
   ## @param prometheus.alertmanager.enabled Enable alertmanager
   alertmanager:
     enabled: false
-
   ## Prometheus Operator configuration
   ## Set enabled to false if a Prometheus Operator already exists in the cluster.
   prometheusOperator:
@@ -105,7 +92,6 @@ prometheus:
       limits:
         cpu: 200m
         memory: 256Mi
-
   ## Prometheus server configuration
   prometheus:
     prometheusSpec:
@@ -129,7 +115,6 @@ prometheus:
             resources:
               requests:
                 storage: 50Gi
-
       ## Discover ServiceMonitors/PodMonitors/Rules from all namespaces.
       ## Actual metric scoping is done by the scrape config in
       ## templates/prometheus-scrape-config.yaml which uses global.controlPlaneNamespace.
@@ -139,7 +124,6 @@ prometheus:
       podMonitorNamespaceSelector: {}
       ## @param prometheus.prometheus.prometheusSpec.ruleNamespaceSelector [object] Namespace selector for PrometheusRules
       ruleNamespaceSelector: {}
-
       ## Scrape config for control plane pods is generated as a Secret by
       ## templates/prometheus-scrape-config.yaml using global.controlPlaneNamespace.
       ## @param prometheus.prometheus.prometheusSpec.additionalScrapeConfigsSecret [object] Reference to the generated scrape config Secret
@@ -147,16 +131,14 @@ prometheus:
         enabled: true
         name: tfy-cp-monitoring-scrape-config
         key: additional-scrape-configs.yaml
-
       ## @param prometheus.prometheus.prometheusSpec.affinity [object] Affinity for Prometheus pods
       affinity: {}
       ## @param prometheus.prometheus.prometheusSpec.tolerations [array] Tolerations for Prometheus pods
       tolerations: []
       ## @param prometheus.prometheus.prometheusSpec.nodeSelector [object] Node selector for Prometheus pods
       nodeSelector: {}
-
 ## =============================================================================
-## @section Logs (victoria-logs-single) configuration
+## @section Logs (tfy-logs) configuration
 ## Set enabled=true only when no VictoriaLogs / tfy-logs instance exists.
 ## When disabled (default), Grafana datasources point to externalServices URLs.
 ## Vector is scoped to only collect logs from the TrueFoundry control plane
@@ -165,145 +147,151 @@ prometheus:
 logs:
   ## @param logs.enabled Install a dedicated VictoriaLogs + Vector for control plane logs
   enabled: true
+  ## @skip logs.windowsVector
+  windowsVector:
+    enabled: false
+  ## @skip logs.resourceQuota
+  resourceQuota:
+    enabled: false
+  ## @section logs.victoria-logs-single VictoriaLogs subchart configuration
+  victoria-logs-single:
+    global:
+      image:
+        ## @param logs.victoria-logs-single.global.image.registry Image registry for VictoriaLogs
+        registry: tfy.jfrog.io/tfy-mirror
+    server:
+      image:
+        ## @param logs.victoria-logs-single.server.image.registry Image registry
+        registry: tfy.jfrog.io/tfy-mirror
+      ## @skip logs.victoria-logs-single.server.serviceMonitor
+      serviceMonitor:
+        enabled: false
+      ## @param logs.victoria-logs-single.server.retentionPeriod Retention period for logs
+      retentionPeriod: 15d
+      ## @param logs.victoria-logs-single.server.retentionMaxDiskUsagePercent Maximum disk usage percentage for retention
+      retentionMaxDiskUsagePercent: 85
+      persistentVolume:
+        ## @param logs.victoria-logs-single.server.persistentVolume.size Persistent volume size
+        size: 50Gi
+      ## @param logs.victoria-logs-single.server.resources [object] Resources for VictoriaLogs server
+      resources:
+        requests:
+          cpu: 200m
+          memory: 400Mi
+        limits:
+          cpu: 800m
+          memory: 800Mi
+      ## @param logs.victoria-logs-single.server.affinity [object] Affinity for VictoriaLogs server
+      affinity: {}
+      ## @param logs.victoria-logs-single.server.tolerations [array] Tolerations for VictoriaLogs server
+      tolerations: []
+    vector:
+      ## @param logs.victoria-logs-single.vector.enabled Enable Vector for log collection
+      enabled: true
+      ## @param logs.victoria-logs-single.vector.podPriorityClassName Pod priority class name
+      podPriorityClassName: system-node-critical
+      image:
+        ## @param logs.victoria-logs-single.vector.image.repository Image repository
+        repository: public.ecr.aws/truefoundrycloud/timberio/vector
+        ## @param logs.victoria-logs-single.vector.image.tag Image tag
+        tag: v0.52.0
+      ## @param logs.victoria-logs-single.vector.resources [object] Resources for Vector
+      resources:
+        requests:
+          cpu: 50m
+          memory: 80Mi
+        limits:
+          cpu: 200m
+          memory: 200Mi
+      ## @param logs.victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
+      podSecurityContext: {}
+      ## @param logs.victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
+      securityContext:
+        privileged: false
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - CAP_FOWNER
+      ## @param logs.victoria-logs-single.vector.affinity [object] Affinity for Vector pods
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      ## @param logs.victoria-logs-single.vector.tolerations [array] Tolerations for Vector pods
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+          operator: Exists
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+          operator: Exists
+        - effect: NoSchedule
+          operator: Exists
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
+      ## @param logs.victoria-logs-single.vector.nodeSelector [object] Node selector for Vector pods
+      nodeSelector: {}
+      ## Vector custom configuration scoped to truefoundry namespace
+      ## @param logs.victoria-logs-single.vector.customConfig [object] Custom Vector config scoped to control plane
+      customConfig:
+        sources:
+          k8s:
+            type: kubernetes_logs
+            glob_minimum_cooldown_ms: 1000
+            extra_namespace_label_selector: "kubernetes.io/metadata.name=truefoundry"
+        transforms:
+          parser:
+            type: remap
+            inputs:
+              - k8s
+            source: >
+              pod_labels = object(.kubernetes.pod_labels) ?? {}
 
-  global:
-    image:
-      ## @param logs.global.image.registry Image registry
-      registry: tfy.jfrog.io/tfy-mirror
+              if .message == "" {
 
-  server:
-    image:
-      ## @param logs.server.image.registry Image registry
-      registry: tfy.jfrog.io/tfy-mirror
-    ## @skip logs.server.serviceMonitor
-    serviceMonitor:
-      enabled: false
-    ## @param logs.server.retentionPeriod Retention period for logs
-    retentionPeriod: 15d
-    ## @param logs.server.retentionMaxDiskUsagePercent Maximum disk usage percentage for retention
-    retentionMaxDiskUsagePercent: 85
-    persistentVolume:
-      ## @param logs.server.persistentVolume.size Persistent volume size
-      size: 50Gi
-    ## @param logs.server.resources [object] Resources for VictoriaLogs server
-    resources:
-      requests:
-        cpu: 200m
-        memory: 400Mi
-      limits:
-        cpu: 800m
-        memory: 800Mi
-    ## @param logs.server.affinity [object] Affinity for VictoriaLogs server
-    affinity: {}
-    ## @param logs.server.tolerations [array] Tolerations for VictoriaLogs server
-    tolerations: []
+                .message = " "
+              }
 
-  vector:
-    ## @param logs.vector.enabled Enable Vector for log collection
-    enabled: true
-    ## @param logs.vector.podPriorityClassName Pod priority class name
-    podPriorityClassName: system-node-critical
-    image:
-      ## @param logs.vector.image.repository Image repository
-      repository: public.ecr.aws/truefoundrycloud/timberio/vector
-      ## @param logs.vector.image.tag Image tag
-      tag: v0.52.0
-    ## @param logs.vector.resources [object] Resources for Vector
-    resources:
-      requests:
-        cpu: 50m
-        memory: 80Mi
-      limits:
-        cpu: 200m
-        memory: 200Mi
-    ## @param logs.vector.podSecurityContext [object] Pod-level security context for Vector
-    podSecurityContext: {}
-    ## @param logs.vector.securityContext [object] Container-level security context for Vector
-    securityContext:
-      privileged: false
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-        add:
-          - CAP_FOWNER
-    ## @param logs.vector.affinity [object] Affinity for Vector pods
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: kubernetes.io/os
-                  operator: In
-                  values:
-                    - linux
-    ## @param logs.vector.tolerations [array] Tolerations for Vector pods
-    tolerations:
-      - key: node-role.kubernetes.io/master
-        effect: NoSchedule
-        operator: Exists
-      - key: node-role.kubernetes.io/control-plane
-        effect: NoSchedule
-        operator: Exists
-      - effect: NoSchedule
-        operator: Exists
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - effect: NoExecute
-        operator: Exists
-    ## @param logs.vector.nodeSelector [object] Node selector for Vector pods
-    nodeSelector: {}
-    ## Vector custom configuration scoped to truefoundry namespace
-    ## @param logs.vector.customConfig [object] Custom Vector config scoped to control plane
-    customConfig:
-      sources:
-        k8s:
-          type: kubernetes_logs
-          glob_minimum_cooldown_ms: 1000
-          ## Must match global.controlPlaneNamespace (subchart values cannot be templated)
-          extra_namespace_label_selector: "kubernetes.io/metadata.name=truefoundry"
-      transforms:
-        parser:
-          type: remap
-          inputs:
-            - k8s
-          source: >
-            pod_labels = object(.kubernetes.pod_labels) ?? {}
+              .service = .kubernetes.container_name
 
-            if .message == "" {
-              .message = " "
-            }
+              .container = .kubernetes.container_name
 
-            .service = .kubernetes.container_name
+              .app = .kubernetes.container_name
 
-            .container = .kubernetes.container_name
+              .pod = .kubernetes.pod_name
 
-            .app = .kubernetes.container_name
+              .node = .kubernetes.pod_node_name
 
-            .pod = .kubernetes.pod_name
+              .namespace = .kubernetes.pod_namespace
 
-            .node = .kubernetes.pod_node_name
+              for_each(pod_labels) -> |key, value| {
 
-            .namespace = .kubernetes.pod_namespace
+                label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
+                . = set!(., [label_key], string(value) ?? "")
+              }
 
-            for_each(pod_labels) -> |key, value| {
-              label_key = replace(replace(replace(key, ".", "_"), "/", "_"), "-", "_")
-              . = set!(., [label_key], string(value) ?? "")
-            }
+              del(.kubernetes)
 
-            del(.kubernetes)
+              del(.file)
 
-            del(.file)
-      sinks:
-        vlogs:
-          type: elasticsearch
-          query:
-            _time_field: timestamp
-            _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_component_type
-          inputs:
-            - parser
-
+        sinks:
+          vlogs:
+            type: elasticsearch
+            query:
+              _time_field: timestamp
+              _stream_fields: namespace,pod,container,stream,truefoundry_com_application,truefoundry_com_component_type
+            inputs:
+              - parser
 ## =============================================================================
 ## @section Grafana configuration
 ## Datasources are provisioned dynamically via a template-generated ConfigMap
@@ -314,16 +302,13 @@ logs:
 grafana:
   ## @param grafana.enabled Enable Grafana for control plane dashboards
   enabled: true
-
   ## @param grafana.plugins [array] Grafana plugins to install
   plugins:
     - victoriametrics-logs-datasource
-
   ## @param grafana.replicas Number of Grafana replicas
   replicas: 1
   ## @param grafana.useStatefulSet Use StatefulSet for Grafana
   useStatefulSet: true
-
   ## @param grafana.resources [object] Resources for Grafana
   resources:
     requests:
@@ -333,7 +318,6 @@ grafana:
       cpu: 200m
       memory: 1Gi
       ephemeral-storage: 1Gi
-
   ## Grafana server configuration for path-based routing.
   ## Set domain and root_url to match your ingress configuration.
   ## @param grafana.grafana\.ini [object] Grafana INI configuration overrides
@@ -344,13 +328,11 @@ grafana:
       ## @param grafana.grafana\.ini.server.root_url Root URL for Grafana (include the subpath)
       root_url: ""
       ## @param grafana.grafana\.ini.server.serve_from_sub_path Serve Grafana from a subpath
-      serve_from_sub_path: false
-
+      serve_from_sub_path: true
   ## @param grafana.adminUser Admin user for Grafana
   adminUser: admin
   ## @param grafana.adminPassword Admin password for Grafana (generate a random password if empty)
   adminPassword: ""
-
   ## @param grafana.initChownData.resources [object] Resources for init-chown-data container
   initChownData:
     resources:
@@ -360,7 +342,6 @@ grafana:
       requests:
         cpu: 100m
         memory: 128Mi
-
   ## Sidecar configuration for dashboard and datasource discovery
   ## @param grafana.sidecar.resources [object] Resources for Grafana sidecar
   sidecar:
@@ -394,7 +375,6 @@ grafana:
       enabled: true
       label: truefoundry_monitoring_datasource
       labelValue: "1"
-
   ## Persistence configuration
   ## @param grafana.persistence.enabled Enable persistence for Grafana
   ## @param grafana.persistence.type Persistence type
@@ -403,7 +383,6 @@ grafana:
     enabled: true
     type: statefulset
     size: 5Gi
-
   ## @param grafana.affinity [object] Affinity for Grafana pods
   affinity: {}
   ## @param grafana.tolerations [array] Tolerations for Grafana pods

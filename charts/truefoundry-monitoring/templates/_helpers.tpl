@@ -101,3 +101,12 @@ regardless of cleanPrometheusOperatorObjectNames.
 {{- define "truefoundry-monitoring.prometheus.serviceName" -}}
 {{- printf "%s-prometheus" (include "truefoundry-monitoring.prometheus.fullname" .) -}}
 {{- end -}}
+
+{{/*
+VictoriaLogs server service name.
+The victoria-logs-single chart (nested inside tfy-logs) uses the standard Helm
+fullname (<release>-victoria-logs-single) with a "-server" suffix for its service.
+*/}}
+{{- define "truefoundry-monitoring.logs.serviceName" -}}
+{{- printf "%s-victoria-logs-single-server" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
