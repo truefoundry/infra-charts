@@ -98,7 +98,7 @@ data:
             - name: FAILED_MARKER
               value: {{ .Values.tfyBuild.jobTemplate.logMarkers.failed | quote }}
             - name: TFY_BUILD_SECRETS
-              value: '{{ .Values.tfyBuild.jobTemplate.buildSecrets | toJson }}'
+              value: '{{ .Values.tfyBuild.jobTemplate.buildSecrets | default list | toJson }}'
             - name: SOURCE_CODE_DOWNLOAD_PATH
               value: {{ .Values.tfyBuild.jobTemplate.sourceCodeDownloadPath | quote }}
             - name: SIZE_THRESHOLD
