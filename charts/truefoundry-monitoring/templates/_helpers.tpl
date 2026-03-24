@@ -56,9 +56,28 @@ Control plane namespace
 {{- end }}
 
 {{/*
+Grafana datasource sidecar labels (common labels + discovery label).
+*/}}
+{{- define "truefoundry-monitoring.grafana.datasourceLabels" -}}
+{{ include "truefoundry-monitoring.labels" . }}
+{{ .Values.grafana.sidecar.datasources.label }}: {{ .Values.grafana.sidecar.datasources.labelValue | quote }}
+{{- end -}}
+
+{{/*
+Grafana dashboard sidecar labels (common labels + discovery label).
+*/}}
+{{- define "truefoundry-monitoring.grafana.dashboardLabels" -}}
+{{ include "truefoundry-monitoring.labels" . }}
+{{ .Values.grafana.sidecar.dashboards.label }}: {{ .Values.grafana.sidecar.dashboards.labelValue | quote }}
+{{- end -}}
+
+{{/*
 Replicate the kube-prometheus-stack fullname (26-char truncation) for the
 "prometheus" subchart alias so the parent chart can reference subchart service
 names without hard-coding a truncation artifact.
+Requires prometheus.nameOverride="prometheus" in values.yaml so that the
+subchart's $name matches the default used here (Helm aliases do NOT change
+.Chart.Name inside the subchart).
 See: kube-prometheus-stack/templates/_helpers.tpl  "kube-prometheus-stack.fullname"
 */}}
 {{- define "truefoundry-monitoring.prometheus.fullname" -}}

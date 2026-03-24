@@ -7,8 +7,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "truefoundry-monitoring.fullname" $ }}-{{ $path | replace "dashboards/" "" | replace ".json" "" }}
   labels:
-    {{- include "truefoundry-monitoring.labels" $ | nindent 4 }}
-    {{ $.Values.grafana.sidecar.dashboards.label }}: {{ $.Values.grafana.sidecar.dashboards.labelValue | quote }}
+    {{- include "truefoundry-monitoring.grafana.dashboardLabels" $ | nindent 4 }}
   annotations:
     grafana_folder: "TrueFoundry Control Plane"
 data:

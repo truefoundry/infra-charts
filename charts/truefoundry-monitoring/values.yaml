@@ -33,6 +33,9 @@ prometheus:
   ## @param prometheus.enabled Install a dedicated Prometheus for control plane monitoring
   enabled: true
 
+  ## @param prometheus.nameOverride Override the subchart name so the parent chart helpers can predict service names correctly. The kube-prometheus-stack subchart's .Chart.Name is "kube-prometheus-stack" regardless of the alias, so this override keeps names aligned.
+  nameOverride: "prometheus"
+
   ## @param prometheus.cleanPrometheusOperatorObjectNames Clean object names (avoids redundant suffixes)
   cleanPrometheusOperatorObjectNames: true
 

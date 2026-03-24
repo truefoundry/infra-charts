@@ -4,8 +4,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "truefoundry-monitoring.fullname" . }}-datasources
   labels:
-    {{- include "truefoundry-monitoring.labels" . | nindent 4 }}
-    {{ .Values.grafana.sidecar.datasources.label }}: {{ .Values.grafana.sidecar.datasources.labelValue | quote }}
+    {{- include "truefoundry-monitoring.grafana.datasourceLabels" . | nindent 4 }}
 data:
   datasources.yaml: |
     apiVersion: 1
