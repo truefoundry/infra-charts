@@ -1,32 +1,3 @@
-## @section Configuration options for adding a CA certificate volume
-
-## addCaCertificateVolume Configuration options for adding a CA certificate volume
-addCaCertificateVolume:
-  ## @param addCaCertificateVolume.enabled Enable or disable adding the CA certificate volume
-  enabled: false
-  ## @param addCaCertificateVolume.sourceNamespace The namespace where the source ConfigMap is located
-  sourceNamespace: ""
-  sourceConfigMap:
-    ## @param addCaCertificateVolume.sourceConfigMap.name The source ConfigMap name that contains the CA certificate
-    name: ""
-    ## @param addCaCertificateVolume.sourceConfigMap.subPath The subPath in the source ConfigMap where the CA certificate is located
-    subPath: ""
-  destinationConfigMap:
-    ## @param addCaCertificateVolume.destinationConfigMap.name The destination ConfigMap name where the CA certificate volume will be mounted
-    name: ""
-  ## @param addCaCertificateVolume.excludeNamespaces Namespaces to exclude from adding the CA certificate volume
-  excludeNamespaces: []
-  ## Ex -
-  ## - label:
-  ##     key: "app.kubernetes.io/instance"
-  ##     value: "truefoundry"
-  ##   mountPaths:
-  ##     - /etc/ssl/certs
-  ## @param addCaCertificateVolume.injectionConfigs Configuration options for injecting the CA certificate volume
-  injectionConfigs: []
-  ## @param addCaCertificateVolume.envs Env variables to inject to the selected containers
-  envs: []
-
 ## @section replaceImageRegistry Configuration options for replacing the image registry
 replaceImageRegistry:
   ## @param replaceImageRegistry.enabled Enable or disable replacing the image registry
@@ -60,6 +31,65 @@ replaceArgoHelmRepo:
   ##   "*": "registry.organization.com"
   ##   "https://truefoundry.github.io/infra-charts/": "registry.organization.com/helm/infra-charts"
   registryReplacementMap: {}
+## @section syncConfigMaps Configuration options for syncing ConfigMaps across namespaces
+syncConfigMaps:
+  ## @param syncConfigMaps.enabled Enable or disable syncing ConfigMaps across namespaces
+  enabled: false
+  ## @param syncConfigMaps.excludeNamespaces Namespaces to exclude from syncing ConfigMaps
+  excludeNamespaces: []
+  ## @param syncConfigMaps.includeNamespaces Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+  ## @param syncConfigMaps.items List of ConfigMaps to sync across namespaces
+  ## Example:
+  ##   - namespace: truefoundry
+  ##     name: ca-cert-bundle
+  items: []
+
+## @section syncSecrets Configuration options for syncing Secrets across namespaces
+syncSecrets:
+  ## @param syncSecrets.enabled Enable or disable syncing Secrets across namespaces
+  enabled: false
+  ## @param syncSecrets.excludeNamespaces Namespaces to exclude from syncing Secrets
+  excludeNamespaces: []
+  ## @param syncSecrets.includeNamespaces Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+  ## @param syncSecrets.items List of Secrets to sync across namespaces
+  ## Example:
+  ##   - namespace: truefoundry
+  ##     name: my-tls-secret
+  items: []
+
+## @section podVolumeMounts Configuration options for adding volume mounts to pods
+podVolumeMounts:
+  ## @param podVolumeMounts.enabled Enable or disable adding volume mounts to pods
+  enabled: false
+  ## @param podVolumeMounts.excludeNamespaces Namespaces to exclude from adding volume mounts to pods
+  excludeNamespaces: []
+
+  ## @param podVolumeMounts.includeNamespaces Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included
+  includeNamespaces: []
+
+  ## @param podVolumeMounts.objectSelector Label selector to match specific pods. When set, only pods matching these labels will be mutated
+  ## Example:
+  ##   matchLabels:
+  ##     app.kubernetes.io/instance: truefoundry
+  ##   matchExpressions:
+  ##     - key: app.kubernetes.io/instance
+  ##       operator: In
+  ##       values: ["truefoundry", "my-app"]
+  objectSelector: {}
+
+  ## @param podVolumeMounts.mountDetails The details of the volume mounts to add
+  ## Example:
+  ##   - type: secret
+  ##     secretName: my-secret
+  ##     mountPath: /var/run/secrets/my-secret
+  ##     subPath: my-subPath
+  ##   - type: configMap
+  ##     configMapName: my-configmap
+  ##     mountPath: /my/configmap/path
+  ##     subPath: my-subPath
+  mountDetails: []
 
 ## @param additionalKyvernoPolicies Additional Kyverno clusterpolicies to apply
 additionalKyvernoPolicies: []

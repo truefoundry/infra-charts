@@ -1,0 +1,119 @@
+{{- if and .Values.podVolumeMounts.enabled .Values.podVolumeMounts.mountDetails -}}
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-pod-volume-mounts
+  namespace: {{ .Release.Namespace }}
+spec:
+  matchConstraints:
+    {{- if or .Values.podVolumeMounts.excludeNamespaces .Values.podVolumeMounts.includeNamespaces }}
+    namespaceSelector:
+      matchExpressions:
+        {{- if .Values.podVolumeMounts.excludeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            {{- range .Values.podVolumeMounts.excludeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.podVolumeMounts.includeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            {{- range .Values.podVolumeMounts.includeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- end }}
+    {{- end }}
+    {{- if .Values.podVolumeMounts.objectSelector }}
+    objectSelector:
+      {{- with .Values.podVolumeMounts.objectSelector.matchLabels }}
+      matchLabels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podVolumeMounts.objectSelector.matchExpressions }}
+      matchExpressions:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['CREATE', 'UPDATE']
+        resources: ['pods']
+  matchConditions:
+    - name: has-new-volumes
+      expression: >-
+        !has(object.spec.volumes) ||
+        {{- range $i, $m := .Values.podVolumeMounts.mountDetails }}
+        {{- $volName := "" }}
+        {{- if eq $m.type "secret" }}{{ $volName = $m.secretName }}{{ else if eq $m.type "configMap" }}{{ $volName = $m.configMapName }}{{ end }}
+        {{ if $i }}||{{ end }} !object.spec.volumes.exists(v, v.name == "{{ $volName }}")
+        {{- end }}
+  mutations:
+    {{- range $m := .Values.podVolumeMounts.mountDetails }}
+    {{- $volName := "" }}
+    {{- if eq $m.type "secret" }}{{ $volName = $m.secretName }}{{ else if eq $m.type "configMap" }}{{ $volName = $m.configMapName }}{{ end }}
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: |
+          !has(object.spec.volumes) || !object.spec.volumes.exists(v, v.name == "{{ $volName }}") ?
+          Object{
+            spec: Object.spec{
+              volumes: [
+                {{- if eq $m.type "secret" }}
+                Object.spec.volumes{
+                  name: "{{ $m.secretName }}",
+                  secret: Object.spec.volumes.secret{
+                    secretName: "{{ $m.secretName }}"
+                  }
+                }
+                {{- else if eq $m.type "configMap" }}
+                Object.spec.volumes{
+                  name: "{{ $m.configMapName }}",
+                  configMap: Object.spec.volumes.configMap{
+                    name: "{{ $m.configMapName }}",
+                    defaultMode: 420
+                  }
+                }
+                {{- end }}
+              ],
+              containers: object.spec.containers.map(c,
+                Object.spec.containers{
+                  name: c.name,
+                  volumeMounts: [
+                    Object.spec.containers.volumeMounts{
+                      name: "{{ $volName }}",
+                      mountPath: "{{ $m.mountPath }}"
+                      {{- if $m.subPath }},
+                      subPath: "{{ $m.subPath }}"
+                      {{- end }}
+                    }
+                  ]
+                }
+              ),
+              initContainers: has(object.spec.initContainers) ?
+                object.spec.initContainers.map(c,
+                  Object.spec.initContainers{
+                    name: c.name,
+                    volumeMounts: [
+                      Object.spec.initContainers.volumeMounts{
+                        name: "{{ $volName }}",
+                        mountPath: "{{ $m.mountPath }}"
+                        {{- if $m.subPath }},
+                        subPath: "{{ $m.subPath }}"
+                        {{- end }}
+                      }
+                    ]
+                  }
+                ) : []
+            }
+          } : Object{}
+    {{- end }}
+  evaluation:
+    admission:
+      enabled: true
+  webhookConfiguration:
+    timeoutSeconds: 10
+{{- end -}}

@@ -3,18 +3,33 @@ A Helm chart for kyverno configurations
 
 ## Parameters
 
-### Configuration options for adding a CA certificate volume
+### syncConfigMaps Configuration options for syncing ConfigMaps across namespaces
 
-| Name                                               | Description                                                                    | Value   |
-| -------------------------------------------------- | ------------------------------------------------------------------------------ | ------- |
-| `addCaCertificateVolume.enabled`                   | Enable or disable adding the CA certificate volume                             | `false` |
-| `addCaCertificateVolume.sourceNamespace`           | The namespace where the source ConfigMap is located                            | `""`    |
-| `addCaCertificateVolume.sourceConfigMap.name`      | The source ConfigMap name that contains the CA certificate                     | `""`    |
-| `addCaCertificateVolume.sourceConfigMap.subPath`   | The subPath in the source ConfigMap where the CA certificate is located        | `""`    |
-| `addCaCertificateVolume.destinationConfigMap.name` | The destination ConfigMap name where the CA certificate volume will be mounted | `""`    |
-| `addCaCertificateVolume.excludeNamespaces`         | Namespaces to exclude from adding the CA certificate volume                    | `[]`    |
-| `addCaCertificateVolume.injectionConfigs`          | Configuration options for injecting the CA certificate volume                  | `[]`    |
-| `addCaCertificateVolume.envs`                      | Env variables to inject to the selected containers                             | `[]`    |
+| Name                             | Description                                            | Value   |
+| -------------------------------- | ------------------------------------------------------ | ------- |
+| `syncConfigMaps.enabled`           | Enable or disable syncing ConfigMaps across namespaces                                                     | `false` |
+| `syncConfigMaps.excludeNamespaces` | Namespaces to exclude from syncing ConfigMaps                                                              | `[]`    |
+| `syncConfigMaps.includeNamespaces` | Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included       | `[]`    |
+| `syncConfigMaps.items`             | List of ConfigMaps to sync (each with `namespace` and `name`)                                              | `[]`    |
+
+### syncSecrets Configuration options for syncing Secrets across namespaces
+
+| Name                            | Description                                           | Value   |
+| ------------------------------- | ----------------------------------------------------- | ------- |
+| `syncSecrets.enabled`           | Enable or disable syncing Secrets across namespaces                                                  | `false` |
+| `syncSecrets.excludeNamespaces` | Namespaces to exclude from syncing Secrets                                                           | `[]`    |
+| `syncSecrets.includeNamespaces` | Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included     | `[]`    |
+| `syncSecrets.items`             | List of Secrets to sync (each with `namespace` and `name`)                                           | `[]`    |
+
+### podVolumeMounts Configuration options for adding volume mounts to pods
+
+| Name                                | Description                                                                                                      | Value   |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------- |
+| `podVolumeMounts.enabled`           | Enable or disable adding volume mounts to pods                                                                   | `false` |
+| `podVolumeMounts.excludeNamespaces` | Namespaces to exclude from adding volume mounts to pods                                                          | `[]`    |
+| `podVolumeMounts.includeNamespaces` | Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included   | `[]`    |
+| `podVolumeMounts.objectSelector`    | Label selector to match specific pods. Supports `matchLabels` and `matchExpressions`                             | `{}`    |
+| `podVolumeMounts.mountDetails`      | The details of the volume mounts to add (supports `secret` and `configMap` types)                                | `[]`    |
 
 ### replaceImageRegistry Configuration options for replacing the image registry
 

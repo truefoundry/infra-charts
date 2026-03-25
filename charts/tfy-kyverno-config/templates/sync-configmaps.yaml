@@ -1,0 +1,51 @@
+{{- if and .Values.syncConfigMaps.enabled .Values.syncConfigMaps.items -}}
+apiVersion: policies.kyverno.io/v1
+kind: GeneratingPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-sync-configmaps
+spec:
+  evaluation:
+    synchronize:
+      enabled: true
+  matchConstraints:
+    {{- if or .Values.syncConfigMaps.excludeNamespaces .Values.syncConfigMaps.includeNamespaces }}
+    namespaceSelector:
+      matchExpressions:
+        {{- if .Values.syncConfigMaps.excludeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values:
+            {{- range .Values.syncConfigMaps.excludeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- end }}
+        {{- if .Values.syncConfigMaps.includeNamespaces }}
+        - key: kubernetes.io/metadata.name
+          operator: In
+          values:
+            {{- range .Values.syncConfigMaps.includeNamespaces }}
+            - {{ . }}
+            {{- end }}
+        {{- end }}
+    {{- end }}
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: ['v1']
+        operations: ['CREATE']
+        resources: ['namespaces']
+  variables:
+    - name: nsName
+      expression: "object.metadata.name"
+    {{- range $i, $cm := .Values.syncConfigMaps.items }}
+    - name: source{{ $i }}
+      expression: >-
+        resource.Get("v1", "configmaps", "{{ $cm.namespace }}", "{{ $cm.name }}")
+    {{- end }}
+  generate:
+    - expression: >-
+        generator.Apply(variables.nsName, [
+        {{- range $i, $cm := .Values.syncConfigMaps.items }}
+        {{- if $i }}, {{ end }}variables.source{{ $i }}
+        {{- end }}
+        ])
+{{- end -}}
