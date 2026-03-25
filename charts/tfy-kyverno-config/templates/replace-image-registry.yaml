@@ -6,6 +6,11 @@
     {{- $wildcard = $target }}
   {{- else }}
     {{- $_ := set $overrides $source $target }}
+    {{- if eq $source "docker.io" }}
+      {{- $_ := set $overrides "index.docker.io" $target }}
+    {{- else if eq $source "index.docker.io" }}
+      {{- $_ := set $overrides "docker.io" $target }}
+    {{- end }}
   {{- end }}
 {{- end }}
 apiVersion: policies.kyverno.io/v1
@@ -54,32 +59,34 @@ spec:
               containers: object.spec.containers.map(c,
                 Object.spec.containers{
                   name: c.name,
-                  image:
-                  {{- range $source, $target := $overrides }}
-                    c.image.startsWith('{{ $source }}/') ? '{{ $target }}/' + c.image.substring({{ add (len $source) 1 }}) :
-                  {{- end }}
-                  {{- if $wildcard }}
+                  image: (
+                    {{- range $source, $target := $overrides }}
+                    image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + ':' + image(c.image).identifier() :
+                    {{- end }}
+                    {{- if $wildcard }}
                     c.image.startsWith('{{ $wildcard }}/') ? c.image :
-                    '{{ $wildcard }}/' + (c.image.contains('/') ? c.image.substring(c.image.indexOf('/') + 1) : c.image)
-                  {{- else }}
+                    '{{ $wildcard }}/' + image(c.image).repository() + ':' + image(c.image).identifier()
+                    {{- else }}
                     c.image
-                  {{- end }}
+                    {{- end }}
+                  )
                 }
               ),
               initContainers: has(object.spec.initContainers) ?
                 object.spec.initContainers.map(c,
                   Object.spec.initContainers{
                     name: c.name,
-                    image:
-                    {{- range $source, $target := $overrides }}
-                      c.image.startsWith('{{ $source }}/') ? '{{ $target }}/' + c.image.substring({{ add (len $source) 1 }}) :
-                    {{- end }}
-                    {{- if $wildcard }}
+                    image: (
+                      {{- range $source, $target := $overrides }}
+                      image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + ':' + image(c.image).identifier() :
+                      {{- end }}
+                      {{- if $wildcard }}
                       c.image.startsWith('{{ $wildcard }}/') ? c.image :
-                      '{{ $wildcard }}/' + (c.image.contains('/') ? c.image.substring(c.image.indexOf('/') + 1) : c.image)
-                    {{- else }}
+                      '{{ $wildcard }}/' + image(c.image).repository() + ':' + image(c.image).identifier()
+                      {{- else }}
                       c.image
-                    {{- end }}
+                      {{- end }}
+                    )
                   }
                 ) : []
             }
