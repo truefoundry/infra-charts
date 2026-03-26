@@ -52,7 +52,7 @@ spec:
         {{- end }}
         {{- $inferentiaNotAllowedInstanceValues := .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
         {{- $inferentiaNotAllowedValuesAreCategories := false }}
-        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.inferentiaNodePool.instanceCategories.notAllowed }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.inferentiaNodePool.instanceCategories (hasKey .Values.karpenter.inferentiaNodePool.instanceCategories "notAllowed") }}
         {{- $inferentiaNotAllowedInstanceValues = .Values.karpenter.inferentiaNodePool.instanceCategories.notAllowed }}
         {{- $inferentiaNotAllowedValuesAreCategories = true }}
         {{- end }}

@@ -66,7 +66,7 @@ spec:
         {{- end }}
         {{- $gpuNotAllowedInstanceValues := .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed }}
         {{- $gpuNotAllowedValuesAreCategories := false }}
-        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.gpuNodePool.instanceCategories.notAllowed }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.gpuNodePool.instanceCategories (hasKey .Values.karpenter.gpuNodePool.instanceCategories "notAllowed") }}
         {{- $gpuNotAllowedInstanceValues = .Values.karpenter.gpuNodePool.instanceCategories.notAllowed }}
         {{- $gpuNotAllowedValuesAreCategories = true }}
         {{- end }}

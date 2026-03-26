@@ -38,12 +38,10 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
-        {{- if not .Values.karpenter.eksAutoMode.enabled }}
         - key: kubernetes.io/os
           operator: In
           values:
           - linux
-        {{- end }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
@@ -62,7 +60,7 @@ spec:
         {{- end }}
         {{- $criticalNotAllowedInstanceValues := .Values.karpenter.critical.instanceFamilies.notAllowed }}
         {{- $criticalNotAllowedValuesAreCategories := false }}
-        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories.notAllowed }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories (hasKey .Values.karpenter.critical.instanceCategories "notAllowed") }}
         {{- $criticalNotAllowedInstanceValues = .Values.karpenter.critical.instanceCategories.notAllowed }}
         {{- $criticalNotAllowedValuesAreCategories = true }}
         {{- end }}

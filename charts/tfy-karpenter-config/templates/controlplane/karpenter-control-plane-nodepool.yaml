@@ -38,12 +38,10 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
-        {{- if not .Values.karpenter.eksAutoMode.enabled }}
         - key: kubernetes.io/os
           operator: In
           values:
           - linux
-        {{- end }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
@@ -62,7 +60,7 @@ spec:
         {{- end }}
         {{- $controlPlaneNotAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
         {{- $controlPlaneNotAllowedValuesAreCategories := false }}
-        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories (hasKey .Values.karpenter.controlPlaneNodePool.instanceCategories "notAllowed") }}
         {{- $controlPlaneNotAllowedInstanceValues = .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
         {{- $controlPlaneNotAllowedValuesAreCategories = true }}
         {{- end }}
