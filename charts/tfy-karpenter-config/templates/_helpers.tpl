@@ -147,7 +147,7 @@ karpenter.k8s.aws
 
 {{- define "tfyKarpenterConfig.instanceFamilyRequirementKey" -}}
 {{- if .Values.karpenter.eksAutoMode.enabled -}}
-eks.amazonaws.com/instance-family
+eks.amazonaws.com/instance-category
 {{- else -}}
 karpenter.k8s.aws/instance-family
 {{- end -}}
@@ -167,4 +167,23 @@ eks.amazonaws.com/instance-generation
 {{- else -}}
 karpenter.k8s.aws/instance-generation
 {{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.instanceConstraintValues" -}}
+{{- $values := .values -}}
+{{- $eksAutoModeEnabled := .eksAutoModeEnabled -}}
+{{- $treatAsCategory := .treatAsCategory | default false -}}
+{{- $seen := dict -}}
+{{- range $values }}
+{{- $value := "" -}}
+{{- if and $eksAutoModeEnabled (not $treatAsCategory) }}
+{{- $value = regexReplaceAll "[0-9].*$" (toString .) "" -}}
+{{- else }}
+{{- $value = (toString .) -}}
+{{- end }}
+{{- if and $value (not (hasKey $seen $value)) }}
+{{- $_ := set $seen $value true }}
+- {{ $value | quote }}
+{{- end }}
+{{- end }}
 {{- end -}}

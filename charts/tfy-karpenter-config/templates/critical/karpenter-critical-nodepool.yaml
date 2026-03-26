@@ -48,21 +48,29 @@ spec:
           operator: Gt
           values:
             - "4"
-        {{- if .Values.karpenter.critical.instanceFamilies.allowed }}
+        {{- $criticalAllowedInstanceValues := .Values.karpenter.critical.instanceFamilies.allowed }}
+        {{- $criticalAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories.allowed }}
+        {{- $criticalAllowedInstanceValues = .Values.karpenter.critical.instanceCategories.allowed }}
+        {{- $criticalAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $criticalAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
-          {{- range .Values.karpenter.critical.instanceFamilies.allowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $criticalAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $criticalAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
-        {{- if .Values.karpenter.critical.instanceFamilies.notAllowed }}
+        {{- $criticalNotAllowedInstanceValues := .Values.karpenter.critical.instanceFamilies.notAllowed }}
+        {{- $criticalNotAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories.notAllowed }}
+        {{- $criticalNotAllowedInstanceValues = .Values.karpenter.critical.instanceCategories.notAllowed }}
+        {{- $criticalNotAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $criticalNotAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
-          {{- range .Values.karpenter.critical.instanceFamilies.notAllowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $criticalNotAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $criticalNotAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
         {{- if .Values.karpenter.critical.instanceSizes.allowed }}
         - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}

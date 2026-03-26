@@ -1,3 +1,4 @@
+{{- if .Values.karpenter.defaultNodeTemplate.create }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
@@ -78,3 +79,4 @@ spec:
   userData: {{- .Values.karpenter.defaultNodeTemplate.userData | toYaml | indent 2 }}
   {{- end }}
   {{- end }}
+{{- end }}

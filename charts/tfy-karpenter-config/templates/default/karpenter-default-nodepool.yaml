@@ -1,3 +1,4 @@
+{{- if .Values.karpenter.defaultNodePool.create }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
@@ -49,21 +50,29 @@ spec:
           operator: Gt
           values:
             - "4"
-        {{- if .Values.karpenter.defaultNodePool.instanceFamilies.allowed }}
+        {{- $defaultAllowedInstanceValues := .Values.karpenter.defaultNodePool.instanceFamilies.allowed }}
+        {{- $defaultAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.defaultNodePool.instanceCategories.allowed }}
+        {{- $defaultAllowedInstanceValues = .Values.karpenter.defaultNodePool.instanceCategories.allowed }}
+        {{- $defaultAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $defaultAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
-          {{- range .Values.karpenter.defaultNodePool.instanceFamilies.allowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $defaultAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $defaultAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
-        {{- if .Values.karpenter.defaultNodePool.instanceFamilies.notAllowed }}
+        {{- $defaultNotAllowedInstanceValues := .Values.karpenter.defaultNodePool.instanceFamilies.notAllowed }}
+        {{- $defaultNotAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.defaultNodePool.instanceCategories.notAllowed }}
+        {{- $defaultNotAllowedInstanceValues = .Values.karpenter.defaultNodePool.instanceCategories.notAllowed }}
+        {{- $defaultNotAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $defaultNotAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
-          {{- range .Values.karpenter.defaultNodePool.instanceFamilies.notAllowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $defaultNotAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $defaultNotAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
         {{- if .Values.karpenter.defaultNodePool.instanceSizes.allowed }}
         - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
@@ -99,3 +108,4 @@ spec:
   limits:
   {{- .Values.karpenter.defaultNodePool.limits | toYaml | nindent 4 }}
   {{- end }}
+{{- end }}

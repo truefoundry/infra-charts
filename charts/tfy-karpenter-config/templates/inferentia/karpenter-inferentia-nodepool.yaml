@@ -38,21 +38,29 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
-        {{- if .Values.karpenter.inferentiaNodePool.instanceFamilies.allowed }}
+        {{- $inferentiaAllowedInstanceValues := .Values.karpenter.inferentiaNodePool.instanceFamilies.allowed }}
+        {{- $inferentiaAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.inferentiaNodePool.instanceCategories.allowed }}
+        {{- $inferentiaAllowedInstanceValues = .Values.karpenter.inferentiaNodePool.instanceCategories.allowed }}
+        {{- $inferentiaAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $inferentiaAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
-          {{- range .Values.karpenter.inferentiaNodePool.instanceFamilies.allowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $inferentiaAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $inferentiaAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
-        {{- if .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
+        {{- $inferentiaNotAllowedInstanceValues := .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
+        {{- $inferentiaNotAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.inferentiaNodePool.instanceCategories.notAllowed }}
+        {{- $inferentiaNotAllowedInstanceValues = .Values.karpenter.inferentiaNodePool.instanceCategories.notAllowed }}
+        {{- $inferentiaNotAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $inferentiaNotAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
-          {{- range .Values.karpenter.inferentiaNodePool.instanceFamilies.notAllowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $inferentiaNotAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $inferentiaNotAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
         {{- if .Values.karpenter.inferentiaNodePool.instanceSizes.allowed }}
         - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}

@@ -48,21 +48,29 @@ spec:
           operator: Gt
           values:
             - "4"
-        {{- if .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
+        {{- $controlPlaneAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
+        {{- $controlPlaneAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.allowed }}
+        {{- $controlPlaneAllowedInstanceValues = .Values.karpenter.controlPlaneNodePool.instanceCategories.allowed }}
+        {{- $controlPlaneAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $controlPlaneAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
-          {{- range .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $controlPlaneAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $controlPlaneAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
-        {{- if .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
+        {{- $controlPlaneNotAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
+        {{- $controlPlaneNotAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
+        {{- $controlPlaneNotAllowedInstanceValues = .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
+        {{- $controlPlaneNotAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $controlPlaneNotAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
-          {{- range .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $controlPlaneNotAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $controlPlaneNotAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
         {{- if .Values.karpenter.controlPlaneNodePool.instanceSizes.allowed }}
         - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}

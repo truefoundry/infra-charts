@@ -52,21 +52,29 @@ spec:
             - {{ . | quote }}
           {{- end }}
         {{- end }}
-        {{- if .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
+        {{- $gpuAllowedInstanceValues := .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
+        {{- $gpuAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.gpuNodePool.instanceCategories.allowed }}
+        {{- $gpuAllowedInstanceValues = .Values.karpenter.gpuNodePool.instanceCategories.allowed }}
+        {{- $gpuAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $gpuAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: In
           values:
-          {{- range .Values.karpenter.gpuNodePool.instanceFamilies.allowed }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $gpuAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $gpuAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
-        {{- if .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed }}
+        {{- $gpuNotAllowedInstanceValues := .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed }}
+        {{- $gpuNotAllowedValuesAreCategories := false }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.gpuNodePool.instanceCategories.notAllowed }}
+        {{- $gpuNotAllowedInstanceValues = .Values.karpenter.gpuNodePool.instanceCategories.notAllowed }}
+        {{- $gpuNotAllowedValuesAreCategories = true }}
+        {{- end }}
+        {{- if $gpuNotAllowedInstanceValues }}
         - key: {{ include "tfyKarpenterConfig.instanceFamilyRequirementKey" . }}
           operator: NotIn
           values:
-          {{- range .Values.karpenter.gpuNodePool.instanceFamilies.notAllowed  }}
-            - {{ . | quote }}
-          {{- end }}
+          {{- include "tfyKarpenterConfig.instanceConstraintValues" (dict "values" $gpuNotAllowedInstanceValues "eksAutoModeEnabled" .Values.karpenter.eksAutoMode.enabled "treatAsCategory" $gpuNotAllowedValuesAreCategories) | nindent 10 }}
         {{- end }}
         {{- if .Values.karpenter.gpuNodePool.instanceSizes.notAllowed }}
         - key: {{ include "tfyKarpenterConfig.instanceSizeRequirementKey" . }}
