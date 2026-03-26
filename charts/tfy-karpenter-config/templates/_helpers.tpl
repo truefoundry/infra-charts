@@ -145,6 +145,42 @@ karpenter.k8s.aws
 {{- end -}}
 {{- end -}}
 
+{{- define "tfyKarpenterConfig.shouldRenderNodeClass" -}}
+{{- $ctx := .context -}}
+{{- $name := .name -}}
+{{- $existing := lookup (include "tfyKarpenterConfig.nodeClassApiVersion" $ctx) (include "tfyKarpenterConfig.nodeClassKind" $ctx) "" $name -}}
+{{- if not $existing -}}
+true
+{{- else -}}
+{{- $metadata := get $existing "metadata" | default dict -}}
+{{- $labels := get $metadata "labels" | default dict -}}
+{{- $annotations := get $metadata "annotations" | default dict -}}
+{{- if and (eq (get $labels "app.kubernetes.io/managed-by") "Helm") (eq (get $annotations "meta.helm.sh/release-name") $ctx.Release.Name) (eq (get $annotations "meta.helm.sh/release-namespace") $ctx.Release.Namespace) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "tfyKarpenterConfig.shouldRenderNodePool" -}}
+{{- $ctx := .context -}}
+{{- $name := .name -}}
+{{- $existing := lookup "karpenter.sh/v1" "NodePool" "" $name -}}
+{{- if not $existing -}}
+true
+{{- else -}}
+{{- $metadata := get $existing "metadata" | default dict -}}
+{{- $labels := get $metadata "labels" | default dict -}}
+{{- $annotations := get $metadata "annotations" | default dict -}}
+{{- if and (eq (get $labels "app.kubernetes.io/managed-by") "Helm") (eq (get $annotations "meta.helm.sh/release-name") $ctx.Release.Name) (eq (get $annotations "meta.helm.sh/release-namespace") $ctx.Release.Namespace) -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "tfyKarpenterConfig.instanceFamilyRequirementKey" -}}
 {{- if .Values.karpenter.eksAutoMode.enabled -}}
 eks.amazonaws.com/instance-category

@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.inferentiaDefaultNodeTemplate.enabled }}
+{{- if and .Values.karpenter.inferentiaDefaultNodeTemplate.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodeClass" (dict "context" . "name" .Values.karpenter.inferentiaDefaultNodeTemplate.name)) "true") }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:

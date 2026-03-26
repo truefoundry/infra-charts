@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.gpuDefaultNodeTemplate.enabled }}
+{{- if and .Values.karpenter.gpuDefaultNodeTemplate.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodeClass" (dict "context" . "name" .Values.karpenter.gpuDefaultNodeTemplate.name)) "true") }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:

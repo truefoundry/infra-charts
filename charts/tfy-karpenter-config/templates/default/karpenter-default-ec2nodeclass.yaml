@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.defaultNodeTemplate.create }}
+{{- if and .Values.karpenter.defaultNodeTemplate.create (eq (include "tfyKarpenterConfig.shouldRenderNodeClass" (dict "context" . "name" .Values.karpenter.defaultNodeTemplate.name)) "true") }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:

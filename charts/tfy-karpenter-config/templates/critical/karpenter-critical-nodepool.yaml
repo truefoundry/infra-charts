@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.critical.enabled }}
+{{- if and .Values.karpenter.critical.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodePool" (dict "context" . "name" .Values.karpenter.critical.name)) "true") }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:

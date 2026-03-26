@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.gpuNodePool.enabled }}
+{{- if and .Values.karpenter.gpuNodePool.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodePool" (dict "context" . "name" .Values.karpenter.gpuNodePool.name)) "true") }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:

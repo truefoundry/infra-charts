@@ -1,4 +1,4 @@
-{{- if .Values.karpenter.inferentiaNodePool.enabled }}
+{{- if and .Values.karpenter.inferentiaNodePool.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodePool" (dict "context" . "name" .Values.karpenter.inferentiaNodePool.name)) "true") }}
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
