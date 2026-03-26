@@ -352,6 +352,10 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
     {{- $volumes = append $volumes . }}
   {{- end }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -360,7 +364,8 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
   mountPath: {{ .Values.deltaFusionIngestor.storage.mountPath }}
 {{- with .Values.deltaFusionIngestor.extraVolumeMounts }}
 {{- toYaml . | nindent 0 }}
-{{- end -}}
+{{- end }}
+{{- include "truefoundry.customCA.volumeMounts" . -}}
 {{- end -}}
 
 {{- define "deltafusion-ingestor.imagePullSecrets" -}}
@@ -649,6 +654,10 @@ Tolerations for the deltafusion-compaction service
     {{- $volumes = append $volumes . }}
   {{- end }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -659,6 +668,10 @@ Tolerations for the deltafusion-compaction service
     {{- $volumeMounts = append $volumeMounts . }}
   {{- end }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumeMounts = concat $volumeMounts $caData.items -}}
+{{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 

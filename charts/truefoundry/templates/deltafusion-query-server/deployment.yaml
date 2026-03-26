@@ -27,6 +27,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "deltafusion-query-server"
           {{- with .Values.deltaFusionQueryServer.securityContext }}
@@ -82,7 +86,7 @@ spec:
           volumeMounts:
             - name: tmp-dir
               mountPath: /tmp
-            {{- if .Values.deltaFusionQueryServer.extraVolumeMounts }}
+            {{- if or .Values.deltaFusionQueryServer.extraVolumeMounts .Values.global.customCA.enabled }}
             {{- include "deltafusion-query-server.volumeMounts" . | nindent 12 }}
             {{- end }}
       imagePullSecrets:
@@ -91,7 +95,7 @@ spec:
         - name: tmp-dir
           emptyDir:
             sizeLimit: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
-        {{- if .Values.deltaFusionQueryServer.extraVolumes }}
+        {{- if or .Values.deltaFusionQueryServer.extraVolumes .Values.global.customCA.enabled }}
         {{- include "deltafusion-query-server.volumes" . | nindent 8 }}
         {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionQueryServer.nodeSelector) }}

@@ -194,6 +194,10 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumes = append $volumes (dict "name" "config-vol" "configMap" (dict "name" (include "s3proxy.configmapName" .))) }}
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -206,6 +210,10 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumeMounts = append $volumeMounts (dict "name" "config-vol" "mountPath" "/opt/s3proxy/config.properties" "subPath" "config.properties") }}
+{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumeMounts = concat $volumeMounts $caData.items -}}
+{{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 

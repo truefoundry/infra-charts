@@ -234,6 +234,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   Create the env file
   */}}
 {{- define "servicefoundry-server.env" }}
+{{- $tfyConfigsEnabled := true -}}
+{{- if hasKey .Values "tfy-configs" -}}
+  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- end -}}
 {{- range $key, $val := (include "servicefoundry-server.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
@@ -256,21 +260,25 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
 - name: CICD_TEMPLATES_DIRECTORY
   value: /opt/truefoundry/configs/cicd-templates
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
 - name: WORKBENCH_IMAGES_CONFIG_PATH
   value: /opt/truefoundry/configs/workbench-images/workbench-images.yaml
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
 - name: IMAGE_MUTATION_POLICY_CONFIG_PATH
   value: /opt/truefoundry/configs/image-mutation-policy/image-mutation-policy.yaml
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
 - name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
   value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
+{{- end }}
+{{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
+- name: LLM_CODE_SNIPPET_TEMPLATE_DIRECTORY
+  value: /opt/truefoundry/configs/llm-gateway/code-snippet
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
 - name: BUILD_JOB_TEMPLATE_PATH
@@ -284,23 +292,53 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 {{- define "servicefoundry-server.volumes" -}}
 {{- $volumes := list -}}
+{{- $tfyConfigsEnabled := true -}}
+{{- if hasKey .Values "tfy-configs" -}}
+  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- end -}}
 {{- $volumes = append $volumes (dict "name" "truefoundry-tmpdir" "emptyDir" (dict)) -}}
 {{- if .Values.servicefoundryServer.extraVolumes }}
   {{- range .Values.servicefoundryServer.extraVolumes }}
     {{- $volumes = append $volumes . }}
   {{- end }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
   {{- $volumes = append $volumes (dict "name" "configs-cicd-templates" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.cicdTemplates .))) }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumes = append $volumes (dict "name" "configs-workbench-images" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.workbenchImages .))) }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
   {{- $volumes = append $volumes (dict "name" "configs-image-mutation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .))) }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
+{{- end }}
+{{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-chat" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.embedding .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-embedding" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.embedding .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.image .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-image" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.image .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.realtime .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-realtime" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.realtime .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.rerank .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-rerank" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.rerank .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.speech .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-speech" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.speech .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.transcription .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-transcription" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.transcription .))) }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-codesnippet-translation" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .))) }}
+  {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $configMapName := "" }}
@@ -314,6 +352,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if .Values.servicefoundryServer.tfyK8sSecretName }}
   {{- $volumes = append $volumes (dict "name" "tfy-k8s-secrets" "secret" (dict "secretName" (tpl .Values.servicefoundryServer.tfyK8sSecretName .))) }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
 
 {{- $volumes | toYaml -}}
 {{- end -}}
@@ -321,23 +363,53 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 {{- define "servicefoundry-server.volumeMounts" -}}
 {{- $volumeMounts := list -}}
+{{- $tfyConfigsEnabled := true -}}
+{{- if hasKey .Values "tfy-configs" -}}
+  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- end -}}
 {{- $volumeMounts = append $volumeMounts (dict "name" "truefoundry-tmpdir" "mountPath" "/tmp") -}}
 {{- if .Values.servicefoundryServer.extraVolumeMounts }}
   {{- range .Values.servicefoundryServer.extraVolumeMounts }}
     {{- $volumeMounts = append $volumeMounts . }}
   {{- end }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.cicdTemplates .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-cicd-templates" "mountPath" "/opt/truefoundry/configs/cicd-templates") }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.workbenchImages .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-workbench-images" "mountPath" "/opt/truefoundry/configs/workbench-images") }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.imageMutationPolicy .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-image-mutation-policy" "mountPath" "/opt/truefoundry/configs/image-mutation-policy") }}
 {{- end }}
-{{- if (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
+{{- end }}
+{{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-chat" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/chat") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.embedding .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-embedding" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/embedding") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.image .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-image" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/image") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.realtime .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-realtime" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/realtime") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.rerank .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-rerank" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/rerank") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.speech .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-speech" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/speech") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.transcription .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-transcription" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/transcription") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-translation" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/translation") }}
+  {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-build-job-template" "mountPath" "/opt/truefoundry/configs/build-job-template") }}
@@ -345,6 +417,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if .Values.servicefoundryServer.tfyK8sSecretName }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "tfy-k8s-secrets" "mountPath" "/opt/truefoundry/tfy-k8s-secrets" "readOnly" true) }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumeMounts = concat $volumeMounts $caData.items -}}
+{{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 

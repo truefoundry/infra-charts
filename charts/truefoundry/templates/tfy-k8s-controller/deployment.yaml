@@ -25,6 +25,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-k8s-controller"
           {{- with .Values.tfyK8sController.securityContext }}
@@ -33,6 +37,7 @@ spec:
           {{- end }}
           env:
             {{- include "tfy-k8s-controller.env" . | trim | nindent 12 }}
+            {{- include "truefoundry.customCA.env" . | nindent 12 }}
           image: "{{ .Values.tfyK8sController.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyK8sController.image.repository }}:{{ .Values.tfyK8sController.image.tag }}"
           imagePullPolicy: {{ .Values.tfyK8sController.imagePullPolicy }}
           ports:

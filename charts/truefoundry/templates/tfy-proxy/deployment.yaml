@@ -35,6 +35,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.tfyProxy.terminationGracePeriodSeconds | default 300 }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-proxy"
           {{- with .Values.tfyProxy.securityContext }}
