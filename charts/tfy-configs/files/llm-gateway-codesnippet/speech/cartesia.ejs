@@ -1,0 +1,32 @@
+import asyncio
+from cartesia import AsyncCartesia
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+client = AsyncCartesia(
+    api_key=TFY_API_KEY,
+    base_url=BASE_URL,
+)
+
+
+async def main():
+    response = await client.tts.generate(
+        model_id="<%= model %>",
+        transcript="Welcome to Cartesia Sonic!",
+        voice={"mode": "id", "id": "a0e99841-438c-4a64-b679-ae501e7d6091"},
+        language="en",
+        output_format={
+            "container": "wav",
+            "sample_rate": 44100,
+            "encoding": "pcm_s16le",
+        },
+    )
+
+    with open("speech.wav", "wb") as f:
+        f.write(await response.read())
+
+    print("Audio saved to speech.wav")
+
+
+asyncio.run(main())

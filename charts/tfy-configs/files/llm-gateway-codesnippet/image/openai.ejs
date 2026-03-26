@@ -1,0 +1,31 @@
+from openai import OpenAI
+import base64
+
+client = OpenAI(
+    api_key="<%= api_key %>",
+    base_url="<%= endpoint %>",
+    default_headers={
+        "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+        "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+)
+
+try:
+    response = client.images.generate(
+        model="<%= model %>",
+        prompt="<%= prompt %>",
+        n=1,
+        size="1024x1024"
+    )
+
+    if hasattr(response.data[0], 'url') and response.data[0].url:
+        print(f"Image URL: {response.data[0].url}")
+
+    if hasattr(response.data[0], 'b64_json') and response.data[0].b64_json:
+        image_bytes = base64.b64decode(response.data[0].b64_json)
+        with open("generated_image.png", "wb") as f:
+            f.write(image_bytes)
+        print("Image saved as generated_image.png")
+
+except Exception as e:
+    print(f"Error: {e}")

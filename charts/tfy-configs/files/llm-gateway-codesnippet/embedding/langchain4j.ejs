@@ -1,0 +1,33 @@
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import dev.langchain4j.model.output.Response;
+
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+public class LangChain4jEmbeddingExample {
+    public static void main(String[] args) {
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("X-TFY-METADATA", "<%- JSON.stringify(custom_metadata).replace(/"/g, '\\"') %>");
+        customHeaders.put("X-TFY-LOGGING-CONFIG", "{\"enabled\": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, \"tracing_project_fqn\": \"<%= request_logging_tracing_project_fqn %>\"<% } %>}");
+
+        EmbeddingModel embeddingModel = OpenAiEmbeddingModel.builder()
+            .apiKey("<%= api_key %>")
+            .baseUrl("<%= endpoint %>")
+            .modelName("<%= model %>")
+            .customHeaders(customHeaders)
+            .logRequests(true)
+            .logResponses(true)
+            .build();
+
+        Response<Embedding> response = embeddingModel.embed("<%= prompt %>");
+        Embedding embedding = response.content();
+
+        List<Float> vector = embedding.vectorAsList();
+        System.out.println("Embedding vector (first 5 dimensions): " +
+                          vector.subList(0, Math.min(5, vector.size())));
+        System.out.println("Embedding dimension: " + vector.size());
+    }
+}

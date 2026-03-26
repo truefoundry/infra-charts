@@ -1,0 +1,120 @@
+<%
+  const indent = '    '.repeat(2);
+  const USE_STREAM = (stream === true);
+  let model_params = '';
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'stream') {
+        return;
+      }
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          model_params += `${indent}${key}="${value}",\n`;
+        } else if (Array.isArray(value)) {
+          model_params += `${indent}${key}=${JSON.stringify(value)},\n`;
+        } else if (typeof value === 'boolean') {
+          model_params += `${indent}${key}=${value ? 'True' : 'False'},\n`;
+        } else {
+          model_params += `${indent}${key}=${value},\n`;
+        }
+      }
+    });
+  }
+
+  model_params += `${indent}stream=${USE_STREAM ? 'True' : 'False'},`;
+
+-%>
+import asyncio
+from google.adk.agents import Agent, RunConfig
+from google.adk.models.lite_llm import LiteLlm
+from google.adk.agents.run_config import StreamingMode
+from google.adk.sessions import InMemorySessionService
+from google.adk.runners import Runner
+from google.genai import types
+import json
+API_KEY = "<%= api_key %>"<% if (include_output_schema) { %>
+response_schema = json.loads('''<%- output_schema.structuredOutputResponse %>''')<% } %>
+
+chat_agent = Agent(
+    name="chat_agent",
+    model=LiteLlm(
+        model="<%= model %>",
+        custom_llm_provider="openai",
+        base_url="<%= endpoint %>",<% if (include_output_schema) { %>
+        response_format={"type": "json_schema","json_schema": {"name": "<%- output_schema.name %>", "schema": response_schema}},<% } %>
+        api_key=API_KEY,
+<%- model_params %>
+        extra_headers={
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',<% if (include_guardrails) { %>
+            "X-TFY-GUARDRAILS": '<%- JSON.stringify({llm_input_guardrails: input_guardrails, llm_output_guardrails:
+              output_guardrails})
+                %>',<% } %><% if (include_routing_config) { %>
+            "X-TFY-ROUTING-CONFIG": '<%- JSON.stringify(routing_config) %>',<% } %><% if (include_cache_config) { %>
+            "X-TFY-CACHE-CONFIG": '<%- JSON.stringify(cache_config) %>' <% } %>
+        },<% if (use_prompt_fqn) { %>
+        extra_body={
+            "prompt_version_fqn": "<%= prompt_fqn %>"<% if (input_variables && Object.keys(input_variables).length > 0) { %>,
+            "prompt_variables": <%- JSON.stringify(input_variables) %><% } %>
+        },<% } else if (extra_body && extra_body.mcp_servers.length > 0) { %>
+        extra_body={
+            "mcp_servers": [
+                <%- extra_body.mcp_servers.map(server => `{
+                    "integration_fqn": "${server.integration_fqn}",
+                    "enable_all_tools": ${server.enable_all_tools ? 'True' : 'False'}${server.tools && server.tools.length > 0 ? `,
+                    "tools": [${server.tools.map(tool => `{"name": "${tool.name}"}`).join(', ')}]` : ''}
+                }`).join(',\n            ') %>
+            ],
+            "iteration_limit": <%= extra_body.iteration_limit %>,
+        },<% } %>
+    ),
+    description="Basic example agent",
+    instruction="You are a helpful assistant",
+    tools=[],
+)
+
+async def test() -> str:
+    run_config = RunConfig(
+      streaming_mode=<%= USE_STREAM ? 'StreamingMode.SSE' : 'StreamingMode.NONE' %>
+    )
+    session_service = InMemorySessionService()
+    await session_service.create_session(
+        app_name="test_app",
+        user_id="user",
+        session_id="session"
+    )
+    runner = Runner(
+        agent=chat_agent,
+        app_name="test_app",
+        session_service=session_service
+    )
+
+<% if (use_prompt_fqn) { %>    content = types.Content(role='user', parts=[types.Part(text="")])
+
+    async for event in runner.run_async(
+        user_id="user",
+        session_id="session",
+        new_message=content,
+        run_config=run_config
+    ):<% } else { %>    content = types.Content(role='user', parts=[types.Part(text="<%= prompt %>")])
+
+    async for event in runner.run_async(
+        user_id="user",
+        session_id="session",
+        new_message=content,
+        run_config=run_config
+    ):<% } %>
+      <% if (USE_STREAM) { %>
+        if(event.is_final_response()):
+          break
+        if event.content and event.content.parts and event.content.parts[0].text:
+            print(event.content.parts[0].text, end="", flush=<%- USE_STREAM ? 'True' : 'False' %>)
+      <% } else { %>
+        if event.content and event.content.parts and event.content.parts[0].text:
+            print(event.content.parts[0].text)
+      <% } %>
+
+
+if __name__ == "__main__":
+    asyncio.run(test())

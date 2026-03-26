@@ -1,0 +1,6 @@
+# we're using websocat for this example, but you can use any websocket client
+websocat "<%= endpoint %>/v1/realtime?model=<%= model %>" \
+  -H 'Authorization: Bearer <%= api_key %>' \
+  -H 'X-TFY-METADATA: <%- JSON.stringify(custom_metadata) %>' \
+  -H 'X-TFY-LOGGING-CONFIG: {"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+# once connected, you can send your messages as you would with OpenAI's Realtime API

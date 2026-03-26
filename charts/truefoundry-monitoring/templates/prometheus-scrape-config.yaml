@@ -1,0 +1,44 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tfy-cp-monitoring-scrape-config
+  labels:
+    {{- include "truefoundry-monitoring.labels" . | nindent 4 }}
+stringData:
+  additional-scrape-configs.yaml: |
+    - job_name: truefoundry-control-plane-pods
+      kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+              - {{ .Values.global.controlPlaneNamespace }}
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: "true"
+        - source_labels: [__meta_kubernetes_pod_container_init, __meta_kubernetes_pod_container_name]
+          action: keep
+          regex: "(false;.*)|(true;istio-proxy)"
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+          action: replace
+          target_label: __scheme__
+          regex: (https?)
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          target_label: __address__
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          target_label: container
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_pod_label_truefoundry_com_application_id]
+          target_label: label_truefoundry_com_application_id
+{{- end }}

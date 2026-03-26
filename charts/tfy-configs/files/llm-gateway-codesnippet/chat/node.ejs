@@ -1,0 +1,86 @@
+<%
+  const indent = '    '.repeat(3);
+  const USE_STREAM = (stream === true);
+  const USE_PROMPT_FQN = (prompt_fqn && prompt_fqn.trim() !== '');
+  let args = '';
+
+  if (!USE_PROMPT_FQN && params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === 'stream') {
+        return;
+      }
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'string') {
+          args += `${indent}"${key}": "${value}",\n`;
+        } else if (Array.isArray(value)) {
+          args += `${indent}"${key}": ${JSON.stringify(value)},\n`;
+        } else {
+          args += `${indent}"${key}": ${value},\n`;
+        }
+      }
+    });
+  }
+
+  args += `${indent}"stream": ${USE_STREAM ? 'true' : 'false'}`;
+
+-%>
+const OpenAI = require('openai');
+const openai = new OpenAI({
+    apiKey: '<%= api_key %>',
+    baseURL: '<%= endpoint %>',
+    extra_headers: {
+      'X-TFY-METADATA': '<%- JSON.stringify(custom_metadata) %>',
+      'X-TFY-LOGGING-CONFIG': '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',<% if (!USE_PROMPT_FQN && ((input_guardrails && input_guardrails.length> 0) ||
+          (output_guardrails && output_guardrails.length > 0))) { %>
+      'X-TFY-GUARDRAILS': '<%- JSON.stringify({llm_input_guardrails: input_guardrails, llm_output_guardrails:
+        output_guardrails}) %>',<% } %><% if (!USE_PROMPT_FQN && routing_config &&
+       routing_config.type && routing_config.load_balance_targets.length > 0) { %>
+      'X-TFY-ROUTING-CONFIG': '<%- JSON.stringify(routing_config) %>',<% } %><% if (include_cache_config) { %>
+      'X-TFY-CACHE-CONFIG': '<%- JSON.stringify(cache_config) %>' <% } %>
+  }
+});<% if (!USE_PROMPT_FQN && output_schema && output_schema.structuredOutputResponse) { %>
+const response_schema = <%- output_schema.structuredOutputResponse %>;<% } %>
+
+async function main() {
+    try {
+        const response = await openai.chat.completions.create({<% if (USE_PROMPT_FQN) { %>
+            model: '<%= model %>',
+            messages: [],
+            stream: <%- USE_STREAM ? 'true' : 'false' %>,
+            extra_body: {
+                prompt_version_fqn: '<%= prompt_fqn %>'<% if (input_variables && Object.keys(input_variables).length > 0) { %>,
+                prompt_variables: <%- JSON.stringify(input_variables) %><% } %>
+            }<% } else { %>
+            model: '<%= model %>',
+            messages: [
+                { role: 'system', content: 'You are an AI bot.' },
+                { role: 'user', content: '<%= prompt %>' }
+            ],<% if (include_output_schema) { %>
+            response_format: { type: 'json_schema', json_schema: { name: '<%- output_schema.name %>', schema: response_schema } },<% } %><% if (extra_body && extra_body.mcp_servers.length > 0) { %>
+            "mcp_servers": [
+              <%- extra_body.mcp_servers.map(server => `{
+                  "integration_fqn": "${server.integration_fqn}",
+                  "enable_all_tools": ${server.enable_all_tools ? 'true' : 'false'}${server.tools && server.tools.length > 0 ? `,
+                  "tools": [${server.tools.map(tool => `{"name": "${tool.name}"}`).join(', ')}]` : ''}
+              }`).join(',\n            ') %>
+            ],
+            "iteration_limit": <%= extra_body.iteration_limit %>,<% } %>
+<%- args %><% } %>
+        });
+        <% if (USE_STREAM) { %>
+          for await (const chunk of response) {
+            if (chunk.choices && chunk.choices[0]?.delta?.content) {
+                process.stdout.write(chunk.choices[0].delta.content);
+            }
+          }
+        <% } else { %>
+          if (response.choices && response.choices[0]?.message?.content) {
+            process.stdout.write(response.choices[0].message.content);
+        }
+        <% } %>
+    } catch (error) {
+        console.error('An error occurred:', error.message);
+    }
+}
+
+main();

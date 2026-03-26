@@ -1,0 +1,27 @@
+const { OpenAI } = require('openai');
+
+const openai = new OpenAI({
+    apiKey: '<%= api_key %>',
+    baseURL: '<%= endpoint %>',
+    defaultHeaders: {
+        'X-TFY-METADATA': '<%- JSON.stringify(custom_metadata) %>',
+        'X-TFY-LOGGING-CONFIG': '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+});
+
+async function main() {
+    try {
+        const response = await openai.embeddings.create({
+            model: '<%= model %>',
+            input: '<%= prompt %>'
+        });
+
+        console.log(response.data[0].embedding);
+    } catch (error) {
+        console.error('An error occurred:', error.message);
+    }
+}
+
+main().catch(error => {
+    console.error('An error occurred:', error.message);
+});

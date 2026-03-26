@@ -1,0 +1,18 @@
+{{- if .Values.grafana.enabled }}
+{{- if .Values.grafana.sidecar.dashboards.enabled }}
+{{- range $path, $content := .Files.Glob "dashboards/*.json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "truefoundry-monitoring.fullname" $ }}-{{ $path | replace "dashboards/" "" | replace ".json" "" }}
+  labels:
+    {{- include "truefoundry-monitoring.grafana.dashboardLabels" $ | nindent 4 }}
+  annotations:
+    grafana_folder: "TrueFoundry Control Plane"
+data:
+  {{ $path | replace "dashboards/" "" }}: |-
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,25 @@
+import asyncio
+from cartesia import AsyncCartesia
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+client = AsyncCartesia(
+    api_key=TFY_API_KEY,
+    base_url=BASE_URL,
+)
+
+
+async def main():
+    with open("audio.wav", "rb") as f:
+        response = await client.stt.transcribe(
+            file=f,
+            model="<%= model %>",
+            language="en",
+            timestamp_granularities=["word"],
+        )
+
+    print(response.model_dump_json(indent=2))
+
+
+asyncio.run(main())

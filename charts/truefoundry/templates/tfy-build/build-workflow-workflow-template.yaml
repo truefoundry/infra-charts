@@ -342,11 +342,11 @@ spec:
           - name: DEPLOYMENT_ID
             value: "{{`{{inputs.parameters.deploymentId}}`}}"
           - name: DONE_MARKER
-            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done | quote }}
           - name: FAILED_MARKER
-            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed }}
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed | quote }}
           - name: TFY_BUILD_SECRETS
-            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
+            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | default list | toJson }}'
           # This is the path where the source code will be downloaded
           - name: SOURCE_CODE_DOWNLOAD_PATH
             value: /mnt/tfy/source-code
@@ -513,11 +513,11 @@ spec:
           - name: DEPLOYMENT_ID
             value: "{{`{{inputs.parameters.deploymentId}}`}}"
           - name: DONE_MARKER
-            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done }}
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done | quote }}
           - name: FAILED_MARKER
-            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed }}
+            value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.failed | quote }}
           - name: TFY_BUILD_SECRETS
-            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | toJson }}'
+            value: '{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.buildSecrets | default list | toJson }}'
           # This is the path where the source code will be downloaded
           - name: SOURCE_CODE_DOWNLOAD_PATH
             value: /mnt/tfy/source-code
@@ -651,7 +651,8 @@ spec:
               - key: status
                 value: "{{`{{status}}`}}"
             when: "{{`{{status}}`}} != Skipped"
-            gauge: 
+            gauge:
+              realtime: true
               value: "{{`{{duration}}`}}"
       inputs:
         parameters:
@@ -754,7 +755,8 @@ spec:
               - key: status
                 value: "{{`{{status}}`}}"
             when: "{{`{{status}}`}} != Skipped"
-            gauge: 
+            gauge:
+              realtime: true
               value: "{{`{{duration}}`}}"
       inputs:
         parameters:

@@ -1,0 +1,36 @@
+const OpenAI = require('openai');
+const fs = require('fs');
+
+const openai = new OpenAI({
+  baseURL: '<%= endpoint %>',
+  apiKey: '<%= api_key %>',
+  defaultHeaders: {
+    'X-TFY-METADATA': '<%- JSON.stringify(custom_metadata) %>',
+    'X-TFY-LOGGING-CONFIG': '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+  }
+});
+
+async function generateImage() {
+  try {
+    const response = await openai.images.generate({
+      model: '<%= model %>',
+      prompt: '<%= prompt %>',
+      n: 1,
+      size: '1024x1024'
+    });
+
+    if (response.data[0].url) {
+      console.log(`Image URL: ${response.data[0].url}`);
+    }
+
+    if (response.data[0].b64_json) {
+      const imageBuffer = Buffer.from(response.data[0].b64_json, 'base64');
+      fs.writeFileSync('generated_image.png', imageBuffer);
+      console.log('Image saved as generated_image.png');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+generateImage();

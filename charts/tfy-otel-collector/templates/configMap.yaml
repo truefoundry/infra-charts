@@ -12,11 +12,11 @@ data:
     extensions:
       tfyauth: # Custom authorisation 
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
-        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         cache_ttl: 5m
         tfy_api_key: ${env:TFY_API_KEY}
-        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
-        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -35,8 +35,13 @@ data:
     receivers:
       otlp:
         protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+            include_metadata: true
+            auth:
+              authenticator: tfyauth
           http:
-            endpoint: 0.0.0.0:4318  
+            endpoint: 0.0.0.0:4318
             include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
             auth:
               authenticator: tfyauth
@@ -47,23 +52,24 @@ data:
       nop:
       datafusion:
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
-        deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT}
-        deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES}
-        deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL}
+        deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT:-60s}
+        deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES:-2}
+        deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL:-10s}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
-        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT}
-        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES}
-        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL}
-        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW}
-        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE}
-        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE}
-        tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT}
-        tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES}
-        tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL}
-        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
+        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-5s}
+        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE:-200}
+        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-100000}
+        tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT:-60s}
+        tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES:-3}
+        tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
+        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-1s}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
-        timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT}
+        retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
+        timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
     processors:
       batch:
         timeout: 5s
@@ -71,7 +77,7 @@ data:
       resource: # trace level attributes
         attributes:
           - key: Authorization
-            from_context: Authorization
+            from_context: authorization
             action: upsert
           - key: tfycreatedbysubject
             from_context: auth.tfysubject

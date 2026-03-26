@@ -1,0 +1,17 @@
+from langchain_community.embeddings import OpenAIEmbeddings
+
+try:
+    embeddings = OpenAIEmbeddings(
+        model="<%= model %>",
+        base_url="<%= endpoint %>",
+        api_key="<%= api_key %>",
+        extra_headers={
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+        }
+    )
+
+    output = embeddings.embed_query("<%= prompt %>")
+    print(output)
+except Exception as e:
+    print("An error occurred:", str(e))
