@@ -25,6 +25,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-controller"
           {{- with .Values.tfyController.securityContext }}
@@ -61,8 +65,16 @@ spec:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
               scheme: HTTP
+          {{- if .Values.global.customCA.enabled }}
+          volumeMounts:
+            {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
+          {{- end }}
       imagePullSecrets:
         {{- include "tfy-controller.imagePullSecrets" . | nindent 8 }}
+      {{- if .Values.global.customCA.enabled }}
+      volumes:
+        {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
+      {{- end }}
       topologySpreadConstraints:
         {{- if .Values.tfyController.topologySpreadConstraints }}
         {{- toYaml .Values.tfyController.topologySpreadConstraints | nindent 8 }}

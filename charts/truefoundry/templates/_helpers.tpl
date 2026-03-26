@@ -204,6 +204,150 @@ Truefoundry virtual service fullname
 {{- end }}
 
 
+{{/*
+  Custom CA validation
+*/}}
+{{- define "truefoundry.customCA.validate" -}}
+{{- if and .Values.global.customCA.enabled (not .Values.global.customCA.certificate) (not .Values.global.customCA.existingConfigMap.name) -}}
+{{- fail "global.customCA.enabled is true but neither global.customCA.certificate nor global.customCA.existingConfigMap.name is set. Provide one of them." -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Whether to use direct mount (true) or initContainer merge (false)
+*/}}
+{{- define "truefoundry.customCA.useDirectMount" -}}
+{{- if and .Values.global.customCA.existingConfigMap.name .Values.global.customCA.existingConfigMap.overrideCAList -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA ConfigMap name
+*/}}
+{{- define "truefoundry.customCA.configMapName" -}}
+{{- include "truefoundry.customCA.validate" . -}}
+{{- if .Values.global.customCA.existingConfigMap.name -}}
+{{- .Values.global.customCA.existingConfigMap.name -}}
+{{- else -}}
+{{- include "truefoundry.fullname" . }}-custom-ca
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA initContainer (only when not using direct mount)
+*/}}
+{{- define "truefoundry.customCA.initContainer" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" }}
+- name: configure-custom-ca
+  image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  command: ["sh", "-c"]
+  args:
+    - |
+      set -e
+      apk add --no-cache ca-certificates
+      cp /custom-ca/ca-certificates.crt /usr/local/share/ca-certificates/custom-ca.crt
+      update-ca-certificates
+      cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+  volumeMounts:
+    - name: custom-ca
+      mountPath: /custom-ca
+      readOnly: true
+    - name: ssl-certs
+      mountPath: /ssl-certs
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volumes
+  - Direct mount: just the ConfigMap
+  - InitContainer merge: ConfigMap + emptyDir
+*/}}
+{{- define "truefoundry.customCA.volumes" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "truefoundry.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  configMap:
+    name: {{ include "truefoundry.customCA.configMapName" . }}
+{{- else }}
+- name: custom-ca
+  configMap:
+    name: {{ include "truefoundry.customCA.configMapName" . }}
+- name: ssl-certs
+  emptyDir:
+    medium: Memory
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volume mounts for app containers
+  - Direct mount: ConfigMap mounted at /etc/ssl/certs
+  - InitContainer merge: emptyDir mounted at /etc/ssl/certs
+*/}}
+{{- define "truefoundry.customCA.volumeMounts" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "truefoundry.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- else }}
+- name: ssl-certs
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volume items as JSON-wrapped list for use in list-building helpers.
+  Usage:
+    {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+    {{- $volumes = concat $volumes $caData.items -}}
+*/}}
+{{- define "truefoundry.customCA.volumeItems" -}}
+{{- $items := list -}}
+{{- if .Values.global.customCA.enabled -}}
+  {{- $items = append $items (dict "name" "custom-ca" "configMap" (dict "name" (include "truefoundry.customCA.configMapName" .))) -}}
+  {{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" -}}
+    {{- $items = append $items (dict "name" "ssl-certs" "emptyDir" (dict "medium" "Memory")) -}}
+  {{- end -}}
+{{- end -}}
+{{- dict "items" $items | toJson -}}
+{{- end -}}
+
+{{/*
+  Custom CA volumeMount items as JSON-wrapped list for use in list-building helpers.
+  Usage:
+    {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+    {{- $volumeMounts = concat $volumeMounts $caData.items -}}
+*/}}
+{{- define "truefoundry.customCA.volumeMountItems" -}}
+{{- $items := list -}}
+{{- if .Values.global.customCA.enabled -}}
+  {{- if eq (include "truefoundry.customCA.useDirectMount" .) "true" -}}
+    {{- $items = append $items (dict "name" "custom-ca" "mountPath" "/etc/ssl/certs" "readOnly" true) -}}
+  {{- else -}}
+    {{- $items = append $items (dict "name" "ssl-certs" "mountPath" "/etc/ssl/certs" "readOnly" true) -}}
+  {{- end -}}
+{{- end -}}
+{{- dict "items" $items | toJson -}}
+{{- end -}}
+
+{{/*
+  Custom CA environment variables for Node.js containers
+*/}}
+{{- define "truefoundry.customCA.env" -}}
+{{- if .Values.global.customCA.enabled }}
+- name: NODE_EXTRA_CA_CERTS
+  value: /etc/ssl/certs/ca-certificates.crt
+{{- end }}
+{{- end -}}
+
 {{- define "truefoundry.storage-credentials" }}
 {{- if .Values.global.config.defaultCloudProvider }}
 CLOUD_PROVIDER: {{ .Values.global.config.defaultCloudProvider }}

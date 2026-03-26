@@ -26,6 +26,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-workflow-admin-server"
           command:
@@ -75,6 +79,9 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
+          {{- if .Values.global.customCA.enabled }}
+            {{- include "truefoundry.customCA.volumeMounts" . | nindent 10 }}
+          {{- end }}
       imagePullSecrets:
         {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -84,6 +91,9 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
+        {{- if .Values.global.customCA.enabled }}
+        {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
+        {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
       {{- if $mergedNodeSelector }}
       nodeSelector:
@@ -139,6 +149,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "tfy-workflow-admin-scheduler"
           command:
@@ -163,6 +177,9 @@ spec:
           - mountPath: /etc/secrets/admin_api_key
             name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
             subPath: TFY_API_KEY
+          {{- if .Values.global.customCA.enabled }}
+            {{- include "truefoundry.customCA.volumeMounts" . | nindent 10 }}
+          {{- end }}
       imagePullSecrets:
         {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -172,6 +189,9 @@ spec:
         - name: {{ include "tfy-workflow-admin.fullname" . }}-tfy-api-key
           secret:
             secretName: truefoundry-creds
+        {{- if .Values.global.customCA.enabled }}
+        {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
+        {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
       {{- if $mergedNodeSelector }}
       nodeSelector:
