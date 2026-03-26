@@ -203,6 +203,10 @@ Expand the name of the chart.
     {{- $volumes = append $volumes . }}
   {{- end }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -214,6 +218,10 @@ Expand the name of the chart.
     {{- $volumeMounts = append $volumeMounts . }}
   {{- end }}
 {{- end }}
+{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumeMounts = concat $volumeMounts $caData.items -}}
+{{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 

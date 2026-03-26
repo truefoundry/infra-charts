@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.132.5
+  controlPlaneChartVersion: 0.133.0
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -237,6 +237,24 @@ global:
   clusterDomain: "cluster.local"
   ## @param global.enableSentry Bool to enable Sentry integration for the control plane
   enableSentry: true
+  ## global.customCA Custom CA certificate configuration
+  customCA:
+    ## @param global.customCA.enabled Bool to enable custom CA certificate injection via initContainers
+    enabled: false
+    ## @param global.customCA.certificate PEM-encoded CA certificate to trust (paste the full certificate content here). Uses an initContainer to merge with system CAs.
+    certificate: ""
+    ## global.customCA.existingConfigMap Reference an existing ConfigMap containing CA certificate(s) under key "ca-certificates.crt"
+    existingConfigMap:
+      ## @param global.customCA.existingConfigMap.name Name of the existing ConfigMap
+      name: ""
+      ## @param global.customCA.existingConfigMap.overrideCAList When true, the ConfigMap is mounted directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
+      overrideCAList: false
+    ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
+    image:
+      ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
+      repository: "tfy-mirror/alpine"
+      ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
+      tag: "3.21"
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -389,7 +407,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.130.0"
+    tag: "v0.133.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -672,7 +690,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.132.1"
+    tag: "v0.133.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -836,7 +854,6 @@ servicefoundryServer:
     EXTERNAL_OAUTH_ISSUER: ""
     EXTERNAL_OAUTH_CLIENT_ID: ""
     EXTERNAL_OAUTH_CLIENT_SECRET: ""
-    OAUTH2_JWKS_URI: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/keys/jwks"
     OAUTH2_TOKEN_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/oauth2-proxy/token"
     OAUTH2_AUTHORIZATION_ENDPOINT: "{{ .Values.global.controlPlaneURL }}/api/svc/v1/oauth2-proxy/authorize"
     NODE_OPTIONS: --no-node-snapshot
@@ -853,6 +870,25 @@ servicefoundryServer:
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
+    codeSnippetTemplates:
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.enabled Enable LLM gateway code snippet ConfigMap mounting
+      enabled: false
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.chat Chat templates ConfigMap name (LLM gateway code snippets)
+      chat: "{{ .Release.Name }}-chat-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.embedding Embedding templates ConfigMap name
+      embedding: "{{ .Release.Name }}-embedding-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.image Image templates ConfigMap name
+      image: "{{ .Release.Name }}-image-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.realtime Realtime templates ConfigMap name
+      realtime: "{{ .Release.Name }}-realtime-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.rerank Rerank templates ConfigMap name
+      rerank: "{{ .Release.Name }}-rerank-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.speech Speech templates ConfigMap name
+      speech: "{{ .Release.Name }}-speech-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.transcription Transcription templates ConfigMap name
+      transcription: "{{ .Release.Name }}-transcription-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.translation Translation templates ConfigMap name
+      translation: "{{ .Release.Name }}-translation-codesnippet-cm"
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for workbench deployments
     workbenchImages: "{{ .Release.Name }}-workbench-images-cm"
     ## @param servicefoundryServer.configs.imageMutationPolicy Image Mutations policy for workloads
@@ -1011,7 +1047,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.132.0"
+    tag: "v0.133.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1161,7 +1197,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.111.0"
+    tag: "v0.133.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1275,8 +1311,8 @@ sfyManifestService:
   env:
     GIN_MODE: release
     PORT: "8080"
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
-    MLF_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ .Release.Namespace }}.svc.cluster.local:3000
+    MLF_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server.{{ .Release.Namespace }}.svc.cluster.local:5000
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PROCESS_TICKER_PERIOD_SECONDS: "5"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
@@ -1287,7 +1323,7 @@ sfyManifestService:
     TFY_NOTIFICATION_SENDER_IMAGE: tfy.jfrog.io/tfy-images/tfy-notification-sender:0.0.4
     APP_CATALOGUE_ENDPOINT: https://catalogue.truefoundry.com/templates/
     AUTOPILOT_PROCESSOR_ENABLED: "false"
-    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats:4222
+    AUTOPILOT_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats.{{ .Release.Namespace }}.svc.cluster.local:4222
     AUTOPILOT_PROCESSOR_NATS_PULL_MAX_BYTES: "10485760"
     AUTOPILOT_PROCESSOR_NATS_ACK_WAIT: "120"
     AUTOPILOT_PROCESSOR_PUBLISH_ASYNC_MAX_PENDING: "100"
@@ -2215,6 +2251,54 @@ victoriaMetricsMonitoring:
     ## @param victoriaMetricsMonitoring.controlPlaneMonitors.enabled Bool to enable the control plane monitoring
     enabled: true
 ###################################################################################################################
+######################################## TrueFoundry Monitoring ###################################################
+###################################################################################################################
+## @section truefoundryMonitoring TrueFoundry Monitoring settings
+truefoundryMonitoring:
+  ## @param truefoundryMonitoring.enabled Bool to enable the TrueFoundry Monitoring
+  enabled: false
+  ## External service URLs (used when prometheus/logs subcharts are disabled)
+  externalServices:
+    prometheus:
+      ## @param truefoundryMonitoring.externalServices.prometheus.url URL of existing Prometheus
+      ##
+      url: ""
+    victoriaLogs:
+      ## @param truefoundryMonitoring.externalServices.victoriaLogs.url URL of existing VictoriaLogs
+      ##
+      url: ""
+  ## Prometheus subchart (set enabled=true only if no Prometheus exists in cluster)
+  prometheus:
+    ## @param truefoundryMonitoring.prometheus.enabled Install a dedicated Prometheus
+    ##
+    enabled: false
+  ## Logs subchart (set enabled=true only if no VictoriaLogs exists in cluster)
+  logs:
+    ## @param truefoundryMonitoring.logs.enabled Install a dedicated VictoriaLogs + Vector
+    ##
+    enabled: false
+  ## Grafana configuration
+  grafana:
+    ## @param truefoundryMonitoring.grafana.adminUser Grafana admin username
+    ##
+    adminUser: "admin"
+    ## @param truefoundryMonitoring.grafana.adminPassword Grafana admin password
+    ##
+    adminPassword: ""
+    ## @param truefoundryMonitoring.grafana.grafana\.ini [object] Grafana INI server configuration
+    grafana.ini:
+      server:
+        ## @param truefoundryMonitoring.grafana.grafana.ini.server.domain Domain for Grafana (e.g. mycluster.example.com)
+        ##
+        domain: ""
+        ## @param truefoundryMonitoring.grafana.grafana.ini.server.root_url Root URL for Grafana
+        ## For subpath routing set to e.g. https://mycluster.example.com/grafana/
+        ##
+        root_url: ""
+        ## @param truefoundryMonitoring.grafana.grafana.ini.server.serve_from_sub_path Enable serving Grafana from a subpath
+        ##
+        serve_from_sub_path: true
+###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
 ## @section deltaFusionIngestor Truefoundry DeltaFusion Ingestor settings
@@ -2230,7 +2314,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.131.0"
+    tag: "v0.133.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2406,7 +2490,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.131.0"
+    tag: "v0.133.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -2568,7 +2652,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.131.0
+    tag: v0.133.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
     optimized: auto
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2751,7 +2835,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.132.1"
+    tag: "v0.133.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)

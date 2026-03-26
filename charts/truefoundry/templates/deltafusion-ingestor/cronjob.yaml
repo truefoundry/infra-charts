@@ -42,6 +42,10 @@ spec:
             {{- toYaml (omit . "enabled") | nindent 12 }}
           {{- end }}
           {{- end }}
+          {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+          initContainers:
+            {{- include "truefoundry.customCA.initContainer" . | nindent 12 }}
+          {{- end }}
           containers:
             - name: "deltafusion-compaction"
               {{- with .Values.deltaFusionCompaction.securityContext }}
