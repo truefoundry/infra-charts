@@ -1,0 +1,10 @@
+{{- if and .Values.configs.codeSnippet.integrationSets.enabled .Values.configs.codeSnippet.integrationSets.index }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-llm-gateway-integration-sets-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  index.yaml: |
+{{ .Values.configs.codeSnippet.integrationSets.index | toYaml | nindent 4 }}
+{{- end }}
