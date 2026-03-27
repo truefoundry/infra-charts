@@ -25,6 +25,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "servicefoundry-server"
           {{- with .Values.servicefoundryServer.securityContext }}
@@ -33,6 +37,7 @@ spec:
           {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
+            {{- include "truefoundry.customCA.env" . | nindent 12 }}
           image: "{{ .Values.servicefoundryServer.image.registry | default .Values.global.image.registry }}/{{ .Values.servicefoundryServer.image.repository }}:{{ .Values.servicefoundryServer.image.tag }}"
           imagePullPolicy: {{ .Values.servicefoundryServer.imagePullPolicy }}
           ports:

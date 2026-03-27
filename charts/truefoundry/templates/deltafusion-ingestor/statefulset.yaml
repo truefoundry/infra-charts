@@ -30,6 +30,10 @@ spec:
         {{- toYaml (omit . "enabled") | nindent 8 }}
       {{- end }}
       {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: "deltafusion-ingestor"
           {{- with .Values.deltaFusionIngestor.securityContext }}
