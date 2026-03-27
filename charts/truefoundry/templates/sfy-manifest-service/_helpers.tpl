@@ -6,6 +6,14 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Whether sfy manifest service resources should be rendered.
+  Defaults to tfyWorkflowAdmin.enabled; set sfyManifestService.enabled to true to force deployment.
+*/}}
+{{- define "sfy-manifest-service.enabled" -}}
+{{- if or .Values.tfyWorkflowAdmin.enabled .Values.sfyManifestService.enabled -}}true{{- end -}}
+{{- end -}}
+
+{{/*
   Create a default fully qualified app name.
   We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
   If release name contains chart name it will be used as a full name.
