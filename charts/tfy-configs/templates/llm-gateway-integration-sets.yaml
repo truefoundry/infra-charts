@@ -1,4 +1,4 @@
-{{- if and .Values.configs.codeSnippet.integrationSets.enabled .Values.configs.codeSnippet.integrationSets.index }}
+{{- if .Values.configs.codeSnippet.integrationSets.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,5 +6,9 @@ metadata:
   namespace: {{ include "global.namespace" . }}
 data:
   index.yaml: |
-{{ .Values.configs.codeSnippet.integrationSets.index | toYaml | nindent 4 }}
+{{- if .Values.configs.codeSnippet.integrationSets.override }}
+{{ tpl .Values.configs.codeSnippet.integrationSets.override . | nindent 4 }}
+{{- else }}
+{{ .Files.Get "files/llm-gateway-codesnippet/index.yaml" | nindent 4 }}
+{{- end }}
 {{- end }}
