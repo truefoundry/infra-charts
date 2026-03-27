@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.133.0
+  controlPlaneChartVersion: 0.133.1
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -690,7 +690,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.133.0"
+    tag: "v0.133.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1183,8 +1183,8 @@ tfyK8sController:
 ###################################################################################################################
 ## @section sfyManifestService Truefoundry sfy manifest service values
 sfyManifestService:
-  ## @param sfyManifestService.enabled Bool to enable the sfy manifest service
-  enabled: true
+  ## @param sfyManifestService.enabled Bool to force-deploy the sfy manifest service when true; otherwise follows tfyWorkflowAdmin.enabled
+  enabled: false
   # SFY_API_KEY: <api_key>
   ## @param sfyManifestService.annotations [object] Annotations for the sfy manifest service
   annotations: {}

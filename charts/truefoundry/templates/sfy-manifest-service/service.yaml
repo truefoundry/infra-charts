@@ -1,4 +1,4 @@
-{{- if .Values.sfyManifestService.enabled }}
+{{- if include "sfy-manifest-service.enabled" . }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -17,4 +17,4 @@ spec:
       name: http
   selector:
     {{- include "truefoundry.selectorLabels" (dict "context" . "name" "sfy-manifest-service") | nindent 4 }}
-  {{- end }}
+{{- end }}
