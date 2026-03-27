@@ -60,7 +60,7 @@ spec:
         {{- end }}
         {{- $controlPlaneNotAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.notAllowed }}
         {{- $controlPlaneNotAllowedValuesAreCategories := false }}
-        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
+        {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories (hasKey .Values.karpenter.controlPlaneNodePool.instanceCategories "notAllowed") }}
         {{- $controlPlaneNotAllowedInstanceValues = .Values.karpenter.controlPlaneNodePool.instanceCategories.notAllowed }}
         {{- $controlPlaneNotAllowedValuesAreCategories = true }}
         {{- end }}
