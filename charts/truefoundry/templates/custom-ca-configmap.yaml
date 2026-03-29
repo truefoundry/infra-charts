@@ -1,0 +1,12 @@
+{{- if and .Values.global.customCA.enabled .Values.global.customCA.certificate (not .Values.global.customCA.existingConfigMap.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "truefoundry.fullname" . }}-custom-ca
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "truefoundry.labels" (dict "context" . "name" "custom-ca") | nindent 4 }}
+data:
+  ca-certificates.crt: |
+    {{- .Values.global.customCA.certificate | nindent 4 }}
+{{- end }}

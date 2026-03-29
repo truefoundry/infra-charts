@@ -255,6 +255,11 @@ Expand the name of the chart.
   {{- $volumes = concat $volumes .Values.tfyProxy.extraVolumes -}}
 {{- end -}}
 
+{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumes = concat $volumes $caData.items -}}
+{{- end -}}
+
 {{- toYaml $volumes -}}
 {{- end -}}
 
@@ -271,6 +276,11 @@ Expand the name of the chart.
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
 {{- if .Values.tfyProxy.extraVolumeMounts -}}
   {{- $volumeMounts = concat $volumeMounts .Values.tfyProxy.extraVolumeMounts -}}
+{{- end -}}
+
+{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
+{{- if $caData.items -}}
+{{- $volumeMounts = concat $volumeMounts $caData.items -}}
 {{- end -}}
 
 {{- /* Convert the final, combined list of volume mounts to YAML */}}

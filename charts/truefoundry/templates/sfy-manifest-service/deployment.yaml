@@ -1,4 +1,4 @@
-{{- if .Values.sfyManifestService.enabled }}
+{{- if include "sfy-manifest-service.enabled" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,6 +24,10 @@ spec:
       {{- with .Values.sfyManifestService.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
       {{- end }}
       containers:
         - name: "sfy-manifest-service"
@@ -60,11 +64,25 @@ spec:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
           volumeMounts:
+          {{- if .Values.global.customCA.enabled }}
+          {{- with .Values.sfyManifestService.extraVolumeMounts }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
+          {{- else }}
           {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
+          {{- end }}
       imagePullSecrets:
         {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
+      {{- if .Values.global.customCA.enabled }}
+      {{- with .Values.sfyManifestService.extraVolumes }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
+      {{- else }}
       {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
+      {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
       {{- if $mergedNodeSelector }}
       nodeSelector:
