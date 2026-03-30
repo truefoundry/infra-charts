@@ -14,7 +14,7 @@ Create a default fully qualified app name.
 {{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
 {{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- .Release.Name | lower |trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- printf "%s-%s" .Release.Name $name | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
