@@ -325,12 +325,41 @@ grafana:
   ## @param grafana.grafana\.ini [object] Grafana INI configuration overrides
   grafana.ini:
     server:
-      ## @param grafana.grafana.ini.server.domain Domain for Grafana
+      ## @param grafana.grafana.ini.server.domain Domain for Grafana (e.g. mycluster.example.com)
+      ##
       domain: ""
-      ## @param grafana.grafana.ini.server.root_url Root URL for Grafana (include the subpath)
-      root_url: ""
+      ## @param grafana.grafana.ini.server.root_url Root URL for Grafana (subpath /admin/grafana via tfy-proxy)
+      ##
+      root_url: '%(protocol)s://%(domain)s/admin/grafana'
+      ## @param grafana.grafana.ini.server.enforce_domain Enforce domain for Grafana
+      ##
+      enforce_domain: false
       ## @param grafana.grafana.ini.server.serve_from_sub_path Serve Grafana from a subpath
       serve_from_sub_path: true
+
+    auth.jwt:
+      ## @param grafana.grafana.ini.auth.jwt.enabled Enable JWT auth for Grafana
+      ##
+      enabled: true
+      ## @param grafana.grafana.ini.auth.jwt.email_claim JWT claim for email
+      ##
+      email_claim: email
+      ## @param grafana.grafana.ini.auth.jwt.header_name Header carrying JWT for Grafana auth
+      ##
+      header_name: X-TFY-AUTH
+      ## @param grafana.grafana.ini.auth.jwt.jwk_set_url JWKS URL (must match your global.controlPlaneURL, e.g. https://cp.example.com/api/svc/v1/keys/truefoundry/jwks)
+      ##
+      jwk_set_url: >-
+        https://CONTROL_PLANE_URL/api/svc/v1/keys/TENANT_NAME/jwks
+      ## @param grafana.grafana.ini.auth.jwt.auto_sign_up Auto sign up Grafana users from JWT
+      ##
+      auto_sign_up: true
+      ## @param grafana.grafana.ini.auth.jwt.username_claim JWT claim for username
+      ##
+      username_claim: sub
+      ## @param grafana.grafana.ini.auth.jwt.skip_org_role_sync Skip org role sync from JWT
+      ##
+      skip_org_role_sync: true
   ## @param grafana.adminUser Admin user for Grafana
   adminUser: admin
   ## @param grafana.adminPassword Admin password for Grafana (generate a random password if empty)
@@ -349,11 +378,11 @@ grafana:
   sidecar:
     resources:
       requests:
-        cpu: 50m
-        memory: 128Mi
-      limits:
         cpu: 100m
         memory: 256Mi
+      limits:
+        cpu: 200m
+        memory: 512Mi
     ## @param grafana.sidecar.dashboards.enabled Enable dashboard sidecar
     ## @param grafana.sidecar.dashboards.label Label key for dashboard ConfigMaps
     ## @param grafana.sidecar.dashboards.labelValue Label value for dashboard ConfigMaps
