@@ -42,8 +42,7 @@ stream = client.chat.completions.create(<% if (use_prompt_fqn) { %>
         "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
         "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',<% if (include_guardrails) { %>
         "X-TFY-GUARDRAILS": '<%- JSON.stringify({llm_input_guardrails: input_guardrails, llm_output_guardrails:
-          output_guardrails}) %>', <% } %><% if (include_routing_config) { %>
-        "X-TFY-ROUTING-CONFIG": '<%- JSON.stringify(routing_config) %>',<% } %><% if (include_cache_config) { %>
+          output_guardrails}) %>', <% } %><% if (include_cache_config) { %>
         "X-TFY-CACHE-CONFIG": '<%- JSON.stringify(cache_config) %>' <% } %>
     },<% if (use_prompt_fqn) { %>
     extra_body={
