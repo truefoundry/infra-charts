@@ -12,7 +12,7 @@ Create a default fully qualified app name.
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | lower | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- $name := default .Chart.Name .Values.nameOverride | lower }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | lower |trunc 63 | trimSuffix "-" }}
 {{- else }}
