@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "truefoundry-monitoring.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default .Chart.Name .Values.nameOverride | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -16,7 +16,7 @@ Create a default fully qualified app name.
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Release.Name $name | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -25,7 +25,7 @@ Create a default fully qualified app name.
 Create chart name and version as used by the chart label.
 */}}
 {{- define "truefoundry-monitoring.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
