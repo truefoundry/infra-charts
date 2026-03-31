@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.133.1
+  controlPlaneChartVersion: 0.134.2
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -690,7 +690,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.133.1"
+    tag: "v0.134.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1047,7 +1047,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.133.0"
+    tag: "v0.134.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -2271,33 +2271,17 @@ truefoundryMonitoring:
   prometheus:
     ## @param truefoundryMonitoring.prometheus.enabled Install a dedicated Prometheus
     ##
-    enabled: false
+    enabled: true
   ## Logs subchart (set enabled=true only if no VictoriaLogs exists in cluster)
   logs:
     ## @param truefoundryMonitoring.logs.enabled Install a dedicated VictoriaLogs + Vector
     ##
-    enabled: false
+    enabled: true
   ## Grafana configuration
   grafana:
-    ## @param truefoundryMonitoring.grafana.adminUser Grafana admin username
+    ## @param truefoundryMonitoring.grafana.enabled Bool to enable Grafana
     ##
-    adminUser: "admin"
-    ## @param truefoundryMonitoring.grafana.adminPassword Grafana admin password
-    ##
-    adminPassword: ""
-    ## @param truefoundryMonitoring.grafana.grafana\.ini [object] Grafana INI server configuration
-    grafana.ini:
-      server:
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.domain Domain for Grafana (e.g. mycluster.example.com)
-        ##
-        domain: ""
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.root_url Root URL for Grafana
-        ## For subpath routing set to e.g. https://mycluster.example.com/grafana/
-        ##
-        root_url: ""
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.serve_from_sub_path Enable serving Grafana from a subpath
-        ##
-        serve_from_sub_path: true
+    enabled: true
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
@@ -2314,7 +2298,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.133.0"
+    tag: "v0.134.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2476,6 +2460,7 @@ deltaFusionIngestor:
     CLEANUP_EXPIRED_LOGS: "false"
     GRPC_PORT: "8001"
     ENABLE_ARROW_FLIGHT_SERVER: "{{ .Values.deltaFusionQueryServer.enableLiveLogs }}"
+    FLIGHT_DO_GET_MAX_ENCODED_MESSAGE_BYTES: "3500000"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -2490,7 +2475,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.133.0"
+    tag: "v0.134.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -2652,7 +2637,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.133.0
+    tag: v0.134.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
     optimized: auto
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2835,7 +2820,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.133.0"
+    tag: "v0.134.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
