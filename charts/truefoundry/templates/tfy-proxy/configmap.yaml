@@ -313,6 +313,14 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}
       }
 
+      {{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.grafana.enabled }}
+      # /admin/grafana/* → /api/grafana/proxy/* on upstream:3000
+      handle /admin/grafana/* {
+        uri replace /admin/grafana /api/grafana/proxy
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}

@@ -284,6 +284,20 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: BUILD_JOB_TEMPLATE_PATH
   value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
 {{- end }}
+{{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.grafana.enabled }}
+{{- $gName := default "grafana" .Values.truefoundryMonitoring.grafana.nameOverride }}
+{{- $grafanaSvc := "" }}
+{{- if .Values.truefoundryMonitoring.grafana.fullnameOverride }}
+{{- $grafanaSvc = .Values.truefoundryMonitoring.grafana.fullnameOverride }}
+{{- else if contains $gName .Release.Name }}
+{{- $grafanaSvc = .Release.Name }}
+{{- else }}
+{{- $grafanaSvc = printf "%s-%s" .Release.Name $gName }}
+{{- end }}
+{{- $ns := include "global.namespace" . }}
+- name: GRAFANA_ENDPOINT
+  value: {{ printf "http://%s.%s/admin/grafana" $grafanaSvc $ns | quote }}
+{{- end }}
 - name: K8S_SERVICE_ACCOUNT_NAME
   valueFrom:
     fieldRef:
