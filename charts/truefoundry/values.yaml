@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.134.2
+  controlPlaneChartVersion: 0.134.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -889,6 +889,8 @@ servicefoundryServer:
       transcription: "{{ .Release.Name }}-transcription-codesnippet-cm"
       ## @param servicefoundryServer.configs.codeSnippetTemplates.translation Translation templates ConfigMap name
       translation: "{{ .Release.Name }}-translation-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.integrationSets AI gateway integration sets ConfigMap name
+      integrationSets: "{{ .Release.Name }}-ai-gateway-integration-sets-cm"
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for workbench deployments
     workbenchImages: "{{ .Release.Name }}-workbench-images-cm"
     ## @param servicefoundryServer.configs.imageMutationPolicy Image Mutations policy for workloads
