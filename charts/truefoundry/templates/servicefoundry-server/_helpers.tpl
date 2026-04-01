@@ -353,6 +353,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
     {{- $volumes = append $volumes (dict "name" "configs-codesnippet-translation" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .))) }}
   {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .) }}
+    {{- $volumes = append $volumes (dict "name" "configs-ai-gateway-integration-sets" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .))) }}
+  {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
   {{- $configMapName := "" }}
@@ -423,6 +426,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   {{- end }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
     {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-translation" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/translation") }}
+  {{- end }}
+  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .) }}
+    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-ai-gateway-integration-sets" "mountPath" "/opt/truefoundry/configs/llm-gateway/index.yaml" "subPath" "index.yaml") }}
   {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
