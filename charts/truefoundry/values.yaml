@@ -49,6 +49,22 @@ global:
       annotations: {}
       ## @param global.ingress.workflow.labels [object] Labels for the workflow ingress
       labels: {}
+  ## global.httpRoute Gateway API HTTPRoute configuration for the control plane
+  httpRoute:
+    ## @param global.httpRoute.enabled Bool to enable HTTPRoute for the control plane
+    enabled: false
+    ## @param global.httpRoute.annotations [object] Annotations for the control plane HTTPRoute
+    annotations: {}
+    ## @param global.httpRoute.labels [object] Labels for the control plane HTTPRoute
+    labels: {}
+    ## @param global.httpRoute.parentRefs [array] Parent gateway references for the HTTPRoute
+    parentRefs: []
+    #  - name: my-gateway
+    #    namespace: gateway-system
+    #    sectionName: https
+    ## @param global.httpRoute.hostnames [array] Hostnames for the HTTPRoute
+    hostnames: []
+    #  - "app.example.com"
   ## global.virtualservice Istio configuration for the control plane
   virtualservice:
     ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane

@@ -133,6 +133,24 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+  HTTPRoute Labels
+*/}}
+{{- define "tfy-llm-gateway.httpRouteLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- $httpRouteLabels := mergeOverwrite $commonLabels .Values.httpRoute.labels }}
+{{- toYaml $httpRouteLabels }}
+{{- end }}
+
+{{/*
+  HTTPRoute annotations
+  */}}
+{{- define "tfy-llm-gateway.httpRouteAnnotations" -}}
+{{- $commonAnnotations := include "tfy-llm-gateway.commonAnnotations" . | fromYaml }}
+{{- $httpRouteAnnotations := mergeOverwrite $commonAnnotations .Values.httpRoute.annotations }}
+{{- toYaml $httpRouteAnnotations }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "tfy-llm-gateway.deploymentLabels" -}}
