@@ -284,20 +284,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: BUILD_JOB_TEMPLATE_PATH
   value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
 {{- end }}
-{{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.grafana.enabled }}
-{{- $gName := default "grafana" .Values.truefoundryMonitoring.grafana.nameOverride }}
-{{- $grafanaSvc := "" }}
-{{- if .Values.truefoundryMonitoring.grafana.fullnameOverride }}
-{{- $grafanaSvc = .Values.truefoundryMonitoring.grafana.fullnameOverride }}
-{{- else if contains $gName .Release.Name }}
-{{- $grafanaSvc = .Release.Name }}
-{{- else }}
-{{- $grafanaSvc = printf "%s-%s" .Release.Name $gName }}
-{{- end }}
-{{- $ns := include "global.namespace" . }}
-- name: GRAFANA_ENDPOINT
-  value: {{ printf "http://%s.%s/admin/grafana" $grafanaSvc $ns | quote }}
-{{- end }}
 - name: K8S_SERVICE_ACCOUNT_NAME
   valueFrom:
     fieldRef:
@@ -352,9 +338,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   {{- end }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
     {{- $volumes = append $volumes (dict "name" "configs-codesnippet-translation" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .))) }}
-  {{- end }}
-  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .) }}
-    {{- $volumes = append $volumes (dict "name" "configs-ai-gateway-integration-sets" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .))) }}
   {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
@@ -426,9 +409,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   {{- end }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.translation .) }}
     {{- $volumeMounts = append $volumeMounts (dict "name" "configs-codesnippet-translation" "mountPath" "/opt/truefoundry/configs/llm-gateway/code-snippet/translation") }}
-  {{- end }}
-  {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.integrationSets .) }}
-    {{- $volumeMounts = append $volumeMounts (dict "name" "configs-ai-gateway-integration-sets" "mountPath" "/opt/truefoundry/configs/llm-gateway/index.yaml" "subPath" "index.yaml") }}
   {{- end }}
 {{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
