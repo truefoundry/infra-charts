@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.134.3
+  controlPlaneChartVersion: 0.134.4
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -690,7 +690,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.134.1"
+    tag: "v0.134.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1333,6 +1333,128 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
+###################################################################################################################
+####################################### stdio-mcp-proxy ###########################################################
+###################################################################################################################
+## @section stdioMcpProxy stdio MCP proxy values
+stdioMcpProxy:
+  ## @param stdioMcpProxy.enabled Bool to enable the stdio MCP proxy
+  enabled: false
+  ## @param stdioMcpProxy.annotations [object] Annotations for the stdio MCP proxy
+  annotations: {}
+  ## @param stdioMcpProxy.tolerations Tolerations specific to the stdio MCP proxy
+  tolerations: []
+  ## stdioMcpProxy.image Image for the stdio MCP proxy
+  image:
+    ## @param stdioMcpProxy.image.registry Registry for the stdio MCP proxy image (overrides global.registry if specified)
+    registry: ""
+    ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
+    repository: "tfy-private-images/stdio-mcp-proxy"
+    ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
+    tag: "v0.1.0"
+  ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
+  # replicaCount: 1
+  ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
+  environmentName: default
+  ## @param stdioMcpProxy.envSecretName Secret name for the stdio MCP proxy environment variables
+  envSecretName: stdio-mcp-proxy-env-secret
+  ## @param stdioMcpProxy.imagePullPolicy Image pull policy for the stdio MCP proxy
+  imagePullPolicy: IfNotPresent
+  ## @param stdioMcpProxy.nameOverride Override name for the stdio MCP proxy
+  nameOverride: ""
+  ## @param stdioMcpProxy.fullnameOverride Full name override for the stdio MCP proxy
+  fullnameOverride: ""
+  ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
+  podAnnotations: {}
+  ## @param stdioMcpProxy.podSecurityContext Security context for the stdio MCP proxy pods
+  podSecurityContext: {}
+  ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
+  commonLabels: {}
+  ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
+  commonAnnotations: {}
+  ## @param stdioMcpProxy.podLabels [object] Labels for the stdio MCP proxy pods
+  podLabels: {}
+  ## @param stdioMcpProxy.deploymentLabels [object] Deployment-specific labels for the stdio MCP proxy
+  deploymentLabels: {}
+  ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
+  deploymentAnnotations: {}
+  ## stdioMcpProxy.securityContext Security context for the stdio MCP proxy
+  securityContext:
+    ## @param stdioMcpProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the stdio MCP proxy
+    readOnlyRootFilesystem: false
+  ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
+  resourceTierOverride: ""
+  ## @param stdioMcpProxy.resources [object] Resource requests and limits for the stdio MCP proxy
+  resources: {}
+  ## stdioMcpProxy.livenessProbe Liveness probe settings for the stdio MCP proxy
+  livenessProbe:
+    ## @param stdioMcpProxy.livenessProbe.failureThreshold Liveness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 15
+    ## @param stdioMcpProxy.livenessProbe.periodSeconds Liveness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.livenessProbe.successThreshold Liveness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+  ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
+  readinessProbe:
+    ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 5
+    ## @param stdioMcpProxy.readinessProbe.periodSeconds Readiness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.readinessProbe.successThreshold Readiness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+  ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
+  nodeSelector: {}
+  ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
+  affinity: {}
+  ## @param stdioMcpProxy.topologySpreadConstraints Topology spread constraints for the stdio MCP proxy
+  topologySpreadConstraints: []
+  ## stdioMcpProxy.serviceMonitor ServiceMonitor settings for the stdio MCP proxy
+  serviceMonitor:
+    ## @param stdioMcpProxy.serviceMonitor.enabled Enable ServiceMonitor for the stdio MCP proxy
+    enabled: false
+    ## @param stdioMcpProxy.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param stdioMcpProxy.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
+  ## stdioMcpProxy.service Service settings for the stdio MCP proxy
+  service:
+    ## @param stdioMcpProxy.service.type Service type for the stdio MCP proxy
+    type: ClusterIP
+    ## @param stdioMcpProxy.service.port Service port for the stdio MCP proxy
+    port: 8000
+    ## @param stdioMcpProxy.service.annotations Annotations for the stdio MCP proxy service
+    annotations: {}
+    ## @param stdioMcpProxy.service.labels [object] Labels for the stdio MCP proxy service
+    labels: {}
+  ## stdioMcpProxy.serviceAccount Service account settings for the stdio MCP proxy
+  serviceAccount:
+    ## @param stdioMcpProxy.serviceAccount.create Bool to create a service account for the stdio MCP proxy
+    create: true
+    ## @param stdioMcpProxy.serviceAccount.name Name of the stdio MCP proxy service account
+    name: "stdio-mcp-proxy"
+    ## @param stdioMcpProxy.serviceAccount.annotations [object] Annotations for the stdio MCP proxy service account
+    annotations: {}
+    ## @param stdioMcpProxy.serviceAccount.labels [object] Labels for the stdio MCP proxy service account
+    labels: {}
+    ## @param stdioMcpProxy.serviceAccount.automountServiceAccountToken Automount service account token for the stdio MCP proxy service account
+    automountServiceAccountToken: true
+  ## @param stdioMcpProxy.extraVolumes Extra volumes for the stdio MCP proxy
+  extraVolumes: []
+  ## @param stdioMcpProxy.extraVolumeMounts Extra volume mounts for the stdio MCP proxy
+  extraVolumeMounts: []
+  ## @param stdioMcpProxy.imagePullSecrets Image pull credentials for the stdio MCP proxy
+  imagePullSecrets: []
+  ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
+  env:
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
