@@ -527,7 +527,7 @@ limits:
 
 {{- define "servicefoundry-server.imagePullSecrets" -}}
 {{- if .Values.servicefoundryServer.imagePullSecrets -}}
-{{- toYaml .Values.servicefoundryServer.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.servicefoundryServer.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

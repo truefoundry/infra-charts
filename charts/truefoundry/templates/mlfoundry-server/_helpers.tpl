@@ -307,7 +307,7 @@ limits:
 
 {{- define "mlfoundry-server.imagePullSecrets" -}}
 {{- if .Values.mlfoundryServer.imagePullSecrets -}}
-{{- toYaml .Values.mlfoundryServer.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.mlfoundryServer.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

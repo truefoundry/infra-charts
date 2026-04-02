@@ -305,7 +305,7 @@ limits:
 
 {{- define "tfy-k8s-controller.imagePullSecrets" -}}
 {{- if .Values.tfyK8sController.imagePullSecrets -}}
-{{- toYaml .Values.tfyK8sController.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.tfyK8sController.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
