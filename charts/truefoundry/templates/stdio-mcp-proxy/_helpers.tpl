@@ -221,7 +221,7 @@ limits:
 
 {{- define "stdio-mcp-proxy.imagePullSecrets" -}}
 {{- if .Values.stdioMcpProxy.imagePullSecrets -}}
-{{- toYaml .Values.stdioMcpProxy.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.stdioMcpProxy.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

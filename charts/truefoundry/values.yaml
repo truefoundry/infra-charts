@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.134.5
+  controlPlaneChartVersion: 0.134.6
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -84,6 +84,9 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector
+    ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
+    stdioMcpProxyHost: >-
+      {{ .Release.Name }}-stdio-mcp-proxy
     ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
     managedClusterOnboardingServiceURL: ""
     ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
@@ -2944,7 +2947,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.134.1"
+    tag: "v0.134.2"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)

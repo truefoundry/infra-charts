@@ -176,6 +176,14 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
+      {{- if .Values.stdioMcpProxy.enabled }}
+      # /api/stdio-mcp-proxy → / on upstream:8000
+      handle /api/stdio-mcp-proxy/* {
+        uri strip_prefix /api/stdio-mcp-proxy
+        reverse_proxy {{ tpl .Values.global.proxy.stdioMcpProxyHost . }}:{{ .Values.stdioMcpProxy.service.port }}
+      }
+      {{- end }}
+
       handle /api/env {
         uri strip_prefix /api/env
         rewrite * /v1/fe-env
