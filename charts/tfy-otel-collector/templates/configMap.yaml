@@ -50,11 +50,28 @@ data:
       debug:
         verbosity: detailed # For debug output during troubleshooting
       nop:
-      datafusion:
+      tfytracesexporter:
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
         deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT:-60s}
         deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES:-2}
         deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL:-10s}
+        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
+        tfy_otel_exporter_worker_count: ${env:TFY_OTEL_EXPORTER_WORKER_COUNT:-1}
+        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-5s}
+        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE:-200}
+        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-100000}
+        tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT:-60s}
+        tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES:-3}
+        tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
+        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-1s}
+        tfy_api_key: ${env:TFY_API_KEY}
+        cache_ttl: 5m
+        retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
+        timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
+      tfymetricsexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
@@ -68,7 +85,6 @@ data:
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-1s}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
-        retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
     processors:
       batch:
@@ -110,9 +126,9 @@ data:
         traces:
           receivers: [otlp]
           processors: [resource, batch]
-          exporters: [datafusion]
+          exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
           processors: []
-          exporters: [nop]
+          exporters: [tfymetricsexporter]
 
