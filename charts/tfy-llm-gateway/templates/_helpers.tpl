@@ -406,3 +406,112 @@ Node Selector for tfy-llm-gateway deployment
 []
 {{- end }}
 {{- end }}
+
+{{/*
+  Custom CA validation
+*/}}
+{{- define "tfy-llm-gateway.customCA.validate" -}}
+{{- if and .Values.global.customCA.enabled (not .Values.global.customCA.certificate) (not .Values.global.customCA.existingConfigMap.name) -}}
+{{- fail "global.customCA.enabled is true but neither global.customCA.certificate nor global.customCA.existingConfigMap.name is set. Provide one of them." -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Whether to use direct mount (true) or initContainer merge (false)
+*/}}
+{{- define "tfy-llm-gateway.customCA.useDirectMount" -}}
+{{- if and .Values.global.customCA.existingConfigMap.name .Values.global.customCA.existingConfigMap.overrideCAList -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA ConfigMap name
+*/}}
+{{- define "tfy-llm-gateway.customCA.configMapName" -}}
+{{- include "tfy-llm-gateway.customCA.validate" . -}}
+{{- if .Values.global.customCA.existingConfigMap.name -}}
+{{- .Values.global.customCA.existingConfigMap.name -}}
+{{- else -}}
+{{- include "tfy-llm-gateway.fullname" . }}-custom-ca
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA initContainer (only when not using direct mount)
+*/}}
+{{- define "tfy-llm-gateway.customCA.initContainer" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false" }}
+- name: configure-custom-ca
+  image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  command: ["sh", "-c"]
+  args:
+    - |
+      set -e
+      apk add --no-cache ca-certificates
+      cp /custom-ca/ca-certificates.crt /usr/local/share/ca-certificates/custom-ca.crt
+      update-ca-certificates
+      cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+  volumeMounts:
+    - name: custom-ca
+      mountPath: /custom-ca
+      readOnly: true
+    - name: ssl-certs
+      mountPath: /ssl-certs
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volumes
+  - Direct mount: just the ConfigMap
+  - InitContainer merge: ConfigMap + emptyDir
+*/}}
+{{- define "tfy-llm-gateway.customCA.volumes" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-llm-gateway.customCA.configMapName" . }}
+{{- else }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-llm-gateway.customCA.configMapName" . }}
+- name: ssl-certs
+  emptyDir:
+    medium: Memory
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volume mounts for app containers
+  - Direct mount: ConfigMap mounted at /etc/ssl/certs
+  - InitContainer merge: emptyDir mounted at /etc/ssl/certs
+*/}}
+{{- define "tfy-llm-gateway.customCA.volumeMounts" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- else }}
+- name: ssl-certs
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA environment variables for Node.js containers
+*/}}
+{{- define "tfy-llm-gateway.customCA.env" -}}
+{{- if .Values.global.customCA.enabled }}
+- name: NODE_EXTRA_CA_CERTS
+  value: /etc/ssl/certs/ca-certificates.crt
+{{- end }}
+{{- end -}}
