@@ -298,7 +298,7 @@ limits:
 
 {{- define "s3proxy.imagePullSecrets" -}}
 {{- if .Values.s3proxy.imagePullSecrets -}}
-{{- toYaml .Values.s3proxy.imagePullSecrets -}}
+{{- toYaml .Values.s3proxy.imagePullSecrets | nindent 2 -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

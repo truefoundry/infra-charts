@@ -276,9 +276,9 @@ limits:
 {{ toYaml $merged }}
 {{- end }}
 
-{{- define "tfy-controller.imagePullSecrets" -}}
+{{- define "tfy-controller.imagePullSecrets"}}
 {{- if .Values.tfyController.imagePullSecrets -}}
-{{- toYaml .Values.tfyController.imagePullSecrets -}}
+{{- toYaml .Values.tfyController.imagePullSecrets | nindent 2 -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

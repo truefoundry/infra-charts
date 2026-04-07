@@ -290,7 +290,7 @@ limits:
 
 {{- define "sfy-manifest-service.imagePullSecrets" -}}
 {{- if .Values.sfyManifestService.imagePullSecrets -}}
-{{- toYaml .Values.sfyManifestService.imagePullSecrets -}}
+{{- toYaml .Values.sfyManifestService.imagePullSecrets | nindent 2 -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

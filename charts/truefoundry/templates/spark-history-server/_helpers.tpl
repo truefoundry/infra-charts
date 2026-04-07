@@ -289,7 +289,7 @@ limits:
 
 {{- define "spark-history-server.imagePullSecrets" -}}
 {{- if .Values.sparkHistoryServer.imagePullSecrets -}}
-{{- toYaml .Values.sparkHistoryServer.imagePullSecrets -}}
+{{- toYaml .Values.sparkHistoryServer.imagePullSecrets | nindent 2 -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}
