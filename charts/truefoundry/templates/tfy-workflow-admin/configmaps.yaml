@@ -35,12 +35,7 @@ data:
       useOffloadedWorkflowClosure: false
     database:
       postgres:
-        port: ""
-        username: ""
-        password: ""
-        host: ""
-        dbname: ""
-        options: "sslmode=disable"
+        {{- toYaml .Values.tfyWorkflowAdmin.database.postgres | nindent 8 }}
     Logger:
       show-source: true
       level: 5
@@ -69,12 +64,7 @@ data:
       profilerPort: 10254
     database:
       postgres:
-        port: ''
-        username: ''
-        password: ''
-        host: ''
-        dbname: ''
-        options: "sslmode=disable"
+        {{- toYaml .Values.tfyWorkflowAdmin.database.postgres | nindent 8 }}
     Logger:
       show-source: true
       level: 5
