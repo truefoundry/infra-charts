@@ -58,10 +58,10 @@ global:
       name: ""
       ## @param global.customCA.existingConfigMap.overrideCAList When true, mounts ConfigMap directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
       overrideCAList: false
-    ## @param global.customCA.envVars [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
-    envVars: {}
+    ## @param global.customCA.env [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
+    env: {}
     # Example:
-    # envVars:
+    # env:
     #   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     #   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
     ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)

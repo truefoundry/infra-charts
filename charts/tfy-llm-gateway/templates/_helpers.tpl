@@ -452,7 +452,7 @@ false
     - |
       set -e
       cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
-  {{- with .Values.global.customCA.envVars }}
+  {{- with .Values.global.customCA.env }}
   env:
     {{- range $key, $val := . }}
     - name: {{ $key }}
