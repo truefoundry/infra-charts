@@ -9,16 +9,6 @@ It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connec
 
 | Name                                   | Description                                                 | Value                                            |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------ |
-| `global.labels`                        | Global labels                                               | `{}`                                             |
-| `global.annotations`                   | Global annotations                                          | `{}`                                             |
-| `global.podLabels`                     | Global pod labels                                           | `{}`                                             |
-| `global.podAnnotations`                | Global pod annotations                                      | `{}`                                             |
-| `global.deploymentLabels`              | Global deployment labels                                    | `{}`                                             |
-| `global.deploymentAnnotations`         | Global deployment annotations                               | `{}`                                             |
-| `global.serviceLabels`                 | Global service labels                                       | `{}`                                             |
-| `global.serviceAnnotations`            | Global service annotations                                  | `{}`                                             |
-| `global.serviceAccount.labels`         | Global service account labels                               | `{}`                                             |
-| `global.serviceAccount.annotations`    | Global service account annotations                          | `{}`                                             |
 | `nameOverride`                         | Name override                                               | `""`                                             |
 | `fullnameOverride`                     | Full name override for the tfy-cloudflared chart            | `""`                                             |
 | `commonLabels`                         | Common labels added to all resources                        | `{}`                                             |

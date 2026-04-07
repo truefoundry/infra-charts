@@ -29,61 +29,61 @@ app.kubernetes.io/part-of: truefoundry
 
 {{- define "tfy-cloudflared.commonLabels" -}}
 {{- $baseLabels := include "tfy-cloudflared.labels" . | fromYaml }}
-{{- $mergedLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) .Values.commonLabels }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.commonLabels }}
 {{- toYaml $mergedLabels }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.commonAnnotations" -}}
-{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.commonAnnotations) }}
+{{- with .Values.commonAnnotations }}
 {{- toYaml . }}
 {{- end }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.deploymentLabels" -}}
 {{- $commonLabels := include "tfy-cloudflared.commonLabels" . | fromYaml }}
-{{- $deploymentLabels := mergeOverwrite (deepCopy .Values.global.deploymentLabels) $commonLabels .Values.deploymentLabels }}
+{{- $deploymentLabels := mergeOverwrite $commonLabels .Values.deploymentLabels }}
 {{- toYaml $deploymentLabels }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.deploymentAnnotations" -}}
 {{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
-{{- $deploymentAnnotations := mergeOverwrite (deepCopy .Values.global.deploymentAnnotations) $commonAnnotations .Values.deploymentAnnotations }}
+{{- $deploymentAnnotations := mergeOverwrite $commonAnnotations .Values.deploymentAnnotations }}
 {{- toYaml $deploymentAnnotations }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.podLabels" -}}
 {{- $selectorLabels := include "tfy-cloudflared.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite .Values.podLabels $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.podAnnotations" -}}
 {{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.podAnnotations }}
+{{- $podAnnotations := mergeOverwrite $commonAnnotations .Values.podAnnotations }}
 {{- toYaml $podAnnotations }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.serviceLabels" -}}
 {{- $commonLabels := include "tfy-cloudflared.commonLabels" . | fromYaml }}
-{{- $serviceLabels := mergeOverwrite (deepCopy .Values.global.serviceLabels) $commonLabels .Values.service.labels }}
+{{- $serviceLabels := mergeOverwrite $commonLabels .Values.service.labels }}
 {{- toYaml $serviceLabels }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.serviceAnnotations" -}}
 {{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
-{{- $serviceAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAnnotations) $commonAnnotations .Values.service.annotations }}
+{{- $serviceAnnotations := mergeOverwrite $commonAnnotations .Values.service.annotations }}
 {{- toYaml $serviceAnnotations }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.serviceAccountLabels" -}}
 {{- $commonLabels := include "tfy-cloudflared.commonLabels" . | fromYaml }}
-{{- $serviceAccountLabels := mergeOverwrite (deepCopy .Values.global.serviceAccount.labels) $commonLabels .Values.serviceAccount.labels }}
+{{- $serviceAccountLabels := mergeOverwrite $commonLabels .Values.serviceAccount.labels }}
 {{- toYaml $serviceAccountLabels }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.serviceAccountAnnotations" -}}
 {{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
-{{- $serviceAccountAnnotations := mergeOverwrite (deepCopy .Values.global.serviceAccount.annotations) $commonAnnotations .Values.serviceAccount.annotations }}
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.serviceAccount.annotations }}
 {{- toYaml $serviceAccountAnnotations }}
 {{- end -}}
 
