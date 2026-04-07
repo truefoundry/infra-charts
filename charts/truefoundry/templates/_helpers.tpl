@@ -281,10 +281,7 @@ false
   args:
     - |
       set -e
-      apk add --no-cache ca-certificates
-      cp /custom-ca/ca-certificates.crt /usr/local/share/ca-certificates/custom-ca.crt
-      update-ca-certificates
-      cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+      cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
   volumeMounts:
     - name: custom-ca
       mountPath: /custom-ca
