@@ -3,41 +3,6 @@ Tfy-cloudflared vendors the upstream Cloudflare Tunnel chart into this repositor
 
 It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) for secure, outbound-only connections between services in your cluster and Cloudflare's network.
 
-## Installation
-
-From this repository:
-
-```bash
-helm install tfy-cloudflared ./charts/tfy-cloudflared -f values.yaml
-```
-
-From the published TrueFoundry repo after release:
-
-```bash
-helm repo add truefoundry https://truefoundry.github.io/infra-charts/
-helm repo update
-helm install tfy-cloudflared truefoundry/tfy-cloudflared -f values.yaml
-```
-
-## Quick Start
-
-Create a tunnel in the Cloudflare dashboard, copy the tunnel token, and set one of the following:
-
-```yaml
-tunnel:
-  token: "eyJhIjoiY2Y..."
-```
-
-or reference an existing secret:
-
-```yaml
-tunnel:
-  existingSecret: my-tunnel-secret
-  existingSecretKey: token
-```
-
-Then configure the public hostname mappings in Cloudflare to point at your in-cluster services.
-
 ## Parameters
 
 ### Configuration values for tfy-cloudflared
