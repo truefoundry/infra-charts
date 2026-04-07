@@ -451,10 +451,14 @@ false
   args:
     - |
       set -e
-      apk add --no-cache ca-certificates
-      cp /custom-ca/ca-certificates.crt /usr/local/share/ca-certificates/custom-ca.crt
-      update-ca-certificates
-      cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+      cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
+  {{- with .Values.global.customCA.envVars }}
+  env:
+    {{- range $key, $val := . }}
+    - name: {{ $key }}
+      value: {{ $val | quote }}
+    {{- end }}
+  {{- end }}
   volumeMounts:
     - name: custom-ca
       mountPath: /custom-ca
@@ -503,15 +507,5 @@ false
   mountPath: /etc/ssl/certs
   readOnly: true
 {{- end }}
-{{- end }}
-{{- end -}}
-
-{{/*
-  Custom CA environment variables for Node.js containers
-*/}}
-{{- define "tfy-llm-gateway.customCA.env" -}}
-{{- if .Values.global.customCA.enabled }}
-- name: NODE_EXTRA_CA_CERTS
-  value: /etc/ssl/certs/ca-certificates.crt
 {{- end }}
 {{- end -}}
