@@ -1,0 +1,180 @@
+## @section Configuration values for tfy-cloudflared
+
+## @param nameOverride Name override
+nameOverride: ""
+
+## @param fullnameOverride Full name override for the tfy-cloudflared chart
+fullnameOverride: ""
+
+## @param commonLabels [object] Common labels added to all resources
+commonLabels: {}
+
+## Image configuration
+image:
+  ## @param image.repository Image repository for cloudflared
+  repository: docker.io/cloudflare/cloudflared
+  ## @param image.tag Image tag for cloudflared
+  tag: "2026.3.0"
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+## Tunnel configuration
+tunnel:
+  ## @param tunnel.token Tunnel token obtained from the Cloudflare dashboard
+  token: ""
+  ## @param tunnel.existingSecret Name of an existing secret containing the tunnel token
+  existingSecret: ""
+  ## @param tunnel.existingSecretKey Key inside the existing secret that stores the tunnel token
+  existingSecretKey: token
+
+## cloudflared runtime configuration
+cloudflared:
+  ## @param cloudflared.logLevel Log level for the cloudflared process
+  logLevel: info
+  ## @param cloudflared.noAutoupdate Disable auto-update for cloudflared
+  noAutoupdate: true
+  ## @param cloudflared.metricsPort Metrics listen port used for /ready and /metrics
+  metricsPort: 2000
+  ## @param cloudflared.extraArgs [array] Extra arguments appended to the cloudflared command
+  extraArgs: []
+  ## @param cloudflared.extraEnv [array] Extra environment variables for the cloudflared container
+  extraEnv: []
+  #  - name: TUNNEL_LOGLEVEL
+  #    value: debug
+
+## @param replicaCount Number of cloudflared replicas to deploy
+replicaCount: 2
+
+## PodDisruptionBudget configuration
+pdb:
+  ## @param pdb.enabled Create a PodDisruptionBudget
+  enabled: true
+  ## @param pdb.minAvailable Minimum available replicas during voluntary disruptions
+  minAvailable: 1
+
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated service account
+  create: false
+  ## @param serviceAccount.name Service account name
+  name: ""
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+
+## Service configuration for metrics
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 2000
+  ## @param service.annotations [object] Service annotations
+  annotations: {}
+
+## Metrics configuration
+metrics:
+  ## @param metrics.enabled Expose the metrics service
+  enabled: true
+
+## ServiceMonitor configuration
+serviceMonitor:
+  ## @param serviceMonitor.enabled Create a ServiceMonitor
+  enabled: false
+  ## @param serviceMonitor.interval Prometheus scrape interval
+  interval: 30s
+  ## @param serviceMonitor.labels [object] Additional labels for the ServiceMonitor
+  labels: {}
+
+## Health probe configuration
+probes:
+  ## probes.startup Startup probe configuration
+  startup:
+    ## @param probes.startup.enabled Enable the startup probe
+    enabled: true
+    ## @param probes.startup.path Startup probe HTTP path
+    path: /ready
+    ## @param probes.startup.initialDelaySeconds Startup probe initial delay in seconds
+    initialDelaySeconds: 5
+    ## @param probes.startup.periodSeconds Startup probe period in seconds
+    periodSeconds: 5
+    ## @param probes.startup.timeoutSeconds Startup probe timeout in seconds
+    timeoutSeconds: 3
+    ## @param probes.startup.failureThreshold Startup probe failure threshold
+    failureThreshold: 12
+  ## probes.liveness Liveness probe configuration
+  liveness:
+    ## @param probes.liveness.enabled Enable the liveness probe
+    enabled: true
+    ## @param probes.liveness.path Liveness probe HTTP path
+    path: /ready
+    ## @param probes.liveness.initialDelaySeconds Liveness probe initial delay in seconds
+    initialDelaySeconds: 0
+    ## @param probes.liveness.periodSeconds Liveness probe period in seconds
+    periodSeconds: 15
+    ## @param probes.liveness.timeoutSeconds Liveness probe timeout in seconds
+    timeoutSeconds: 5
+    ## @param probes.liveness.failureThreshold Liveness probe failure threshold
+    failureThreshold: 3
+  ## probes.readiness Readiness probe configuration
+  readiness:
+    ## @param probes.readiness.enabled Enable the readiness probe
+    enabled: true
+    ## @param probes.readiness.path Readiness probe HTTP path
+    path: /ready
+    ## @param probes.readiness.initialDelaySeconds Readiness probe initial delay in seconds
+    initialDelaySeconds: 0
+    ## @param probes.readiness.periodSeconds Readiness probe period in seconds
+    periodSeconds: 10
+    ## @param probes.readiness.timeoutSeconds Readiness probe timeout in seconds
+    timeoutSeconds: 5
+    ## @param probes.readiness.failureThreshold Readiness probe failure threshold
+    failureThreshold: 3
+
+## @skip resources [object] Resource requests and limits for cloudflared
+resources: {}
+# requests:
+#   cpu: 50m
+#   memory: 64Mi
+# limits:
+#   memory: 128Mi
+
+## @param podSecurityContext [object] Pod security context
+podSecurityContext: {}
+
+## @param securityContext [object] Container security context
+securityContext: {}
+
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+
+## @param tolerations [array] Tolerations
+tolerations: []
+
+## @param affinity [object] Affinity
+affinity: {}
+
+## @param topologySpreadConstraints [array] Topology spread constraints
+topologySpreadConstraints: []
+
+## @param priorityClassName PriorityClass name to assign to the pods
+priorityClassName: ""
+
+## @param terminationGracePeriodSeconds Termination grace period in seconds
+terminationGracePeriodSeconds: 30
+
+## @param podLabels [object] Pod labels
+podLabels: {}
+
+## @param podAnnotations [object] Pod annotations
+podAnnotations: {}
+
+## @param extraVolumes [array] Extra volumes
+extraVolumes: []
+
+## @param extraVolumeMounts [array] Extra volume mounts
+extraVolumeMounts: []
+
+## @param extraManifests [array] Extra manifests to deploy alongside the chart
+extraManifests: []
