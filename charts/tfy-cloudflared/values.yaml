@@ -1,5 +1,30 @@
 ## @section Configuration values for tfy-cloudflared
 
+## Global configuration
+global:
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.labels [object] Global service account labels
+    labels: {}
+    ## @param global.serviceAccount.annotations [object] Global service account annotations
+    annotations: {}
+
 ## @param nameOverride Name override
 nameOverride: ""
 
@@ -8,6 +33,8 @@ fullnameOverride: ""
 
 ## @param commonLabels [object] Common labels added to all resources
 commonLabels: {}
+## @param commonAnnotations [object] Common annotations added to all resources
+commonAnnotations: {}
 
 ## Image configuration
 image:
@@ -54,6 +81,10 @@ pdb:
   enabled: true
   ## @param pdb.minAvailable Minimum available replicas during voluntary disruptions
   minAvailable: 1
+  ## @param pdb.labels [object] PodDisruptionBudget labels
+  labels: {}
+  ## @param pdb.annotations [object] PodDisruptionBudget annotations
+  annotations: {}
 
 ## Service account configuration
 serviceAccount:
@@ -61,6 +92,8 @@ serviceAccount:
   create: false
   ## @param serviceAccount.name Service account name
   name: ""
+  ## @param serviceAccount.labels [object] Service account labels
+  labels: {}
   ## @param serviceAccount.annotations [object] Service account annotations
   annotations: {}
 
@@ -70,6 +103,8 @@ service:
   type: ClusterIP
   ## @param service.port Service port
   port: 2000
+  ## @param service.labels [object] Service labels
+  labels: {}
   ## @param service.annotations [object] Service annotations
   annotations: {}
 
@@ -84,8 +119,10 @@ serviceMonitor:
   enabled: false
   ## @param serviceMonitor.interval Prometheus scrape interval
   interval: 30s
-  ## @param serviceMonitor.labels [object] Additional labels for the ServiceMonitor
-  labels: {}
+  ## @param serviceMonitor.additionalLabels [object] Additional labels for the ServiceMonitor
+  additionalLabels: {}
+  ## @param serviceMonitor.additionalAnnotations [object] Additional annotations for the ServiceMonitor
+  additionalAnnotations: {}
 
 ## Health probe configuration
 probes:
@@ -169,6 +206,12 @@ podLabels: {}
 
 ## @param podAnnotations [object] Pod annotations
 podAnnotations: {}
+
+## @param deploymentLabels [object] Deployment labels
+deploymentLabels: {}
+
+## @param deploymentAnnotations [object] Deployment annotations
+deploymentAnnotations: {}
 
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []

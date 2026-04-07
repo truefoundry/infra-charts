@@ -4,11 +4,9 @@ kind: Service
 metadata:
   name: {{ include "tfy-cloudflared.fullname" . }}
   labels:
-    {{- include "tfy-cloudflared.labels" . | nindent 4 }}
-  {{- with .Values.service.annotations }}
+    {{- include "tfy-cloudflared.serviceLabels" . | nindent 4 }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- include "tfy-cloudflared.serviceAnnotations" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:

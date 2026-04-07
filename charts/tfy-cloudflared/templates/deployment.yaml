@@ -3,7 +3,9 @@ kind: Deployment
 metadata:
   name: {{ include "tfy-cloudflared.fullname" . }}
   labels:
-    {{- include "tfy-cloudflared.labels" . | nindent 4 }}
+    {{- include "tfy-cloudflared.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -11,15 +13,10 @@ spec:
       {{- include "tfy-cloudflared.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      labels:
-        {{- include "tfy-cloudflared.selectorLabels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-cloudflared.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-cloudflared.podLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

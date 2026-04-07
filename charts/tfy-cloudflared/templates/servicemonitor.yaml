@@ -4,10 +4,9 @@ kind: ServiceMonitor
 metadata:
   name: {{ include "tfy-cloudflared.fullname" . }}
   labels:
-    {{- include "tfy-cloudflared.labels" . | nindent 4 }}
-    {{- with .Values.serviceMonitor.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- include "tfy-cloudflared.serviceMonitorLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.serviceMonitorAnnotations" . | nindent 4 }}
 spec:
   selector:
     matchLabels:

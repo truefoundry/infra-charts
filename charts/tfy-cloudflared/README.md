@@ -9,9 +9,20 @@ It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connec
 
 | Name                                   | Description                                                 | Value                                            |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------ |
+| `global.labels`                        | Global labels                                               | `{}`                                             |
+| `global.annotations`                   | Global annotations                                          | `{}`                                             |
+| `global.podLabels`                     | Global pod labels                                           | `{}`                                             |
+| `global.podAnnotations`                | Global pod annotations                                      | `{}`                                             |
+| `global.deploymentLabels`              | Global deployment labels                                    | `{}`                                             |
+| `global.deploymentAnnotations`         | Global deployment annotations                               | `{}`                                             |
+| `global.serviceLabels`                 | Global service labels                                       | `{}`                                             |
+| `global.serviceAnnotations`            | Global service annotations                                  | `{}`                                             |
+| `global.serviceAccount.labels`         | Global service account labels                               | `{}`                                             |
+| `global.serviceAccount.annotations`    | Global service account annotations                          | `{}`                                             |
 | `nameOverride`                         | Name override                                               | `""`                                             |
 | `fullnameOverride`                     | Full name override for the tfy-cloudflared chart            | `""`                                             |
 | `commonLabels`                         | Common labels added to all resources                        | `{}`                                             |
+| `commonAnnotations`                    | Common annotations added to all resources                   | `{}`                                             |
 | `image.repository`                     | Image repository for cloudflared                            | `tfy.jfrog.io/tfy-mirror/cloudflare/cloudflared` |
 | `image.tag`                            | Image tag for cloudflared                                   | `2026.3.0`                                       |
 | `image.pullPolicy`                     | Image pull policy                                           | `IfNotPresent`                                   |
@@ -27,16 +38,21 @@ It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connec
 | `replicaCount`                         | Number of cloudflared replicas to deploy                    | `2`                                              |
 | `pdb.enabled`                          | Create a PodDisruptionBudget                                | `true`                                           |
 | `pdb.minAvailable`                     | Minimum available replicas during voluntary disruptions     | `1`                                              |
+| `pdb.labels`                           | PodDisruptionBudget labels                                  | `{}`                                             |
+| `pdb.annotations`                      | PodDisruptionBudget annotations                             | `{}`                                             |
 | `serviceAccount.create`                | Create a dedicated service account                          | `false`                                          |
 | `serviceAccount.name`                  | Service account name                                        | `""`                                             |
+| `serviceAccount.labels`                | Service account labels                                      | `{}`                                             |
 | `serviceAccount.annotations`           | Service account annotations                                 | `{}`                                             |
 | `service.type`                         | Service type                                                | `ClusterIP`                                      |
 | `service.port`                         | Service port                                                | `2000`                                           |
+| `service.labels`                       | Service labels                                              | `{}`                                             |
 | `service.annotations`                  | Service annotations                                         | `{}`                                             |
 | `metrics.enabled`                      | Expose the metrics service                                  | `true`                                           |
 | `serviceMonitor.enabled`               | Create a ServiceMonitor                                     | `false`                                          |
 | `serviceMonitor.interval`              | Prometheus scrape interval                                  | `30s`                                            |
-| `serviceMonitor.labels`                | Additional labels for the ServiceMonitor                    | `{}`                                             |
+| `serviceMonitor.additionalLabels`      | Additional labels for the ServiceMonitor                    | `{}`                                             |
+| `serviceMonitor.additionalAnnotations` | Additional annotations for the ServiceMonitor               | `{}`                                             |
 | `probes.startup.enabled`               | Enable the startup probe                                    | `true`                                           |
 | `probes.startup.path`                  | Startup probe HTTP path                                     | `/ready`                                         |
 | `probes.startup.initialDelaySeconds`   | Startup probe initial delay in seconds                      | `5`                                              |
@@ -65,6 +81,8 @@ It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connec
 | `terminationGracePeriodSeconds`        | Termination grace period in seconds                         | `30`                                             |
 | `podLabels`                            | Pod labels                                                  | `{}`                                             |
 | `podAnnotations`                       | Pod annotations                                             | `{}`                                             |
+| `deploymentLabels`                     | Deployment labels                                           | `{}`                                             |
+| `deploymentAnnotations`                | Deployment annotations                                      | `{}`                                             |
 | `extraVolumes`                         | Extra volumes                                               | `[]`                                             |
 | `extraVolumeMounts`                    | Extra volume mounts                                         | `[]`                                             |
 | `extraManifests`                       | Extra manifests to deploy alongside the chart               | `[]`                                             |
