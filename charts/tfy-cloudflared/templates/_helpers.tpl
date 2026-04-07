@@ -53,7 +53,7 @@ app.kubernetes.io/part-of: truefoundry
 
 {{- define "tfy-cloudflared.podLabels" -}}
 {{- $selectorLabels := include "tfy-cloudflared.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite .Values.podLabels $selectorLabels }}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.podLabels) $selectorLabels }}
 {{- toYaml $podLabels }}
 {{- end -}}
 
