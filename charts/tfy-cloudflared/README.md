@@ -68,15 +68,3 @@ It deploys [cloudflared](https://developers.cloudflare.com/cloudflare-one/connec
 | `extraVolumes`                         | Extra volumes                                               | `[]`                                             |
 | `extraVolumeMounts`                    | Extra volume mounts                                         | `[]`                                             |
 | `extraManifests`                       | Extra manifests to deploy alongside the chart               | `[]`                                             |
-
-## Notes
-
-- This chart does not create Cloudflare tunnel routes or ingress rules.
-- Horizontal autoscaling is intentionally not included because downscaling can terminate active tunnel connections.
-- The metrics endpoint is exposed on port `2000` and a `ServiceMonitor` can be enabled when needed.
-
-## More Information
-
-- [Cloudflare Tunnel documentation](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
-- [Kubernetes deployment guide](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/deploy-tunnels/deployment-guides/kubernetes/)
-- [Architecture overview](docs/architecture.md)
