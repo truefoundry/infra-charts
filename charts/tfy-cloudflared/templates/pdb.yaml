@@ -1,0 +1,15 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tfy-cloudflared.fullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.pdbAnnotations" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "tfy-cloudflared.selectorLabels" . | nindent 6 }}
+{{- end }}
