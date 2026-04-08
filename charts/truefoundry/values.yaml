@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.133.0
+  controlPlaneChartVersion: 0.135.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -49,7 +49,23 @@ global:
       annotations: {}
       ## @param global.ingress.workflow.labels [object] Labels for the workflow ingress
       labels: {}
-  ## global.virtualservice Istio configuration for the control plane
+  ## global.httpRoute Gateway API HTTPRoute configuration for the control plane
+  httpRoute:
+    ## @param global.httpRoute.enabled Bool to enable HTTPRoute for the control plane
+    enabled: false
+    ## @param global.httpRoute.annotations [object] Annotations for the control plane HTTPRoute
+    annotations: {}
+    ## @param global.httpRoute.labels [object] Labels for the control plane HTTPRoute
+    labels: {}
+    ## @param global.httpRoute.parentRefs [array] Parent gateway references for the HTTPRoute
+    parentRefs: []
+    #  - name: my-gateway
+    #    namespace: gateway-system
+    #    sectionName: https
+    ## @param global.httpRoute.hostnames [array] Hostnames for the HTTPRoute
+    hostnames: []
+    #  - "app.example.com"
+    ## global.virtualservice Istio configuration for the control plane
   virtualservice:
     ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
     enabled: false
@@ -84,6 +100,9 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector
+    ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
+    stdioMcpProxyHost: >-
+      {{ .Release.Name }}-stdio-mcp-proxy
     ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
     managedClusterOnboardingServiceURL: ""
     ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
@@ -407,7 +426,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.133.0"
+    tag: "v0.135.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -690,7 +709,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.133.0"
+    tag: "v0.135.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -889,6 +908,8 @@ servicefoundryServer:
       transcription: "{{ .Release.Name }}-transcription-codesnippet-cm"
       ## @param servicefoundryServer.configs.codeSnippetTemplates.translation Translation templates ConfigMap name
       translation: "{{ .Release.Name }}-translation-codesnippet-cm"
+      ## @param servicefoundryServer.configs.codeSnippetTemplates.integrationSets AI gateway integration sets ConfigMap name
+      integrationSets: "{{ .Release.Name }}-ai-gateway-integration-sets-cm"
     ## @param servicefoundryServer.configs.workbenchImages Workbench Images for workbench deployments
     workbenchImages: "{{ .Release.Name }}-workbench-images-cm"
     ## @param servicefoundryServer.configs.imageMutationPolicy Image Mutations policy for workloads
@@ -1047,7 +1068,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.133.0"
+    tag: "v0.135.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1183,8 +1204,8 @@ tfyK8sController:
 ###################################################################################################################
 ## @section sfyManifestService Truefoundry sfy manifest service values
 sfyManifestService:
-  ## @param sfyManifestService.enabled Bool to enable the sfy manifest service
-  enabled: true
+  ## @param sfyManifestService.enabled Bool to force-deploy the sfy manifest service when true; otherwise follows tfyWorkflowAdmin.enabled
+  enabled: false
   # SFY_API_KEY: <api_key>
   ## @param sfyManifestService.annotations [object] Annotations for the sfy manifest service
   annotations: {}
@@ -1331,6 +1352,130 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
+###################################################################################################################
+####################################### stdio-mcp-proxy ###########################################################
+###################################################################################################################
+## @section stdioMcpProxy stdio MCP proxy values
+stdioMcpProxy:
+  ## @param stdioMcpProxy.enabled Bool to enable the stdio MCP proxy
+  enabled: false
+  ## @param stdioMcpProxy.annotations [object] Annotations for the stdio MCP proxy
+  annotations: {}
+  ## @param stdioMcpProxy.tolerations Tolerations specific to the stdio MCP proxy
+  tolerations: []
+  ## stdioMcpProxy.image Image for the stdio MCP proxy
+  image:
+    ## @param stdioMcpProxy.image.registry Registry for the stdio MCP proxy image (overrides global.registry if specified)
+    registry: ""
+    ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
+    repository: "tfy-private-images/stdio-mcp-proxy"
+    ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
+    tag: "v0.135.0"
+  ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
+  # replicaCount: 1
+  ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
+  environmentName: default
+  ## @param stdioMcpProxy.envSecretName Secret name for the stdio MCP proxy environment variables
+  envSecretName: stdio-mcp-proxy-env-secret
+  ## @param stdioMcpProxy.imagePullPolicy Image pull policy for the stdio MCP proxy
+  imagePullPolicy: IfNotPresent
+  ## @param stdioMcpProxy.nameOverride Override name for the stdio MCP proxy
+  nameOverride: ""
+  ## @param stdioMcpProxy.fullnameOverride Full name override for the stdio MCP proxy
+  fullnameOverride: ""
+  ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
+  podAnnotations: {}
+  ## @param stdioMcpProxy.podSecurityContext Security context for the stdio MCP proxy pods
+  podSecurityContext: {}
+  ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
+  commonLabels: {}
+  ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
+  commonAnnotations: {}
+  ## @param stdioMcpProxy.podLabels [object] Labels for the stdio MCP proxy pods
+  podLabels: {}
+  ## @param stdioMcpProxy.deploymentLabels [object] Deployment-specific labels for the stdio MCP proxy
+  deploymentLabels: {}
+  ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
+  deploymentAnnotations: {}
+  ## stdioMcpProxy.securityContext Security context for the stdio MCP proxy
+  securityContext:
+    ## @param stdioMcpProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the stdio MCP proxy
+    readOnlyRootFilesystem: false
+  ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
+  resourceTierOverride: ""
+  ## @param stdioMcpProxy.resources [object] Resource requests and limits for the stdio MCP proxy
+  resources: {}
+  ## stdioMcpProxy.livenessProbe Liveness probe settings for the stdio MCP proxy
+  livenessProbe:
+    ## @param stdioMcpProxy.livenessProbe.failureThreshold Liveness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 15
+    ## @param stdioMcpProxy.livenessProbe.periodSeconds Liveness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.livenessProbe.successThreshold Liveness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+  ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
+  readinessProbe:
+    ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 5
+    ## @param stdioMcpProxy.readinessProbe.periodSeconds Readiness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.readinessProbe.successThreshold Readiness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+  ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
+  nodeSelector: {}
+  ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
+  affinity: {}
+  ## @param stdioMcpProxy.topologySpreadConstraints Topology spread constraints for the stdio MCP proxy
+  topologySpreadConstraints: []
+  ## stdioMcpProxy.serviceMonitor ServiceMonitor settings for the stdio MCP proxy
+  serviceMonitor:
+    ## @param stdioMcpProxy.serviceMonitor.enabled Enable ServiceMonitor for the stdio MCP proxy
+    enabled: false
+    ## @param stdioMcpProxy.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param stdioMcpProxy.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
+  ## stdioMcpProxy.service Service settings for the stdio MCP proxy
+  service:
+    ## @param stdioMcpProxy.service.type Service type for the stdio MCP proxy
+    type: ClusterIP
+    ## @param stdioMcpProxy.service.port Service port for the stdio MCP proxy
+    port: 8000
+    ## @param stdioMcpProxy.service.annotations Annotations for the stdio MCP proxy service
+    annotations: {}
+    ## @param stdioMcpProxy.service.labels [object] Labels for the stdio MCP proxy service
+    labels: {}
+  ## stdioMcpProxy.serviceAccount Service account settings for the stdio MCP proxy
+  serviceAccount:
+    ## @param stdioMcpProxy.serviceAccount.create Bool to create a service account for the stdio MCP proxy
+    create: true
+    ## @param stdioMcpProxy.serviceAccount.name Name of the stdio MCP proxy service account
+    name: "stdio-mcp-proxy"
+    ## @param stdioMcpProxy.serviceAccount.annotations [object] Annotations for the stdio MCP proxy service account
+    annotations: {}
+    ## @param stdioMcpProxy.serviceAccount.labels [object] Labels for the stdio MCP proxy service account
+    labels: {}
+    ## @param stdioMcpProxy.serviceAccount.automountServiceAccountToken Automount service account token for the stdio MCP proxy service account
+    automountServiceAccountToken: true
+  ## @param stdioMcpProxy.extraVolumes Extra volumes for the stdio MCP proxy
+  extraVolumes: []
+  ## @param stdioMcpProxy.extraVolumeMounts Extra volume mounts for the stdio MCP proxy
+  extraVolumeMounts: []
+  ## @param stdioMcpProxy.imagePullSecrets Image pull credentials for the stdio MCP proxy
+  imagePullSecrets: []
+  ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
+  env:
+    MCP_PROXY_CONFIG_JSON: ${k8s-secret/stdio-mcp-proxy-env-secret/MCP_PROXY_CONFIG_JSON}
+    MCP_SUBPROCESS_TTL_MINUTES: "20"
+    MCP_REAP_INTERVAL_MINUTES: "5"
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -1983,6 +2128,21 @@ tfyWorkflowAdmin:
     labels: {}
   ## @param tfyWorkflowAdmin.storage Storage settings for the tfyWorkflowAdmin
   storage: {}
+  ## tfyWorkflowAdmin.database Postgres settings embedded in flyteadmin-config.yaml and flytescheduler-config.yaml
+  database:
+    postgres:
+      ## @param tfyWorkflowAdmin.database.postgres.port Postgres port for workflow admin Flyte config
+      port: ""
+      ## @param tfyWorkflowAdmin.database.postgres.username Postgres username for workflow admin Flyte config
+      username: ""
+      ## @param tfyWorkflowAdmin.database.postgres.password Postgres password for workflow admin Flyte config
+      password: ""
+      ## @param tfyWorkflowAdmin.database.postgres.host Postgres host for workflow admin Flyte config
+      host: ""
+      ## @param tfyWorkflowAdmin.database.postgres.dbname Postgres database name for workflow admin Flyte config
+      dbname: ""
+      ## @param tfyWorkflowAdmin.database.postgres.options Postgres connection options (e.g. sslmode) for workflow admin Flyte config
+      options: "sslmode=disable"
   ## For AWS uncomment this section
   ## type: s3
   ## limits:
@@ -2271,33 +2431,17 @@ truefoundryMonitoring:
   prometheus:
     ## @param truefoundryMonitoring.prometheus.enabled Install a dedicated Prometheus
     ##
-    enabled: false
+    enabled: true
   ## Logs subchart (set enabled=true only if no VictoriaLogs exists in cluster)
   logs:
     ## @param truefoundryMonitoring.logs.enabled Install a dedicated VictoriaLogs + Vector
     ##
-    enabled: false
+    enabled: true
   ## Grafana configuration
   grafana:
-    ## @param truefoundryMonitoring.grafana.adminUser Grafana admin username
+    ## @param truefoundryMonitoring.grafana.enabled Bool to enable Grafana
     ##
-    adminUser: "admin"
-    ## @param truefoundryMonitoring.grafana.adminPassword Grafana admin password
-    ##
-    adminPassword: ""
-    ## @param truefoundryMonitoring.grafana.grafana\.ini [object] Grafana INI server configuration
-    grafana.ini:
-      server:
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.domain Domain for Grafana (e.g. mycluster.example.com)
-        ##
-        domain: ""
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.root_url Root URL for Grafana
-        ## For subpath routing set to e.g. https://mycluster.example.com/grafana/
-        ##
-        root_url: ""
-        ## @param truefoundryMonitoring.grafana.grafana.ini.server.serve_from_sub_path Enable serving Grafana from a subpath
-        ##
-        serve_from_sub_path: true
+    enabled: true
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Ingestor #################################################
 ###################################################################################################################
@@ -2314,7 +2458,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.133.0"
+    tag: "v0.135.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2476,6 +2620,7 @@ deltaFusionIngestor:
     CLEANUP_EXPIRED_LOGS: "false"
     GRPC_PORT: "8001"
     ENABLE_ARROW_FLIGHT_SERVER: "{{ .Values.deltaFusionQueryServer.enableLiveLogs }}"
+    FLIGHT_DO_GET_MAX_ENCODED_MESSAGE_BYTES: "3500000"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -2490,7 +2635,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.133.0"
+    tag: "v0.135.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -2652,7 +2797,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.133.0
+    tag: v0.135.1
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
     optimized: auto
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -2835,7 +2980,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.133.0"
+    tag: "v0.135.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)

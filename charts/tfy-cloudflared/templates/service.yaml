@@ -1,0 +1,19 @@
+{{- if .Values.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-cloudflared.fullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: metrics
+      port: {{ .Values.service.port }}
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "tfy-cloudflared.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -205,6 +205,39 @@ Truefoundry virtual service fullname
 
 
 {{/*
+Truefoundry HTTPRoute fullname
+*/}}
+{{- define "truefoundry.httproute.fullname" -}}
+{{- if .Values.global.httpRoute.fullnameOverride -}}
+{{- .Values.global.httpRoute.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "httproute" .Values.global.httpRoute.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  HTTPRoute labels
+  */}}
+{{- define "truefoundry.httproute.labels" -}}
+{{- $base := include "truefoundry.labels" (dict "context" . "name" "truefoundry-httproute") | fromYaml -}}
+{{- $httpRouteLabels := mergeOverwrite $base (deepCopy .Values.global.httpRoute.labels) -}}
+{{- toYaml $httpRouteLabels -}}
+{{- end -}}
+
+{{/*
+  HTTPRoute annotations
+  */}}
+{{- define "truefoundry.httproute.annotations" -}}
+{{- $httpRouteAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) .Values.global.httpRoute.annotations }}
+{{- toYaml $httpRouteAnnotations }}
+{{- end }}
+
+{{/*
   Custom CA validation
 */}}
 {{- define "truefoundry.customCA.validate" -}}
@@ -248,10 +281,7 @@ false
   args:
     - |
       set -e
-      apk add --no-cache ca-certificates
-      cp /custom-ca/ca-certificates.crt /usr/local/share/ca-certificates/custom-ca.crt
-      update-ca-certificates
-      cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+      cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
   volumeMounts:
     - name: custom-ca
       mountPath: /custom-ca

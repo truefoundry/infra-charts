@@ -49,7 +49,7 @@ requests:
 */}}
 {{- define "bootstrap.imagePullSecrets" -}}
 {{- if .Values.truefoundryBootstrap.imagePullSecrets -}}
-{{- toYaml .Values.truefoundryBootstrap.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.truefoundryBootstrap.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

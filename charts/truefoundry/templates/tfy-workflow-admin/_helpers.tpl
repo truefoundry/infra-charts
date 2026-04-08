@@ -358,8 +358,8 @@ limits:
 
 {{- define "tfy-workflow-admin.imagePullSecrets" -}}
 {{- if .Values.tfyWorkflowAdmin.imagePullSecrets -}}
-{{- toYaml .Values.tfyWorkflowAdmin.imagePullSecrets | indent 8 }}
-{{- else if .Values.global.imagePullSecrets -}}
-{{- toYaml .Values.global.imagePullSecrets | indent 8 }}
-{{- end -}}
+{{- toYaml .Values.tfyWorkflowAdmin.imagePullSecrets -}}
+{{- else -}}
+{{- include "global.imagePullSecrets" . -}}
+{{- end }}
 {{- end }}

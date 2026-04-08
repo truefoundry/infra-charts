@@ -193,6 +193,14 @@ Expand the name of the chart.
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
+- name: K8S_SERVICE_ACCOUNT_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.serviceAccountName
+- name: MLFOUNDRY_WIF_K8S_NAMESPACE
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.namespace
 {{- end }}
 
 {{/*
@@ -299,7 +307,7 @@ limits:
 
 {{- define "mlfoundry-server.imagePullSecrets" -}}
 {{- if .Values.mlfoundryServer.imagePullSecrets -}}
-{{- toYaml .Values.mlfoundryServer.imagePullSecrets | nindent 2 -}}
+{{- toYaml .Values.mlfoundryServer.imagePullSecrets -}}
 {{- else -}}
 {{- include "global.imagePullSecrets" . -}}
 {{- end }}

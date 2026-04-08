@@ -1,0 +1,18 @@
+{{- if and .Values.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "tfy-cloudflared.fullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.serviceMonitorLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.serviceMonitorAnnotations" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tfy-cloudflared.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.serviceMonitor.interval }}
+      path: /metrics
+{{- end }}

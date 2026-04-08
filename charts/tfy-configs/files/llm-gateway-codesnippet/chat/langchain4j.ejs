@@ -78,8 +78,7 @@ public class LangChain4jExample {
     customHeaders.put("X-TFY-METADATA", "<%- JSON.stringify(custom_metadata).replace(/"/g, '\\"') %>");
     <% if ((input_guardrails && input_guardrails.length> 0) || (output_guardrails && output_guardrails.length > 0)) { %>
     customHeaders.put("X-TFY-GUARDRAILS", "<%- JSON.stringify({llm_input_guardrails: input_guardrails,
-      llm_output_guardrails: output_guardrails}).replace(/"/g, '\\"' ) %>");<% } %><% if (routing_config && routing_config.type && routing_config.load_balance_targets.length > 0) { %>
-    customHeaders.put("X-TFY-ROUTING-CONFIG", "<%- JSON.stringify(routing_config).replace(/"/g, '\\"') %>");<% } %><% if (include_cache_config) { %>
+      llm_output_guardrails: output_guardrails}).replace(/"/g, '\\"' ) %>");<% } %><% if (include_cache_config) { %>
     customHeaders.put("X-TFY-CACHE-CONFIG", "<%- JSON.stringify(cache_config).replace(/"/g, '\\"') %>");<% } %>
     customHeaders.put("X-TFY-LOGGING-CONFIG", "{\"enabled\": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, \"tracing_project_fqn\": \"<%= request_logging_tracing_project_fqn %>\"<% } %>}");
     return customHeaders;

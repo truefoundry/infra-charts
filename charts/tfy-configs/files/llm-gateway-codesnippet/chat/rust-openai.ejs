@@ -27,12 +27,7 @@
                                 headers.insert(
                                 "X-TFY-GUARDRAILS",
                                 HeaderValue::from_static(r#"<%- JSON.stringify({llm_input_guardrails: input_guardrails,
-                                    llm_output_guardrails: output_guardrails}).replace(/"/g, "\\\"") %>" #) );<% } %><% if (routing_config && routing_config.type &&
-                                        routing_config.load_balance_targets.length> 0) { %>
-                                        headers.insert(
-                                        "X-TFY-ROUTING-CONFIG",
-                                        HeaderValue::from_static(r#"<%-
-                                            JSON.stringify(routing_config).replace(/"/g, "\\\"") %>" #) );<% } %><% if (include_cache_config) { %>
+                                    llm_output_guardrails: output_guardrails}).replace(/"/g, "\\\"") %>" #) );<% } %><% if (include_cache_config) { %>
                                                 headers.insert(
                                                 "X-TFY-CACHE-CONFIG",
                                                 HeaderValue::from_static(r#"<%-
