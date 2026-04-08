@@ -1,0 +1,54 @@
+import asyncio
+import json
+import websockets
+
+BASE_URL = "<%= endpoint %>/v1/realtime?model=<%= model %>"
+
+headers = {
+    "Authorization": f"Bearer <%= api_key %>",
+    "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+    "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+}
+
+async def connect():
+    async with websockets.connect(BASE_URL, additional_headers=headers) as ws:
+        print("WebSocket connection established!")
+        # Can follow the openai realtime api docs
+        # https://platform.openai.com/docs/api-reference/realtime
+        # Update session
+        session_update = {
+            "type": "session.update",
+            "session": {
+                "modalities": ["text"],
+                "model": "<%= model %>",
+            },
+        }
+        await ws.send(json.dumps(session_update))
+        print("Session updated!")
+        # Send user message
+        message = {
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": "Say hello!"}],
+            },
+        }
+        await ws.send(json.dumps(message))
+        print("Conversation item created!")
+        # Request response
+        response_request = {"type": "response.create"}
+        await ws.send(json.dumps(response_request))
+        print("Response requested!")
+        # Read responses
+        async for msg in ws:
+            event = json.loads(msg)
+            if event.get("type") == "response.text.delta":
+                print(event["delta"], end="", flush=True)
+            elif event.get("type") == "response.text.done":
+                print("\nResponse completed.")
+            elif event.get("type") == "response.done":
+                print("Session complete, closing connection.")
+                break
+
+asyncio.run(connect())

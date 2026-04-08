@@ -1,0 +1,11 @@
+curl -X POST "<%= endpoint %>/images/generations" \
+    -H "Authorization: Bearer <%= api_key %>" \
+    -H "Content-Type: application/json" \
+    -H 'X-TFY-METADATA: <%- JSON.stringify(custom_metadata) %>' \
+    -H 'X-TFY-LOGGING-CONFIG: {"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}' \
+    -d '{
+        "model": "<%= model %>",
+        "prompt": "<%= prompt %>",
+        "n": 1,
+        "size": "1024x1024"
+    }'

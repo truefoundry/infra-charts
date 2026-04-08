@@ -1,0 +1,21 @@
+const { CohereClient } = require('cohere-ai');
+
+const cohere = new CohereClient({
+    token: '<%= api_key %>',
+    environment: '<%= endpoint %>',
+    defaultHeaders: {
+        'X-TFY-METADATA': '<%- JSON.stringify(custom_metadata) %>',
+        'X-TFY-LOGGING-CONFIG': '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+});
+
+(async () => {
+  const rerank = await cohere.v2.rerank({
+    documents: <%- JSON.stringify(documents) %>,
+    query: '<%= query %>',
+    topN: <%= top_n %>,
+    model: '<%= model %>',
+  });
+
+  console.log(rerank);
+})();

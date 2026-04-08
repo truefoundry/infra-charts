@@ -1,0 +1,14 @@
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuildkitdService.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-buildkitd-service.fullname" . }}-config
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-buildkitd-service.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-buildkitd-service.commonAnnotations" . | nindent 4 }}
+data:
+  buildkitd.toml: |
+    {{- .Values.tfyBuildkitdService.buildkitConfig | nindent 4 }}
+{{- end }}

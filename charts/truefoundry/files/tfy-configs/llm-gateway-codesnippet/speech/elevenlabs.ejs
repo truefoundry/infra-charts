@@ -1,0 +1,28 @@
+import httpx
+from elevenlabs import ElevenLabs
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+client = ElevenLabs(
+    api_key="dummy",
+    base_url=BASE_URL,
+    httpx_client=httpx.Client(
+        headers={
+            "x-tfy-api-key": TFY_API_KEY,
+        },
+    ),
+)
+
+response = client.text_to_speech.convert(
+    voice_id="JBFqnCBsd6RMkjVDRZzb",
+    output_format="mp3_44100_128",
+    text="The first move is what sets everything in motion.",
+    model_id="<%= model %>",
+)
+
+with open("speech.mp3", "wb") as f:
+    for chunk in response:
+        f.write(chunk)
+
+print("Audio saved to speech.mp3")
