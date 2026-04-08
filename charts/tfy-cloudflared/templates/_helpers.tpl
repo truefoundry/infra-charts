@@ -135,7 +135,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.image" -}}
-{{- printf "%s:%s" .Values.image.repository (default .Chart.AppVersion .Values.image.tag) -}}
+{{- printf "%s:%s" .Values.image.repository ((default .Chart.AppVersion .Values.image.tag) | toString) -}}
 {{- end -}}
 
 {{/* Tunnel token secret name */}}
