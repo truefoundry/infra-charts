@@ -1,0 +1,176 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- $chat := $tc.configs.codeSnippet.chat }}
+{{- if and $tc.enabled $chat.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-chat-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $chat.override }}
+  {{- range $key, $value := $chat.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/chat/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $chat.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $embedding := $tc.configs.codeSnippet.embedding }}
+{{- if and $tc.enabled $embedding.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-embedding-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $embedding.override }}
+  {{- range $key, $value := $embedding.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/embedding/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $embedding.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $image := $tc.configs.codeSnippet.image }}
+{{- if and $tc.enabled $image.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $image.override }}
+  {{- range $key, $value := $image.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/image/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $image.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $realtime := $tc.configs.codeSnippet.realtime }}
+{{- if and $tc.enabled $realtime.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-realtime-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $realtime.override }}
+  {{- range $key, $value := $realtime.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/realtime/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $realtime.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $rerank := $tc.configs.codeSnippet.rerank }}
+{{- if and $tc.enabled $rerank.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-rerank-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $rerank.override }}
+  {{- range $key, $value := $rerank.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/rerank/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $rerank.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $speech := $tc.configs.codeSnippet.speech }}
+{{- if and $tc.enabled $speech.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-speech-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $speech.override }}
+  {{- range $key, $value := $speech.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/speech/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $speech.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $transcription := $tc.configs.codeSnippet.transcription }}
+{{- if and $tc.enabled $transcription.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-transcription-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $transcription.override }}
+  {{- range $key, $value := $transcription.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/transcription/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $transcription.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+{{- $translation := $tc.configs.codeSnippet.translation }}
+{{- if and $tc.enabled $translation.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-translation-codesnippet-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $translation.override }}
+  {{- range $key, $value := $translation.override }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/llm-gateway-codesnippet/translation/*.ejs").AsConfig | indent 2 }}
+{{- end }}
+{{- range $key, $value := $translation.extraSnippets }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}

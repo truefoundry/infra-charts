@@ -1,0 +1,16 @@
+from openai import OpenAI
+
+client = OpenAI(api_key="<%= api_key %>", base_url="<%= endpoint %>")
+
+response = client.embeddings.create(
+    input="<%= prompt %>",
+    model="<%= model %>",
+    encoding_format="float",
+    extra_headers={
+        "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+        "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+)
+
+output = [embed.embedding for embed in response.data]
+print(output)

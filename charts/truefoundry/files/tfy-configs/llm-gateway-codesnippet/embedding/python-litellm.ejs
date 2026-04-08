@@ -1,0 +1,21 @@
+import json
+from litellm import embedding
+
+API_KEY = "<%= api_key %>"
+
+extra_headers = {
+    "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+    "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+}
+
+response = embedding(
+    model="<%= model %>",
+    input="<%= prompt %>",
+    api_key=API_KEY,
+    api_base="<%= endpoint %>",
+    custom_llm_provider="openai",
+    extra_headers=extra_headers
+)
+
+output = [item['embedding'] for item in response.data]
+print(output)

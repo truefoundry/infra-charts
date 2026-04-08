@@ -1,0 +1,15 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- if $tc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-k8s-manifest-validation-policy-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  k8s-manifest-validation-policy.yaml: |-
+    {{- if not $tc.configs.k8sManifestValidationPolicyOverride }}
+    {{ .Files.Get "files/tfy-configs/k8s-manifest-validation-policy.yaml" | nindent 4 }}
+    {{- else }}
+    {{ toYaml $tc.configs.k8sManifestValidationPolicyOverride | nindent 4 }}
+    {{- end }}
+{{- end }}

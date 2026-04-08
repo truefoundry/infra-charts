@@ -1,0 +1,53 @@
+// Requires: yarn add ws @types/ws
+const { OpenAIRealtimeWS } = require('openai/beta/realtime/ws');
+const OpenAI = require('openai');
+
+const openai = new OpenAI({
+  apiKey: '<%= api_key %>',
+  baseURL: '<%= endpoint %>/v1',
+  defaultHeaders: {
+    'X-TFY-METADATA': '<%- JSON.stringify(custom_metadata) %>',
+    'X-TFY-LOGGING-CONFIG': '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+  }
+});
+const rt = new OpenAIRealtimeWS(
+  { model: '<%= model %>', options: {} },
+  openai
+);
+
+// Access the underlying WebSocket instance
+rt.socket.on('open', () => {
+  console.log('Connection opened!');
+  // Can follow the openai realtime api docs
+  // https://platform.openai.com/docs/api-reference/realtime
+  rt.send({
+    type: 'session.update',
+    session: {
+      modalities: ['text'],
+      model: '<%= model %>',
+    },
+  });
+  console.log('Session updated!');
+  rt.send({
+    type: 'conversation.item.create',
+    item: {
+      type: 'message',
+      role: 'user',
+      content: [{ type: 'input_text', text: 'Say a couple paragraphs!' }],
+    },
+  });
+  console.log('Conversation item created!');
+  rt.send({ type: 'response.create' });
+  console.log('Response created!');
+});
+rt.on('error', (err) => {
+  console.error('WebSocket Error:', err);
+});
+rt.on('session.created', (event) => {
+  console.log('session created!', event.session);
+  console.log();
+});
+rt.on('response.text.delta', (event) => process.stdout.write(event.delta));
+rt.on('response.text.done', () => console.log());
+rt.on('response.done', () => rt.close());
+rt.socket.on('close', () => console.log('\nConnection closed!'));

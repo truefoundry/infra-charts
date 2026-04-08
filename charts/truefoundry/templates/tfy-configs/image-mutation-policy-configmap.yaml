@@ -1,0 +1,15 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- if $tc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-image-mutation-policy-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  image-mutation-policy.yaml: |-
+    {{- if not $tc.configs.imageMutationPolicyOverride }}
+    {{ .Files.Get "files/tfy-configs/image-mutation-policy.yaml" | nindent 4 }}
+    {{- else }}
+    {{ toYaml $tc.configs.imageMutationPolicyOverride | nindent 4 }}
+    {{- end }}
+{{- end }}

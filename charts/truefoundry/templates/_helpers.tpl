@@ -203,7 +203,6 @@ Truefoundry virtual service fullname
 {{- toYaml $virtualServiceAnnotations }}
 {{- end }}
 
-
 {{/*
 Truefoundry HTTPRoute fullname
 */}}
@@ -282,6 +281,13 @@ false
     - |
       set -e
       cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
+  {{- with .Values.global.customCA.env }}
+  env:
+    {{- range $key, $val := . }}
+    - name: {{ $key }}
+      value: {{ $val | quote }}
+    {{- end }}
+  {{- end }}
   volumeMounts:
     - name: custom-ca
       mountPath: /custom-ca

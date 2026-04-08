@@ -1,0 +1,22 @@
+from langchain_cohere.rerank import CohereRerank
+import cohere
+
+client = cohere.ClientV2(
+    "<%= api_key %>",
+    base_url="<%= endpoint %>",
+    extra_headers={
+        "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+        "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+    }
+)
+reranker = CohereRerank(
+    client=client,
+    model="<%= model %>",
+)
+
+response = reranker.rerank(
+    query="<%= query %>",
+    documents=<%- JSON.stringify(documents) %>,
+    top_n=<%= top_n %>,
+)
+print(response)

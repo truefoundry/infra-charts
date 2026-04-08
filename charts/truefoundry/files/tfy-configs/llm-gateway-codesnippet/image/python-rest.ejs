@@ -1,0 +1,35 @@
+import requests
+import json
+import base64
+
+try:
+    response = requests.post(
+        "<%= endpoint %>/images/generations",
+        headers={
+            "Authorization": "Bearer <%= api_key %>",
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+        },
+        json={
+            "model": "<%= model %>",
+            "prompt": "<%= prompt %>",
+            "n": 1,
+            "size": "1024x1024"
+        }
+    )
+    if not response.ok:
+        raise Exception(f"Error with status code {response.status_code}: {response.text}")
+
+    if "url" in response.json()["data"][0]:
+        print(f"Image URL: {response.json()['data'][0]['url']}")
+
+    if "b64_json" in response.json()["data"][0]:
+        image_bytes = base64.b64decode(response.json()["data"][0]["b64_json"])
+        with open("generated_image.png", "wb") as f:
+            f.write(image_bytes)
+        print("Image saved as generated_image.png")
+
+except requests.exceptions.RequestException as e:
+    print("Request error:", e)
+except (KeyError, json.JSONDecodeError) as e:
+    print("Parsing error:", e)

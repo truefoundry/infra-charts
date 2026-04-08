@@ -1,0 +1,20 @@
+from llama_index.core import Settings
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+try:
+    embedding = OpenAIEmbedding(
+        model_name="<%= model %>",
+        api_key="<%= api_key %>",
+        api_base="<%= endpoint %>",
+        default_headers={
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+        }
+    )
+
+    Settings.embed_model = embedding
+
+    response = embedding.get_text_embedding("<%= prompt %>")
+    print(response)
+except Exception as e:
+    print("An error occurred:", str(e))

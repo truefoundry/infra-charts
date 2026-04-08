@@ -1,0 +1,17 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- if $tc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-cicd-templates-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+{{- if $tc.configs.cicdTemplates }}
+  {{- range $key, $value := $tc.configs.cicdTemplates }}
+  {{ $key }}: |
+{{ $value | indent 4 }}
+  {{- end }}
+{{- else }}
+{{ (.Files.Glob "files/tfy-configs/cicd-templates/*.yaml").AsConfig | indent 2 }}
+{{- end }}
+{{- end }}

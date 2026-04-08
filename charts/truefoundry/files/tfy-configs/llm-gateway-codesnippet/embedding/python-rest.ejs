@@ -1,0 +1,25 @@
+import requests
+
+try:
+    response = requests.post(
+        "<%= endpoint %>/embeddings",
+        headers={
+            "Authorization": "Bearer <%= api_key %>",
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}',
+        },
+        json={
+            "input": "<%= prompt %>",
+            "model": "<%= model %>"
+        }
+    )
+    if not response.ok:
+        raise Exception(f"Error with status code {response.status_code}: {response.text}")
+except requests.exceptions.HTTPError as http_error:
+    print("HTTP error occurred:", http_error)
+except Exception as e:
+    print("An error occurred:", str(e))
+
+data = response.json()
+output = [embed['embedding'] for embed in data['data']]
+print(output)

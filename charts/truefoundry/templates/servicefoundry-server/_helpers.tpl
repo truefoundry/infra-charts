@@ -181,38 +181,18 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-Here we are trying to get the full name of buildkitd service and statefulset
-*/}}
-{{- define "tfy-buildkitd.buildkitdServiceName"  }}
-{{- if index .Values "tfy-buildkitd-service" "fullnameOverride" }}
-{{- index .Values "tfy-buildkitd-service" "fullnameOverride"}}
-{{- else }}
-{{- $name := "tfy-buildkitd-service" }}
-{{- if index .Values "tfy-buildkitd-service" "nameOverride"}}
-{{- $name := index .Values "tfy-buildkitd-service" "nameOverride" }}
-{{- end}}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-
-{{/*
-Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if tfy-buildkitd-service is enabled
+Set GLOBAL_BUILDERS_BUILDKIT_URLS env variable if buildkitd service is enabled
 */}}
 {{- define "tfy-buildkitd.globalBuilderBuildkitUrlsEnv" }}
-{{- if index .Values "tfy-buildkitd-service" "enabled" }}
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuildkitdService.enabled }}
 {{ $urls := "" }}
-{{ $replicas := index .Values "tfy-buildkitd-service" "replicaCount" | int}}
+{{ $replicas := .Values.tfyBuildkitdService.replicaCount | int}}
 {{ $namespace := include "global.namespace" . }}
 {{ $clusterDomain := default "cluster.local" .Values.global.clusterDomain }}
-{{ $portNumber := index .Values "tfy-buildkitd-service" "service" "port" | int }}
-{{ $buildkitdServiceName := (include "tfy-buildkitd.buildkitdServiceName" .) }}
+{{ $portNumber := .Values.tfyBuildkitdService.service.port | int }}
+{{ $tfyBuildkitdServiceName := (include "tfy-buildkitd-service.fullname" .) }}
 {{- range $i := until $replicas}}
-  {{- $url := printf "%s-%d.%s.%s.svc.%s:%d" $buildkitdServiceName $i $buildkitdServiceName $namespace $clusterDomain $portNumber }}
+  {{- $url := printf "%s-%d.%s.%s.svc.%s:%d" $tfyBuildkitdServiceName $i $tfyBuildkitdServiceName $namespace $clusterDomain $portNumber }}
   {{- $urls = printf "%s,%s" $urls $url }}
 {{- end }}
 GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
@@ -235,8 +215,8 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
   */}}
 {{- define "servicefoundry-server.env" }}
 {{- $tfyConfigsEnabled := true -}}
-{{- if hasKey .Values "tfy-configs" -}}
-  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- if hasKey .Values "tfyConfigs" -}}
+  {{- $tfyConfigsEnabled = .Values.tfyConfigs.enabled -}}
 {{- end -}}
 {{- range $key, $val := (include "servicefoundry-server.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
@@ -307,8 +287,8 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- define "servicefoundry-server.volumes" -}}
 {{- $volumes := list -}}
 {{- $tfyConfigsEnabled := true -}}
-{{- if hasKey .Values "tfy-configs" -}}
-  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- if hasKey .Values "tfyConfigs" -}}
+  {{- $tfyConfigsEnabled = .Values.tfyConfigs.enabled -}}
 {{- end -}}
 {{- $volumes = append $volumes (dict "name" "truefoundry-tmpdir" "emptyDir" (dict)) -}}
 {{- if .Values.servicefoundryServer.extraVolumes }}
@@ -381,8 +361,8 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- define "servicefoundry-server.volumeMounts" -}}
 {{- $volumeMounts := list -}}
 {{- $tfyConfigsEnabled := true -}}
-{{- if hasKey .Values "tfy-configs" -}}
-  {{- $tfyConfigsEnabled = (index .Values "tfy-configs" "enabled") -}}
+{{- if hasKey .Values "tfyConfigs" -}}
+  {{- $tfyConfigsEnabled = .Values.tfyConfigs.enabled -}}
 {{- end -}}
 {{- $volumeMounts = append $volumeMounts (dict "name" "truefoundry-tmpdir" "mountPath" "/tmp") -}}
 {{- if .Values.servicefoundryServer.extraVolumeMounts }}

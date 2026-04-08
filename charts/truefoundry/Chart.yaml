@@ -1,14 +1,10 @@
 apiVersion: v2
 name: truefoundry
-version: 0.135.3
+version: 0.135.4
 description: "TrueFoundry Control Plane Components"
 maintainers:
   - name: truefoundry
 dependencies:
-  - condition: tfy-configs.enabled
-    name: tfy-configs
-    repository: https://truefoundry.github.io/infra-charts
-    version: 0.1.27
   - condition: tfyNats.enabled
     name: nats
     alias: tfyNats
@@ -18,10 +14,6 @@ dependencies:
     name: postgresql
     repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
     version: 18.1.1
-  - condition: tfy-buildkitd-service.enabled
-    name: tfy-buildkitd-service
-    repository: https://truefoundry.github.io/infra-charts/
-    version: 0.2.16
   - name: tfy-manifests-template
     repository: https://truefoundry.github.io/infra-charts/
     version: 0.2.0

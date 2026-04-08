@@ -1,0 +1,25 @@
+from deepgram import DeepgramClient
+from deepgram.environment import DeepgramClientEnvironment
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+env = DeepgramClientEnvironment(
+    base=BASE_URL,
+    production="",
+    agent="",
+)
+
+client = DeepgramClient(
+    api_key=TFY_API_KEY,
+    environment=env,
+)
+
+with open("audio.mp3", "rb") as audio_file:
+    response = client.listen.v1.media.transcribe_file(
+        request=audio_file.read(),
+        model="<%= model %>",
+        smart_format=True,
+    )
+
+print(response.model_dump_json(indent=2))

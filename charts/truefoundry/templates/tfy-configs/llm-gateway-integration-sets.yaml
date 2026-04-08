@@ -1,0 +1,15 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- if and $tc.enabled $tc.configs.codeSnippet.integrationSets.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-ai-gateway-integration-sets-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  index.yaml: |
+{{- if $tc.configs.codeSnippet.integrationSets.override }}
+{{ tpl $tc.configs.codeSnippet.integrationSets.override . | nindent 4 }}
+{{- else }}
+{{ .Files.Get "files/tfy-configs/llm-gateway-codesnippet/index.yaml" | nindent 4 }}
+{{- end }}
+{{- end }}

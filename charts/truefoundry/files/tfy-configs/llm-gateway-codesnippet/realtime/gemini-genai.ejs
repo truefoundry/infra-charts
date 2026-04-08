@@ -1,0 +1,159 @@
+<%
+const providerAccount = model.split('/')[0];
+const modelName = model.split('/')[1];
+const isVertex = provider === 'google-vertex';
+const baseUrl = endpoint.replace('wss', 'https') + '/live/' + providerAccount;
+%>"""
+Gemini Live API - Realtime Audio Streaming
+Docs: https://github.com/google-gemini/cookbook/blob/main/quickstarts/Get_started_LiveAPI.py
+
+pip install google-genai pyaudio<% if (isVertex) { %> google-auth<% } %>
+"""
+import asyncio
+import pyaudio
+<% if (isVertex) { %>import google.auth.credentials
+<% } %>from google import genai
+from google.genai import types
+
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+SEND_SAMPLE_RATE = 16000
+RECEIVE_SAMPLE_RATE = 24000
+CHUNK_SIZE = 1024
+
+API_KEY = "<%= api_key %>"
+MODEL = "<%= modelName %>"
+<% if (isVertex) { %>
+class _GatewayCredentials(google.auth.credentials.Credentials):
+    """Bypasses local ADC; the gateway handles Vertex AI authentication."""
+    def __init__(self, token):
+        super().__init__()
+        self.token = token
+    def refresh(self, request):
+        pass
+    @property
+    def valid(self):
+        return True
+
+client = genai.Client(
+    http_options={
+        "base_url": "<%= baseUrl %>",
+        "headers": {"Authorization": f"Bearer {API_KEY}"},
+    },
+    vertexai=True,
+    project="<%= vertex_project %>",
+    location="<%= vertex_location %>",
+    credentials=_GatewayCredentials(API_KEY),
+)
+<% } else { %>
+client = genai.Client(
+    http_options={
+        "base_url": "<%= baseUrl %>",
+        "headers": {
+            "Authorization": f"Bearer {API_KEY}",
+        }
+    },
+    api_key=API_KEY,
+)
+<% } %>
+
+CONFIG = types.LiveConnectConfig(
+    response_modalities=["AUDIO"],
+    speech_config=types.SpeechConfig(
+        voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Zephyr")
+        )
+    ),
+    # Enable transcription to get text versions of user and model speech.
+    # Remove these lines if transcription is not needed.
+    input_audio_transcription=types.AudioTranscriptionConfig(),
+    output_audio_transcription=types.AudioTranscriptionConfig(),
+)
+
+pya = pyaudio.PyAudio()
+
+async def main():
+    try:
+        async with client.aio.live.connect(model=MODEL, config=CONFIG) as session:
+            print("Connected!")
+
+            # Record audio from microphone and send to session
+            mic_info = pya.get_default_input_device_info()
+            mic_stream = pya.open(
+                format=FORMAT, channels=CHANNELS, rate=SEND_SAMPLE_RATE,
+                input=True, input_device_index=mic_info["index"],
+                frames_per_buffer=CHUNK_SIZE,
+            )
+
+            # Speaker output for receiving audio
+            speaker_stream = pya.open(
+                format=FORMAT, channels=CHANNELS, rate=RECEIVE_SAMPLE_RATE,
+                output=True,
+            )
+
+            audio_in_queue = asyncio.Queue()
+            current_speaker = None  # Track who is currently speaking
+
+            async def send_audio():
+                while True:
+                    data = await asyncio.to_thread(
+                        mic_stream.read, CHUNK_SIZE, exception_on_overflow=False
+                    )
+                    await session.send(input={"data": data, "mime_type": "audio/pcm"})
+
+            async def receive_audio():
+                nonlocal current_speaker
+                while True:
+                    turn = session.receive()
+                    was_interrupted = False
+                    async for response in turn:
+                        if response.server_content and response.server_content.model_turn:
+                            for part in response.server_content.model_turn.parts:
+                                if part.inline_data:
+                                    audio_in_queue.put_nowait(part.inline_data.data)
+                                if part.text and not part.thought:  # skip model thinking
+                                    print(part.text, end="", flush=True)
+
+                        # Print transcriptions if enabled above
+                        if hasattr(response, "server_content") and response.server_content:
+                            sc = response.server_content
+                            if hasattr(sc, "input_transcription") and sc.input_transcription and sc.input_transcription.text:
+                                if current_speaker != "user":
+                                    if current_speaker is not None:
+                                        print()  # end previous line
+                                    print("[You]: ", end="", flush=True)
+                                    current_speaker = "user"
+                                print(sc.input_transcription.text, end="", flush=True)
+                            if hasattr(sc, "output_transcription") and sc.output_transcription and sc.output_transcription.text:
+                                if current_speaker != "model":
+                                    if current_speaker is not None:
+                                        print()  # end previous line
+                                    print("[Model]: ", end="", flush=True)
+                                    current_speaker = "model"
+                                print(sc.output_transcription.text, end="", flush=True)
+                            if hasattr(sc, "interrupted") and sc.interrupted:
+                                was_interrupted = True
+
+                    # Only clear the audio queue on interruption.
+                    # On normal turn completion, let play_audio finish playing
+                    # all enqueued chunks to avoid losing audio.
+                    if was_interrupted:
+                        while not audio_in_queue.empty():
+                            audio_in_queue.get_nowait()
+
+            async def play_audio():
+                while True:
+                    data = await audio_in_queue.get()
+                    await asyncio.to_thread(speaker_stream.write, data)
+
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(send_audio())
+                tg.create_task(receive_audio())
+                tg.create_task(play_audio())
+
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        pya.terminate()
+
+asyncio.run(main())
