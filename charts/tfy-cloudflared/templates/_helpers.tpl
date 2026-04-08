@@ -34,9 +34,8 @@ app.kubernetes.io/part-of: truefoundry
 {{- end -}}
 
 {{- define "tfy-cloudflared.commonAnnotations" -}}
-{{- with .Values.commonAnnotations }}
-{{- toYaml . }}
-{{- end }}
+{{- $commonAnnotations := default dict .Values.commonAnnotations }}
+{{- toYaml $commonAnnotations }}
 {{- end -}}
 
 {{- define "tfy-cloudflared.deploymentLabels" -}}
