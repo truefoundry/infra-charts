@@ -1,0 +1,18 @@
+{{- if .Values.envoyFilter.forceIPv4DNS }}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: force-ipv4-dns
+  namespace: istio-system
+  labels:
+    {{- include "tfy-istio-ingress.labels" . | nindent 4 }}
+spec:
+  configPatches:
+    - applyTo: CLUSTER
+      match:
+        context: ANY
+      patch:
+        operation: MERGE
+        value:
+          dns_lookup_family: V4_ONLY
+{{- end }}
