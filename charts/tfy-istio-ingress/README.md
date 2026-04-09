@@ -42,9 +42,9 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### envoyFilter Configuration for EnvoyFilter patches.
 
-| Name                       | Description                                                         | Value  |
-| -------------------------- | ------------------------------------------------------------------- | ------ |
-| `envoyFilter.forceIPv4DNS` | Force all Envoy clusters to use IPv4-only DNS resolution (V4_ONLY). | `true` |
+| Name                             | Description                                           | Value  |
+| -------------------------------- | ----------------------------------------------------- | ------ |
+| `envoyFilter.forceIPv4TfyOauth2` | Force the tfy-oauth2 cluster (added by servicefoundry | `true` |
 
 ### telemetry Configuration for the telemetry.
 
