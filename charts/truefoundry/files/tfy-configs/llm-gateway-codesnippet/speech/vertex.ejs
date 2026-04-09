@@ -1,0 +1,36 @@
+from google.cloud import texttospeech
+from google.api_core.client_options import ClientOptions
+from google.auth.credentials import AnonymousCredentials
+
+TFY_API_KEY = "<%= api_key %>"
+BASE_URL = "<%= endpoint %>"
+
+client_options = ClientOptions(api_endpoint=BASE_URL)
+credentials = AnonymousCredentials()
+
+client = texttospeech.TextToSpeechClient(
+    transport="rest",
+    client_options=client_options,
+    credentials=AnonymousCredentials(),
+)
+
+client._transport._session.headers.update({
+    "x-tfy-api-key": TFY_API_KEY,
+    "x-tfy-model-name": "<%= model %>",
+})
+
+response = client.synthesize_speech(
+    input=texttospeech.SynthesisInput(text="heyy how are you doing boi"),
+    voice=texttospeech.VoiceSelectionParams(
+        language_code="en-US",
+        name="en-US-Wavenet-D",
+    ),
+    audio_config=texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.MP3
+    ),
+)
+
+with open("output.mp3", "wb") as f:
+    f.write(response.audio_content)
+
+print("Audio saved to output.mp3")

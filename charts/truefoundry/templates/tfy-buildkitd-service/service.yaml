@@ -1,0 +1,20 @@
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuildkitdService.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-buildkitd-service.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-buildkitd-service.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-buildkitd-service.commonAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.tfyBuildkitdService.service.type }}
+  ports:
+    - port: {{ .Values.tfyBuildkitdService.service.port }}
+      targetPort: {{ .Values.tfyBuildkitdService.service.port }}
+      protocol: TCP
+      name: grpc-buildkit
+  selector:
+    {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 4 }}
+{{- end }}

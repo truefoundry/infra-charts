@@ -1,0 +1,153 @@
+{{- if and .Values.tfyBuild.enabled .Values.tfyBuildkitdService.enabled -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "tfy-buildkitd-service.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-buildkitd-service.statefulsetLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-buildkitd-service.statefulsetAnnotations" . | nindent 4 }}
+spec:
+  serviceName: {{ include "tfy-buildkitd-service.fullname" . }}
+  replicas: {{ include "tfy-buildkitd-service.replicas" . }}
+  selector:
+    matchLabels:
+      {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-buildkitd-service.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-buildkitd-service.podLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        {{- include "tfy-buildkitd-service.imagePullSecrets" . | nindent 8 }}
+      serviceAccountName: {{ include "tfy-buildkitd-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.tfyBuildkitdService.podSecurityContext | nindent 8 }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "kubernetes.io/hostname"
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 14 }}
+      containers:
+        - name: tfy-buildkitd-service
+          securityContext:
+            {{- toYaml .Values.tfyBuildkitdService.securityContext | nindent 12 }}
+          image: "{{ .Values.tfyBuildkitdService.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuildkitdService.image.repository }}:{{ .Values.tfyBuildkitdService.image.tag }}"
+          imagePullPolicy: {{ .Values.tfyBuildkitdService.image.pullPolicy }}
+          {{- with .Values.tfyBuildkitdService.extraEnvs }}
+          env:
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
+          args:
+            - --addr
+            - tcp://0.0.0.0:{{ .Values.tfyBuildkitdService.service.port }}
+            - --config
+            - /etc/buildkit/buildkitd.toml
+          {{- if .Values.tfyBuildkitdService.tls.enabled }}
+            - --tlscacert
+            - /etc/buildkit/certs/ca.pem
+            - --tlscert
+            - /etc/buildkit/certs/cert.pem
+            - --tlskey
+            - /etc/buildkit/certs/key.pem
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyBuildkitdService.service.port }}
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - buildctl
+                - --addr
+                - tcp://0.0.0.0:{{ .Values.tfyBuildkitdService.service.port }}
+              {{- if .Values.tfyBuildkitdService.tls.enabled }}
+                - --tlscacert
+                - /etc/buildkit/client/certs/ca.pem
+                - --tlscert
+                - /etc/buildkit/client/certs/cert.pem
+                - --tlskey
+                - /etc/buildkit/client/certs/key.pem
+                - --tlsservername
+                - 0.0.0.0
+              {{- end }}
+                - debug
+                - workers
+          readinessProbe:
+            exec:
+              command:
+                - buildctl
+                - --addr
+                - tcp://0.0.0.0:{{ .Values.tfyBuildkitdService.service.port }}
+              {{- if .Values.tfyBuildkitdService.tls.enabled }}
+                - --tlscacert
+                - /etc/buildkit/client/certs/ca.pem
+                - --tlscert
+                - /etc/buildkit/client/certs/cert.pem
+                - --tlskey
+                - /etc/buildkit/client/certs/key.pem
+                - --tlsservername
+                - 0.0.0.0
+              {{- end }}
+                - debug
+                - workers
+          resources:
+            {{- include "tfy-buildkitd-service.resources" . | indent 12 }}
+          volumeMounts:
+          {{- if .Values.tfyBuildkitdService.storage.enabled }}
+            - name: buildkit-storage
+              mountPath: /var/lib/buildkit
+          {{- end }}
+            - name: buildkit-config
+              mountPath: /etc/buildkit/buildkitd.toml
+              subPath: buildkitd.toml
+          {{- if .Values.tfyBuildkitdService.tls.enabled }}
+            - name: buildkit-daemon-cert
+              mountPath: /etc/buildkit/certs/
+            - name: buildkit-client-cert
+              mountPath: /etc/buildkit/client/certs/
+          {{- end }}
+          {{- with .Values.tfyBuildkitdService.extraVolumeMounts }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: buildkit-config
+          configMap:
+            name: {{ include "tfy-buildkitd-service.fullname" . }}-config
+      {{- if .Values.tfyBuildkitdService.tls.enabled }}
+        - name: buildkit-daemon-cert
+          secret:
+            secretName: {{ .Values.tfyBuildkitdService.tls.buildkitDaemonCertsSecretName }}
+        - name: buildkit-client-cert
+          secret:
+            secretName: {{ .Values.tfyBuildkitdService.tls.buildkitClientCertsSecretName }}
+      {{- end }}
+      {{- with .Values.tfyBuildkitdService.extraVolumes }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      nodeSelector:
+        {{- include "tfy-buildkitd-service.nodeSelector" . | nindent 8 }}
+      affinity:
+        {{- include "tfy-buildkitd-service.affinity" . | nindent 8 }}
+      tolerations:
+        {{- include "tfy-buildkitd-service.tolerations" . | nindent 8 }}
+  {{- if .Values.tfyBuildkitdService.storage.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: buildkit-storage
+      spec:
+        accessModes:
+        {{- range .Values.tfyBuildkitdService.storage.accessModes }}
+          - {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ include "tfy-buildkitd-service.storageSize" . }}
+        storageClassName: {{ .Values.tfyBuildkitdService.storage.storageClassName }}
+  {{- end }}
+{{- end }}

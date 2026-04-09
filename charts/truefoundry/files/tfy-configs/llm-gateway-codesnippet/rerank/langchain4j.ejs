@@ -1,0 +1,41 @@
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.rag.query.Query;
+import dev.langchain4j.rag.rerank.CohereReranker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+
+public class LangChain4jRerankExample {
+    public static void main(String[] args) {
+        Map<String, String> customHeaders = new HashMap<>();
+        customHeaders.put("X-TFY-METADATA", "<%- JSON.stringify(custom_metadata) %>");
+        customHeaders.put("X-TFY-LOGGING-CONFIG", "{\"enabled\": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, \"tracing_project_fqn\": \"<%= request_logging_tracing_project_fqn %>\"<% } %>}");
+
+        List<TextSegment> segments = new ArrayList<>();
+        <%_ for (let i = 0; i < documents.length; i++) { _%>
+        segments.add(TextSegment.from("<%= documents[i] %>"));
+        <%_ } _%>
+
+        CohereReranker reranker = CohereReranker.builder()
+            .apiKey("<%= api_key %>")
+            .baseUrl("<%= endpoint %>")
+            .model("<%= model %>")
+            .customHeaders(customHeaders)
+            .logRequests(true)
+            .logResponses(true)
+            .build();
+
+        List<TextSegment> rerankedSegments = reranker.rerank(
+            Query.from("<%= query %>"),
+            segments,
+            <%= top_n %>
+        );
+
+        System.out.println("Reranked results:");
+        for (int i = 0; i < rerankedSegments.size(); i++) {
+            System.out.println((i + 1) + ". " + rerankedSegments.get(i).text());
+        }
+    }
+}

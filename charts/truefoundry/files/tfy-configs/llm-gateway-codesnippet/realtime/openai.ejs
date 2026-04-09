@@ -1,0 +1,51 @@
+import asyncio
+from openai import AsyncOpenAI
+
+async def main():
+    client = AsyncOpenAI(
+        api_key="<%= api_key %>",
+        base_url="<%= endpoint %>/v1",
+        extra_headers={
+            "X-TFY-METADATA": '<%- JSON.stringify(custom_metadata) %>',
+            "X-TFY-LOGGING-CONFIG": '{"enabled": <%- request_logging %><% if (request_logging_tracing_project_fqn) { %>, "tracing_project_fqn": "<%= request_logging_tracing_project_fqn %>"<% } %>}'
+        }
+    )
+
+    try:
+        async with client.beta.realtime.connect(model="<%= model %>") as connection:
+            # Can follow the openai realtime api docs
+            # https://platform.openai.com/docs/api-reference/realtime
+            print("WebSocket connection established!")
+
+            # Update session
+            await connection.session.update(session={'modalities': ['text']})
+            print("Session updated!")
+
+            # Send user message
+            await connection.conversation.item.create(
+                item={
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": "Say hello!"}],
+                }
+            )
+            print("Conversation item created!")
+
+            # Request response
+            await connection.response.create()
+            print("Response requested!")
+
+            # Read responses
+            async for event in connection:
+                if event.type == 'response.text.delta':
+                    print(event.delta, flush=True, end="")
+                elif event.type == 'response.text.done':
+                    print("\nResponse completed.")
+                elif event.type == "response.done":
+                    print("Session complete, closing connection.")
+                    break
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+asyncio.run(main())

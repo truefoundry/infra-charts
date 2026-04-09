@@ -1,0 +1,101 @@
+name: Upload Code, Build and Deploy using TrueFoundry
+cicd_provider_id: jenkins
+enabled: true
+description: "This case should only be done when you are setting up CI/CD on code not stored in a Git repository or if the Git source is not integrated with Truefoundry. In this case, the application spec will be stored in the source code as a separate YAML file (truefoundry.yaml). On every push, the code will be uploaded to Truefoundry, where it will be built and deployed. **Choose this approach only if the Git repositories cannot be integrated with Truefoundry.**"
+deployment_mode: deploy
+build_source: local
+recommended_environment: prod
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Jenkins Credentials
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your Jenkins instance, navigate to **Manage Jenkins > Credentials > System > Global credentials**.
+        Add a new secret text credential with ID `TFY_API_KEY` and set the generated api key as value
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create Jenkins Pipeline
+    icon: null
+    usage: |
+      Add the below pipeline as `Jenkinsfile` in your repository root.
+      Following Jenkins pipeline will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```groovy
+        pipeline {
+            agent any
+            
+            environment {
+                TFY_HOST = '{{ TRUEFOUNDRY_TFY_HOST }}'
+                TFY_API_KEY = credentials('TFY_API_KEY')
+                WORKSPACE_FQN = '{{ TRUEFOUNDRY_WORKSPACE_FQN }}'
+            }
+            
+            triggers {
+                pollSCM('H/5 * * * *')  // Poll SCM every 5 minutes
+            }
+            
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
+                
+                stage('Setup Python') {
+                    steps {
+                        script {
+                            // Use Python 3.11 if available, otherwise use system Python
+                            def pythonVersion = '3.11'
+                            try {
+                                sh "python${pythonVersion} --version"
+                                env.PYTHON_CMD = "python${pythonVersion}"
+                            } catch (Exception e) {
+                                echo "Python ${pythonVersion} not found, using system Python"
+                                env.PYTHON_CMD = "python3"
+                            }
+                        }
+                    }
+                }
+                
+                stage('Install Dependencies') {
+                    steps {
+                        sh "${env.PYTHON_CMD} -m pip install 'truefoundry<1.0.0'"
+                    }
+                }
+                
+                stage('Deploy to Workspace') {
+                    steps {
+                        sh """
+                            ${env.PYTHON_CMD} -m tfy deploy \
+                                -f truefoundry.yaml \
+                                -w "${env.WORKSPACE_FQN}" \
+                                --no-wait
+                        """
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    cleanWs()
+                }
+                success {
+                    echo 'Deployment completed successfully!'
+                }
+                failure {
+                    echo 'Deployment failed!'
+                }
+            }
+        }
+        ```

@@ -1,0 +1,54 @@
+name: Upload Code, Build and Deploy using TrueFoundry
+cicd_provider_id: gitlab
+enabled: true
+description: "This case should only be done when you are setting up CI/CD on code not stored in a Git repository or if the Git source is not integrated with Truefoundry. In this case, the application spec will be stored in the source code as a separate YAML file (truefoundry.yaml). On every push, the code will be uploaded to Truefoundry, where it will be built and deployed. **Choose this approach only if the Git repositories cannot be integrated with Truefoundry.**"
+deployment_mode: deploy
+build_source: local
+recommended_environment: prod
+image_builder: truefoundry-control-plane
+steps:
+  - label: Generate API Key
+    icon: null
+    usage: Generate an API Key to authenticate and deploy applications
+    type: generate-api-key
+  - label: Add API Key to Secrets
+    icon: null
+    usage: null
+    type: markdown-content
+    args:
+      content: |
+        In your GitLab Repository, navigate to **Settings > CI/CD** then expand **Variables**.
+        Add a new secret called `TFY_API_KEY` and set the generated api key as value and select the **Mask Variable** checkbox.
+  - label: Download Application Spec
+    icon: null
+    usage: Click the button below to download the `truefoundry.yaml` application spec file. Copy it to the root of your project directory.
+    type: download-truefoundry-spec
+  - label: Create GitLab Pipeline
+    icon: null
+    usage: |
+      Add the below workflow as `.gitlab-ci.yml` in your root directory.
+      Following Pipelines will be triggered on each push to `main` branch
+    type: markdown-content
+    args:
+      content: |
+        ```yaml
+        default:
+          image: python:3.11.9-bullseye
+        
+        workflow:
+          rules:
+            - if: $CI_COMMIT_BRANCH == "main"
+        
+        variables:
+          TFY_HOST: {{ TRUEFOUNDRY_TFY_HOST }}
+          WORKSPACE_FQN: {{ TRUEFOUNDRY_WORKSPACE_FQN }}
+          
+        deploy-job:
+          stage: deploy
+          timeout: 30 minutes
+          script: 
+            - apt update && apt install -y jq
+            - pip3 install "truefoundry<1.0.0"
+            - |
+              tfy deploy -f truefoundry.yaml -w "$WORKSPACE_FQN" --no-wait
+        ```

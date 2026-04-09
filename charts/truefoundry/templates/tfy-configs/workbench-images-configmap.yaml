@@ -1,0 +1,15 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- if $tc.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-workbench-images-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  workbench-images.yaml: |-
+    {{- if eq $tc.configs.workbenchImages "default" }}
+    {{ .Files.Get "files/tfy-configs/workbench-images.yaml" | nindent 4 }}
+    {{- else }}
+    {{ $tc.configs.workbenchImages | nindent 4 }}
+    {{- end }}
+{{- end }}
