@@ -19,11 +19,21 @@ on:
         required: false
         type: boolean
         default: false
+      force_run_without_manifest_changes:
+        description: "Run once even when no manifest diff is detected"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 env:
+  # Workflow controls (can be set via repository/org Variables)
+  # Accepted truthy values: true, 1, yes (case-insensitive)
+  WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES: ${{ vars.WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES }}
+  WORKFLOW_DRY_RUN: ${{ vars.WORKFLOW_DRY_RUN }}
+
   # Source chart/image auth (JFrog)
   # JFROG_HELM_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
   # JFROG_HELM_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_USERNAME }}
@@ -74,6 +84,9 @@ jobs:
         id: changed_manifests
         shell: bash
         run: |
+          all_manifests="charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json charts/tfy-k8s-generic-inframold/artifacts-manifest.json charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json"
+          force_run_input="${{ inputs.force_run_without_manifest_changes }}"
+          force_run_env="${WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES}"
           base_sha="${{ github.event.before }}"
           head_sha="${{ github.sha }}"
 
@@ -97,6 +110,18 @@ jobs:
           done <<< "$changed_files"
 
           manifests="$(echo "$manifests" | xargs)"
+
+          if [[ "$force_run_input" =~ ^(true|1|yes)$ || "$force_run_env" =~ ^(true|1|yes)$ ]]; then
+            force_run_enabled="true"
+          else
+            force_run_enabled="false"
+          fi
+
+          if [[ -z "$manifests" && "$force_run_enabled" == "true" ]]; then
+            manifests="$all_manifests"
+            echo "No changed manifests found; force-run enabled, using all inframold manifests."
+          fi
+
           echo "manifests=$manifests" >> "$GITHUB_OUTPUT"
 
       # - name: Login to source JFrog helm OCI
@@ -120,7 +145,10 @@ jobs:
         shell: bash
         run: |
           dry_run_flag=""
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+          dry_run_input="${{ inputs.dry_run }}"
+          dry_run_env="${WORKFLOW_DRY_RUN}"
+
+          if [[ "$dry_run_input" =~ ^(true|1|yes)$ || "$dry_run_env" =~ ^(true|1|yes)$ ]]; then
             dry_run_flag="--dry-run"
           fi
 
