@@ -1,4 +1,4 @@
-{{- if and .Values.karpenter.controlPlaneNodeTemplate.enabled (eq (include "tfyKarpenterConfig.shouldRenderNodeClass" (dict "context" . "name" .Values.karpenter.controlPlaneNodeTemplate.name)) "true") }}
+{{- if .Values.karpenter.controlPlaneNodeTemplate.enabled }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:

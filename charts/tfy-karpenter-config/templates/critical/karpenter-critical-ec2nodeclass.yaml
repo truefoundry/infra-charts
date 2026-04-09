@@ -1,4 +1,4 @@
-{{- if and .Values.karpenter.critical.nodeclass.create (eq (include "tfyKarpenterConfig.shouldRenderNodeClass" (dict "context" . "name" .Values.karpenter.critical.nodeclass.name)) "true") }}
+{{- if .Values.karpenter.critical.nodeclass.create }}
 apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
 kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
