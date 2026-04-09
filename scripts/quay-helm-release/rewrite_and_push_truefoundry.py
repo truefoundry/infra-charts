@@ -3,15 +3,22 @@ import argparse
 import json
 import os
 import pathlib
-import re
 import subprocess
 import sys
 import tarfile
 import tempfile
 from typing import Dict, Iterable, List, Set, Tuple
 
-SOURCE_TRUEFOUNDRY_CHART_REF = "oci://tfy.jfrog.io/tfy-helm/truefoundry"
-SOURCE_TFY_LLM_GATEWAY_CHART_REF = "oci://tfy.jfrog.io/tfy-helm/tfy-llm-gateway"
+SUPPORTED_CHARTS = {"truefoundry", "tfy-llm-gateway"}
+SOURCE_HELM_REPO = "oci://tfy.jfrog.io/tfy-helm"
+TARGET_HELM_REPO = "oci://quay.io/tfy-helm"
+
+
+def get_env_or_raise(name: str) -> str:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
 
 
 def run(cmd: List[str], cwd: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -26,57 +33,9 @@ def run(cmd: List[str], cwd: str | None = None, check: bool = True) -> subproces
     return proc
 
 
-def run_secret(cmd: List[str], check: bool = True) -> subprocess.CompletedProcess:
-    proc = subprocess.run(cmd, text=True, capture_output=True)
-    if check and proc.returncode != 0:
-        if proc.stdout:
-            print(proc.stdout, end="")
-        if proc.stderr:
-            print(proc.stderr, end="", file=sys.stderr)
-        raise RuntimeError(f"Sensitive command failed ({proc.returncode}): {cmd[0]}")
-    return proc
-
-
-def parse_manifest(path: str) -> Tuple[str, Set[str]]:
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    for item in data:
-        if item.get("type") != "helm":
-            continue
-        details = item.get("details", {})
-        if details.get("chart") != "truefoundry":
-            continue
-
-        version = details.get("targetRevision", "").strip()
-        images = {img for img in details.get("images", []) if isinstance(img, str) and img.strip()}
-        if not version:
-            raise ValueError(f"Invalid truefoundry entry in {path}: missing targetRevision")
-        return version, images
-
-    raise ValueError(f"No truefoundry helm entry found in {path}")
-
-
-def chart_exists_on_quay(chart_name: str, version: str, quay_repo: str) -> bool:
-    chart_ref = f"oci://{quay_repo}/{chart_name}"
-    proc = run(
-        ["helm", "pull", chart_ref, "--version", version, "--destination", tempfile.gettempdir()],
-        check=False,
-    )
-    return proc.returncode == 0
-
-
-def get_env_or_raise(name: str) -> str:
-    value = os.environ.get(name, "").strip()
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
-
-
 def get_quay_destination_creds(image: str) -> Tuple[str, str]:
     if not image.startswith("quay.io/"):
         raise ValueError(f"Unsupported destination image registry: {image}")
-
     parts = image.split("/")
     if len(parts) < 2:
         raise ValueError(f"Invalid destination image path: {image}")
@@ -94,25 +53,45 @@ def get_quay_destination_creds(image: str) -> Tuple[str, str]:
     return get_env_or_raise("QUAY_HELM_USERNAME"), get_env_or_raise("QUAY_HELM_PASSWORD")
 
 
-def get_images_to_mirror(images_from_manifest: Iterable[str]) -> List[Tuple[str, str]]:
-    src_images = sorted({img.strip() for img in images_from_manifest if img.startswith("tfy.jfrog.io/")})
+def parse_manifest(path: str) -> Tuple[Set[str], Dict[str, Set[str]]]:
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    images: Set[str] = set()
+    chart_versions: Dict[str, Set[str]] = {chart: set() for chart in SUPPORTED_CHARTS}
+    for item in data:
+        if item.get("type") != "helm":
+            continue
+        details = item.get("details", {})
+        chart_name = details.get("chart")
+        if chart_name not in SUPPORTED_CHARTS:
+            continue
+
+        version = str(details.get("targetRevision", "")).strip()
+        if version:
+            chart_versions[chart_name].add(version)
+
+        for image in details.get("images", []):
+            if isinstance(image, str) and image.startswith("tfy.jfrog.io/"):
+                images.add(image.strip())
+
+    return images, chart_versions
+
+
+def get_image_mappings(images: Iterable[str]) -> List[Tuple[str, str]]:
+    src_images = sorted({img.strip() for img in images if img.startswith("tfy.jfrog.io/")})
     return [(src, src.replace("tfy.jfrog.io/", "quay.io/", 1)) for src in src_images]
 
 
-def mirror_images(images_from_manifest: Iterable[str]) -> int:
+def mirror_images(images: Iterable[str]) -> int:
     src_user = get_env_or_raise("JFROG_IMAGES_USERNAME")
     src_pass = get_env_or_raise("JFROG_IMAGES_PASSWORD")
 
-    to_mirror = get_images_to_mirror(images_from_manifest)
-    if not to_mirror:
-        print("No tfy.jfrog.io images found in manifest for mirroring.")
-        return 0
-
+    mappings = get_image_mappings(images)
     mirrored = 0
-    for src, dst in to_mirror:
+    for src, dst in mappings:
         dst_user, dst_pass = get_quay_destination_creds(dst)
-        print(f"Mirroring image {src} -> {dst}")
-        run_secret(
+        run(
             [
                 "skopeo",
                 "copy",
@@ -131,26 +110,24 @@ def mirror_images(images_from_manifest: Iterable[str]) -> int:
     return mirrored
 
 
-def pull_chart(source_chart_ref: str, version: str, chart_name: str, destination: str) -> pathlib.Path:
-    run(["helm", "pull", source_chart_ref, "--version", version, "--destination", destination])
-
+def pull_chart(chart_name: str, version: str, destination: str) -> pathlib.Path:
+    source_ref = f"{SOURCE_HELM_REPO}/{chart_name}"
+    run(["helm", "pull", source_ref, "--version", version, "--destination", destination])
     archive = pathlib.Path(destination) / f"{chart_name}-{version}.tgz"
     if not archive.exists():
         raise FileNotFoundError(f"Pulled chart archive not found: {archive}")
     return archive
 
 
-def replace_content(chart_root: pathlib.Path, images_from_manifest: Iterable[str]) -> int:
-    replacements: Dict[str, str] = {}
-    for image in images_from_manifest:
-        if "tfy.jfrog.io/" in image:
-            replacements[image] = image.replace("tfy.jfrog.io/", "quay.io/", 1)
-
+def rewrite_helm_repo_refs(chart_root: pathlib.Path) -> int:
+    replacements = {
+        "oci://tfy.jfrog.io/tfy-helm/truefoundry": "oci://quay.io/tfy-helm/truefoundry",
+        "oci://tfy.jfrog.io/tfy-helm/tfy-llm-gateway": "oci://quay.io/tfy-helm/tfy-llm-gateway",
+    }
     files_touched = 0
     for path in chart_root.rglob("*"):
         if not path.is_file():
             continue
-
         try:
             original = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
@@ -159,205 +136,90 @@ def replace_content(chart_root: pathlib.Path, images_from_manifest: Iterable[str
         updated = original
         for src, dst in replacements.items():
             updated = updated.replace(src, dst)
-        updated = updated.replace("tfy.jfrog.io/", "quay.io/")
 
         if updated != original:
             path.write_text(updated, encoding="utf-8")
             files_touched += 1
-
     return files_touched
 
 
-def get_dependency_version(chart_root: pathlib.Path, dependency_name: str) -> str | None:
-    chart_yaml = chart_root / "Chart.yaml"
-    try:
-        text = chart_yaml.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return None
-
-    in_dependencies = False
-    current_name = ""
-    current_version = ""
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-        if line.startswith("dependencies:"):
-            in_dependencies = True
-            continue
-        if not in_dependencies:
-            continue
-        if line.startswith("- "):
-            if current_name == dependency_name and current_version:
-                return current_version
-            current_name = ""
-            current_version = ""
-            if line.startswith("- name:"):
-                current_name = line.split(":", 1)[1].strip()
-            continue
-        if line.startswith("name:"):
-            current_name = line.split(":", 1)[1].strip()
-        elif line.startswith("version:"):
-            current_version = line.split(":", 1)[1].strip()
-
-    if current_name == dependency_name and current_version:
-        return current_version
-    return None
-
-
-def collect_jfrog_images_from_chart(chart_root: pathlib.Path) -> Set[str]:
-    images: Set[str] = set()
-    pattern = re.compile(r"tfy\.jfrog\.io/[A-Za-z0-9._/\-]+(?::[A-Za-z0-9._\-]+|@sha256:[A-Fa-f0-9]{64})")
-
-    for path in chart_root.rglob("*"):
-        if not path.is_file():
-            continue
-        try:
-            content = path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            continue
-        for match in pattern.findall(content):
-            images.add(match)
-    return images
-
-
-def package_and_push(chart_root: pathlib.Path, quay_repo: str) -> None:
+def package_and_push(chart_root: pathlib.Path, chart_name: str, version: str) -> None:
     run(["helm", "package", "."], cwd=str(chart_root))
+    package = chart_root / f"{chart_name}-{version}.tgz"
+    if not package.exists():
+        raise FileNotFoundError(f"Chart package missing: {package}")
+    run(["helm", "push", str(package), TARGET_HELM_REPO])
 
-    chart_yaml = chart_root / "Chart.yaml"
-    with chart_yaml.open("r", encoding="utf-8") as f:
-        lines = f.readlines()
-    name = ""
-    version = ""
-    for line in lines:
-        if line.startswith("name:"):
-            name = line.split(":", 1)[1].strip()
-        if line.startswith("version:"):
-            version = line.split(":", 1)[1].strip()
-    if not name or not version:
-        raise RuntimeError("Unable to parse chart name/version from Chart.yaml")
 
-    pkg = chart_root / f"{name}-{version}.tgz"
-    if not pkg.exists():
-        raise FileNotFoundError(f"Chart package missing: {pkg}")
+def sync_helm_charts(chart_versions: Dict[str, Set[str]], dry_run: bool) -> None:
+    for chart_name in sorted(SUPPORTED_CHARTS):
+        for version in sorted(chart_versions.get(chart_name, set())):
+            source_ref = f"{SOURCE_HELM_REPO}/{chart_name}:{version}"
+            target_ref = f"{TARGET_HELM_REPO}/{chart_name}:{version}"
+            print(f"Helm chart mapping {source_ref} -> {target_ref}")
+            if dry_run:
+                continue
 
-    run(["helm", "push", str(pkg), f"oci://{quay_repo}"])
+            with tempfile.TemporaryDirectory(prefix=f"{chart_name}-sync-") as tmp:
+                archive = pull_chart(chart_name=chart_name, version=version, destination=tmp)
+                extracted = pathlib.Path(tmp) / "chart"
+                extracted.mkdir(parents=True, exist_ok=True)
+                with tarfile.open(archive, "r:gz") as tf:
+                    tf.extractall(path=extracted)
+
+                chart_root = extracted / chart_name
+                if not chart_root.exists():
+                    raise FileNotFoundError(f"Extracted chart directory missing: {chart_root}")
+
+                touched = rewrite_helm_repo_refs(chart_root)
+                print(f"Updated {touched} files for {chart_name}:{version}")
+                package_and_push(chart_root=chart_root, chart_name=chart_name, version=version)
+                print(f"Pushed {chart_name}:{version} to {TARGET_HELM_REPO}")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Pull truefoundry chart from changed manifests, rewrite tfy.jfrog.io->quay.io, and push to quay."
+        description="Mirror images and sync helm charts for truefoundry and tfy-llm-gateway from JFrog to Quay."
     )
-    parser.add_argument("--manifests", nargs="+", required=True, help="Changed artifacts-manifest.json file paths")
-    parser.add_argument("--quay-repo", default="quay.io/tfy-helm", help="Target OCI repo for helm push")
-    parser.add_argument(
-        "--skip-image-mirroring",
-        action="store_true",
-        help="Skip mirroring tfy.jfrog.io images to quay.io",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Print source and destination image mappings only; do not mirror or push charts.",
-    )
+    parser.add_argument("--manifests", nargs="+", required=True, help="artifacts-manifest.json paths")
+    parser.add_argument("--dry-run", action="store_true", help="Print mappings only; skip skopeo and helm push")
+    parser.add_argument("--skip-image-mirroring", action="store_true", help="Skip image mirroring")
+    parser.add_argument("--skip-helm-sync", action="store_true", help="Skip helm chart sync")
     args = parser.parse_args()
 
-    work_items: Set[str] = set()
-    images_by_item: Dict[str, Set[str]] = {}
     all_images: Set[str] = set()
+    chart_versions: Dict[str, Set[str]] = {chart: set() for chart in SUPPORTED_CHARTS}
 
     for manifest in args.manifests:
-        version, images = parse_manifest(manifest)
-        work_items.add(version)
-        images_by_item.setdefault(version, set()).update(images)
-        all_images.update(images)
-        print(f"Found truefoundry chart in {manifest}: source={SOURCE_TRUEFOUNDRY_CHART_REF}, version={version}")
+        manifest_images, manifest_chart_versions = parse_manifest(manifest)
+        all_images.update(manifest_images)
+        for chart_name, versions in manifest_chart_versions.items():
+            chart_versions[chart_name].update(versions)
+        print(
+            f"Collected {len(manifest_images)} images and "
+            f"{sum(len(v) for v in manifest_chart_versions.values())} chart versions from {manifest}"
+        )
 
-    if args.dry_run:
-        mappings = get_images_to_mirror(all_images)
-        if not mappings:
-            print("No tfy.jfrog.io images found in manifests.")
-            return 0
-        print("Dry run mode: source -> destination image mappings")
-        for src, dst in mappings:
+    image_mappings = get_image_mappings(all_images)
+    if image_mappings:
+        print("Source -> Destination image mappings")
+        for src, dst in image_mappings:
             print(f"{src} -> {dst}")
-        return 0
+    else:
+        print("No tfy.jfrog.io images found for truefoundry/tfy-llm-gateway.")
 
-    if not args.skip_image_mirroring:
+    if not args.skip_image_mirroring and not args.dry_run and image_mappings:
         mirrored = mirror_images(all_images)
-        print(f"Mirrored {mirrored} images to quay.io")
+        print(f"Mirrored {mirrored} images.")
+    elif args.skip_image_mirroring:
+        print("Skipping image mirroring by flag.")
+    elif args.dry_run:
+        print("Dry run enabled: skipping skopeo copy.")
 
-    tfy_llm_gateway_versions: Set[str] = set()
-
-    for version in sorted(work_items):
-        with tempfile.TemporaryDirectory(prefix="tfy-quay-release-") as tmp:
-            archive = pull_chart(
-                source_chart_ref=SOURCE_TRUEFOUNDRY_CHART_REF,
-                version=version,
-                chart_name="truefoundry",
-                destination=tmp,
-            )
-            extracted = pathlib.Path(tmp) / "chart"
-            extracted.mkdir(parents=True, exist_ok=True)
-            with tarfile.open(archive, "r:gz") as tf:
-                tf.extractall(path=extracted)
-
-            chart_root = extracted / "truefoundry"
-            if not chart_root.exists():
-                raise FileNotFoundError(f"Extracted chart directory missing: {chart_root}")
-
-            tfy_llm_gateway_version = get_dependency_version(chart_root=chart_root, dependency_name="tfy-llm-gateway")
-            if tfy_llm_gateway_version:
-                tfy_llm_gateway_versions.add(tfy_llm_gateway_version)
-            else:
-                print(f"Did not find tfy-llm-gateway dependency version in truefoundry:{version}")
-
-            chart_images = collect_jfrog_images_from_chart(chart_root=chart_root)
-            if not args.skip_image_mirroring and chart_images:
-                mirrored_chart_images = mirror_images(chart_images)
-                print(f"Mirrored {mirrored_chart_images} chart-defined images for truefoundry:{version}")
-
-            if chart_exists_on_quay(chart_name="truefoundry", version=version, quay_repo=args.quay_repo):
-                print(f"truefoundry:{version} already exists in {args.quay_repo}, skipping chart push")
-                continue
-
-            files_touched = replace_content(
-                chart_root=chart_root,
-                images_from_manifest=images_by_item.get(version, set()),
-            )
-            print(f"Updated {files_touched} files for truefoundry:{version}")
-            package_and_push(chart_root=chart_root, quay_repo=args.quay_repo)
-            print(f"Pushed truefoundry:{version} to oci://{args.quay_repo}")
-
-    for llm_version in sorted(tfy_llm_gateway_versions):
-        with tempfile.TemporaryDirectory(prefix="tfy-llm-gateway-quay-release-") as tmp:
-            archive = pull_chart(
-                source_chart_ref=SOURCE_TFY_LLM_GATEWAY_CHART_REF,
-                version=llm_version,
-                chart_name="tfy-llm-gateway",
-                destination=tmp,
-            )
-            extracted = pathlib.Path(tmp) / "chart"
-            extracted.mkdir(parents=True, exist_ok=True)
-            with tarfile.open(archive, "r:gz") as tf:
-                tf.extractall(path=extracted)
-
-            chart_root = extracted / "tfy-llm-gateway"
-            if not chart_root.exists():
-                raise FileNotFoundError(f"Extracted chart directory missing: {chart_root}")
-
-            llm_images = collect_jfrog_images_from_chart(chart_root=chart_root)
-            if not args.skip_image_mirroring and llm_images:
-                mirrored_llm_images = mirror_images(llm_images)
-                print(f"Mirrored {mirrored_llm_images} images for tfy-llm-gateway:{llm_version}")
-
-            if chart_exists_on_quay(chart_name="tfy-llm-gateway", version=llm_version, quay_repo=args.quay_repo):
-                print(f"tfy-llm-gateway:{llm_version} already exists in {args.quay_repo}, skipping chart push")
-                continue
-
-            files_touched = replace_content(chart_root=chart_root, images_from_manifest=llm_images)
-            print(f"Updated {files_touched} files for tfy-llm-gateway:{llm_version}")
-            package_and_push(chart_root=chart_root, quay_repo=args.quay_repo)
-            print(f"Pushed tfy-llm-gateway:{llm_version} to oci://{args.quay_repo}")
-
+    if not args.skip_helm_sync:
+        sync_helm_charts(chart_versions=chart_versions, dry_run=args.dry_run)
+    else:
+        print("Skipping helm sync by flag.")
     return 0
 
 
