@@ -1,0 +1,102 @@
+name: Rewrite and Push TFY Charts and Images to Quay
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/**/artifacts-manifest.json"
+      - "scripts/quay-helm-release/**"
+      - ".github/workflows/rewrite-and-push-truefoundry-to-quay.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print mappings and skip pushes"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  WORKFLOW_DRY_RUN: ${{ vars.WORKFLOW_DRY_RUN }}
+
+  # Source chart/image auth (JFrog)
+  JFROG_HELM_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
+  JFROG_HELM_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_USERNAME }}
+  JFROG_HELM_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
+  JFROG_IMAGES_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_USERNAME }}
+  JFROG_IMAGES_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
+
+  # Target helm OCI repo auth
+  QUAY_HELM_REGISTRY: quay.io
+  QUAY_HELM_REPOSITORY: quay.io/tfy-helm
+  QUAY_HELM_USERNAME: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_HELM_USERNAME }}
+  QUAY_HELM_PASSWORD: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_HELM_PASSWORD }}
+
+  # Org-scoped Quay image auth
+  QUAY_PRIVATE_IMAGES_USERNAME: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_PRIVATE_IMAGES_USERNAME }}
+  QUAY_PRIVATE_IMAGES_PASSWORD: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_PRIVATE_IMAGES_PASSWORD }}
+  QUAY_IMAGES_USERNAME: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_IMAGES_USERNAME }}
+  QUAY_IMAGES_PASSWORD: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_IMAGES_PASSWORD }}
+  QUAY_MIRROR_USERNAME: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_MIRROR_USERNAME }}
+  QUAY_MIRROR_PASSWORD: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_MIRROR_PASSWORD }}
+
+jobs:
+  sync-images-and-charts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.17.3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install skopeo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+
+      - name: Login to source JFrog helm OCI
+        if: github.event_name != 'workflow_dispatch' || (inputs.dry_run != true && env.WORKFLOW_DRY_RUN != 'true')
+        shell: bash
+        run: |
+          helm registry login "$JFROG_HELM_REGISTRY" \
+            --username "$JFROG_HELM_USERNAME" \
+            --password "$JFROG_HELM_PASSWORD"
+
+      - name: Login to target Quay helm OCI
+        if: github.event_name != 'workflow_dispatch' || (inputs.dry_run != true && env.WORKFLOW_DRY_RUN != 'true')
+        shell: bash
+        run: |
+          helm registry login "$QUAY_HELM_REGISTRY" \
+            --username "$QUAY_HELM_USERNAME" \
+            --password "$QUAY_HELM_PASSWORD"
+
+      - name: Merge provider manifests and sync
+        shell: bash
+        run: |
+          dry_run_flag=""
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            dry_run_flag="--dry-run"
+          elif [[ "${WORKFLOW_DRY_RUN}" =~ ^(true|1|yes)$ ]]; then
+            dry_run_flag="--dry-run"
+          fi
+
+          python scripts/quay-helm-release/rewrite_and_push_truefoundry.py \
+            --manifests \
+            charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-generic-inframold/artifacts-manifest.json \
+            $dry_run_flag
