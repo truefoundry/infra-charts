@@ -35,9 +35,6 @@ env:
   WORKFLOW_DRY_RUN: ${{ vars.WORKFLOW_DRY_RUN }}
 
   # Source chart/image auth (JFrog)
-  # JFROG_HELM_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
-  # JFROG_HELM_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_USERNAME }}
-  # JFROG_HELM_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
   JFROG_IMAGES_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_USERNAME }}
   JFROG_IMAGES_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
 
@@ -123,14 +120,6 @@ jobs:
           fi
 
           echo "manifests=$manifests" >> "$GITHUB_OUTPUT"
-
-      # - name: Login to source JFrog helm OCI
-      #   if: steps.changed_manifests.outputs.manifests != ''
-      #   shell: bash
-      #   run: |
-      #     helm registry login "$JFROG_HELM_REGISTRY" \
-      #       --username "$JFROG_HELM_USERNAME" \
-      #       --password "$JFROG_HELM_PASSWORD"
 
       - name: Login to target Quay helm OCI
         if: steps.changed_manifests.outputs.manifests != ''
