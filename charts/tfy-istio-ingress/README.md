@@ -40,6 +40,12 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `tfyGateway.spec.servers[1].port.number`            | Port number for https.                  | `443`                 |
 | `tfyGateway.spec.servers[1].port.protocol`          | Protocol of the port.                   | `HTTPS`               |
 
+### envoyFilter Configuration for EnvoyFilter patches.
+
+| Name                       | Description                                                         | Value  |
+| -------------------------- | ------------------------------------------------------------------- | ------ |
+| `envoyFilter.forceIPv4DNS` | Force all Envoy clusters to use IPv4-only DNS resolution (V4_ONLY). | `true` |
+
 ### telemetry Configuration for the telemetry.
 
 | Name                      | Description                       | Value   |
