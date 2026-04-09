@@ -104,10 +104,11 @@ tfyGateway:
 ## @section envoyFilter Configuration for EnvoyFilter patches.
 ##
 envoyFilter:
-  ## @param envoyFilter.forceIPv4DNS Force all Envoy clusters to use IPv4-only DNS resolution (V4_ONLY).
-  ## Useful on IPv4-only clusters where AAAA lookups cause timeouts or resolution failures.
+  ## @param envoyFilter.forceIPv4TfyOauth2 Force the tfy-oauth2 cluster (added by servicefoundry
+  ## per-workload EnvoyFilters) to use IPv4-only DNS. Enable this on dual-stack clusters so the
+  ## LOGICAL_DNS tfy-oauth2 cluster still resolves over IPv4.
   ##
-  forceIPv4DNS: true
+  forceIPv4TfyOauth2: true
 
 ## @section telemetry Configuration for the telemetry.
 ##

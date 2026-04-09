@@ -1,16 +1,19 @@
-{{- if .Values.envoyFilter.forceIPv4DNS }}
+{{- if .Values.envoyFilter.forceIPv4TfyOauth2 }}
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: force-ipv4-dns
+  name: force-ipv4-tfy-oauth2
   namespace: istio-system
   labels:
     {{- include "tfy-istio-ingress.labels" . | nindent 4 }}
 spec:
+  priority: 10
   configPatches:
     - applyTo: CLUSTER
       match:
-        context: ANY
+        context: SIDECAR_OUTBOUND
+        cluster:
+          name: tfy-oauth2
       patch:
         operation: MERGE
         value:
