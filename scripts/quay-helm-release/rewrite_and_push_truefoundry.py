@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import tarfile
@@ -10,6 +11,7 @@ import tempfile
 from typing import Dict, Iterable, List, Set, Tuple
 
 SOURCE_TRUEFOUNDRY_CHART_REF = "oci://tfy.jfrog.io/tfy-helm/truefoundry"
+SOURCE_TFY_LLM_GATEWAY_CHART_REF = "oci://tfy.jfrog.io/tfy-helm/tfy-llm-gateway"
 
 
 def run(cmd: List[str], cwd: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -55,8 +57,8 @@ def parse_manifest(path: str) -> Tuple[str, Set[str]]:
     raise ValueError(f"No truefoundry helm entry found in {path}")
 
 
-def chart_exists_on_quay(version: str, quay_repo: str) -> bool:
-    chart_ref = f"oci://{quay_repo}/truefoundry"
+def chart_exists_on_quay(chart_name: str, version: str, quay_repo: str) -> bool:
+    chart_ref = f"oci://{quay_repo}/{chart_name}"
     proc = run(
         ["helm", "pull", chart_ref, "--version", version, "--destination", tempfile.gettempdir()],
         check=False,
@@ -129,8 +131,8 @@ def mirror_images(images_from_manifest: Iterable[str]) -> int:
     return mirrored
 
 
-def pull_chart(version: str, chart_name: str, destination: str) -> pathlib.Path:
-    run(["helm", "pull", SOURCE_TRUEFOUNDRY_CHART_REF, "--version", version, "--destination", destination])
+def pull_chart(source_chart_ref: str, version: str, chart_name: str, destination: str) -> pathlib.Path:
+    run(["helm", "pull", source_chart_ref, "--version", version, "--destination", destination])
 
     archive = pathlib.Path(destination) / f"{chart_name}-{version}.tgz"
     if not archive.exists():
@@ -164,6 +166,57 @@ def replace_content(chart_root: pathlib.Path, images_from_manifest: Iterable[str
             files_touched += 1
 
     return files_touched
+
+
+def get_dependency_version(chart_root: pathlib.Path, dependency_name: str) -> str | None:
+    chart_yaml = chart_root / "Chart.yaml"
+    try:
+        text = chart_yaml.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
+
+    in_dependencies = False
+    current_name = ""
+    current_version = ""
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if line.startswith("dependencies:"):
+            in_dependencies = True
+            continue
+        if not in_dependencies:
+            continue
+        if line.startswith("- "):
+            if current_name == dependency_name and current_version:
+                return current_version
+            current_name = ""
+            current_version = ""
+            if line.startswith("- name:"):
+                current_name = line.split(":", 1)[1].strip()
+            continue
+        if line.startswith("name:"):
+            current_name = line.split(":", 1)[1].strip()
+        elif line.startswith("version:"):
+            current_version = line.split(":", 1)[1].strip()
+
+    if current_name == dependency_name and current_version:
+        return current_version
+    return None
+
+
+def collect_jfrog_images_from_chart(chart_root: pathlib.Path) -> Set[str]:
+    images: Set[str] = set()
+    pattern = re.compile(r"tfy\.jfrog\.io/[A-Za-z0-9._/\-]+(?::[A-Za-z0-9._\-]+|@sha256:[A-Fa-f0-9]{64})")
+
+    for path in chart_root.rglob("*"):
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for match in pattern.findall(content):
+            images.add(match)
+    return images
 
 
 def package_and_push(chart_root: pathlib.Path, quay_repo: str) -> None:
@@ -232,13 +285,16 @@ def main() -> int:
         mirrored = mirror_images(all_images)
         print(f"Mirrored {mirrored} images to quay.io")
 
-    for version in sorted(work_items):
-        if chart_exists_on_quay(version=version, quay_repo=args.quay_repo):
-            print(f"truefoundry:{version} already exists in {args.quay_repo}, skipping")
-            continue
+    tfy_llm_gateway_versions: Set[str] = set()
 
+    for version in sorted(work_items):
         with tempfile.TemporaryDirectory(prefix="tfy-quay-release-") as tmp:
-            archive = pull_chart(version=version, chart_name="truefoundry", destination=tmp)
+            archive = pull_chart(
+                source_chart_ref=SOURCE_TRUEFOUNDRY_CHART_REF,
+                version=version,
+                chart_name="truefoundry",
+                destination=tmp,
+            )
             extracted = pathlib.Path(tmp) / "chart"
             extracted.mkdir(parents=True, exist_ok=True)
             with tarfile.open(archive, "r:gz") as tf:
@@ -248,6 +304,21 @@ def main() -> int:
             if not chart_root.exists():
                 raise FileNotFoundError(f"Extracted chart directory missing: {chart_root}")
 
+            tfy_llm_gateway_version = get_dependency_version(chart_root=chart_root, dependency_name="tfy-llm-gateway")
+            if tfy_llm_gateway_version:
+                tfy_llm_gateway_versions.add(tfy_llm_gateway_version)
+            else:
+                print(f"Did not find tfy-llm-gateway dependency version in truefoundry:{version}")
+
+            chart_images = collect_jfrog_images_from_chart(chart_root=chart_root)
+            if not args.skip_image_mirroring and chart_images:
+                mirrored_chart_images = mirror_images(chart_images)
+                print(f"Mirrored {mirrored_chart_images} chart-defined images for truefoundry:{version}")
+
+            if chart_exists_on_quay(chart_name="truefoundry", version=version, quay_repo=args.quay_repo):
+                print(f"truefoundry:{version} already exists in {args.quay_repo}, skipping chart push")
+                continue
+
             files_touched = replace_content(
                 chart_root=chart_root,
                 images_from_manifest=images_by_item.get(version, set()),
@@ -255,6 +326,37 @@ def main() -> int:
             print(f"Updated {files_touched} files for truefoundry:{version}")
             package_and_push(chart_root=chart_root, quay_repo=args.quay_repo)
             print(f"Pushed truefoundry:{version} to oci://{args.quay_repo}")
+
+    for llm_version in sorted(tfy_llm_gateway_versions):
+        with tempfile.TemporaryDirectory(prefix="tfy-llm-gateway-quay-release-") as tmp:
+            archive = pull_chart(
+                source_chart_ref=SOURCE_TFY_LLM_GATEWAY_CHART_REF,
+                version=llm_version,
+                chart_name="tfy-llm-gateway",
+                destination=tmp,
+            )
+            extracted = pathlib.Path(tmp) / "chart"
+            extracted.mkdir(parents=True, exist_ok=True)
+            with tarfile.open(archive, "r:gz") as tf:
+                tf.extractall(path=extracted)
+
+            chart_root = extracted / "tfy-llm-gateway"
+            if not chart_root.exists():
+                raise FileNotFoundError(f"Extracted chart directory missing: {chart_root}")
+
+            llm_images = collect_jfrog_images_from_chart(chart_root=chart_root)
+            if not args.skip_image_mirroring and llm_images:
+                mirrored_llm_images = mirror_images(llm_images)
+                print(f"Mirrored {mirrored_llm_images} images for tfy-llm-gateway:{llm_version}")
+
+            if chart_exists_on_quay(chart_name="tfy-llm-gateway", version=llm_version, quay_repo=args.quay_repo):
+                print(f"tfy-llm-gateway:{llm_version} already exists in {args.quay_repo}, skipping chart push")
+                continue
+
+            files_touched = replace_content(chart_root=chart_root, images_from_manifest=llm_images)
+            print(f"Updated {files_touched} files for tfy-llm-gateway:{llm_version}")
+            package_and_push(chart_root=chart_root, quay_repo=args.quay_repo)
+            print(f"Pushed tfy-llm-gateway:{llm_version} to oci://{args.quay_repo}")
 
     return 0
 
