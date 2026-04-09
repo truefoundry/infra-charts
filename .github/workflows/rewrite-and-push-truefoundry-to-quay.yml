@@ -1,26 +1,17 @@
-name: Rewrite and Push Truefoundry Chart to Quay
+name: Rewrite and Push TFY Charts and Images to Quay
 
 on:
   push:
     branches:
-      - truefoundry-images-push-to-quay
+      - main
     paths:
-      - "charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json"
-      - "charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json"
-      - "charts/tfy-k8s-generic-inframold/artifacts-manifest.json"
-      - "charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json"
-      - "charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json"
+      - "charts/**/artifacts-manifest.json"
       - "scripts/quay-helm-release/**"
       - ".github/workflows/rewrite-and-push-truefoundry-to-quay.yml"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Print source->destination image mappings only"
-        required: false
-        type: boolean
-        default: false
-      force_run_without_manifest_changes:
-        description: "Run once even when no manifest diff is detected"
+        description: "Print mappings and skip pushes"
         required: false
         type: boolean
         default: false
@@ -29,9 +20,6 @@ permissions:
   contents: read
 
 env:
-  # Workflow controls (can be set via repository/org Variables)
-  # Accepted truthy values: true, 1, yes (case-insensitive)
-  WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES: ${{ vars.WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES }}
   WORKFLOW_DRY_RUN: ${{ vars.WORKFLOW_DRY_RUN }}
 
   # Source chart/image auth (JFrog)
@@ -56,119 +44,7 @@ env:
   QUAY_MIRROR_PASSWORD: ${{ secrets.TRUEFOUNDRY_QUAY_TFY_MIRROR_PASSWORD }}
 
 jobs:
-  detect-manifests:
-    runs-on: ubuntu-latest
-    outputs:
-      manifests: ${{ steps.changed_manifests.outputs.manifests }}
-      manifests_json: ${{ steps.changed_manifests.outputs.manifests_json }}
-      dry_run_enabled: ${{ steps.changed_manifests.outputs.dry_run_enabled }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Determine changed artifact manifests
-        id: changed_manifests
-        shell: bash
-        run: |
-          all_manifests="charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json charts/tfy-k8s-generic-inframold/artifacts-manifest.json charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json"
-          force_run_input="${{ inputs.force_run_without_manifest_changes }}"
-          force_run_env="${WORKFLOW_FORCE_RUN_WITHOUT_MANIFEST_CHANGES}"
-          dry_run_input="${{ inputs.dry_run }}"
-          dry_run_env="${WORKFLOW_DRY_RUN}"
-          base_sha="${{ github.event.before }}"
-          head_sha="${{ github.sha }}"
-
-          if [[ -z "$base_sha" || "$base_sha" == "0000000000000000000000000000000000000000" ]]; then
-            base_sha="$(git rev-parse HEAD^)"
-          fi
-
-          changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
-          manifests=""
-
-          while IFS= read -r file; do
-            case "$file" in
-              charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json|\
-              charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json|\
-              charts/tfy-k8s-generic-inframold/artifacts-manifest.json|\
-              charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json|\
-              charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json)
-                manifests="$manifests $file"
-                ;;
-            esac
-          done <<< "$changed_files"
-
-          manifests="$(echo "$manifests" | xargs)"
-
-          if [[ "$force_run_input" =~ ^(true|1|yes)$ || "$force_run_env" =~ ^(true|1|yes)$ ]]; then
-            force_run_enabled="true"
-          else
-            force_run_enabled="false"
-          fi
-
-          if [[ -z "$manifests" && "$force_run_enabled" == "true" ]]; then
-            manifests="$all_manifests"
-            echo "No changed manifests found; force-run enabled, using all inframold manifests."
-          fi
-
-          if [[ "$dry_run_input" =~ ^(true|1|yes)$ || "$dry_run_env" =~ ^(true|1|yes)$ ]]; then
-            dry_run_enabled="true"
-          else
-            dry_run_enabled="false"
-          fi
-
-          if [[ -n "$manifests" ]]; then
-            manifests_json="$(printf '%s\n' $manifests | jq -R -s -c 'split("\n") | map(select(length > 0))')"
-          else
-            manifests_json="[]"
-          fi
-
-          echo "manifests=$manifests" >> "$GITHUB_OUTPUT"
-          echo "manifests_json=$manifests_json" >> "$GITHUB_OUTPUT"
-          echo "dry_run_enabled=$dry_run_enabled" >> "$GITHUB_OUTPUT"
-
-  mirror-images:
-    needs: detect-manifests
-    if: needs.detect-manifests.outputs.manifests_json != '[]'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        manifest: ${{ fromJson(needs.detect-manifests.outputs.manifests_json) }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install skopeo
-        if: needs.detect-manifests.outputs.dry_run_enabled != 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y skopeo
-
-      - name: Mirror images for manifest (matrix)
-        shell: bash
-        run: |
-          dry_run_flag=""
-          if [[ "${{ needs.detect-manifests.outputs.dry_run_enabled }}" == "true" ]]; then
-            dry_run_flag="--dry-run"
-          fi
-
-          python scripts/quay-helm-release/rewrite_and_push_truefoundry.py \
-            --manifests "${{ matrix.manifest }}" \
-            --skip-helm-sync \
-            $dry_run_flag
-
-  sync-helm-charts:
-    needs: detect-manifests
-    if: needs.detect-manifests.outputs.manifests != ''
+  sync-images-and-charts:
     runs-on: ubuntu-latest
 
     steps:
@@ -185,31 +61,42 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Login to target Quay helm OCI
-        if: needs.detect-manifests.outputs.dry_run_enabled != 'true'
-        shell: bash
+      - name: Install skopeo
         run: |
-          helm registry login "$QUAY_HELM_REGISTRY" \
-            --username "$QUAY_HELM_USERNAME" \
-            --password "$QUAY_HELM_PASSWORD"
+          sudo apt-get update
+          sudo apt-get install -y skopeo
 
       - name: Login to source JFrog helm OCI
-        if: needs.detect-manifests.outputs.dry_run_enabled != 'true'
+        if: github.event_name != 'workflow_dispatch' || (inputs.dry_run != true && env.WORKFLOW_DRY_RUN != 'true')
         shell: bash
         run: |
           helm registry login "$JFROG_HELM_REGISTRY" \
             --username "$JFROG_HELM_USERNAME" \
             --password "$JFROG_HELM_PASSWORD"
 
-      - name: Sync helm charts to quay
+      - name: Login to target Quay helm OCI
+        if: github.event_name != 'workflow_dispatch' || (inputs.dry_run != true && env.WORKFLOW_DRY_RUN != 'true')
+        shell: bash
+        run: |
+          helm registry login "$QUAY_HELM_REGISTRY" \
+            --username "$QUAY_HELM_USERNAME" \
+            --password "$QUAY_HELM_PASSWORD"
+
+      - name: Merge provider manifests and sync
         shell: bash
         run: |
           dry_run_flag=""
-          if [[ "${{ needs.detect-manifests.outputs.dry_run_enabled }}" == "true" ]]; then
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            dry_run_flag="--dry-run"
+          elif [[ "${WORKFLOW_DRY_RUN}" =~ ^(true|1|yes)$ ]]; then
             dry_run_flag="--dry-run"
           fi
 
           python scripts/quay-helm-release/rewrite_and_push_truefoundry.py \
-            --manifests ${{ needs.detect-manifests.outputs.manifests }} \
-            --skip-image-mirroring \
+            --manifests \
+            charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-azure-aks-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-civo-talos-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-gcp-gke-standard-inframold/artifacts-manifest.json \
+            charts/tfy-k8s-generic-inframold/artifacts-manifest.json \
             $dry_run_flag

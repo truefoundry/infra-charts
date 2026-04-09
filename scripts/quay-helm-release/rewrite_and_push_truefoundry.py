@@ -9,7 +9,7 @@ import tarfile
 import tempfile
 from typing import Dict, Iterable, List, Set, Tuple
 
-SUPPORTED_CHARTS = {"truefoundry", "tfy-llm-gateway"}
+SUPPORTED_CHARTS = {"truefoundry", "tfy-llm-gateway", "tfy-otel-collector"}
 SOURCE_HELM_REPO = "oci://tfy.jfrog.io/tfy-helm"
 TARGET_HELM_REPO = "oci://quay.io/tfy-helm"
 
@@ -83,6 +83,15 @@ def get_image_mappings(images: Iterable[str]) -> List[Tuple[str, str]]:
     return [(src, src.replace("tfy.jfrog.io/", "quay.io/", 1)) for src in src_images]
 
 
+def image_exists_on_quay(image: str) -> bool:
+    username, password = get_quay_destination_creds(image)
+    proc = run(
+        ["skopeo", "inspect", "--creds", f"{username}:{password}", f"docker://{image}"],
+        check=False,
+    )
+    return proc.returncode == 0
+
+
 def mirror_images(images: Iterable[str]) -> int:
     src_user = get_env_or_raise("JFROG_IMAGES_USERNAME")
     src_pass = get_env_or_raise("JFROG_IMAGES_PASSWORD")
@@ -90,6 +99,10 @@ def mirror_images(images: Iterable[str]) -> int:
     mappings = get_image_mappings(images)
     mirrored = 0
     for src, dst in mappings:
+        if image_exists_on_quay(dst):
+            print(f"[SKIP] Image already exists: {dst}")
+            continue
+
         dst_user, dst_pass = get_quay_destination_creds(dst)
         run(
             [
@@ -106,8 +119,18 @@ def mirror_images(images: Iterable[str]) -> int:
                 f"docker://{dst}",
             ]
         )
+        print(f"[PUSH] Image pushed: {dst}")
         mirrored += 1
     return mirrored
+
+
+def helm_chart_exists_on_target(chart_name: str, version: str) -> bool:
+    target_ref = f"{TARGET_HELM_REPO}/{chart_name}"
+    proc = run(
+        ["helm", "pull", target_ref, "--version", version, "--destination", tempfile.gettempdir()],
+        check=False,
+    )
+    return proc.returncode == 0
 
 
 def pull_chart(chart_name: str, version: str, destination: str) -> pathlib.Path:
@@ -123,6 +146,7 @@ def rewrite_helm_repo_refs(chart_root: pathlib.Path) -> int:
     replacements = {
         "oci://tfy.jfrog.io/tfy-helm/truefoundry": "oci://quay.io/tfy-helm/truefoundry",
         "oci://tfy.jfrog.io/tfy-helm/tfy-llm-gateway": "oci://quay.io/tfy-helm/tfy-llm-gateway",
+        "oci://tfy.jfrog.io/tfy-helm/tfy-otel-collector": "oci://quay.io/tfy-helm/tfy-otel-collector",
     }
     files_touched = 0
     for path in chart_root.rglob("*"):
@@ -159,6 +183,9 @@ def sync_helm_charts(chart_versions: Dict[str, Set[str]], dry_run: bool) -> None
             print(f"Helm chart mapping {source_ref} -> {target_ref}")
             if dry_run:
                 continue
+            if helm_chart_exists_on_target(chart_name=chart_name, version=version):
+                print(f"[SKIP] Helm chart already exists: {target_ref}")
+                continue
 
             with tempfile.TemporaryDirectory(prefix=f"{chart_name}-sync-") as tmp:
                 archive = pull_chart(chart_name=chart_name, version=version, destination=tmp)
@@ -174,7 +201,7 @@ def sync_helm_charts(chart_versions: Dict[str, Set[str]], dry_run: bool) -> None
                 touched = rewrite_helm_repo_refs(chart_root)
                 print(f"Updated {touched} files for {chart_name}:{version}")
                 package_and_push(chart_root=chart_root, chart_name=chart_name, version=version)
-                print(f"Pushed {chart_name}:{version} to {TARGET_HELM_REPO}")
+                print(f"[PUSH] Helm chart pushed: {target_ref}")
 
 
 def main() -> int:
