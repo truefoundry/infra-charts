@@ -254,9 +254,22 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Deployment Volumes
 */}}
 {{- define "tfy-otel-collector.volumes" -}}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $ephemeralLimit := "1024Mi" }}
+{{- if eq $tier "small" }}
+  {{- $ephemeralLimit = "512Mi" }}
+{{- else if eq $tier "large" }}
+  {{- $ephemeralLimit = "2048Mi" }}
+{{- end }}
+{{- if and .Values.resources .Values.resources.limits (index .Values.resources.limits "ephemeral-storage") }}
+  {{- $ephemeralLimit = index .Values.resources.limits "ephemeral-storage" }}
+{{- end }}
 - name: config-volume
   configMap:
     name: {{ include "tfy-otel-collector.fullname" . }}-cm
+- name: tmp-dir
+  emptyDir:
+    sizeLimit: {{ $ephemeralLimit }}
 {{- with .Values.extraVolumes }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
@@ -270,6 +283,8 @@ Deployment VolumeMounts
   mountPath: /data/config.yaml
   readOnly: true
   subPath: config.yaml
+- name: tmp-dir
+  mountPath: /tmp
 {{- with .Values.extraVolumeMounts }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
