@@ -183,15 +183,6 @@ Inframold, the superchart that configure your cluster on civo for truefoundry.
 | `sparkOperator.affinity`       | Affinity for Spark Operator                | `{}`    |
 | `sparkOperator.valuesOverride` | Config override from default config values | `{}`    |
 
-### kubecost parameters
-
-| Name                      | Description                                | Value  |
-| ------------------------- | ------------------------------------------ | ------ |
-| `kubecost.enabled`        | Flag to enable Kubecost                    | `true` |
-| `kubecost.tolerations`    | Tolerations for Kubecost                   | `[]`   |
-| `kubecost.affinity`       | Affinity for Kubecost                      | `{}`   |
-| `kubecost.valuesOverride` | Config override from default config values | `{}`   |
-
 ### prometheus parameters
 
 | Name                                 | Description                                                               | Value  |
