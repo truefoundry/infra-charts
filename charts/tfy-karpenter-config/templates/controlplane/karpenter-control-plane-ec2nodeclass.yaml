@@ -1,6 +1,6 @@
 {{- if .Values.karpenter.controlPlaneNodeTemplate.enabled }}
-apiVersion: karpenter.k8s.aws/v1
-kind: EC2NodeClass
+apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
+kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
   name: {{ .Values.karpenter.controlPlaneNodeTemplate.name }}
 spec:
@@ -22,10 +22,6 @@ spec:
         {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
-  {{- if .Values.karpenter.controlPlaneNodeTemplate.metadataOptions }}
-  metadataOptions:
-    {{- toYaml .Values.karpenter.controlPlaneNodeTemplate.metadataOptions | nindent 4 }}
-  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: control-plane
@@ -33,6 +29,17 @@ spec:
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.eksAutoMode.enabled }}
+  ephemeralStorage:
+    size: {{ .Values.karpenter.controlPlaneNodeTemplate.rootVolumeSize | quote }}
+    {{- if .Values.karpenter.controlPlaneNodeTemplate.kmsKeyID }}
+    kmsKeyID: {{ .Values.karpenter.controlPlaneNodeTemplate.kmsKeyID }}
+    {{- end }}
+  {{- else }}
+  {{- if .Values.karpenter.controlPlaneNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.controlPlaneNodeTemplate.metadataOptions | nindent 4 }}
   {{- end }}
   {{- if .Values.karpenter.controlPlaneNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
@@ -62,5 +69,6 @@ spec:
         {{- end }}
   {{- if not (eq .Values.karpenter.controlPlaneNodeTemplate.userData "")}}
   userData: {{- .Values.karpenter.controlPlaneNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}
   {{- end }}
 {{- end }}

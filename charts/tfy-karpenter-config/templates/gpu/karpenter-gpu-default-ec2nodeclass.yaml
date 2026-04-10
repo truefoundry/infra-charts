@@ -1,6 +1,6 @@
 {{- if .Values.karpenter.gpuDefaultNodeTemplate.enabled }}
-apiVersion: karpenter.k8s.aws/v1
-kind: EC2NodeClass
+apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
+kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
   name: {{ .Values.karpenter.gpuDefaultNodeTemplate.name }}
 spec:
@@ -22,16 +22,23 @@ spec:
         {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
-  {{- if .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions }}
-  metadataOptions:
-    {{- toYaml .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions | nindent 4 }}
-  {{- end }}
   tags:
     truefoundry.com/compute_type: gpu
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.gpuDefaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.eksAutoMode.enabled }}
+  ephemeralStorage:
+    size: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeSize | quote }}
+    {{- if .Values.karpenter.gpuDefaultNodeTemplate.kmsKeyID }}
+    kmsKeyID: {{ .Values.karpenter.gpuDefaultNodeTemplate.kmsKeyID }}
+    {{- end }}
+  {{- else }}
+  {{- if .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.gpuDefaultNodeTemplate.metadataOptions | nindent 4 }}
   {{- end }}
   {{- if .Values.karpenter.gpuDefaultNodeTemplate.detailedMonitoring }}
   detailedMonitoring: true
@@ -87,6 +94,7 @@ spec:
   {{- .Files.Get "files/bottlerocket-gpu-provisioner-userdata.toml" | nindent 4 }}
   {{- else }}
   userData: {{- .Values.karpenter.gpuDefaultNodeTemplate.userData | toYaml | indent 2 }}
+  {{- end }}
   {{- end }}
   {{- end }}
 

@@ -1,6 +1,6 @@
 {{- if .Values.karpenter.critical.nodeclass.create }}
-apiVersion: karpenter.k8s.aws/v1
-kind: EC2NodeClass
+apiVersion: {{ include "tfyKarpenterConfig.nodeClassApiVersion" . }}
+kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
 metadata:
   name: {{ .Values.karpenter.critical.nodeclass.name }}
 spec:
@@ -22,10 +22,6 @@ spec:
         {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraSecurityGroupTags }}
         {{ $key }}: {{ $val | quote }} 
         {{- end }}
-  {{- if .Values.karpenter.critical.nodeclass.metadataOptions }}
-  metadataOptions:
-    {{- toYaml .Values.karpenter.critical.nodeclass.metadataOptions | nindent 4 }}
-  {{- end }}
   tags:
     truefoundry.com/compute_type: cpu
     truefoundry.com/component_type: critical
@@ -33,6 +29,17 @@ spec:
     cluster-name: {{ .Values.cluster.name }}
   {{- range $key, $val := .Values.karpenter.critical.nodeclass.extraTags }}
     {{ $key }}: {{ $val | quote }} 
+  {{- end }}
+  {{- if .Values.karpenter.eksAutoMode.enabled }}
+  ephemeralStorage:
+    size: {{ .Values.karpenter.critical.nodeclass.rootVolumeSize | quote }}
+    {{- if .Values.karpenter.critical.nodeclass.kmsKeyID }}
+    kmsKeyID: {{ .Values.karpenter.critical.nodeclass.kmsKeyID }}
+    {{- end }}
+  {{- else }}
+  {{- if .Values.karpenter.critical.nodeclass.metadataOptions }}
+  metadataOptions:
+    {{- toYaml .Values.karpenter.critical.nodeclass.metadataOptions | nindent 4 }}
   {{- end }}
   {{- if .Values.karpenter.critical.nodeclass.detailedMonitoring }}
   detailedMonitoring: true
@@ -62,5 +69,6 @@ spec:
         {{- end }}
   {{- if not (eq .Values.karpenter.critical.nodeclass.userData "")}}
   userData: {{- .Values.karpenter.critical.nodeclass.userData | toYaml | indent 2 }}
+  {{- end }}
   {{- end }}
 {{- end }}
