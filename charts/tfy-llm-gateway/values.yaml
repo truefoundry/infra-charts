@@ -97,8 +97,10 @@ nameOverride: ""
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
-## @param podSecurityContext Pod security context
-podSecurityContext: {}
+## @param podSecurityContext [object] Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
 ## @param commonLabels Common labels
 commonLabels: {}
 ## @param podLabels Pod annotations
@@ -107,8 +109,13 @@ podLabels: {}
 deploymentLabels: {}
 ## @param deploymentAnnotations Deployment annotations
 deploymentAnnotations: {}
-## @param securityContext Security context configuration
-securityContext: {}
+## @param securityContext [object] Security context configuration
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
 ## @param imagePullSecrets [array] Image pull secrets
 imagePullSecrets: []
 ## Healthcheck configuration

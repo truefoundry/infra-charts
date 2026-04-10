@@ -96,7 +96,9 @@ podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
-podSecurityContext: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
 ## @param commonLabels [object] Common labels
 commonLabels: {}
 ## @param podLabels [object] Pod annotations
@@ -105,8 +107,13 @@ podLabels: {}
 deploymentAnnotations: {}
 ## @param deploymentLabels [object] Deployment labels
 deploymentLabels: {}
-## @param securityContext Security context configuration
-securityContext: {}
+## @param securityContext [object] Security context configuration
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
 ## Healthcheck configuration
 healthcheck:
   ## @param healthcheck.enabled Enable healthcheck
