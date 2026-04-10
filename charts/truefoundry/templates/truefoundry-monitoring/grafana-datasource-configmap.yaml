@@ -1,0 +1,36 @@
+{{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.grafana.enabled .Values.truefoundryMonitoring.grafanaDatasourceConfigMap.createConfigMap }}
+{{- $m := index .Subcharts "truefoundryMonitoring" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "truefoundry-monitoring.fullname" $m }}-datasources
+  labels:
+    {{- include "truefoundry-monitoring.grafana.datasourceLabels" $m | nindent 4 }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        {{- $promOverride := .Values.truefoundryMonitoring.grafanaDatasourceConfigMap.prometheusDatasourceUrl }}
+        {{- if $promOverride }}
+        url: {{ $promOverride }}
+        {{- else if .Values.truefoundryMonitoring.prometheus.enabled }}
+        url: http://{{ include "truefoundry-monitoring.prometheus.serviceName" $m }}:9090
+        {{- else }}
+        url: {{ .Values.truefoundryMonitoring.externalServices.prometheus.url }}
+        {{- end }}
+        access: proxy
+        isDefault: true
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        {{- $vlOverride := .Values.truefoundryMonitoring.grafanaDatasourceConfigMap.victoriaLogsDatasourceUrl }}
+        {{- if $vlOverride }}
+        url: {{ $vlOverride }}
+        {{- else if .Values.truefoundryMonitoring.logs.enabled }}
+        url: http://{{ include "truefoundry-monitoring.logs.serviceName" $m }}:9428
+        {{- else }}
+        url: {{ .Values.truefoundryMonitoring.externalServices.victoriaLogs.url }}
+        {{- end }}
+        access: proxy
+{{- end }}
