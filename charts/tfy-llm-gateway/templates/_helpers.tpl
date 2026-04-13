@@ -486,7 +486,7 @@ false
     name: {{ include "tfy-llm-gateway.customCA.configMapName" . }}
 - name: ssl-certs
   emptyDir:
-    medium: Memory
+    sizeLimit: {{ .Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi" }}
 {{- end }}
 {{- end }}
 {{- end -}}
