@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.136.2
+  controlPlaneChartVersion: 0.136.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -280,6 +280,10 @@ global:
       repository: "tfy-mirror/alpine"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
       tag: "3.21"
+    ## @param global.customCA.emptyDir [object] emptyDir size limits (default: sslCerts.sizeLimit=10Mi)
+    emptyDir:
+      sslCerts:
+        sizeLimit: ""
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -366,12 +370,17 @@ truefoundryBootstrap:
     labels: {}
     ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
     annotations: {}
-  ## @param truefoundryBootstrap.podSecurityContext Pod security context for the bootstrap container
-  podSecurityContext: {}
-  ## securityContext Security context for the bootstrap container
+  ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context for the bootstrap container
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param truefoundryBootstrap.securityContext [object] Security context for the bootstrap container
   securityContext:
-    ## @param truefoundryBootstrap.securityContext.readOnlyRootFilesystem Read only root filesystem for the bootstrap container
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## truefoundryBootstrap.image Truefoundry base bootstrap image
   image:
     ## @param truefoundryBootstrap.image.registry Registry for the bootstrap image (overrides global.registry if specified)
@@ -394,6 +403,10 @@ truefoundryBootstrap:
   extraEnvVars: []
   ## @param truefoundryBootstrap.extraVolumeMounts Extra volume mounts for the bootstrap container
   extraVolumeMounts: []
+  ## @param truefoundryBootstrap.emptyDir [object] emptyDir size limits (default: workdir.sizeLimit=100Mi)
+  emptyDir:
+    workdir:
+      sizeLimit: ""
   ## @param truefoundryBootstrap.extraVolumes Extra volumes for the bootstrap container
   extraVolumes: []
   ## @param truefoundryBootstrap.affinity Affinity for the bootstrap container
@@ -450,11 +463,16 @@ mlfoundryServer:
   ## @param mlfoundryServer.podLabels [object] Labels for the mlfoundry server pods
   podLabels: {}
   ## @param mlfoundryServer.podSecurityContext [object] Security context for the mlfoundry server pods
-  podSecurityContext: {}
-  ## mlfoundryServer.securityContext Security context for the mlfoundry server
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param mlfoundryServer.securityContext [object] Security context for the mlfoundry server
   securityContext:
-    ## @param mlfoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the mlfoundry server
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param mlfoundryServer.resourceTierOverride Resource tier override for the mlfoundryServer
   resourceTierOverride: ""
   ## @param mlfoundryServer.resources [object] Resource requests and limits for the mlfoundry server
@@ -534,6 +552,10 @@ mlfoundryServer:
     labels: {}
   ## @param mlfoundryServer.imagePullSecrets Image pull credentials for mlfoundry server
   imagePullSecrets: []
+  ## @param mlfoundryServer.emptyDir [object] emptyDir size limits (default: tmpdir.sizeLimit=256Mi)
+  emptyDir:
+    tmpdir:
+      sizeLimit: ""
   ## @param mlfoundryServer.extraVolumes Extra volumes for the mlfoundry server
   extraVolumes: []
   ## @param mlfoundryServer.extraVolumeMounts Extra volume mounts for the mlfoundry server
@@ -729,15 +751,20 @@ servicefoundryServer:
   ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
   fullnameOverride: ""
   ## @param servicefoundryServer.podSecurityContext [object] Security context for the servicefoundry server pods
-  podSecurityContext: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param servicefoundryServer.podLabels [object] Pod-specific labels for the servicefoundry server
   podLabels: {}
   ## @param servicefoundryServer.podAnnotations [object] Pod-specific annotations for the servicefoundry server
   podAnnotations: {}
-  ## servicefoundryServer.securityContext Security context for the servicefoundry server
+  ## @param servicefoundryServer.securityContext [object] Security context for the servicefoundry server
   securityContext:
-    ## @param servicefoundryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the servicefoundry server
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param servicefoundryServer.resourceTierOverride Resource tier override for the servicefoundryServer
   resourceTierOverride: ""
   ## @param servicefoundryServer.resources [object] Resource requests and limits for the servicefoundry server
@@ -815,6 +842,10 @@ servicefoundryServer:
     labels: {}
     ## @param servicefoundryServer.serviceAccount.automountServiceAccountToken Automount service account token for the servicefoundry server
     automountServiceAccountToken: true
+  ## @param servicefoundryServer.emptyDir [object] emptyDir size limits (default: tmpdir.sizeLimit=512Mi)
+  emptyDir:
+    tmpdir:
+      sizeLimit: ""
   ## @param servicefoundryServer.extraVolumes Extra volumes for the servicefoundry server
   extraVolumes: []
   ## @param servicefoundryServer.extraVolumeMounts Extra volume mounts for the servicefoundry server
@@ -1089,8 +1120,10 @@ tfyK8sController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyK8sController.podSecurityContext Security context for the tfyK8sController pods
-  podSecurityContext: {}
+  ## @param tfyK8sController.podSecurityContext [object] Security context for the tfyK8sController pods
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
   ## @param tfyK8sController.commonAnnotations [object] Common annotations for the tfyK8sController pods
@@ -1101,10 +1134,13 @@ tfyK8sController:
   deploymentLabels: {}
   ## @param tfyK8sController.deploymentAnnotations [object] Deployment-specific annotations for the tfyK8sController
   deploymentAnnotations: {}
-  ## tfyK8sController.securityContext Security context for the tfyK8sController
+  ## @param tfyK8sController.securityContext [object] Security context for the tfyK8sController
   securityContext:
-    ## @param tfyK8sController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyK8sController
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param tfyK8sController.resourceTierOverride Resource tier override for the tfyK8sController
   resourceTierOverride: ""
   ## @param tfyK8sController.resources [object] Resource requests and limits for the tfyK8sController
@@ -1239,8 +1275,10 @@ sfyManifestService:
   fullnameOverride: ""
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
-  ## @param sfyManifestService.podSecurityContext Security context for the sfy manifest service pods
-  podSecurityContext: {}
+  ## @param sfyManifestService.podSecurityContext [object] Security context for the sfy manifest service pods
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
   ## @param sfyManifestService.commonAnnotations [object] Common annotations for the sfy manifest service pods
@@ -1251,10 +1289,13 @@ sfyManifestService:
   deploymentLabels: {}
   ## @param sfyManifestService.deploymentAnnotations [object] Deployment-specific annotations for the sfy manifest service
   deploymentAnnotations: {}
-  ## sfyManifestService.securityContext Security context for the sfy manifest service
+  ## @param sfyManifestService.securityContext [object] Security context for the sfy manifest service
   securityContext:
-    ## @param sfyManifestService.securityContext.readOnlyRootFilesystem Read only root filesystem for the sfy manifest service
     readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param sfyManifestService.resourceTierOverride Resource tier override for the sfyManifestService
   resourceTierOverride: ""
   ## @param sfyManifestService.resources [object] Resource requests and limits for the sfy manifest service
@@ -1403,9 +1444,8 @@ stdioMcpProxy:
   deploymentLabels: {}
   ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
   deploymentAnnotations: {}
-  ## stdioMcpProxy.securityContext Security context for the stdio MCP proxy
+  ## @param stdioMcpProxy.securityContext [object] Security context for the stdio MCP proxy
   securityContext:
-    ## @param stdioMcpProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the stdio MCP proxy
     readOnlyRootFilesystem: false
   ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
   resourceTierOverride: ""
@@ -2046,8 +2086,10 @@ tfyController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyController.podSecurityContext Security context for the tfyController pods
-  podSecurityContext: {}
+  ## @param tfyController.podSecurityContext [object] Security context for the tfyController pods
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
   ## @param tfyController.commonAnnotations [object] Common annotations for the tfyController pods
@@ -2058,10 +2100,13 @@ tfyController:
   deploymentLabels: {}
   ## @param tfyController.deploymentAnnotations [object] Deployment-specific annotations for the tfyController
   deploymentAnnotations: {}
-  ## tfyController.securityContext Security context for the tfyController
+  ## @param tfyController.securityContext [object] Security context for the tfyController
   securityContext:
-    ## @param tfyController.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyController
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param tfyController.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
@@ -2349,6 +2394,7 @@ tfyNats:
     merge:
       00$include: accounts/resolver.conf
       max_payload: 2097152
+      max_control_line: 10240
     ## tfyNats.config.cluster Cluster configuration
     cluster:
       ## @param tfyNats.config.cluster.enabled Bool to enable clustering
@@ -2417,7 +2463,13 @@ tfyNats:
       - op: add
         path: /securityContext
         value:
+          runAsNonRoot: true
+          runAsUser: 1000
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
   ## tfyNats.promExporter Prometheus exporter configuration
   promExporter:
     ## tfyNats.promExporter.image Exporter image configuration
@@ -2444,7 +2496,13 @@ tfyNats:
       - op: add
         path: /securityContext
         value:
+          runAsNonRoot: true
+          runAsUser: 1000
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
     ## @param tfyNats.promExporter.podMonitor.enabled Bool to enable pod monitor
     podMonitor:
       enabled: false
@@ -2505,9 +2563,27 @@ tfyNats:
         path: /spec/nodeSelector
         value: {}
       - op: add
+        path: /spec/securityContext
+        value:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 1000
+      - op: add
         path: /spec/containers/0/securityContext
         value:
+          runAsNonRoot: true
+          runAsUser: 1000
           readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+      - op: replace
+        path: /spec/volumes/1
+        value:
+          name: pid
+          emptyDir:
+            sizeLimit: "256Mi"
     ## @skip tfyNats.podTemplate.topologySpreadConstraints Topology spread constraints for NATS server
     topologySpreadConstraints:
       kubernetes.io/hostname:
@@ -2699,10 +2775,18 @@ deltaFusionIngestor:
     enabled: true
     ## @skip deltaFusionIngestor.podSecurityContext.fsGroup
     fsGroup: 100
-  ## deltaFusionIngestor.securityContext Security context for the container
+    ## @param deltaFusionIngestor.podSecurityContext.runAsNonRoot Run as non-root user
+    runAsNonRoot: true
+    ## @param deltaFusionIngestor.podSecurityContext.runAsUser User ID to run as
+    runAsUser: 1001
+  ## @param deltaFusionIngestor.securityContext [object] Security context for the container
   securityContext:
-    ## @param deltaFusionIngestor.securityContext.privileged Bool to run the container in privileged mode
     privileged: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
   ## deltaFusionIngestor.service Service settings
   service:
     ## @param deltaFusionIngestor.service.type Service type
@@ -2863,10 +2947,18 @@ deltaFusionCompaction:
     enabled: true
     ## @skip deltaFusionCompaction.podSecurityContext.fsGroup
     fsGroup: 100
-  ## deltaFusionCompaction.securityContext Security context for the deltaFusionCompaction cron job
+    ## @param deltaFusionCompaction.podSecurityContext.runAsNonRoot Run as non-root user
+    runAsNonRoot: true
+    ## @param deltaFusionCompaction.podSecurityContext.runAsUser User ID to run as
+    runAsUser: 1001
+  ## @param deltaFusionCompaction.securityContext [object] Security context for the deltaFusionCompaction cron job
   securityContext:
-    ## @param deltaFusionCompaction.securityContext.privileged Bool to run the container in privileged mode
     privileged: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
   serviceAccount:
     ## @param deltaFusionCompaction.serviceAccount.create Bool to create a service account for the deltaFusionCompaction cron job
     create: false
@@ -2976,16 +3068,21 @@ deltaFusionQueryServer:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param deltaFusionQueryServer.podSecurityContext Security context for the deltaFusionQueryServer pods
-  podSecurityContext: {}
+  ## @param deltaFusionQueryServer.podSecurityContext [object] Security context for the deltaFusionQueryServer pods
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionQueryServer.commonLabels Common labels for the deltaFusionQueryServer pods
   commonLabels: {}
   ## @param deltaFusionQueryServer.commonAnnotations Common annotations for the deltaFusionQueryServer pods
   commonAnnotations: {}
-  ## deltaFusionQueryServer.securityContext Security context for the deltaFusionQueryServer
+  ## @param deltaFusionQueryServer.securityContext [object] Security context for the deltaFusionQueryServer
   securityContext:
-    ## @param deltaFusionQueryServer.securityContext.readOnlyRootFilesystem Read only root filesystem for the deltaFusionQueryServer
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## @param deltaFusionQueryServer.imagePullSecrets Image pull secrets for the deltaFusionQueryServer
   imagePullSecrets: []
   ## @param deltaFusionQueryServer.resourceTierOverride Resource tier override for the deltaFusionQueryServer
@@ -3159,8 +3256,10 @@ tfyProxy:
   podAnnotations: {}
   ## @param tfyProxy.podLabels [object] Labels for the tfyProxy pods
   podLabels: {}
-  ## @param tfyProxy.podSecurityContext Security context for the tfyProxy pods
-  podSecurityContext: {}
+  ## @param tfyProxy.podSecurityContext [object] Security context for the tfyProxy pods
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
   commonAnnotations: {}
   ## @param tfyProxy.deploymentLabels [object] Deployment-specific labels for the tfyProxy pods
@@ -3169,10 +3268,13 @@ tfyProxy:
   deploymentAnnotations: {}
   ## @param tfyProxy.commonLabels Common labels for the tfyProxy pods
   commonLabels: {}
-  ## tfyProxy.securityContext Security context for the tfyProxy
+  ## @param tfyProxy.securityContext [object] Security context for the tfyProxy
   securityContext:
-    ## @param tfyProxy.securityContext.readOnlyRootFilesystem Read only root filesystem for the tfyProxy
     readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   ## tfyProxy.autoscaling Autoscaling configuration for tfyProxy
   autoscaling:
     ## @param tfyProxy.autoscaling.enabled Enable autoscaling
@@ -3267,6 +3369,13 @@ tfyProxy:
     labels: {}
     ## @param tfyProxy.serviceAccount.automountServiceAccountToken Automount service account token for the tfyProxy service account
     automountServiceAccountToken: true
+  emptyDir:
+    ## @param tfyProxy.emptyDir.caddyConfigData.sizeLimit Size limit for the caddy config data emptyDir
+    caddyConfigData:
+      sizeLimit: ""
+    ## @param tfyProxy.emptyDir.caddyData.sizeLimit Size limit for the caddy data emptyDir
+    caddyData:
+      sizeLimit: ""
   ## @param tfyProxy.extraVolumes Extra volumes for the tfyProxy
   extraVolumes: []
   ## @param tfyProxy.extraVolumeMounts Extra volume mounts for the tfyProxy
