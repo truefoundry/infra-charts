@@ -321,7 +321,6 @@ false
     name: {{ include "truefoundry.customCA.configMapName" . }}
 - name: ssl-certs
   emptyDir:
-    medium: Memory
     sizeLimit: {{ .Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi" }}
 {{- end }}
 {{- end }}
@@ -357,7 +356,7 @@ false
 {{- if .Values.global.customCA.enabled -}}
   {{- $items = append $items (dict "name" "custom-ca" "configMap" (dict "name" (include "truefoundry.customCA.configMapName" .))) -}}
   {{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" -}}
-    {{- $items = append $items (dict "name" "ssl-certs" "emptyDir" (dict "medium" "Memory" "sizeLimit" (.Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi"))) -}}
+    {{- $items = append $items (dict "name" "ssl-certs" "emptyDir" (dict "sizeLimit" (.Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi"))) -}}
   {{- end -}}
 {{- end -}}
 {{- dict "items" $items | toJson -}}
