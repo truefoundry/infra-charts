@@ -273,6 +273,7 @@ Deployment Volumes
 {{- with .Values.extraVolumes }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
+{{- include "tfy-otel-collector.customCA.volumes" . }}
 {{- end }}
 
 {{/*
@@ -288,6 +289,7 @@ Deployment VolumeMounts
 {{- with .Values.extraVolumeMounts }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
+{{- include "tfy-otel-collector.customCA.volumeMounts" . }}
 {{- end }}
 
 {{- define "tfy-otel-collector.resources" }}
@@ -433,3 +435,112 @@ Node Selector for tfy-otel-collector deployment
 []
 {{- end }}
 {{- end }}
+
+{{/*
+  Custom CA validation
+*/}}
+{{- define "tfy-otel-collector.customCA.validate" -}}
+{{- if and .Values.global.customCA.enabled (not .Values.global.customCA.certificate) (not .Values.global.customCA.existingConfigMap.name) -}}
+{{- fail "global.customCA.enabled is true but neither global.customCA.certificate nor global.customCA.existingConfigMap.name is set. Provide one of them." -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Whether to use direct mount (true) or initContainer merge (false)
+*/}}
+{{- define "tfy-otel-collector.customCA.useDirectMount" -}}
+{{- if and .Values.global.customCA.existingConfigMap.name .Values.global.customCA.existingConfigMap.overrideCAList -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA ConfigMap name
+*/}}
+{{- define "tfy-otel-collector.customCA.configMapName" -}}
+{{- include "tfy-otel-collector.customCA.validate" . -}}
+{{- if .Values.global.customCA.existingConfigMap.name -}}
+{{- .Values.global.customCA.existingConfigMap.name -}}
+{{- else -}}
+{{- include "tfy-otel-collector.fullname" . }}-custom-ca
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA initContainer (only when not using direct mount)
+*/}}
+{{- define "tfy-otel-collector.customCA.initContainer" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-otel-collector.customCA.useDirectMount" .) "false" }}
+- name: configure-custom-ca
+  image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  securityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  command: ["sh", "-c"]
+  args:
+    - |
+      set -e
+      cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
+  {{- with .Values.global.customCA.env }}
+  env:
+    {{- range $key, $val := . }}
+    - name: {{ $key }}
+      value: {{ $val | quote }}
+    {{- end }}
+  {{- end }}
+  volumeMounts:
+    - name: custom-ca
+      mountPath: /custom-ca
+      readOnly: true
+    - name: ssl-certs
+      mountPath: /ssl-certs
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volumes
+  - Direct mount: just the ConfigMap
+  - InitContainer merge: ConfigMap + emptyDir
+*/}}
+{{- define "tfy-otel-collector.customCA.volumes" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-otel-collector.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-otel-collector.customCA.configMapName" . }}
+{{- else }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-otel-collector.customCA.configMapName" . }}
+- name: ssl-certs
+  emptyDir:
+    sizeLimit: {{ .Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi" }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volume mounts for app containers
+  - Direct mount: ConfigMap mounted at /etc/ssl/certs
+  - InitContainer merge: emptyDir mounted at /etc/ssl/certs
+*/}}
+{{- define "tfy-otel-collector.customCA.volumeMounts" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-otel-collector.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- else }}
+- name: ssl-certs
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- end }}
+{{- end }}
+{{- end -}}

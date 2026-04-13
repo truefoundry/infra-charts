@@ -64,6 +64,11 @@ global:
     # env:
     #   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     #   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+    ## global.customCA.emptyDir EmptyDir configuration for volumes used in custom CA injection
+    emptyDir:
+      sslCerts:
+        ## @param global.customCA.emptyDir.sslCerts.sizeLimit Size limit for the ssl-certs emptyDir volume
+        sizeLimit: ""
     ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
     image:
       ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)
