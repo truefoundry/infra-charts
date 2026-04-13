@@ -246,8 +246,8 @@ Expand the name of the chart.
 {{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
 {{- $defaultVolume := dict "name" (include "tfy-proxy.fullname" .) "configMap" (dict "defaultMode" 420 "name" $cmName) -}}
 
-{{- $caddyData := dict "name" "caddy-data" "emptyDir" (dict) -}}
-{{- $caddyConfigData := dict "name" "caddy-config-data"   "emptyDir" (dict) -}}
+{{- $caddyData := dict "name" "caddy-data" "emptyDir" (dict "sizeLimit" (.Values.tfyProxy.emptyDir.caddyData.sizeLimit | default "100Mi")) -}}
+{{- $caddyConfigData := dict "name" "caddy-config-data"   "emptyDir" (dict "sizeLimit" (.Values.tfyProxy.emptyDir.caddyConfigData.sizeLimit | default "10Mi")) -}}
 {{- $volumes := list $defaultVolume $caddyData $caddyConfigData  -}}
 
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}

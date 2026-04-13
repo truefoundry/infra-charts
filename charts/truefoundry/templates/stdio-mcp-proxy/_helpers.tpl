@@ -166,35 +166,35 @@ Common labels.
 
 {{- define "stdio-mcp-proxy.defaultResources.small"}}
 requests:
-  cpu: 50m
-  memory: 128Mi
-  ephemeral-storage: 256Mi
-limits:
-  cpu: 200m
+  cpu: 100m
   memory: 512Mi
   ephemeral-storage: 1Gi
+limits:
+  cpu: 1
+  memory: 2Gi
+  ephemeral-storage: 2Gi
 {{- end }}
 
 {{- define "stdio-mcp-proxy.defaultResources.medium"}}
 requests:
-  cpu: 50m
-  memory: 128Mi
-  ephemeral-storage: 256Mi
-limits:
   cpu: 200m
-  memory: 512Mi
-  ephemeral-storage: 1Gi
+  memory: 1Gi
+  ephemeral-storage: 2Gi
+limits:
+  cpu: 2
+  memory: 4Gi
+  ephemeral-storage: 4Gi
 {{- end }}
 
 {{- define "stdio-mcp-proxy.defaultResources.large"}}
 requests:
-  cpu: 100m
-  memory: 256Mi
-  ephemeral-storage: 512Mi
-limits:
   cpu: 500m
-  memory: 1Gi
+  memory: 2Gi
   ephemeral-storage: 2Gi
+limits:
+  cpu: 4
+  memory: 8Gi
+  ephemeral-storage: 4Gi
 {{- end }}
 
 {{- define "stdio-mcp-proxy.resources" }}

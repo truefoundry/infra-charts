@@ -60,7 +60,8 @@ spec:
           secretName: truefoundry-bootstrap-secret
           defaultMode: 0755
       - name: workdir
-        emptyDir: {}
+        emptyDir:
+          sizeLimit: {{ .Values.truefoundryBootstrap.emptyDir.workdir.sizeLimit | default "100Mi" }}
       {{- if gt (len .Values.truefoundryBootstrap.extraVolumes) 0 }}
       {{- toYaml .Values.truefoundryBootstrap.extraVolumes | nindent 6 }}
       {{- end }}

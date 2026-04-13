@@ -284,7 +284,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.volumes" -}}
-{{- $required := dict "name" "truefoundry-tmpdir" "emptyDir" (dict) -}}
+{{- $required := dict "name" "truefoundry-tmpdir" "emptyDir" (dict "sizeLimit" (.Values.mlfoundryServer.emptyDir.tmpdir.sizeLimit | default "256Mi")) -}}
 {{- $userVolumes := .Values.mlfoundryServer.extraVolumes | default (list) -}}
 {{- $final := prepend $userVolumes $required }}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
