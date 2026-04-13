@@ -276,6 +276,12 @@ false
 {{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  securityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
   command: ["sh", "-c"]
   args:
     - |
@@ -316,6 +322,7 @@ false
 - name: ssl-certs
   emptyDir:
     medium: Memory
+    sizeLimit: {{ .Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi" }}
 {{- end }}
 {{- end }}
 {{- end -}}
@@ -350,7 +357,7 @@ false
 {{- if .Values.global.customCA.enabled -}}
   {{- $items = append $items (dict "name" "custom-ca" "configMap" (dict "name" (include "truefoundry.customCA.configMapName" .))) -}}
   {{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" -}}
-    {{- $items = append $items (dict "name" "ssl-certs" "emptyDir" (dict "medium" "Memory")) -}}
+    {{- $items = append $items (dict "name" "ssl-certs" "emptyDir" (dict "medium" "Memory" "sizeLimit" (.Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi"))) -}}
   {{- end -}}
 {{- end -}}
 {{- dict "items" $items | toJson -}}

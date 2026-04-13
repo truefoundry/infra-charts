@@ -290,7 +290,7 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if hasKey .Values "tfyConfigs" -}}
   {{- $tfyConfigsEnabled = .Values.tfyConfigs.enabled -}}
 {{- end -}}
-{{- $volumes = append $volumes (dict "name" "truefoundry-tmpdir" "emptyDir" (dict)) -}}
+{{- $volumes = append $volumes (dict "name" "truefoundry-tmpdir" "emptyDir" (dict "sizeLimit" (.Values.servicefoundryServer.emptyDir.tmpdir.sizeLimit | default "512Mi"))) -}}
 {{- if .Values.servicefoundryServer.extraVolumes }}
   {{- range .Values.servicefoundryServer.extraVolumes }}
     {{- $volumes = append $volumes . }}
