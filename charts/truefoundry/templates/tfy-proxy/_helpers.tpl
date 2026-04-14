@@ -260,6 +260,9 @@ Expand the name of the chart.
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
 
+{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTier" (.Values.global.resourceTier | default "medium") "defaultResourcesPrefix" "tfy-proxy.defaultResources" "resourcesValues" .Values.tfyProxy.resources) | fromYaml }}
+{{- $volumes = append $volumes $tmpVolume -}}
+
 {{- toYaml $volumes -}}
 {{- end -}}
 
@@ -282,6 +285,9 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
 {{- end -}}
+
+{{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
+{{- $volumeMounts = append $volumeMounts $tmpMount -}}
 
 {{- /* Convert the final, combined list of volume mounts to YAML */}}
 {{- toYaml $volumeMounts -}}

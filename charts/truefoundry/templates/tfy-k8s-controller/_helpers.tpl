@@ -207,6 +207,8 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
+{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "tfy-k8s-controller.resourceTier" "defaultResourcesPrefix" "tfy-k8s-controller.defaultResources" "resourcesValues" .Values.tfyK8sController.resources) | fromYaml }}
+{{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -222,6 +224,8 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
 {{- end -}}
+{{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
+{{- $volumeMounts = append $volumeMounts $tmpMount -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
