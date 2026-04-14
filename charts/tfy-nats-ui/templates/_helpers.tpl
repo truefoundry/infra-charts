@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "tfy-nats-ui.name" -}}
-{{- default "nats-ui" .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default "tfy-nats-ui" .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -12,7 +12,7 @@ Create a default fully qualified app name.
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default "nats-ui" .Values.nameOverride }}
+{{- $name := default "tfy-nats-ui" .Values.nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -46,7 +46,7 @@ Selector labels
 {{- define "tfy-nats-ui.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "tfy-nats-ui.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/component: nats-ui
+app.kubernetes.io/component: tfy-nats-ui
 {{- end }}
 
 {{/*
@@ -67,6 +67,18 @@ Container image reference.
 */}}
 {{- define "tfy-nats-ui.parseEnv" -}}
 {{- tpl ((.Values.env | default dict) | toYaml) . }}
+{{- end }}
+
+{{- define "tfy-llm-gateway.imagePullSecrets" -}}
+{{- if .Values.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
+{{- else -}}
+[]
+{{- end }}
 {{- end }}
 
 {{/*
