@@ -322,6 +322,18 @@ limits:
   ephemeral-storage: 512Mi
 {{- end }}
 
+{{- define "tfy-llm-gateway.ephemeralStorage.limit" }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $ephemeralLimit := "512Mi" }}
+{{- if eq $tier "small" }}
+  {{- $ephemeralLimit = "256Mi" }}
+{{- end }}
+{{- if and .Values.resources .Values.resources.limits (index .Values.resources.limits "ephemeral-storage") }}
+  {{- $ephemeralLimit = index .Values.resources.limits "ephemeral-storage" }}
+{{- end }}
+{{- $ephemeralLimit }}
+{{- end }}
+
 {{- define "tfy-llm-gateway.resources" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 
