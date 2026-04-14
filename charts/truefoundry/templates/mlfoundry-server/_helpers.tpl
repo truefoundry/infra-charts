@@ -284,7 +284,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.volumes" -}}
-{{- $required := dict "name" "truefoundry-tmpdir" "emptyDir" (dict "sizeLimit" (.Values.mlfoundryServer.emptyDir.tmpdir.sizeLimit | default "256Mi")) -}}
+{{- $required := dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" (.Values.mlfoundryServer.emptyDir.tmpdir.sizeLimit | default "256Mi")) -}}
 {{- $userVolumes := .Values.mlfoundryServer.extraVolumes | default (list) -}}
 {{- $final := prepend $userVolumes $required }}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
@@ -295,7 +295,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.volumeMounts" -}}
-{{- $required := dict "name" "truefoundry-tmpdir" "mountPath" "/tmp" -}}
+{{- $required := dict "name" "tmp-dir" "mountPath" "/tmp" -}}
 {{- $userMounts := .Values.mlfoundryServer.extraVolumeMounts | default (list) -}}
 {{- $final := prepend $userMounts $required }}
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}

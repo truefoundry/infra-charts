@@ -445,3 +445,35 @@ AZURE_STORAGE_CONNECTION_STRING: {{ .Values.global.config.storageConfiguration.a
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Returns a tmp-dir emptyDir volume dict (as YAML) with sizeLimit matching the component's ephemeral-storage limit.
+Usage with a resourceTier helper:
+  include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "<component>.resourceTier" "defaultResourcesPrefix" "<component>.defaultResources" "resourcesValues" .Values.<component>.resources)
+Usage without a resourceTier helper (pass tier value directly):
+  include "truefoundry.tmpDirVolume" (dict "context" . "resourceTier" "medium" "defaultResourcesPrefix" "<component>.defaultResources" "resourcesValues" .Values.<component>.resources)
+*/}}
+{{- define "truefoundry.tmpDirVolume" -}}
+{{- $ctx := .context -}}
+{{- $tier := "" }}
+{{- if .resourceTierHelper }}
+  {{- $tier = include .resourceTierHelper $ctx | trim }}
+{{- else }}
+  {{- $tier = .resourceTier | default "medium" }}
+{{- end }}
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include (printf "%s.small" .defaultResourcesPrefix) $ctx }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include (printf "%s.medium" .defaultResourcesPrefix) $ctx }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include (printf "%s.large" .defaultResourcesPrefix) $ctx }}
+{{- end }}
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $defaultsLimits := $defaults.limits | default dict }}
+{{- $overrides := .resourcesValues | default dict }}
+{{- $overridesLimits := $overrides.limits | default dict }}
+{{- $limits := merge $overridesLimits $defaultsLimits }}
+{{- $ephemeralLimit := index $limits "ephemeral-storage" }}
+{{- dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $ephemeralLimit) | toYaml -}}
+{{- end -}}

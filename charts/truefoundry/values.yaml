@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.136.5
+  controlPlaneChartVersion: 0.137.2
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -445,7 +445,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.135.0"
+    tag: "v0.137.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -737,7 +737,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.136.2"
+    tag: "v0.137.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1105,7 +1105,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.136.0"
+    tag: "v0.137.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -2460,16 +2460,14 @@ tfyNats:
           requests:
             cpu: 100m
             memory: 128Mi
-      - op: add
-        path: /securityContext
-        value:
-          runAsNonRoot: true
-          runAsUser: 1000
-          readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
+    ## @param tfyNats.reloader.merge [object] Nats reloader container merge
+    merge:
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
   ## tfyNats.promExporter Prometheus exporter configuration
   promExporter:
     ## tfyNats.promExporter.image Exporter image configuration
@@ -2482,6 +2480,14 @@ tfyNats:
       tag: "0.18.0"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
+    ## @param tfyNats.promExporter.merge [object] Nats prom exporter container merge
+    merge:
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
     ## @param tfyNats.promExporter.patch [array] Nats Prom Exporter patches
     patch:
       - op: add
@@ -2493,16 +2499,6 @@ tfyNats:
           requests:
             cpu: 100m
             memory: 128Mi
-      - op: add
-        path: /securityContext
-        value:
-          runAsNonRoot: true
-          runAsUser: 1000
-          readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
     ## @param tfyNats.promExporter.podMonitor.enabled Bool to enable pod monitor
     podMonitor:
       enabled: false
@@ -2539,9 +2535,23 @@ tfyNats:
             cpu: 500m
             memory: 1024Mi
             ephemeral-storage: 1Gi
-  ## skip tfyNats.podTemplate Pod template configuration
+    ## @param tfyNats.container.merge [object] Container merge
+    merge:
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
   podTemplate:
-    ## @skip tfyNats.podTemplate.patch Pod template patches
+    ## @param tfyNats.podTemplate.merge [object] Pod template merges
+    merge:
+      spec:
+        securityContext:
+          fsGroup: 1000
+          runAsUser: 1000
+          runAsNonRoot: true
+    ## @param tfyNats.podTemplate.patch [array] Pod template patches
     patch:
       - op: add
         path: /spec/volumes/-
@@ -2550,6 +2560,12 @@ tfyNats:
           secret:
             secretName: tfy-nats-accounts
             defaultMode: 420
+      - op: replace
+        path: /spec/volumes/1
+        value:
+          name: pid
+          emptyDir:
+            sizeLimit: "256Mi"
       - op: add
         path: /spec/imagePullSecrets
         value: []
@@ -2562,28 +2578,6 @@ tfyNats:
       - op: add
         path: /spec/nodeSelector
         value: {}
-      - op: add
-        path: /spec/securityContext
-        value:
-          runAsNonRoot: true
-          runAsUser: 1000
-          fsGroup: 1000
-      - op: add
-        path: /spec/containers/0/securityContext
-        value:
-          runAsNonRoot: true
-          runAsUser: 1000
-          readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
-      - op: replace
-        path: /spec/volumes/1
-        value:
-          name: pid
-          emptyDir:
-            sizeLimit: "256Mi"
     ## @skip tfyNats.podTemplate.topologySpreadConstraints Topology spread constraints for NATS server
     topologySpreadConstraints:
       kubernetes.io/hostname:
@@ -3049,7 +3043,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.136.0
+    tag: v0.137.0
     ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
     optimized: auto
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
@@ -3237,7 +3231,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.136.2"
+    tag: "v0.137.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
