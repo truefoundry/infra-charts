@@ -84,6 +84,8 @@ spec:
             failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
           {{- end }}
           volumeMounts:
+          - name: tmp-dir
+            mountPath: /tmp
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
           {{- end }}
@@ -98,6 +100,9 @@ spec:
       imagePullSecrets:
         {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 8 }}
       volumes:
+      - name: tmp-dir
+        emptyDir:
+          sizeLimit: {{ include "tfy-llm-gateway.ephemeralStorage.limit" . }}
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 8 }}
       {{- end }}
