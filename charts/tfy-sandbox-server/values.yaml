@@ -1,0 +1,146 @@
+## @section Configuration values for tfy-sandbox-server
+
+## @param nameOverride Name override
+nameOverride: ""
+## @param fullnameOverride Full name override
+fullnameOverride: ""
+
+## @param commonLabels [object] Common labels added to all resources
+commonLabels: {}
+## @param commonAnnotations [object] Common annotations added to all resources
+commonAnnotations: {}
+
+## Image configuration
+image:
+  ## @param image.repository Image repository
+  repository: tfy.jfrog.io/tfy-public/tfy-sandbox-server
+  ## @param image.tag Image tag
+  tag: "0.1.0"
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+## Sandbox configuration
+sandbox:
+  ## @param sandbox.rootDir Root directory for sandbox workspaces
+  rootDir: /data/sandboxes
+  ## @param sandbox.defaultTimeout Default command timeout in seconds
+  defaultTimeout: 60
+
+## Persistence configuration
+persistence:
+  ## @param persistence.enabled Enable persistent storage for sandbox data
+  enabled: true
+  ## @param persistence.size Volume size
+  size: 50Gi
+  ## @param persistence.storageClassName Storage class name (empty string uses cluster default)
+  storageClassName: ""
+  ## @param persistence.accessModes [array] Volume access modes
+  accessModes:
+    - ReadWriteOnce
+  ## @param persistence.mountPath Mount path for the volume
+  mountPath: /data
+
+## @param replicaCount Number of replicas (1 recommended — EBS is RWO)
+replicaCount: 1
+
+## @param extraEnv [array] Extra environment variables for the sandbox server container
+extraEnv: []
+
+## PodDisruptionBudget configuration
+pdb:
+  ## @param pdb.enabled Create a PodDisruptionBudget
+  enabled: false
+  ## @param pdb.minAvailable Minimum available replicas
+  minAvailable: 1
+  ## @param pdb.labels [object] PDB labels
+  labels: {}
+  ## @param pdb.annotations [object] PDB annotations
+  annotations: {}
+
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated service account
+  create: false
+  ## @param serviceAccount.name Service account name
+  name: ""
+  ## @param serviceAccount.labels [object] Service account labels
+  labels: {}
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+
+## Service configuration
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 8080
+  ## @param service.labels [object] Service labels
+  labels: {}
+  ## @param service.annotations [object] Service annotations
+  annotations: {}
+
+## Health probe configuration
+probes:
+  startup:
+    ## @param probes.startup.enabled Enable startup probe
+    enabled: true
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 12
+  liveness:
+    ## @param probes.liveness.enabled Enable liveness probe
+    enabled: true
+    path: /health
+    initialDelaySeconds: 0
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    ## @param probes.readiness.enabled Enable readiness probe
+    enabled: true
+    path: /health
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+## @skip resources
+resources: {}
+
+## @param podSecurityContext [object] Pod security context
+podSecurityContext: {}
+## @param securityContext [object] Container security context
+securityContext: {}
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+## @param tolerations [array] Tolerations
+tolerations: []
+## @param affinity [object] Affinity
+affinity: {}
+## @param topologySpreadConstraints [array] Topology spread constraints
+topologySpreadConstraints: []
+## @param priorityClassName PriorityClass name
+priorityClassName: ""
+## @param terminationGracePeriodSeconds Termination grace period
+terminationGracePeriodSeconds: 30
+
+## @param podLabels [object] Pod labels
+podLabels: {}
+## @param podAnnotations [object] Pod annotations
+podAnnotations: {}
+## @param deploymentLabels [object] Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations [object] Deployment annotations
+deploymentAnnotations: {}
+
+## @param extraVolumes [array] Extra volumes
+extraVolumes: []
+## @param extraVolumeMounts [array] Extra volume mounts
+extraVolumeMounts: []
+## @param extraManifests [array] Extra manifests
+extraManifests: []
