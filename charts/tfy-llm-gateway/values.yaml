@@ -69,6 +69,13 @@ global:
       sslCerts:
         ## @param global.customCA.emptyDir.sslCerts.sizeLimit Size limit for the ssl-certs emptyDir volume
         sizeLimit: ""
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
+    securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
     ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
     image:
       ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)

@@ -476,12 +476,10 @@ false
 {{- if eq (include "tfy-otel-collector.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   command: ["sh", "-c"]
   args:
     - |
