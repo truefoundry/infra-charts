@@ -459,8 +459,10 @@ false
 {{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    {{- toYaml .Values.global.customCA.securityContext | nindent 4 }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   command: ["sh", "-c"]
   args:
     - |
