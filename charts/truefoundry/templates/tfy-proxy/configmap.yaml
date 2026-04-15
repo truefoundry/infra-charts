@@ -296,6 +296,7 @@ data:
       }
       {{- end }}
 
+      {{- if .Values.tfyController.enabled }}
       # /api/proxy-server/socket.io → /socket.io on upstream:8123
       handle /api/proxy-server/socket.io* {
         uri strip_prefix /api/proxy-server
@@ -308,18 +309,23 @@ data:
         uri strip_prefix /api/proxy-server
         reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
+      {{- end }}
 
+      {{- if .Values.s3proxy.enabled }}
       # /api/s3proxy/ → / on upstream:8080
       handle /api/s3proxy/* {
         uri strip_prefix /api/s3proxy
         reverse_proxy {{ tpl .Values.global.proxy.s3proxyHost . }}:{{ .Values.s3proxy.service.port }}
       }
+      {{- end }}
 
+      {{- if (index .Values "tfy-otel-collector").enabled }}
       # /api/otel/ → / on upstream:4318
       handle /api/otel/* {
         uri strip_prefix /api/otel
         reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}
       }
+      {{- end }}
 
       {{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.grafana.enabled }}
       # /admin/grafana/* → /api/grafana/proxy/* on upstream:3000
