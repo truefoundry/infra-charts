@@ -77,7 +77,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum(\n    increase(\n      llm_gateway_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
+          "expr": "round(\n  sum(\n    increase(\n      ai_gateway_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -142,7 +142,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum(\n    increase(\n      llm_gateway_agent_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
+          "expr": "round(\n  sum(\n    increase(\n      ai_gateway_agent_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -207,7 +207,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum(\n    increase(\n      llm_gateway_guardrail_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
+          "expr": "round(\n  sum(\n    increase(\n      ai_gateway_guardrail_requests_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -271,7 +271,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(llm_gateway_request_total_cost{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))",
+          "expr": "sum(increase(ai_gateway_request_cost_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -335,7 +335,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum(increase(llm_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))\n/\nsum(increase(llm_gateway_request_processing_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))\n",
+          "expr": "sum(increase(ai_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))\n/\nsum(increase(ai_gateway_request_processing_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]))\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -400,7 +400,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum(\n    increase(\n      llm_gateway_input_tokens{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
+          "expr": "round(\n  sum(\n    increase(\n      ai_gateway_input_tokens_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -465,7 +465,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum(\n    increase(\n      llm_gateway_output_tokens{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
+          "expr": "round(\n  sum(\n    increase(\n      ai_gateway_output_tokens_total{\n        model_name=~\"$model_name\",\n        username=~\"$username\",\n        tenant_name=~\"$tenant_name\"\n      }[$__range]\n    )\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -573,7 +573,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (username) (\n  rate(llm_gateway_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+              "expr": "sum by (username) (\n  rate(ai_gateway_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -672,7 +672,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (rate(llm_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(username) (rate(llm_gateway_request_processing_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(username) (rate(ai_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(username) (rate(ai_gateway_request_processing_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -771,7 +771,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (rate(llm_gateway_first_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(username) (rate(llm_gateway_first_token_latency_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(username) (rate(ai_gateway_first_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(username) (rate(ai_gateway_first_token_latency_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -868,7 +868,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (\n  rate(llm_gateway_inter_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n/\nsum by(username) (\n  rate(llm_gateway_inter_token_latency_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n",
+              "expr": "sum by(username) (\n  rate(ai_gateway_inter_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n/\nsum by(username) (\n  rate(ai_gateway_inter_token_latency_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -967,7 +967,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (\n  increase(llm_gateway_output_tokens{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(username) (\n  increase(ai_gateway_output_tokens_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1066,7 +1066,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (\n  increase(llm_gateway_input_tokens{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(username) (\n  increase(ai_gateway_input_tokens_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "format": "time_series",
               "instant": false,
               "legendFormat": "__auto",
@@ -1164,7 +1164,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(username) (\n  increase(llm_gateway_request_total_cost{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(username) (\n  increase(ai_gateway_request_cost_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1262,7 +1262,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(error_code, exception_class) (rate(llm_gateway_request_model_inference_failure{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(error_code, exception_class) (rate(ai_gateway_request_model_inference_failure_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "range": true,
               "refId": "A"
@@ -1340,7 +1340,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (username, model_name, tenant_name)((max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
+              "expr": "sum by (username, model_name, tenant_name)((max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
               "hide": true,
               "instant": false,
               "range": true,
@@ -1352,7 +1352,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (username, model_name, tenant_name) ((max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
+              "expr": "sum by (username, model_name, tenant_name) ((max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
               "hide": true,
               "instant": false,
               "range": true,
@@ -1513,7 +1513,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (model_name) (\n  rate(llm_gateway_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+              "expr": "sum by (model_name) (\n  rate(ai_gateway_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1612,7 +1612,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (rate(llm_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(llm_gateway_request_processing_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(model_name) (rate(ai_gateway_request_processing_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(ai_gateway_request_processing_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1711,7 +1711,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (rate(llm_gateway_first_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(llm_gateway_first_token_latency_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(model_name) (rate(ai_gateway_first_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])) / sum by(model_name) (rate(ai_gateway_first_token_latency_ms_count{username=~\"$username\", model_name=~\"$model_name\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1808,7 +1808,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (\n  rate(llm_gateway_inter_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(llm_gateway_inter_token_latency_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n",
+              "expr": "sum by(model_name) (\n  rate(ai_gateway_inter_token_latency_ms_sum{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(ai_gateway_inter_token_latency_ms_count{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -1907,7 +1907,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (\n  increase(llm_gateway_output_tokens{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(model_name) (\n  increase(ai_gateway_output_tokens_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2006,7 +2006,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (\n  increase(llm_gateway_input_tokens{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(model_name) (\n  increase(ai_gateway_input_tokens_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "format": "time_series",
               "instant": false,
               "legendFormat": "__auto",
@@ -2104,7 +2104,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(model_name) (\n  increase(llm_gateway_request_total_cost{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
+              "expr": "sum by(model_name) (\n  increase(ai_gateway_request_cost_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2202,7 +2202,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(error_code, exception_class) (rate(llm_gateway_request_model_inference_failure{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
+              "expr": "sum by(error_code, exception_class) (rate(ai_gateway_request_model_inference_failure_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]))",
               "instant": false,
               "range": true,
               "refId": "A"
@@ -2280,7 +2280,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (username, model_name, tenant_name)((max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_input_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
+              "expr": "sum by (username, model_name, tenant_name)((max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(ai_gateway_input_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
               "hide": true,
               "instant": false,
               "range": true,
@@ -2292,7 +2292,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (username, model_name, tenant_name) ((max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(llm_gateway_output_tokens{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
+              "expr": "sum by (username, model_name, tenant_name) ((max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds}) - max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__rate_interval]@${__from:date:seconds})) or (max_over_time(ai_gateway_output_tokens_total{model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"}[$__range]@${__to:date:seconds})))",
               "hide": true,
               "instant": false,
               "range": true,
@@ -2451,7 +2451,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (ruleId) (\n  rate(llm_gateway_rate_limit_applied_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
+              "expr": "sum by (ruleId) (\n  rate(ai_gateway_rate_limit_applied_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2548,7 +2548,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (ruleId) (\n  rate(llm_gateway_rate_limit_nominated_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
+              "expr": "sum by (ruleId) (\n  rate(ai_gateway_rate_limit_nominated_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2645,7 +2645,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (ruleId) (\n  rate(llm_gateway_budget_applied_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
+              "expr": "sum by (ruleId) (\n  rate(ai_gateway_budget_applied_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2742,7 +2742,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (ruleId) (\n  rate(llm_gateway_budget_nominated_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
+              "expr": "sum by (ruleId) (\n  rate(ai_gateway_budget_nominated_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -2835,7 +2835,7 @@
             {
               "editorMode": "code",
               "exemplar": false,
-              "expr": "max by (ruleId) (\n  llm_gateway_budget_usage\n)\n",
+              "expr": "max by (ruleId) (\n  ai_gateway_budget_usage\n)\n",
               "instant": false,
               "interval": "",
               "legendFormat": "__auto",
@@ -2933,7 +2933,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by(ruleId) (\n  increase(llm_gateway_load_balanced_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)",
+              "expr": "sum by(ruleId) (\n  increase(ai_gateway_load_balanced_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -3030,7 +3030,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (guardrail_fqn, result) (\n  rate(llm_gateway_guardrail_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+              "expr": "sum by (guardrail_fqn, result) (\n  rate(ai_gateway_guardrail_requests_total{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
               "instant": false,
               "range": true,
               "refId": "A"
@@ -3129,7 +3129,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (guardrail_fqn) (\n  rate(llm_gateway_guardrail_execution_latency_ms_sum{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by (guardrail_fqn) (\n  rate(llm_gateway_guardrail_execution_latency_ms_count{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+              "expr": "sum by (guardrail_fqn) (\n  rate(ai_gateway_guardrail_execution_latency_ms_sum{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by (guardrail_fqn) (\n  rate(ai_gateway_guardrail_execution_latency_ms_count{\n    model_name=~\"$model_name\",\n    username=~\"$username\",\n    tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
               "instant": false,
               "legendFormat": "__auto",
               "range": true,
@@ -3243,7 +3243,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by(model_name) (\n  rate(llm_gateway_agent_request_duration_ms_sum{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(llm_gateway_agent_request_duration_ms_count{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+          "expr": "sum by(model_name) (\n  rate(ai_gateway_agent_request_duration_ms_sum{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(ai_gateway_agent_request_duration_ms_count{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -3340,7 +3340,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by(tenant_name) (\n  rate(llm_gateway_agent_mcp_connect_latency_ms_sum{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(tenant_name) (\n  rate(llm_gateway_agent_mcp_connect_latency_ms_count{\n    username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
+          "expr": "sum by(tenant_name) (\n  rate(ai_gateway_agent_mcp_connect_latency_ms_sum{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(tenant_name) (\n  rate(ai_gateway_agent_mcp_connect_latency_ms_count{\n    username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -3436,7 +3436,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by(tool_name) (\n  rate(llm_gateway_agent_tool_latency_ms_sum{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(tool_name) (\n  rate(llm_gateway_agent_tool_latency_ms_count{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+          "expr": "sum by(tool_name) (\n  rate(ai_gateway_agent_tool_latency_ms_sum{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(tool_name) (\n  rate(ai_gateway_agent_tool_latency_ms_count{username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -3511,7 +3511,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (tool_name) (rate(llm_gateway_agent_tool_latency_ms_sum{tool_name!=\"\"}[$__rate_interval]))\n/\nsum by (tool_name) (rate(llm_gateway_agent_tool_latency_ms_count{tool_name!=\"\"}[$__rate_interval]))\n",
+          "expr": "sum by (tool_name) (rate(ai_gateway_agent_tool_latency_ms_sum{tool_name!=\"\"}[$__rate_interval]))\n/\nsum by (tool_name) (rate(ai_gateway_agent_tool_latency_ms_count{tool_name!=\"\"}[$__rate_interval]))\n",
           "instant": false,
           "interval": "",
           "legendFormat": "{{tool_name}}",
@@ -3609,7 +3609,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by(model_name) (\n  rate(llm_gateway_agent_request_tool_calls_total_sum{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(llm_gateway_agent_request_tool_calls_total_count{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
+          "expr": "sum by(model_name) (\n  rate(ai_gateway_agent_request_tool_calls_sum{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n/\nsum by(model_name) (\n  rate(ai_gateway_agent_request_tool_calls_count{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__rate_interval])\n)\n",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
@@ -3702,7 +3702,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "round(\n  sum by (tool_name, integration_fqn) (\n    increase(llm_gateway_agent_tool_calls_total{\n      username=~\"$username\",\n      tenant_name=~\"$tenant_name\"\n    }[$__range])\n  )\n)\n",
+          "expr": "round(\n  sum by (tool_name, integration_fqn) (\n    increase(ai_gateway_agent_tool_calls_total{\n      username=~\"$username\",\n      tenant_name=~\"$tenant_name\"\n    }[$__range])\n  )\n)\n",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -3798,7 +3798,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by(model_name) (\n  increase(llm_gateway_agent_request_iteration_limit_reached_total{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)",
+          "expr": "sum by(model_name) (\n  increase(ai_gateway_agent_request_iteration_limit_reached_total{\n    model_name=~\"$model_name\", username=~\"$username\", tenant_name=~\"$tenant_name\"\n  }[$__interval])\n)",
           "instant": false,
           "range": true,
           "refId": "A"
