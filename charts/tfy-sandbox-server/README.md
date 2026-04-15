@@ -37,7 +37,7 @@ http://<release-name>-tfy-sandbox-server:8080
 | `persistence.accessModes`              | Volume access modes                                          | `[]`                                         |
 | `persistence.mountPath`                | Mount path for the volume                                    | `/data/sandboxes`                            |
 | `replicaCount`                         | Number of replicas (1 recommended — EBS is RWO)              | `1`                                          |
-| `strategy`                             | Deployment strategy                                          | `{}`                                         |
+| `strategy`                             | Deployment strategy (Recreate recommended for RWO volumes)   | `{}`                                         |
 | `extraEnv`                             | Extra environment variables for the sandbox server container | `[]`                                         |
 | `pdb.enabled`                          | Create a PodDisruptionBudget                                 | `false`                                      |
 | `pdb.minAvailable`                     | Minimum available replicas                                   | `1`                                          |
