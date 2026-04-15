@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.137.2
+  controlPlaneChartVersion: 0.137.3
   # If you have an existing truefoundry-creds secret, provide the name here.
   # This will ignore `.global.database` and `.global.tfyApiKey` values.
   ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
@@ -268,6 +268,13 @@ global:
       name: ""
       ## @param global.customCA.existingConfigMap.overrideCAList When true, the ConfigMap is mounted directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
       overrideCAList: false
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
+    securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
     ## @param global.customCA.env [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
     env: {}
     # Example:
@@ -737,7 +744,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.137.0"
+    tag: "v0.137.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
