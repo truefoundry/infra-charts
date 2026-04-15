@@ -477,11 +477,7 @@ false
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
   securityContext:
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
+    {{- toYaml .Values.global.customCA.securityContext | nindent 4 }}
   command: ["sh", "-c"]
   args:
     - |
