@@ -8,6 +8,10 @@ metadata:
     {{- include "tfy-sandbox-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "tfy-sandbox-server.selectorLabels" . | nindent 6 }}
@@ -39,14 +43,10 @@ spec:
           image: {{ include "tfy-sandbox-server.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: sandboxes_root_dir
+            - name: SANDBOXES_ROOT_DIR
               value: {{ .Values.sandbox.rootDir | quote }}
-            - name: DEFAULT_TIMEOUT
-              value: {{ .Values.sandbox.defaultTimeout | quote }}
             - name: PORT
               value: "8080"
-            - name: HOST
-              value: "0.0.0.0"
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

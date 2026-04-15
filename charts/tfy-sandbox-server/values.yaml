@@ -26,8 +26,6 @@ imagePullSecrets: []
 sandbox:
   ## @param sandbox.rootDir Root directory for sandbox workspaces
   rootDir: /data/sandboxes
-  ## @param sandbox.defaultTimeout Default command timeout in seconds
-  defaultTimeout: 60
 
 ## Persistence configuration
 persistence:
@@ -41,10 +39,17 @@ persistence:
   accessModes:
     - ReadWriteOnce
   ## @param persistence.mountPath Mount path for the volume
-  mountPath: /data
+  mountPath: /data/sandboxes
 
 ## @param replicaCount Number of replicas (1 recommended — EBS is RWO)
 replicaCount: 1
+
+## @param strategy [object] Deployment strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0%
+    maxUnavailable: 25%
 
 ## @param extraEnv [array] Extra environment variables for the sandbox server container
 extraEnv: []
@@ -91,13 +96,13 @@ probes:
     ## @param probes.startup.path Startup probe HTTP path
     path: /health
     ## @param probes.startup.initialDelaySeconds Startup probe initial delay in seconds
-    initialDelaySeconds: 5
+    initialDelaySeconds: 0
     ## @param probes.startup.periodSeconds Startup probe period in seconds
-    periodSeconds: 5
+    periodSeconds: 10
     ## @param probes.startup.timeoutSeconds Startup probe timeout in seconds
-    timeoutSeconds: 3
+    timeoutSeconds: 1
     ## @param probes.startup.failureThreshold Startup probe failure threshold
-    failureThreshold: 12
+    failureThreshold: 3
   ## probes.liveness Liveness probe configuration
   liveness:
     ## @param probes.liveness.enabled Enable the liveness probe
@@ -107,9 +112,9 @@ probes:
     ## @param probes.liveness.initialDelaySeconds Liveness probe initial delay in seconds
     initialDelaySeconds: 0
     ## @param probes.liveness.periodSeconds Liveness probe period in seconds
-    periodSeconds: 15
+    periodSeconds: 10
     ## @param probes.liveness.timeoutSeconds Liveness probe timeout in seconds
-    timeoutSeconds: 5
+    timeoutSeconds: 1
     ## @param probes.liveness.failureThreshold Liveness probe failure threshold
     failureThreshold: 3
   ## probes.readiness Readiness probe configuration
@@ -123,7 +128,7 @@ probes:
     ## @param probes.readiness.periodSeconds Readiness probe period in seconds
     periodSeconds: 10
     ## @param probes.readiness.timeoutSeconds Readiness probe timeout in seconds
-    timeoutSeconds: 5
+    timeoutSeconds: 1
     ## @param probes.readiness.failureThreshold Readiness probe failure threshold
     failureThreshold: 3
 
