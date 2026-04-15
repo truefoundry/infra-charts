@@ -65,16 +65,12 @@ spec:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
               scheme: HTTP
-          {{- if .Values.global.customCA.enabled }}
           volumeMounts:
-            {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
-          {{- end }}
+            {{- include "tfy-controller.volumeMounts" . | nindent 12 }}
       imagePullSecrets:
         {{- include "tfy-controller.imagePullSecrets" . | nindent 8 }}
-      {{- if .Values.global.customCA.enabled }}
       volumes:
-        {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-controller.volumes" . | nindent 8 }}
       topologySpreadConstraints:
         {{- if .Values.tfyController.topologySpreadConstraints }}
         {{- toYaml .Values.tfyController.topologySpreadConstraints | nindent 8 }}

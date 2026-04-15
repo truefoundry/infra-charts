@@ -356,12 +356,16 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
+{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-ingestor.resourceTier" "defaultResourcesPrefix" "deltafusion-ingestor.defaultResources" "resourcesValues" .Values.deltaFusionIngestor.resources) | fromYaml }}
+{{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
 {{- define "deltafusion-ingestor.volumeMounts" -}}
 - name: data
   mountPath: {{ .Values.deltaFusionIngestor.storage.mountPath }}
+- name: tmp-dir
+  mountPath: /tmp
 {{- with .Values.deltaFusionIngestor.extraVolumeMounts }}
 {{- toYaml . | nindent 0 }}
 {{- end }}
@@ -658,6 +662,8 @@ Tolerations for the deltafusion-compaction service
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
+{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-compaction.resourceTier" "defaultResourcesPrefix" "deltafusion-compaction.defaultResources" "resourcesValues" .Values.deltaFusionCompaction.resources) | fromYaml }}
+{{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -672,6 +678,8 @@ Tolerations for the deltafusion-compaction service
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
 {{- end -}}
+{{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
+{{- $volumeMounts = append $volumeMounts $tmpMount -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
