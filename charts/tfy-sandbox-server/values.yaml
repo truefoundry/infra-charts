@@ -44,12 +44,9 @@ persistence:
 ## @param replicaCount Number of replicas (1 recommended — EBS is RWO)
 replicaCount: 1
 
-## @param strategy [object] Deployment strategy
+## @param strategy [object] Deployment strategy (Recreate recommended for RWO volumes)
 strategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxSurge: 0%
-    maxUnavailable: 25%
+  type: Recreate
 
 ## @param extraEnv [array] Extra environment variables for the sandbox server container
 extraEnv: []
