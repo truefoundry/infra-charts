@@ -324,7 +324,7 @@ data:
       }
       {{- end }}
 
-      {{- if (index .Values "tfy-otel-collector").enabled }}
+      {{- if (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) }}
       # /api/otel/ → / on upstream:4318
       handle /api/otel/* {
         uri strip_prefix /api/otel
