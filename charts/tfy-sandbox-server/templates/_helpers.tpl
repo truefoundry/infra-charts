@@ -165,7 +165,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Image
 */}}
 {{- define "tfy-sandbox-server.image" -}}
-{{- printf "%s/%s:%s" (.Values.image.registry | default .Values.global.image.registry) .Values.image.repository ((default .Chart.AppVersion .Values.image.tag) | toString) -}}
+{{- printf "%s/%s:%s" (.Values.image.registry | default .Values.global.image.registry) .Values.image.repository .Values.image.tag -}}
 {{- end -}}
 
 {{/*
