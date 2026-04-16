@@ -27,7 +27,7 @@ http://<release-name>-tfy-sandbox-server:8080
 | `commonLabels`                         | Common labels added to all resources                         | `{}`                                         |
 | `commonAnnotations`                    | Common annotations added to all resources                    | `{}`                                         |
 | `image.repository`                     | Image repository                                             | `tfy.jfrog.io/tfy-public/tfy-sandbox-server` |
-| `image.tag`                            | Image tag                                                    | `0.1.0`                                      |
+| `image.tag`                            | Image tag                                                    | `v0.1.0-rc.2`                                |
 | `image.pullPolicy`                     | Image pull policy                                            | `IfNotPresent`                               |
 | `imagePullSecrets`                     | Image pull secrets                                           | `[]`                                         |
 | `sandbox.rootDir`                      | Root directory for sandbox workspaces                        | `/data/sandboxes`                            |
