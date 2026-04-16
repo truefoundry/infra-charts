@@ -63,9 +63,11 @@ data:
         }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
         header @origin_allowed Access-Control-Allow-Credentials "true"
+        header @origin_allowed Access-Control-Allow-Private-Network "true"
         {{- else }}
         header Access-Control-Allow-Origin "{http.request.header.Origin}"
         header Access-Control-Allow-Credentials "true"
+        header Access-Control-Allow-Private-Network "true"
         {{- end }}
         header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
@@ -93,6 +95,7 @@ data:
       }
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header @origin >Access-Control-Allow-Credentials "true"
+      header @origin >Access-Control-Allow-Private-Network "true"
       header @origin >Vary "Origin"
 
       @not_origin {
@@ -100,6 +103,7 @@ data:
       }
       header @not_origin -Access-Control-Allow-Origin
       header @not_origin -Access-Control-Allow-Credentials
+      header @not_origin -Access-Control-Allow-Private-Network
 
       @no_origin {
         expression {http.request.header.Origin} == ""
@@ -109,6 +113,7 @@ data:
       {{- else }}
       header >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header >Access-Control-Allow-Credentials "true"
+      header >Access-Control-Allow-Private-Network "true"
       header >Vary "Origin"
       {{- end }}
     }
