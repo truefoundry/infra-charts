@@ -156,8 +156,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "tfy-sandbox-server.serviceAccountName" -}}
 {{- if .Values.serviceAccount.name -}}
 {{- .Values.serviceAccount.name -}}
-{{- else -}}
+{{- else if .Values.global.serviceAccount.name -}}
 {{- .Values.global.serviceAccount.name -}}
+{{- else -}}
+{{- include "tfy-sandbox-server.fullname" . -}}
 {{- end }}
 {{- end -}}
 
