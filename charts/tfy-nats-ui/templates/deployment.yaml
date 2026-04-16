@@ -40,7 +40,7 @@ spec:
             {{- include "tfy-nats-ui.env" . | trim | nindent 12 }}
             {{- else }}
             - name: NATS_URL
-              value: {{ required "natsUrl is required when enabled is true and env is empty" .Values.natsUrl | quote }}
+              value: {{ tpl (required "natsUrl is required when enabled is true and env is empty" .Values.natsUrl) . | quote }}
             - name: NATS_ACCOUNT_SEED
               valueFrom:
                 secretKeyRef:

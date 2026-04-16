@@ -34,17 +34,15 @@ serviceAccount:
   ## @param serviceAccount.automountServiceAccountToken Automount service account token into the pod (only used when create is true)
   automountServiceAccountToken: false
 ## @param env [object] If non-empty, replaces natsUrl/accountSeedSecret wiring. Values are passed through tpl(); use ${k8s-secret/<secret>/<key>} or ${k8s-secret/<key>} with envSecretName (same pattern as truefoundry servicefoundryServer.env).
-env:
-  NATS_URL: "http://{{ .Release.Name }}-tfy-nats:4222"
-  NATS_ACCOUNT_SEED: ${k8s-secret/truefoundry-tfy-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
+env: {}
 ## @param envSecretName Secret name for shorthand ${k8s-secret/<key>} entries in env
 envSecretName: ""
 ## @param natsUrl Value for NATS_URL when env is empty
-natsUrl: ""
+natsUrl: "http://{{ .Release.Name }}-tfy-nats:4222"
 ## @param accountSeedSecret.name Existing Secret name when env is empty
 ## @param accountSeedSecret.key Key inside the Secret
 accountSeedSecret:
-  name: ""
+  name: "truefoundry-tfy-nats-secret"
   key: NATS_CONTROLPLANE_ACCOUNT_SEED
 ## @param service.name Kubernetes Service metadata.name (defaults to tfy-nats-ui)
 ## @param service.type Service type
