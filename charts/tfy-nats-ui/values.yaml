@@ -21,6 +21,18 @@ image:
 imagePullPolicy: IfNotPresent
 ## @param imagePullSecrets [array] Image pull secrets
 imagePullSecrets: []
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated ServiceAccount
+  create: false
+  ## @param serviceAccount.name Override ServiceAccount name (defaults to fullname when create is true; when create is false defaults to the cluster default unless set)
+  name: ""
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+  ## @param serviceAccount.labels [object] Extra labels for the ServiceAccount
+  labels: {}
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token into the pod (only used when create is true)
+  automountServiceAccountToken: false
 ## @param env [object] If non-empty, replaces natsUrl/accountSeedSecret wiring. Values are passed through tpl(); use ${k8s-secret/<secret>/<key>} or ${k8s-secret/<key>} with envSecretName (same pattern as truefoundry servicefoundryServer.env).
 env:
   NATS_URL: "http://{{ .Release.Name }}-tfy-nats:4222"

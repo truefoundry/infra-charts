@@ -82,6 +82,17 @@ Container image reference.
 {{- end }}
 
 {{/*
+  Service account name for the workload (same pattern as tfy-cloudflared).
+*/}}
+{{- define "tfy-nats-ui.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "tfy-nats-ui.fullname" .) .Values.serviceAccount.name -}}
+{{- else -}}
+{{- default "default" .Values.serviceAccount.name -}}
+{{- end -}}
+{{- end }}
+
+{{/*
   Build container env list from env with ${k8s-secret/...} expansion.
   Two-part form: ${k8s-secret/<key>} uses envSecretName as the Secret name.
   Three-part form: ${k8s-secret/<secretName>/<key>}

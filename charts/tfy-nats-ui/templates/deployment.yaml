@@ -15,6 +15,7 @@ spec:
       labels:
         {{- include "tfy-nats-ui.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "tfy-nats-ui.serviceAccountName" . }}
       imagePullSecrets:
         {{- include "tfy-nats-ui.imagePullSecrets" . | nindent 8 }}
       {{- with .Values.podSecurityContext }}
