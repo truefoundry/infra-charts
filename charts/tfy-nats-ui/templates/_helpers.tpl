@@ -69,7 +69,7 @@ Container image reference.
 {{- tpl ((.Values.env | default dict) | toYaml) . }}
 {{- end }}
 
-{{- define "tfy-llm-gateway.imagePullSecrets" -}}
+{{- define "tfy-nats-ui.imagePullSecrets" -}}
 {{- if .Values.imagePullSecrets -}}
 {{- toYaml .Values.imagePullSecrets }}
 {{- else if .Values.global.imagePullSecrets -}}

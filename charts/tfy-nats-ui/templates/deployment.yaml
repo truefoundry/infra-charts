@@ -15,16 +15,14 @@ spec:
       labels:
         {{- include "tfy-nats-ui.labels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-nats-ui.imagePullSecrets" . | nindent 8 }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        - name: nats-ui
+        - name: tfy-nats-ui
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
