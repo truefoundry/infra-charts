@@ -112,5 +112,17 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "tfy-sandbox-server.image" -}}
-{{- printf "%s:%s" .Values.image.repository ((default .Chart.AppVersion .Values.image.tag) | toString) -}}
+{{- printf "%s/%s:%s" (.Values.image.registry | default .Values.global.image.registry) .Values.image.repository ((default .Chart.AppVersion .Values.image.tag) | toString) -}}
+{{- end -}}
+
+{{- define "tfy-sandbox-server.imagePullSecrets" -}}
+{{- if .Values.imagePullSecrets -}}
+{{- toYaml .Values.imagePullSecrets }}
+{{- else if .Values.global.imagePullSecrets -}}
+{{- toYaml .Values.global.imagePullSecrets }}
+{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+- name: truefoundry-image-pull-secret
+{{- else -}}
+[]
+{{- end }}
 {{- end -}}

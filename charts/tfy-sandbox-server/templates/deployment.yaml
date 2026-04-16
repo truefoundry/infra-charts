@@ -22,10 +22,8 @@ spec:
       labels:
         {{- include "tfy-sandbox-server.podLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-sandbox-server.imagePullSecrets" . | nindent 8 }}
       {{- $serviceAccountName := include "tfy-sandbox-server.serviceAccountName" . }}
       {{- with $serviceAccountName }}
       serviceAccountName: {{ . }}

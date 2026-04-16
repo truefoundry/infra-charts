@@ -1,5 +1,12 @@
 ## @section Configuration values for tfy-sandbox-server
 
+global:
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
+  ## @param global.image.registry Global image registry override
+  image:
+    registry: "tfy.jfrog.io"
+
 ## @param nameOverride Name override
 nameOverride: ""
 ## @param fullnameOverride Full name override
@@ -10,9 +17,11 @@ commonLabels: {}
 commonAnnotations: {}
 ## Image configuration
 image:
-  ## @param image.repository Image repository
-  repository: tfy.jfrog.io/tfy-public/tfy-sandbox-server
-  ## @param image.tag Image tag
+  ## @param image.registry Image registry for tfy-sandbox-server (defaults to global.image.registry if not set)
+  registry: ""
+  ## @param image.repository Image repository for tfy-sandbox-server
+  repository: tfy-private-images/tfy-sandbox-server
+  ## @param image.tag Image tag for tfy-sandbox-server
   tag: "v0.1.0-rc.2"
   ## @param image.pullPolicy Image pull policy
   pullPolicy: IfNotPresent
