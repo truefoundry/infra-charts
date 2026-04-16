@@ -4,29 +4,24 @@
 nameOverride: ""
 ## @param fullnameOverride Full name override
 fullnameOverride: ""
-
 ## @param commonLabels [object] Common labels added to all resources
 commonLabels: {}
 ## @param commonAnnotations [object] Common annotations added to all resources
 commonAnnotations: {}
-
 ## Image configuration
 image:
   ## @param image.repository Image repository
   repository: tfy.jfrog.io/tfy-public/tfy-sandbox-server
   ## @param image.tag Image tag
-  tag: "0.1.0"
+  tag: "v0.1.0-rc.1"
   ## @param image.pullPolicy Image pull policy
   pullPolicy: IfNotPresent
-
 ## @param imagePullSecrets [array] Image pull secrets
 imagePullSecrets: []
-
 ## Sandbox configuration
 sandbox:
   ## @param sandbox.rootDir Root directory for sandbox workspaces
   rootDir: /data/sandboxes
-
 ## Persistence configuration
 persistence:
   ## @param persistence.enabled Enable persistent storage for sandbox data
@@ -40,17 +35,13 @@ persistence:
     - ReadWriteOnce
   ## @param persistence.mountPath Mount path for the volume
   mountPath: /data/sandboxes
-
 ## @param replicaCount Number of replicas (1 recommended — EBS is RWO)
 replicaCount: 1
-
 ## @param strategy [object] Deployment strategy (Recreate recommended for RWO volumes)
 strategy:
   type: Recreate
-
 ## @param extraEnv [array] Extra environment variables for the sandbox server container
 extraEnv: []
-
 ## PodDisruptionBudget configuration
 pdb:
   ## @param pdb.enabled Create a PodDisruptionBudget
@@ -61,7 +52,6 @@ pdb:
   labels: {}
   ## @param pdb.annotations [object] PDB annotations
   annotations: {}
-
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create a dedicated service account
@@ -72,7 +62,6 @@ serviceAccount:
   labels: {}
   ## @param serviceAccount.annotations [object] Service account annotations
   annotations: {}
-
 ## Service configuration
 service:
   ## @param service.type Service type
@@ -83,7 +72,6 @@ service:
   labels: {}
   ## @param service.annotations [object] Service annotations
   annotations: {}
-
 ## Health probe configuration
 probes:
   ## probes.startup Startup probe configuration
@@ -128,7 +116,6 @@ probes:
     timeoutSeconds: 1
     ## @param probes.readiness.failureThreshold Readiness probe failure threshold
     failureThreshold: 3
-
 ## @skip resources
 resources:
   requests:
@@ -139,7 +126,6 @@ resources:
     cpu: "1"
     memory: 500Mi
     ephemeral-storage: 2Gi
-
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext: {}
 ## @param securityContext [object] Container security context
@@ -156,7 +142,6 @@ topologySpreadConstraints: []
 priorityClassName: ""
 ## @param terminationGracePeriodSeconds Termination grace period
 terminationGracePeriodSeconds: 30
-
 ## @param podLabels [object] Pod labels
 podLabels: {}
 ## @param podAnnotations [object] Pod annotations
@@ -165,7 +150,6 @@ podAnnotations: {}
 deploymentLabels: {}
 ## @param deploymentAnnotations [object] Deployment annotations
 deploymentAnnotations: {}
-
 ## @param extraVolumes [array] Extra volumes
 extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts
