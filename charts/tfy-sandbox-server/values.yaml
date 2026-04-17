@@ -208,8 +208,28 @@ securityContext: {}
 nodeSelector: {}
 ## @param tolerations [array] Tolerations
 tolerations: []
-## @param affinity [object] Affinity
-affinity: {}
+## @skip affinity Affinity rules (default: avoid spot/preemptible nodes across all cloud providers)
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: karpenter.sh/capacity-type
+              operator: NotIn
+              values:
+                - spot
+            - key: eks.amazonaws.com/capacityType
+              operator: NotIn
+              values:
+                - SPOT
+            - key: cloud.google.com/gke-provisioning
+              operator: NotIn
+              values:
+                - spot
+            - key: kubernetes.azure.com/scalesetpriority
+              operator: NotIn
+              values:
+                - spot
 ## @param topologySpreadConstraints [array] Topology spread constraints
 topologySpreadConstraints: []
 ## @param priorityClassName PriorityClass name
@@ -218,8 +238,10 @@ priorityClassName: ""
 terminationGracePeriodSeconds: 30
 ## @param podLabels [object] Pod labels
 podLabels: {}
-## @param podAnnotations [object] Pod annotations
-podAnnotations: {}
+## @skip podAnnotations Pod annotations (default: prevent Karpenter/cluster-autoscaler eviction)
+podAnnotations:
+  karpenter.sh/do-not-disrupt: "true"
+  cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
 ## @param deploymentLabels [object] Deployment labels
 deploymentLabels: {}
 ## @param deploymentAnnotations [object] Deployment annotations
