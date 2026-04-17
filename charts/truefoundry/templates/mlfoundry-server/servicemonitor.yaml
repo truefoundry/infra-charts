@@ -1,0 +1,21 @@
+{{- if and .Values.mlfoundryServer.enabled .Values.mlfoundryServer.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mlfoundry-server.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "mlfoundry-server.labels" . | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ include "global.namespace" . }}
+  selector:
+    matchLabels:
+      {{- include "mlfoundry-server.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - targetPort: {{ .Values.mlfoundryServer.service.port }}
+      path: /metrics
+      honorLabels: true
+      interval: 10s
+{{- end -}}
