@@ -111,6 +111,16 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  ServiceMonitor Labels - merges commonLabels with prometheus label and servicemonitor specific labels
+  */}}
+{{- define "mlfoundry-server.serviceMonitorLabels" -}}
+{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
+{{- $prometheusLabel := dict "release" "prometheus" }}
+{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.mlfoundryServer.serviceMonitor.labels }}
+{{- toYaml $serviceMonitorLabels }}
+{{- end }}
+
+{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "mlfoundry-server.deploymentLabels" -}}
