@@ -403,3 +403,44 @@ grafana:
   tolerations: []
   ## @param grafana.nodeSelector [object] Node selector for Grafana pods
   nodeSelector: {}
+
+## =============================================================================
+## @section tfy-nats-ui (NATS UI dashboard) configuration
+## NATS control plane UI subchart. See charts/tfy-nats-ui for template details.
+## =============================================================================
+tfyNatsUi:
+  ## @param tfyNatsUi.enabled Enable tfy-nats-ui
+  enabled: true
+  ## @param tfyNatsUi.nameOverride Override the component name used in labels and the Deployment name
+  nameOverride: ""
+  ## @param tfyNatsUi.fullnameOverride If set, overrides the Deployment full name (leave empty for <release>-tfy-nats-ui)
+  fullnameOverride: ""
+  ## @param tfyNatsUi.replicaCount Number of replicas
+  replicaCount: 1
+  ## @param tfyNatsUi.imagePullPolicy Image pull policy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyNatsUi.imagePullSecrets [array] Image pull secrets for this workload
+  imagePullSecrets: []
+  ## @param tfyNatsUi.envSecretName Secret name for shorthand ${k8s-secret/<key>} entries in env
+  envSecretName: ""
+  ## @param tfyNatsUi.natsUrl Value for NATS_URL when env is empty
+  natsUrl: "http://{{ .Release.Name }}-tfy-nats:4222"
+  ## @param tfyNatsUi.accountSeedSecret.name Existing Secret name when env is empty
+  ## @param tfyNatsUi.accountSeedSecret.key Key inside the Secret
+  accountSeedSecret:
+    name: "truefoundry-tfy-nats-secret"
+    key: NATS_CONTROLPLANE_ACCOUNT_SEED
+  ## @param tfyNatsUi.extraEnv [array] Extra environment variables for the container
+  extraEnv: []
+  ## @param tfyNatsUi.resources [object] Container resources
+  resources: {}
+  ## @param tfyNatsUi.podSecurityContext [object] Pod security context
+  podSecurityContext: {}
+  ## @param tfyNatsUi.securityContext [object] Container security context
+  securityContext: {}
+  ## @param tfyNatsUi.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## @param tfyNatsUi.tolerations [array] Tolerations
+  tolerations: []
+  ## @param tfyNatsUi.affinity [object] Affinity
+  affinity: {}
