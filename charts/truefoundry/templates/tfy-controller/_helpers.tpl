@@ -276,28 +276,6 @@ limits:
 {{ toYaml $merged }}
 {{- end }}
 
-{{- define "tfy-controller.volumes" -}}
-{{- $volumes := list -}}
-{{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
-{{- if $caData.items -}}
-{{- $volumes = concat $volumes $caData.items -}}
-{{- end -}}
-{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "tfy-controller.resourceTier" "defaultResourcesPrefix" "tfy-controller.defaultResources" "resourcesValues" .Values.tfyController.resources) | fromYaml }}
-{{- $volumes = append $volumes $tmpVolume -}}
-{{- $volumes | toYaml -}}
-{{- end -}}
-
-{{- define "tfy-controller.volumeMounts" -}}
-{{- $volumeMounts := list -}}
-{{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
-{{- if $caData.items -}}
-{{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
-{{- $volumeMounts = append $volumeMounts $tmpMount -}}
-{{- $volumeMounts | toYaml -}}
-{{- end -}}
-
 {{- define "tfy-controller.imagePullSecrets" -}}
 {{- if .Values.tfyController.imagePullSecrets -}}
 {{- toYaml .Values.tfyController.imagePullSecrets -}}

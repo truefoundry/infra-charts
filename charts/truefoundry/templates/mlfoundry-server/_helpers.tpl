@@ -111,25 +111,6 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-  ServiceMonitor Labels - merges commonLabels with prometheus label and servicemonitor specific labels
-  */}}
-{{- define "mlfoundry-server.serviceMonitorLabels" -}}
-{{- $commonLabels := include "mlfoundry-server.commonLabels" . | fromYaml }}
-{{- $prometheusLabel := dict "release" "prometheus" }}
-{{- $serviceMonitorLabels := mergeOverwrite $commonLabels $prometheusLabel .Values.mlfoundryServer.serviceMonitor.labels }}
-{{- toYaml $serviceMonitorLabels }}
-{{- end }}
-
-{{/*
-  ServiceMonitor Annotations - merges commonAnnotations with servicemonitor specific annotations
-  */}}
-{{- define "mlfoundry-server.serviceMonitorAnnotations" -}}
-{{- $commonAnnotations := include "mlfoundry-server.commonAnnotations" . | fromYaml }}
-{{- $serviceMonitorAnnotations := mergeOverwrite $commonAnnotations .Values.mlfoundryServer.serviceMonitor.annotations }}
-{{- toYaml $serviceMonitorAnnotations }}
-{{- end }}
-
-{{/*
   Deployment Labels - merges commonLabels with deployment-specific labels
   */}}
 {{- define "mlfoundry-server.deploymentLabels" -}}
@@ -303,7 +284,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.volumes" -}}
-{{- $required := dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" (.Values.mlfoundryServer.emptyDir.tmpdir.sizeLimit | default "256Mi")) -}}
+{{- $required := dict "name" "truefoundry-tmpdir" "emptyDir" (dict "sizeLimit" (.Values.mlfoundryServer.emptyDir.tmpdir.sizeLimit | default "256Mi")) -}}
 {{- $userVolumes := .Values.mlfoundryServer.extraVolumes | default (list) -}}
 {{- $final := prepend $userVolumes $required }}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
@@ -314,7 +295,7 @@ limits:
 {{- end }}
 
 {{- define "mlfoundry-server.volumeMounts" -}}
-{{- $required := dict "name" "tmp-dir" "mountPath" "/tmp" -}}
+{{- $required := dict "name" "truefoundry-tmpdir" "mountPath" "/tmp" -}}
 {{- $userMounts := .Values.mlfoundryServer.extraVolumeMounts | default (list) -}}
 {{- $final := prepend $userMounts $required }}
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
