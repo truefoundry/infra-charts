@@ -22,3 +22,23 @@ rules:
     verbs:
       - create
 {{- end}}
+{{- if and .Values.global.wif.enabled .Values.servicefoundryServer.enabled .Values.servicefoundryServer.serviceAccount.create .Values.servicefoundryServer.serviceAccount.name }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "servicefoundry-server.fullname" . }}-wif
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "servicefoundry-server.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "servicefoundry-server.commonAnnotations" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "truefoundry.fullname" . }}-wif
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "servicefoundry-server.serviceAccountName" . }}
+    namespace: {{ include "global.namespace" . }}
+{{- end }}
