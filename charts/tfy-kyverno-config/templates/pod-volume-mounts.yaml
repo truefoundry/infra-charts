@@ -107,6 +107,21 @@ spec:
                       }
                     ]
                   }
+                ) : [],
+              ephemeralContainers: has(object.spec.ephemeralContainers) ?
+                object.spec.ephemeralContainers.map(c,
+                  Object.spec.ephemeralContainers{
+                    name: c.name,
+                    volumeMounts: [
+                      Object.spec.ephemeralContainers.volumeMounts{
+                        name: "{{ $volName }}",
+                        mountPath: "{{ $m.mountPath }}"
+                        {{- if $m.subPath }},
+                        subPath: "{{ $m.subPath }}"
+                        {{- end }}
+                      }
+                    ]
+                  }
                 ) : []
             }
           } : Object{}

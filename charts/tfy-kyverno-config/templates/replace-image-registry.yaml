@@ -61,11 +61,11 @@ spec:
                   name: c.name,
                   image: (
                     {{- range $source, $target := $overrides }}
-                    image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + ':' + image(c.image).identifier() :
+                    image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier() :
                     {{- end }}
                     {{- if $wildcard }}
                     c.image.startsWith('{{ $wildcard }}/') ? c.image :
-                    '{{ $wildcard }}/' + image(c.image).repository() + ':' + image(c.image).identifier()
+                    '{{ $wildcard }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier()
                     {{- else }}
                     c.image
                     {{- end }}
@@ -78,11 +78,28 @@ spec:
                     name: c.name,
                     image: (
                       {{- range $source, $target := $overrides }}
-                      image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + ':' + image(c.image).identifier() :
+                      image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier() :
                       {{- end }}
                       {{- if $wildcard }}
                       c.image.startsWith('{{ $wildcard }}/') ? c.image :
-                      '{{ $wildcard }}/' + image(c.image).repository() + ':' + image(c.image).identifier()
+                      '{{ $wildcard }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier()
+                      {{- else }}
+                      c.image
+                      {{- end }}
+                    )
+                  }
+                ) : [],
+              ephemeralContainers: has(object.spec.ephemeralContainers) ?
+                object.spec.ephemeralContainers.map(c,
+                  Object.spec.ephemeralContainers{
+                    name: c.name,
+                    image: (
+                      {{- range $source, $target := $overrides }}
+                      image(c.image).registry() == '{{ $source }}' ? '{{ $target }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier() :
+                      {{- end }}
+                      {{- if $wildcard }}
+                      c.image.startsWith('{{ $wildcard }}/') ? c.image :
+                      '{{ $wildcard }}/' + image(c.image).repository() + (image(c.image).containsDigest() ? '@' : ':') + image(c.image).identifier()
                       {{- else }}
                       c.image
                       {{- end }}
@@ -91,6 +108,20 @@ spec:
                 ) : []
             }
           }
+    {{- if .Values.replaceImageRegistry.imagePullSecrets }}
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: |
+          Object{
+            spec: Object.spec{
+              imagePullSecrets:
+                (has(object.spec.imagePullSecrets) ? object.spec.imagePullSecrets : [])
+                {{- range .Values.replaceImageRegistry.imagePullSecrets }}
+                + (!(has(object.spec.imagePullSecrets) && object.spec.imagePullSecrets.exists(s, s.name == '{{ . }}')) ? [Object.spec.imagePullSecrets{name: '{{ . }}'}] : [])
+                {{- end }}
+            }
+          }
+    {{- end }}
   evaluation:
     admission:
       enabled: true
