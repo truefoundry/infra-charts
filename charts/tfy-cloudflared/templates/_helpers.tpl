@@ -137,6 +137,64 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "%s:%s" .Values.image.repository ((default .Chart.AppVersion .Values.image.tag) | toString) -}}
 {{- end -}}
 
+{{- define "tfy-cloudflared.caddyName" -}}
+{{- printf "%s-caddy" (include "tfy-cloudflared.name" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyFullname" -}}
+{{- printf "%s-caddy" (include "tfy-cloudflared.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddySelectorLabels" -}}
+app.kubernetes.io/name: {{ include "tfy-cloudflared.caddyName" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyLabels" -}}
+helm.sh/chart: {{ include "tfy-cloudflared.chart" . }}
+{{ include "tfy-cloudflared.caddySelectorLabels" . }}
+app.kubernetes.io/version: {{ .Values.caddy.image.tag | quote }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: truefoundry
+app.kubernetes.io/component: caddy
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyCommonLabels" -}}
+{{- $baseLabels := include "tfy-cloudflared.caddyLabels" . | fromYaml }}
+{{- $mergedLabels := mergeOverwrite $baseLabels .Values.commonLabels }}
+{{- toYaml $mergedLabels }}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyServiceAnnotations" -}}
+{{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
+{{- $serviceAnnotations := mergeOverwrite $commonAnnotations .Values.caddy.service.annotations }}
+{{- toYaml $serviceAnnotations }}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyServiceAccountLabels" -}}
+{{- $commonLabels := include "tfy-cloudflared.caddyCommonLabels" . | fromYaml }}
+{{- $serviceAccountLabels := mergeOverwrite $commonLabels .Values.caddy.serviceAccount.labels }}
+{{- toYaml $serviceAccountLabels }}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyServiceAccountAnnotations" -}}
+{{- $commonAnnotations := include "tfy-cloudflared.commonAnnotations" . | fromYaml }}
+{{- $serviceAccountAnnotations := mergeOverwrite $commonAnnotations .Values.caddy.serviceAccount.annotations }}
+{{- toYaml $serviceAccountAnnotations }}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyServiceAccountName" -}}
+{{- if .Values.caddy.serviceAccount.create -}}
+{{- default (include "tfy-cloudflared.caddyFullname" .) .Values.caddy.serviceAccount.name -}}
+{{- else -}}
+{{- default "default" .Values.caddy.serviceAccount.name -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "tfy-cloudflared.caddyImage" -}}
+{{- printf "%s:%s" .Values.caddy.image.repository (.Values.caddy.image.tag | toString) -}}
+{{- end -}}
+
 {{/* Tunnel token secret name */}}
 {{- define "tfy-cloudflared.tunnelSecretName" -}}
 {{- if .Values.tunnel.existingSecret -}}
