@@ -89,9 +89,7 @@ This chart also deploys Caddy resources for private endpoint routing.
 | `caddy.image.pullPolicy`           | Image pull policy for Caddy                        | `IfNotPresent`                        |
 | `caddy.service.type`               | Caddy service type                                 | `ClusterIP`                           |
 | `caddy.service.annotations`        | Caddy service annotations                          | `{}`                                  |
-| `caddy.service.loadBalancerIP`     | Caddy service load balancer IP                     | `""`                                  |
 | `caddy.service.ports.http`         | Caddy HTTP service port                            | `80`                                  |
-| `caddy.service.ports.https`        | Caddy HTTPS service port                           | `443`                                 |
 | `caddy.serviceAccount.create`      | Create a dedicated Caddy service account           | `false`                               |
 | `caddy.serviceAccount.name`        | Caddy service account name                         | `""`                                  |
 | `caddy.serviceAccount.labels`      | Caddy service account labels                       | `{}`                                  |
