@@ -77,27 +77,27 @@ This chart also deploys Caddy resources for private endpoint routing.
 | `deploymentAnnotations`                | Deployment annotations                                      | `{}`                                             |
 | `extraVolumes`                         | Extra volumes                                               | `[]`                                             |
 | `extraVolumeMounts`                    | Extra volume mounts                                         | `[]`                                             |
-| `extraManifests`                       | Extra manifests to deploy alongside the chart               | `[]`                                             |
 
 ### Caddy private endpoint router configuration
 
-| Name                            | Description                                      | Value                                  |
-| ------------------------------- | ------------------------------------------------ | -------------------------------------- |
-| `caddy.enabled`                 | Deploy the Caddy private endpoint router manifests | `false`                             |
-| `caddy.replicaCount`            | Number of Caddy replicas to deploy               | `2`                                    |
-| `caddy.image.repository`        | Image repository for Caddy                       | `public.ecr.aws/docker/library/caddy`  |
-| `caddy.image.tag`               | Image tag for Caddy                              | `2.6.3`                                |
-| `caddy.image.pullPolicy`        | Image pull policy for Caddy                      | `IfNotPresent`                         |
-| `caddy.service.type`            | Caddy service type                               | `ClusterIP`                            |
-| `caddy.service.annotations`     | Caddy service annotations                        | `{}`                                   |
-| `caddy.service.loadBalancerIP`  | Caddy service load balancer IP                   | `""`                                   |
-| `caddy.service.ports.http`      | Caddy HTTP service port                          | `80`                                   |
-| `caddy.service.ports.https`     | Caddy HTTPS service port                         | `443`                                  |
-| `caddy.serviceAccount.create`   | Create a dedicated Caddy service account         | `false`                                |
-| `caddy.serviceAccount.name`     | Caddy service account name                       | `""`                                   |
-| `caddy.serviceAccount.labels`   | Caddy service account labels                     | `{}`                                   |
-| `caddy.serviceAccount.annotations` | Caddy service account annotations              | `{}`                                   |
-| `caddy.resources`               | Resource requests and limits for Caddy           | `{}`                                   |
-| `caddy.nodeSelector`            | Node selector for Caddy pods                     | `{}`                                   |
-| `caddy.tolerations`             | Tolerations for Caddy pods                       | `[]`                                   |
-| `caddy.affinity`                | Affinity for Caddy pods                          | `{}`                                   |
+| Name                               | Description                                        | Value                                 |
+| ---------------------------------- | -------------------------------------------------- | ------------------------------------- |
+| `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `false`                               |
+| `caddy.replicaCount`               | Number of Caddy replicas to deploy                 | `2`                                   |
+| `caddy.image.repository`           | Image repository for Caddy                         | `public.ecr.aws/docker/library/caddy` |
+| `caddy.image.tag`                  | Image tag for Caddy                                | `2.6.3`                               |
+| `caddy.image.pullPolicy`           | Image pull policy for Caddy                        | `IfNotPresent`                        |
+| `caddy.service.type`               | Caddy service type                                 | `ClusterIP`                           |
+| `caddy.service.annotations`        | Caddy service annotations                          | `{}`                                  |
+| `caddy.service.loadBalancerIP`     | Caddy service load balancer IP                     | `""`                                  |
+| `caddy.service.ports.http`         | Caddy HTTP service port                            | `80`                                  |
+| `caddy.service.ports.https`        | Caddy HTTPS service port                           | `443`                                 |
+| `caddy.serviceAccount.create`      | Create a dedicated Caddy service account           | `false`                               |
+| `caddy.serviceAccount.name`        | Caddy service account name                         | `""`                                  |
+| `caddy.serviceAccount.labels`      | Caddy service account labels                       | `{}`                                  |
+| `caddy.serviceAccount.annotations` | Caddy service account annotations                  | `{}`                                  |
+| `caddy.resources`                  | Resource requests and limits for Caddy             | `{}`                                  |
+| `caddy.nodeSelector`               | Node selector for Caddy pods                       | `{}`                                  |
+| `caddy.tolerations`                | Tolerations for Caddy pods                         | `[]`                                  |
+| `caddy.affinity`                   | Affinity for Caddy pods                            | `{}`                                  |
+| `extraManifests`                   | Extra manifests to deploy alongside the chart      | `[]`                                  |
