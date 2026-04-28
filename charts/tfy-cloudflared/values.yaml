@@ -194,5 +194,48 @@ extraVolumes: []
 ## @param extraVolumeMounts [array] Extra volume mounts
 extraVolumeMounts: []
 
+## @section Caddy private endpoint router configuration
+caddy:
+  ## @param caddy.enabled Deploy the Caddy private endpoint router manifests
+  enabled: false
+  ## @param caddy.replicaCount Number of Caddy replicas to deploy
+  replicaCount: 2
+  image:
+    ## @param caddy.image.repository Image repository for Caddy
+    repository: public.ecr.aws/docker/library/caddy
+    ## @param caddy.image.tag Image tag for Caddy
+    tag: "2.6.3"
+    ## @param caddy.image.pullPolicy Image pull policy for Caddy
+    pullPolicy: IfNotPresent
+  service:
+    ## @param caddy.service.type Caddy service type
+    type: ClusterIP
+    ## @param caddy.service.annotations [object] Caddy service annotations
+    annotations: {}
+    ## @param caddy.service.loadBalancerIP Caddy service load balancer IP
+    loadBalancerIP: ""
+    ports:
+      ## @param caddy.service.ports.http Caddy HTTP service port
+      http: 80
+      ## @param caddy.service.ports.https Caddy HTTPS service port
+      https: 443
+  serviceAccount:
+    ## @param caddy.serviceAccount.create Create a dedicated Caddy service account
+    create: false
+    ## @param caddy.serviceAccount.name Caddy service account name
+    name: ""
+    ## @param caddy.serviceAccount.labels [object] Caddy service account labels
+    labels: {}
+    ## @param caddy.serviceAccount.annotations [object] Caddy service account annotations
+    annotations: {}
+  ## @param caddy.resources [object] Resource requests and limits for Caddy
+  resources: {}
+  ## @param caddy.nodeSelector [object] Node selector for Caddy pods
+  nodeSelector: {}
+  ## @param caddy.tolerations [array] Tolerations for Caddy pods
+  tolerations: []
+  ## @param caddy.affinity [object] Affinity for Caddy pods
+  affinity: {}
+
 ## @param extraManifests [array] Extra manifests to deploy alongside the chart
 extraManifests: []

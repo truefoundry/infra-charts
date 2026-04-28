@@ -1,0 +1,26 @@
+{{- if .Values.caddy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-cloudflared.caddyFullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.caddyCommonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.caddyServiceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.caddy.service.type }}
+  {{- if .Values.caddy.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.caddy.service.loadBalancerIP }}
+  {{- end }}
+  selector:
+    {{- include "tfy-cloudflared.caddySelectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.caddy.service.ports.http }}
+      targetPort: http
+      protocol: TCP
+    - name: https
+      port: {{ .Values.caddy.service.ports.https }}
+      targetPort: https
+      protocol: TCP
+{{- end }}
