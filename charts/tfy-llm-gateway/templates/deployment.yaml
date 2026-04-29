@@ -37,8 +37,10 @@ spec:
         {{- toYaml .Values.dnsConfig | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
+      {{- if .Values.podSecurityContext.enabled }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- if or .Values.initContainers (and .Values.global.customCA.enabled (eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false")) }}
       initContainers:
@@ -51,8 +53,10 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- if .Values.securityContext.enabled }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml (omit .Values.securityContext "enabled") | nindent 12 }}
+          {{- end }}
           env:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
           image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
