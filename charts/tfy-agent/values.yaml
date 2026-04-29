@@ -22,6 +22,46 @@ global:
   serviceAccount:
     name: ""
     labels: {}
+  ## global.customCA Custom CA certificate configuration. When enabled, a CA bundle is mounted
+  ## into the tfyAgent, tfyAgentProxy and sdsServer pods so they can trust private/self-signed
+  ## certificates (e.g. when the control plane sits behind a corporate TLS proxy).
+  customCA:
+    ## @param global.customCA.enabled Bool to enable custom CA certificate injection
+    enabled: false
+    ## @param global.customCA.certificate PEM-encoded CA certificate to trust (paste the full certificate content here). Uses an initContainer to merge with system CAs.
+    certificate: ""
+    ## global.customCA.existingConfigMap Reference an existing ConfigMap containing CA certificate(s) under key "ca-certificates.crt"
+    existingConfigMap:
+      ## @param global.customCA.existingConfigMap.name Name of the existing ConfigMap
+      name: ""
+      ## @param global.customCA.existingConfigMap.overrideCAList When true, mounts ConfigMap directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
+      overrideCAList: false
+    ## @param global.customCA.env [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
+    env: {}
+    # Example:
+    # env:
+    #   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+    #   REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+    ## global.customCA.emptyDir EmptyDir configuration for volumes used in custom CA injection
+    emptyDir:
+      sslCerts:
+        ## @param global.customCA.emptyDir.sslCerts.sizeLimit Size limit for the ssl-certs emptyDir volume
+        sizeLimit: ""
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
+    securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
+    image:
+      ## @param global.customCA.image.registry Registry for the CA certificates initContainer image
+      registry: "tfy.jfrog.io"
+      ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
+      repository: "tfy-mirror/alpine"
+      ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
+      tag: "3.21"
 
 ## @section Configuration parameters
 ## Parameters to configure tfyAgent and tfyAgentProxy
