@@ -24,12 +24,21 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "sds-server.serviceAccountName" . }}
+      {{- if and .Values.global.customCA.enabled (eq (include "tfy-agent.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "tfy-agent.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       {{- with .Values.sdsServer.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- toYaml .Values.sdsServer.extraVolumes | nindent 8 }}
+        {{- with .Values.sdsServer.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.global.customCA.enabled }}
+        {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
+        {{- end }}
       {{- with .Values.sdsServer.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -75,6 +84,10 @@ spec:
             {{- with .Values.sdsServer.resources }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+          {{- if .Values.global.customCA.enabled }}
+          volumeMounts:
+            {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
+          {{- end }}
       topologySpreadConstraints:
         {{- with .Values.sdsServer.topologySpreadConstraints }}
         {{- toYaml . | nindent 8 }}
