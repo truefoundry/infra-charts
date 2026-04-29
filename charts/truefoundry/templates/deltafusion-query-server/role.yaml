@@ -1,0 +1,19 @@
+{{- if and .Values.global.wif.enabled (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) .Values.deltaFusionQueryServer.enabled .Values.deltaFusionQueryServer.serviceAccount.create .Values.deltaFusionQueryServer.serviceAccount.name -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "deltafusion-query-server.fullname" . }}-wif
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "deltafusion-query-server.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "deltafusion-query-server.commonAnnotations" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "truefoundry.fullname" . }}-wif
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "deltafusion-query-server.serviceAccountName" . }}
+    namespace: {{ include "global.namespace" . }}
+{{- end }}

@@ -40,14 +40,14 @@ EOF
 # Get required version for a tool
 get_tool_required_version() {
     case $1 in
-        terraform) echo "1.10.1" ;;
-        tofu) echo "1.10.6" ;;
-        kubectl) echo "1.31.8" ;;
-        helm) echo "3.17.3" ;;
-        jq) echo "1.7.1" ;;
-        aws) echo "2.17.0" ;;
-        gcloud) echo "500.0.0" ;;
-        az) echo "2.67.0" ;;
+        terraform) echo "1.14.8" ;;
+        tofu) echo "1.11.6" ;;
+        kubectl) echo "1.35.3" ;;
+        helm) echo "4.1.4" ;;
+        jq) echo "1.8.1" ;;
+        aws) echo "2.34.32" ;;
+        gcloud) echo "565.0.0" ;;
+        az) echo "2.85.0" ;;
         gke-gcloud-auth-plugin) echo "0.0.1" ;;
         *) echo "0.0.0" ;;  # Default case
     esac

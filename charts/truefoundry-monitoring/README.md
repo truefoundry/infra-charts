@@ -109,3 +109,25 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 | `grafana.affinity`                                              | Affinity for Grafana pods                                        | `{}`                                      |
 | `grafana.tolerations`                                           | Tolerations for Grafana pods                                     | `[]`                                      |
 | `grafana.nodeSelector`                                          | Node selector for Grafana pods                                   | `{}`                                      |
+
+### tfy-nats-ui (NATS UI dashboard) configuration
+
+| Name                               | Description                                                                        | Value                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ |
+| `tfyNatsUi.enabled`                | Enable tfy-nats-ui                                                                 | `true`                                     |
+| `tfyNatsUi.nameOverride`           | Override the component name used in labels and the Deployment name                 | `""`                                       |
+| `tfyNatsUi.fullnameOverride`       | If set, overrides the Deployment full name (leave empty for <release>-tfy-nats-ui) | `""`                                       |
+| `tfyNatsUi.replicaCount`           | Number of replicas                                                                 | `1`                                        |
+| `tfyNatsUi.imagePullPolicy`        | Image pull policy                                                                  | `IfNotPresent`                             |
+| `tfyNatsUi.imagePullSecrets`       | Image pull secrets for this workload                                               | `[]`                                       |
+| `tfyNatsUi.envSecretName`          | Secret name for shorthand ${k8s-secret/<key>} entries in env                       | `""`                                       |
+| `tfyNatsUi.natsUrl`                | Value for NATS_URL when env is empty                                               | `http://{{ .Release.Name }}-tfy-nats:4222` |
+| `tfyNatsUi.accountSeedSecret.name` | Existing Secret name when env is empty                                             | `truefoundry-tfy-nats-secret`              |
+| `tfyNatsUi.accountSeedSecret.key`  | Key inside the Secret                                                              | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
+| `tfyNatsUi.extraEnv`               | Extra environment variables for the container                                      | `[]`                                       |
+| `tfyNatsUi.resources`              | Container resources                                                                | `{}`                                       |
+| `tfyNatsUi.podSecurityContext`     | Pod security context                                                               | `{}`                                       |
+| `tfyNatsUi.securityContext`        | Container security context                                                         | `{}`                                       |
+| `tfyNatsUi.nodeSelector`           | Node selector                                                                      | `{}`                                       |
+| `tfyNatsUi.tolerations`            | Tolerations                                                                        | `[]`                                       |
+| `tfyNatsUi.affinity`               | Affinity                                                                           | `{}`                                       |

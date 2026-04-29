@@ -1,0 +1,71 @@
+## @section Global parameters for Various Configurations
+global:
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
+## @param enabled Deploy NATS UI Deployment and Service
+enabled: false
+## @param nameOverride Override the component name used in labels and the Deployment name
+nameOverride: ""
+## @param fullnameOverride If set, overrides the Deployment full name (leave empty for <release>-tfy-nats-ui)
+fullnameOverride: ""
+## @param replicaCount Number of replicas
+replicaCount: 1
+## @param image.registry Image registry (optional)
+image:
+  registry: "tfy.jfrog.io"
+  ## @param image.repository Container image repository (required when enabled)
+  repository: "tfy-private-images/nats-ui-dashboard"
+  ## @param image.tag Image tag
+  tag: "78859f0304fc2081e835db5cfe7ba241f059fac6"
+## @param imagePullPolicy Image pull policy
+imagePullPolicy: IfNotPresent
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated ServiceAccount
+  create: false
+  ## @param serviceAccount.name Override ServiceAccount name (defaults to fullname when create is true; when create is false defaults to the cluster default unless set)
+  name: ""
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+  ## @param serviceAccount.labels [object] Extra labels for the ServiceAccount
+  labels: {}
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token into the pod (only used when create is true)
+  automountServiceAccountToken: false
+## @param env [object] If non-empty, replaces natsUrl/accountSeedSecret wiring. Values are passed through tpl(); use ${k8s-secret/<secret>/<key>} or ${k8s-secret/<key>} with envSecretName (same pattern as truefoundry servicefoundryServer.env).
+env: {}
+## @param envSecretName Secret name for shorthand ${k8s-secret/<key>} entries in env
+envSecretName: ""
+## @param natsUrl Value for NATS_URL when env is empty
+natsUrl: "http://{{ .Release.Name }}-tfy-nats:4222"
+## @param accountSeedSecret.name Existing Secret name when env is empty
+## @param accountSeedSecret.key Key inside the Secret
+accountSeedSecret:
+  name: "truefoundry-tfy-nats-secret"
+  key: NATS_CONTROLPLANE_ACCOUNT_SEED
+## @param service.name Kubernetes Service metadata.name (defaults to tfy-nats-ui)
+## @param service.type Service type
+## @param service.port Service port
+## @param service.targetPort Container port (defaults to service.port)
+## @param service.annotations [object] Service annotations
+service:
+  name: tfy-nats-ui
+  type: ClusterIP
+  port: 8080
+  targetPort: ""
+  annotations: {}
+## @param extraEnv [array] Extra environment variables for the container
+extraEnv: []
+## @param resources [object] Container resources
+resources: {}
+## @param podSecurityContext [object] Pod security context
+podSecurityContext: {}
+## @param securityContext [object] Container security context
+securityContext: {}
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+## @param tolerations [array] Tolerations
+tolerations: []
+## @param affinity [object] Affinity
+affinity: {}

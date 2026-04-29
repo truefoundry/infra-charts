@@ -1,0 +1,252 @@
+## @section Configuration values for tfy-sandbox-server
+
+global:
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
+  ## @param global.image.registry Global image registry override
+  image:
+    registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
+  ## @param global.affinity [object] Affinity rules for pod scheduling on a node
+  affinity: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
+  ## @param global.tolerations [array] Tolerations for pod scheduling on a node
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.name Service account name
+    name: ""
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
+  ## global.customCA Custom CA certificate configuration
+  customCA:
+    ## @param global.customCA.enabled Bool to enable custom CA certificate injection
+    enabled: false
+    ## @param global.customCA.certificate PEM-encoded CA certificate to trust (paste the full certificate content here). Uses an initContainer to merge with system CAs.
+    certificate: ""
+    ## global.customCA.existingConfigMap Reference an existing ConfigMap containing CA certificate(s) under key "ca-certificates.crt"
+    existingConfigMap:
+      ## @param global.customCA.existingConfigMap.name Name of the existing ConfigMap
+      name: ""
+      ## @param global.customCA.existingConfigMap.overrideCAList When true, mounts ConfigMap directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
+      overrideCAList: false
+    ## @param global.customCA.env [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
+    env: {}
+    ## global.customCA.emptyDir EmptyDir configuration for volumes used in custom CA injection
+    emptyDir:
+      sslCerts:
+        ## @param global.customCA.emptyDir.sslCerts.sizeLimit Size limit for the ssl-certs emptyDir volume
+        sizeLimit: ""
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
+    securityContext:
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
+    image:
+      ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)
+      registry: ""
+      ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
+      repository: "tfy-mirror/alpine"
+      ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
+      tag: "3.21"
+## @param nameOverride Name override
+nameOverride: ""
+## @param fullnameOverride Full name override
+fullnameOverride: ""
+## @param commonLabels [object] Common labels added to all resources
+commonLabels: {}
+## @param commonAnnotations [object] Common annotations added to all resources
+commonAnnotations: {}
+## Image configuration
+image:
+  ## @param image.registry Image registry for tfy-sandbox-server (defaults to global.image.registry if not set)
+  registry: ""
+  ## @param image.repository Image repository for tfy-sandbox-server
+  repository: tfy-images/tfy-sandbox-server
+  ## @param image.tag Image tag for tfy-sandbox-server
+  tag: "v0.1.0"
+## @param imagePullPolicy Image pull policy
+imagePullPolicy: IfNotPresent
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+## Sandbox configuration
+sandbox:
+  ## @param sandbox.rootDir Root directory for sandbox workspaces
+  rootDir: /data/sandboxes
+## Persistence configuration
+persistence:
+  ## @param persistence.enabled Enable persistent storage for sandbox data
+  enabled: true
+  ## @param persistence.size Volume size
+  size: 50Gi
+  ## @param persistence.storageClassName Storage class name (empty string uses cluster default)
+  storageClassName: ""
+  ## @param persistence.accessModes [array] Volume access modes
+  accessModes:
+    - ReadWriteOnce
+  ## @param persistence.mountPath Mount path for the volume
+  mountPath: /data/sandboxes
+## @param replicaCount Number of replicas (1 recommended — EBS is RWO)
+replicaCount: 1
+## @param strategy [object] Deployment strategy (Recreate recommended for RWO volumes)
+strategy:
+  type: Recreate
+## @param extraEnv [array] Extra environment variables for the sandbox server container
+extraEnv: []
+## PodDisruptionBudget configuration
+pdb:
+  ## @param pdb.enabled Create a PodDisruptionBudget
+  enabled: false
+  ## @param pdb.minAvailable Minimum available replicas
+  minAvailable: 1
+  ## @param pdb.labels [object] PDB labels
+  labels: {}
+  ## @param pdb.annotations [object] PDB annotations
+  annotations: {}
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated service account
+  create: false
+  ## @param serviceAccount.name Service account name
+  name: ""
+  ## @param serviceAccount.labels [object] Service account labels
+  labels: {}
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+## Service configuration
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 8080
+  ## @param service.labels [object] Service labels
+  labels: {}
+  ## @param service.annotations [object] Service annotations
+  annotations: {}
+## Health probe configuration
+probes:
+  ## probes.startup Startup probe configuration
+  startup:
+    ## @param probes.startup.enabled Enable the startup probe
+    enabled: true
+    ## @param probes.startup.path Startup probe HTTP path
+    path: /health
+    ## @param probes.startup.initialDelaySeconds Startup probe initial delay in seconds
+    initialDelaySeconds: 0
+    ## @param probes.startup.periodSeconds Startup probe period in seconds
+    periodSeconds: 10
+    ## @param probes.startup.timeoutSeconds Startup probe timeout in seconds
+    timeoutSeconds: 1
+    ## @param probes.startup.failureThreshold Startup probe failure threshold
+    failureThreshold: 3
+  ## probes.liveness Liveness probe configuration
+  liveness:
+    ## @param probes.liveness.enabled Enable the liveness probe
+    enabled: true
+    ## @param probes.liveness.path Liveness probe HTTP path
+    path: /health
+    ## @param probes.liveness.initialDelaySeconds Liveness probe initial delay in seconds
+    initialDelaySeconds: 0
+    ## @param probes.liveness.periodSeconds Liveness probe period in seconds
+    periodSeconds: 10
+    ## @param probes.liveness.timeoutSeconds Liveness probe timeout in seconds
+    timeoutSeconds: 1
+    ## @param probes.liveness.failureThreshold Liveness probe failure threshold
+    failureThreshold: 3
+  ## probes.readiness Readiness probe configuration
+  readiness:
+    ## @param probes.readiness.enabled Enable the readiness probe
+    enabled: true
+    ## @param probes.readiness.path Readiness probe HTTP path
+    path: /health
+    ## @param probes.readiness.initialDelaySeconds Readiness probe initial delay in seconds
+    initialDelaySeconds: 0
+    ## @param probes.readiness.periodSeconds Readiness probe period in seconds
+    periodSeconds: 10
+    ## @param probes.readiness.timeoutSeconds Readiness probe timeout in seconds
+    timeoutSeconds: 1
+    ## @param probes.readiness.failureThreshold Readiness probe failure threshold
+    failureThreshold: 3
+## @skip resources
+resources:
+  requests:
+    cpu: 500m
+    memory: 200Mi
+    ephemeral-storage: 1Gi
+  limits:
+    cpu: "1"
+    memory: 500Mi
+    ephemeral-storage: 2Gi
+## @param podSecurityContext [object] Pod security context
+podSecurityContext: {}
+## @param securityContext [object] Container security context
+securityContext: {}
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+## @param tolerations [array] Tolerations
+tolerations: []
+## @skip affinity Affinity rules (default: avoid spot/preemptible nodes across all cloud providers)
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: karpenter.sh/capacity-type
+              operator: NotIn
+              values:
+                - spot
+            - key: eks.amazonaws.com/capacityType
+              operator: NotIn
+              values:
+                - SPOT
+            - key: cloud.google.com/gke-provisioning
+              operator: NotIn
+              values:
+                - spot
+            - key: kubernetes.azure.com/scalesetpriority
+              operator: NotIn
+              values:
+                - spot
+## @param topologySpreadConstraints [array] Topology spread constraints
+topologySpreadConstraints: []
+## @param priorityClassName PriorityClass name
+priorityClassName: ""
+## @param terminationGracePeriodSeconds Termination grace period
+terminationGracePeriodSeconds: 30
+## @param podLabels [object] Pod labels
+podLabels: {}
+## @param podAnnotations [object] Pod annotations
+podAnnotations: {}
+## @param deploymentLabels [object] Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations [object] Deployment annotations
+deploymentAnnotations: {}
+## @param extraVolumes [array] Extra volumes
+extraVolumes: []
+## @param extraVolumeMounts [array] Extra volume mounts
+extraVolumeMounts: []
+## @param extraManifests [array] Extra manifests
+extraManifests: []
