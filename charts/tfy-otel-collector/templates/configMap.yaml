@@ -31,7 +31,8 @@ data:
           config:
             enabled: true
             path: "/health/config"
-
+      pprof:
+    
     receivers:
       otlp:
         protocols:
@@ -59,14 +60,14 @@ data:
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-        tfy_otel_exporter_worker_count: ${env:TFY_OTEL_EXPORTER_WORKER_COUNT:-1}
-        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-5s}
-        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE:-200}
-        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-100000}
+        tfy_otel_exporter_worker_count: ${env:TFY_OTEL_EXPORTER_WORKER_COUNT:-4}
+        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-500ms}
+        tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE:-10}
+        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-1000}
         tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT:-60s}
         tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES:-3}
         tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
-        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-1s}
+        tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-200ms}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
         retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
@@ -76,9 +77,9 @@ data:
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-5s}
+        tfy_otel_exporter_batch_window: ${env:TFY_OTEL_EXPORTER_BATCH_WINDOW:-2s}
         tfy_otel_exporter_batch_size: ${env:TFY_OTEL_EXPORTER_BATCH_SIZE:-200}
-        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-100000}
+        tfy_otel_exporter_queue_size: ${env:TFY_OTEL_EXPORTER_QUEUE_SIZE:-100}
         tfy_otel_exporter_request_timeout: ${env:TFY_OTEL_EXPORTER_REQUEST_TIMEOUT:-60s}
         tfy_otel_exporter_request_max_retries: ${env:TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES:-3}
         tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
@@ -88,17 +89,20 @@ data:
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
     processors:
       batch:
-        timeout: 5s
-        send_batch_size: 5000
-      resource: # trace level attributes
+        timeout: 2s
+        send_batch_size: 200
+      resource: # resource span level attributes
         attributes:
           - key: Authorization
             from_context: authorization
             action: upsert
           - key: tfycreatedbysubject
             from_context: auth.tfysubject
-            action: upsert    
-          - key: tfytenantname
+            action: upsert
+          - key: tfytenantname  # rbac / tenant check; tfy.request.tenant_name is grouped onto resource via groupbyattrs
+            from_context: auth.tfytenant
+            action: upsert
+          - key: tfy.request.tenant_name
             from_context: auth.tfytenant
             action: upsert
           - key: tfyproject
@@ -110,8 +114,30 @@ data:
           - key: istfyllmgateway
             from_context: auth.istfyllmgateway
             action: upsert
+      groupbyattrs:
+        keys:
+          - tfy.request.tenant_name
+      filter:
+        error_mode: ignore
+        # for non gateway spans, tfytenantname is must, if not present, then drop the span
+        # for gateway spans, tfy.request.tenant_name is must, if not present, then drop the span
+        # for gateway spans, tfy.request.tenant_name must be equal to tfytenantname, if tfytenantname is present
+        traces:
+          span:
+            - '(resource.attributes["istfyllmgateway"] == "false" and resource.attributes["tfytenantname"] == "")'
+            - '(resource.attributes["istfyllmgateway"] == "true" and attributes["tfy.request.tenant_name"] == "")'
+            - '(resource.attributes["istfyllmgateway"] == "true" and resource.attributes["tfytenantname"] != "" and attributes["tfy.request.tenant_name"] != resource.attributes["tfytenantname"])'
+      transform:
+        error_mode: ignore
+        trace_statements:
+          - context: span
+            statements:
+              # Error spans, Model gateway type, default tfy.error_type when unset (missing key => nil in OTTL)
+              - set(attributes["tfy.error_type"], "unknown") where status.code == STATUS_CODE_ERROR and attributes["tfy.span_type"] == "Model" and attributes["tfy.error_type"] == nil
     service:
       telemetry:
+        logs:
+          level: "${env:LOG_LEVEL:-DEBUG}"
         metrics:
           readers:
             - pull:
@@ -125,7 +151,7 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [resource, batch]
+          processors: [resource, filter, groupbyattrs, transform, batch] # resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]

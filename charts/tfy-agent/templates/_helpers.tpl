@@ -455,3 +455,121 @@ Merge order: commonAnnotations < serviceAccount.annotations (highest)
 {{- toYaml . }}
 {{- end }}
 {{- end }}
+
+{{/*
+  Custom CA validation
+*/}}
+{{- define "tfy-agent.customCA.validate" -}}
+{{- if and .Values.global.customCA.enabled (not .Values.global.customCA.certificate) (not .Values.global.customCA.existingConfigMap.name) -}}
+{{- fail "global.customCA.enabled is true but neither global.customCA.certificate nor global.customCA.existingConfigMap.name is set. Provide one of them." -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Whether to use direct mount (true) or initContainer merge (false)
+*/}}
+{{- define "tfy-agent.customCA.useDirectMount" -}}
+{{- if and .Values.global.customCA.existingConfigMap.name .Values.global.customCA.existingConfigMap.overrideCAList -}}
+true
+{{- else -}}
+false
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA ConfigMap name
+*/}}
+{{- define "tfy-agent.customCA.configMapName" -}}
+{{- include "tfy-agent.customCA.validate" . -}}
+{{- if .Values.global.customCA.existingConfigMap.name -}}
+{{- .Values.global.customCA.existingConfigMap.name -}}
+{{- else -}}
+{{- include "tfy-agent.fullname" . }}-custom-ca
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Custom CA initContainer (only when not using direct mount)
+*/}}
+{{- define "tfy-agent.customCA.initContainer" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-agent.customCA.useDirectMount" .) "false" }}
+- name: configure-custom-ca
+  image: "{{ .Values.global.customCA.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  {{- with .Values.global.customCA.securityContext }}
+  securityContext:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  command: ["sh", "-c"]
+  args:
+    - |
+      set -e
+      cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
+  {{- with .Values.global.customCA.env }}
+  env:
+    {{- range $key, $val := . }}
+    - name: {{ $key }}
+      value: {{ $val | quote }}
+    {{- end }}
+  {{- end }}
+  volumeMounts:
+    - name: custom-ca
+      mountPath: /custom-ca
+      readOnly: true
+    - name: ssl-certs
+      mountPath: /ssl-certs
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volumes
+  - Direct mount: just the ConfigMap
+  - InitContainer merge: ConfigMap + emptyDir
+*/}}
+{{- define "tfy-agent.customCA.volumes" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-agent.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-agent.customCA.configMapName" . }}
+{{- else }}
+- name: custom-ca
+  configMap:
+    name: {{ include "tfy-agent.customCA.configMapName" . }}
+- name: ssl-certs
+  emptyDir:
+    sizeLimit: {{ .Values.global.customCA.emptyDir.sslCerts.sizeLimit | default "10Mi" }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA volume mounts for app containers
+  - Direct mount: ConfigMap mounted at /etc/ssl/certs
+  - InitContainer merge: emptyDir mounted at /etc/ssl/certs
+*/}}
+{{- define "tfy-agent.customCA.volumeMounts" -}}
+{{- if .Values.global.customCA.enabled }}
+{{- if eq (include "tfy-agent.customCA.useDirectMount" .) "true" }}
+- name: custom-ca
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- else }}
+- name: ssl-certs
+  mountPath: /etc/ssl/certs
+  readOnly: true
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Custom CA environment variables for Node.js based containers (tfyAgent, tfyAgentProxy).
+  Node.js bundles its own CA store and ignores the system bundle, so it must be told to load the merged file.
+*/}}
+{{- define "tfy-agent.customCA.nodeEnv" -}}
+{{- if .Values.global.customCA.enabled }}
+- name: NODE_EXTRA_CA_CERTS
+  value: /etc/ssl/certs/ca-certificates.crt
+{{- end }}
+{{- end -}}

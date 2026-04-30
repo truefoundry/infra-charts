@@ -8,7 +8,11 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.140.0-rc.1"
+  gatewayChartVersion: "0.141.0-rc.2"
+  ## global.multitenant Multitenant configuration
+  multitenant:
+    ## @param global.multitenant.enabled Enable multitenant env injection
+    enabled: false
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -95,7 +99,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.140.0-rc.1
+  tag: v0.141.0-rc.2
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -342,7 +346,7 @@ redis:
       ## @param redis.global.security.allowInsecureImages Allow insecure images
       allowInsecureImages: true
   ## @param redis.enabled Enable Redis dependency
-  enabled: false
+  enabled: true
   ## redis.auth Authentication configuration
   auth:
     ## @param redis.auth.enabled Enable Redis authentication
@@ -370,6 +374,9 @@ redis:
       - key: class.truefoundry.io/control-plane
         effect: NoSchedule
         operator: Exists
+      - key: class.truefoundry.com/component
+        value: critical
+        effect: NoSchedule
     ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
     affinity:
       nodeAffinity:
