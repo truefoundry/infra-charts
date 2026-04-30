@@ -55,8 +55,8 @@ Bundled monitoring dashboards for TrueFoundry: NATS UI, Metrics Dashboard, and H
 | `tfyMetricsDashboard.nameOverride`                                | Override the component name used in labels and the Deployment name | `""`                                       |
 | `tfyMetricsDashboard.fullnameOverride`                            | If set, overrides the Deployment full name                         | `""`                                       |
 | `tfyMetricsDashboard.replicaCount`                                | Number of replicas                                                 | `1`                                        |
-| `tfyMetricsDashboard.image.registry`                              | Image registry                                                     | `ghcr.io`                                  |
-| `tfyMetricsDashboard.image.repository`                            | Container image repository (path within registry)                  | `truefoundry/tfy-metrics-dashboard`        |
+| `tfyMetricsDashboard.image.registry`                              | Image registry                                                     | `tfy.jfrog.io`                             |
+| `tfyMetricsDashboard.image.repository`                            | Container image repository (path within registry)                  | `tfy-private-images/tfy-metrics-dashboard` |
 | `tfyMetricsDashboard.image.tag`                                   | Image tag                                                          | `78049faac40e566f3d7014a39a310593254c69c8` |
 | `tfyMetricsDashboard.imagePullPolicy`                             | Image pull policy                                                  | `IfNotPresent`                             |
 | `tfyMetricsDashboard.serviceAccount.create`                       | Create a dedicated ServiceAccount                                  | `false`                                    |
