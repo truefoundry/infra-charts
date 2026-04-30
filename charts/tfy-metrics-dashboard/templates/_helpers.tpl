@@ -1,3 +1,7 @@
+{{- define "tfy-metrics-dashboard.name" -}}
+{{- default "tfy-metrics-dashboard" .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
 {{- define "tfy-metrics-dashboard.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
@@ -12,7 +16,7 @@
 {{- end }}
 
 {{- define "tfy-metrics-dashboard.selectorLabels" -}}
-app.kubernetes.io/name: tfy-metrics-dashboard
+app.kubernetes.io/name: {{ include "tfy-metrics-dashboard.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
@@ -28,6 +32,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- printf "%s/%s:%s" .Values.image.registry .Values.image.repository $tag -}}
 {{- else -}}
 {{- printf "%s:%s" .Values.image.repository $tag -}}
+{{- end -}}
+{{- end }}
+
+{{- define "tfy-metrics-dashboard.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+{{- default (include "tfy-metrics-dashboard.fullname" .) .Values.serviceAccount.name -}}
+{{- else -}}
+{{- default "default" .Values.serviceAccount.name -}}
 {{- end -}}
 {{- end }}
 

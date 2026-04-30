@@ -18,6 +18,7 @@ spec:
       labels:
         {{- include "tfy-metrics-dashboard.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "tfy-metrics-dashboard.serviceAccountName" . }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

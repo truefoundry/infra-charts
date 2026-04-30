@@ -15,6 +15,17 @@ image:
   tag: "78049faac40e566f3d7014a39a310593254c69c8"
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
+## @param serviceAccount.create Create a dedicated ServiceAccount
+serviceAccount:
+  create: false
+  ## @param serviceAccount.name Override ServiceAccount name (defaults to fullname when create is true; when create is false defaults to the cluster default unless set)
+  name: ""
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+  ## @param serviceAccount.labels [object] Extra labels for the ServiceAccount
+  labels: {}
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token into the pod (only used when create is true)
+  automountServiceAccountToken: false
 ## @param imagePullSecrets [array] Image pull secrets
 imagePullSecrets: []
 ## @param podSecurityContext [object] Pod-level security context
