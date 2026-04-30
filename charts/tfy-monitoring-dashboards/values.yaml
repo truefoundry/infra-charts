@@ -135,8 +135,11 @@ tfyMetricsDashboard:
 headlamp:
   ## @param headlamp.enabled Deploy Headlamp
   enabled: false
-  ## @param headlamp.clusterRoleBinding.create Create the ClusterRoleBinding (and ClusterRole) for read-only access. Set false to manage RBAC externally.
+  ## @param headlamp.clusterRoleBinding.create Disabled — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. RBAC is managed by this chart via readOnlyRbac below.
   clusterRoleBinding:
+    create: false
+  ## @param headlamp.readOnlyRbac.create Create a read-only ClusterRole and ClusterRoleBinding (get/list/watch on all resources) bound to the headlamp ServiceAccount.
+  readOnlyRbac:
     create: true
   config:
     ## @param headlamp.config.pluginsDir Directory for Headlamp plugins
@@ -147,13 +150,13 @@ headlamp:
   ## @param headlamp.service.port Service port for Headlamp
   service:
     port: 4466
-  ## Inject token via projected volume so Headlamp auto-authenticates without a login screen.
-  ## The service account token is mounted at /var/run/secrets/kubernetes.io/serviceaccount/token,
-  ## and headlamp reads it via the KUBECONFIG / tokenFile mechanism.
+  ## Projected volume that injects the service account token so Headlamp auto-authenticates without a login screen.
+  ## @skip headlamp.volumeMounts
   volumeMounts:
     - name: sa-token
       mountPath: /var/run/secrets/kubernetes.io/serviceaccount
       readOnly: true
+  ## @skip headlamp.volumes
   volumes:
     - name: sa-token
       projected:
