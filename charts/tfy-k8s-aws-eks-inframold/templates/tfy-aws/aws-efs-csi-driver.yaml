@@ -14,7 +14,7 @@ spec:
     namespace: aws-efs-csi-driver
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: https://kubernetes-sigs.github.io/aws-efs-csi-driver/
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/aws-efs-csi-driver{{ else }}https://kubernetes-sigs.github.io/aws-efs-csi-driver/{{ end }}
     targetRevision: 3.2.6
     chart: aws-efs-csi-driver
     helm:

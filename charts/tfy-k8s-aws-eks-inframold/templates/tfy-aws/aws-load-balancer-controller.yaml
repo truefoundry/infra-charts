@@ -16,7 +16,7 @@ spec:
     namespace: aws-load-balancer-controller
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: "https://aws.github.io/eks-charts"
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/eks-charts{{ else }}https://aws.github.io/eks-charts{{ end }}
     targetRevision: 1.16.0
     chart: aws-load-balancer-controller
     helm:

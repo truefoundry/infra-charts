@@ -16,7 +16,7 @@ spec:
   project: tfy-apps
   source:
     targetRevision: 2.2.1
-    repoURL: "https://kubeflow.github.io/spark-operator"
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/spark-operator{{ else }}https://kubeflow.github.io/spark-operator{{ end }}
     chart: spark-operator
     helm:
       values: |-

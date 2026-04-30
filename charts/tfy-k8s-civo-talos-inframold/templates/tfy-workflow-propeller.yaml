@@ -15,7 +15,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     targetRevision: 0.1.0
-    repoURL: "tfy.jfrog.io/tfy-helm"
+    repoURL: {{ (.Values.global | default dict).repoURL | default "tfy.jfrog.io/tfy-helm" }}
     chart: tfy-workflow-propeller
     helm:
       values: |-

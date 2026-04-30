@@ -14,7 +14,7 @@ spec:
     namespace: tfy-logs
     server: "https://kubernetes.default.svc"
   source:
-    repoURL: https://truefoundry.github.io/infra-charts/
+    repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
     targetRevision: 0.1.19
     chart: tfy-logs
     helm:

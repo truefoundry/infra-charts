@@ -16,7 +16,7 @@ spec:
     namespace: aws-ebs-csi-driver
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/aws-ebs-csi-driver{{ else }}https://kubernetes-sigs.github.io/aws-ebs-csi-driver{{ end }}
     targetRevision: 2.54.1
     chart: aws-ebs-csi-driver
     helm:

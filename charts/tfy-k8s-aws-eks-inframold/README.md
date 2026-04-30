@@ -5,15 +5,16 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### Global Parameters
 
-| Name               | Description                                          | Value |
-| ------------------ | ---------------------------------------------------- | ----- |
-| `tenantName`       | Parameters for tenantName                            | `""`  |
-| `controlPlaneURL`  | Parameters for controlPlaneURL                       | `""`  |
-| `clusterName`      | Name of the cluster                                  | `""`  |
-| `registry`         | registry to override in the chart components         | `""`  |
-| `imagePullSecrets` | imagePullSecrets to override in the chart components | `[]`  |
-| `tolerations`      | Tolerations for the all chart components             | `[]`  |
-| `affinity`         | Affinity for the all chart components                | `{}`  |
+| Name               | Description                                                | Value |
+| ------------------ | ---------------------------------------------------------- | ----- |
+| `global.repoURL`   | Override chart repository URL for all Argo CD Applications | `""`  |
+| `tenantName`       | Parameters for tenantName                                  | `""`  |
+| `controlPlaneURL`  | Parameters for controlPlaneURL                             | `""`  |
+| `clusterName`      | Name of the cluster                                        | `""`  |
+| `registry`         | registry to override in the chart components               | `""`  |
+| `imagePullSecrets` | imagePullSecrets to override in the chart components       | `[]`  |
+| `tolerations`      | Tolerations for the all chart components                   | `[]`  |
+| `affinity`         | Affinity for the all chart components                      | `{}`  |
 
 ### argocd parameters
 
