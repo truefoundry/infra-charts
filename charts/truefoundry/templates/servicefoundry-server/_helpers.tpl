@@ -260,22 +260,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: LLM_CODE_SNIPPET_TEMPLATE_DIRECTORY
   value: /opt/truefoundry/configs/llm-gateway/code-snippet
 {{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.servicefoundryServer.env "MULTITENANT")) }}
-- name: MULTITENANT
-  value: "true"
-{{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.servicefoundryServer.env "FE_MULTITENANT_ENABLED")) }}
-- name: FE_MULTITENANT_ENABLED
-  value: "true"
-{{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.servicefoundryServer.env "TENANT_HOST_CONTROL_PLANE_BASE_DOMAIN")) }}
-- name: TENANT_HOST_CONTROL_PLANE_BASE_DOMAIN
-  value: {{ (urlParse .Values.global.controlPlaneURL).host | quote }}
-{{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.servicefoundryServer.env "FE_TENANT_BASE_DOMAIN")) }}
-- name: FE_TENANT_BASE_DOMAIN
-  value: {{ (urlParse .Values.global.controlPlaneURL).host | quote }}
-{{- end }}
 {{- if .Values.tfyBuild.jobTemplate.enabled }}
 - name: BUILD_JOB_TEMPLATE_PATH
   value: /opt/truefoundry/configs/build-job-template/build-job-template.yaml
