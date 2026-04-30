@@ -14,7 +14,7 @@ spec:
     namespace: kube-system
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: 'https://kubernetes-sigs.github.io/metrics-server/'
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/metrics-server{{ else }}https://kubernetes-sigs.github.io/metrics-server/{{ end }}
     targetRevision: 3.13.0
     chart: metrics-server
     helm:

@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    repoURL: https://truefoundry.github.io/infra-charts/
+    repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
     chart: tfy-gpu-operator
     targetRevision: 0.4.7
     helm:

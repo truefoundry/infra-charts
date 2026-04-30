@@ -16,7 +16,7 @@ spec:
   project: tfy-apps
   source:
     chart: tfy-jspolicy-config
-    repoURL: "https://truefoundry.github.io/infra-charts/"
+    repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
     targetRevision: 0.2.4
     helm:
       {{- if .Values.jspolicy.config.valuesOverride }}

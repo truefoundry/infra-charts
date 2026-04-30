@@ -1,4 +1,24 @@
 ## @section Global Parameters
+
+## @param global.repoURL Override chart repository URL for all Argo CD Applications
+## When set (e.g. "tfy.jfrog.io/tfy-helm"), the rendered Application spec.source.repoURL is:
+##   - <global.repoURL> for TrueFoundry-owned charts (truefoundry, tfy-*, infra-charts, elasti, cert-manager, jspolicy)
+##   - <global.repoURL>/<suffix> for third-party charts, where <suffix> is the last
+##     path segment of the upstream chart repo URL:
+##       /argo-helm           (argocd, argo-rollouts, argo-workflows)
+##       /charts              (istio base/istiod, keda)
+##       /eks-charts          (aws-load-balancer-controller)
+##       /aws-ebs-csi-driver  (aws-ebs-csi-driver)
+##       /aws-efs-csi-driver  (aws-efs-csi-driver)
+##       /metrics-server      (metrics-server)
+##       /helm-charts         (kube-prometheus-stack)
+##       /spark-operator      (spark-operator)
+## The mirror must expose all required (sub-path, chart, version) tuples.
+## When empty (default), each Application falls back to its original upstream URL.
+##
+global:
+  repoURL: ""
+
 ## @param tenantName Parameters for tenantName
 ## Tenant Name - This is same as the name of the organization used to sign up
 ## on Truefoundry

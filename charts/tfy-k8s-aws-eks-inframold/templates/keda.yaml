@@ -16,7 +16,7 @@ spec:
   project: tfy-apps
   source:
     chart: keda
-    repoURL: "https://kedacore.github.io/charts"
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/charts{{ else }}https://kedacore.github.io/charts{{ end }}
     targetRevision: 2.18.3
     helm:
       values: |-

@@ -15,7 +15,7 @@ spec:
     namespace: kube-system
     server: 'https://kubernetes.default.svc'
   source:
-    repoURL: https://truefoundry.github.io/infra-charts/
+    repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
     targetRevision: 0.5.9
     chart: tfy-karpenter
     helm:
