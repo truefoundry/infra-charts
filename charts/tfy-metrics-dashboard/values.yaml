@@ -1,0 +1,36 @@
+## @param enabled Deploy Metrics Dashboard Deployment and Service
+enabled: true
+## @param nameOverride Override the component name used in labels and the Deployment name
+nameOverride: ""
+## @param fullnameOverride If set, overrides the Deployment full name (leave empty for <release>-tfy-metrics-dashboard)
+fullnameOverride: ""
+## @param replicaCount Number of replicas
+replicaCount: 1
+## @param image.registry Image registry (optional, overrides repository prefix)
+image:
+  registry: ""
+  ## @param image.repository Container image repository
+  repository: "ghcr.io/truefoundry/tfy-metrics-dashboard"
+  ## @param image.tag Image tag
+  tag: "78049faac40e566f3d7014a39a310593254c69c8"
+## @param imagePullPolicy Image pull policy
+imagePullPolicy: IfNotPresent
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+## @param podSecurityContext [object] Pod-level security context
+podSecurityContext: {}
+## @param securityContext [object] Container-level security context
+securityContext: {}
+## @param service.type Kubernetes Service type
+service:
+  type: ClusterIP
+  ## @param service.port Kubernetes Service port
+  port: 80
+## @param resources [object] CPU/Memory resource requests/limits
+resources: {}
+## @param nodeSelector [object] Node labels for pod assignment
+nodeSelector: {}
+## @param tolerations [array] Tolerations for pod assignment
+tolerations: []
+## @param affinity [object] Affinity for pod assignment
+affinity: {}
