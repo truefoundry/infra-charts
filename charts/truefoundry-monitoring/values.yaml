@@ -406,7 +406,6 @@ grafana:
 
 ## =============================================================================
 ## @section tfy-nats-ui (NATS UI dashboard) configuration
-## NATS control plane UI subchart. See charts/tfy-nats-ui for template details.
 ## =============================================================================
 tfyNatsUi:
   ## @param tfyNatsUi.enabled Enable tfy-nats-ui
@@ -444,3 +443,95 @@ tfyNatsUi:
   tolerations: []
   ## @param tfyNatsUi.affinity [object] Affinity
   affinity: {}
+## =============================================================================
+## @section tfyMetricsDashboard (TrueFoundry metrics dashboard) configuration
+## =============================================================================
+tfyMetricsDashboard:
+  ## @param tfyMetricsDashboard.enabled Enable the TrueFoundry metrics dashboard
+  enabled: false
+  ## @param tfyMetricsDashboard.nameOverride Override the component name
+  nameOverride: ""
+  ## @param tfyMetricsDashboard.fullnameOverride Override the full resource name
+  fullnameOverride: ""
+  ## @param tfyMetricsDashboard.replicaCount Number of replicas
+  replicaCount: 1
+  image:
+    ## @param tfyMetricsDashboard.image.registry Optional registry prefix override
+    registry: ""
+    ## @param tfyMetricsDashboard.image.repository Image repository
+    repository: "ghcr.io/truefoundry/tfy-metrics-dashboard"
+    ## @param tfyMetricsDashboard.image.tag Image tag
+    tag: "78049faac40e566f3d7014a39a310593254c69c8"
+  ## @param tfyMetricsDashboard.imagePullPolicy Image pull policy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyMetricsDashboard.imagePullSecrets [array] Image pull secrets (overrides global when set)
+  imagePullSecrets: []
+  ## @param tfyMetricsDashboard.podSecurityContext [object] Pod-level security context
+  podSecurityContext: {}
+  ## @param tfyMetricsDashboard.securityContext [object] Container-level security context
+  securityContext: {}
+  service:
+    ## @param tfyMetricsDashboard.service.type Service type
+    type: ClusterIP
+    ## @param tfyMetricsDashboard.service.port Service port
+    port: 80
+  ## @param tfyMetricsDashboard.resources [object] Resource requests and limits
+  resources: {}
+  ## @param tfyMetricsDashboard.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## @param tfyMetricsDashboard.tolerations [array] Tolerations
+  tolerations: []
+  ## @param tfyMetricsDashboard.affinity [object] Affinity
+  affinity: {}
+## =============================================================================
+## @section headlamp (Kubernetes dashboard) configuration
+## Uses the official headlamp/headlamp Helm chart as a subchart.
+## Auth is bypassed via a kubeconfig backed by the pod's SA token (no login page).
+## RBAC is restricted to read-only (get/list/watch) on all resources.
+## =============================================================================
+headlamp:
+  ## @param headlamp.enabled Enable the Headlamp Kubernetes dashboard
+  enabled: false
+  config:
+    inCluster: false
+    extraArgs:
+      - "-kubeconfig=/etc/headlamp/kubeconfig"
+  clusterRoleBinding:
+    create: false
+  serviceAccount:
+    create: true
+    name: "headlamp"
+  volumes:
+    - name: kubeconfig
+      configMap:
+        name: headlamp-kubeconfig
+  volumeMounts:
+    - name: kubeconfig
+      mountPath: /etc/headlamp/kubeconfig
+      subPath: kubeconfig
+      readOnly: true
+  extraManifests:
+    - |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: headlamp-kubeconfig
+      data:
+        kubeconfig: |
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - cluster:
+              certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              server: https://kubernetes.default.svc
+            name: in-cluster
+          contexts:
+          - context:
+              cluster: in-cluster
+              user: headlamp-sa
+            name: in-cluster
+          current-context: in-cluster
+          users:
+          - name: headlamp-sa
+            user:
+              tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token

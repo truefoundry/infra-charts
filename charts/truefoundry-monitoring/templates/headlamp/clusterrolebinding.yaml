@@ -1,0 +1,19 @@
+{{- if .Values.headlamp.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-readonly
+  labels:
+    app.kubernetes.io/part-of: truefoundry-monitoring
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: headlamp-readonly
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.headlamp.serviceAccount.name | default "headlamp" }}
+    namespace: {{ include "truefoundry-monitoring.controlPlaneNamespace" . }}
+{{- end }}

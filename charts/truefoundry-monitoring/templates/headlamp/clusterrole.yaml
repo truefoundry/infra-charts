@@ -1,0 +1,15 @@
+{{- if .Values.headlamp.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: headlamp-readonly
+  labels:
+    app.kubernetes.io/part-of: truefoundry-monitoring
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+{{- end }}
