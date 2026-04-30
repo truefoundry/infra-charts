@@ -136,7 +136,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if .Values.tfyMetricsDashboard.image.registry -}}
 {{- printf "%s/%s:%s" .Values.tfyMetricsDashboard.image.registry .Values.tfyMetricsDashboard.image.repository $tag -}}
 {{- else -}}
-{{- printf "%s/%s:%s" "ghcr.io" .Values.tfyMetricsDashboard.image.repository $tag -}}
+{{- printf "%s:%s" .Values.tfyMetricsDashboard.image.repository $tag -}}
 {{- end -}}
 {{- end }}
 
