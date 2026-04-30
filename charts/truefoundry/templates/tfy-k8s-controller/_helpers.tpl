@@ -194,10 +194,6 @@ Expand the name of the chart.
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.tfyK8sController.env "MULTITENANT")) }}
-- name: MULTITENANT
-  value: "true"
-{{- end }}
 {{- end }}
 
 {{- define "tfy-k8s-controller.volumes" -}}
