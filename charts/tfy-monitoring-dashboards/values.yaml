@@ -135,12 +135,9 @@ tfyMetricsDashboard:
 headlamp:
   ## @param headlamp.enabled Deploy Headlamp
   enabled: false
-  ## @param headlamp.clusterRoleBinding.create Disabled — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. RBAC is managed by this chart via readOnlyRbac below.
+  ## @param headlamp.clusterRoleBinding.create Keep false — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. Read-only RBAC is always created by this chart when headlamp.enabled=true.
   clusterRoleBinding:
     create: false
-  ## @param headlamp.readOnlyRbac.create Create a read-only ClusterRole and ClusterRoleBinding (get/list/watch on all resources) bound to the headlamp ServiceAccount.
-  readOnlyRbac:
-    create: true
   config:
     ## @param headlamp.config.pluginsDir Directory for Headlamp plugins
     pluginsDir: "/headlamp/plugins"
