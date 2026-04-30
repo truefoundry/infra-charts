@@ -212,6 +212,10 @@ Expand the name of the chart.
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
+{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.mlfoundryServer.env "MULTITENANT")) }}
+- name: MULTITENANT
+  value: "true"
+{{- end }}
 - name: K8S_SERVICE_ACCOUNT_NAME
   valueFrom:
     fieldRef:

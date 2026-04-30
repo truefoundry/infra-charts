@@ -24,6 +24,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      {{- if and .Values.global.customCA.enabled (eq (include "tfy-agent.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "tfy-agent.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -75,6 +79,7 @@ spec:
             - name: {{ $val.name }}
               value: {{ $val.value | quote }}
           {{- end }}
+            {{- include "tfy-agent.customCA.nodeEnv" . | nindent 12 }}
           image: "{{ .Values.tfyAgent.image.repository }}:{{ .Values.tfyAgent.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.tfyAgent.image.pullPolicy }}
           ports:
@@ -88,13 +93,23 @@ spec:
           resources:
             {{- toYaml .Values.tfyAgent.resources | nindent 12 }}
           volumeMounts:
-            {{- toYaml .Values.tfyAgent.extraVolumeMounts | nindent 12 }}
+            {{- with .Values.tfyAgent.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.global.customCA.enabled }}
+            {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
+            {{- end }}
       {{- with .Values.tfyAgent.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- toYaml .Values.tfyAgent.extraVolumes | nindent 8 }}
+        {{- with .Values.tfyAgent.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.global.customCA.enabled }}
+        {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
+        {{- end }}
       {{- with .Values.tfyAgent.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
