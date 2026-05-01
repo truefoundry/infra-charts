@@ -229,10 +229,11 @@ def process_and_generate_chart_manifests(chart_info_list):
                 continue
             
             # Adding -optimized images for deltafusion images
-            if image_registry_url.contains('deltafusion-query-server') or image_registry_url.contains('deltafusion-ingestor'):
-                chart_processed_images.append(f"{image_registry_url}-optimized")
-                continue
-                
+            if any(sub in image_registry_url for sub in ['deltafusion-query-server', 'deltafusion-ingestor']):
+                optimized_image_entry = image_entry.copy()
+                optimized_image_entry['details']['registryURL'] = f"{image_registry_url}-optimized"
+                chart_processed_images.append(optimized_image_entry)
+            
             # If the image is already seen before, use that platform info even if empty
             if image_registry_url in known_image_registry_urls:
                 # Reuse the existing platform info, even if empty
