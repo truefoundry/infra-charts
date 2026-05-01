@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import yaml
+import copy
 import sys
 import json
 import subprocess
@@ -230,7 +231,7 @@ def process_and_generate_chart_manifests(chart_info_list):
             
             # Adding -optimized images for deltafusion images
             if any(sub in image_registry_url for sub in ['deltafusion-query-server', 'deltafusion-ingestor']):
-                optimized_image_entry = image_entry.copy()
+                optimized_image_entry = copy.deepcopy(image_entry)
                 optimized_image_entry['details']['registryURL'] = f"{image_registry_url}-optimized"
                 chart_processed_images.append(optimized_image_entry)
             
