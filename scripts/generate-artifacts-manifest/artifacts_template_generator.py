@@ -227,6 +227,11 @@ def process_and_generate_chart_manifests(chart_info_list):
             if image_registry_url.startswith(('auto', 'cos-nvidia-installer')):
                 chart_processed_images.append(image_entry)
                 continue
+            
+            # Adding -optimized images for deltafusion images
+            if image_registry_url.contains('deltafusion-query-server') or image_registry_url.contains('deltafusion-ingestor'):
+                chart_processed_images.append(f"{image_registry_url}-optimized")
+                continue
                 
             # If the image is already seen before, use that platform info even if empty
             if image_registry_url in known_image_registry_urls:
@@ -236,6 +241,7 @@ def process_and_generate_chart_manifests(chart_info_list):
             else:
                 # This is truly a new image, add it to be processed
                 chart_processed_images.append(image_entry)
+            
         
         # Log a summary
         image_urls = [img['details']['registryURL'] for img in chart_processed_images]
