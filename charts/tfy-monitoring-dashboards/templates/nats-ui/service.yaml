@@ -1,0 +1,21 @@
+{{- if .Values.tfyNatsUi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ default "tfy-nats-ui" .Values.tfyNatsUi.service.name }}
+  labels:
+    {{- include "tfy-monitoring-dashboards.nats-ui.labels" . | nindent 4 }}
+  {{- with .Values.tfyNatsUi.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.tfyNatsUi.service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ .Values.tfyNatsUi.service.port }}
+      targetPort: {{ .Values.tfyNatsUi.service.targetPort | default .Values.tfyNatsUi.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "tfy-monitoring-dashboards.nats-ui.selectorLabels" . | nindent 4 }}
+{{- end }}

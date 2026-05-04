@@ -1,0 +1,168 @@
+## @section Global parameters
+global:
+  ## @param global.imagePullSecrets [array] Global image pull secrets
+  imagePullSecrets: []
+  ## @param global.truefoundryImagePullConfigJSON JSON config for truefoundry image pull secret (auto-creates secret)
+  truefoundryImagePullConfigJSON: ""
+
+## =============================================================================
+## @section NATS UI configuration
+## =============================================================================
+tfyNatsUi:
+  ## @param tfyNatsUi.enabled Deploy NATS UI Deployment and Service
+  enabled: false
+  ## @param tfyNatsUi.nameOverride Override the component name used in labels and the Deployment name
+  nameOverride: ""
+  ## @param tfyNatsUi.fullnameOverride If set, overrides the Deployment full name
+  fullnameOverride: ""
+  ## @param tfyNatsUi.replicaCount Number of replicas
+  replicaCount: 1
+  ## @param tfyNatsUi.image.registry Image registry (optional)
+  image:
+    registry: "tfy.jfrog.io"
+    ## @param tfyNatsUi.image.repository Container image repository (required when enabled)
+    repository: "tfy-private-images/nats-ui-dashboard"
+    ## @param tfyNatsUi.image.tag Image tag
+    tag: "78859f0304fc2081e835db5cfe7ba241f059fac6"
+  ## @param tfyNatsUi.imagePullPolicy Image pull policy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyNatsUi.imagePullSecrets [array] Image pull secrets for this workload
+  imagePullSecrets: []
+  ## @param tfyNatsUi.serviceAccount.create Create a dedicated ServiceAccount
+  serviceAccount:
+    create: false
+    ## @param tfyNatsUi.serviceAccount.name Override ServiceAccount name
+    name: ""
+    ## @param tfyNatsUi.serviceAccount.annotations [object] Service account annotations
+    annotations: {}
+    ## @param tfyNatsUi.serviceAccount.labels [object] Extra labels for the ServiceAccount
+    labels: {}
+    ## @param tfyNatsUi.serviceAccount.automountServiceAccountToken Automount service account token
+    automountServiceAccountToken: false
+  ## @param tfyNatsUi.env [object] Environment variables (replaces natsUrl/accountSeedSecret when set)
+  env: {}
+  ## @param tfyNatsUi.envSecretName Secret name for shorthand ${k8s-secret/<key>} entries in env
+  envSecretName: ""
+  ## @param tfyNatsUi.natsUrl NATS_URL env var when env is empty
+  natsUrl: "http://{{ .Release.Name }}-tfy-nats:4222"
+  ## @param tfyNatsUi.accountSeedSecret.name Existing Secret name when env is empty
+  ## @param tfyNatsUi.accountSeedSecret.key Key inside the Secret
+  accountSeedSecret:
+    name: "truefoundry-tfy-nats-secret"
+    key: NATS_CONTROLPLANE_ACCOUNT_SEED
+  ## @param tfyNatsUi.service.name Kubernetes Service metadata.name
+  ## @param tfyNatsUi.service.type Service type
+  ## @param tfyNatsUi.service.port Service port
+  ## @param tfyNatsUi.service.targetPort Container port (defaults to service.port)
+  ## @param tfyNatsUi.service.annotations [object] Service annotations
+  service:
+    name: tfy-nats-ui
+    type: ClusterIP
+    port: 8080
+    targetPort: ""
+    annotations: {}
+  ## @param tfyNatsUi.extraEnv [array] Extra environment variables for the container
+  extraEnv: []
+  ## @param tfyNatsUi.resources [object] Container resources
+  resources: {}
+  ## @param tfyNatsUi.podSecurityContext [object] Pod security context
+  podSecurityContext: {}
+  ## @param tfyNatsUi.securityContext [object] Container security context
+  securityContext: {}
+  ## @param tfyNatsUi.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## @param tfyNatsUi.tolerations [array] Tolerations
+  tolerations: []
+  ## @param tfyNatsUi.affinity [object] Affinity
+  affinity: {}
+
+## =============================================================================
+## @section Metrics Dashboard configuration
+## =============================================================================
+tfyMetricsDashboard:
+  ## @param tfyMetricsDashboard.enabled Deploy Metrics Dashboard Deployment and Service
+  enabled: false
+  ## @param tfyMetricsDashboard.nameOverride Override the component name used in labels and the Deployment name
+  nameOverride: ""
+  ## @param tfyMetricsDashboard.fullnameOverride If set, overrides the Deployment full name
+  fullnameOverride: ""
+  ## @param tfyMetricsDashboard.replicaCount Number of replicas
+  replicaCount: 1
+  ## @param tfyMetricsDashboard.image.registry Image registry
+  image:
+    registry: "tfy.jfrog.io"
+    ## @param tfyMetricsDashboard.image.repository Container image repository (path within registry)
+    repository: "tfy-private-images/tfy-metrics-dashboard"
+    ## @param tfyMetricsDashboard.image.tag Image tag
+    tag: "78049faac40e566f3d7014a39a310593254c69c8"
+  ## @param tfyMetricsDashboard.imagePullPolicy Image pull policy
+  imagePullPolicy: IfNotPresent
+  ## @param tfyMetricsDashboard.serviceAccount.create Create a dedicated ServiceAccount
+  serviceAccount:
+    create: false
+    ## @param tfyMetricsDashboard.serviceAccount.name Override ServiceAccount name
+    name: ""
+    ## @param tfyMetricsDashboard.serviceAccount.annotations [object] Service account annotations
+    annotations: {}
+    ## @param tfyMetricsDashboard.serviceAccount.labels [object] Extra labels for the ServiceAccount
+    labels: {}
+    ## @param tfyMetricsDashboard.serviceAccount.automountServiceAccountToken Automount service account token
+    automountServiceAccountToken: false
+  ## @param tfyMetricsDashboard.imagePullSecrets [array] Image pull secrets
+  imagePullSecrets: []
+  ## @param tfyMetricsDashboard.podSecurityContext [object] Pod-level security context
+  podSecurityContext: {}
+  ## @param tfyMetricsDashboard.securityContext [object] Container-level security context
+  securityContext: {}
+  ## @param tfyMetricsDashboard.service.type Kubernetes Service type
+  ## @param tfyMetricsDashboard.service.port Kubernetes Service port
+  service:
+    type: ClusterIP
+    port: 80
+  ## @param tfyMetricsDashboard.resources [object] CPU/Memory resource requests/limits
+  resources: {}
+  ## @param tfyMetricsDashboard.nodeSelector [object] Node labels for pod assignment
+  nodeSelector: {}
+  ## @param tfyMetricsDashboard.tolerations [array] Tolerations for pod assignment
+  tolerations: []
+  ## @param tfyMetricsDashboard.affinity [object] Affinity for pod assignment
+  affinity: {}
+
+## =============================================================================
+## @section Headlamp configuration
+## Headlamp is deployed as a subchart. RBAC is managed by this chart.
+## =============================================================================
+headlamp:
+  ## @param headlamp.enabled Deploy Headlamp
+  enabled: false
+  ## @param headlamp.clusterRoleBinding.create Keep false — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. Read-only RBAC is always created by this chart when headlamp.enabled=true.
+  clusterRoleBinding:
+    create: false
+  config:
+    ## @param headlamp.config.pluginsDir Directory for Headlamp plugins
+    pluginsDir: "/headlamp/plugins"
+  persistentVolumeClaim:
+    ## @param headlamp.persistentVolumeClaim.enabled Enable PVC for plugin storage
+    enabled: false
+  ## @param headlamp.service.port Service port for Headlamp
+  service:
+    port: 4466
+  ## Projected volume that injects the service account token so Headlamp auto-authenticates without a login screen.
+  ## @skip headlamp.volumeMounts
+  volumeMounts:
+    - name: sa-token
+      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      readOnly: true
+  ## @skip headlamp.volumes
+  volumes:
+    - name: sa-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3607
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+                - key: ca.crt
+                  path: ca.crt
