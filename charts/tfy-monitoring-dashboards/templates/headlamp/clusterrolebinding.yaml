@@ -13,6 +13,6 @@ roleRef:
   name: {{ .Release.Name }}-headlamp-readonly
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-headlamp
+    name: {{ include "tfy-monitoring-dashboards.headlamp.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

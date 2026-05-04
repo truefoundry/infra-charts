@@ -1,6 +1,31 @@
 {{/*
 ===========================================================================
-  tfy-nats-ui helpers
+  headlamp helpers
+===========================================================================
+*/}}
+
+{{/*
+  Replicate headlamp's serviceAccountName logic so our ClusterRoleBinding
+  always references the exact SA the subchart creates.
+*/}}
+{{- define "tfy-monitoring-dashboards.headlamp.serviceAccountName" -}}
+{{- if .Values.headlamp.serviceAccount.name -}}
+  {{- .Values.headlamp.serviceAccount.name -}}
+{{- else if .Values.headlamp.fullnameOverride -}}
+  {{- .Values.headlamp.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+  {{- $chartName := .Values.headlamp.nameOverride | default "headlamp" -}}
+  {{- if contains $chartName .Release.Name -}}
+    {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- printf "%s-%s" .Release.Name $chartName | trunc 63 | trimSuffix "-" -}}
+  {{- end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+===========================================================================
+  nats-ui helpers
 ===========================================================================
 */}}
 
