@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import yaml
+import copy
 import sys
 import json
 import subprocess
@@ -227,7 +228,13 @@ def process_and_generate_chart_manifests(chart_info_list):
             if image_registry_url.startswith(('auto', 'cos-nvidia-installer')):
                 chart_processed_images.append(image_entry)
                 continue
-                
+            
+            # Adding -optimized images for deltafusion images
+            if any(sub in image_registry_url for sub in ['deltafusion-query-server', 'deltafusion-ingestor']):
+                optimized_image_entry = copy.deepcopy(image_entry)
+                optimized_image_entry['details']['registryURL'] = f"{image_registry_url}-optimized"
+                chart_processed_images.append(optimized_image_entry)
+            
             # If the image is already seen before, use that platform info even if empty
             if image_registry_url in known_image_registry_urls:
                 # Reuse the existing platform info, even if empty
@@ -236,6 +243,7 @@ def process_and_generate_chart_manifests(chart_info_list):
             else:
                 # This is truly a new image, add it to be processed
                 chart_processed_images.append(image_entry)
+            
         
         # Log a summary
         image_urls = [img['details']['registryURL'] for img in chart_processed_images]

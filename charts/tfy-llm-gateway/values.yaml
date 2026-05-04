@@ -79,6 +79,9 @@ global:
         sizeLimit: ""
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
       capabilities:
@@ -119,6 +122,7 @@ podAnnotations: {}
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext:
+  enabled: true
   runAsNonRoot: true
   runAsUser: 1001
 ## @param commonLabels Common labels
@@ -131,6 +135,7 @@ deploymentLabels: {}
 deploymentAnnotations: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
+  enabled: true
   capabilities:
     drop:
       - ALL
