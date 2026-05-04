@@ -100,25 +100,6 @@ flyte-core:
           kubernetes-enabled: true
           ## @param flyte-core.configmap.task_logs.plugins.logs.kubernetes-template-uri to set the kubernetes uri to fetch the logs
           kubernetes-template-uri: '{{ "{{" }} .podName {{ "}}" }}'
-    enabled_plugins:
-      tasks:
-        task-plugins:
-          ## @param flyte-core.configmap.enabled_plugins.tasks.task-plugins.enabled-plugins to set the enabled propeller plugins. `agent-service` is required for the Snowflake / flyteagent plugin.
-          enabled-plugins:
-            - container
-            - sidecar
-            - k8s-array
-            - agent-service
-            - echo
-          default-for-task-types:
-            ## @param flyte-core.configmap.enabled_plugins.tasks.task-plugins.default-for-task-types.container to route the `container` task type to the `container` plugin.
-            container: container
-            ## @param flyte-core.configmap.enabled_plugins.tasks.task-plugins.default-for-task-types.sidecar to route the `sidecar` task type to the `sidecar` plugin.
-            sidecar: sidecar
-            ## @param flyte-core.configmap.enabled_plugins.tasks.task-plugins.default-for-task-types.container_array to route the `container_array` task type to the `k8s-array` plugin.
-            container_array: k8s-array
-            ## @param flyte-core.configmap.enabled_plugins.tasks.task-plugins.default-for-task-types.snowflake to route the `snowflake` task type to the `agent-service` plugin (required for the Snowflake agent).
-            snowflake: agent-service
   flyteadmin:
     ## @param flyte-core.flyteadmin.enabled to enable the flyteadmin
     enabled: false
@@ -131,10 +112,6 @@ flyte-core:
   flytepropeller:
     ## @param flyte-core.flytepropeller.enabled to enable the flytepropeller
     enabled: true
-    ## @param flyte-core.flytepropeller.createCRDs Disabled because upstream flyte-core v1.15.3 renders
-    ## apiextensions.k8s.io/v1beta1 when $.Capabilities is unavailable (e.g. ArgoCD / helm template).
-    ## The correct v1 CRD is rendered by tfy-workflow-propeller/templates/flyteworkflow-crd.yaml instead.
-    createCRDs: false
     resources:
       limits:
         ## @param flyte-core.flytepropeller.resources.limits.cpu to set the cpu limit
@@ -184,38 +161,11 @@ flyte-core:
             insecure: true
           ## @param flyte-core.flyteagent.plugin_config.plugins.agent-service.supportedTaskTypes to set the task types handled by the default agent. Auto-discovered since flyte #5460; left empty here.
           supportedTaskTypes: []
-    image:
-      ## @param flyte-core.flyteagent.image.repository custom flyteagent image built from truefoundry-cli/docker/flyte-snowflake-agent/Dockerfile
-      repository: <to_be_provided>
-      ## @param flyte-core.flyteagent.image.tag tag of the custom flyteagent image (must match the base flyteagent image major/minor)
-      tag: <to_be_provided>
-      ## @param flyte-core.flyteagent.image.pullPolicy image pull policy for the flyteagent pod
-      pullPolicy: IfNotPresent
-    serviceAccount:
-      ## @param flyte-core.flyteagent.serviceAccount.create to create the flyteagent service account
-      create: true
-      ## @param flyte-core.flyteagent.serviceAccount.annotations [object] Optional IRSA / workload-identity annotations for the flyteagent service account (e.g. eks.amazonaws.com/role-arn for StructuredDataset uploads).
-      annotations: {}
     agentSecret:
       secretData:
         stringData:
           ## @param flyte-core.flyteagent.agentSecret.secretData.stringData.snowflake_private_key Snowflake private key. Use tfy-secret:// reference (e.g. tfy-secret://internal:private-key:snowflake) to avoid inlining sensitive data.
           snowflake_private_key: ""
-    ## @param flyte-core.flyteagent.resources.limits.cpu cpu limit for the flyteagent pod
-    ## @param flyte-core.flyteagent.resources.limits.memory memory limit for the flyteagent pod
-    ## @param flyte-core.flyteagent.resources.limits.ephemeral-storage ephemeral-storage limit for the flyteagent pod
-    ## @param flyte-core.flyteagent.resources.requests.cpu cpu request for the flyteagent pod
-    ## @param flyte-core.flyteagent.resources.requests.memory memory request for the flyteagent pod
-    ## @param flyte-core.flyteagent.resources.requests.ephemeral-storage ephemeral-storage request for the flyteagent pod
-    resources:
-      limits:
-        cpu: 500m
-        memory: 500Mi
-        ephemeral-storage: 500Mi
-      requests:
-        cpu: 200m
-        memory: 300Mi
-        ephemeral-storage: 200Mi
 
 ## @section tfySignedURLServer configurations
 tfySignedURLServer:
