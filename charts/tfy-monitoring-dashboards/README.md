@@ -76,12 +76,11 @@ Bundled monitoring dashboards for TrueFoundry: NATS UI, Metrics Dashboard, and H
 
 ### Headlamp configuration
 
-| Name                                     | Description                                                                                                                                   | Value               |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| `headlamp.enabled`                       | Deploy Headlamp                                                                                                                               | `false`             |
-| `headlamp.clusterRoleBinding.create`     | Disabled — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. RBAC is managed by this chart via readOnlyRbac below. | `false`             |
-| `headlamp.readOnlyRbac.create`           | Create a read-only ClusterRole and ClusterRoleBinding (get/list/watch on all resources) bound to the headlamp ServiceAccount.                 | `true`              |
-| `headlamp.config.pluginsDir`             | Directory for Headlamp plugins                                                                                                                | `/headlamp/plugins` |
-| `headlamp.persistentVolumeClaim.enabled` | Enable PVC for plugin storage                                                                                                                 | `false`             |
-| `headlamp.service.port`                  | Service port for Headlamp                                                                                                                     | `4466`              |
+| Name                                     | Description                                                                                                                                                          | Value               |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `headlamp.enabled`                       | Deploy Headlamp                                                                                                                                                      | `false`             |
+| `headlamp.clusterRoleBinding.create`     | Keep false — prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. Read-only RBAC is always created by this chart when headlamp.enabled=true. | `false`             |
+| `headlamp.config.pluginsDir`             | Directory for Headlamp plugins                                                                                                                                       | `/headlamp/plugins` |
+| `headlamp.persistentVolumeClaim.enabled` | Enable PVC for plugin storage                                                                                                                                        | `false`             |
+| `headlamp.service.port`                  | Service port for Headlamp                                                                                                                                            | `4466`              |
 
