@@ -48,9 +48,11 @@ spec:
           {{- end }}
           containers:
             - name: "deltafusion-compaction"
+              {{- if .Values.deltaFusionCompaction.securityContext.enabled }}
               {{- with .Values.deltaFusionCompaction.securityContext }}
               securityContext:
-                {{- toYaml . | nindent 16 }}
+                {{- toYaml (omit . "enabled") | nindent 16 }}
+              {{- end }}
               {{- end }}
               {{- $useOptimized := include "deltafusion-compaction.useOptimized" . | trim }}
               {{- if eq $useOptimized "true" }}

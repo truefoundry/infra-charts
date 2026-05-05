@@ -425,50 +425,136 @@ Image Pull Secrets
 {{- end }}
 
 {{/*
-Determine if optimized image should be used for deltaFusionQueryServer
-- image.optimized=true → always use optimized
-- image.optimized=false → never use optimized
-- image.optimized=auto → use optimized only if Karpenter affinity will be applied (no user affinity override)
+Resolve the optimized mode for deltaFusionQueryServer. Returns one of "auto" | "true" | "false".
+
+Source of truth: .Values.deltaFusionQueryServer.optimized (top-level).
+Fallback (DEPRECATED): .Values.deltaFusionQueryServer.image.optimized when top-level is empty/unset.
+Default: "auto".
+
+Any value outside {auto,true,false} is treated as "auto" (with a tpl-time fail for safety).
+*/}}
+{{- define "deltafusion-query-server.optimizedMode" -}}
+{{- $top := "" -}}
+{{- if hasKey .Values.deltaFusionQueryServer "optimized" -}}
+  {{- $top = toString .Values.deltaFusionQueryServer.optimized -}}
+{{- end -}}
+{{- $legacy := "" -}}
+{{- if .Values.deltaFusionQueryServer.image -}}
+  {{- if hasKey .Values.deltaFusionQueryServer.image "optimized" -}}
+    {{- $legacy = toString .Values.deltaFusionQueryServer.image.optimized -}}
+  {{- end -}}
+{{- end -}}
+{{- $mode := $top -}}
+{{- if or (eq $mode "") (eq $mode "<nil>") -}}
+  {{- $mode = $legacy -}}
+{{- end -}}
+{{- if or (eq $mode "") (eq $mode "<nil>") -}}
+  {{- $mode = "auto" -}}
+{{- end -}}
+{{- if not (has $mode (list "auto" "true" "false")) -}}
+  {{- fail (printf "deltaFusionQueryServer.optimized must be one of \"auto\"|\"true\"|\"false\", got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end -}}
+
+{{/*
+Determine if the -optimized image tag should be used.
+- optimized=true            → -optimized
+- optimized=false           → regular
+- optimized=auto            → -optimized only if Karpenter path is active (enabled + no user affinity override)
 */}}
 {{- define "deltafusion-query-server.useOptimized" -}}
 {{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
 {{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
 {{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionQueryServer.affinity) 0) -}}
-{{- $optimized := toString .Values.deltaFusionQueryServer.image.optimized -}}
+{{- $mode := include "deltafusion-query-server.optimizedMode" . | trim -}}
 
-{{- if eq $optimized "true" -}}
+{{- if eq $mode "true" -}}
 true
-{{- else if eq $optimized "false" -}}
+{{- else if eq $mode "false" -}}
 false
-{{- else if eq $optimized "auto" -}}
+{{- else -}}
+  {{- /* auto */ -}}
   {{- if and $karpenterEnabled (not $hasUserAffinity) -}}
 true
   {{- else -}}
 false
   {{- end -}}
-{{- else -}}
-false
 {{- end -}}
 {{- end -}}
 
 {{/*
-Get affinity for deltaFusionQueryServer (override strategy)
-User affinity (global + component) completely overrides Karpenter affinity.
-If no user affinity: use Karpenter affinity (when Karpenter is available and enabled)
-If user affinity exists: merge global.affinity + component.affinity (component wins, Karpenter skipped)
+Emit the OPTIMIZED env var for the container. Returns YAML list entries (no leading list marker
+handling here - callers use `include ... | trim | nindent`). Empty for optimized=auto.
+
+  optimized=true  → OPTIMIZED=true
+  optimized=false → OPTIMIZED=false
+  optimized=auto  → <nothing>
+
+NOTE: when the app wants to distinguish "auto" explicitly instead of "env unset", swap the
+auto-branch to emit OPTIMIZED=auto.
+*/}}
+{{- define "deltafusion-query-server.optimizedEnv" -}}
+{{- $mode := include "deltafusion-query-server.optimizedMode" . | trim -}}
+{{- if or (eq $mode "true") (eq $mode "false") }}
+- name: OPTIMIZED
+  value: {{ $mode | quote }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Get affinity for deltaFusionQueryServer. Implements the full matrix:
+
+  optimized=false                              → no karpenter affinity (user affinity only, if any)
+  user affinity present (global or component)  → user affinity wins; karpenter skipped
+  optimized=auto + karpenter enabled           → base (OS/arch) + preferred AVX-512 instance-family
+  optimized=true + karpenter enabled           → base (OS/arch) + required  AVX-512 instance-family
+  karpenter disabled                           → no karpenter affinity (user affinity only, if any)
+
+AWS-only: instance-family uses `karpenter.k8s.aws/instance-family`. On non-AWS clusters this
+expression simply won't match any nodes in preferred mode (soft) and would block scheduling in
+required mode — see karpenterAffinity TODO in values.yaml.
 */}}
 {{- define "deltafusion-query-server.affinity" -}}
 {{- $karpenterAvailable := or (.Capabilities.APIVersions.Has "karpenter.sh/v1") (.Capabilities.APIVersions.Has "karpenter.sh/v1beta1") -}}
 {{- $karpenterEnabled := and $karpenterAvailable .Values.deltaFusionQueryServer.karpenterAffinity.enabledIfAvailable -}}
 {{- $hasUserAffinity := or (ne (len .Values.global.affinity) 0) (ne (len .Values.deltaFusionQueryServer.affinity) 0) -}}
+{{- $mode := include "deltafusion-query-server.optimizedMode" . | trim -}}
 
 {{- $result := dict -}}
 {{- if $hasUserAffinity -}}
   {{- /* User affinity takes precedence - merge global + component */ -}}
   {{- $result = mergeOverwrite (deepCopy .Values.global.affinity) (deepCopy .Values.deltaFusionQueryServer.affinity) -}}
-{{- else if $karpenterEnabled -}}
-  {{- /* No user affinity - use Karpenter affinity for optimized scheduling */ -}}
-  {{- $result = .Values.deltaFusionQueryServer.karpenterAffinity.affinity -}}
+{{- else if and $karpenterEnabled (ne $mode "false") -}}
+  {{- /* Karpenter path active. Start from base (OS/arch) then attach instance-family. */ -}}
+  {{- $result = deepCopy .Values.deltaFusionQueryServer.karpenterAffinity.affinity -}}
+  {{- $families := .Values.deltaFusionQueryServer.karpenterAffinity.instanceFamilies -}}
+  {{- if and $families $families.enabled (gt (len ($families.values | default list)) 0) -}}
+    {{- $matchExpr := dict "key" "karpenter.k8s.aws/instance-family" "operator" "In" "values" $families.values -}}
+    {{- $nodeAffinity := $result.nodeAffinity | default dict -}}
+    {{- if eq $mode "true" -}}
+      {{- /* Required: AND the instance-family expression into every existing nodeSelectorTerm. */ -}}
+      {{- $required := $nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution | default (dict "nodeSelectorTerms" (list (dict "matchExpressions" (list)))) -}}
+      {{- $terms := $required.nodeSelectorTerms | default (list (dict "matchExpressions" (list))) -}}
+      {{- $newTerms := list -}}
+      {{- range $term := $terms -}}
+        {{- $exprs := $term.matchExpressions | default list -}}
+        {{- $exprs = append $exprs $matchExpr -}}
+        {{- $newTerm := deepCopy $term -}}
+        {{- $_ := set $newTerm "matchExpressions" $exprs -}}
+        {{- $newTerms = append $newTerms $newTerm -}}
+      {{- end -}}
+      {{- $_ := set $required "nodeSelectorTerms" $newTerms -}}
+      {{- $_ := set $nodeAffinity "requiredDuringSchedulingIgnoredDuringExecution" $required -}}
+    {{- else -}}
+      {{- /* auto: add as preferred using configured weight. */ -}}
+      {{- $preference := dict "matchExpressions" (list $matchExpr) -}}
+      {{- $preferredTerm := dict "weight" ($families.weight | int) "preference" $preference -}}
+      {{- $existing := $nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution | default list -}}
+      {{- $_ := set $nodeAffinity "preferredDuringSchedulingIgnoredDuringExecution" (append $existing $preferredTerm) -}}
+    {{- end -}}
+    {{- $_ := set $result "nodeAffinity" $nodeAffinity -}}
+  {{- end -}}
 {{- end -}}
 
 {{- if $result -}}

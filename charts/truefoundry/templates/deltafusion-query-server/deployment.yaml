@@ -23,9 +23,11 @@ spec:
         {{- include "deltafusion-query-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "deltafusion-query-server.serviceAccountName" . }}
+      {{- if .Values.deltaFusionQueryServer.podSecurityContext.enabled }}
       {{- with .Values.deltaFusionQueryServer.podSecurityContext }}
       securityContext:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -33,12 +35,18 @@ spec:
       {{- end }}
       containers:
         - name: "deltafusion-query-server"
+          {{- if .Values.deltaFusionQueryServer.securityContext.enabled }}
           {{- with .Values.deltaFusionQueryServer.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
+            {{- $optimizedEnv := include "deltafusion-query-server.optimizedEnv" . | trim }}
+            {{- if $optimizedEnv }}
+            {{- $optimizedEnv | nindent 12 }}
+            {{- end }}
             {{- if .Values.deltaFusionQueryServer.enableLiveLogs }}
             {{- $replicas := include "deltafusion-ingestor.replicas" . | trim | int }}
             {{- $ingestorName := include "deltafusion-ingestor.fullname" . }}
