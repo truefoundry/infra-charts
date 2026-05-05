@@ -142,6 +142,30 @@ flyte-core:
   ## @param flyte-core.cluster_resource_manager.enabled to enable the cluster resource manager
   cluster_resource_manager:
     enabled: false
+  ## flyte-core.flyteagent configures BOTH:
+  ##   1. the flyteagent subchart that flyte-core already vendors (pod + service + secret)
+  ##   2. the propeller configmap's agent_service.yaml (endpoint, supportedTaskTypes)
+  ## We override the image to one that bundles truefoundry[workflow,snowflake]
+  ## and registers the SnowflakeAgent via `--modules truefoundry.workflow.snowflake_agent`.
+  ## Build the image from: truefoundry-cli/docker/flyte-snowflake-agent/Dockerfile
+  flyteagent:
+    ## @param flyte-core.flyteagent.enabled to deploy the flyteagent pod AND write agent_service.yaml into the propeller configmap
+    enabled: false
+    plugin_config:
+      plugins:
+        agent-service:
+          defaultAgent:
+            ## @param flyte-core.flyteagent.plugin_config.plugins.agent-service.defaultAgent.endpoint to set the grpc endpoint propeller uses to reach the flyteagent service. Format: `k8s://<service>.<namespace>:<port>`.
+            endpoint: "k8s://flyteagent.{{ .Release.Namespace }}:8000"
+            ## @param flyte-core.flyteagent.plugin_config.plugins.agent-service.defaultAgent.insecure to disable TLS between propeller and the flyteagent service
+            insecure: true
+          ## @param flyte-core.flyteagent.plugin_config.plugins.agent-service.supportedTaskTypes to set the task types handled by the default agent. Auto-discovered since flyte #5460; left empty here.
+          supportedTaskTypes: []
+    agentSecret:
+      secretData:
+        stringData:
+          ## @param flyte-core.flyteagent.agentSecret.secretData.stringData.snowflake_private_key Snowflake private key. Use tfy-secret:// reference (e.g. tfy-secret://internal:private-key:snowflake) to avoid inlining sensitive data.
+          snowflake_private_key: ""
 
 ## @section tfySignedURLServer configurations
 tfySignedURLServer:
