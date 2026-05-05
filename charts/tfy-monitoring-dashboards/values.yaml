@@ -95,6 +95,12 @@ tfyMetricsDashboard:
     repository: "tfy-private-images/tfy-metrics-dashboard"
     ## @param tfyMetricsDashboard.image.tag Image tag
     tag: "78049faac40e566f3d7014a39a310593254c69c8"
+  ## @param tfyMetricsDashboard.prometheusUrl Prometheus base URL accessible from the browser (nginx will proxy this). Leave empty to use the built-in nginx proxy path.
+  prometheusUrl: ""
+  ## @param tfyMetricsDashboard.targetNamespace Kubernetes namespace to scope PromQL queries (used as $namespace in queries)
+  targetNamespace: "truefoundry"
+  ## @param tfyMetricsDashboard.dashboardVisibility [object] Per-dashboard visibility toggle keyed by filename. Set a key to false to hide that dashboard. E.g. {"deltafusion.json": false}
+  dashboardVisibility: {}
   ## @param tfyMetricsDashboard.imagePullPolicy Image pull policy
   imagePullPolicy: IfNotPresent
   ## @param tfyMetricsDashboard.serviceAccount.create Create a dedicated ServiceAccount
