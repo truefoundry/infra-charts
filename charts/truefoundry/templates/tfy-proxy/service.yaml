@@ -16,9 +16,11 @@ spec:
       targetPort: {{ .Values.tfyProxy.service.port }}
       protocol: TCP
       appProtocol: tcp
+    {{- if .Values.tfyProxy.adminApi.enabled }}
     - name: metrics
       port: 2019
       targetPort: metrics
+    {{- end }}
   selector:
     {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-proxy") | nindent 4 }}
 {{- end }}

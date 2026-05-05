@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.141.0
+  controlPlaneChartVersion: 0.142.0
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -278,6 +278,9 @@ global:
       overrideCAList: false
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
       capabilities:
@@ -387,10 +390,12 @@ truefoundryBootstrap:
     annotations: {}
   ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context for the bootstrap container
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param truefoundryBootstrap.securityContext [object] Security context for the bootstrap container
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -460,7 +465,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.141.0"
+    tag: "v0.142.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -479,10 +484,12 @@ mlfoundryServer:
   podLabels: {}
   ## @param mlfoundryServer.podSecurityContext [object] Security context for the mlfoundry server pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param mlfoundryServer.securityContext [object] Security context for the mlfoundry server
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -636,8 +643,9 @@ s3proxy:
   fullnameOverride: ""
   ## @param s3proxy.podAnnotations Annotations for the s3 proxy pods
   podAnnotations: {}
-  ## @param s3proxy.podSecurityContext Security context for the s3 proxy pods
-  podSecurityContext: {}
+  ## @param s3proxy.podSecurityContext [object] Security context for the s3 proxy pods
+  podSecurityContext:
+    enabled: false
   ## @param s3proxy.commonLabels Common labels for the s3 proxy pods
   commonLabels: {}
   ## @param s3proxy.commonAnnotations [object] Common annotations for the s3 proxy pods
@@ -648,8 +656,9 @@ s3proxy:
   deploymentLabels: {}
   ## @param s3proxy.deploymentAnnotations [object] Deployment-specific annotations for the s3 proxy
   deploymentAnnotations: {}
-  ## @param s3proxy.securityContext Security context for the s3 proxy
-  securityContext: {}
+  ## @param s3proxy.securityContext [object] Security context for the s3 proxy
+  securityContext:
+    enabled: false
   ## @param s3proxy.resourceTierOverride Resource tier override for the s3proxy
   resourceTierOverride: ""
   ## @skip s3proxy.resources [object] Resource requests and limits for the s3 proxy
@@ -760,7 +769,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.141.0"
+    tag: "v0.142.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -775,6 +784,7 @@ servicefoundryServer:
   fullnameOverride: ""
   ## @param servicefoundryServer.podSecurityContext [object] Security context for the servicefoundry server pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param servicefoundryServer.podLabels [object] Pod-specific labels for the servicefoundry server
@@ -783,6 +793,7 @@ servicefoundryServer:
   podAnnotations: {}
   ## @param servicefoundryServer.securityContext [object] Security context for the servicefoundry server
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -1011,8 +1022,9 @@ sparkHistoryServer:
   fullnameOverride: ""
   ## @param sparkHistoryServer.podAnnotations Annotations for the spark history server pods
   podAnnotations: {}
-  ## @param sparkHistoryServer.podSecurityContext Security context for the spark history server pods
-  podSecurityContext: {}
+  ## @param sparkHistoryServer.podSecurityContext [object] Security context for the spark history server pods
+  podSecurityContext:
+    enabled: false
   ## @param sparkHistoryServer.commonLabels Common labels for the spark history server pods
   commonLabels: {}
   ## @param sparkHistoryServer.commonAnnotations [object] Common annotations for the spark history server pods
@@ -1023,8 +1035,9 @@ sparkHistoryServer:
   deploymentLabels: {}
   ## @param sparkHistoryServer.deploymentAnnotations [object] Deployment-specific annotations for the spark history server
   deploymentAnnotations: {}
-  ## @param sparkHistoryServer.securityContext Security context for the spark history server
-  securityContext: {}
+  ## @param sparkHistoryServer.securityContext [object] Security context for the spark history server
+  securityContext:
+    enabled: false
   ## @param sparkHistoryServer.resourceTierOverride Resource tier override for the sparkHistoryServer
   resourceTierOverride: ""
   ## @skip sparkHistoryServer.resources [object] Resource requests and limits for the spark history server
@@ -1128,7 +1141,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.141.0"
+    tag: "v0.142.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1145,6 +1158,7 @@ tfyK8sController:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
   ## @param tfyK8sController.podSecurityContext [object] Security context for the tfyK8sController pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
@@ -1159,6 +1173,7 @@ tfyK8sController:
   deploymentAnnotations: {}
   ## @param tfyK8sController.securityContext [object] Security context for the tfyK8sController
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -1300,6 +1315,7 @@ sfyManifestService:
   podAnnotations: {}
   ## @param sfyManifestService.podSecurityContext [object] Security context for the sfy manifest service pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
@@ -1314,6 +1330,7 @@ sfyManifestService:
   deploymentAnnotations: {}
   ## @param sfyManifestService.securityContext [object] Security context for the sfy manifest service
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: false
     allowPrivilegeEscalation: false
     capabilities:
@@ -1455,8 +1472,9 @@ stdioMcpProxy:
   fullnameOverride: ""
   ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
   podAnnotations: {}
-  ## @param stdioMcpProxy.podSecurityContext Security context for the stdio MCP proxy pods
-  podSecurityContext: {}
+  ## @param stdioMcpProxy.podSecurityContext [object] Security context for the stdio MCP proxy pods
+  podSecurityContext:
+    enabled: false
   ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
   commonLabels: {}
   ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
@@ -1469,6 +1487,7 @@ stdioMcpProxy:
   deploymentAnnotations: {}
   ## @param stdioMcpProxy.securityContext [object] Security context for the stdio MCP proxy
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: false
   ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
   resourceTierOverride: ""
@@ -1973,9 +1992,11 @@ tfyBuildkitdService:
     karpenter.sh/do-not-disrupt: "true"
     karpenter.sh/do-not-evict: "true"
   ## @param tfyBuildkitdService.podSecurityContext [object] Pod security context
-  podSecurityContext: {}
+  podSecurityContext:
+    enabled: false
   ## @param tfyBuildkitdService.securityContext [object] Container security context
   securityContext:
+    enabled: true
     privileged: true
   ## @skip tfyBuildkitdService.resources
   # resources: {}
@@ -2111,6 +2132,7 @@ tfyController:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
   ## @param tfyController.podSecurityContext [object] Security context for the tfyController pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param tfyController.commonLabels Common labels for the tfyController pods
@@ -2125,6 +2147,7 @@ tfyController:
   deploymentAnnotations: {}
   ## @param tfyController.securityContext [object] Security context for the tfyController
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -2260,8 +2283,9 @@ tfyWorkflowAdmin:
   fullnameOverride: ""
   ## @param tfyWorkflowAdmin.podAnnotations Annotations for the tfyWorkflowAdmin pods
   podAnnotations: {}
-  ## @param tfyWorkflowAdmin.podSecurityContext Security context for the tfyWorkflowAdmin pods
-  podSecurityContext: {}
+  ## @param tfyWorkflowAdmin.podSecurityContext [object] Security context for the tfyWorkflowAdmin pods
+  podSecurityContext:
+    enabled: false
   ## @param tfyWorkflowAdmin.commonLabels Common labels for the tfyWorkflowAdmin pods
   commonLabels: {}
   ## @param tfyWorkflowAdmin.commonAnnotations [object] Common annotations for the tfyWorkflowAdmin pods
@@ -2272,8 +2296,9 @@ tfyWorkflowAdmin:
   deploymentLabels: {}
   ## @param tfyWorkflowAdmin.deploymentAnnotations [object] Deployment-specific annotations for the tfyWorkflowAdmin
   deploymentAnnotations: {}
-  ## @param tfyWorkflowAdmin.securityContext Security context for the tfyWorkflowAdmin
-  securityContext: {}
+  ## @param tfyWorkflowAdmin.securityContext [object] Security context for the tfyWorkflowAdmin
+  securityContext:
+    enabled: false
   ## @param tfyWorkflowAdmin.imagePullSecrets Image pull secrets for the tfycontroller
   ##
   imagePullSecrets: []
@@ -2559,21 +2584,21 @@ tfyNats:
             memory: 1024Mi
             ephemeral-storage: 1Gi
     ## @param tfyNats.container.merge [object] Container merge
-    merge:
-      securityContext:
-        capabilities:
-          drop:
-            - ALL
-        readOnlyRootFilesystem: true
-        allowPrivilegeEscalation: false
+    merge: {}
+    # securityContext:
+    #   capabilities:
+    #     drop:
+    #       - ALL
+    #   readOnlyRootFilesystem: true
+    #   allowPrivilegeEscalation: false
   podTemplate:
     ## @param tfyNats.podTemplate.merge [object] Pod template merges
-    merge:
-      spec:
-        securityContext:
-          fsGroup: 1000
-          runAsUser: 1000
-          runAsNonRoot: true
+    merge: {}
+    # spec:
+    #   securityContext:
+    #     fsGroup: 1000
+    #     runAsUser: 1000
+    #     runAsNonRoot: true
     ## @param tfyNats.podTemplate.patch [array] Pod template patches
     patch:
       - op: add
@@ -2711,7 +2736,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.141.0"
+    tag: "v0.142.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2786,18 +2811,16 @@ deltaFusionIngestor:
   podLabels: {}
   ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
   podAnnotations: {}
+  ## @param deltaFusionIngestor.podSecurityContext [object] Pod security context for the container
   podSecurityContext:
-    ## @param deltaFusionIngestor.podSecurityContext.enabled Bool to enable pod security context
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
     enabled: true
-    ## @skip deltaFusionIngestor.podSecurityContext.fsGroup
     fsGroup: 100
-    ## @param deltaFusionIngestor.podSecurityContext.runAsNonRoot Run as non-root user
     runAsNonRoot: true
-    ## @param deltaFusionIngestor.podSecurityContext.runAsUser User ID to run as
     runAsUser: 1001
   ## @param deltaFusionIngestor.securityContext [object] Security context for the container
   securityContext:
+    enabled: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -2896,7 +2919,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.141.0"
+    tag: "v0.142.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -2957,19 +2980,16 @@ deltaFusionCompaction:
   podLabels: {}
   ## @param deltaFusionCompaction.podAnnotations Annotations for the deltaFusionCompaction cron job
   podAnnotations: {}
-  ## deltaFusionCompaction.podSecurityContext Security context for the deltaFusionCompaction cron job
+  ## @param deltaFusionCompaction.podSecurityContext [object] Security context for the deltaFusionCompaction cron job
   podSecurityContext:
-    ## @param deltaFusionCompaction.podSecurityContext.enabled Bool to enable pod security context
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
     enabled: true
-    ## @skip deltaFusionCompaction.podSecurityContext.fsGroup
     fsGroup: 100
-    ## @param deltaFusionCompaction.podSecurityContext.runAsNonRoot Run as non-root user
     runAsNonRoot: true
-    ## @param deltaFusionCompaction.podSecurityContext.runAsUser User ID to run as
     runAsUser: 1001
   ## @param deltaFusionCompaction.securityContext [object] Security context for the deltaFusionCompaction cron job
   securityContext:
+    enabled: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -3058,7 +3078,16 @@ deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.deploymentLabels Labels for the deltaFusionQueryServer deployment
   deploymentLabels: {}
   ## @param deltaFusionQueryServer.deploymentAnnotations Annotations for the deltaFusionQueryServer deployment
-  deploymentAnnotations: {}
+  deploymentAnnotations: {} ## deltaFusionQueryServer.optimized: behavior matrix (AWS-only via karpenterAffinity):
+  ##   optimized=auto  + karpenter enabled  -> preferred affinity for AVX-512 families, OPTIMIZED env unset, -optimized image
+  ##   optimized=auto  + karpenter disabled -> no special affinity, OPTIMIZED env unset, regular image
+  ##   optimized=true  + karpenter enabled  -> required affinity for AVX-512 families, OPTIMIZED=true, -optimized image
+  ##   optimized=true  + karpenter disabled -> no special affinity, OPTIMIZED=true, -optimized image
+  ##   optimized=false + (any)              -> no special affinity, OPTIMIZED=false, regular image
+  ##   NOTE: "no special affinity" still respects any user-provided global/component affinity.
+  ##   NOTE: GKE/Azure equivalents are pending - see karpenterAffinity below.
+  ## @param deltaFusionQueryServer.optimized AVX-512 scheduling and image mode. One of "auto" (default), "true" (force required affinity plus optimized image), "false" (disable).
+  optimized: "auto"
   ## deltaFusionQueryServer.image Image for the deltaFusionQueryServer
   image:
     ## @param deltaFusionQueryServer.image.registry Registry for the deltaFusionQueryServer image (overrides global.registry if specified)
@@ -3067,8 +3096,9 @@ deltaFusionQueryServer:
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
     tag: v0.139.0
-    ## @param deltaFusionQueryServer.image.optimized Use optimized image tag for the deltaFusionQueryServer (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
-    optimized: auto
+    ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
+    ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
+    optimized: ""
   ## @param deltaFusionQueryServer.environmentName Environment name for the deltaFusionQueryServer
   environmentName: default
   ## @param deltaFusionQueryServer.envSecretName Secret name for the deltaFusionQueryServer environment variables
@@ -3087,6 +3117,7 @@ deltaFusionQueryServer:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
   ## @param deltaFusionQueryServer.podSecurityContext [object] Security context for the deltaFusionQueryServer pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param deltaFusionQueryServer.commonLabels Common labels for the deltaFusionQueryServer pods
@@ -3095,6 +3126,7 @@ deltaFusionQueryServer:
   commonAnnotations: {}
   ## @param deltaFusionQueryServer.securityContext [object] Security context for the deltaFusionQueryServer
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -3142,11 +3174,37 @@ deltaFusionQueryServer:
   affinity: {}
   ## @skip deltaFusionQueryServer.karpenterAffinity Karpenter-specific affinity configuration
   ## Note: Karpenter affinity is SKIPPED if any user affinity (global or component) is provided.
-  ## If no user affinity: uses karpenterAffinity (if Karpenter available and enabledIfAvailable=true)
+  ## If no user affinity: uses karpenterAffinity (if Karpenter available and enabledIfAvailable=true
+  ##   and deltaFusionQueryServer.optimized != "false")
   ## If user affinity exists: merges global.affinity + component.affinity (component wins, Karpenter skipped)
   ## This gives customers full control to add their own affinity without Karpenter interference.
+  ##
+  ## AWS-ONLY: the instance-family expression uses `karpenter.k8s.aws/instance-family` node labels.
+  ## GKE and Azure are NOT YET SUPPORTED - see TODO below.
+  ## TODO(multi-cloud): add equivalents for GKE (`cloud.google.com/machine-family`) and Azure
+  ## (candidate: `node.kubernetes.io/instance-type` family prefix or a Karpenter-Azure label
+  ## once available). For now, karpenterAffinity is a no-op on non-AWS clusters since these
+  ## label keys will not exist.
   karpenterAffinity:
     enabledIfAvailable: true
+    ## deltaFusionQueryServer.karpenterAffinity.instanceFamilies Node affinity for AVX-512 capable instance families.
+    ## Applied as requiredDuringSchedulingIgnoredDuringExecution when deltaFusionQueryServer.optimized="true",
+    ## or as preferredDuringSchedulingIgnoredDuringExecution (using `weight`) when optimized="auto".
+    ## Skipped entirely when optimized="false".
+    instanceFamilies:
+      ## @skip deltaFusionQueryServer.karpenterAffinity.instanceFamilies.enabled Enable AVX-512 instance-family node affinity
+      enabled: true
+      ## @skip deltaFusionQueryServer.karpenterAffinity.instanceFamilies.weight Scheduling weight (1-100) used only when optimized="auto" (preferred affinity)
+      weight: 100
+      ## @skip deltaFusionQueryServer.karpenterAffinity.instanceFamilies.values List of instance families (AVX-512 capable). AWS-only.
+      values:
+        - i7i
+        - m7a
+        - c7a
+        - r7a
+    ## Base affinity (OS/arch) applied whenever the karpenter path is active. The helper adds
+    ## instance-family constraints on top of this, as required or preferred, based on
+    ## deltaFusionQueryServer.optimized.
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -3160,12 +3218,6 @@ deltaFusionQueryServer:
                   operator: In
                   values:
                     - linux
-                - key: karpenter.k8s.aws/instance-family
-                  operator: In
-                  values:
-                    - m7a
-                    - c7a
-                    - r7a
   ## @param deltaFusionQueryServer.topologySpreadConstraints Topology spread constraints for the deltaFusionQueryServer
   topologySpreadConstraints: []
   ## deltaFusionQueryServer.podDisruptionBudget PodDisruptionBudget settings for the deltaFusionQueryServer
@@ -3254,7 +3306,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.141.0"
+    tag: "v0.142.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Existing configmap containing nginx config for tfyProxy (key should be `nginx.conf`)
@@ -3275,6 +3327,7 @@ tfyProxy:
   podLabels: {}
   ## @param tfyProxy.podSecurityContext [object] Security context for the tfyProxy pods
   podSecurityContext:
+    enabled: true
     runAsNonRoot: true
     runAsUser: 1001
   ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
@@ -3287,6 +3340,7 @@ tfyProxy:
   commonLabels: {}
   ## @param tfyProxy.securityContext [object] Security context for the tfyProxy
   securityContext:
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -3376,6 +3430,10 @@ tfyProxy:
     labels: {}
     ## @param tfyProxy.service.annotations Annotations for the tfyProxy service
     annotations: {}
+  ## tfyProxy.adminApi Admin API settings for the tfyProxy
+  adminApi:
+    ## @param tfyProxy.adminApi.enabled Enable the Caddy admin API and metrics endpoint on port 2019. When disabled, the :2019 server block is removed from the Caddyfile and the metrics port is removed from the Service and ServiceMonitor.
+    enabled: true
     ## tfyProxy.serviceAccount Service account settings for the tfyProxy
   serviceAccount:
     ## @param tfyProxy.serviceAccount.create Bool to create a service account for the tfyProxy

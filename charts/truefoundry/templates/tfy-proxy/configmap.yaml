@@ -34,9 +34,11 @@ data:
         max_header_size 0
       }
 
+      {{- if .Values.tfyProxy.adminApi.enabled }}
       metrics {
         per_host
       }
+      {{- end }}
     }
 
     {{- if .Values.global.proxy.cors.enabled }}
@@ -61,13 +63,18 @@ data:
         @origin_allowed {
           expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         }
+        @origin_pna_cors {
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
+          header Access-Control-Request-Private-Network true
+        }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
         header @origin_allowed Access-Control-Allow-Credentials "true"
-        header @origin_allowed Access-Control-Allow-Private-Network "true"
+        header @origin_pna_cors Access-Control-Allow-Private-Network "true"
         {{- else }}
+        @pna_requested_cors header Access-Control-Request-Private-Network true
         header Access-Control-Allow-Origin "{http.request.header.Origin}"
         header Access-Control-Allow-Credentials "true"
-        header Access-Control-Allow-Private-Network "true"
+        header @pna_requested_cors Access-Control-Allow-Private-Network "true"
         {{- end }}
         header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
         header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
@@ -93,9 +100,13 @@ data:
       @origin {
         expression {http.request.header.Origin}.matches("^({{ $regex }})$")
       }
+      @origin_pna {
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
+        header Access-Control-Request-Private-Network true
+      }
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header @origin >Access-Control-Allow-Credentials "true"
-      header @origin >Access-Control-Allow-Private-Network "true"
+      header @origin_pna >Access-Control-Allow-Private-Network "true"
       header @origin >Vary "Origin"
 
       @not_origin {
@@ -111,9 +122,10 @@ data:
       header @no_origin -Access-Control-Allow-Origin
 
       {{- else }}
+      @pna_requested header Access-Control-Request-Private-Network true
       header >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header >Access-Control-Allow-Credentials "true"
-      header >Access-Control-Allow-Private-Network "true"
+      header @pna_requested >Access-Control-Allow-Private-Network "true"
       header >Vary "Origin"
       {{- end }}
     }
@@ -145,11 +157,13 @@ data:
     }
     {{- end }}
 
+    {{- if .Values.tfyProxy.adminApi.enabled }}
     :2019 {
       handle /metrics {
         metrics /metrics
       }
     }
+    {{- end }}
 
     :8080 {
       {{- if .Values.global.proxy.enforceSecurityHeaders }}

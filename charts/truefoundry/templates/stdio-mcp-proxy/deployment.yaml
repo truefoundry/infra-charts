@@ -21,9 +21,11 @@ spec:
         {{- include "stdio-mcp-proxy.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "stdio-mcp-proxy.serviceAccountName" . }}
+      {{- if .Values.stdioMcpProxy.podSecurityContext.enabled }}
       {{- with .Values.stdioMcpProxy.podSecurityContext }}
       securityContext:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -31,9 +33,11 @@ spec:
       {{- end }}
       containers:
         - name: "stdio-mcp-proxy"
+          {{- if .Values.stdioMcpProxy.securityContext.enabled }}
           {{- with .Values.stdioMcpProxy.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "stdio-mcp-proxy.env" . | trim | nindent 12 }}

@@ -36,9 +36,11 @@ spec:
       {{- end }}
       containers:
         - name: "deltafusion-ingestor"
+          {{- if .Values.deltaFusionIngestor.securityContext.enabled }}
           {{- with .Values.deltaFusionIngestor.securityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           {{- if .Values.deltaFusionIngestor.image.optimized }}
           image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}-optimized"

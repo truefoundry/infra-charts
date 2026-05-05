@@ -24,8 +24,10 @@ spec:
       imagePullSecrets:
         {{- include "tfy-buildkitd-service.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "tfy-buildkitd-service.serviceAccountName" . }}
+      {{- if .Values.tfyBuildkitdService.podSecurityContext.enabled }}
       securityContext:
-        {{- toYaml .Values.tfyBuildkitdService.podSecurityContext | nindent 8 }}
+        {{- toYaml (omit .Values.tfyBuildkitdService.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: "kubernetes.io/hostname"
@@ -35,8 +37,10 @@ spec:
               {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 14 }}
       containers:
         - name: tfy-buildkitd-service
+          {{- if .Values.tfyBuildkitdService.securityContext.enabled }}
           securityContext:
-            {{- toYaml .Values.tfyBuildkitdService.securityContext | nindent 12 }}
+            {{- toYaml (omit .Values.tfyBuildkitdService.securityContext "enabled") | nindent 12 }}
+          {{- end }}
           image: "{{ .Values.tfyBuildkitdService.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuildkitdService.image.repository }}:{{ .Values.tfyBuildkitdService.image.tag }}"
           imagePullPolicy: {{ .Values.tfyBuildkitdService.image.pullPolicy }}
           {{- with .Values.tfyBuildkitdService.extraEnvs }}
