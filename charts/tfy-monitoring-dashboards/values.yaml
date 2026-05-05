@@ -94,7 +94,20 @@ tfyMetricsDashboard:
     ## @param tfyMetricsDashboard.image.repository Container image repository (path within registry)
     repository: "tfy-private-images/tfy-metrics-dashboard"
     ## @param tfyMetricsDashboard.image.tag Image tag
-    tag: "78049faac40e566f3d7014a39a310593254c69c8"
+    tag: "b6585fa000977af22096d3f6e75b8625a11df66a"
+  ## @param tfyMetricsDashboard.prometheusUrl Prometheus base URL (required)
+  prometheusUrl: ""
+  ## @param tfyMetricsDashboard.targetNamespace Kubernetes namespace to scope PromQL queries (used as $namespace in queries)
+  targetNamespace: "truefoundry"
+  ## @param tfyMetricsDashboard.dashboardVisibility [object] Per-dashboard visibility toggle keyed by filename. Set a key to false to hide that dashboard.
+  dashboardVisibility:
+    ai-gateway.json: true
+    build-pipeline.json: true
+    deltafusion.json: true
+    servicefoundry-server.json: true
+    tfy-controller.json: true
+    tfy-k8s-controller.json: true
+    tfy-proxy.json: true
   ## @param tfyMetricsDashboard.imagePullPolicy Image pull policy
   imagePullPolicy: IfNotPresent
   ## @param tfyMetricsDashboard.serviceAccount.create Create a dedicated ServiceAccount
@@ -139,30 +152,55 @@ headlamp:
   clusterRoleBinding:
     create: false
   config:
+    ## @param headlamp.config.inCluster Use in-cluster auth mode. Must be false to enable the kubeconfig auto-auth bypass.
+    inCluster: false
     ## @param headlamp.config.pluginsDir Directory for Headlamp plugins
     pluginsDir: "/headlamp/plugins"
+    ## @skip headlamp.config.extraArgs
+    extraArgs:
+      - "-kubeconfig=/etc/headlamp/kubeconfig"
   persistentVolumeClaim:
     ## @param headlamp.persistentVolumeClaim.enabled Enable PVC for plugin storage
     enabled: false
   ## @param headlamp.service.port Service port for Headlamp
   service:
     port: 4466
-  ## Projected volume that injects the service account token so Headlamp auto-authenticates without a login screen.
+  ## Mount a pre-configured kubeconfig so Headlamp auto-authenticates using the pod's SA token without showing a login screen.
   ## @skip headlamp.volumeMounts
   volumeMounts:
-    - name: sa-token
-      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+    - name: kubeconfig
+      mountPath: /etc/headlamp/kubeconfig
+      subPath: kubeconfig
       readOnly: true
   ## @skip headlamp.volumes
   volumes:
-    - name: sa-token
-      projected:
-        sources:
-          - serviceAccountToken:
-              path: token
-              expirationSeconds: 3607
-          - configMap:
-              name: kube-root-ca.crt
-              items:
-                - key: ca.crt
-                  path: ca.crt
+    - name: kubeconfig
+      configMap:
+        name: headlamp-kubeconfig
+  ## @skip headlamp.extraManifests
+  extraManifests:
+    - |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: headlamp-kubeconfig
+        namespace: {{ .Release.Namespace }}
+      data:
+        kubeconfig: |
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - cluster:
+              certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+              server: https://kubernetes.default.svc
+            name: in-cluster
+          contexts:
+          - context:
+              cluster: in-cluster
+              user: headlamp-sa
+            name: in-cluster
+          current-context: in-cluster
+          users:
+          - name: headlamp-sa
+            user:
+              tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
