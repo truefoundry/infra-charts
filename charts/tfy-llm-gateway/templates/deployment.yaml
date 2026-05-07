@@ -91,7 +91,7 @@ spec:
           - name: tmp-dir
             mountPath: /tmp
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
-          {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+          {{- toYaml .Values.extraVolumeMounts | nindent 10 }}
           {{- end }}
           {{- if .Values.oidc.enabled }}
           - name: oidc-config
@@ -108,7 +108,7 @@ spec:
         emptyDir:
           sizeLimit: {{ include "tfy-llm-gateway.ephemeralStorage.limit" . }}
       {{- if gt (len .Values.extraVolumes) 0 }}
-      {{- toYaml .Values.extraVolumes | nindent 8 }}
+      {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
       {{- if .Values.oidc.enabled }}
       - name: oidc-config
