@@ -467,9 +467,19 @@ tfyNatsUi:
   ## @param tfyNatsUi.resources [object] Container resources
   resources: {}
   ## @param tfyNatsUi.podSecurityContext [object] Pod security context
-  podSecurityContext: {}
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
   ## @param tfyNatsUi.securityContext [object] Container security context
-  securityContext: {}
+  securityContext:
+    runAsUser: 100
+    privileged: false
+    runAsGroup: 101
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
   ## @param tfyNatsUi.nodeSelector [object] Node selector
   nodeSelector: {}
   ## @param tfyNatsUi.tolerations [array] Tolerations
@@ -525,9 +535,19 @@ tfyMetricsDashboard:
   ## @param tfyMetricsDashboard.imagePullSecrets [array] Image pull secrets
   imagePullSecrets: []
   ## @param tfyMetricsDashboard.podSecurityContext [object] Pod-level security context
-  podSecurityContext: {}
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
   ## @param tfyMetricsDashboard.securityContext [object] Container-level security context
-  securityContext: {}
+  securityContext:
+    runAsUser: 100
+    privileged: false
+    runAsGroup: 101
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
   ## @param tfyMetricsDashboard.service.type Kubernetes Service type
   ## @param tfyMetricsDashboard.service.port Kubernetes Service port
   service:
@@ -554,6 +574,20 @@ headlamp:
     create: false
   ## @param headlamp.allowPodExec Allow shell/exec into pods from headlamp.
   allowPodExec: false
+  ## @param headlamp.podSecurityContext [object] Pod security context
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  ## @param headlamp.securityContext [object] Container security context
+  securityContext:
+    runAsUser: 100
+    privileged: false
+    runAsGroup: 101
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
   config:
     ## @param headlamp.config.inCluster Use in-cluster auth mode. Must be false to enable the kubeconfig auto-auth bypass.
     inCluster: false
