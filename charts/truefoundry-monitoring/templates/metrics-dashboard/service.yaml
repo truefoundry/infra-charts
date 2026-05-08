@@ -1,0 +1,20 @@
+{{- if .Values.tfyMetricsDashboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "truefoundry-monitoring.metrics-dashboard.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "truefoundry-monitoring.metrics-dashboard.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  type: {{ .Values.tfyMetricsDashboard.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.tfyMetricsDashboard.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "truefoundry-monitoring.metrics-dashboard.selectorLabels" . | nindent 4 }}
+{{- end }}

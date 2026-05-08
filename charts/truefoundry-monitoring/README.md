@@ -110,14 +110,13 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 | `grafana.tolerations`                                           | Tolerations for Grafana pods                                     | `[]`                                      |
 | `grafana.nodeSelector`                                          | Node selector for Grafana pods                                   | `{}`                                      |
 
-### tfy-monitoring-dashboards configuration
+### Monitoring dashboards configuration
 
 | Name                                                       | Description                               | Value                                      |
 | ---------------------------------------------------------- | ----------------------------------------- | ------------------------------------------ |
-| `tfyMonitoringDashboards.enabled`                          | Enable tfy-monitoring-dashboards subchart | `false`                                    |
-| `tfyMonitoringDashboards.tfyNatsUi.enabled`                | Enable NATS UI                            | `true`                                     |
-| `tfyMonitoringDashboards.tfyNatsUi.natsUrl`                | Value for NATS_URL when env is empty      | `http://{{ .Release.Name }}-tfy-nats:4222` |
-| `tfyMonitoringDashboards.tfyNatsUi.accountSeedSecret.name` | Existing Secret name when env is empty    | `truefoundry-tfy-nats-secret`              |
-| `tfyMonitoringDashboards.tfyNatsUi.accountSeedSecret.key`  | Key inside the Secret                     | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
-| `tfyMonitoringDashboards.tfyMetricsDashboard.enabled`      | Enable Metrics Dashboard                  | `true`                                     |
-| `tfyMonitoringDashboards.headlamp.enabled`                 | Enable Headlamp                           | `true`                                     |
+| `tfyNatsUi.enabled`                                        | Enable NATS UI                            | `false`                                    |
+| `tfyNatsUi.natsUrl`                                        | Value for NATS_URL when env is empty      | `http://{{ .Release.Name }}-tfy-nats:4222` |
+| `tfyNatsUi.accountSeedSecret.name`                         | Existing Secret name when env is empty    | `truefoundry-tfy-nats-secret`              |
+| `tfyNatsUi.accountSeedSecret.key`                          | Key inside the Secret                     | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
+| `tfyMetricsDashboard.enabled`                              | Enable Metrics Dashboard                  | `false`                                    |
+| `headlamp.enabled`                                         | Enable Headlamp                           | `false`                                    |
