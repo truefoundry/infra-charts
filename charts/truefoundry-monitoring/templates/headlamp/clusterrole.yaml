@@ -1,18 +1,20 @@
 {{- if .Values.headlamp.enabled }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: Role
 metadata:
   name: {{ .Release.Name }}-headlamp-readonly
+  namespace: {{ include "truefoundry-monitoring.controlPlaneNamespace" . }}
   labels:
     app.kubernetes.io/name: headlamp
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ .Release.Name }}-headlamp-readonly
-subjects:
-  - kind: ServiceAccount
-    name: {{ include "tfy-monitoring-dashboards.headlamp.serviceAccountName" . }}
-    namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  {{- if .Values.headlamp.allowPodExec }}
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  {{- end }}
 {{- end }}

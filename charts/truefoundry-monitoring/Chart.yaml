@@ -1,7 +1,7 @@
 apiVersion: v2
 name: truefoundry-monitoring
 description: Monitoring stack for TrueFoundry control plane - Prometheus, Logs, and Grafana
-version: 0.1.5-rc.3
+version: 0.1.5-rc.4
 maintainers:
   - name: truefoundry
 dependencies:
@@ -19,8 +19,7 @@ dependencies:
     version: 10.4.0
     repository: https://grafana.github.io/helm-charts
     condition: grafana.enabled
-  - name: tfy-monitoring-dashboards
-    version: 0.1.2
-    repository: https://truefoundry.github.io/infra-charts/
-    alias: tfyMonitoringDashboards
-    condition: tfyMonitoringDashboards.enabled
+  - name: headlamp
+    version: "0.41.0"
+    repository: "https://kubernetes-sigs.github.io/headlamp/"
+    condition: headlamp.enabled

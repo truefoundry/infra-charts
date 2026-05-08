@@ -2,30 +2,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tfy-monitoring-dashboards.metrics-dashboard.fullname" . }}
+  name: {{ include "truefoundry-monitoring.metrics-dashboard.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "tfy-monitoring-dashboards.metrics-dashboard.labels" . | nindent 4 }}
+    {{- include "truefoundry-monitoring.metrics-dashboard.labels" . | nindent 4 }}
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   replicas: {{ .Values.tfyMetricsDashboard.replicaCount | default 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-monitoring-dashboards.metrics-dashboard.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry-monitoring.metrics-dashboard.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "tfy-monitoring-dashboards.metrics-dashboard.labels" . | nindent 8 }}
+        {{- include "truefoundry-monitoring.metrics-dashboard.labels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "tfy-monitoring-dashboards.metrics-dashboard.serviceAccountName" . }}
+      serviceAccountName: {{ include "truefoundry-monitoring.metrics-dashboard.serviceAccountName" . }}
       {{- with .Values.tfyMetricsDashboard.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: tfy-metrics-dashboard
-          image: {{ include "tfy-monitoring-dashboards.metrics-dashboard.image" . | quote }}
+          image: {{ include "truefoundry-monitoring.metrics-dashboard.image" . | quote }}
           imagePullPolicy: {{ .Values.tfyMetricsDashboard.imagePullPolicy }}
           {{- with .Values.tfyMetricsDashboard.securityContext }}
           securityContext:
@@ -35,7 +35,7 @@ spec:
             - name: PROMETHEUS_URL
               value: {{ .Values.tfyMetricsDashboard.prometheusUrl | default "" | quote }}
             - name: TARGET_NAMESPACE
-              value: {{ .Values.tfyMetricsDashboard.targetNamespace | default "truefoundry" | quote }}
+              value: {{ .Values.tfyMetricsDashboard.targetNamespace | default (include "truefoundry-monitoring.controlPlaneNamespace" .) | quote }}
             - name: DASHBOARD_VISIBILITY
               value: {{ .Values.tfyMetricsDashboard.dashboardVisibility | toJson | quote }}
           ports:
@@ -57,7 +57,7 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
           resources:
-            {{- include "tfy-monitoring-dashboards.metrics-dashboard.resources" . | nindent 12 }}
+            {{- include "truefoundry-monitoring.metrics-dashboard.resources" . | nindent 12 }}
       {{- with .Values.tfyMetricsDashboard.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "tfy-monitoring-dashboards.nats-ui.fullname" . }}
+  name: {{ include "truefoundry-monitoring.nats-ui.fullname" . }}
   labels:
-    {{- include "tfy-monitoring-dashboards.nats-ui.labels" . | nindent 4 }}
+    {{- include "truefoundry-monitoring.nats-ui.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.tfyNatsUi.replicaCount | default 1 }}
   selector:
     matchLabels:
-      {{- include "tfy-monitoring-dashboards.nats-ui.selectorLabels" . | nindent 6 }}
+      {{- include "truefoundry-monitoring.nats-ui.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "tfy-monitoring-dashboards.nats-ui.labels" . | nindent 8 }}
+        {{- include "truefoundry-monitoring.nats-ui.labels" . | nindent 8 }}
     spec:
-      serviceAccountName: {{ include "tfy-monitoring-dashboards.nats-ui.serviceAccountName" . }}
+      serviceAccountName: {{ include "truefoundry-monitoring.nats-ui.serviceAccountName" . }}
       imagePullSecrets:
-        {{- include "tfy-monitoring-dashboards.nats-ui.imagePullSecrets" . | nindent 8 }}
+        {{- include "truefoundry-monitoring.nats-ui.imagePullSecrets" . | nindent 8 }}
       {{- with .Values.tfyNatsUi.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -28,7 +28,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: {{ include "tfy-monitoring-dashboards.nats-ui.image" . }}
+          image: {{ include "truefoundry-monitoring.nats-ui.image" . }}
           imagePullPolicy: {{ .Values.tfyNatsUi.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
@@ -37,7 +37,7 @@ spec:
           env:
             {{- $envMap := .Values.tfyNatsUi.env | default dict }}
             {{- if gt (len (keys $envMap)) 0 }}
-            {{- include "tfy-monitoring-dashboards.nats-ui.env" . | trim | nindent 12 }}
+            {{- include "truefoundry-monitoring.nats-ui.env" . | trim | nindent 12 }}
             {{- else }}
             - name: NATS_URL
               value: {{ tpl (required "tfyNatsUi.natsUrl is required when enabled and env is empty" .Values.tfyNatsUi.natsUrl) . | quote }}
