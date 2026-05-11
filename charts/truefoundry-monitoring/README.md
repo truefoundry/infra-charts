@@ -148,33 +148,33 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 
 ### Metrics Dashboard configuration
 
-| Name                                                              | Description                                                                                   | Value                                      |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `tfyMetricsDashboard.enabled`                                     | Deploy Metrics Dashboard Deployment and Service                                               | `false`                                    |
-| `tfyMetricsDashboard.nameOverride`                                | Override the component name used in labels and the Deployment name                            | `""`                                       |
-| `tfyMetricsDashboard.fullnameOverride`                            | If set, overrides the Deployment full name                                                    | `""`                                       |
-| `tfyMetricsDashboard.replicaCount`                                | Number of replicas                                                                            | `1`                                        |
-| `tfyMetricsDashboard.image.registry`                              | Image registry                                                                                | `tfy.jfrog.io`                             |
-| `tfyMetricsDashboard.image.repository`                            | Container image repository (path within registry)                                             | `tfy-private-images/tfy-metrics-dashboard` |
-| `tfyMetricsDashboard.image.tag`                                   | Image tag                                                                                     | `5940b1e5f60e003e973d7984f7b0f4aac03bcadd` |
-| `tfyMetricsDashboard.prometheusUrl`                               | Prometheus base URL (required)                                                                | `""`                                       |
-| `tfyMetricsDashboard.targetNamespace`                             | Kubernetes namespace to scope PromQL queries (used as $namespace in queries)                  | `""`                                       |
-| `tfyMetricsDashboard.dashboardVisibility`                         | Per-dashboard visibility toggle keyed by filename. Set a key to false to hide that dashboard. | `{}`                                       |
-| `tfyMetricsDashboard.imagePullPolicy`                             | Image pull policy                                                                             | `IfNotPresent`                             |
-| `tfyMetricsDashboard.serviceAccount.create`                       | Create a dedicated ServiceAccount                                                             | `false`                                    |
-| `tfyMetricsDashboard.serviceAccount.name`                         | Override ServiceAccount name                                                                  | `""`                                       |
-| `tfyMetricsDashboard.serviceAccount.annotations`                  | Service account annotations                                                                   | `{}`                                       |
-| `tfyMetricsDashboard.serviceAccount.labels`                       | Extra labels for the ServiceAccount                                                           | `{}`                                       |
-| `tfyMetricsDashboard.serviceAccount.automountServiceAccountToken` | Automount service account token                                                               | `false`                                    |
-| `tfyMetricsDashboard.imagePullSecrets`                            | Image pull secrets                                                                            | `[]`                                       |
-| `tfyMetricsDashboard.podSecurityContext`                          | Pod-level security context                                                                    | `{}`                                       |
-| `tfyMetricsDashboard.securityContext`                             | Container-level security context                                                              | `{}`                                       |
-| `tfyMetricsDashboard.service.type`                                | Kubernetes Service type                                                                       | `ClusterIP`                                |
-| `tfyMetricsDashboard.service.port`                                | Kubernetes Service port                                                                       | `80`                                       |
-| `tfyMetricsDashboard.resources`                                   | CPU/Memory resource requests/limits                                                           | `{}`                                       |
-| `tfyMetricsDashboard.nodeSelector`                                | Node labels for pod assignment                                                                | `{}`                                       |
-| `tfyMetricsDashboard.tolerations`                                 | Tolerations for pod assignment                                                                | `[]`                                       |
-| `tfyMetricsDashboard.affinity`                                    | Affinity for pod assignment                                                                   | `{}`                                       |
+| Name                                                              | Description                                                                                   | Value                                                          |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `tfyMetricsDashboard.enabled`                                     | Deploy Metrics Dashboard Deployment and Service                                               | `false`                                                        |
+| `tfyMetricsDashboard.nameOverride`                                | Override the component name used in labels and the Deployment name                            | `""`                                                           |
+| `tfyMetricsDashboard.fullnameOverride`                            | If set, overrides the Deployment full name                                                    | `""`                                                           |
+| `tfyMetricsDashboard.replicaCount`                                | Number of replicas                                                                            | `1`                                                            |
+| `tfyMetricsDashboard.image.registry`                              | Image registry                                                                                | `tfy.jfrog.io`                                                 |
+| `tfyMetricsDashboard.image.repository`                            | Container image repository (path within registry)                                             | `tfy-private-images/tfy-metrics-dashboard`                     |
+| `tfyMetricsDashboard.image.tag`                                   | Image tag                                                                                     | `5940b1e5f60e003e973d7984f7b0f4aac03bcadd`                     |
+| `tfyMetricsDashboard.prometheusUrl`                               | Prometheus base URL (required)                                                                | `http://prometheus-operated.prometheus.svc.cluster.local:9090` |
+| `tfyMetricsDashboard.targetNamespace`                             | Kubernetes namespace to scope PromQL queries (used as $namespace in queries)                  | `""`                                                           |
+| `tfyMetricsDashboard.dashboardVisibility`                         | Per-dashboard visibility toggle keyed by filename. Set a key to false to hide that dashboard. | `{}`                                                           |
+| `tfyMetricsDashboard.imagePullPolicy`                             | Image pull policy                                                                             | `IfNotPresent`                                                 |
+| `tfyMetricsDashboard.serviceAccount.create`                       | Create a dedicated ServiceAccount                                                             | `false`                                                        |
+| `tfyMetricsDashboard.serviceAccount.name`                         | Override ServiceAccount name                                                                  | `""`                                                           |
+| `tfyMetricsDashboard.serviceAccount.annotations`                  | Service account annotations                                                                   | `{}`                                                           |
+| `tfyMetricsDashboard.serviceAccount.labels`                       | Extra labels for the ServiceAccount                                                           | `{}`                                                           |
+| `tfyMetricsDashboard.serviceAccount.automountServiceAccountToken` | Automount service account token                                                               | `false`                                                        |
+| `tfyMetricsDashboard.imagePullSecrets`                            | Image pull secrets                                                                            | `[]`                                                           |
+| `tfyMetricsDashboard.podSecurityContext`                          | Pod-level security context                                                                    | `{}`                                                           |
+| `tfyMetricsDashboard.securityContext`                             | Container-level security context                                                              | `{}`                                                           |
+| `tfyMetricsDashboard.service.type`                                | Kubernetes Service type                                                                       | `ClusterIP`                                                    |
+| `tfyMetricsDashboard.service.port`                                | Kubernetes Service port                                                                       | `8080`                                                         |
+| `tfyMetricsDashboard.resources`                                   | CPU/Memory resource requests/limits                                                           | `{}`                                                           |
+| `tfyMetricsDashboard.nodeSelector`                                | Node labels for pod assignment                                                                | `{}`                                                           |
+| `tfyMetricsDashboard.tolerations`                                 | Tolerations for pod assignment                                                                | `[]`                                                           |
+| `tfyMetricsDashboard.affinity`                                    | Affinity for pod assignment                                                                   | `{}`                                                           |
 
 ### Headlamp configuration
 

@@ -17,7 +17,7 @@ spec:
     spec:
       serviceAccountName: {{ include "truefoundry-monitoring.nats-ui.serviceAccountName" . }}
       imagePullSecrets:
-        {{- include "truefoundry-monitoring.nats-ui.imagePullSecrets" . | nindent 8 }}
+        {{- include "truefoundry-monitoring.imagePullSecrets" (list .Values.tfyNatsUi.imagePullSecrets .) | nindent 8 }}
       {{- with .Values.tfyNatsUi.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

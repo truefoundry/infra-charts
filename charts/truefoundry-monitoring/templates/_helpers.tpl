@@ -189,12 +189,14 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- tpl ((.Values.tfyNatsUi.env | default dict) | toYaml) . }}
 {{- end }}
 
-{{- define "truefoundry-monitoring.nats-ui.imagePullSecrets" -}}
-{{- if .Values.tfyNatsUi.imagePullSecrets -}}
-{{- toYaml .Values.tfyNatsUi.imagePullSecrets }}
-{{- else if .Values.global.imagePullSecrets -}}
-{{- toYaml .Values.global.imagePullSecrets }}
-{{- else if .Values.global.truefoundryImagePullConfigJSON -}}
+{{- define "truefoundry-monitoring.imagePullSecrets" -}}
+{{- $componentSecrets := index . 0 -}}
+{{- $ctx := index . 1 -}}
+{{- if $componentSecrets -}}
+{{- toYaml $componentSecrets }}
+{{- else if $ctx.Values.global.imagePullSecrets -}}
+{{- toYaml $ctx.Values.global.imagePullSecrets }}
+{{- else if $ctx.Values.global.truefoundryImagePullConfigJSON -}}
 - name: truefoundry-image-pull-secret
 {{- else -}}
 []
