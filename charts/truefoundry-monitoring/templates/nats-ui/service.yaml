@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ default "tfy-nats-ui" .Values.tfyNatsUi.service.name }}
+  name: {{ include "truefoundry-monitoring.nats-ui.fullname" . }}
   labels:
     {{- include "truefoundry-monitoring.nats-ui.labels" . | nindent 4 }}
   {{- with .Values.tfyNatsUi.service.annotations }}
