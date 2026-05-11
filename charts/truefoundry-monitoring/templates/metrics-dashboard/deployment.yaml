@@ -58,10 +58,8 @@ spec:
             failureThreshold: 3
           resources:
             {{- include "truefoundry-monitoring.metrics-dashboard.resources" . | nindent 12 }}
-      {{- with .Values.tfyMetricsDashboard.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- include "truefoundry-monitoring.imagePullSecrets" (list .Values.tfyMetricsDashboard.imagePullSecrets .) | nindent 8 }}
       {{- with .Values.tfyMetricsDashboard.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
