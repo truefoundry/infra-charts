@@ -134,7 +134,6 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 | `tfyNatsUi.natsUrl`                                     | NATS_URL env var when env is empty                                  | `http://{{ .Release.Name }}-tfy-nats:4222` |
 | `tfyNatsUi.accountSeedSecret.name`                      | Existing Secret name when env is empty                              | `truefoundry-tfy-nats-secret`              |
 | `tfyNatsUi.accountSeedSecret.key`                       | Key inside the Secret                                               | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
-| `tfyNatsUi.service.name`                                | Kubernetes Service metadata.name                                    | `tfy-nats-ui`                              |
 | `tfyNatsUi.service.type`                                | Service type                                                        | `ClusterIP`                                |
 | `tfyNatsUi.service.port`                                | Service port                                                        | `8080`                                     |
 | `tfyNatsUi.service.targetPort`                          | Container port (defaults to service.port)                           | `""`                                       |
