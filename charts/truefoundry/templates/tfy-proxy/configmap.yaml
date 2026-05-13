@@ -354,6 +354,30 @@ data:
       }
       {{- end }}
 
+      {{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.tfyNatsUi.enabled }}
+      # /admin/nats/* → /api/nats/proxy/* on upstream:3000
+      handle /admin/nats/* {
+        uri replace /admin/nats /api/nats/proxy
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
+      {{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.tfyMetricsDashboard.enabled }}
+      # /admin/metrics-dashboard/* → /api/metrics-dashboard/proxy/* on upstream:3000
+      handle /admin/metrics-dashboard/* {
+        uri replace /admin/metrics-dashboard /api/metrics-dashboard/proxy
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
+      {{- if and .Values.truefoundryMonitoring.enabled .Values.truefoundryMonitoring.headlamp.enabled }}
+      # /admin/kubernetes/* → /api/kubernetes/proxy/* on upstream:3000
+      handle /admin/kubernetes/* {
+        uri replace /admin/kubernetes /api/kubernetes/proxy
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
