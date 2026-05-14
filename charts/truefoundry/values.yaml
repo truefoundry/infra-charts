@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.143.1
+  controlPlaneChartVersion: 0.143.2
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -769,7 +769,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.143.1"
+    tag: "v0.143.4"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -3292,7 +3292,7 @@ deltaFusionQueryServer:
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
   ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
-  enableLiveLogs: false
+  enableLiveLogs: true
 ## @section tfyProxy Truefoundry tfy proxy values
 tfyProxy:
   ## @param tfyProxy.enabled Bool to enable the tfyProxy
@@ -3428,6 +3428,8 @@ tfyProxy:
     type: ClusterIP
     ## @param tfyProxy.service.port Service port for the tfyProxy
     port: 8080
+    ## @param tfyProxy.service.nodePort NodePort for the tfyProxy service (only used when service.type is NodePort). Leave empty to auto-assign.
+    nodePort: ""
     ## @param tfyProxy.service.metricsPort Metrics port for the tfyProxy
     metricsPort: 2019
     ## @param tfyProxy.service.labels [object] Labels for the tfyProxy service

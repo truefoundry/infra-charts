@@ -16,6 +16,9 @@ spec:
       targetPort: {{ .Values.tfyProxy.service.port }}
       protocol: TCP
       appProtocol: tcp
+      {{- if and (eq .Values.tfyProxy.service.type "NodePort") .Values.tfyProxy.service.nodePort }}
+      nodePort: {{ .Values.tfyProxy.service.nodePort }}
+      {{- end }}
     {{- if .Values.tfyProxy.adminApi.enabled }}
     - name: metrics
       port: 2019
