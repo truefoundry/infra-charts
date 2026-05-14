@@ -36,8 +36,11 @@ spec:
         {{- $mergedAffinity = .Values.argocd.affinity }}
         {{- end }}
 
-        {{- if .Values.registry }}
+        
         global:
+          logging:
+            level: warn
+        {{- if .Values.registry }}
           image:
             repository: {{ .Values.registry }}/argoproj/argocd
           imagePullSecrets:
