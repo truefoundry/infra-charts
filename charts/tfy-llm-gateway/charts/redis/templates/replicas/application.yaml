@@ -88,6 +88,8 @@ spec:
       {{- end }}
       {{- if .Values.replica.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.replica.nodeSelector "context" $) | nindent 8 }}
+      {{- else if .Values.global.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.global.nodeSelector "context" $) | nindent 8 }}
       {{- end }}
       {{- if .Values.replica.tolerations }}
       tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.replica.tolerations "context" $) | nindent 8 }}
