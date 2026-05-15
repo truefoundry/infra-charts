@@ -34,37 +34,11 @@ global:
   ## @param global.serviceLabels [object] Global service labels
   serviceLabels: {}
   ## @param global.tolerations [array] Tolerations for pod scheduling on a node
-  tolerations:
-    - key: class.truefoundry.io/control-plane
-      effect: NoSchedule
-      operator: Exists
-    - key: class.truefoundry.com/component
-      value: critical
-      effect: NoSchedule
+  tolerations: []
   ## @param global.nodeSelector [object] Node selector
   nodeSelector: {}
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: karpenter.sh/capacity-type
-                operator: NotIn
-                values:
-                  - spot
-              - key: eks.amazonaws.com/capacityType
-                operator: NotIn
-                values:
-                  - SPOT
-              - key: cloud.google.com/gke-provisioning
-                operator: NotIn
-                values:
-                  - spot
-              - key: kubernetes.azure.com/scalesetpriority
-                operator: NotIn
-                values:
-                  - spot
+  affinity: {}
   ## global.serviceAccount Service account configuration
   serviceAccount:
     ## @param global.serviceAccount.name Service account name
@@ -403,9 +377,35 @@ redis:
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
     ## @skip redis.master.tolerations Tolerations for Redis master pods
-    tolerations: []
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: class.truefoundry.com/component
+        value: critical
+        effect: NoSchedule
     ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: karpenter.sh/capacity-type
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: eks.amazonaws.com/capacityType
+                  operator: NotIn
+                  values:
+                    - SPOT
+                - key: cloud.google.com/gke-provisioning
+                  operator: NotIn
+                  values:
+                    - spot
+                - key: kubernetes.azure.com/scalesetpriority
+                  operator: NotIn
+                  values:
+                    - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
       # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
