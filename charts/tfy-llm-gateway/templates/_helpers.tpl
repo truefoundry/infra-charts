@@ -206,6 +206,88 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+  Whether the TLS sidecar (Caddy in tfy-proxy) is enabled
+*/}}
+{{- define "tfy-llm-gateway.tls.enabled" -}}
+{{- if .Values.tls.enabled }}true{{- else -}}false{{- end -}}
+{{- end -}}
+
+{{/*
+  ConfigMap name for the sidecar Caddyfile
+*/}}
+{{- define "tfy-llm-gateway.tls.configMapName" -}}
+{{- if .Values.tls.sidecar.configMapName -}}
+{{- .Values.tls.sidecar.configMapName -}}
+{{- else -}}
+{{- printf "%s-caddyfile" (include "tfy-llm-gateway.fullname" .) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Fail fast if TLS sidecar is misconfigured
+*/}}
+{{- define "tfy-llm-gateway.tls.validate" -}}
+{{- if .Values.tls.enabled }}
+{{- if not .Values.tls.tlsSecretName }}
+{{- fail "tls.enabled is true but tls.tlsSecretName is empty. Set tls.tlsSecretName to a Secret containing tls.crt and tls.key." }}
+{{- end }}
+{{- if eq (int .Values.tls.sidecar.containerPort) (int .Values.service.port) }}
+{{- fail "tls.sidecar.containerPort must differ from service.port (gateway listens on service.port; the sidecar cannot use the same port)." }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Volume mounts for the TLS sidecar container:
+  - caddyfile  (ConfigMap, read-only) -> /etc/caddy/Caddyfile (subPath)
+  - tls-cert   (Secret,    read-only) -> /etc/caddy/tls
+  - caddy-data (emptyDir)             -> /data
+  - caddy-config (emptyDir)           -> /config
+*/}}
+{{- define "tfy-llm-gateway.tls.volumeMounts" -}}
+{{- if .Values.tls.enabled -}}
+- name: caddyfile
+  mountPath: /etc/caddy/Caddyfile
+  subPath: Caddyfile
+  readOnly: true
+- name: tls-cert
+  mountPath: /etc/caddy/tls
+  readOnly: true
+- name: caddy-data
+  mountPath: /data
+- name: caddy-config
+  mountPath: /config
+{{- end }}
+{{- end -}}
+
+{{/*
+  Pod-level volumes backing the TLS sidecar mounts:
+  - caddyfile    sourced from the Caddyfile ConfigMap
+  - tls-cert     sourced from the user-supplied TLS Secret (tls.crt / tls.key)
+  - caddy-data   ephemeral state directory
+  - caddy-config ephemeral autosave directory
+*/}}
+{{- define "tfy-llm-gateway.tls.volumes" -}}
+{{- if .Values.tls.enabled -}}
+- name: caddyfile
+  configMap:
+    name: {{ include "tfy-llm-gateway.tls.configMapName" . }}
+- name: tls-cert
+  secret:
+    secretName: {{ .Values.tls.tlsSecretName }}
+    items:
+      - key: tls.crt
+        path: tls.crt
+      - key: tls.key
+        path: tls.key
+- name: caddy-data
+  emptyDir: {}
+- name: caddy-config
+  emptyDir: {}
+{{- end }}
+{{- end -}}
+
+{{/*
   Parse env from template
   */}}
 {{- define "tfy-llm-gateway.parseEnv" -}}

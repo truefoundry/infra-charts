@@ -213,7 +213,10 @@ podDisruptionBudget:
 ingress:
   ## @param ingress.enabled Enable ingress configuration
   enabled: false
-  ## @param ingress.annotations Ingress annotations
+  ## @param ingress.annotations Ingress annotations. When `tls.enabled` is true the controller must forward the TLS connection to the pod without terminating it; for ingress-nginx add `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` (controller must be started with `--enable-ssl-passthrough`). Other controllers use their own mechanism (e.g. Istio Gateway `tls.mode: PASSTHROUGH`).
+  ## Example for ingress-nginx with the TLS sidecar enabled:
+  ##   annotations:
+  ##     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   annotations: {}
   ## @param ingress.labels Ingress labels
   labels: {}
@@ -271,6 +274,96 @@ service:
   annotations: {}
   ## @param service.labels Service labels
   labels: {}
+## TLS configuration for the gateway.
+## When `tls.enabled` is true, a sidecar (tfy-proxy / Caddy) terminates TLS on
+## `tls.sidecar.containerPort` (default 8081) using the cert in `tls.tlsSecretName`,
+## and reverse-proxies to the gateway on loopback. The ClusterIP service.port
+## (default 8787) forwards to that sidecar port; the gateway container itself
+## stays plaintext and listens on service.port.
+##
+## IMPORTANT — Ingress wiring (when ingress.enabled is true):
+## TLS is terminated INSIDE the pod, so your ingress controller must forward
+## the encrypted connection without terminating it. The chart does NOT add the
+## controller-specific annotation for you; set it under `ingress.annotations`.
+## For ingress-nginx, that means:
+##     ingress:
+##       annotations:
+##         nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+## (The ingress-nginx controller must also be started with
+##  `--enable-ssl-passthrough`, which is off by default.)
+## For Istio, configure passthrough on the Gateway resource
+## (`tls.mode: PASSTHROUGH`); for ALB / Traefik / others, follow their docs.
+tls:
+  ## @param tls.enabled Enable TLS termination via the sidecar
+  enabled: false
+  ## @param tls.tlsSecretName Secret containing tls.crt and tls.key for the sidecar (required when tls.enabled is true)
+  tlsSecretName: ""
+  ## tls.sidecar Sidecar (tfy-proxy / Caddy) container settings.
+  sidecar:
+    ## @param tls.sidecar.name Sidecar container name
+    name: caddy
+    ## @param tls.sidecar.containerPort TCP port the sidecar listens on for TLS (must differ from service.port; Service targetPort when sidecar is enabled)
+    containerPort: 8081
+    ## @param tls.sidecar.configMapName Override Caddyfile ConfigMap name (default: fullname + "-caddyfile")
+    configMapName: ""
+    ## @param tls.sidecar.imagePullPolicy Image pull policy for the TLS sidecar container. Empty string inherits the top-level `imagePullPolicy`.
+    imagePullPolicy: ""
+    ## tls.sidecar.image Image for the TLS sidecar container.
+    image:
+      ## @param tls.sidecar.image.registry Registry override for the TLS sidecar image (defaults to image.registry, then global.image.registry)
+      registry: ""
+      ## @param tls.sidecar.image.repository Repository for the TLS sidecar image
+      repository: tfy-private-images/tfy-proxy
+      ## @param tls.sidecar.image.tag Tag for the TLS sidecar image (defaults to the gateway image.tag when empty)
+      tag: ""
+    ## @param tls.sidecar.resources [object] Resource requests/limits for the TLS sidecar container
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    ## @param tls.sidecar.securityContext [object] Security context for the TLS sidecar container (mirrors the main container's defaults)
+    securityContext:
+      enabled: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    ## tls.sidecar.healthcheck Probes target the TLS listener (tls.sidecar.containerPort) via tcpSocket.
+    healthcheck:
+      ## @param tls.sidecar.healthcheck.enabled Enable readiness/liveness probes for the TLS sidecar
+      enabled: true
+      ## tls.sidecar.healthcheck.readiness Readiness probe configuration
+      readiness:
+        ## @param tls.sidecar.healthcheck.readiness.port TCP port the readiness probe checks. Empty string falls back to tls.sidecar.containerPort.
+        port: ""
+        ## @param tls.sidecar.healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+        initialDelaySeconds: 5
+        ## @param tls.sidecar.healthcheck.readiness.periodSeconds Period in seconds
+        periodSeconds: 10
+        ## @param tls.sidecar.healthcheck.readiness.timeoutSeconds Timeout in seconds
+        timeoutSeconds: 1
+        ## @param tls.sidecar.healthcheck.readiness.successThreshold Success threshold
+        successThreshold: 1
+        ## @param tls.sidecar.healthcheck.readiness.failureThreshold Failure threshold
+        failureThreshold: 3
+      ## tls.sidecar.healthcheck.liveness Liveness probe configuration
+      liveness:
+        ## @param tls.sidecar.healthcheck.liveness.port TCP port the liveness probe checks. Empty string falls back to tls.sidecar.containerPort.
+        port: ""
+        ## @param tls.sidecar.healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+        initialDelaySeconds: 15
+        ## @param tls.sidecar.healthcheck.liveness.periodSeconds Period in seconds
+        periodSeconds: 20
+        ## @param tls.sidecar.healthcheck.liveness.timeoutSeconds Timeout in seconds
+        timeoutSeconds: 1
+        ## @param tls.sidecar.healthcheck.liveness.successThreshold Success threshold
+        successThreshold: 1
+        ## @param tls.sidecar.healthcheck.liveness.failureThreshold Failure threshold
+        failureThreshold: 3
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
