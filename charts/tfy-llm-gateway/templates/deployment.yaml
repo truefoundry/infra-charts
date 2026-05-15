@@ -1,3 +1,4 @@
+{{- include "tfy-llm-gateway.tls.validate" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,6 +102,41 @@ spec:
           {{- if .Values.global.customCA.enabled }}
           {{- include "tfy-llm-gateway.customCA.volumeMounts" . | nindent 10 }}
           {{- end }}
+        {{- if .Values.tls.enabled }}
+        - name: {{ .Values.tls.sidecar.name }}
+          {{- if .Values.tls.sidecar.securityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.tls.sidecar.securityContext "enabled") | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.tls.sidecar.image.registry | default .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.tls.sidecar.image.repository }}:{{ .Values.tls.sidecar.image.tag | default .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.tls.sidecar.imagePullPolicy | default .Values.imagePullPolicy }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.tls.sidecar.containerPort }}
+              protocol: TCP
+          volumeMounts:
+            {{- include "tfy-llm-gateway.tls.volumeMounts" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.tls.sidecar.resources | nindent 12 }}
+          {{- if .Values.tls.sidecar.healthcheck.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.tls.sidecar.healthcheck.readiness.port | default .Values.tls.sidecar.containerPort }}
+            initialDelaySeconds: {{ .Values.tls.sidecar.healthcheck.readiness.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.tls.sidecar.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.tls.sidecar.healthcheck.readiness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.tls.sidecar.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.tls.sidecar.healthcheck.readiness.failureThreshold | default 3 }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.tls.sidecar.healthcheck.liveness.port | default .Values.tls.sidecar.containerPort }}
+            initialDelaySeconds: {{ .Values.tls.sidecar.healthcheck.liveness.initialDelaySeconds | default 15 }}
+            periodSeconds: {{ .Values.tls.sidecar.healthcheck.liveness.periodSeconds | default 20 }}
+            timeoutSeconds: {{ .Values.tls.sidecar.healthcheck.liveness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.tls.sidecar.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.tls.sidecar.healthcheck.liveness.failureThreshold | default 3 }}
+          {{- end }}
+        {{- end }}
       imagePullSecrets:
         {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -117,6 +153,9 @@ spec:
       {{- end }}
       {{- if .Values.global.customCA.enabled }}
       {{- include "tfy-llm-gateway.customCA.volumes" . | nindent 6 }}
+      {{- end }}
+      {{- if .Values.tls.enabled }}
+      {{- include "tfy-llm-gateway.tls.volumes" . | nindent 6 }}
       {{- end }}
       nodeSelector:
         {{- include "tfy-llm-gateway.nodeSelector" . | nindent 8 }}
