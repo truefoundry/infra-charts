@@ -287,7 +287,8 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### externalSecretsOperator configuration parameters
 
-| Name                              | Description                                                            | Value              |
-| --------------------------------- | ---------------------------------------------------------------------- | ------------------ |
-| `externalSecretsOperator.enabled` | Bool value to deploy externalSecretsOperator                           | `false`            |
-| `externalSecretsOperator.name`    | Name of the ClusterSecretStore resource (defaults to release fullname) | `tfy-secret-store` |
+| Name                                   | Description                                          | Value              |
+| -------------------------------------- | ---------------------------------------------------- | ------------------ |
+| `externalSecretsOperator.enabled`      | Bool value to deploy externalSecretsOperator         | `false`            |
+| `externalSecretsOperator.name`         | Name of the ClusterSecretStore resource              | `tfy-secret-store` |
+| `externalSecretsOperator.nameOverride` | Overrides the external-secrets subchart name segment | `external-secrets` |
