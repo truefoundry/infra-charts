@@ -266,7 +266,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `sdsServer.service.type`                                | Type for sdsServer Service                                                                                        | `ClusterIP`                                |
 | `sdsServer.image.repository`                            | Repository for sdsServer                                                                                          | `tfy.jfrog.io/tfy-images/sds-server`       |
 | `sdsServer.image.pullPolicy`                            | Pull policy for sdsServer                                                                                         | `IfNotPresent`                             |
-| `sdsServer.image.tag`                                   | Tag for sdsServer                                                                                                 | `c3bb65485f56faaa236f4ee02074c6da7ab269a8` |
+| `sdsServer.image.tag`                                   | Tag for sdsServer                                                                                                 | `e7b37e62356cfa186e0c865135540d7707f13a29` |
 | `sdsServer.affinity`                                    | Node affinity for sdsServer                                                                                       | `{}`                                       |
 | `sdsServer.imagePullSecrets`                            | Image pull credentials for sdsServer                                                                              | `[]`                                       |
 | `sdsServer.command`                                     | Command and arguments to start the sdsServer application.                                                         | `["/app/sds-server","--port","8000"]`      |
@@ -284,3 +284,10 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `sdsServer.resources.requests.memory`                   | The minimum memory resources requested.                                                                           | `30M`                                      |
 | `sdsServer.tolerations`                                 | Tolerations for the sdsServer application                                                                         | `[]`                                       |
 | `sdsServer.topologySpreadConstraints`                   | topology spread constraints on sdsServer application                                                              | `[]`                                       |
+
+### externalSecretsOperator configuration parameters
+
+| Name                              | Description                                                            | Value              |
+| --------------------------------- | ---------------------------------------------------------------------- | ------------------ |
+| `externalSecretsOperator.enabled` | Bool value to deploy externalSecretsOperator                           | `false`            |
+| `externalSecretsOperator.name`    | Name of the ClusterSecretStore resource (defaults to release fullname) | `tfy-secret-store` |
