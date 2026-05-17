@@ -789,16 +789,15 @@ sdsServer:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
 
-## @section externalSecretsOperator configuration parameters
+## @section eso (external-secrets operator) configuration parameters
 ##
-externalSecretsOperator:
-  ## @param externalSecretsOperator.enabled Bool value to deploy externalSecretsOperator
+eso:
+  ## @param eso.enabled Bool value to deploy the external-secrets operator subchart
   ##
   enabled: false
-  ## @param externalSecretsOperator.name Name of the ClusterSecretStore resource
+  ## @param eso.clusterSecretStoreName Name of the ClusterSecretStore resource
   ##
   clusterSecretStoreName: "tfy-secret-store"
-  ## Subchart alias is camelCase (invalid for K8s names); override to a DNS-safe chart name.
-  ## @param externalSecretsOperator.nameOverride Overrides the external-secrets subchart name segment
+  ## @param eso.nameOverride Overrides the subchart name segment in K8s resource names (release-name-{nameOverride})
   ##
   nameOverride: external-secrets
