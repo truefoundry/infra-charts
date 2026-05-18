@@ -391,6 +391,32 @@ Create the name of the secret which will contain cluster token
 {{- end }}
 
 {{/*
+Trimmed external control plane base URL (https://...).
+*/}}
+{{- define "tfy-agent.controlPlaneBaseURL" -}}
+{{- .Values.config.controlPlaneURL | trimSuffix "/" -}}
+{{- end }}
+
+{{/*
+Resolved CONTROL_PLANE_URL: external base URL when set, otherwise in-cluster cluster IP.
+*/}}
+{{- define "tfy-agent.controlPlaneURL" -}}
+{{- if .Values.config.controlPlaneURL -}}
+{{- include "tfy-agent.controlPlaneBaseURL" . -}}
+{{- else -}}
+{{- .Values.config.controlPlaneClusterIP -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Webhook URL for the ClusterSecretStore control-plane secret provider.
+Uses external-secrets templating (not Helm) for .remoteRef.key.
+*/}}
+{{- define "tfy-agent.clusterSecretStore.webhookUrl" -}}
+{{- printf "%s/api/svc/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.controlPlaneBaseURL" .) "{{ .remoteRef.key }}" -}}
+{{- end }}
+
+{{/*
 ServiceAccount Labels for tfy-agent
 Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}
