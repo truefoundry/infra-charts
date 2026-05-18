@@ -206,46 +206,46 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Whether the TLS sidecar (Caddy in tfy-proxy) is enabled
+  Whether the TLS proxy (Caddy in tfy-proxy) is enabled
 */}}
-{{- define "tfy-llm-gateway.tls.enabled" -}}
-{{- if .Values.tls.enabled }}true{{- else -}}false{{- end -}}
+{{- define "tfy-llm-gateway.proxy.tls.enabled" -}}
+{{- if .Values.proxy.tls.enabled }}true{{- else -}}false{{- end -}}
 {{- end -}}
 
 {{/*
-  ConfigMap name for the sidecar Caddyfile
+  ConfigMap name for the proxy Caddyfile
 */}}
-{{- define "tfy-llm-gateway.tls.configMapName" -}}
-{{- if .Values.tls.sidecar.configMapName -}}
-{{- .Values.tls.sidecar.configMapName -}}
+{{- define "tfy-llm-gateway.proxy.configMapName" -}}
+{{- if .Values.proxy.configMapName -}}
+{{- .Values.proxy.configMapName -}}
 {{- else -}}
 {{- printf "%s-caddyfile" (include "tfy-llm-gateway.fullname" .) -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-  Fail fast if TLS sidecar is misconfigured
+  Fail fast if TLS proxy is misconfigured
 */}}
-{{- define "tfy-llm-gateway.tls.validate" -}}
-{{- if .Values.tls.enabled }}
-{{- if not .Values.tls.tlsSecretName }}
-{{- fail "tls.enabled is true but tls.tlsSecretName is empty. Set tls.tlsSecretName to a Secret containing tls.crt and tls.key." }}
+{{- define "tfy-llm-gateway.proxy.validate" -}}
+{{- if .Values.proxy.tls.enabled }}
+{{- if not .Values.proxy.tls.secretName }}
+{{- fail "proxy.tls.enabled is true but proxy.tls.secretName is empty. Set proxy.tls.secretName to a Secret containing tls.crt and tls.key." }}
 {{- end }}
-{{- if eq (int .Values.tls.sidecar.containerPort) (int .Values.service.port) }}
-{{- fail "tls.sidecar.containerPort must differ from service.port (gateway listens on service.port; the sidecar cannot use the same port)." }}
+{{- if eq (int .Values.proxy.containerPort) (int .Values.service.port) }}
+{{- fail "proxy.containerPort must differ from service.port (gateway listens on service.port; the proxy cannot use the same port)." }}
 {{- end }}
 {{- end }}
 {{- end -}}
 
 {{/*
-  Volume mounts for the TLS sidecar container:
+  Volume mounts for the proxy container:
   - caddyfile  (ConfigMap, read-only) -> /etc/caddy/Caddyfile (subPath)
   - tls-cert   (Secret,    read-only) -> /etc/caddy/tls
   - caddy-data (emptyDir)             -> /data
   - caddy-config (emptyDir)           -> /config
 */}}
-{{- define "tfy-llm-gateway.tls.volumeMounts" -}}
-{{- if .Values.tls.enabled -}}
+{{- define "tfy-llm-gateway.proxy.volumeMounts" -}}
+{{- if .Values.proxy.tls.enabled -}}
 - name: caddyfile
   mountPath: /etc/caddy/Caddyfile
   subPath: Caddyfile
@@ -261,20 +261,20 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-  Pod-level volumes backing the TLS sidecar mounts:
+  Pod-level volumes backing the proxy mounts:
   - caddyfile    sourced from the Caddyfile ConfigMap
   - tls-cert     sourced from the user-supplied TLS Secret (tls.crt / tls.key)
   - caddy-data   ephemeral state directory
   - caddy-config ephemeral autosave directory
 */}}
-{{- define "tfy-llm-gateway.tls.volumes" -}}
-{{- if .Values.tls.enabled -}}
+{{- define "tfy-llm-gateway.proxy.volumes" -}}
+{{- if .Values.proxy.tls.enabled -}}
 - name: caddyfile
   configMap:
-    name: {{ include "tfy-llm-gateway.tls.configMapName" . }}
+    name: {{ include "tfy-llm-gateway.proxy.configMapName" . }}
 - name: tls-cert
   secret:
-    secretName: {{ .Values.tls.tlsSecretName }}
+    secretName: {{ .Values.proxy.tls.secretName }}
     items:
       - key: tls.crt
         path: tls.crt

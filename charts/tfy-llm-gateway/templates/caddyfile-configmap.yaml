@@ -1,9 +1,9 @@
-{{- if .Values.tls.enabled }}
-{{- include "tfy-llm-gateway.tls.validate" . }}
+{{- if .Values.proxy.tls.enabled }}
+{{- include "tfy-llm-gateway.proxy.validate" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "tfy-llm-gateway.tls.configMapName" . }}
+  name: {{ include "tfy-llm-gateway.proxy.configMapName" . }}
   namespace: {{ include "global.namespace" . }}
   labels:
     {{- include "tfy-llm-gateway.commonLabels" . | nindent 4 }}
@@ -20,7 +20,7 @@ data:
       }
     }
 
-    :{{ .Values.tls.sidecar.containerPort }} {
+    :{{ .Values.proxy.containerPort }} {
       tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
 
       reverse_proxy 127.0.0.1:{{ .Values.service.port }} {

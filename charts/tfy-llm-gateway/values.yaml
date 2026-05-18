@@ -213,8 +213,8 @@ podDisruptionBudget:
 ingress:
   ## @param ingress.enabled Enable ingress configuration
   enabled: false
-  ## @param ingress.annotations Ingress annotations. When `tls.enabled` is true the controller must forward the TLS connection to the pod without terminating it; for ingress-nginx add `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` (controller must be started with `--enable-ssl-passthrough`). Other controllers use their own mechanism (e.g. Istio Gateway `tls.mode: PASSTHROUGH`).
-  ## Example for ingress-nginx with the TLS sidecar enabled:
+  ## @param ingress.annotations Ingress annotations. When `proxy.tls.enabled` is true the controller must forward the TLS connection to the pod without terminating it; for ingress-nginx add `nginx.ingress.kubernetes.io/ssl-passthrough: "true"` (controller must be started with `--enable-ssl-passthrough`). Other controllers use their own mechanism (e.g. Istio Gateway `tls.mode: PASSTHROUGH`).
+  ## Example for ingress-nginx with the TLS proxy enabled:
   ##   annotations:
   ##     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
   annotations: {}
@@ -274,11 +274,11 @@ service:
   annotations: {}
   ## @param service.labels Service labels
   labels: {}
-## TLS configuration for the gateway.
-## When `tls.enabled` is true, a sidecar (tfy-proxy / Caddy) terminates TLS on
-## `tls.sidecar.containerPort` (default 8081) using the cert in `tls.tlsSecretName`,
+## Proxy configuration (tfy-proxy / Caddy).
+## When `proxy.tls.enabled` is true, the proxy terminates TLS on
+## `proxy.containerPort` (default 8081) using the cert in `proxy.tls.secretName`,
 ## and reverse-proxies to the gateway on loopback. The ClusterIP service.port
-## (default 8787) forwards to that sidecar port; the gateway container itself
+## (default 8787) forwards to that proxy port; the gateway container itself
 ## stays plaintext and listens on service.port.
 ##
 ## IMPORTANT — Ingress wiring (when ingress.enabled is true):
@@ -293,77 +293,77 @@ service:
 ##  `--enable-ssl-passthrough`, which is off by default.)
 ## For Istio, configure passthrough on the Gateway resource
 ## (`tls.mode: PASSTHROUGH`); for ALB / Traefik / others, follow their docs.
-tls:
-  ## @param tls.enabled Enable TLS termination via the sidecar
-  enabled: false
-  ## @param tls.tlsSecretName Secret containing tls.crt and tls.key for the sidecar (required when tls.enabled is true)
-  tlsSecretName: ""
-  ## tls.sidecar Sidecar (tfy-proxy / Caddy) container settings.
-  sidecar:
-    ## @param tls.sidecar.name Sidecar container name
-    name: caddy
-    ## @param tls.sidecar.containerPort TCP port the sidecar listens on for TLS (must differ from service.port; Service targetPort when sidecar is enabled)
-    containerPort: 8081
-    ## @param tls.sidecar.configMapName Override Caddyfile ConfigMap name (default: fullname + "-caddyfile")
-    configMapName: ""
-    ## @param tls.sidecar.imagePullPolicy Image pull policy for the TLS sidecar container. Empty string inherits the top-level `imagePullPolicy`.
-    imagePullPolicy: ""
-    ## tls.sidecar.image Image for the TLS sidecar container.
-    image:
-      ## @param tls.sidecar.image.registry Registry override for the TLS sidecar image (defaults to image.registry, then global.image.registry)
-      registry: ""
-      ## @param tls.sidecar.image.repository Repository for the TLS sidecar image
-      repository: tfy-private-images/tfy-proxy
-      ## @param tls.sidecar.image.tag Tag for the TLS sidecar image (defaults to the gateway image.tag when empty)
-      tag: ""
-    ## @param tls.sidecar.resources [object] Resource requests/limits for the TLS sidecar container
-    resources:
-      requests:
-        cpu: 100m
-        memory: 64Mi
-      limits:
-        cpu: 500m
-        memory: 256Mi
-    ## @param tls.sidecar.securityContext [object] Security context for the TLS sidecar container (mirrors the main container's defaults)
-    securityContext:
-      enabled: true
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-    ## tls.sidecar.healthcheck Probes target the TLS listener (tls.sidecar.containerPort) via tcpSocket.
-    healthcheck:
-      ## @param tls.sidecar.healthcheck.enabled Enable readiness/liveness probes for the TLS sidecar
-      enabled: true
-      ## tls.sidecar.healthcheck.readiness Readiness probe configuration
-      readiness:
-        ## @param tls.sidecar.healthcheck.readiness.port TCP port the readiness probe checks. Empty string falls back to tls.sidecar.containerPort.
-        port: ""
-        ## @param tls.sidecar.healthcheck.readiness.initialDelaySeconds Initial delay in seconds
-        initialDelaySeconds: 5
-        ## @param tls.sidecar.healthcheck.readiness.periodSeconds Period in seconds
-        periodSeconds: 10
-        ## @param tls.sidecar.healthcheck.readiness.timeoutSeconds Timeout in seconds
-        timeoutSeconds: 1
-        ## @param tls.sidecar.healthcheck.readiness.successThreshold Success threshold
-        successThreshold: 1
-        ## @param tls.sidecar.healthcheck.readiness.failureThreshold Failure threshold
-        failureThreshold: 3
-      ## tls.sidecar.healthcheck.liveness Liveness probe configuration
-      liveness:
-        ## @param tls.sidecar.healthcheck.liveness.port TCP port the liveness probe checks. Empty string falls back to tls.sidecar.containerPort.
-        port: ""
-        ## @param tls.sidecar.healthcheck.liveness.initialDelaySeconds Initial delay in seconds
-        initialDelaySeconds: 15
-        ## @param tls.sidecar.healthcheck.liveness.periodSeconds Period in seconds
-        periodSeconds: 20
-        ## @param tls.sidecar.healthcheck.liveness.timeoutSeconds Timeout in seconds
-        timeoutSeconds: 1
-        ## @param tls.sidecar.healthcheck.liveness.successThreshold Success threshold
-        successThreshold: 1
-        ## @param tls.sidecar.healthcheck.liveness.failureThreshold Failure threshold
-        failureThreshold: 3
+proxy:
+  ## @param proxy.name Proxy container name
+  name: proxy
+  ## @param proxy.containerPort TCP port the proxy listens on for TLS (must differ from service.port; Service targetPort when proxy TLS is enabled)
+  containerPort: 8081
+  ## @param proxy.configMapName Override Caddyfile ConfigMap name (default: fullname + "-caddyfile")
+  configMapName: ""
+  ## @param proxy.imagePullPolicy Image pull policy for the proxy container. Empty string inherits the top-level `imagePullPolicy`.
+  imagePullPolicy: ""
+  ## proxy.image Image for the proxy container.
+  image:
+    ## @param proxy.image.registry Registry override for the proxy image (defaults to image.registry, then global.image.registry)
+    registry: ""
+    ## @param proxy.image.repository Repository for the proxy image
+    repository: tfy-private-images/tfy-proxy
+    ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
+    tag: ""
+  ## @param proxy.resources [object] Resource requests/limits for the proxy container
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  ## @param proxy.securityContext [object] Security context for the proxy container (mirrors the main container's defaults)
+  securityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  ## proxy.healthcheck Probes target the TLS listener (proxy.containerPort) via tcpSocket.
+  healthcheck:
+    ## @param proxy.healthcheck.enabled Enable readiness/liveness probes for the proxy
+    enabled: true
+    ## proxy.healthcheck.readiness Readiness probe configuration
+    readiness:
+      ## @param proxy.healthcheck.readiness.port TCP port the readiness probe checks. Empty string falls back to proxy.containerPort.
+      port: ""
+      ## @param proxy.healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+      initialDelaySeconds: 5
+      ## @param proxy.healthcheck.readiness.periodSeconds Period in seconds
+      periodSeconds: 10
+      ## @param proxy.healthcheck.readiness.timeoutSeconds Timeout in seconds
+      timeoutSeconds: 1
+      ## @param proxy.healthcheck.readiness.successThreshold Success threshold
+      successThreshold: 1
+      ## @param proxy.healthcheck.readiness.failureThreshold Failure threshold
+      failureThreshold: 3
+    ## proxy.healthcheck.liveness Liveness probe configuration
+    liveness:
+      ## @param proxy.healthcheck.liveness.port TCP port the liveness probe checks. Empty string falls back to proxy.containerPort.
+      port: ""
+      ## @param proxy.healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+      initialDelaySeconds: 15
+      ## @param proxy.healthcheck.liveness.periodSeconds Period in seconds
+      periodSeconds: 20
+      ## @param proxy.healthcheck.liveness.timeoutSeconds Timeout in seconds
+      timeoutSeconds: 1
+      ## @param proxy.healthcheck.liveness.successThreshold Success threshold
+      successThreshold: 1
+      ## @param proxy.healthcheck.liveness.failureThreshold Failure threshold
+      failureThreshold: 3
+  ## proxy.tls TLS configuration for the proxy (in-pod termination).
+  tls:
+    ## @param proxy.tls.enabled Enable TLS termination via the proxy
+    enabled: false
+    ## @param proxy.tls.secretName Secret containing tls.crt and tls.key for the proxy (required when proxy.tls.enabled is true)
+    secretName: ""
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create service account
