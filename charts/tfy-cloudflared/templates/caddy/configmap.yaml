@@ -29,7 +29,7 @@ data:
 
     	respond /healthz 200
 
-    	@proxy_url_http path_regexp proxy_url_http ^/proxy/http:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	@proxy_url_http path_regexp proxy_url_http ^(?:/[^/]+)?/proxy/http:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
     	handle @proxy_url_http {
     		rewrite * /{re.proxy_url_http.3}
 
@@ -51,7 +51,7 @@ data:
     		}
     	}
 
-    	@proxy_url_https path_regexp proxy_url_https ^/proxy/https:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	@proxy_url_https path_regexp proxy_url_https ^(?:/[^/]+)?/proxy/https:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
     	handle @proxy_url_https {
     		rewrite * /{re.proxy_url_https.3}
 
@@ -75,7 +75,7 @@ data:
     		}
     	}
 
-    	@proxy_http path_regexp proxy_http ^/proxy/([^/]+):([0-9]+)(?:/(.*))?$
+    	@proxy_http path_regexp proxy_http ^(?:/[^/]+)?/proxy/([^/]+):([0-9]+)(?:/(.*))?$
     	handle @proxy_http {
     		rewrite * /{re.proxy_http.3}
 
@@ -97,7 +97,7 @@ data:
     		}
     	}
 
-    	@proxy_https path_regexp proxy_https ^/proxy/https/([^/]+):([0-9]+)(?:/(.*))?$
+    	@proxy_https path_regexp proxy_https ^(?:/[^/]+)?/proxy/https/([^/]+):([0-9]+)(?:/(.*))?$
     	handle @proxy_https {
     		rewrite * /{re.proxy_https.3}
 
