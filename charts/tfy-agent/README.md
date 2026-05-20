@@ -296,5 +296,5 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 | Name                                               | Description                                                 | Value              |
 | -------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
-| `external-secrets-operator.enabled`                | Bool value to deploy the external-secrets operator subchart | `false`            |
+| `external-secrets-operator.enabled`                | Bool value to deploy the external-secrets operator subchart | `true`             |
 | `external-secrets-operator.clusterSecretStoreName` | Name of the ClusterSecretStore resource                     | `tfy-secret-store` |
