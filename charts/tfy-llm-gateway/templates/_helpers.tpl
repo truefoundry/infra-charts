@@ -328,6 +328,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: MULTITENANT
   value: "true"
 {{- end }}
+{{- if or .Values.proxy.tls.enabled .Values.global.proxy.tls.enabled }}
+- name: CONTROL_PLANE_URL
+  value: {{ .Values.global.controlPlaneURL | quote }}
+{{- end }}
 {{- end }}
 
 {{/*
