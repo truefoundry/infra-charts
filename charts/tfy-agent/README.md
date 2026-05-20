@@ -1,87 +1,94 @@
-
 # Tfy-agent helm chart packaged by TrueFoundry
+
 Tfy-agent is an application that runs on the compute plane Kubernetes cluster to connect to the TrueFoundry control plane.
 
 This application has two parts.
+
 1. TFY Agent
-    * This is used to stream the state of the compute plane cluster to the control plane.
+   - This is used to stream the state of the compute plane cluster to the control plane.
 2. TFY Agent Proxy
-    * This enables the control plane to access the compute plane cluster's Kubernetes API server.
+   - This enables the control plane to access the compute plane cluster's Kubernetes API server.
 
 ## Compute plane cluster authorization
 
 ### TFY Agent
-* TFY Agent runs [informers](https://macias.info/entry/202109081800_k8s_informers.md) to stream kubernetes resource updates and send it to the control plane.
-* To run informers, the TFY Agent needs to be able to `list` and `watch` [those resource types](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrole.yaml) across [all the namespaces](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrolebinding.yaml) in the cluster.
-   *  The `config.allowedNamespaces` field allows you to configure a list of allowed namespaces. TFY Agent will filter out any namespaced resource's update if the resource is not part of the allowed namespaces.
+
+- TFY Agent runs [informers](https://macias.info/entry/202109081800_k8s_informers.md) to stream kubernetes resource updates and send it to the control plane.
+- To run informers, the TFY Agent needs to be able to `list` and `watch` [those resource types](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrole.yaml) across [all the namespaces](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-clusterrolebinding.yaml) in the cluster.
+  - The `config.allowedNamespaces` field allows you to configure a list of allowed namespaces. TFY Agent will filter out any namespaced resource's update if the resource is not part of the allowed namespaces.
 
 ### TFY Agent Proxy
-* By default, the TFY Agent Proxy enables the control plane to access all resources on the compute cluster.
-* If you want to give minimum authorization, please set the field `tfyAgentProxy.clusterRole.strictMode` to `true`.
+
+- By default, the TFY Agent Proxy enables the control plane to access all resources on the compute cluster.
+- If you want to give minimum authorization, please set the field `tfyAgentProxy.clusterRole.strictMode` to `true`.
 
 #### Strict Mode
-* In this mode, we set up minimum required authorization rules for the control plane to function correctly.
-* If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we will always run on strict mode, regardless of the value of the `tfyAgentProxy.clusterRole.strictMode` field.
+
+- In this mode, we set up minimum required authorization rules for the control plane to function correctly.
+- If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we will always run on strict mode, regardless of the value of the `tfyAgentProxy.clusterRole.strictMode` field.
 
 ##### Cluster Scope resource access
-* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-cs.yaml) documents all the authorization rules we set for the resources for which we require cluster-scope access.
-* Note that if you have configured a list of allowed namespaces, the control plane cannot create any new namespace in the cluster.
+
+- [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-cs.yaml) documents all the authorization rules we set for the resources for which we require cluster-scope access.
+- Note that if you have configured a list of allowed namespaces, the control plane cannot create any new namespace in the cluster.
 
 ##### Namespace Scope resource access
-* [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-ns.yaml) documents all the authorization rules we set for the resources the control plane can work with namespace-scope access.
-* If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we use [setup role binding](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-rolebinding-ns.yaml) for only those namespaces.
-* If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
 
+- [This file](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrole-ns.yaml) documents all the authorization rules we set for the resources the control plane can work with namespace-scope access.
+- If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we use [setup role binding](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-rolebinding-ns.yaml) for only those namespaces.
+- If the list of allowed namespaces is empty. We set up [cluster-wide access](https://github.com/truefoundry/infra-charts/blob/main/charts/tfy-agent/templates/tfy-agent-proxy-clusterrolebinding-ns.yaml) for these namespaced resources.
 
 ## Troubleshoot
 
 ### Using self-signed certificate in control plane URL
-If your control plane URL is using self-signed CA certificate, follow these steps:
-1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways:
-    1. using volume mounts
-        - create a config map using your `ca-certificate.crt` file
-            
-            `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
 
-        - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
-            ```
-            tfyAgent:
-                extraVolumes:
+If your control plane URL is using self-signed CA certificate, follow these steps:
+
+1. Update CA bundle in the container by mounting your CA bundle. This can be done in two ways:
+   1. using volume mounts
+      - create a config map using your `ca-certificate.crt` file
+
+        `kubectl create configmap tfy-ca-cert -n tfy-agent --from-file=ca-certificate.crt`
+
+      - add following volume and volume mounts in both tfyAgent and tfyAgentProxy
+        ```
+        tfyAgent:
+            extraVolumes:
+            - name: ca-certificates-volume
+              configMap:
+                name: tfy-ca-cert
+                items:
+                - key: ca-certificates.crt
+                  path: ca-certificates.crt
+            extraVolumeMounts:
                 - name: ca-certificates-volume
-                  configMap:
-                    name: tfy-ca-cert 
-                    items:
-                    - key: ca-certificates.crt
-                      path: ca-certificates.crt
-                extraVolumeMounts:
-                    - name: ca-certificates-volume
-                      mountPath: /etc/ssl/certs/ca-certificates.crt
-                      subPath: ca-certificates.crt
-                      readOnly: true
-            tfyAgentProxy:
-                extraVolumes:
+                  mountPath: /etc/ssl/certs/ca-certificates.crt
+                  subPath: ca-certificates.crt
+                  readOnly: true
+        tfyAgentProxy:
+            extraVolumes:
+            - name: ca-certificates-volume
+              configMap:
+                name: tfy-ca-cert
+                items:
+                - key: ca-certificates.crt
+                  path: ca-certificates.crt
+            extraVolumeMounts:
                 - name: ca-certificates-volume
-                  configMap:
-                    name: tfy-ca-cert 
-                    items:
-                    - key: ca-certificates.crt
-                      path: ca-certificates.crt
-                extraVolumeMounts:
-                    - name: ca-certificates-volume
-                      mountPath: /etc/ssl/certs/ca-certificates.crt
-                      subPath: ca-certificates.crt
-                      readOnly: true
-            ```
-    2. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
+                  mountPath: /etc/ssl/certs/ca-certificates.crt
+                  subPath: ca-certificates.crt
+                  readOnly: true
+        ```
+
+   2. using jspolicy - [link](https://artifacthub.io/packages/helm/truefoundry/tfy-jspolicy-config)
 
 2. Add extraEnv in tfyAgent to allow insecure connection
-    ```
-    tfyAgent:
-        extraEnvVars:
-            - name: NODE_TLS_REJECT_UNAUTHORIZED
-              value: '0'
-    ```
-
+   ```
+   tfyAgent:
+       extraEnvVars:
+           - name: NODE_TLS_REJECT_UNAUTHORIZED
+             value: '0'
+   ```
 
 ## Parameters
 
@@ -266,7 +273,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `sdsServer.service.type`                                | Type for sdsServer Service                                                                                        | `ClusterIP`                                |
 | `sdsServer.image.repository`                            | Repository for sdsServer                                                                                          | `tfy.jfrog.io/tfy-images/sds-server`       |
 | `sdsServer.image.pullPolicy`                            | Pull policy for sdsServer                                                                                         | `IfNotPresent`                             |
-| `sdsServer.image.tag`                                   | Tag for sdsServer                                                                                                 | `c3bb65485f56faaa236f4ee02074c6da7ab269a8` |
+| `sdsServer.image.tag`                                   | Tag for sdsServer                                                                                                 | `e7b37e62356cfa186e0c865135540d7707f13a29` |
 | `sdsServer.affinity`                                    | Node affinity for sdsServer                                                                                       | `{}`                                       |
 | `sdsServer.imagePullSecrets`                            | Image pull credentials for sdsServer                                                                              | `[]`                                       |
 | `sdsServer.command`                                     | Command and arguments to start the sdsServer application.                                                         | `["/app/sds-server","--port","8000"]`      |
@@ -284,3 +291,11 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `sdsServer.resources.requests.memory`                   | The minimum memory resources requested.                                                                           | `30M`                                      |
 | `sdsServer.tolerations`                                 | Tolerations for the sdsServer application                                                                         | `[]`                                       |
 | `sdsServer.topologySpreadConstraints`                   | topology spread constraints on sdsServer application                                                              | `[]`                                       |
+
+### eso (external-secrets operator) configuration parameters
+
+| Name                         | Description                                                                             | Value              |
+| ---------------------------- | --------------------------------------------------------------------------------------- | ------------------ |
+| `eso.enabled`                | Bool value to deploy the external-secrets operator subchart                             | `false`            |
+| `eso.clusterSecretStoreName` | Name of the ClusterSecretStore resource                                                 | `tfy-secret-store` |
+| `eso.nameOverride`           | Overrides the subchart name segment in K8s resource names (release-name-{nameOverride}) | `external-secrets` |

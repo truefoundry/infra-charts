@@ -56,13 +56,8 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           env:
-            {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL
-              value: {{ .Values.config.controlPlaneURL | quote }}
-            {{- else }}
-            - name: CONTROL_PLANE_URL
-              value: {{ .Values.config.controlPlaneClusterIP | quote }}
-            {{- end }}
+              value: {{ include "tfy-agent.controlPlaneURL" . | quote }}
             - name: CLUSTER_TOKEN
               valueFrom:
                 secretKeyRef:
