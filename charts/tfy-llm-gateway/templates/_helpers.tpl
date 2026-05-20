@@ -295,26 +295,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  CONTROL_PLANE_URL when in-pod proxy TLS is enabled (overrides values.env).
-*/}}
-{{- define "tfy-llm-gateway.controlPlaneURL" -}}
-{{- .Values.global.controlPlaneURL -}}
-{{- end -}}
-
-{{/*
-  Whether in-pod proxy TLS is enabled (llm-gateway sidecar or parent global.proxy.tls).
-*/}}
-{{- define "tfy-llm-gateway.proxy.tlsActive" -}}
-{{- if or .Values.proxy.tls.enabled (dig "proxy" "tls" "enabled" false .Values.global) }}true{{- else }}false{{- end -}}
-{{- end -}}
-
-{{/*
   Create the env file
   */}}
 {{- define "tfy-llm-gateway.env" }}
-{{- $proxyTls := eq (include "tfy-llm-gateway.proxy.tlsActive" .) "true" }}
-{{- range $key, $val := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
-{{- if not (and $proxyTls (eq $key "CONTROL_PLANE_URL")) }}
+{{- $parsedEnv := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
+{{- range $key, $val := $parsedEnv }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -336,19 +321,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- end }}
-{{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
+{{- if and .Values.redis.enabled (not (hasKey $parsedEnv "REDIS_HOST")) }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
+{{- if and .Values.global.multitenant.enabled (not (hasKey $parsedEnv "MULTITENANT")) }}
 - name: MULTITENANT
   value: "true"
-{{- end }}
-{{- if $proxyTls }}
-- name: CONTROL_PLANE_URL
-  value: {{ include "tfy-llm-gateway.controlPlaneURL" . | quote }}
-{{- end }}
 {{- end }}
 
 {{/*
