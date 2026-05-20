@@ -298,8 +298,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the env file
   */}}
 {{- define "tfy-llm-gateway.env" }}
-{{- $parsedEnv := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
-{{- range $key, $val := $parsedEnv }}
+{{- range $key, $val := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -321,13 +320,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- if and .Values.redis.enabled (not (hasKey $parsedEnv "REDIS_HOST")) }}
+{{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
-{{- if and .Values.global.multitenant.enabled (not (hasKey $parsedEnv "MULTITENANT")) }}
+{{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
   value: "true"
+{{- end }}
 {{- end }}
 
 {{/*
