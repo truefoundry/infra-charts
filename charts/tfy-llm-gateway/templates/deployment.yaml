@@ -1,3 +1,4 @@
+{{- include "tfy-llm-gateway.proxy.validate" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,6 +102,41 @@ spec:
           {{- if .Values.global.customCA.enabled }}
           {{- include "tfy-llm-gateway.customCA.volumeMounts" . | nindent 10 }}
           {{- end }}
+        {{- if .Values.proxy.tls.enabled }}
+        - name: {{ .Values.proxy.name }}
+          {{- if .Values.proxy.securityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.proxy.securityContext "enabled") | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.proxy.image.registry | default .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag | default .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.proxy.imagePullPolicy | default .Values.imagePullPolicy }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.proxy.containerPort }}
+              protocol: TCP
+          volumeMounts:
+            {{- include "tfy-llm-gateway.proxy.volumeMounts" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.proxy.resources | nindent 12 }}
+          {{- if .Values.proxy.healthcheck.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.proxy.healthcheck.readiness.port | default .Values.proxy.containerPort }}
+            initialDelaySeconds: {{ .Values.proxy.healthcheck.readiness.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.proxy.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.proxy.healthcheck.readiness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.proxy.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.proxy.healthcheck.readiness.failureThreshold | default 3 }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.proxy.healthcheck.liveness.port | default .Values.proxy.containerPort }}
+            initialDelaySeconds: {{ .Values.proxy.healthcheck.liveness.initialDelaySeconds | default 15 }}
+            periodSeconds: {{ .Values.proxy.healthcheck.liveness.periodSeconds | default 20 }}
+            timeoutSeconds: {{ .Values.proxy.healthcheck.liveness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.proxy.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.proxy.healthcheck.liveness.failureThreshold | default 3 }}
+          {{- end }}
+        {{- end }}
       imagePullSecrets:
         {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -117,6 +153,9 @@ spec:
       {{- end }}
       {{- if .Values.global.customCA.enabled }}
       {{- include "tfy-llm-gateway.customCA.volumes" . | nindent 6 }}
+      {{- end }}
+      {{- if .Values.proxy.tls.enabled }}
+      {{- include "tfy-llm-gateway.proxy.volumes" . | nindent 6 }}
       {{- end }}
       nodeSelector:
         {{- include "tfy-llm-gateway.nodeSelector" . | nindent 8 }}
