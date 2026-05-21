@@ -294,8 +294,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### eso (external-secrets operator) configuration parameters
 
-| Name                         | Description                                                                             | Value              |
-| ---------------------------- | --------------------------------------------------------------------------------------- | ------------------ |
-| `eso.enabled`                | Bool value to deploy the external-secrets operator subchart                             | `false`            |
-| `eso.clusterSecretStoreName` | Name of the ClusterSecretStore resource                                                 | `tfy-secret-store` |
-| `eso.nameOverride`           | Overrides the subchart name segment in K8s resource names (release-name-{nameOverride}) | `external-secrets` |
+| Name                                               | Description                                                 | Value              |
+| -------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
+| `external-secrets-operator.enabled`                | Bool value to deploy the external-secrets operator subchart | `true`             |
+| `external-secrets-operator.clusterSecretStoreName` | Name of the ClusterSecretStore resource                     | `tfy-secret-store` |
