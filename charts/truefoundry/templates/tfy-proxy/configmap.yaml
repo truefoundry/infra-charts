@@ -19,8 +19,12 @@ data:
         level {{ .Values.tfyProxy.logLevel }}
         output stdout
       }
-
+      
+      {{- if .Values.global.proxy.tls.enabled }}
+      auto_https off
+      {{- else }}
       auto_https disable_redirects
+      {{- end }}
 
       servers {
         protocols h1 h2 h2c
@@ -166,6 +170,10 @@ data:
     {{- end }}
 
     :8080 {
+      {{- if .Values.global.proxy.tls.enabled }}
+      tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+      {{- end }}
+
       {{- if .Values.global.proxy.enforceSecurityHeaders }}
       import security_headers
 

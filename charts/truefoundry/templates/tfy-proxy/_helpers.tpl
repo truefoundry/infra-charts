@@ -250,6 +250,23 @@ Expand the name of the chart.
 {{- $caddyConfigData := dict "name" "caddy-config-data"   "emptyDir" (dict "sizeLimit" (.Values.tfyProxy.emptyDir.caddyConfigData.sizeLimit | default "10Mi")) -}}
 {{- $volumes := list $defaultVolume $caddyData $caddyConfigData  -}}
 
+{{- if .Values.global.proxy.tls.enabled -}}
+{{- if not .Values.global.proxy.tls.secretName -}}
+{{- fail "global.proxy.tls.secretName is required when global.proxy.tls.enabled is true" -}}
+{{- end -}}
+{{- $tlsCertKey := .Values.global.proxy.tls.secretKeys.cert | default "tls.crt" -}}
+{{- $tlsKeyKey := .Values.global.proxy.tls.secretKeys.key | default "tls.key" -}}
+{{- $caddyTls := dict "name" "caddy-tls" "secret" (dict
+    "secretName" .Values.global.proxy.tls.secretName
+    "defaultMode" 420
+    "items" (list
+      (dict "key" $tlsCertKey "path" "tls.crt")
+      (dict "key" $tlsKeyKey "path" "tls.key")
+    )
+) -}}
+{{- $volumes = append $volumes $caddyTls -}}
+{{- end -}}
+
 {{- /* If extraVolumes are defined, concatenate them with the default list */}}
 {{- if .Values.tfyProxy.extraVolumes -}}
   {{- $volumes = concat $volumes .Values.tfyProxy.extraVolumes -}}
@@ -274,6 +291,11 @@ Expand the name of the chart.
 {{- $caddyData := dict "name" "caddy-data" "mountPath" "/data" -}}
 {{- $caddyConfigData := dict "name" "caddy-config-data" "mountPath" "/config" -}}
 {{- $volumeMounts := list $defaultVolumeMounts $caddyData $caddyConfigData -}}
+
+{{- if .Values.global.proxy.tls.enabled -}}
+{{- $caddyTls := dict "name" "caddy-tls" "mountPath" "/etc/caddy/tls" "readOnly" true -}}
+{{- $volumeMounts = append $volumeMounts $caddyTls -}}
+{{- end -}}
 
 
 {{- /* If extraVolumeMounts are defined, concatenate them with the default list */}}
