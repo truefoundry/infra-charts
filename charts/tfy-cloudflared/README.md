@@ -117,9 +117,9 @@ The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded 
 | `caddy.affinity`                   | Affinity for Caddy pods                            | `{}`                                  |
 | `extraManifests`                   | Extra manifests to deploy alongside the chart      | `[]`                                  |
 
-## Migrating from the `/proxy/` URL scheme
+## Migrating from the `/proxy/` URL scheme (chart < 0.2.0)
 
-Prior to this change, Caddy accepted URLs with an explicit `/proxy/` segment:
+Prior to chart version `0.2.0`, Caddy accepted URLs with an explicit `/proxy/` segment:
 
 ```
 # Old scheme (no longer supported)
@@ -167,7 +167,7 @@ If you need to revert to the old `/proxy/` matchers while callers are updated, r
 helm rollback tfy-cloudflared -n tfy-cloudflared
 ```
 
-## Migrating from the `cloudflared` namespace
+## Migrating from the `cloudflared` namespace (chart 0.3.0)
 
 Starting with chart version `0.3.0`, the recommended install namespace is **`tfy-cloudflared`** (previously `cloudflared`). Caddy is also now enabled by default (`caddy.enabled=true`).
 
