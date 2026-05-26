@@ -1071,51 +1071,52 @@ fi
 
 ### tfyNats Truefoundry NATS settings
 
-| Name                                             | Description                                                                  | Value                                           |
-| ------------------------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------- |
-| `tfyNats.nameOverride`                           | Override name for NATS server                                                | `tfy-nats`                                      |
-| `tfyNats.enabled`                                | Bool to enable the NATS server                                               | `true`                                          |
-| `tfyNats.config.cluster.enabled`                 | Bool to enable clustering                                                    | `true`                                          |
-| `tfyNats.config.cluster.replicas`                | Number of replicas in cluster                                                | `3`                                             |
-| `tfyNats.config.advertise`                       | Bool to enable NATS server advertise                                         | `false`                                         |
-| `tfyNats.config.jetstream.enabled`               | Bool to enable Jetstream                                                     | `true`                                          |
-| `tfyNats.config.jetstream.fileStore.dir`         | Storage directory path                                                       | `/data`                                         |
-| `tfyNats.config.jetstream.fileStore.pvc.size`    | PVC storage size                                                             | `10Gi`                                          |
-| `tfyNats.config.jetstream.fileStore.pvc.enabled` | Bool to enable PVC                                                           | `true`                                          |
-| `tfyNats.config.jetstream.fileStore.enabled`     | Bool to enable file storage                                                  | `true`                                          |
-| `tfyNats.config.jetstream.fileStore.maxSize`     | Maximum file storage size                                                    | `9Gi`                                           |
-| `tfyNats.config.jetstream.memoryStore.size`      | Memory storage size                                                          | `1Gi`                                           |
-| `tfyNats.config.jetstream.memoryStore.enabled`   | Bool to enable memory storage                                                | `true`                                          |
-| `tfyNats.config.websocket.port`                  | Websocket port                                                               | `8080`                                          |
-| `tfyNats.config.websocket.enabled`               | Bool to enable websocket                                                     | `true`                                          |
-| `tfyNats.natsBox.enabled`                        | Bool to enable NATS Box                                                      | `false`                                         |
-| `tfyNats.reloader.image.registry`                | Registry for the reloader image (overrides global.registry if specified)     | `""`                                            |
-| `tfyNats.reloader.image.repository`              | Reloader image repository (without registry)                                 | `tfy-mirror/natsio/nats-server-config-reloader` |
-| `tfyNats.reloader.image.tag`                     | Reloader image tag                                                           | `0.21.1`                                        |
-| `tfyNats.reloader.enabled`                       | Bool to enable config reloader                                               | `true`                                          |
-| `tfyNats.reloader.patch`                         | Nats Reloader patches                                                        | `[]`                                            |
-| `tfyNats.reloader.merge`                         | Nats reloader container merge                                                | `{}`                                            |
-| `tfyNats.promExporter.image.registry`            | Registry for the promExporter image (overrides global.registry if specified) | `""`                                            |
-| `tfyNats.promExporter.image.repository`          | Exporter image repository (without registry)                                 | `tfy-mirror/natsio/prometheus-nats-exporter`    |
-| `tfyNats.promExporter.image.tag`                 | Exporter image tag                                                           | `0.18.0`                                        |
-| `tfyNats.promExporter.enabled`                   | Bool to enable Prometheus exporter                                           | `true`                                          |
-| `tfyNats.promExporter.merge`                     | Nats prom exporter container merge                                           | `{}`                                            |
-| `tfyNats.promExporter.patch`                     | Nats Prom Exporter patches                                                   | `[]`                                            |
-| `tfyNats.promExporter.podMonitor.enabled`        | Bool to enable pod monitor                                                   | `false`                                         |
-| `tfyNats.promExporter.podMonitor.merge`          | Additional kustomize patches for the pod monitor                             | `{}`                                            |
-| `tfyNats.container.image.registry`               | Registry for the container image (overrides global.registry if specified)    | `""`                                            |
-| `tfyNats.container.image.tag`                    | Container image tag                                                          | `2.12.3-alpine`                                 |
-| `tfyNats.container.image.repository`             | Container image repository (without registry)                                | `tfy-mirror/nats`                               |
-| `tfyNats.container.merge`                        | Container merge                                                              | `{}`                                            |
-| `tfyNats.podTemplate.merge`                      | Pod template merges                                                          | `{}`                                            |
-| `tfyNats.podTemplate.patch`                      | Pod template patches                                                         | `[]`                                            |
-| `tfyNats.serviceAccount.enabled`                 | Specifies whether a service account should be created                        | `true`                                          |
-| `tfyNats.serviceAccount.annotations`             | Annotations to add to the service account                                    | `{}`                                            |
-| `tfyNats.serviceAccount.labels`                  | Labels to add to the service account                                         | `{}`                                            |
-| `tfyNats.serviceAccount.name`                    | The name of the service account to use.                                      | `truefoundry-tfy-nats`                          |
-| `tfyNats.serviceAccount.patch`                   | Service account patches                                                      | `[]`                                            |
-| `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                                          | `{}`                                            |
-| `tfy-llm-gateway.env`                            | Environment variables for tfy-llm-gateway                                    | `{}`                                            |
+| Name                                             | Description                                                                                                                       | Value                                           |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `tfyNats.nameOverride`                           | Override name for NATS server                                                                                                     | `tfy-nats`                                      |
+| `tfyNats.enabled`                                | Bool to enable the NATS server                                                                                                    | `true`                                          |
+| `tfyNats.config.cluster.enabled`                 | Bool to enable clustering                                                                                                         | `true`                                          |
+| `tfyNats.config.cluster.replicas`                | Number of replicas in cluster                                                                                                     | `3`                                             |
+| `tfyNats.config.advertise`                       | Bool to enable NATS server advertise                                                                                              | `false`                                         |
+| `tfyNats.config.jetstream.enabled`               | Bool to enable Jetstream                                                                                                          | `true`                                          |
+| `tfyNats.config.jetstream.fileStore.dir`         | Storage directory path                                                                                                            | `/data`                                         |
+| `tfyNats.config.jetstream.fileStore.pvc.size`    | PVC storage size                                                                                                                  | `10Gi`                                          |
+| `tfyNats.config.jetstream.fileStore.pvc.enabled` | Bool to enable PVC                                                                                                                | `true`                                          |
+| `tfyNats.config.jetstream.fileStore.enabled`     | Bool to enable file storage                                                                                                       | `true`                                          |
+| `tfyNats.config.jetstream.fileStore.maxSize`     | Maximum file storage size                                                                                                         | `9Gi`                                           |
+| `tfyNats.config.jetstream.memoryStore.size`      | Memory storage size                                                                                                               | `1Gi`                                           |
+| `tfyNats.config.jetstream.memoryStore.enabled`   | Bool to enable memory storage                                                                                                     | `true`                                          |
+| `tfyNats.config.websocket.port`                  | Websocket port                                                                                                                    | `8080`                                          |
+| `tfyNats.config.websocket.enabled`               | Bool to enable websocket                                                                                                          | `true`                                          |
+| `tfyNats.natsBox.enabled`                        | Bool to enable NATS Box                                                                                                           | `false`                                         |
+| `tfyNats.reloader.image.registry`                | Registry for the reloader image (overrides global.registry if specified)                                                          | `""`                                            |
+| `tfyNats.reloader.image.repository`              | Reloader image repository (without registry)                                                                                      | `tfy-mirror/natsio/nats-server-config-reloader` |
+| `tfyNats.reloader.image.tag`                     | Reloader image tag                                                                                                                | `0.21.1`                                        |
+| `tfyNats.reloader.enabled`                       | Bool to enable config reloader                                                                                                    | `true`                                          |
+| `tfyNats.reloader.patch`                         | Nats Reloader patches                                                                                                             | `[]`                                            |
+| `tfyNats.reloader.merge`                         | Nats reloader container merge                                                                                                     | `{}`                                            |
+| `tfyNats.promExporter.image.registry`            | Registry for the promExporter image (overrides global.registry if specified)                                                      | `""`                                            |
+| `tfyNats.promExporter.image.repository`          | Exporter image repository (without registry)                                                                                      | `tfy-mirror/natsio/prometheus-nats-exporter`    |
+| `tfyNats.promExporter.image.tag`                 | Exporter image tag                                                                                                                | `0.18.0`                                        |
+| `tfyNats.promExporter.enabled`                   | Bool to enable Prometheus exporter                                                                                                | `true`                                          |
+| `tfyNats.promExporter.merge`                     | Nats prom exporter container merge                                                                                                | `{}`                                            |
+| `tfyNats.promExporter.patch`                     | Nats Prom Exporter patches                                                                                                        | `[]`                                            |
+| `tfyNats.promExporter.podMonitor.enabled`        | Bool to enable pod monitor                                                                                                        | `false`                                         |
+| `tfyNats.promExporter.podMonitor.merge`          | Additional kustomize patches for the pod monitor                                                                                  | `{}`                                            |
+| `tfyNats.container.image.registry`               | Registry for the container image (overrides global.registry if specified)                                                         | `""`                                            |
+| `tfyNats.container.image.tag`                    | Container image tag                                                                                                               | `2.12.3-alpine`                                 |
+| `tfyNats.container.image.repository`             | Container image repository (without registry)                                                                                     | `tfy-mirror/nats`                               |
+| `tfyNats.container.merge`                        | Container merge                                                                                                                   | `{}`                                            |
+| `tfyNats.podTemplate.merge`                      | Pod template merges                                                                                                               | `{}`                                            |
+| `tfyNats.podTemplate.patch`                      | Pod template patches                                                                                                              | `[]`                                            |
+| `tfyNats.serviceAccount.enabled`                 | Specifies whether a service account should be created                                                                             | `true`                                          |
+| `tfyNats.serviceAccount.annotations`             | Annotations to add to the service account                                                                                         | `{}`                                            |
+| `tfyNats.serviceAccount.labels`                  | Labels to add to the service account                                                                                              | `{}`                                            |
+| `tfyNats.serviceAccount.name`                    | The name of the service account to use.                                                                                           | `truefoundry-tfy-nats`                          |
+| `tfyNats.serviceAccount.patch`                   | Service account patches                                                                                                           | `[]`                                            |
+| `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                                                                                               | `{}`                                            |
+| `tfy-llm-gateway.env`                            | Environment variables for tfy-llm-gateway                                                                                         | `{}`                                            |
+| `tfy-llm-gateway.redis.networkPolicy.enabled`    | Bool to create the NetworkPolicy resource for Redis. Defaults to false; set to true to render the upstream Bitnami NetworkPolicy. | `false`                                         |
 
 ### tfy-otel-collector TrueFoundry OpenTelemetry Collector settings
 

@@ -2680,6 +2680,12 @@ tfy-llm-gateway:
   env:
     CONTROL_PLANE_URL: http://{{ .Release.Name }}-tfy-proxy:8080
     PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  ## tfy-llm-gateway.redis Redis dependency overrides for the bundled tfy-llm-gateway sub-chart
+  redis:
+    ## tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for Redis
+    networkPolicy:
+      ## @param tfy-llm-gateway.redis.networkPolicy.enabled Bool to create the NetworkPolicy resource for Redis. Defaults to false; set to true to render the upstream Bitnami NetworkPolicy.
+      enabled: false
 ###################################################################################################################
 ####################################### TrueFoundry OTel Collector ################################################
 ###################################################################################################################
