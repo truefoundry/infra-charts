@@ -385,12 +385,65 @@ false
 {{- end }}
 {{- end -}}
 
+{{- define "true-ai.defaultResources.small" }}
+requests:
+  cpu: 100m
+  memory: 100Mi
+  ephemeral-storage: 64Mi
+limits:
+  cpu: 100m
+  memory: 100Mi
+  ephemeral-storage: 64Mi
+{{- end }}
+
+{{- define "true-ai.defaultResources.medium" }}
+requests:
+  cpu: 100m
+  memory: 100Mi
+  ephemeral-storage: 64Mi
+limits:
+  cpu: 200m
+  memory: 200Mi
+  ephemeral-storage: 128Mi
+{{- end }}
+
+{{- define "true-ai.defaultResources.large" }}
+requests:
+  cpu: 200m
+  memory: 200Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 500m
+  memory: 500Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
 {{- define "true-ai.resources" }}
-{{- toYaml (.Values.resources | default dict) }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- $defaultsYaml := "" }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "true-ai.defaultResources.small" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "true-ai.defaultResources.large" . }}
+{{- else }}
+  {{- $defaultsYaml = include "true-ai.defaultResources.medium" . }}
+{{- end }}
+{{- $defaults := fromYaml $defaultsYaml | default dict }}
+{{- $overrides := .Values.resources | default dict }}
+{{- $requests := merge (dig "requests" dict $overrides) (dig "requests" dict $defaults) }}
+{{- $limits := merge (dig "limits" dict $overrides) (dig "limits" dict $defaults) }}
+{{- toYaml (dict "requests" $requests "limits" $limits) }}
 {{- end }}
 
 {{- define "true-ai.replicas" }}
-{{- .Values.replicaCount | default 1 }}
+{{- $tier := .Values.global.resourceTier | default "medium" }}
+{{- if .Values.replicaCount -}}
+{{ .Values.replicaCount }}
+{{- else if eq $tier "small" -}}
+1
+{{- else -}}
+3
+{{- end }}
 {{- end }}
 
 {{/*
@@ -402,26 +455,19 @@ false
 
 {{/*
   Build the env list for the deployment.
-  Supports inline values and ${k8s-secret/<key>} or ${k8s-secret/<secretName>/<key>} references
-  resolved against `.Values.envSecretName` (or the explicit secretName).
+  Supports inline values and ${k8s-secret/<secretName>/<key>} references.
 */}}
 {{- define "true-ai.env" }}
 {{- range $key, $val := (include "true-ai.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
-{{- if eq (regexSplit "/" $val -1 | len) 2 }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $.Values.envSecretName }}
-      key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-{{- else if eq (regexSplit "/" $val -1 | len) 3 }}
+{{- if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
 {{- else }}
-{{- fail "Invalid secret supplied" }}
+{{- fail "Invalid secret supplied; expected ${k8s-secret/<secretName>/<key>}" }}
 {{- end }}
 {{- else }}
 - name: {{ $key }}

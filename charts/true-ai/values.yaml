@@ -1,6 +1,8 @@
 ## @section Configuration for True AI (Internal AI Platform Frontend)
 
 global:
+  ## @param global.resourceTier Resource deployment tier: small, medium, or large
+  resourceTier: "medium"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -89,8 +91,8 @@ image:
 fullnameOverride: ""
 ## @param nameOverride Name override
 nameOverride: ""
-## @param replicaCount Number of replicas (ignored when autoscaling is enabled)
-replicaCount: 1
+## @skip replicaCount Number of replicas (defaults derived from global.resourceTier; ignored when autoscaling is enabled)
+# replicaCount: 1
 
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
@@ -171,16 +173,16 @@ healthcheck:
     ## @param healthcheck.liveness.failureThreshold Failure threshold
     failureThreshold: 3
 
-## @param resources [object] Resource configuration
-resources:
-  requests:
-    cpu: 100m
-    memory: 128Mi
-    ephemeral-storage: 128Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-    ephemeral-storage: 512Mi
+## @skip resources [object] Resource configuration (defaults derived from global.resourceTier)
+# resources:
+#   requests:
+#     cpu: 100m
+#     memory: 100Mi
+#     ephemeral-storage: 64Mi
+#   limits:
+#     cpu: 100m
+#     memory: 100Mi
+#     ephemeral-storage: 64Mi
 
 ## @param nodeSelector Node selector
 nodeSelector: {}
@@ -321,8 +323,5 @@ rollout:
   maxSurge: 40%
 
 ## @param env [object] Environment variables for the true-ai container. Values support templating.
-## Use the `${k8s-secret/<secretName>/<key>}` or `${k8s-secret/<key>}` (uses envSecretName) syntax to reference Kubernetes secrets.
+## Use the `${k8s-secret/<secretName>/<key>}` syntax to reference Kubernetes secrets.
 env: {}
-
-## @param envSecretName Name of an existing Secret to resolve `${k8s-secret/<key>}` env values against.
-envSecretName: true-ai-env-secret
