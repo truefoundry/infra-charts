@@ -11,16 +11,16 @@ When `caddy.enabled=true`, a Caddy reverse proxy is deployed alongside cloudflar
 
 ### URL scheme
 
-All requests must include a `<cluster-name>` prefix segment immediately followed by the target address. Four address formats are supported:
+All requests must include a `<tunnel-identifier>` prefix segment immediately followed by the target address. Four address formats are supported:
 
 | Format | Example URL | Backend transport |
 | ------ | ----------- | ----------------- |
-| `/<cluster-name>/http://host:port[/path]` | `/my-cluster/http://svc.ns.svc.cluster.local:8080/api` | Plain HTTP |
-| `/<cluster-name>/https://host:port[/path]` | `/my-cluster/https://svc.ns.svc.cluster.local:443/api` | TLS (SNI from host) |
-| `/<cluster-name>/https/host:port[/path]` | `/my-cluster/https/svc.ns.svc.cluster.local:443/api` | TLS (SNI from host) |
-| `/<cluster-name>/host:port[/path]` | `/my-cluster/svc.ns.svc.cluster.local:8080/api` | Plain HTTP |
+| `/<tunnel-identifier>/http://host:port[/path]` | `/my-tunnel/http://svc.ns.svc.cluster.local:8080/api` | Plain HTTP |
+| `/<tunnel-identifier>/https://host:port[/path]` | `/my-tunnel/https://svc.ns.svc.cluster.local:443/api` | TLS (SNI from host) |
+| `/<tunnel-identifier>/https/host:port[/path]` | `/my-tunnel/https/svc.ns.svc.cluster.local:443/api` | TLS (SNI from host) |
+| `/<tunnel-identifier>/host:port[/path]` | `/my-tunnel/svc.ns.svc.cluster.local:8080/api` | Plain HTTP |
 
-The `<cluster-name>` segment is consumed by Caddy and is **not** forwarded to the upstream service. The remaining path after the host:port is forwarded as-is.
+The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded to the upstream service. The remaining path after the host:port is forwarded as-is.
 
 ## Parameters
 
@@ -127,25 +127,22 @@ Prior to this change, Caddy accepted URLs with an explicit `/proxy/` segment:
 <tunnel-url>/proxy/https://host:port/path
 <tunnel-url>/proxy/https/host:port/path
 <tunnel-url>/proxy/host:port/path
-
-# Also accepted with optional cluster prefix
-<tunnel-url>/<cluster-name>/proxy/http://host:port/path
 ```
 
-The `/proxy/` segment has been removed. The `<cluster-name>` prefix is now **required**.
+The `/proxy/` segment has been removed. The `<tunnel-identifier>` prefix is now **required**.
 
 ### Migration steps
 
 1. **Identify all callers** that construct Caddy proxy URLs — SDKs, agents, platform services, scripts, or any code that builds URLs pointing at the Cloudflare tunnel endpoint.
 
-2. **Rewrite URLs** using the following substitution rules (replace `<cluster-name>` with your actual cluster identifier):
+2. **Rewrite URLs** using the following substitution rules (replace `<tunnel-identifier>` with your actual tunnel identifier):
 
    | Old URL | New URL |
    | ------- | ------- |
-   | `.../proxy/http://host:port/path` | `.../<cluster-name>/http://host:port/path` |
-   | `.../proxy/https://host:port/path` | `.../<cluster-name>/https://host:port/path` |
-   | `.../proxy/https/host:port/path` | `.../<cluster-name>/https/host:port/path` |
-   | `.../proxy/host:port/path` | `.../<cluster-name>/host:port/path` |
+   | `.../proxy/http://host:port/path` | `.../<tunnel-identifier>/http://host:port/path` |
+   | `.../proxy/https://host:port/path` | `.../<tunnel-identifier>/https://host:port/path` |
+   | `.../proxy/https/host:port/path` | `.../<tunnel-identifier>/https/host:port/path` |
+   | `.../proxy/host:port/path` | `.../<tunnel-identifier>/host:port/path` |
 
 3. **Deploy the new chart version:**
 
@@ -159,7 +156,7 @@ The `/proxy/` segment has been removed. The `<cluster-name>` prefix is now **req
 
    ```bash
    # Should return a response from your target service
-   curl -v https://<tunnel-url>/<cluster-name>/http://<host>:<port>/healthz
+   curl -v https://<tunnel-url>/<tunnel-identifier>/http://<host>:<port>/healthz
    ```
 
 ### Rollback
