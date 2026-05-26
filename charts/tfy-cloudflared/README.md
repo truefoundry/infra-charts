@@ -161,18 +161,7 @@ The `/proxy/` segment has been removed. The `<tunnel-identifier>` prefix is now 
 
 ### Rollback
 
-If you need to revert to the old `/proxy/` matchers while callers are updated, patch the configmap directly:
-
-```bash
-kubectl patch configmap tfy-cloudflared-caddy-config -n tfy-cloudflared \
-  --type merge \
-  -p '{"data":{"Caddyfile":"<old-caddyfile-content>"}}'
-
-# Then restart Caddy to pick up the change
-kubectl rollout restart deployment/tfy-cloudflared-caddy -n tfy-cloudflared
-```
-
-Alternatively, roll back the Helm release:
+If you need to revert to the old `/proxy/` matchers while callers are updated, roll back the Helm release to the previous revision — this restores the previous Caddyfile configmap and triggers a Caddy restart automatically:
 
 ```bash
 helm rollback tfy-cloudflared -n tfy-cloudflared
