@@ -1,0 +1,327 @@
+## @section Configuration for True AI (Internal AI Platform Frontend)
+
+global:
+  ## @param global.resourceTier Resource deployment tier: small, medium, or large
+  resourceTier: "medium"
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
+  ## @param global.affinity [object] Affinity rules for pod scheduling on a node
+  affinity: {}
+  ## @param global.labels [object] Global labels
+  labels: {}
+  ## @param global.annotations [object] Global annotations
+  annotations: {}
+  ## @param global.podLabels [object] Global pod labels
+  podLabels: {}
+  ## @param global.podAnnotations [object] Global pod annotations
+  podAnnotations: {}
+  ## @param global.deploymentLabels [object] Global deployment labels
+  deploymentLabels: {}
+  ## @param global.deploymentAnnotations [object] Global deployment annotations
+  deploymentAnnotations: {}
+  ## @param global.serviceAnnotations [object] Global service annotations
+  serviceAnnotations: {}
+  ## @param global.serviceLabels [object] Global service labels
+  serviceLabels: {}
+  ## @param global.tolerations [array] Tolerations for pod scheduling on a node
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector
+  nodeSelector: {}
+  ## global.serviceAccount Service account configuration
+  serviceAccount:
+    ## @param global.serviceAccount.name Service account name
+    name: ""
+    ## @param global.serviceAccount.labels Service account labels
+    labels: {}
+    ## @param global.serviceAccount.annotations Service account annotations
+    annotations: {}
+  ## @param global.image.registry Global image registry override
+  image:
+    registry: "tfy.jfrog.io"
+  ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
+  namespaceOverride: ""
+  ## global.customCA Custom CA certificate configuration
+  customCA:
+    ## @param global.customCA.enabled Bool to enable custom CA certificate injection
+    enabled: false
+    ## @param global.customCA.certificate PEM-encoded CA certificate to trust (paste the full certificate content here). Uses an initContainer to merge with system CAs.
+    certificate: ""
+    ## global.customCA.existingConfigMap Reference an existing ConfigMap containing CA certificate(s) under key "ca-certificates.crt"
+    existingConfigMap:
+      ## @param global.customCA.existingConfigMap.name Name of the existing ConfigMap
+      name: ""
+      ## @param global.customCA.existingConfigMap.overrideCAList When true, mounts ConfigMap directly at /etc/ssl/certs/ replacing the system CA bundle (no initContainer). The ConfigMap must contain the full CA bundle (system + custom CAs). When false, an initContainer merges the custom CA with system CAs.
+      overrideCAList: false
+    ## @param global.customCA.env [object] Additional environment variables to inject into the custom CA initContainer when customCA is enabled.
+    env: {}
+    ## global.customCA.emptyDir EmptyDir configuration for volumes used in custom CA injection
+    emptyDir:
+      sslCerts:
+        ## @param global.customCA.emptyDir.sslCerts.sizeLimit Size limit for the ssl-certs emptyDir volume
+        sizeLimit: ""
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
+    securityContext:
+      enabled: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
+    image:
+      ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)
+      registry: ""
+      ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
+      repository: "tfy-mirror/alpine"
+      ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
+      tag: "3.21"
+
+## Image configuration for true-ai
+image:
+  ## @param image.registry Image registry for true-ai (defaults to global.image.registry if not set)
+  registry: ""
+  ## @param image.repository Image repository for true-ai
+  repository: tfy-images/internal-ai-platform-fe
+  ## @param image.tag Image tag for true-ai
+  tag: "latest"
+
+## @param fullnameOverride Full name override for the true-ai chart
+fullnameOverride: ""
+## @param nameOverride Name override
+nameOverride: ""
+## @skip replicaCount Number of replicas (defaults derived from global.resourceTier; ignored when autoscaling is enabled)
+# replicaCount: 1
+
+## @param imagePullPolicy Image pull policy
+imagePullPolicy: IfNotPresent
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+## @param podAnnotations Pod annotations
+podAnnotations: {}
+## @param podLabels Pod labels
+podLabels: {}
+## @param commonAnnotations Common annotations
+commonAnnotations: {}
+## @param commonLabels Common labels
+commonLabels: {}
+## @param deploymentLabels Deployment labels
+deploymentLabels: {}
+## @param deploymentAnnotations Deployment annotations
+deploymentAnnotations: {}
+
+## @param podSecurityContext [object] Pod security context
+podSecurityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  fsGroup: 101
+
+## @param securityContext [object] Container security context.
+## NOTE: The upstream nginx image writes to /etc/nginx/conf.d, /usr/share/nginx/html,
+## /var/cache/nginx, /var/run and /tmp at startup, so `readOnlyRootFilesystem` is
+## kept false by default. Set it to true only after providing emptyDir mounts
+## for those paths via `extraVolumes`/`extraVolumeMounts`.
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+## Healthcheck configuration
+healthcheck:
+  ## @param healthcheck.enabled Enable healthcheck
+  enabled: true
+  ## healthcheck.readiness Readiness probe configuration
+  readiness:
+    ## @param healthcheck.readiness.port Port to probe
+    port: 8080
+    ## @param healthcheck.readiness.path Path to probe
+    path: /
+    ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 5
+    ## @param healthcheck.readiness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.readiness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 5
+    ## @param healthcheck.readiness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.readiness.failureThreshold Failure threshold
+    failureThreshold: 3
+  ## healthcheck.liveness Liveness probe configuration
+  liveness:
+    ## @param healthcheck.liveness.port Port to probe
+    port: 8080
+    ## @param healthcheck.liveness.path Path to probe
+    path: /
+    ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
+    initialDelaySeconds: 30
+    ## @param healthcheck.liveness.periodSeconds Period in seconds
+    periodSeconds: 10
+    ## @param healthcheck.liveness.timeoutSeconds Timeout in seconds
+    timeoutSeconds: 5
+    ## @param healthcheck.liveness.successThreshold Success threshold
+    successThreshold: 1
+    ## @param healthcheck.liveness.failureThreshold Failure threshold
+    failureThreshold: 3
+
+## @skip resources [object] Resource configuration (defaults derived from global.resourceTier)
+# resources:
+#   requests:
+#     cpu: 100m
+#     memory: 100Mi
+#     ephemeral-storage: 64Mi
+#   limits:
+#     cpu: 100m
+#     memory: 100Mi
+#     ephemeral-storage: 64Mi
+
+## @param nodeSelector Node selector
+nodeSelector: {}
+## @param tolerations Tolerations
+tolerations: []
+## @param affinity Affinity
+affinity: {}
+## @param topologySpreadConstraints Topology spread constraints
+topologySpreadConstraints: {}
+## @param terminationGracePeriodSeconds Termination grace period in seconds
+terminationGracePeriodSeconds: 30
+
+## podDisruptionBudget configuration
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum number of unavailable replicas
+  maxUnavailable: 30%
+
+## Ingress configuration
+ingress:
+  ## @param ingress.enabled Enable ingress configuration
+  enabled: false
+  ## @param ingress.annotations Ingress annotations
+  annotations: {}
+  ## @param ingress.labels Ingress labels
+  labels: {}
+  ## @param ingress.ingressClassName Ingress class name
+  ingressClassName: istio
+  ## @param ingress.path Ingress path prefix
+  path: /
+  ## @param ingress.pathType Ingress path type
+  pathType: Prefix
+  ## @param ingress.tls Ingress TLS configuration
+  tls: []
+  ## @param ingress.hosts Ingress hosts
+  hosts: []
+
+## HTTPRoute configuration (Gateway API)
+httpRoute:
+  ## @param httpRoute.enabled Enable HTTPRoute configuration
+  enabled: false
+  ## @param httpRoute.annotations HTTPRoute annotations
+  annotations: {}
+  ## @param httpRoute.labels HTTPRoute labels
+  labels: {}
+  ## @param httpRoute.parentRefs [array] Parent gateway references for the HTTPRoute
+  parentRefs: []
+  ## @param httpRoute.hostnames [array] Hostnames for the HTTPRoute
+  hostnames: []
+  ## @param httpRoute.path Path prefix to match for the HTTPRoute
+  path: /
+
+## Istio configuration
+istio:
+  ## istio.virtualservice Virtual service configuration
+  virtualservice:
+    ## @param istio.virtualservice.enabled Enable virtual service
+    enabled: false
+    ## @param istio.virtualservice.annotations Virtual service annotations
+    annotations: {}
+    ## @param istio.virtualservice.labels Virtual service labels
+    labels: {}
+    ## @param istio.virtualservice.gateways Virtual service gateways
+    gateways: []
+    ## @param istio.virtualservice.hosts Virtual service hosts
+    hosts: []
+    ## @param istio.virtualservice.path URI prefix to match
+    path: /
+    ## Retries configuration
+    retries:
+      ## @param istio.virtualservice.retries.enabled Enable retries
+      enabled: false
+      ## @param istio.virtualservice.retries.attempts Retries attempts
+      attempts: 3
+      ## @param istio.virtualservice.retries.retryOn Retries retry on
+      retryOn: "gateway-error"
+
+## Service configuration
+service:
+  ## @param service.type Service type
+  type: ClusterIP
+  ## @param service.port Service port
+  port: 8080
+  ## @param service.annotations Service annotations
+  annotations: {}
+  ## @param service.labels Service labels
+  labels: {}
+
+## Service account configuration
+serviceAccount:
+  ## @param serviceAccount.create Create service account
+  create: false
+  ## @param serviceAccount.annotations Service account annotations
+  annotations: {}
+  ## @param serviceAccount.labels Service account labels
+  labels: {}
+  ## @param serviceAccount.name Service account name
+  name: ""
+  ## @param serviceAccount.automountServiceAccountToken Automount service account token (only used if create is true)
+  automountServiceAccountToken: false
+
+## @param initContainers Init containers
+initContainers: []
+## @param extraVolumes Extra volumes
+extraVolumes: []
+## @param extraVolumeMounts Extra volume mounts
+extraVolumeMounts: []
+## @param dnsConfig DNS config
+dnsConfig: {}
+## @param hostAliases Host aliases
+hostAliases: []
+
+## Autoscaling configuration
+autoscaling:
+  ## @param autoscaling.enabled Enable autoscaling
+  enabled: false
+  ## @param autoscaling.minReplicas Minimum number of replicas
+  minReplicas: 2
+  ## @param autoscaling.maxReplicas Maximum number of replicas
+  maxReplicas: 10
+  ## @param autoscaling.targetCPUUtilizationPercentage Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 70
+  # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
+  # targetMemoryUtilizationPercentage: 70
+
+## Rollout configuration
+rollout:
+  ## @param rollout.enabled Enable rollout (rolling update)
+  enabled: true
+  ## @param rollout.maxUnavailable Maximum number of unavailable replicas during rolling update
+  maxUnavailable: 0
+  ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
+  maxSurge: 40%
+
+## @param env [object] Environment variables for the true-ai container. Values support templating.
+## Use the `${k8s-secret/<secretName>/<key>}` syntax to reference Kubernetes secrets.
+env: {}
