@@ -99,7 +99,7 @@ The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded 
 
 | Name                               | Description                                        | Value                                 |
 | ---------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `false`                               |
+| `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `true`                                |
 | `caddy.replicaCount`               | Number of Caddy replicas to deploy                 | `2`                                   |
 | `caddy.image.repository`           | Image repository for Caddy                         | `public.ecr.aws/docker/library/caddy` |
 | `caddy.image.tag`                  | Image tag for Caddy                                | `2.6.3`                               |
@@ -117,63 +117,6 @@ The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded 
 | `caddy.affinity`                   | Affinity for Caddy pods                            | `{}`                                  |
 | `extraManifests`                   | Extra manifests to deploy alongside the chart      | `[]`                                  |
 
-## Migrating from the `/proxy/` URL scheme
+## Upgrading
 
-Prior to this change, Caddy accepted URLs with an explicit `/proxy/` segment:
-
-```
-# Old scheme (no longer supported)
-<tunnel-url>/proxy/http://host:port/path
-<tunnel-url>/proxy/https://host:port/path
-<tunnel-url>/proxy/https/host:port/path
-<tunnel-url>/proxy/host:port/path
-```
-
-The `/proxy/` segment has been removed. The `<tunnel-identifier>` prefix is now **required**.
-
-### Migration steps
-
-1. **Identify all callers** that construct Caddy proxy URLs — SDKs, agents, platform services, scripts, or any code that builds URLs pointing at the Cloudflare tunnel endpoint.
-
-2. **Rewrite URLs** using the following substitution rules (replace `<tunnel-identifier>` with your actual tunnel identifier):
-
-   | Old URL | New URL |
-   | ------- | ------- |
-   | `.../proxy/http://host:port/path` | `.../<tunnel-identifier>/http://host:port/path` |
-   | `.../proxy/https://host:port/path` | `.../<tunnel-identifier>/https://host:port/path` |
-   | `.../proxy/https/host:port/path` | `.../<tunnel-identifier>/https/host:port/path` |
-   | `.../proxy/host:port/path` | `.../<tunnel-identifier>/host:port/path` |
-
-3. **Deploy the new chart version:**
-
-   ```bash
-   helm upgrade tfy-cloudflared truefoundry/tfy-cloudflared \
-     --namespace cloudflared \
-     --reuse-values
-   ```
-
-4. **Smoke-test** after the rollout completes:
-
-   ```bash
-   # Should return a response from your target service
-   curl -v https://<tunnel-url>/<tunnel-identifier>/http://<host>:<port>/healthz
-   ```
-
-### Rollback
-
-If you need to revert to the old `/proxy/` matchers while callers are updated, patch the configmap directly:
-
-```bash
-kubectl patch configmap tfy-cloudflared-caddy-config -n cloudflared \
-  --type merge \
-  -p '{"data":{"Caddyfile":"<old-caddyfile-content>"}}'
-
-# Then restart Caddy to pick up the change
-kubectl rollout restart deployment/tfy-cloudflared-caddy -n cloudflared
-```
-
-Alternatively, roll back the Helm release:
-
-```bash
-helm rollback tfy-cloudflared -n cloudflared
-```
+For breaking changes, version-by-version migration steps, and rollback instructions, see [CHANGELOG.md](./CHANGELOG.md).
