@@ -59,8 +59,10 @@ spec:
           {{- end }}
           image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- if .Values.env }}
           env:
             {{- include "true-ai.env" . | trim | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

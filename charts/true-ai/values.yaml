@@ -1,8 +1,6 @@
 ## @section Configuration for True AI (Internal AI Platform Frontend)
 
 global:
-  ## @param global.resourceTier Resource deployment type
-  resourceTier: "medium"
   ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
   imagePullSecrets: []
   ## @param global.affinity [object] Affinity rules for pod scheduling on a node
@@ -91,8 +89,8 @@ image:
 fullnameOverride: ""
 ## @param nameOverride Name override
 nameOverride: ""
-## @skip replicaCount Number of replicas
-# replicaCount: 3
+## @param replicaCount Number of replicas (ignored when autoscaling is enabled)
+replicaCount: 1
 
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
@@ -173,16 +171,16 @@ healthcheck:
     ## @param healthcheck.liveness.failureThreshold Failure threshold
     failureThreshold: 3
 
-## @skip resources [object] Resource configuration (defaults derived from global.resourceTier)
-# resources:
-#   limits:
-#     cpu: 400m
-#     ephemeral-storage: 256Mi
-#     memory: 512Mi
-#   requests:
-#     cpu: 100m
-#     ephemeral-storage: 128Mi
-#     memory: 128Mi
+## @param resources [object] Resource configuration
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+    ephemeral-storage: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+    ephemeral-storage: 512Mi
 
 ## @param nodeSelector Node selector
 nodeSelector: {}
@@ -322,24 +320,9 @@ rollout:
   ## @param rollout.maxSurge Maximum number of surge replicas during rolling update
   maxSurge: 40%
 
-## @skip env Environment variables for the true-ai container. Values support templating.
+## @param env [object] Environment variables for the true-ai container. Values support templating.
 ## Use the `${k8s-secret/<secretName>/<key>}` or `${k8s-secret/<key>}` (uses envSecretName) syntax to reference Kubernetes secrets.
-env:
-  ## Where the app is mounted on the public URL. e.g. "/internal-ai".
-  FE_DEPLOYED_PATH: "/"
-  ## Gateway base URL template (supports {tenantName}). e.g. https://gateway.example.com/{tenantName}
-  GATEWAY_BASE_URL: ""
-  ## Control-plane base URL. e.g. https://internal.truefoundry.cloud
-  CONTROL_PLANE_URL: ""
-  ## Session/auth mode: STANDALONE (device-code OAuth) or CP_AUTH (control-plane session cookie).
-  AGENT_MODE: "STANDALONE"
-  ## Slack incoming-webhook URL for in-app feedback. When set, the Feedback button is shown.
-  SLACK_WEBHOOK_URL_FEEDBACK: ""
-  ## Composer seeds (see source for full docs).
-  DEFAULT_SELECTED_MODEL: ""
-  DEFAULT_SELECTED_MCP_SERVERS: ""
-  DEFAULT_SELECTED_SKILLS: ""
-  DEFAULT_SEEDED_SYSTEM_INSTRUCTIONS: ""
+env: {}
 
 ## @param envSecretName Name of an existing Secret to resolve `${k8s-secret/<key>}` env values against.
 envSecretName: true-ai-env-secret
