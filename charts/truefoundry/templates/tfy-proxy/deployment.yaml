@@ -68,6 +68,11 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.tfyProxy.service.port }}
+              {{- if .Values.global.proxy.tls.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: HTTP
+              {{- end }}
             periodSeconds: {{ .Values.tfyProxy.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.tfyProxy.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.tfyProxy.livenessProbe.failureThreshold }}
@@ -77,6 +82,11 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.tfyProxy.service.port }}
+              {{- if .Values.global.proxy.tls.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: HTTP
+              {{- end }}
             periodSeconds: {{ .Values.tfyProxy.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.tfyProxy.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.tfyProxy.readinessProbe.failureThreshold }}

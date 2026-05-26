@@ -394,7 +394,12 @@ Create the name of the secret which will contain cluster token
 Trimmed external control plane base URL (https://...).
 */}}
 {{- define "tfy-agent.controlPlaneBaseURL" -}}
-{{- .Values.config.controlPlaneURL | trimSuffix "/" -}}
+{{- $controlPlaneURL := .Values.config.controlPlaneURL | toString -}}
+{{- if $controlPlaneURL -}}
+{{- $controlPlaneURL | trimSuffix "/" -}}
+{{- else -}}
+{{- .Values.config.controlPlaneClusterIP | toString | trimSuffix "/" -}}
+{{- end -}}
 {{- end }}
 
 {{/*

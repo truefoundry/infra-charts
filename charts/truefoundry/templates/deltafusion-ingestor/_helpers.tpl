@@ -250,11 +250,11 @@ limits:
 {{- if .Values.deltaFusionIngestor.replicaCount -}}
 {{ .Values.deltaFusionIngestor.replicaCount }}
 {{- else if eq $tier "small" -}}
-2
+3
 {{- else if eq $tier "medium" -}}
-2
+3
 {{- else if eq $tier "large" -}}
-2
+3
 {{- end }}
 {{- end }}
 

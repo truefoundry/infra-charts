@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.144.0
+  controlPlaneChartVersion: 0.146.2
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -154,6 +154,27 @@ global:
       enabled: true
       ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS (e.g. ["https://example.com"]). Leave empty to allow all origins when CORS is enabled.
       allowedOrigins: []
+    ## global.proxy.tls TLS configuration for the proxy
+    ## When enabled, the Secret named by `secretName` is projected into
+    ## /etc/caddy/tls inside the tfy-proxy container, and Caddy is configured with:
+    ##   tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
+    ## The Secret must contain a PEM-encoded certificate (chain) and private key.
+    ## By default these are read from the standard `kubernetes.io/tls` keys
+    ## (`tls.crt` and `tls.key`), but you can override `secretKeys.cert` and
+    ## `secretKeys.key` to point at different keys within an existing Secret —
+    ## the chosen entries are always remapped to `tls.crt` and `tls.key` on disk
+    ## so the Caddyfile contract above never changes.
+    tls:
+      ## @param global.proxy.tls.enabled Enable TLS on the main Caddy site (adds `tls` directive and mounts the Secret)
+      enabled: false
+      ## @param global.proxy.tls.secretName Name of an existing Kubernetes Secret in the release namespace containing the certificate and private key (required when tls.enabled is true)
+      secretName: ""
+      ## global.proxy.tls.secretKeys Keys within `secretName` that hold the cert and key. Defaults match a `kubernetes.io/tls` Secret.
+      secretKeys:
+        ## @param global.proxy.tls.secretKeys.cert Key inside `secretName` that holds the PEM-encoded certificate (chain). Mounted at /etc/caddy/tls/tls.crt
+        cert: tls.crt
+        ## @param global.proxy.tls.secretKeys.key Key inside `secretName` that holds the PEM-encoded private key. Mounted at /etc/caddy/tls/tls.key
+        key: tls.key
   ## global.database Database configuration when dev mode is not enabled
   database:
     ## @param global.database.host Control plane database hostname when dev mode is not enabled
@@ -465,7 +486,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.143.0"
+    tag: "v0.145.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -769,7 +790,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.144.0"
+    tag: "v0.146.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -2739,7 +2760,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.144.0"
+    tag: "v0.146.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2922,7 +2943,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.144.0"
+    tag: "v0.146.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3099,7 +3120,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.143.0
+    tag: v0.146.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3291,6 +3312,10 @@ deltaFusionQueryServer:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
+    SENTRY_ENABLED: '{{ .Values.global.enableSentry | default "false" }}'
+    AUTH_SERVER_URL: "{{ .Values.global.authServerUrl }}"
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    ALLOCATOR: snmalloc
   ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
   enableLiveLogs: true
 ## @section tfyProxy Truefoundry tfy proxy values
@@ -3310,7 +3335,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.144.0"
+    tag: "v0.146.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Name of an existing ConfigMap containing Caddy configuration for tfyProxy. The ConfigMap must include `Caddyfile` as the key.
