@@ -186,32 +186,23 @@ If you have an existing release in the `cloudflared` namespace, follow these ste
 
 ### Migration steps
 
-1. **Capture the existing tunnel token** so the new release can reuse it:
-
-   ```bash
-   kubectl get secret -n cloudflared \
-     -l app.kubernetes.io/instance=tfy-cloudflared \
-     -o yaml > /tmp/cloudflared-secret.yaml
-   ```
-
-2. **Install the chart in the new namespace** (creates it if it doesn't exist):
+1. **Install the chart in the new namespace** using the same values file (with the same `tunnel.token` / `tunnel.existingSecret`) you used for the original install:
 
    ```bash
    helm upgrade --install tfy-cloudflared truefoundry/tfy-cloudflared \
      --namespace tfy-cloudflared \
      --create-namespace \
-     --reuse-values \
      -f <your-values-overrides>.yaml
    ```
 
-3. **Verify the new release is healthy** before tearing down the old one:
+2. **Verify the new release is healthy** before tearing down the old one:
 
    ```bash
    kubectl rollout status deployment -n tfy-cloudflared \
      -l app.kubernetes.io/instance=tfy-cloudflared --timeout=120s
    ```
 
-4. **Uninstall the old release** once traffic is confirmed flowing through the new namespace:
+3. **Uninstall the old release** once traffic is confirmed flowing through the new namespace:
 
    ```bash
    helm uninstall tfy-cloudflared -n cloudflared
@@ -222,7 +213,7 @@ If you have an existing release in the `cloudflared` namespace, follow these ste
 
 ### Rollback
 
-If the new namespace deployment has issues, the old `cloudflared` namespace release is still active (assuming you haven't run step 4). Simply scale the new deployment down or uninstall it:
+If the new namespace deployment has issues, the old `cloudflared` namespace release is still active (assuming you haven't run step 3). Simply scale the new deployment down or uninstall it:
 
 ```bash
 helm uninstall tfy-cloudflared -n tfy-cloudflared
