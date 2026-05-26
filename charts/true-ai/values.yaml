@@ -83,7 +83,7 @@ image:
   ## @param image.repository Image repository for true-ai
   repository: tfy-images/internal-ai-platform-fe
   ## @param image.tag Image tag for true-ai
-  tag: "latest"
+  tag: "0.0.1-rc.1"
 
 ## @param fullnameOverride Full name override for the true-ai chart
 fullnameOverride: ""
@@ -311,7 +311,7 @@ autoscaling:
   # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
   # targetMemoryUtilizationPercentage: 70
 
-## Rollout configuration
+  ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
   enabled: true
@@ -322,7 +322,8 @@ rollout:
 
 ## @param env [object] Environment variables for the true-ai container. Values support templating.
 ## Use the `${k8s-secret/<secretName>/<key>}` or `${k8s-secret/<key>}` (uses envSecretName) syntax to reference Kubernetes secrets.
-env: {}
+env:
+  TEST_KEY: TEST_VALUE
 
 ## @param envSecretName Name of an existing Secret to resolve `${k8s-secret/<key>}` env values against.
 envSecretName: true-ai-env-secret
