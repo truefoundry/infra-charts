@@ -99,7 +99,7 @@ The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded 
 
 | Name                               | Description                                        | Value                                 |
 | ---------------------------------- | -------------------------------------------------- | ------------------------------------- |
-| `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `false`                               |
+| `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `true`                                |
 | `caddy.replicaCount`               | Number of Caddy replicas to deploy                 | `2`                                   |
 | `caddy.image.repository`           | Image repository for Caddy                         | `public.ecr.aws/docker/library/caddy` |
 | `caddy.image.tag`                  | Image tag for Caddy                                | `2.6.3`                               |
@@ -148,7 +148,7 @@ The `/proxy/` segment has been removed. The `<tunnel-identifier>` prefix is now 
 
    ```bash
    helm upgrade tfy-cloudflared truefoundry/tfy-cloudflared \
-     --namespace cloudflared \
+     --namespace tfy-cloudflared \
      --reuse-values
    ```
 
@@ -164,16 +164,66 @@ The `/proxy/` segment has been removed. The `<tunnel-identifier>` prefix is now 
 If you need to revert to the old `/proxy/` matchers while callers are updated, patch the configmap directly:
 
 ```bash
-kubectl patch configmap tfy-cloudflared-caddy-config -n cloudflared \
+kubectl patch configmap tfy-cloudflared-caddy-config -n tfy-cloudflared \
   --type merge \
   -p '{"data":{"Caddyfile":"<old-caddyfile-content>"}}'
 
 # Then restart Caddy to pick up the change
-kubectl rollout restart deployment/tfy-cloudflared-caddy -n cloudflared
+kubectl rollout restart deployment/tfy-cloudflared-caddy -n tfy-cloudflared
 ```
 
 Alternatively, roll back the Helm release:
 
 ```bash
-helm rollback tfy-cloudflared -n cloudflared
+helm rollback tfy-cloudflared -n tfy-cloudflared
+```
+
+## Migrating from the `cloudflared` namespace
+
+Starting with chart version `0.3.0`, the recommended install namespace is **`tfy-cloudflared`** (previously `cloudflared`). Caddy is also now enabled by default (`caddy.enabled=true`).
+
+If you have an existing release in the `cloudflared` namespace, follow these steps to move it.
+
+### Migration steps
+
+1. **Capture the existing tunnel token** so the new release can reuse it:
+
+   ```bash
+   kubectl get secret -n cloudflared \
+     -l app.kubernetes.io/instance=tfy-cloudflared \
+     -o yaml > /tmp/cloudflared-secret.yaml
+   ```
+
+2. **Install the chart in the new namespace** (creates it if it doesn't exist):
+
+   ```bash
+   helm upgrade --install tfy-cloudflared truefoundry/tfy-cloudflared \
+     --namespace tfy-cloudflared \
+     --create-namespace \
+     --reuse-values \
+     -f <your-values-overrides>.yaml
+   ```
+
+3. **Verify the new release is healthy** before tearing down the old one:
+
+   ```bash
+   kubectl rollout status deployment -n tfy-cloudflared \
+     -l app.kubernetes.io/instance=tfy-cloudflared --timeout=120s
+   ```
+
+4. **Uninstall the old release** once traffic is confirmed flowing through the new namespace:
+
+   ```bash
+   helm uninstall tfy-cloudflared -n cloudflared
+   kubectl delete namespace cloudflared
+   ```
+
+> **Note:** Cloudflare tunnels are outbound-only — running the old and new releases in parallel during the cutover is safe; both will establish their own connections to Cloudflare's edge using the same token. Cut over by uninstalling the old release when ready.
+
+### Rollback
+
+If the new namespace deployment has issues, the old `cloudflared` namespace release is still active (assuming you haven't run step 4). Simply scale the new deployment down or uninstall it:
+
+```bash
+helm uninstall tfy-cloudflared -n tfy-cloudflared
 ```
