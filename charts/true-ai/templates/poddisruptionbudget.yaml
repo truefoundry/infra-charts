@@ -1,0 +1,21 @@
+{{- $replicas := include "true-ai.replicas" . | trim | int -}}
+{{- if and .Values.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "true-ai.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "true-ai.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "true-ai.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "true-ai.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "true-ai.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "true-ai.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "true-ai.deploymentAnnotations" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ include "true-ai.replicas" . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "true-ai.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if .Values.rollout.enabled }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.rollout.maxSurge | default "100%" | quote }}
+      maxUnavailable: {{ .Values.rollout.maxUnavailable | default 0 }}
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- include "true-ai.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "true-ai.podLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml .Values.hostAliases | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dnsConfig }}
+      dnsConfig:
+        {{- toYaml .Values.dnsConfig | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "true-ai.serviceAccountName" . }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+      {{- if or .Values.initContainers (and .Values.global.customCA.enabled (eq (include "true-ai.customCA.useDirectMount" .) "false")) }}
+      initContainers:
+        {{- if and .Values.global.customCA.enabled (eq (include "true-ai.customCA.useDirectMount" .) "false") }}
+        {{- include "true-ai.customCA.initContainer" . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.initContainers }}
+        {{- toYaml .Values.initContainers | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- if .Values.securityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.securityContext "enabled") | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            {{- include "true-ai.env" . | trim | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "true-ai.resources" . | nindent 12 }}
+          {{- if .Values.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.liveness.path }}
+              port: {{ .Values.healthcheck.liveness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 5 }}
+            successThreshold: {{ .Values.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.liveness.failureThreshold | default 3 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.readiness.path }}
+              port: {{ .Values.healthcheck.readiness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 5 }}
+            periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 5 }}
+            successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
+          {{- end }}
+          {{- if or (gt (len .Values.extraVolumeMounts) 0) .Values.global.customCA.enabled }}
+          volumeMounts:
+            {{- if gt (len .Values.extraVolumeMounts) 0 }}
+            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+            {{- if .Values.global.customCA.enabled }}
+            {{- include "true-ai.customCA.volumeMounts" . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+      imagePullSecrets:
+        {{- include "true-ai.imagePullSecrets" . | nindent 8 }}
+      {{- if or (gt (len .Values.extraVolumes) 0) .Values.global.customCA.enabled }}
+      volumes:
+        {{- if gt (len .Values.extraVolumes) 0 }}
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+        {{- end }}
+        {{- if .Values.global.customCA.enabled }}
+        {{- include "true-ai.customCA.volumes" . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      nodeSelector:
+        {{- include "true-ai.nodeSelector" . | nindent 8 }}
+      affinity:
+        {{- include "true-ai.affinity" . | nindent 8 }}
+      topologySpreadConstraints:
+        {{- if .Values.topologySpreadConstraints }}
+        {{- toYaml .Values.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "true-ai.selectorLabels" . | nindent 14 }}
+        {{- end }}
+      tolerations:
+        {{- include "true-ai.tolerations" . | nindent 8 }}
