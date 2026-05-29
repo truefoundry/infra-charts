@@ -190,6 +190,31 @@ def generate_manifests_local(chart_name, values_file):
     return manifest_file_path
 
 # Process charts and gather images
+def process_images_for_chart(raw_images):
+    processed_images = []
+    image_urls = []
+
+    for image_entry in raw_images:
+        image_registry_url = image_entry['details']['registryURL']
+
+        if image_registry_url.startswith(('auto', 'cos-nvidia-installer')):
+            processed_images.append(image_entry)
+            image_urls.append(image_registry_url)
+            continue
+
+        if any(sub in image_registry_url for sub in ['deltafusion-query-server', 'deltafusion-ingestor']):
+            optimized_image_entry = copy.deepcopy(image_entry)
+            optimized_image_entry['details']['registryURL'] = f"{image_registry_url}-optimized"
+            if image_entry['details'].get('platforms'):
+                optimized_image_entry['details']['platforms'] = image_entry['details']['platforms']
+            processed_images.append(optimized_image_entry)
+            image_urls.append(f"{image_registry_url}-optimized")
+
+        processed_images.append(image_entry)
+        image_urls.append(image_registry_url)
+
+    return processed_images, make_image_list_unique(image_urls)
+
 def process_and_generate_chart_manifests(chart_info_list):
     all_processed_images = []
     
@@ -219,34 +244,14 @@ def process_and_generate_chart_manifests(chart_info_list):
 
         # Get raw images from the manifest
         chart_raw_images = make_image_list_unique(extract_images_from_k8s_manifests(open(f"{temp_dir}/charts/{chart_name}.yaml").read()))
-        
-        # Process each image, setting platform info from previous_platform_data if already known
-        chart_processed_images = []
-        for image_entry in chart_raw_images:
+        chart_processed_images, image_urls = process_images_for_chart(chart_raw_images)
+
+        for image_entry in chart_processed_images:
             image_registry_url = image_entry['details']['registryURL']
-            
-            if image_registry_url.startswith(('auto', 'cos-nvidia-installer')):
-                chart_processed_images.append(image_entry)
-                continue
-            
-            # Adding -optimized images for deltafusion images
-            if any(sub in image_registry_url for sub in ['deltafusion-query-server', 'deltafusion-ingestor']):
-                optimized_image_entry = copy.deepcopy(image_entry)
-                optimized_image_entry['details']['registryURL'] = f"{image_registry_url}-optimized"
-                chart_processed_images.append(optimized_image_entry)
-            
-            # If the image is already seen before, use that platform info even if empty
             if image_registry_url in known_image_registry_urls:
-                # Reuse the existing platform info, even if empty
                 image_entry['details']['platforms'] = previous_platform_data[image_registry_url]
-                chart_processed_images.append(image_entry)
-            else:
-                # This is truly a new image, add it to be processed
-                chart_processed_images.append(image_entry)
-            
         
         # Log a summary
-        image_urls = [img['details']['registryURL'] for img in chart_processed_images]
         previously_known_count = len([url for url in image_urls if url in known_image_registry_urls])
         new_image_count = len(image_urls) - previously_known_count
         
@@ -350,7 +355,21 @@ if __name__ == '__main__':
         manifest_file_path = generate_manifests(args.chart_name, args.chart_repo_url, args.chart_version, args.values_file_path)
 
     chart_list = extract_chart_info(manifest_file_path)
-    new_chart_images = process_and_generate_chart_manifests(chart_list) if chart_list else make_image_list_unique(extract_images_from_k8s_manifests(open(manifest_file_path).read()))
+    if chart_list:
+        new_chart_images = process_and_generate_chart_manifests(chart_list)
+    else:
+        raw_images = make_image_list_unique(extract_images_from_k8s_manifests(open(manifest_file_path).read()))
+        new_chart_images, image_urls = process_images_for_chart(raw_images)
+        chart_list = [{
+            "type": "helm",
+            "details": {
+                "chart": args.chart_name,
+                "repoURL": normalize_repo_url(args.chart_repo_url),
+                "targetRevision": args.chart_version,
+                "images": image_urls,
+            }
+        }]
+        logging.info(f"Standalone chart {args.chart_name}@{args.chart_version} images: {len(image_urls)}")
 
     # Inject images with empty platforms from output_file into new_images
     images_to_inject = []
@@ -449,9 +468,19 @@ if __name__ == '__main__':
     
     # Track which images are actually inspected in this run
     newly_inspected_count = 0
-    
+
     for image_entry in new_chart_images:
         image_registry_url = image_entry['details']['registryURL']
+        if image_registry_url.endswith('-optimized') and not image_entry['details'].get('platforms'):
+            base_image_url = image_registry_url[:-len('-optimized')]
+            base_platforms = previous_platform_data.get(base_image_url)
+            if not base_platforms:
+                for candidate in new_chart_images:
+                    if candidate['details']['registryURL'] == base_image_url:
+                        base_platforms = candidate['details'].get('platforms', [])
+                        break
+            if base_platforms:
+                image_entry['details']['platforms'] = base_platforms
         
         # Skip if already has platforms (from output file or otherwise)
         if image_entry['details'].get('platforms') or image_registry_url in previous_platform_data:
