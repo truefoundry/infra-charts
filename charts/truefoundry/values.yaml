@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.147.0
+  controlPlaneChartVersion: 0.147.1
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -284,7 +284,7 @@ global:
   ## global.wif Workload Identity Federation (WIF) RBAC settings.
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting control-plane service accounts permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
-    enabled: true
+    enabled: false
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection via initContainers
@@ -2689,6 +2689,11 @@ tfy-llm-gateway:
   env:
     CONTROL_PLANE_URL: http://{{ .Release.Name }}-tfy-proxy:8080
     PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
+  redis:
+    ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
+    networkPolicy:
+      enabled: false
 ###################################################################################################################
 ####################################### TrueFoundry OTel Collector ################################################
 ###################################################################################################################
@@ -3345,7 +3350,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.147.0"
+    tag: "v0.147.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.existingProxyConfigMapName Name of an existing ConfigMap containing Caddy configuration for tfyProxy. The ConfigMap must include `Caddyfile` as the key.
