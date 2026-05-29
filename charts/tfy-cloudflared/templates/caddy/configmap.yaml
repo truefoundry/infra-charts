@@ -34,6 +34,7 @@ data:
     		rewrite * /{re.direct_url_http.3}
 
     		reverse_proxy {re.direct_url_http.1}:{re.direct_url_http.2} {
+    			header_up Host {re.direct_url_http.1}
     			header_up X-Forwarded-Host {host}
     			header_up X-Original-URI {uri}
 
@@ -106,6 +107,7 @@ data:
     		rewrite * /{re.direct_http.3}
 
     		reverse_proxy {re.direct_http.1}:{re.direct_http.2} {
+    			header_up Host {re.direct_http.1}
     			header_up X-Forwarded-Host {host}
     			header_up X-Original-URI {uri}
 
