@@ -238,6 +238,9 @@ spec:
         kubeControllerManager:
           enabled: false
         prometheus-node-exporter:
+          service:
+            port: {{ .Values.prometheus.prometheusNodeExporter.port | default 9100 }}
+            targetPort: {{ .Values.prometheus.prometheusNodeExporter.port | default 9100 }}
           extraArgs:
             - --web.disable-exporter-metrics
             - --collector.disable-defaults
