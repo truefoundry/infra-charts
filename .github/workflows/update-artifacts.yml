@@ -87,14 +87,14 @@ jobs:
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold" "truefoundry")
           for chart in "${charts_list[@]}"; do
-            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
+            version=$(grep '^version:' "charts/$chart/Chart.yaml" | awk '{print $2}')
             if [ "$chart" = "truefoundry" ]; then
               repo_url="oci://tfy.jfrog.io/tfy-helm"
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart $repo_url \
-                $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json
+              python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "$repo_url" \
+                "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json"
             else
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-                $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
+              python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "https://truefoundry.github.io/infra-charts/" \
+                "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json" scripts/generate-artifacts-manifest/extra.json
             fi
           done
         env:
