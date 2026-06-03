@@ -1,4 +1,46 @@
 {{- if and .Values.syncConfigMaps.enabled .Values.syncConfigMaps.items -}}
+{{- if .Values.syncConfigMaps.useClusterPolicy }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ include "tfy-kyverno.fullname" . }}-sync-configmaps
+spec:
+  rules:
+    {{- range $i, $cm := .Values.syncConfigMaps.items }}
+    - name: sync-configmap-{{ $cm.name }}
+      skipBackgroundRequests: false
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+              {{- if $.Values.syncConfigMaps.includeNamespaces }}
+              names:
+                {{- range $.Values.syncConfigMaps.includeNamespaces }}
+                - {{ . | quote }}
+                {{- end }}
+              {{- end }}
+      {{- if $.Values.syncConfigMaps.excludeNamespaces }}
+      exclude:
+        any:
+          - resources:
+              names:
+                {{- range $.Values.syncConfigMaps.excludeNamespaces }}
+                - {{ . | quote }}
+                {{- end }}
+      {{- end }}
+      generate:
+        generateExisting: true
+        synchronize: true
+        apiVersion: v1
+        kind: ConfigMap
+        name: {{ $cm.name }}
+        namespace: "{{`{{request.object.metadata.name}}`}}"
+        clone:
+          namespace: {{ $cm.namespace }}
+          name: {{ $cm.name }}
+    {{- end }}
+{{- else }}
 apiVersion: policies.kyverno.io/v1
 kind: GeneratingPolicy
 metadata:
@@ -50,4 +92,5 @@ spec:
         {{- if $i }}, {{ end }}variables.source{{ $i }}
         {{- end }}
         ])
+{{- end }}
 {{- end -}}
