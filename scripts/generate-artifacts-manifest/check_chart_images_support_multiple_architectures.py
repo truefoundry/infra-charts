@@ -7,7 +7,7 @@ from pathlib import Path
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-truefoundry_charts = ["truefoundry", "tfy-agent", "elasti"]
+VALIDATED_CHARTS = {"truefoundry", "tfy-agent", "elasti", "tfy-llm-gateway"}
 
 def load_json_file(file_path: str):
     """Load and return the contents of a JSON file."""
@@ -42,23 +42,26 @@ def parse_args(args):
     return artifacts_manifest_path, whitelisted_images_path
 
 
-def get_truefoundry_chart_images(artifacts_manifest):
-    """Extract the list of images associated with the 'truefoundry' chart."""
+def get_validated_chart_images(artifacts_manifest):
+    """Extract images associated with charts that require multi-arch validation."""
+    chart_images = []
     for artifact in artifacts_manifest:
-        if artifact.get("details", {}).get("chart") in truefoundry_charts:
-            return artifact["details"].get("images", [])
-    return []
+        details = artifact.get("details", {})
+        if artifact.get("type") == "helm" and details.get("chart") in VALIDATED_CHARTS:
+            chart_images.extend(details.get("images", []))
+    return chart_images
 
 
-def check_image_architectures(artifacts_manifest, truefoundry_chart_images, whitelisted_images):
+def check_image_architectures(artifacts_manifest, validated_chart_images, whitelisted_images):
+    validated_chart_image_set = set(validated_chart_images)
     whitelisted_set = set(whitelisted_images)
 
     for artifact_image in artifacts_manifest:
         if artifact_image.get("type") == "image":
             image_url = artifact_image.get("details", {}).get("registryURL")
 
-            # Skip images not in the truefoundry chart images list
-            if image_url not in truefoundry_chart_images:
+            # Skip images not in the validated chart images list
+            if image_url not in validated_chart_image_set:
                 continue
 
             platforms = artifact_image.get("details", {}).get("platforms", [])
@@ -87,10 +90,17 @@ def main():
     artifacts_manifest = load_json_file(artifacts_manifest_path)
     whitelisted_images = load_json_file(whitelisted_images_path)
 
-    truefoundry_chart_images = get_truefoundry_chart_images(artifacts_manifest)
-    check_image_architectures(artifacts_manifest, truefoundry_chart_images, whitelisted_images)
+    validated_chart_images = get_validated_chart_images(artifacts_manifest)
+    if not validated_chart_images:
+        logging.error(
+            "No images found for charts that require multi-arch validation. "
+            f"Supported charts: {', '.join(sorted(VALIDATED_CHARTS))}"
+        )
+        sys.exit(1)
 
-    logging.info("All images in the truefoundry chart support both arm64 and amd64 architectures.")
+    check_image_architectures(artifacts_manifest, validated_chart_images, whitelisted_images)
+
+    logging.info("All images in the validated charts support both arm64 and amd64 architectures.")
 
 
 if __name__ == "__main__":
