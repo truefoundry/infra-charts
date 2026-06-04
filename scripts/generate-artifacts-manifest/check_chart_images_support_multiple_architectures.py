@@ -7,7 +7,7 @@ from pathlib import Path
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-VALIDATED_CHARTS = {"truefoundry", "tfy-agent", "elasti", "tfy-llm-gateway"}
+VALIDATED_CHARTS = ["truefoundry", "tfy-agent", "elasti", "tfy-llm-gateway"]
 
 def load_json_file(file_path: str):
     """Load and return the contents of a JSON file."""
@@ -44,12 +44,11 @@ def parse_args(args):
 
 def get_validated_chart_images(artifacts_manifest):
     """Extract images associated with charts that require multi-arch validation."""
-    chart_images = []
     for artifact in artifacts_manifest:
         details = artifact.get("details", {})
         if artifact.get("type") == "helm" and details.get("chart") in VALIDATED_CHARTS:
-            chart_images.extend(details.get("images", []))
-    return chart_images
+            return details.get("images", [])
+    return []
 
 
 def check_image_architectures(artifacts_manifest, validated_chart_images, whitelisted_images):

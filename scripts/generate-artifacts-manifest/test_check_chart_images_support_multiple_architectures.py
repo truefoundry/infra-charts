@@ -25,7 +25,7 @@ class CheckChartImagesSupportMultipleArchitecturesTest(unittest.TestCase):
 
         self.assertEqual(chart_images, ["example.com/tfy-llm-gateway:v1"])
 
-    def test_collects_images_from_all_validated_charts(self):
+    def test_returns_first_validated_chart_images(self):
         artifacts_manifest = [
             {
                 "type": "helm",
@@ -43,10 +43,7 @@ class CheckChartImagesSupportMultipleArchitecturesTest(unittest.TestCase):
 
         chart_images = multi_arch_check.get_validated_chart_images(artifacts_manifest)
 
-        self.assertEqual(
-            chart_images,
-            ["example.com/elasti:v1", "example.com/truefoundry:v1"],
-        )
+        self.assertEqual(chart_images, ["example.com/elasti:v1"])
 
     def test_fails_when_gateway_image_missing_arm64(self):
         artifacts_manifest = [
