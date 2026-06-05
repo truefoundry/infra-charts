@@ -3,11 +3,9 @@ global:
   controlPlaneURL: ""
   customCA:
     enabled: true
-    certificate: |
-      -----BEGIN CERTIFICATE-----
-      MIIBdummycertificatecontentusedonlyforartifactmanifestrendering==
-      -----END CERTIFICATE-----
-
+    existingConfigMap:
+      name: tfy-llm-gateway-custom-ca
+      overrideCAList: false
 proxy:
   tls:
     enabled: true
