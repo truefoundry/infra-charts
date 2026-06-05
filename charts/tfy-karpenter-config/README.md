@@ -66,7 +66,7 @@ https://github.com/awslabs/soci-snapshotter/blob/2e3df4a92415ff02ccc76ed9ceb1c25
 
 ## Parameters
 
-### Cluster configurations
+### Cluster configurations - ##
 
 | Name           | Description             | Value           |
 | -------------- | ----------------------- | --------------- |
