@@ -4,21 +4,34 @@ on:
   pull_request:
     branches:
       - 'main'
-    paths:
-      - '.github/workflows/update-artifacts.yml'
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'charts/truefoundry/**'
-      - 'charts/tfy-llm-gateway/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
-      - 'scripts/get-release-notes/**'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Detect Relevant Path Changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            relevant:
+              - '.github/workflows/update-artifacts.yml'
+              - 'charts/tfy-k8s-aws-eks-inframold/**'
+              - 'charts/tfy-k8s-azure-aks-inframold/**'
+              - 'charts/tfy-k8s-civo-talos-inframold/**'
+              - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+              - 'charts/tfy-k8s-generic-inframold/**'
+              - 'charts/truefoundry/**'
+              - 'charts/tfy-llm-gateway/**'
+              - 'scripts/generate-artifacts-manifest/**'
+              - 'scripts/upload-artifacts/**'
+              - 'scripts/get-release-notes/**'
+
   update-artifacts:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
