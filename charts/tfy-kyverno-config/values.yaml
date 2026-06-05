@@ -48,6 +48,9 @@ syncConfigMaps:
   items: []
 
 ## @section syncSecrets Configuration options for syncing Secrets across namespaces
+## Syncing secrets requires additional RBAC permissions for both the Kyverno admission
+## controller and the background controller to read source secrets and create/update/delete generated secrets for synchronization.
+## This must be configured in the Kyverno Helm chart values
 syncSecrets:
   ## @param syncSecrets.enabled Enable or disable syncing Secrets across namespaces
   enabled: false
