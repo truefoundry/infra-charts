@@ -36,6 +36,10 @@ spec:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
+            {{- if .Values.tags }}
+            extraTags:
+              {{- .Values.tags | toYaml | nindent 14 }}
+            {{- end }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
@@ -46,31 +50,49 @@ spec:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
+            {{- if .Values.tags }}
+            extraTags:
+              {{- .Values.tags | toYaml | nindent 14 }}
+            {{- end }}
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-          {{- if .Values.aws.karpenter.kmsKeyID }}
           inferentiaDefaultNodeTemplate:
+            {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
-          {{- end }}
+            {{- end }}
+            {{- if .Values.tags }}
+            extraTags:
+              {{- .Values.tags | toYaml | nindent 14 }}
+            {{- end }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-            {{- if .Values.aws.karpenter.kmsKeyID }}
+            {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
             nodeclass:
+              {{- if .Values.aws.karpenter.kmsKeyID }}
               kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
+              {{- end }}
+              {{- if .Values.tags }}
+              extraTags:
+                {{- .Values.tags | toYaml | nindent 16 }}
+              {{- end }}
             {{- end }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-          {{- if .Values.aws.karpenter.kmsKeyID }}
           controlPlaneNodeTemplate:
+            {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
-          {{- end }}
+            {{- end }}
+            {{- if .Values.tags }}
+            extraTags:
+              {{- .Values.tags | toYaml | nindent 14 }}
+            {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:

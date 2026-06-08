@@ -104,6 +104,9 @@ spec:
             cluster-name: "{{ .Values.clusterName }}"
             volume-type: csi-ebs
             truefoundry.com/managed: "true"
+            {{- range $k, $v := .Values.tags }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
