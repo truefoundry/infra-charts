@@ -59,6 +59,7 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
           inferentiaDefaultNodeTemplate:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
@@ -67,6 +68,7 @@ spec:
             extraTags:
               {{- .Values.tags | toYaml | nindent 14 }}
             {{- end }}
+          {{- end }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
@@ -85,6 +87,7 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+          {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
           controlPlaneNodeTemplate:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
@@ -93,6 +96,7 @@ spec:
             extraTags:
               {{- .Values.tags | toYaml | nindent 14 }}
             {{- end }}
+          {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
