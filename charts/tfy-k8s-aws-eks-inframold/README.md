@@ -93,6 +93,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.karpenter.kmsKeyID`                       | KMS Key ID for Karpenter                    | `""`    |
 | `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
 | `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
+| `aws.karpenter.config.enabled`                 | Flag to enable karpenter config             | `true`  |
 | `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
 | `aws.awsEbsCsiDriver.enabled`                  | Flag to enable AWS EBS CSI Driver           | `true`  |
 | `aws.awsEbsCsiDriver.roleArn`                  | Role ARN for AWS EBS CSI Driver             | `""`    |
