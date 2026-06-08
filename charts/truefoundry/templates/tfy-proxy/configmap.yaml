@@ -197,6 +197,21 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
+      {{- if .Values.tfyProxy.useMcpV2 }}
+      # Legacy MCP OAuth callback reroutes to new endpoints
+      # /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback → /mcp/oauth2/callback/outbound (outbound OAuth)
+      handle /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback {
+        uri replace /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback /mcp/oauth2/callback/outbound
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      # /api/svc/oauth2-mcp/callback → /mcp/oauth2/callback/inbound (inbound OAuth)
+      handle /api/svc/oauth2-mcp/callback {
+        uri replace /api/svc/oauth2-mcp/callback /mcp/oauth2/callback/inbound
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
       # /api/svc → / on upstream:3000
       handle /api/svc/* {
         uri strip_prefix /api/svc
@@ -267,6 +282,14 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.trtEngineBuilderBaseURL . }} {
           header_up Host {{ (tpl .Values.global.proxy.trtEngineBuilderBaseURL .) | trimPrefix "https://" | trimPrefix "http://" }}
         }
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.trueAI.enabled }}
+      # /true-ai and /true-ai/* → / on upstream:8080
+      handle /true-ai /true-ai/* {
+        uri strip_prefix /true-ai
+        reverse_proxy {{ tpl .Values.global.proxy.trueAI.host . }}:{{ .Values.global.proxy.trueAI.port }}
       }
       {{- end }}
 
