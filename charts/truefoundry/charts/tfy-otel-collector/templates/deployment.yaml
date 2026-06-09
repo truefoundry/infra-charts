@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-otel-collector.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.deploymentAnnotations" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ include "tfy-otel-collector.replicas" . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if .Values.rollout.enabled }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.rollout.maxSurge | default "100%" | quote }}
+      maxUnavailable: {{ .Values.rollout.maxUnavailable | default 0 }}
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-otel-collector.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-otel-collector.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext:
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
+      {{- $initContainers := include "tfy-otel-collector.customCA.initContainer" . | trim }}
+      {{- if $initContainers }}
+      initContainers:
+        {{- $initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- if .Values.securityContext.enabled }}
+          securityContext:
+            {{- toYaml (omit .Values.securityContext "enabled") | nindent 12 }}
+          {{- end }}
+          env:
+            {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
+          args: ["--config", "/data/config.yaml"]
+          image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: metrics
+              containerPort: 8888
+              protocol: TCP
+            - name: healthcheck
+              containerPort: 3000
+              protocol: TCP
+          resources:
+            {{- include "tfy-otel-collector.resources" . | nindent 12 }}
+          {{- if .Values.healthcheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.liveness.path }}
+              port: {{ .Values.healthcheck.liveness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 30 }}
+            periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.healthcheck.liveness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.liveness.failureThreshold | default 3 }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.readiness.path }}
+              port: {{ .Values.healthcheck.readiness.port }}
+            initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
+            periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
+            timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 1 }}
+            successThreshold: {{ .Values.healthcheck.readiness.successThreshold | default 1 }}
+            failureThreshold: {{ .Values.healthcheck.readiness.failureThreshold | default 3 }}
+          {{- end }}
+          volumeMounts:
+          {{- include "tfy-otel-collector.volumeMounts" . | nindent 12 }}
+      imagePullSecrets:
+        {{- include "tfy-otel-collector.imagePullSecrets" . | nindent 8 }}
+      volumes:
+      {{- include "tfy-otel-collector.volumes" . | nindent 8 }}
+      nodeSelector:
+        {{- include "tfy-otel-collector.nodeSelector" . | nindent 8 }}
+      affinity:
+        {{- include "tfy-otel-collector.affinity" . | nindent 8 }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+        {{- include "tfy-otel-collector.tolerations" . | nindent 8 }}
