@@ -285,6 +285,14 @@ data:
       }
       {{- end }}
 
+      {{- if .Values.global.proxy.trueAI.enabled }}
+      # /true-ai and /true-ai/* → / on upstream:8080
+      handle /true-ai /true-ai/* {
+        uri strip_prefix /true-ai
+        reverse_proxy {{ tpl .Values.global.proxy.trueAI.host . }}:{{ .Values.global.proxy.trueAI.port }}
+      }
+      {{- end }}
+
       {{- if .Values.global.proxy.liveDemoTokenVendorURL }}
       handle /api/live-demo-token-vendor/* {
         uri strip_prefix /api/live-demo-token-vendor

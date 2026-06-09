@@ -23,21 +23,23 @@ A Helm chart for kyverno configurations
 
 ### syncConfigMaps Configuration options for syncing ConfigMaps across namespaces
 
-| Name                               | Description                                                                                          | Value   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------- | ------- |
-| `syncConfigMaps.enabled`           | Enable or disable syncing ConfigMaps across namespaces                                               | `false` |
-| `syncConfigMaps.excludeNamespaces` | Namespaces to exclude from syncing ConfigMaps                                                        | `[]`    |
-| `syncConfigMaps.includeNamespaces` | Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included | `[]`    |
-| `syncConfigMaps.items`             | List of ConfigMaps to sync across namespaces                                                         | `[]`    |
+| Name                               | Description                                                                                                                                                                                          | Value   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `syncConfigMaps.enabled`           | Enable or disable syncing ConfigMaps across namespaces                                                                                                                                               | `false` |
+| `syncConfigMaps.useClusterPolicy`  | Use ClusterPolicy (kyverno.io/v1) instead of GeneratingPolicy (policies.kyverno.io/v1). ClusterPolicy has more mature generateExisting support and supports wildcard namespace patterns (e.g. tfy-*) | `true`  |
+| `syncConfigMaps.excludeNamespaces` | Namespaces to exclude from syncing ConfigMaps                                                                                                                                                        | `[]`    |
+| `syncConfigMaps.includeNamespaces` | Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true                          | `[]`    |
+| `syncConfigMaps.items`             | List of ConfigMaps to sync across namespaces                                                                                                                                                         | `[]`    |
 
 ### syncSecrets Configuration options for syncing Secrets across namespaces
 
-| Name                            | Description                                                                                       | Value   |
-| ------------------------------- | ------------------------------------------------------------------------------------------------- | ------- |
-| `syncSecrets.enabled`           | Enable or disable syncing Secrets across namespaces                                               | `false` |
-| `syncSecrets.excludeNamespaces` | Namespaces to exclude from syncing Secrets                                                        | `[]`    |
-| `syncSecrets.includeNamespaces` | Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included | `[]`    |
-| `syncSecrets.items`             | List of Secrets to sync across namespaces                                                         | `[]`    |
+| Name                            | Description                                                                                                                                                                                          | Value   |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `syncSecrets.enabled`           | Enable or disable syncing Secrets across namespaces                                                                                                                                                  | `false` |
+| `syncSecrets.useClusterPolicy`  | Use ClusterPolicy (kyverno.io/v1) instead of GeneratingPolicy (policies.kyverno.io/v1). ClusterPolicy has more mature generateExisting support and supports wildcard namespace patterns (e.g. tfy-*) | `true`  |
+| `syncSecrets.excludeNamespaces` | Namespaces to exclude from syncing Secrets                                                                                                                                                           | `[]`    |
+| `syncSecrets.includeNamespaces` | Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true                             | `[]`    |
+| `syncSecrets.items`             | List of Secrets to sync across namespaces                                                                                                                                                            | `[]`    |
 
 ### podVolumeMounts Configuration options for adding volume mounts to pods
 

@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.148.0
+  controlPlaneChartVersion: 0.148.4
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -113,6 +113,15 @@ global:
     liveDemoTokenVendorURL: ""
     ## @param global.proxy.trtEngineBuilderBaseURL TRT ENGINE BUILDER BASE URL
     trtEngineBuilderBaseURL: ""
+    ## global.proxy.trueAI True AI platform frontend settings for service routing
+    trueAI:
+      ## @param global.proxy.trueAI.enabled Enable True AI frontend proxy route
+      enabled: false
+      ## @param global.proxy.trueAI.host True AI platform frontend host for service routing
+      host: >-
+        true-ai.{{ .Release.Namespace }}.svc.cluster.local
+      ## @param global.proxy.trueAI.port True AI platform frontend port for service routing
+      port: 8080
     ## @param global.proxy.authServerURL AUTH SERVER URL
     authServerURL: "https://auth.truefoundry.com"
     ## @param global.proxy.tfyLLMAgentURL LLM agent URL for service routing
@@ -790,7 +799,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.148.0"
+    tag: "v0.148.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -2143,7 +2152,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.148.0
+    tag: v0.148.1
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2776,7 +2785,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.148.0"
+    tag: "v0.148.1"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -2959,7 +2968,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.148.0"
+    tag: "v0.148.1"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3100,11 +3109,14 @@ deltaFusionCompaction:
     SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "true"
+    COMPACTION_ENABLED: "true"
     VACUUM_ENABLED: "true"
     DELETE_OLD_PARTITIONS_ENABLED: "true"
     DATAFUSION_EXECUTION_TARGET_PARTITIONS: "1"
     DATAFUSION_EXECUTION_SPILL_COMPRESSION: lz4_frame
     DELTA_LOG_BUFFER_SIZE: "64"
+    SERVICEFOUNDRY_CONCURRENCY: "5"
+    VACUUM_PARALLELISM: "64"
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################

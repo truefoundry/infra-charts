@@ -35,9 +35,11 @@ replaceArgoHelmRepo:
 syncConfigMaps:
   ## @param syncConfigMaps.enabled Enable or disable syncing ConfigMaps across namespaces
   enabled: false
+  ## @param syncConfigMaps.useClusterPolicy Use ClusterPolicy (kyverno.io/v1) instead of GeneratingPolicy (policies.kyverno.io/v1). ClusterPolicy has more mature generateExisting support and supports wildcard namespace patterns (e.g. tfy-*)
+  useClusterPolicy: true
   ## @param syncConfigMaps.excludeNamespaces Namespaces to exclude from syncing ConfigMaps
   excludeNamespaces: []
-  ## @param syncConfigMaps.includeNamespaces Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included
+  ## @param syncConfigMaps.includeNamespaces Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true
   includeNamespaces: []
   ## @param syncConfigMaps.items List of ConfigMaps to sync across namespaces
   ## Example:
@@ -46,12 +48,17 @@ syncConfigMaps:
   items: []
 
 ## @section syncSecrets Configuration options for syncing Secrets across namespaces
+## Syncing secrets requires additional RBAC permissions for both the Kyverno admission
+## controller and the background controller to read source secrets and create/update/delete generated secrets for synchronization.
+## This must be configured in the Kyverno Helm chart values
 syncSecrets:
   ## @param syncSecrets.enabled Enable or disable syncing Secrets across namespaces
   enabled: false
+  ## @param syncSecrets.useClusterPolicy Use ClusterPolicy (kyverno.io/v1) instead of GeneratingPolicy (policies.kyverno.io/v1). ClusterPolicy has more mature generateExisting support and supports wildcard namespace patterns (e.g. tfy-*)
+  useClusterPolicy: true
   ## @param syncSecrets.excludeNamespaces Namespaces to exclude from syncing Secrets
   excludeNamespaces: []
-  ## @param syncSecrets.includeNamespaces Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included
+  ## @param syncSecrets.includeNamespaces Namespaces to include for syncing Secrets. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true
   includeNamespaces: []
   ## @param syncSecrets.items List of Secrets to sync across namespaces
   ## Example:
