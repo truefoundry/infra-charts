@@ -1,0 +1,35 @@
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-otel-collector.hpaLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.hpaAnnotations" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "tfy-otel-collector.fullname" . }}
+  minReplicas: {{ include "tfy-otel-collector.hpaMinReplicas" . }}
+  maxReplicas: {{ include "tfy-otel-collector.hpaMaxReplicas" . }}
+  metrics:
+      {{- if .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+      {{- end }}
+      {{- if .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+      {{- end }}
+  {{- end }}
