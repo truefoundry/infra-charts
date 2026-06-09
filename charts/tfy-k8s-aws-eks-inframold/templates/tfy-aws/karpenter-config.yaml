@@ -36,10 +36,12 @@ spec:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
-            {{- if .Values.tags }}
             extraTags:
-              {{- .Values.tags | toYaml | nindent 14 }}
-            {{- end }}
+              truefoundry-cluster-name: {{ .Values.clusterName | quote }}
+              truefoundry-managed: "true"
+              {{- range $k, $v := .Values.tags }}
+              {{ $k }}: {{ $v | quote }}
+              {{- end }}
           {{- if .Values.gpu.enabled }}
           gpuNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
@@ -50,53 +52,55 @@ spec:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
-            {{- if .Values.tags }}
             extraTags:
-              {{- .Values.tags | toYaml | nindent 14 }}
-            {{- end }}
+              truefoundry-cluster-name: {{ .Values.clusterName | quote }}
+              truefoundry-managed: "true"
+              {{- range $k, $v := .Values.tags }}
+              {{ $k }}: {{ $v | quote }}
+              {{- end }}
           {{- end }}
           inferentiaNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-          {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
           inferentiaDefaultNodeTemplate:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
-            {{- if .Values.tags }}
             extraTags:
-              {{- .Values.tags | toYaml | nindent 14 }}
-            {{- end }}
-          {{- end }}
+              truefoundry-cluster-name: {{ .Values.clusterName | quote }}
+              truefoundry-managed: "true"
+              {{- range $k, $v := .Values.tags }}
+              {{ $k }}: {{ $v | quote }}
+              {{- end }}
           critical:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-            {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
             nodeclass:
               {{- if .Values.aws.karpenter.kmsKeyID }}
               kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
               {{- end }}
-              {{- if .Values.tags }}
               extraTags:
-                {{- .Values.tags | toYaml | nindent 16 }}
-              {{- end }}
-            {{- end }}
+                truefoundry-cluster-name: {{ .Values.clusterName | quote }}
+                truefoundry-managed: "true"
+                {{- range $k, $v := .Values.tags }}
+                {{ $k }}: {{ $v | quote }}
+                {{- end }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
-          {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
           controlPlaneNodeTemplate:
             {{- if .Values.aws.karpenter.kmsKeyID }}
             kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
             {{- end }}
-            {{- if .Values.tags }}
             extraTags:
-              {{- .Values.tags | toYaml | nindent 14 }}
-            {{- end }}
-          {{- end }}
+              truefoundry-cluster-name: {{ .Values.clusterName | quote }}
+              truefoundry-managed: "true"
+              {{- range $k, $v := .Values.tags }}
+              {{ $k }}: {{ $v | quote }}
+              {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
