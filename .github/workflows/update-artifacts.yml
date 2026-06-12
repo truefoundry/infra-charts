@@ -23,8 +23,6 @@ jobs:
               - 'charts/tfy-k8s-civo-talos-inframold/**'
               - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
               - 'charts/tfy-k8s-generic-inframold/**'
-              - 'charts/truefoundry/**'
-              - 'charts/tfy-llm-gateway/**'
               - 'scripts/generate-artifacts-manifest/**'
               - 'scripts/upload-artifacts/**'
               - 'scripts/get-release-notes/**'
@@ -96,24 +94,14 @@ jobs:
           cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
 
-      # Generate artifacts manifest for inframold charts and truefoundry chart
+      # Generate artifacts manifest for inframold charts
       - name: Generate Artifacts Manifest for Each Chart
         run: |
-          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold" "truefoundry" "tfy-llm-gateway")
+          charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}"; do
             version=$(grep '^version:' "charts/$chart/Chart.yaml" | awk '{print $2}')
-            if [ "$chart" = "truefoundry" ]; then
-              repo_url="oci://tfy.jfrog.io/tfy-helm"
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "$repo_url" \
-                "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json"
-            elif [ "$chart" = "tfy-llm-gateway" ]; then
-              # Standalone application chart (like truefoundry): only its own images, no platform extra.json
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "https://truefoundry.github.io/infra-charts/" \
-                "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json"
-            else
-              python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "https://truefoundry.github.io/infra-charts/" \
-                "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json" scripts/generate-artifacts-manifest/extra.json
-            fi
+            python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "https://truefoundry.github.io/infra-charts/" \
+              "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json" scripts/generate-artifacts-manifest/extra.json
           done
         env:
           MODE: 'local'
@@ -123,12 +111,6 @@ jobs:
         run: |
           python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
           charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json \
-          scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
-          python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
-          charts/truefoundry/artifacts-manifest.json \
-          scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
-          python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
-          charts/tfy-llm-gateway/artifacts-manifest.json \
           scripts/generate-artifacts-manifest/multi-arch-image-whitelist.json
 
       # Generate changelog step is run on only tfy-k8s-aws-eks-inframold chart
