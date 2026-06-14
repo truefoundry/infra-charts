@@ -180,3 +180,13 @@ jobs:
             git pull origin --rebase
             git push
           fi
+  gate:
+    needs: [ changes, update-artifacts ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Required jobs
+        run: |
+          if [ "${{ needs.changes.result }}" != "success" ]; then exit 1; fi
+          # update-artifacts is allowed to be skipped
+          if [ "${{ needs.update-artifacts.result }}" = "failure" ]; then exit 1; fi
