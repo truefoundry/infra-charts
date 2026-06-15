@@ -34,6 +34,46 @@ The TrueFoundry Helm chart components are installed in the following order:
      - s3proxy
      - Additional control plane services
 
+## Network policies (optional)
+
+Network policies ship **inside this chart** and apply only to the control-plane namespace (`global.namespaceOverride` or release namespace). When enabled, the chart creates up to **four** NetworkPolicies:
+
+| Policy | Purpose |
+|--------|---------|
+| `default-deny-ingress` | Block all ingress by default |
+| `allow-all-egress` | Allow all egress (DNS, RDS, cloud APIs, internet) |
+| `intra-instance` | Allow ingress between pods with `app.kubernetes.io/instance: <release-name>` |
+| `ingress-external` | Single policy listing all cross-namespace sources (only when configured) |
+
+### Enable
+
+```yaml
+networkPolicy:
+  enabled: true
+  allowedIngressFrom:
+    - namespace: tfy-prometheus
+    - namespace: ingress-nginx
+      podSelector:
+        app.kubernetes.io/name: ingress-nginx
+```
+
+Set `networkPolicy.enabled: false` (default) to skip all NetworkPolicy objects.
+
+### What is allowed
+
+| Direction | Rule |
+|-----------|------|
+| **Ingress (baseline)** | Default-deny all ingress into the control-plane namespace |
+| **Egress** | Allow all egress from every pod in the namespace |
+| **In-release mesh** | Ingress between pods with `app.kubernetes.io/instance: <release-name>` (any port) |
+| **Cross-namespace ingress** | Combined in one `ingress-external` policy from each `allowedIngressFrom` entry |
+
+Each `allowedIngressFrom` entry requires `namespace`. Omit `podSelector` to allow all pods in that namespace; set `podSelector` to restrict to specific source pods (e.g. Prometheus, ingress controller).
+
+Example: release name `truefoundry` → in-namespace mesh uses `app.kubernetes.io/instance=truefoundry`.
+
+No NetworkPolicies are created in other namespaces.
+
 ## Using K8s secret for required fields
 
 For control plane installation, you need to provide licence key and DB credentials in the values. This can be done either by adding the values as plain text in the values file or using a externally created K8s secret in the same namespace.
@@ -275,6 +315,15 @@ global:
 | `tags.tracing`                                                               | Bool to enable OTEL tracing feature                                                                                                                                                                                                                        | `false`                                                                                                            |
 | `devMode.enabled`                                                            | Bool to enable dev mode                                                                                                                                                                                                                                    | `false`                                                                                                            |
 
+### networkPolicy Optional NetworkPolicies scoped to the control-plane namespace only.
+
+| Name                               | Description                                                                                                       | Value   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------- |
+| `networkPolicy.enabled`            | Create NetworkPolicies in the control-plane namespace                                                             | `false` |
+| `networkPolicy.labels`             | Extra labels on NetworkPolicy objects (merged with global.labels)                                                 | `{}`    |
+| `networkPolicy.annotations`        | Extra annotations on NetworkPolicy objects (merged with global.annotations)                                       | `{}`    |
+| `networkPolicy.allowedIngressFrom` | Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. | `[]`    |
+
 ### Monitoring Config values
 
 | Name                                                          | Description                                     | Value                                    |
@@ -454,7 +503,7 @@ global:
 | `servicefoundryServer.deploymentAnnotations`                        | Deployment-specific annotations for the servicefoundry server                                                                                                                           | `{}`                                                    |
 | `servicefoundryServer.image.registry`                               | Registry for the servicefoundry server image (overrides global.registry if specified)                                                                                                   | `""`                                                    |
 | `servicefoundryServer.image.repository`                             | Image repository for the servicefoundry server (without registry)                                                                                                                       | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.150.0`                                              |
+| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.150.1`                                              |
 | `servicefoundryServer.environmentName`                              | Environment name for the servicefoundry server                                                                                                                                          | `default`                                               |
 | `servicefoundryServer.envSecretName`                                | Secret name for the servicefoundry server environment variables                                                                                                                         | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.tfyK8sSecretName`                             | Secret name for K8s secrets mounted at /opt/truefoundry/tfy-k8s-secrets. If set, the secret is mounted as a volume; if empty, no volume is attached.                                    | `""`                                                    |
