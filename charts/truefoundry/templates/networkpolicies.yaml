@@ -1,0 +1,85 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $instance := .Release.Name }}
+{{- $ingressFrom := .Values.networkPolicy.allowedIngressFrom | default list }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "default-deny-ingress") }}
+  namespace: {{ include "global.namespace" . }}
+  annotations:
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
+  labels:
+    {{- include "networkPolicy.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "allow-all-egress") }}
+  namespace: {{ include "global.namespace" . }}
+  annotations:
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
+  labels:
+    {{- include "networkPolicy.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra-instance") }}
+  namespace: {{ include "global.namespace" . }}
+  annotations:
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
+  labels:
+    {{- include "networkPolicy.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $instance | quote }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ $instance | quote }}
+{{- if $ingressFrom }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "ingress-external") }}
+  namespace: {{ include "global.namespace" . }}
+  annotations:
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
+  labels:
+    {{- include "networkPolicy.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+{{- range $ingressFrom }}
+{{- if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          {{- with .podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
