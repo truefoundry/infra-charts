@@ -792,9 +792,15 @@ sdsServer:
 ## @section eso (external-secrets operator) configuration parameters
 ##
 external-secrets-operator:
-  ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart
+  ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent.
   ##
   enabled: true
-  ## @param external-secrets-operator.clusterSecretStoreName Name of the ClusterSecretStore resource
+  ## @section external-secrets-operator.clusterSecretStore ClusterSecretStore configuration
   ##
-  clusterSecretStoreName: "tfy-secret-store"
+  clusterSecretStore:
+    ## @param external-secrets-operator.clusterSecretStore.create Bool value to create the cluster secret store.
+    ##
+    create: true
+    ## @param external-secrets-operator.clusterSecretStore.name Name of the ClusterSecretStore resource
+    ##
+    name: "tfy-secret-store"
