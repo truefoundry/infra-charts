@@ -27,6 +27,8 @@ spec:
     truefoundry.com/component_type: default
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
+    truefoundry-cluster-name: {{ .Values.cluster.name }}
+    truefoundry-managed: "true"
   {{- range $key, $val := .Values.karpenter.defaultNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
   {{- end }}
