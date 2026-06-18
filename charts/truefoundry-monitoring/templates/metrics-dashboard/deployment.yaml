@@ -33,7 +33,7 @@ spec:
           {{- end }}
           env:
             - name: PROMETHEUS_URL
-              value: {{ .Values.tfyMetricsDashboard.prometheusUrl | default "" | quote }}
+              value: {{ .Values.tfyMetricsDashboard.prometheusUrl | default (printf "http://%s:9090" (include "truefoundry-monitoring.prometheus.serviceName" .)) | quote }}
             - name: TARGET_NAMESPACE
               value: {{ .Values.tfyMetricsDashboard.targetNamespace | default (include "truefoundry-monitoring.controlPlaneNamespace" .) | quote }}
             - name: DASHBOARD_VISIBILITY
