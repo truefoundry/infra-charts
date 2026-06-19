@@ -232,14 +232,6 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # OAuth2 MCP routes - reroute clean external URLs to internal service paths
-      # External clients access clean URLs that get rewritten to upstream paths:
-      # - /.well-known/* → /oauth2-mcp/.well-known/*
-      # - /oauth2/authorize → /oauth2-mcp/authorize
-      # - /oauth2/token → /oauth2-mcp/token
-      # - /oauth2/register → /oauth2-mcp/register
-      # - /oauth2/callback → /oauth2-mcp/callback
-
       {{- if .Values.global.proxy.llmGateway.external }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
@@ -257,15 +249,18 @@ data:
       }
       {{- end }}
 
-      # /.well-known/* → /oauth2-mcp/.well-known/*
-      handle /.well-known/* {
-        uri replace /.well-known /oauth2-mcp/.well-known
+      # RFC 8414 well-known discovery (prepended form) -> server's path-appended form on upstream:3000
+      # /.well-known/openid-configuration/api/svc/<rest> -> /<rest>/.well-known/openid-configuration
+      handle /.well-known/openid-configuration/api/svc/* {
+        uri replace /.well-known/openid-configuration/api/svc ""
+        rewrite {path}/.well-known/openid-configuration
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # /oauth2/* → /oauth2-mcp/* (authorize, token, register, callback)
-      handle /oauth2/* {
-        uri replace /oauth2 /oauth2-mcp
+      # /.well-known/oauth-authorization-server/api/svc/<rest> -> /<rest>/.well-known/oauth-authorization-server
+      handle /.well-known/oauth-authorization-server/api/svc/* {
+        uri replace /.well-known/oauth-authorization-server/api/svc ""
+        rewrite {path}/.well-known/oauth-authorization-server
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
