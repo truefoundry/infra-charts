@@ -294,7 +294,13 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### eso (external-secrets operator) configuration parameters
 
-| Name                                               | Description                                                 | Value              |
-| -------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
-| `external-secrets-operator.enabled`                | Bool value to deploy the external-secrets operator subchart | `true`             |
-| `external-secrets-operator.clusterSecretStoreName` | Name of the ClusterSecretStore resource                     | `tfy-secret-store` |
+| Name                                | Description                                                                                                                                                                        | Value  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `external-secrets-operator.enabled` | Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent. | `true` |
+
+### external-secrets-operator.clusterSecretStore ClusterSecretStore configuration
+
+| Name                                                  | Description                                    | Value              |
+| ----------------------------------------------------- | ---------------------------------------------- | ------------------ |
+| `external-secrets-operator.clusterSecretStore.create` | Bool value to create the cluster secret store. | `true`             |
+| `external-secrets-operator.clusterSecretStore.name`   | Name of the ClusterSecretStore resource        | `tfy-secret-store` |

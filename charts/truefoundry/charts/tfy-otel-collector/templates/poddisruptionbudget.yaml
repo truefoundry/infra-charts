@@ -1,0 +1,21 @@
+{{- $replicas := include "tfy-otel-collector.replicas" . | trim | int -}}
+{{- if and .Values.podDisruptionBudget.enabled (gt $replicas 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tfy-otel-collector.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-otel-collector.pdbLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-otel-collector.pdbAnnotations" . | nindent 4 }}
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-collector.selectorLabels" . | nindent 6 }}
+{{- end }}

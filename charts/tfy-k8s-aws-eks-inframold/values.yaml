@@ -239,8 +239,11 @@ aws:
     ##
     valuesOverride: {}
 
-    ## @param aws.karpenter.config.valuesOverride [object] Config override for karpenter config
     config:
+      ## @param aws.karpenter.config.enabled Flag to enable karpenter config
+      enabled: true
+      ## @param aws.karpenter.config.valuesOverride [object] Config override for karpenter config
+      ##
       valuesOverride: {}
 
   ## @subsection awsEbsCsiDriver parameters
@@ -601,6 +604,13 @@ prometheus:
   ## @param prometheus.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
+
+  ## prometheusNodeExporter.port Port for prometheus-node-exporter service and container
+  ##
+  prometheusNodeExporter:
+    ## @param prometheus.prometheusNodeExporter.port Port for prometheus-node-exporter service and container (default 9100)
+    ##
+    port: 9100
 
   config:
     ## @param prometheus.config.enabled Flag to enable prometheus config (requires prometheus.enabled to be true)

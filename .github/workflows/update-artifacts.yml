@@ -4,19 +4,32 @@ on:
   pull_request:
     branches:
       - 'main'
-    paths:
-      - '.github/workflows/update-artifacts.yml'
-      - 'charts/tfy-k8s-aws-eks-inframold/**'
-      - 'charts/tfy-k8s-azure-aks-inframold/**'
-      - 'charts/tfy-k8s-civo-talos-inframold/**'
-      - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
-      - 'charts/tfy-k8s-generic-inframold/**'
-      - 'scripts/generate-artifacts-manifest/**'
-      - 'scripts/upload-artifacts/**'
-      - 'scripts/get-release-notes/**'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Detect Relevant Path Changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            relevant:
+              - '.github/workflows/update-artifacts.yml'
+              - 'charts/tfy-k8s-aws-eks-inframold/**'
+              - 'charts/tfy-k8s-azure-aks-inframold/**'
+              - 'charts/tfy-k8s-civo-talos-inframold/**'
+              - 'charts/tfy-k8s-gcp-gke-standard-inframold/**'
+              - 'charts/tfy-k8s-generic-inframold/**'
+              - 'scripts/generate-artifacts-manifest/**'
+              - 'scripts/upload-artifacts/**'
+              - 'scripts/get-release-notes/**'
+
   update-artifacts:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -86,15 +99,14 @@ jobs:
         run: |
           charts_list=("tfy-k8s-aws-eks-inframold" "tfy-k8s-azure-aks-inframold" "tfy-k8s-gcp-gke-standard-inframold" "tfy-k8s-civo-talos-inframold" "tfy-k8s-generic-inframold")
           for chart in "${charts_list[@]}"; do
-            version=$(cat charts/$chart/Chart.yaml | grep version | awk '{print $2}')
-          
-            python scripts/generate-artifacts-manifest/artifacts_template_generator.py $chart https://truefoundry.github.io/infra-charts/ \
-              $version charts/$chart/values-artifact-manifest.yaml charts/$chart/artifacts-manifest.json scripts/generate-artifacts-manifest/extra.json
+            version=$(grep '^version:' "charts/$chart/Chart.yaml" | awk '{print $2}')
+            python scripts/generate-artifacts-manifest/artifacts_template_generator.py "$chart" "https://truefoundry.github.io/infra-charts/" \
+              "$version" "charts/$chart/values-artifact-manifest.yaml" "charts/$chart/artifacts-manifest.json" scripts/generate-artifacts-manifest/extra.json
           done
         env:
           MODE: 'local'
 
-      # Check if truefoundry chart images support amd64 and arm64 using AWS chart
+      # Check if truefoundry chart images support amd64 and arm64
       - name: Check if Truefoundry Chart Images Support Multiple Architectures
         run: |
           python scripts/generate-artifacts-manifest/check_chart_images_support_multiple_architectures.py \
@@ -168,3 +180,13 @@ jobs:
             git pull origin --rebase
             git push
           fi
+  artifact-generation-gate:
+    needs: [ changes, update-artifacts ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Required jobs
+        run: |
+          if [ "${{ needs.changes.result }}" != "success" ]; then exit 1; fi
+          # update-artifacts is allowed to be skipped
+          if [ "${{ needs.update-artifacts.result }}" = "failure" ]; then exit 1; fi

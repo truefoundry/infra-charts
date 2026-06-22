@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "true-ai.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "true-ai.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "true-ai.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "true-ai.selectorLabels" . | nindent 4 }}

@@ -29,11 +29,12 @@ data:
 
     	respond /healthz 200
 
-    	@proxy_url_http path_regexp proxy_url_http ^/proxy/http:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
-    	handle @proxy_url_http {
-    		rewrite * /{re.proxy_url_http.3}
+    	@direct_url_http path_regexp direct_url_http ^/[^/]+/http:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	handle @direct_url_http {
+    		rewrite * /{re.direct_url_http.3}
 
-    		reverse_proxy {re.proxy_url_http.1}:{re.proxy_url_http.2} {
+    		reverse_proxy {re.direct_url_http.1}:{re.direct_url_http.2} {
+    			header_up Host {re.direct_url_http.1}
     			header_up X-Forwarded-Host {host}
     			header_up X-Original-URI {uri}
 
@@ -51,11 +52,12 @@ data:
     		}
     	}
 
-    	@proxy_url_https path_regexp proxy_url_https ^/proxy/https:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
-    	handle @proxy_url_https {
-    		rewrite * /{re.proxy_url_https.3}
+    	@direct_url_https path_regexp direct_url_https ^/[^/]+/https:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	handle @direct_url_https {
+    		rewrite * /{re.direct_url_https.3}
 
-    		reverse_proxy {re.proxy_url_https.1}:{re.proxy_url_https.2} {
+    		reverse_proxy {re.direct_url_https.1}:{re.direct_url_https.2} {
+    			header_up Host {re.direct_url_https.1}
     			header_up X-Forwarded-Host {host}
     			header_up X-Original-URI {uri}
 
@@ -66,7 +68,7 @@ data:
 
     			transport http {
     				tls
-    				tls_server_name {re.proxy_url_https.1}
+    				tls_server_name {re.direct_url_https.1}
     				dial_timeout 3s
     				response_header_timeout 30s
     				read_timeout 5m
@@ -75,33 +77,12 @@ data:
     		}
     	}
 
-    	@proxy_http path_regexp proxy_http ^/proxy/([^/]+):([0-9]+)(?:/(.*))?$
-    	handle @proxy_http {
-    		rewrite * /{re.proxy_http.3}
+    	@direct_https path_regexp direct_https ^/[^/]+/https/([^/]+):([0-9]+)(?:/(.*))?$
+    	handle @direct_https {
+    		rewrite * /{re.direct_https.3}
 
-    		reverse_proxy {re.proxy_http.1}:{re.proxy_http.2} {
-    			header_up X-Forwarded-Host {host}
-    			header_up X-Original-URI {uri}
-
-    			lb_try_duration 5s
-    			lb_try_interval 250ms
-    			fail_duration 10s
-    			max_fails 2
-
-    			transport http {
-    				dial_timeout 3s
-    				response_header_timeout 30s
-    				read_timeout 5m
-    				write_timeout 5m
-    			}
-    		}
-    	}
-
-    	@proxy_https path_regexp proxy_https ^/proxy/https/([^/]+):([0-9]+)(?:/(.*))?$
-    	handle @proxy_https {
-    		rewrite * /{re.proxy_https.3}
-
-    		reverse_proxy {re.proxy_https.1}:{re.proxy_https.2} {
+    		reverse_proxy {re.direct_https.1}:{re.direct_https.2} {
+    			header_up Host {re.direct_https.1}
     			header_up X-Forwarded-Host {host}
     			header_up X-Original-URI {uri}
 
@@ -112,7 +93,30 @@ data:
 
     			transport http {
     				tls
-    				tls_server_name {re.proxy_https.1}
+    				tls_server_name {re.direct_https.1}
+    				dial_timeout 3s
+    				response_header_timeout 30s
+    				read_timeout 5m
+    				write_timeout 5m
+    			}
+    		}
+    	}
+
+    	@direct_http path_regexp direct_http ^/[^/]+/([^/]+):([0-9]+)(?:/(.*))?$
+    	handle @direct_http {
+    		rewrite * /{re.direct_http.3}
+
+    		reverse_proxy {re.direct_http.1}:{re.direct_http.2} {
+    			header_up Host {re.direct_http.1}
+    			header_up X-Forwarded-Host {host}
+    			header_up X-Original-URI {uri}
+
+    			lb_try_duration 5s
+    			lb_try_interval 250ms
+    			fail_duration 10s
+    			max_fails 2
+
+    			transport http {
     				dial_timeout 3s
     				response_header_timeout 30s
     				read_timeout 5m

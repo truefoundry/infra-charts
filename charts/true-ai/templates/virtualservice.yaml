@@ -1,0 +1,34 @@
+{{- if .Values.istio.virtualservice.enabled -}}
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ include "true-ai.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "true-ai.virtualserviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "true-ai.virtualserviceAnnotations" . | nindent 4 }}
+spec:
+  gateways:
+  {{- range .Values.istio.virtualservice.gateways }}
+    - {{ . }}
+  {{- end }}
+  hosts:
+  {{- range .Values.istio.virtualservice.hosts }}
+    - {{ . }}
+  {{- end }}
+  http:
+  - match:
+    - uri:
+        prefix: {{ .Values.istio.virtualservice.path | default "/" }}
+    route:
+    - destination:
+        host: {{ include "true-ai.fullname" . }}.{{ include "global.namespace" . }}.svc.cluster.local
+        port:
+          number: {{ .Values.service.port }}
+    {{- if .Values.istio.virtualservice.retries.enabled }}
+    retries:
+      attempts: {{ .Values.istio.virtualservice.retries.attempts }}
+      retryOn: {{ .Values.istio.virtualservice.retries.retryOn }}
+    {{- end }}
+{{- end }}

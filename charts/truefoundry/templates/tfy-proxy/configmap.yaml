@@ -197,6 +197,21 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
+      {{- if .Values.tfyProxy.useMcpV2 }}
+      # Legacy MCP OAuth callback reroutes to new endpoints
+      # /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback → /mcp/oauth2/callback/outbound (outbound OAuth)
+      handle /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback {
+        uri replace /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback /mcp/oauth2/callback/outbound
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
+      # /api/svc/oauth2-mcp/callback → /mcp/oauth2/callback/inbound (inbound OAuth)
+      handle /api/svc/oauth2-mcp/callback {
+        uri replace /api/svc/oauth2-mcp/callback /mcp/oauth2/callback/inbound
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
       # /api/svc → / on upstream:3000
       handle /api/svc/* {
         uri strip_prefix /api/svc
@@ -217,14 +232,6 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # OAuth2 MCP routes - reroute clean external URLs to internal service paths
-      # External clients access clean URLs that get rewritten to upstream paths:
-      # - /.well-known/* → /oauth2-mcp/.well-known/*
-      # - /oauth2/authorize → /oauth2-mcp/authorize
-      # - /oauth2/token → /oauth2-mcp/token
-      # - /oauth2/register → /oauth2-mcp/register
-      # - /oauth2/callback → /oauth2-mcp/callback
-
       {{- if .Values.global.proxy.llmGateway.external }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
@@ -242,15 +249,18 @@ data:
       }
       {{- end }}
 
-      # /.well-known/* → /oauth2-mcp/.well-known/*
-      handle /.well-known/* {
-        uri replace /.well-known /oauth2-mcp/.well-known
+      # RFC 8414 well-known discovery (prepended form) -> server's path-appended form on upstream:3000
+      # /.well-known/openid-configuration/api/svc/<rest> -> /<rest>/.well-known/openid-configuration
+      handle /.well-known/openid-configuration/api/svc/* {
+        uri replace /.well-known/openid-configuration/api/svc ""
+        rewrite {path}/.well-known/openid-configuration
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # /oauth2/* → /oauth2-mcp/* (authorize, token, register, callback)
-      handle /oauth2/* {
-        uri replace /oauth2 /oauth2-mcp
+      # /.well-known/oauth-authorization-server/api/svc/<rest> -> /<rest>/.well-known/oauth-authorization-server
+      handle /.well-known/oauth-authorization-server/api/svc/* {
+        uri replace /.well-known/oauth-authorization-server/api/svc ""
+        rewrite {path}/.well-known/oauth-authorization-server
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
@@ -267,6 +277,14 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.trtEngineBuilderBaseURL . }} {
           header_up Host {{ (tpl .Values.global.proxy.trtEngineBuilderBaseURL .) | trimPrefix "https://" | trimPrefix "http://" }}
         }
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.trueAI.enabled }}
+      # /true-ai and /true-ai/* → / on upstream:8080
+      handle /true-ai /true-ai/* {
+        uri strip_prefix /true-ai
+        reverse_proxy {{ tpl .Values.global.proxy.trueAI.host . }}:{{ .Values.global.proxy.trueAI.port }}
       }
       {{- end }}
 

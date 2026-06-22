@@ -93,6 +93,7 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 | `aws.karpenter.kmsKeyID`                       | KMS Key ID for Karpenter                    | `""`    |
 | `aws.karpenter.interruptionQueue`              | Interruption queue name for Karpenter       | `""`    |
 | `aws.karpenter.valuesOverride`                 | Config override from default config values  | `{}`    |
+| `aws.karpenter.config.enabled`                 | Flag to enable karpenter config             | `true`  |
 | `aws.karpenter.config.valuesOverride`          | Config override for karpenter config        | `{}`    |
 | `aws.awsEbsCsiDriver.enabled`                  | Flag to enable AWS EBS CSI Driver           | `true`  |
 | `aws.awsEbsCsiDriver.roleArn`                  | Role ARN for AWS EBS CSI Driver             | `""`    |
@@ -227,17 +228,18 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### prometheus parameters
 
-| Name                                 | Description                                                               | Value  |
-| ------------------------------------ | ------------------------------------------------------------------------- | ------ |
-| `prometheus.enabled`                 | Flag to enable Prometheus                                                 | `true` |
-| `prometheus.additionalScrapeConfigs` | Additional scrape configs for Prometheus                                  | `[]`   |
-| `prometheus.alertmanager`            | Alertmanager configuration for Prometheus                                 | `{}`   |
-| `prometheus.affinity`                | Affinity for prometheus statefulset pod                                   | `{}`   |
-| `prometheus.tolerations`             | Tolerations for prometheus statefulset pod                                | `[]`   |
-| `prometheus.valuesOverride`          | Config override from default config values                                | `{}`   |
-| `prometheus.config.enabled`          | Flag to enable prometheus config (requires prometheus.enabled to be true) | `true` |
-| `prometheus.config.valuesOverride`   | Config override from default config values                                | `{}`   |
-| `prometheus.config.extraObjects`     | Extra objects for prometheus config                                       | `[]`   |
+| Name                                     | Description                                                               | Value  |
+| ---------------------------------------- | ------------------------------------------------------------------------- | ------ |
+| `prometheus.enabled`                     | Flag to enable Prometheus                                                 | `true` |
+| `prometheus.additionalScrapeConfigs`     | Additional scrape configs for Prometheus                                  | `[]`   |
+| `prometheus.alertmanager`                | Alertmanager configuration for Prometheus                                 | `{}`   |
+| `prometheus.affinity`                    | Affinity for prometheus statefulset pod                                   | `{}`   |
+| `prometheus.tolerations`                 | Tolerations for prometheus statefulset pod                                | `[]`   |
+| `prometheus.valuesOverride`              | Config override from default config values                                | `{}`   |
+| `prometheus.prometheusNodeExporter.port` | Port for prometheus-node-exporter service and container (default 9100)    | `9100` |
+| `prometheus.config.enabled`              | Flag to enable prometheus config (requires prometheus.enabled to be true) | `true` |
+| `prometheus.config.valuesOverride`       | Config override from default config values                                | `{}`   |
+| `prometheus.config.extraObjects`         | Extra objects for prometheus config                                       | `[]`   |
 
 ### grafana parameters
 
