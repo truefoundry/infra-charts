@@ -324,6 +324,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
+{{- if and .Values.sandbox.devMode.enabled (not .Values.env.SANDBOX_SETTINGS_SERVER_URL) }}
+- name: SANDBOX_SETTINGS_SERVER_URL
+  value: {{ printf "http://%s-tfy-sandbox-server.%s.svc.cluster.local:8080" .Release.Name (include "global.namespace" .) | quote }}
+{{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
   value: "true"
