@@ -19,6 +19,7 @@ jobs:
         with:
           ref: ${{github.event.pull_request.head.ref}}
           repository: ${{github.event.pull_request.head.repo.full_name}}
+          token: ${{ secrets.TFY_GITHUB_TOKEN }}
       - name: Execute readme-generator-for-helm
         env:
           DIFF_URL: '${{github.event.pull_request.diff_url}}'
