@@ -46,7 +46,8 @@ spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
   {{- if $hasWildcard }}
-  - http:
+  - host: '*'
+    http:
       paths:
       - path: /
         pathType: Prefix
@@ -72,7 +73,9 @@ spec:
   {{- if $hasWildcard }}
   {{- if $wildcardSecretName }}
   tls:
-  - secretName: {{ $wildcardSecretName }}
+  - hosts:
+    - '*'
+    secretName: {{ $wildcardSecretName }}
   {{- end }}
   {{- else if $tlsEntries }}
   tls:
@@ -110,7 +113,8 @@ spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
   {{- if $hasWildcard }}
-  - http:
+  - host: '*'
+    http:
       paths:
       - path: /flyteidl.service.AdminService
         pathType: Prefix
@@ -154,7 +158,9 @@ spec:
   {{- if $hasWildcard }}
   {{- if $wildcardSecretName }}
   tls:
-  - secretName: {{ $wildcardSecretName }}
+  - hosts:
+    - '*'
+    secretName: {{ $wildcardSecretName }}
   {{- end }}
   {{- else if $tlsEntries }}
   tls:
