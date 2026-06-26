@@ -1,8 +1,23 @@
 {{- if .Values.appgw.ingress.enabled }}
+{{- $hasWildcard := false }}
+{{- range .Values.appgw.ingress.domains }}
+{{- if eq .host "*" }}
+{{- $hasWildcard = true }}
+{{- end }}
+{{- end }}
 {{- $tlsEntries := list }}
+{{- $wildcardSecretName := "" }}
+{{- if $hasWildcard }}
+{{- range .Values.appgw.ingress.domains }}
+{{- if and (eq .host "*") .secretName }}
+{{- $wildcardSecretName = .secretName }}
+{{- end }}
+{{- end }}
+{{- else }}
 {{- range .Values.appgw.ingress.domains }}
 {{- if .secretName }}
 {{- $tlsEntries = append $tlsEntries . }}
+{{- end }}
 {{- end }}
 {{- end }}
 apiVersion: networking.k8s.io/v1
@@ -30,6 +45,17 @@ metadata:
 spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
+  {{- if $hasWildcard }}
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}
+            port:
+              number: 80
+  {{- else }}
   {{- range .Values.appgw.ingress.domains }}
   - host: {{ .host }}
     http:
@@ -42,7 +68,13 @@ spec:
             port:
               number: 80
   {{- end }}
-  {{- if $tlsEntries }}
+  {{- end }}
+  {{- if $hasWildcard }}
+  {{- if $wildcardSecretName }}
+  tls:
+  - secretName: {{ $wildcardSecretName }}
+  {{- end }}
+  {{- else if $tlsEntries }}
   tls:
   {{- range $tlsEntries }}
   - hosts:
@@ -77,6 +109,26 @@ metadata:
 spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
+  {{- if $hasWildcard }}
+  - http:
+      paths:
+      - path: /flyteidl.service.AdminService
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}
+            port:
+              number: 80
+      {{- range .Values.appgw.ingress.additionalHttp2Paths }}
+      - path: {{ .path }}
+        pathType: {{ .pathType }}
+        backend:
+          service:
+            name: {{ .serviceName | default $.Release.Name }}
+            port:
+              number: {{ .servicePort | default 80 }}
+      {{- end }}
+  {{- else }}
   {{- range .Values.appgw.ingress.domains }}
   - host: {{ .host }}
     http:
@@ -98,7 +150,13 @@ spec:
               number: {{ .servicePort | default 80 }}
       {{- end }}
   {{- end }}
-  {{- if $tlsEntries }}
+  {{- end }}
+  {{- if $hasWildcard }}
+  {{- if $wildcardSecretName }}
+  tls:
+  - secretName: {{ $wildcardSecretName }}
+  {{- end }}
+  {{- else if $tlsEntries }}
   tls:
   {{- range $tlsEntries }}
   - hosts:
