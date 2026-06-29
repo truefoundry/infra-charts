@@ -8,6 +8,25 @@ metadata:
     {{- include "tfy-istio-ingress.labels" . | nindent 4 }}
   annotations:
     {{- include "tfy-istio-ingress.annotations" . | nindent 4 }}
-spec: 
-  {{- tpl (toYaml .Values.tfyGateway.spec) . | nindent 2 }}
+spec:
+  selector:
+    {{- tpl (toYaml .Values.tfyGateway.spec.selector) . | nindent 4 }}
+  servers:
+  {{- range .Values.tfyGateway.spec.servers }}
+  {{- $hasWildcard := false }}
+  {{- range .hosts }}
+  {{- if eq . "*" }}
+  {{- $hasWildcard = true }}
+  {{- end }}
+  {{- end }}
+  - hosts:
+    {{- if $hasWildcard }}
+    - "*"
+    {{- else }}
+    {{- range .hosts }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- toYaml (omit . "hosts") | nindent 4 }}
+  {{- end }}
 {{- end }}
