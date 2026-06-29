@@ -212,6 +212,12 @@ data:
       }
       {{- end }}
 
+      # /mcp → /v1/tfy-mcp on upstream:3000
+      handle /mcp /mcp/* {
+        uri replace /mcp /v1/tfy-mcp
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
       # /api/svc → / on upstream:3000
       handle /api/svc/* {
         uri strip_prefix /api/svc

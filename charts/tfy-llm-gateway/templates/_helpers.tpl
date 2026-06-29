@@ -14,6 +14,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Compute the tfy-sandbox-server subchart's Service name from the parent chart context.
+  Mirrors the logic in tfy-sandbox-server.fullname but uses the subchart's scoped values.
+*/}}
+{{- define "tfy-llm-gateway.sandbox.fullname" -}}
+{{- $sandboxValues := index .Values "tfy-sandbox-server" -}}
+{{- if $sandboxValues.fullnameOverride -}}
+{{- $sandboxValues.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "tfy-sandbox-server" $sandboxValues.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
   Create a default fully qualified app name.
   We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
   If release name contains chart name it will be used as a full name.
@@ -323,6 +341,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
+{{- end }}
+{{- if and .Values.sandbox.devMode.enabled (not .Values.env.SANDBOX_SETTINGS_SERVER_URL) }}
+- name: SANDBOX_SETTINGS_SERVER_URL
+  value: {{ printf "http://%s.%s.svc.cluster.local:8080" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
 {{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
