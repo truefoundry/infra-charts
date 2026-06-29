@@ -15,14 +15,15 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### AppGW Configuration
 
-| Name                                 | Description                                  | Value                       |
-| ------------------------------------ | -------------------------------------------- | --------------------------- |
-| `appgw.ingress.enabled`              | Enable AppGW ingress                         | `false`                     |
-| `appgw.ingress.ingressClassName`     | Ingress class name for AppGW                 | `azure-application-gateway` |
-| `appgw.ingress.annotations`          | Additional annotations for the AppGW ingress | `{}`                        |
-| `appgw.ingress.flyte.enabled`        | Enable HTTP2 AppGW ingress path for Flyte    | `true`                      |
-| `appgw.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured      | `[]`                        |
-| `appgw.ingress.domains`              | List of domains for host-based routing       | `[]`                        |
+| Name                                       | Description                                          | Value                       |
+| ------------------------------------------ | ---------------------------------------------------- | --------------------------- |
+| `appgw.ingress.enabled`                    | Enable AppGW ingress                                 | `false`                     |
+| `appgw.ingress.ingressClassName`           | Ingress class name for AppGW                         | `azure-application-gateway` |
+| `appgw.ingress.annotations`                | Additional annotations for the AppGW ingress         | `{}`                        |
+| `appgw.ingress.flyte.enabled`              | Enable HTTP2 AppGW ingress path for Flyte            | `true`                      |
+| `appgw.ingress.flyte.domains`              | List of domains for Flyte ingress host-based routing | `[]`                        |
+| `appgw.ingress.flyte.additionalHttp2Paths` | Additional HTTP2 paths to be configured              | `[]`                        |
+| `appgw.ingress.domains`                    | List of domains for host-based routing               | `[]`                        |
 
 ### Gateway Configuration
 
