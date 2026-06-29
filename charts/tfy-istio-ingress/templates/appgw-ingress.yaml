@@ -58,7 +58,7 @@ spec:
               number: 80
   {{- else }}
   {{- range .Values.appgw.ingress.domains }}
-  - host: {{ .host }}
+  - host: {{ .host | quote }}
     http:
       paths:
       - path: /
@@ -79,11 +79,34 @@ spec:
   tls:
   {{- range $tlsEntries }}
   - hosts:
-    - {{ .host }}
+    - {{ .host | quote }}
     secretName: {{ .secretName }}
   {{- end }}
   {{- end }}
+{{- end }}
 {{- if .Values.appgw.ingress.flyte.enabled }}
+{{- $flyteHasWildcard := false }}
+{{- range .Values.appgw.ingress.flyte.domains }}
+{{- if eq .host "*" }}
+{{- $flyteHasWildcard = true }}
+{{- end }}
+{{- end }}
+{{- $flyteTlsEntries := list }}
+{{- $flyteWildcardSecretName := "" }}
+{{- if $flyteHasWildcard }}
+{{- range .Values.appgw.ingress.flyte.domains }}
+{{- if and (eq .host "*") .secretName }}
+{{- $flyteWildcardSecretName = .secretName }}
+{{- end }}
+{{- end }}
+{{- else }}
+{{- range .Values.appgw.ingress.flyte.domains }}
+{{- if .secretName }}
+{{- $flyteTlsEntries = append $flyteTlsEntries . }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.appgw.ingress.flyte.domains }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -110,7 +133,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
-  {{- if $hasWildcard }}
+  {{- if $flyteHasWildcard }}
   - http:
       paths:
       - path: /flyteidl.service.AdminService
@@ -120,7 +143,7 @@ spec:
             name: {{ .Release.Name }}
             port:
               number: 80
-      {{- range .Values.appgw.ingress.additionalHttp2Paths }}
+      {{- range .Values.appgw.ingress.flyte.additionalHttp2Paths }}
       - path: {{ .path }}
         pathType: {{ .pathType }}
         backend:
@@ -130,8 +153,8 @@ spec:
               number: {{ .servicePort | default 80 }}
       {{- end }}
   {{- else }}
-  {{- range .Values.appgw.ingress.domains }}
-  - host: {{ .host }}
+  {{- range .Values.appgw.ingress.flyte.domains }}
+  - host: {{ .host | quote }}
     http:
       paths:
       - path: /flyteidl.service.AdminService
@@ -141,7 +164,7 @@ spec:
             name: {{ $.Release.Name }}
             port:
               number: 80
-      {{- range $.Values.appgw.ingress.additionalHttp2Paths }}
+      {{- range $.Values.appgw.ingress.flyte.additionalHttp2Paths }}
       - path: {{ .path }}
         pathType: {{ .pathType }}
         backend:
@@ -152,16 +175,16 @@ spec:
       {{- end }}
   {{- end }}
   {{- end }}
-  {{- if $hasWildcard }}
-  {{- if $wildcardSecretName }}
+  {{- if $flyteHasWildcard }}
+  {{- if $flyteWildcardSecretName }}
   tls:
-  - secretName: {{ $wildcardSecretName }}
+  - secretName: {{ $flyteWildcardSecretName }}
   {{- end }}
-  {{- else if $tlsEntries }}
+  {{- else if $flyteTlsEntries }}
   tls:
-  {{- range $tlsEntries }}
+  {{- range $flyteTlsEntries }}
   - hosts:
-    - {{ .host }}
+    - {{ .host | quote }}
     secretName: {{ .secretName }}
   {{- end }}
   {{- end }}
