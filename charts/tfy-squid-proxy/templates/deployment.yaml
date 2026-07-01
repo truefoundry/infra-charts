@@ -42,10 +42,17 @@ spec:
             - name: squid-config
               mountPath: /etc/squid/squid.conf
               subPath: squid.conf
+            - name: squid-tmp
+              mountPath: /tmp
           resources:
             {{- include "tfy-squid-proxy.resources" . | nindent 12 }}
+          securityContext:
+            {{- include "tfy-squid-proxy.containerSecurityContext" . | nindent 12 }}
       volumes:
         - name: squid-config
           configMap:
             name: {{ include "tfy-squid-proxy.fullname" . }}-squid-proxy-config
-
+        - name: squid-tmp
+          emptyDir: {}
+      securityContext:
+        {{- include "tfy-squid-proxy.podSecurityContext" . | nindent 8 }}
