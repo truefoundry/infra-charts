@@ -1,4 +1,3 @@
-{{- if .Values.appgw.ingress.enabled }}
 {{- $allHosts := list }}
 {{- range .Values.appgw.ingress.domains }}
 {{- range .hosts }}
@@ -6,6 +5,7 @@
 {{- end }}
 {{- end }}
 {{- $hasWildcard := has "*" $allHosts }}
+{{- if .Values.appgw.ingress.enabled }}
 {{- if .Values.appgw.ingress.domains }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -45,14 +45,7 @@ spec:
     {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
 {{- end }}
 {{- if .Values.appgw.ingress.flyte.enabled }}
-{{- $flyteAllHosts := list }}
-{{- range .Values.appgw.ingress.flyte.domains }}
-{{- range .hosts }}
-{{- $flyteAllHosts = append $flyteAllHosts . }}
-{{- end }}
-{{- end }}
-{{- $flyteHasWildcard := has "*" $flyteAllHosts }}
-{{- if .Values.appgw.ingress.flyte.domains }}
+{{- if .Values.appgw.ingress.domains }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -64,7 +57,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
   rules:
-  {{- if $flyteHasWildcard }}
+  {{- if $hasWildcard }}
   - http:
       paths:
       - path: /flyteidl.service.AdminService
@@ -76,7 +69,7 @@ spec:
               number: 80
       {{- include "tfy-istio-ingress.additionalHttp2Paths" (dict "paths" .Values.appgw.ingress.additionalHttp2Paths "releaseName" $.Release.Name) | nindent 6 }}
   {{- else }}
-  {{- range $flyteAllHosts }}
+  {{- range $allHosts }}
   - host: {{ . | quote }}
     http:
       paths:
@@ -91,7 +84,7 @@ spec:
   {{- end }}
   {{- end }}
   tls:
-    {{- toYaml .Values.appgw.ingress.flyte.domains | nindent 4 }}
+    {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}

@@ -40,17 +40,11 @@ appgw:
     ##
     annotations: {}
     ## @param appgw.ingress.flyte.enabled Enable HTTP2 AppGW ingress path for Flyte
+    ## When enabled, the Flyte ingress reuses appgw.ingress.domains for host-based routing and TLS —
+    ## it does not have its own separate domains list.
     ##
     flyte:
       enabled: true
-      ## @param appgw.ingress.flyte.domains List of domains for Flyte ingress host-based routing
-      ## Each entry has a list of hosts and may optionally include a secretName for TLS termination.
-      ## Example:
-      ## domains:
-      ##   - hosts:
-      ##       - example.com
-      ##     secretName: example-tls
-      domains: []
     ## @param appgw.ingress.additionalHttp2Paths Additional HTTP2 paths to be configured
     ## Example:
     ## additionalHttp2Paths:
@@ -59,7 +53,7 @@ appgw:
     ##     servicePort: 80
     ##     serviceName: test-service
     additionalHttp2Paths: []
-    ## @param appgw.ingress.domains List of domains for host-based routing
+    ## @param appgw.ingress.domains List of domains for host-based routing, shared by the main and Flyte AppGW ingresses
     ## Each entry has a list of hosts and may optionally include a secretName for TLS termination.
     ## The secretName can reference a Kubernetes TLS secret synced from Azure Key Vault
     ## via the Secrets Store CSI Driver, or any other Kubernetes TLS secret.
