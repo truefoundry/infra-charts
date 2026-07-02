@@ -477,25 +477,3 @@ Usage without a resourceTier helper (pass tier value directly):
 {{- $ephemeralLimit := index $limits "ephemeral-storage" }}
 {{- dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $ephemeralLimit) | toYaml -}}
 {{- end -}}
-
-{{/*
-NetworkPolicy resource name (max 63 chars).
-Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra-instance")
-*/}}
-{{- define "truefoundry.networkPolicyName" -}}
-{{- $ctx := .context -}}
-{{- $suffix := .suffix -}}
-{{- printf "%s-np-%s" (include "truefoundry.fullname" $ctx) $suffix | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{- define "networkPolicy.labels" -}}
-{{- $standardLabels := include "truefoundry.labels" (dict "context" . "name" "network-policy") | fromYaml }}
-{{- $baseLabels := mergeOverwrite $standardLabels (deepCopy .Values.global.labels) .Values.networkPolicy.labels }}
-{{ toYaml $baseLabels }}
-{{- end -}}
-
-{{- define "networkPolicy.annotations" -}}
-{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
-{{- toYaml . }}
-{{- end }}
-{{- end -}}
