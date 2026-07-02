@@ -23,12 +23,7 @@ spec:
         {{- include "deltafusion-query-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "deltafusion-query-server.serviceAccountName" . }}
-      {{- if .Values.deltaFusionQueryServer.podSecurityContext.enabled }}
-      {{- with .Values.deltaFusionQueryServer.podSecurityContext }}
-      securityContext:
-        {{- toYaml (omit . "enabled") | nindent 8 }}
-      {{- end }}
-      {{- end }}
+      {{- include "truefoundry.podSecurityContext" .Values.deltaFusionQueryServer.podSecurityContext | nindent 6 }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
         {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}

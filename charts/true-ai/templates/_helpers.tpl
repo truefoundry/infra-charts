@@ -475,3 +475,20 @@ limits:
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+  Pod securityContext
+  Renders the pod-level securityContext. When enabled, emits the provided
+  fields (minus "enabled"). When disabled, the securityContext is NOT removed
+  entirely; instead only runAsNonRoot: true is enforced.
+  Usage: {{- include "true-ai.podSecurityContext" .Values.podSecurityContext | nindent <n> }}
+*/}}
+{{- define "true-ai.podSecurityContext" -}}
+securityContext:
+{{- if .enabled }}
+  {{- toYaml (omit . "enabled") | nindent 2 }}
+{{- else }}
+  runAsNonRoot: true
+{{- end }}
+{{- end -}}
+

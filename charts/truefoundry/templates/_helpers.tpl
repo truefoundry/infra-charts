@@ -499,3 +499,19 @@ Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra
 {{- toYaml . }}
 {{- end }}
 {{- end -}}
+
+{{/*
+  Pod securityContext
+  Renders the pod-level securityContext. When enabled, emits the provided
+  fields (minus "enabled"). When disabled, the securityContext is NOT removed
+  entirely; instead only runAsNonRoot: true is enforced.
+  Usage: {{- include "truefoundry.podSecurityContext" .Values.<component>.podSecurityContext | nindent <n> }}
+*/}}
+{{- define "truefoundry.podSecurityContext" -}}
+securityContext:
+{{- if .enabled }}
+  {{- toYaml (omit . "enabled") | nindent 2 }}
+{{- else }}
+  runAsNonRoot: true
+{{- end }}
+{{- end -}}

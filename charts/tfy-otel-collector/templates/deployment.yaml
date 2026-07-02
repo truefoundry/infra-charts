@@ -29,10 +29,7 @@ spec:
         {{- include "tfy-otel-collector.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
-      {{- if .Values.podSecurityContext.enabled }}
-      securityContext:
-        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
-      {{- end }}
+      {{- include "tfy-otel-collector.podSecurityContext" .Values.podSecurityContext | nindent 6 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- $initContainers := include "tfy-otel-collector.customCA.initContainer" . | trim }}
       {{- if $initContainers }}

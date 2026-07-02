@@ -28,6 +28,7 @@ spec:
       {{- if .Values.deltaFusionIngestor.podSecurityContext.enabled }}
         {{- toYaml (omit .Values.deltaFusionIngestor.podSecurityContext "enabled") | nindent 8 }}
       {{- else }}
+        runAsNonRoot: true
         fsGroup: {{ .Values.deltaFusionIngestor.podSecurityContext.fsGroup | default 100 }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}

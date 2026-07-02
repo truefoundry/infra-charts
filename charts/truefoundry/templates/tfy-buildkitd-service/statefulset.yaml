@@ -24,10 +24,7 @@ spec:
       imagePullSecrets:
         {{- include "tfy-buildkitd-service.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "tfy-buildkitd-service.serviceAccountName" . }}
-      {{- if .Values.tfyBuildkitdService.podSecurityContext.enabled }}
-      securityContext:
-        {{- toYaml (omit .Values.tfyBuildkitdService.podSecurityContext "enabled") | nindent 8 }}
-      {{- end }}
+      {{- include "truefoundry.podSecurityContext" .Values.tfyBuildkitdService.podSecurityContext | nindent 6 }}
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: "kubernetes.io/hostname"

@@ -37,10 +37,7 @@ spec:
         {{- toYaml .Values.dnsConfig | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "true-ai.serviceAccountName" . }}
-      {{- if .Values.podSecurityContext.enabled }}
-      securityContext:
-        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
-      {{- end }}
+      {{- include "true-ai.podSecurityContext" .Values.podSecurityContext | nindent 6 }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- if or .Values.initContainers (and .Values.global.customCA.enabled (eq (include "true-ai.customCA.useDirectMount" .) "false")) }}
       initContainers:

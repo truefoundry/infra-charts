@@ -36,12 +36,7 @@ spec:
           imagePullSecrets:
             {{- include "deltafusion-compaction.imagePullSecrets" . | nindent 12 }}
           serviceAccountName: {{ include "deltafusion-compaction.serviceAccountName" . }}
-          {{- if .Values.deltaFusionCompaction.podSecurityContext.enabled }}
-          {{- with .Values.deltaFusionCompaction.podSecurityContext }}
-          securityContext:
-            {{- toYaml (omit . "enabled") | nindent 12 }}
-          {{- end }}
-          {{- end }}
+          {{- include "truefoundry.podSecurityContext" .Values.deltaFusionCompaction.podSecurityContext | nindent 10 }}
           {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
           initContainers:
             {{- include "truefoundry.customCA.initContainer" . | nindent 12 }}
