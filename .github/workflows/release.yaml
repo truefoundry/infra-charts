@@ -1,9 +1,19 @@
+# truefoundry and tfy-llm-gateway are released from their OWN
+# truefoundry-X.Y.Z branch (named after the same string as the tag this run
+# will create — see truefoundry/helm-charts' release-public-truefoundry.yaml),
+# not from main. That workflow only fast-forwards main for the current
+# latest shipped line. The "Exclude branch-released charts from main" step
+# below makes that exclusion robust on the main trigger regardless of what
+# main's Chart.yaml happens to contain; the truefoundry-* trigger relies on
+# chart-releaser's own CR_SKIP_EXISTING to no-op on any OTHER chart that
+# hasn't changed there.
 name: Release Charts
 
 on:
   push:
     branches:
       - main
+      - "truefoundry-[0-9]*"
   workflow_dispatch:
 
 jobs:
@@ -22,6 +32,15 @@ jobs:
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Exclude branch-released charts from main
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          # chart-releaser scans the working tree, not git history — removing
+          # these on disk (this ephemeral checkout is discarded after the job,
+          # nothing is pushed) is enough to keep it from ever tagging/releasing
+          # them off a main push.
+          rm -rf charts/truefoundry charts/tfy-llm-gateway
 
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.0
