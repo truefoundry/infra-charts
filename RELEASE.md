@@ -22,15 +22,20 @@ Whenever helm-charts ships a **final** release (a bare `truefoundry-X.Y.Z`
 git tag there — RCs never reach this repo at all), its
 `release-public-truefoundry.yaml` workflow:
 
-1. Ensures a branch here named `truefoundry-<VERSION>` exists (cut from this
-   repo's `main` if it doesn't) — e.g. `truefoundry-0.156.0`. This is the
-   SAME string as the git tag on the helm-charts side, not helm-charts' own
-   internal `release-v<VERSION>` branch name.
+1. Ensures a branch here named `release/truefoundry-<VERSION>` exists (cut
+   from this repo's `main` if it doesn't) — e.g.
+   `release/truefoundry-0.156.0`. It carries the same `truefoundry-X.Y.Z`
+   string as the git tag on the helm-charts side, under a `release/` prefix.
+   The prefix is load-bearing, not cosmetic: a branch named EXACTLY
+   `truefoundry-<VERSION>` collides with the identically-named git tag
+   chart-releaser mints in this repo, and git short-ref resolution
+   (`actions/checkout`, `create-pull-request`) breaks on the ambiguity for
+   every run after the tag exists.
 2. Copies `truefoundry` + `tfy-llm-gateway` into that branch via a PR, then
    auto-merges it (only after that PR's own checks pass).
 3. That push triggers `release.yaml` (gh-pages) and
-   `artifactory-helm-release.yaml` (public + inframold OCI) here — both now
-   trigger on `truefoundry-[0-9]*` branch pushes, not just `main`.
+   `artifactory-helm-release.yaml` (public + inframold OCI) here — both
+   trigger on `release/truefoundry-[0-9]*` branch pushes, not just `main`.
 4. **Only if this was the current latest shipped line**, that branch is ALSO
    fast-forwarded into this repo's `main` (same "latest-line-only" rule
    helm-charts applies to its own `main`). An older-line hotfix final still
@@ -38,10 +43,21 @@ git tag there — RCs never reach this repo at all), its
 
 `tfy-llm-gateway` is versioned independently of `truefoundry` (they can ship
 different patch numbers in the same release) and separately gets its own
-`tfy-llm-gateway-<its own version>` branch as a pure reference snapshot, so
-its version history is browsable on its own even when it diverges from the
-umbrella's version. That branch is inert — it never merges anywhere and
-can't trigger a publish (its name doesn't match either publish trigger).
+`release/tfy-llm-gateway-<its own version>` branch as a pure reference
+snapshot, so its version history is browsable on its own even when it
+diverges from the umbrella's version. That branch is inert — it never merges
+anywhere and can't trigger a publish (its name doesn't match either publish
+trigger).
+
+## The "Latest" release badge
+
+chart-releaser is configured to never implicitly mark a newly-created
+release as the repo's Latest (`CR_MAKE_RELEASE_LATEST: false`) — GitHub
+defaults the badge to the newest-CREATED release, so an older-line hotfix
+(e.g. `truefoundry-0.140.6` shipped after `0.148.0`) would otherwise steal
+it from the actual newest version. A step in `release.yaml` deterministically
+re-asserts the highest-semver final `truefoundry-X.Y.Z` release as Latest
+after every run.
 
 ## Why `main` doesn't publish these two charts
 
@@ -63,4 +79,4 @@ cluster.
 - **A version seems to be "stuck" on an old value on `main`** — check
   whether it's actually an older-line release: `main` here only ever
   reflects the *latest* line, by design, not everything that's ever shipped.
-  Check the `truefoundry-<VERSION>` branch and the git tag directly.
+  Check the `release/truefoundry-<VERSION>` branch and the git tag directly.

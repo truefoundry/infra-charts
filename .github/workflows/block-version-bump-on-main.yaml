@@ -19,13 +19,15 @@
 # failure; GitHub only prevents merging when a failing check is required.
 name: Block version bump on main
 
+# NOTE: no `paths:` filter, deliberately — this job is wired as a REQUIRED
+# status check on main, and a required check that never reports (because the
+# PR didn't touch the filtered paths) shows as "Expected" and blocks the
+# merge forever. Running on every PR is cheap: the version-diff below no-ops
+# when the Chart.yaml files didn't change.
 on:
   pull_request:
     branches:
       - main
-    paths:
-      - 'charts/truefoundry/Chart.yaml'
-      - 'charts/tfy-llm-gateway/Chart.yaml'
 
 jobs:
   block-version-bump:
