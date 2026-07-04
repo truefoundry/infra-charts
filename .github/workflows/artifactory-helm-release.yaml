@@ -1,14 +1,14 @@
 # truefoundry and tfy-llm-gateway are released from their OWN
-# truefoundry-X.Y.Z branch (mirroring helm-charts' branching model), not
-# from main — see release.yaml in this repo for the matching
-# rationale/exclusion.
+# release/truefoundry-X.Y.Z branch (mirroring helm-charts' branching model;
+# the release/ prefix avoids chart-releaser's tag namespace), not from main
+# — see release.yaml in this repo for the matching rationale/exclusion.
 name: Release Charts to public artifactory
 
 on:
   push:
     branches:
       - main
-      - "truefoundry-[0-9]*"
+      - "release/truefoundry-[0-9]*"
 
 env:
   ARTIFACTORY_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}

@@ -29,6 +29,11 @@ on:
 
 jobs:
   block-version-bump:
+    # The pipeline's own promote-to-main PRs use the release branch itself as
+    # the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
+    # release-public-truefoundry.yaml) and are the ONE sanctioned way these
+    # chart versions reach main — skip those. Everything else stays blocked.
+    if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
