@@ -98,8 +98,13 @@ jobs:
         env:
           GH_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
         run: |
+          # `|| true` on the grep: zero matching tags is a legitimate state
+          # (fresh repo, or only RC/other-chart releases exist) handled by the
+          # empty-HIGHEST branch below — without it, grep's non-zero exit
+          # would abort the whole step under `pipefail` before that handler
+          # runs, killing the rest of the job (including the gh-pages steps).
           HIGHEST=$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq '.[].tag_name' \
-            | grep -E '^truefoundry-[0-9]+\.[0-9]+\.[0-9]+$' \
+            | { grep -E '^truefoundry-[0-9]+\.[0-9]+\.[0-9]+$' || true; } \
             | sed 's/truefoundry-//' | sort -V | tail -1)
           if [ -z "$HIGHEST" ]; then
             echo "No final truefoundry-X.Y.Z release found; leaving Latest untouched."

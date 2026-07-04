@@ -43,24 +43,38 @@ jobs:
       # The pipeline's own promote-to-main PRs use the release branch itself
       # as the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
       # release-public-truefoundry.yaml) and are the ONE sanctioned way these
-      # chart versions reach main — pass those explicitly. Everything else
-      # is checked below.
-      - name: Sanctioned promote PR — pass
-        if: ${{ startsWith(github.head_ref, 'release/truefoundry-') }}
-        run: echo "Head branch '${{ github.head_ref }}' is a release branch promote — version bumps are expected here."
+      # chart versions reach main — pass those explicitly. The exemption is
+      # deliberately strict: the head must live in THIS repo (a fork branch
+      # named release/truefoundry-* is not a pipeline promote) and must match
+      # the exact release/truefoundry-X.Y.Z semver shape (a prefix-only match
+      # would also exempt e.g. release/truefoundry-experiment). GitHub
+      # expressions have no regex, so the match is done in shell here.
+      - name: Determine whether this is a sanctioned promote PR
+        id: promote
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ] \
+             && printf '%s' "$HEAD_REF" | grep -Eq '^release/truefoundry-[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "exempt=true" >> "$GITHUB_OUTPUT"
+            echo "Head branch '$HEAD_REF' is this repo's own release branch promote — version bumps are expected here."
+          else
+            echo "exempt=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Checkout
-        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Fetch PR base commit
-        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
         run: git fetch --depth=1 origin "${{ github.event.pull_request.base.sha }}"
 
       - name: Fail if Chart.yaml version changed
-        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
