@@ -31,22 +31,36 @@ on:
 
 jobs:
   block-version-bump:
-    # The pipeline's own promote-to-main PRs use the release branch itself as
-    # the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
-    # release-public-truefoundry.yaml) and are the ONE sanctioned way these
-    # chart versions reach main — skip those. Everything else stays blocked.
-    if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
+    # NOTE: the promote-PR exemption below is implemented as step-level
+    # conditions (job always runs, reports an explicit SUCCESS for exempt
+    # PRs) rather than a job-level `if` that skips the whole job. This job
+    # is wired as a REQUIRED status check; an explicit success removes any
+    # dependence on GitHub's "skipped check satisfies required checks"
+    # semantics, which differ between skip mechanisms and have changed
+    # historically.
     runs-on: ubuntu-latest
     steps:
+      # The pipeline's own promote-to-main PRs use the release branch itself
+      # as the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
+      # release-public-truefoundry.yaml) and are the ONE sanctioned way these
+      # chart versions reach main — pass those explicitly. Everything else
+      # is checked below.
+      - name: Sanctioned promote PR — pass
+        if: ${{ startsWith(github.head_ref, 'release/truefoundry-') }}
+        run: echo "Head branch '${{ github.head_ref }}' is a release branch promote — version bumps are expected here."
+
       - name: Checkout
+        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Fetch PR base commit
+        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
         run: git fetch --depth=1 origin "${{ github.event.pull_request.base.sha }}"
 
       - name: Fail if Chart.yaml version changed
+        if: ${{ !startsWith(github.head_ref, 'release/truefoundry-') }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
