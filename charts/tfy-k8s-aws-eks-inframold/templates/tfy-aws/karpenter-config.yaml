@@ -79,6 +79,7 @@ spec:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
             {{- end }}
+            {{- if or .Values.aws.karpenter.kmsKeyID .Values.tags }}
             nodeclass:
               {{- if .Values.aws.karpenter.kmsKeyID }}
               kmsKeyID: {{ .Values.aws.karpenter.kmsKeyID | default "" }}
@@ -89,6 +90,7 @@ spec:
                 {{ $k }}: {{ $v | quote }}
                 {{- end }}
               {{- end }}
+            {{- end }}
           controlPlaneNodePool:
             zones: {{- range .Values.aws.karpenter.defaultZones }}
             - {{ . | quote }}
