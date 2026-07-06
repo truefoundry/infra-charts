@@ -119,8 +119,5 @@ spec:
           {{- end }}
         {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.tfyAgent.syncPolicy | nindent 4 }}
 {{- end }}

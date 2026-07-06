@@ -86,9 +86,5 @@ spec:
         {{- end }}
       {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.keda.syncPolicy | nindent 4 }}
 {{- end }}
