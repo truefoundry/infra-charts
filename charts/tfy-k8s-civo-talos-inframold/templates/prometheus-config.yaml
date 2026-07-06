@@ -15,9 +15,7 @@ spec:
     server: "https://kubernetes.default.svc"
     namespace: prometheus
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=false
+    {{- toYaml .Values.prometheus.config.syncPolicy | nindent 4 }}
   source:
     repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
     targetRevision: 0.2.17

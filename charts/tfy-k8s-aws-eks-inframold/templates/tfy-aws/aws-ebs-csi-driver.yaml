@@ -145,8 +145,5 @@ spec:
         {{- end }}
   project: tfy-apps
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.aws.awsEbsCsiDriver.syncPolicy | nindent 4 }}
 {{- end }}

@@ -114,9 +114,5 @@ spec:
               release: prometheus
         {{- end }}
   syncPolicy:
-    automated: {}
-    retry: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.certManager.syncPolicy | nindent 4 }}
 {{- end }}
