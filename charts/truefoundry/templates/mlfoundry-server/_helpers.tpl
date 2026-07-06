@@ -247,6 +247,39 @@ Resource Tier
 {{- end }}
 {{- end }}
 
+{{- define "mlfoundry-server.defaultResources.reduced.small" }}
+requests:
+  cpu: 100m
+  memory: 400Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 200m
+  memory: 600Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "mlfoundry-server.defaultResources.reduced.medium" }}
+requests:
+  cpu: 100m
+  memory: 500Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 200m
+  memory: 700Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
+{{- define "mlfoundry-server.defaultResources.reduced.large" }}
+requests:
+  cpu: 100m
+  memory: 650Mi
+  ephemeral-storage: 128Mi
+limits:
+  cpu: 200m
+  memory: 850Mi
+  ephemeral-storage: 256Mi
+{{- end }}
+
 {{- define "mlfoundry-server.defaultResources.small" }}
 requests:
   cpu: 100m
@@ -284,12 +317,22 @@ limits:
 {{- $tier := include "mlfoundry-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
+{{- if .Values.mlfoundryServer.reducedResources }}
+{{- if eq $tier "small" }}
+  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.small" . }}
+{{- else if eq $tier "medium" }}
+  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.medium" . }}
+{{- else if eq $tier "large" }}
+  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.large" . }}
+{{- end }}
+{{- else }}
 {{- if eq $tier "small" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.medium" . }}
 {{- else if eq $tier "large" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.large" . }}
+{{- end }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}
