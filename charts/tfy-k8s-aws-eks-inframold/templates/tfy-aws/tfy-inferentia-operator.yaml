@@ -81,9 +81,6 @@ spec:
             {{- end }}
       {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.aws.inferentia.syncPolicy | nindent 4 }}
 
 {{- end}}

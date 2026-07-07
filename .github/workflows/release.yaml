@@ -17,6 +17,17 @@ on:
       - "release/truefoundry-[0-9]*"
   workflow_dispatch:
 
+# Every run of this workflow ends by regenerating index.html on gh-pages and
+# pushing it (chart-releaser also pushes index.yaml there). Rapid consecutive
+# pushes — e.g. a release branch cut + chart copy + README regen landing
+# within a minute — used to run concurrently and race each other on gh-pages,
+# failing the loser with a non-fast-forward rejection. Queue them instead
+# (never cancel: each triggering commit may carry a different chart to
+# release).
+concurrency:
+  group: release-charts-gh-pages
+  cancel-in-progress: false
+
 jobs:
   release:
     permissions:

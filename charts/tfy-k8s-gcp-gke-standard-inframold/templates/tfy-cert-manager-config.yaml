@@ -27,9 +27,5 @@ spec:
           {{- toYaml .Values.certManager.config.issuers | nindent 10 }}
         {{- end }}
   syncPolicy:
-    automated: {}
-    retry: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.certManager.config.syncPolicy | nindent 4 }}
 {{- end }}

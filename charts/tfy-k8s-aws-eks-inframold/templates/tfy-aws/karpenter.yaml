@@ -84,9 +84,5 @@ spec:
         {{- end }}
   project: tfy-apps
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.aws.karpenter.syncPolicy | nindent 4 }}
 {{- end }}
