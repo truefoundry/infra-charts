@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.156.0"
+  gatewayChartVersion: "0.157.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -102,7 +102,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.156.0
+  tag: v0.157.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -242,6 +242,12 @@ httpRoute:
   ## @param httpRoute.hostnames [array] Hostnames for the HTTPRoute
   hostnames: []
   #  - "llm-gateway.example.com"
+  ## httpRoute.timeouts Timeouts applied to the HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
+  timeouts:
+    ## @param httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
+    request: 1800s
+    ## @param httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
+    backendRequest: 600s
   ## Istio configuration
 istio:
   ## istio.virtualservice Virtual service configuration

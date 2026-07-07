@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.156.0
+  controlPlaneChartVersion: 0.157.1
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -69,6 +69,12 @@ global:
     ## @param global.httpRoute.hostnames [array] Hostnames for the HTTPRoute
     hostnames: []
     #  - "app.example.com"
+    ## global.httpRoute.timeouts Timeouts applied to each HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
+    timeouts:
+      ## @param global.httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
+      request: 1800s
+      ## @param global.httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
+      backendRequest: 600s
     ## global.virtualservice Istio configuration for the control plane
   virtualservice:
     ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
@@ -96,7 +102,7 @@ global:
     mlfoundryHost: >-
       {{ .Release.Name }}-mlfoundry-server
     ## @param global.proxy.mlfToSvcEnabled Kill switch for /api/ml edge routing. When true, whitelisted /api/ml paths are routed to servicefoundry and all others stay on mlfoundry. When false, all /api/ml traffic goes to mlfoundry (legacy behavior).
-    mlfToSvcEnabled: false
+    mlfToSvcEnabled: true
     ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
       {{ .Release.Name }}-tfy-workflow-admin-server
@@ -499,6 +505,8 @@ truefoundryBootstrap:
 mlfoundryServer:
   ## @param mlfoundryServer.enabled Bool to enable the mlfoundry server
   enabled: true
+  ## @param mlfoundryServer.reducedResources Use lower CPU/memory requests and limits for the slim codegen mlfoundry server
+  reducedResources: false
   ## @param mlfoundryServer.tolerations Tolerations specific to the mlfoundry server
   tolerations: []
   ## @param mlfoundryServer.commonAnnotations [object] Annotations for the mlfoundry server
@@ -516,7 +524,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.155.0"
+    tag: "v0.157.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -831,7 +839,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.156.0"
+    tag: "v0.157.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1222,7 +1230,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.156.0"
+    tag: "v0.157.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -2830,7 +2838,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.155.0"
+    tag: "v0.157.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3013,7 +3021,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.155.0"
+    tag: "v0.157.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3409,7 +3417,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.156.0"
+    tag: "v0.157.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
