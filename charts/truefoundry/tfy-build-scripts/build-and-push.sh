@@ -45,6 +45,21 @@ fi
 eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
+if [[ -n "${PYTHON_INDEX_URL:-}" ]]; then
+  mkdir -p /truefoundry-build-secrets
+  if [[ -n "${PYTHON_INDEX_USERNAME:-}" ]] && [[ -n "${PYTHON_INDEX_PASSWORD:-}" ]]; then
+    AUTHED_URL=$(python3 -c "
+from urllib.parse import urlparse, urlunparse, quote
+u = urlparse('${PYTHON_INDEX_URL}')
+print(urlunparse(u._replace(netloc=quote('${PYTHON_INDEX_USERNAME}', safe='') + ':' + quote('${PYTHON_INDEX_PASSWORD}', safe='') + '@' + u.hostname + (':' + str(u.port) if u.port else ''))))
+")
+    printf "[global]\nindex-url = %s\n" "$AUTHED_URL" > /truefoundry-build-secrets/pip.conf
+  else
+    printf "[global]\nindex-url = %s\n" "$PYTHON_INDEX_URL" > /truefoundry-build-secrets/pip.conf
+  fi
+  build_secrets="$build_secrets --secret id=pip.conf,src=/truefoundry-build-secrets/pip.conf"
+fi
+
 start_time=$(date +%s)
 tfy build $build_secrets --build-config="$BUILD_CONFIG_CORRECTED" --name="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max${REGISTRY_INSECURE_OPTS}" --cache-from=type=registry,ref="${IMAGE}:cache-latest${REGISTRY_INSECURE_OPTS}" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true${REGISTRY_INSECURE_OPTS}
 end_time=$(date +%s)
