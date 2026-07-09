@@ -46,18 +46,28 @@ eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
 if [[ -n "${PYTHON_INDEX_URL:-}" ]]; then
-  mkdir -p /truefoundry-build-secrets
+  _PY_INDEX_DIR="/tmp/truefoundry-python-index"
+  mkdir -p "$_PY_INDEX_DIR"
   if [[ -n "${PYTHON_INDEX_USERNAME:-}" ]] && [[ -n "${PYTHON_INDEX_PASSWORD:-}" ]]; then
-    AUTHED_URL=$(python3 -c "
+    _PY_INDEX_RESOLVED_URL=$(
+      PYTHON_INDEX_URL="$PYTHON_INDEX_URL" \
+      PYTHON_INDEX_USERNAME="$PYTHON_INDEX_USERNAME" \
+      PYTHON_INDEX_PASSWORD="$PYTHON_INDEX_PASSWORD" \
+      python3 -c "
+import os
 from urllib.parse import urlparse, urlunparse, quote
-u = urlparse('${PYTHON_INDEX_URL}')
-print(urlunparse(u._replace(netloc=quote('${PYTHON_INDEX_USERNAME}', safe='') + ':' + quote('${PYTHON_INDEX_PASSWORD}', safe='') + '@' + u.hostname + (':' + str(u.port) if u.port else ''))))
+u = urlparse(os.environ['PYTHON_INDEX_URL'])
+user = quote(os.environ['PYTHON_INDEX_USERNAME'], safe='')
+pwd = quote(os.environ['PYTHON_INDEX_PASSWORD'], safe='')
+port = ':' + str(u.port) if u.port else ''
+print(urlunparse(u._replace(netloc=user + ':' + pwd + '@' + u.hostname + port)))
 ")
-    printf "[global]\nindex-url = %s\n" "$AUTHED_URL" > /truefoundry-build-secrets/pip.conf
   else
-    printf "[global]\nindex-url = %s\n" "$PYTHON_INDEX_URL" > /truefoundry-build-secrets/pip.conf
+    _PY_INDEX_RESOLVED_URL="$PYTHON_INDEX_URL"
   fi
-  build_secrets="$build_secrets --secret id=pip.conf,src=/truefoundry-build-secrets/pip.conf"
+  printf "[global]\nindex-url = %s\n" "$_PY_INDEX_RESOLVED_URL" > "$_PY_INDEX_DIR/pip.conf"
+  printf "[[index]]\nurl = \"%s\"\ndefault = true\n" "$_PY_INDEX_RESOLVED_URL" > "$_PY_INDEX_DIR/uv.toml"
+  build_secrets="$build_secrets --secret id=pip.conf,src=$_PY_INDEX_DIR/pip.conf --secret id=uv.toml,src=$_PY_INDEX_DIR/uv.toml"
 fi
 
 start_time=$(date +%s)
