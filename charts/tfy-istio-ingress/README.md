@@ -5,9 +5,9 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### Global
 
-| Name                  | Description                                                                                                         | Value  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------ | ------ |
-| `global.installGatewayCrds`  | Install the Gateway API CRDs sub-chart. Set to false to only install the istio gateway sub-chart and skip the CRDs. | `true` |
+| Name                        | Description                                                                                                         | Value  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| `global.installGatewayCrds` | Install the Gateway API CRDs sub-chart. Set to false to only install the istio gateway sub-chart and skip the CRDs. | `true` |
 
 ### ALB Configuration
 
