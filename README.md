@@ -2,6 +2,10 @@
 
 Please visit the [GitHub Repo](https://github.com/truefoundry/infra-charts) for sources
 
+See [RELEASE.md](./RELEASE.md) for how `truefoundry` and `tfy-llm-gateway`
+specifically are released — they follow a different flow from every other
+chart in this repo.
+
 ## To enable scraping metrics for a particular service
 1. Create a service monitor object in `charts/tfy-prometheus-config/templates/serviceMonitors`
 2. Add an entry in `charts/tfy-prometheus-config/values.yaml`

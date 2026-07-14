@@ -74,9 +74,5 @@ spec:
         {{- end }}
 
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.istio.discovery.syncPolicy | nindent 4 }}
 {{- end }}

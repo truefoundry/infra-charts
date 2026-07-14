@@ -27,14 +27,5 @@ spec:
           {{.Values.gpu.clusterType}}: true
         {{- end }}
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: false
-    retry:
-      limit: 5
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - FailOnSharedResource=true
-      - ApplyOutOfSyncOnly=true
+    {{- toYaml .Values.gpu.syncPolicy | nindent 4 }}
 {{- end }}

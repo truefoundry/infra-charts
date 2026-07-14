@@ -84,8 +84,5 @@ spec:
                 {{- end }}
         {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.istio.gateway.syncPolicy | nindent 4 }}
 {{- end }}
