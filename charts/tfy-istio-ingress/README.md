@@ -25,6 +25,7 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | ------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------- |
 | `appgw.ingress.enabled`              | Enable AppGW ingress                                                                 | `false`                     |
 | `appgw.ingress.ingressClassName`     | Ingress class name for AppGW                                                         | `azure-application-gateway` |
+| `appgw.ingress.labels`               | Additional labels for the AppGW ingress                                              | `{}`                        |
 | `appgw.ingress.annotations`          | Additional annotations for the AppGW ingress                                         | `{}`                        |
 | `appgw.ingress.flyte.enabled`        | Enable HTTP2 AppGW ingress path for Flyte                                            | `true`                      |
 | `appgw.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured                                              | `[]`                        |
