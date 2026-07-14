@@ -64,6 +64,14 @@ spec:
               number: 80
         path: /flyteidl.service.AdminService
         pathType: Prefix
-      {{- include "tfy-istio-ingress.additionalHttp2Paths" (dict "paths" .Values.alb.ingress.additionalHttp2Paths "releaseName" $.Release.Name) | nindent 6 }}
+      {{- range .Values.alb.ingress.additionalHttp2Paths }}
+      - backend:
+          service:
+            name: {{ .serviceName | default $.Release.Name }}
+            port:
+              number: {{ .servicePort | default 80 }}
+        path: {{ .path }}
+        pathType: {{ .pathType }}
+      {{- end }}
 {{- end }}
 {{- end }}
