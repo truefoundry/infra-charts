@@ -34,6 +34,12 @@ spec:
         default: ""
       - name: deploymentId
         default: ""
+      - name: baseImageRegistryURL
+        default: ""
+      - name: baseImageRegistryUsername
+        default: ""
+      - name: baseImageRegistryPassword
+        default: ""
   templates:
     - name: build
       inputs:
@@ -49,6 +55,9 @@ spec:
           - name: callbackURL
           - name: applicationId
           - name: deploymentId
+          - name: baseImageRegistryURL
+          - name: baseImageRegistryUsername
+          - name: baseImageRegistryPassword
       steps:
       - - name: should-use-external-buildkit
           template: should-use-external-buildkit
@@ -84,6 +93,12 @@ spec:
               value: "{{`{{inputs.parameters.applicationId}}`}}"
             - name: deploymentId
               value: "{{`{{inputs.parameters.deploymentId}}`}}"
+            - name: baseImageRegistryURL
+              value: "{{`{{inputs.parameters.baseImageRegistryURL}}`}}"
+            - name: baseImageRegistryUsername
+              value: "{{`{{inputs.parameters.baseImageRegistryUsername}}`}}"
+            - name: baseImageRegistryPassword
+              value: "{{`{{inputs.parameters.baseImageRegistryPassword}}`}}"
       - - name: build-and-push-with-external-buildkit
           template: build-and-push-with-external-buildkit
           when: >-
@@ -112,6 +127,12 @@ spec:
               value: "{{`{{inputs.parameters.applicationId}}`}}"
             - name: deploymentId
               value: "{{`{{inputs.parameters.deploymentId}}`}}"
+            - name: baseImageRegistryURL
+              value: "{{`{{inputs.parameters.baseImageRegistryURL}}`}}"
+            - name: baseImageRegistryUsername
+              value: "{{`{{inputs.parameters.baseImageRegistryUsername}}`}}"
+            - name: baseImageRegistryPassword
+              value: "{{`{{inputs.parameters.baseImageRegistryPassword}}`}}"
 
     - name: exit-handler
       inputs:
@@ -267,6 +288,9 @@ spec:
           - name: callbackURL
           - name: applicationId
           - name: deploymentId
+          - name: baseImageRegistryURL
+          - name: baseImageRegistryUsername
+          - name: baseImageRegistryPassword
       outputs:
         parameters:
         - name: tfyBuildStatus
@@ -341,6 +365,12 @@ spec:
             value: "{{`{{inputs.parameters.applicationId}}`}}"
           - name: DEPLOYMENT_ID
             value: "{{`{{inputs.parameters.deploymentId}}`}}"
+          - name: BASE_IMAGE_REGISTRY_URL
+            value: "{{`{{inputs.parameters.baseImageRegistryURL}}`}}"
+          - name: BASE_IMAGE_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.baseImageRegistryUsername}}`}}"
+          - name: BASE_IMAGE_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.baseImageRegistryPassword}}`}}"
           - name: DONE_MARKER
             value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done | quote }}
           - name: FAILED_MARKER
@@ -433,6 +463,9 @@ spec:
           - name: callbackURL
           - name: applicationId
           - name: deploymentId
+          - name: baseImageRegistryURL
+          - name: baseImageRegistryUsername
+          - name: baseImageRegistryPassword
       outputs:
         parameters:
         - name: tfyBuildStatus
@@ -512,6 +545,12 @@ spec:
             value: "{{`{{inputs.parameters.applicationId}}`}}"
           - name: DEPLOYMENT_ID
             value: "{{`{{inputs.parameters.deploymentId}}`}}"
+          - name: BASE_IMAGE_REGISTRY_URL
+            value: "{{`{{inputs.parameters.baseImageRegistryURL}}`}}"
+          - name: BASE_IMAGE_REGISTRY_USERNAME
+            value: "{{`{{inputs.parameters.baseImageRegistryUsername}}`}}"
+          - name: BASE_IMAGE_REGISTRY_PASSWORD
+            value: "{{`{{inputs.parameters.baseImageRegistryPassword}}`}}"
           - name: DONE_MARKER
             value: {{ .Values.tfyBuild.truefoundryWorkflows.logMarkers.done | quote }}
           - name: FAILED_MARKER
