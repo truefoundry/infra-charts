@@ -46,6 +46,17 @@ aws-elb-controller-checker ServiceAccount name
 {{- end }}
 
 {{/*
+AppGW ingress labels — user-supplied only.
+*/}}
+{{- define "tfy-istio-ingress.appgwLabels" -}}
+{{- if .Values.appgw.ingress.labels }}
+{{- toYaml .Values.appgw.ingress.labels }}
+{{- else }}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
 AppGW ingress annotations — fixed probe/routing settings plus user-supplied extras.
 */}}
 {{- define "tfy-istio-ingress.appgwAnnotations" -}}

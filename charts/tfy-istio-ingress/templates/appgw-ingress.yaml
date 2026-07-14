@@ -5,13 +5,14 @@
 {{- end }}
 {{- end }}
 {{- $hasWildcard := has "*" $allHosts }}
-{{- if .Values.appgw.ingress.enabled }}
-{{- if .Values.appgw.ingress.domains }}
+{{- if and .Values.appgw.ingress.enabled .Values.appgw.ingress.domains }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-appgw-ingress
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-istio-ingress.appgwLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-istio-ingress.appgwAnnotations" . | nindent 4 }}
 spec:
@@ -43,15 +44,15 @@ spec:
   {{- end }}
   tls:
     {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
-{{- end }}
-{{- if .Values.appgw.ingress.flyte.enabled }}
-{{- if .Values.appgw.ingress.domains }}
+{{- if and .Values.appgw.ingress.flyte.enabled .Values.appgw.ingress.domains }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Release.Name }}-appgw-flyte-ingress
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-istio-ingress.appgwLabels" . | nindent 4 }}
   annotations:
     {{- include "tfy-istio-ingress.appgwAnnotations" . | nindent 4 }}
 spec:
@@ -85,6 +86,5 @@ spec:
   {{- end }}
   tls:
     {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
-{{- end }}
 {{- end }}
 {{- end }}

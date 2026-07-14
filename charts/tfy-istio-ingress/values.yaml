@@ -42,6 +42,9 @@ appgw:
     ## @param appgw.ingress.ingressClassName Ingress class name for AppGW
     ##
     ingressClassName: azure-application-gateway
+    ## @param appgw.ingress.labels Additional labels for the AppGW ingress
+    ##
+    labels: {}
     ## @param appgw.ingress.annotations Additional annotations for the AppGW ingress
     ##
     annotations: {}
@@ -71,6 +74,11 @@ appgw:
     ##   - hosts:
     ##       - api.example.com
     ##     secretName: api-example-tls
+    ## Wildcard example (matches any host, takes precedence over the entries above):
+    ## domains:
+    ##   - hosts:
+    ##       - "*"
+    ##     secretName: wildcard-tls
     domains: []
 
 ## @section Gateway Configuration
