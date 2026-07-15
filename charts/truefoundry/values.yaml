@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.157.0
+  controlPlaneChartVersion: 0.157.2
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -69,6 +69,12 @@ global:
     ## @param global.httpRoute.hostnames [array] Hostnames for the HTTPRoute
     hostnames: []
     #  - "app.example.com"
+    ## global.httpRoute.timeouts Timeouts applied to each HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
+    timeouts:
+      ## @param global.httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
+      request: 1800s
+      ## @param global.httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
+      backendRequest: 600s
     ## global.virtualservice Istio configuration for the control plane
   virtualservice:
     ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
@@ -109,6 +115,9 @@ global:
     ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
     stdioMcpProxyHost: >-
       {{ .Release.Name }}-stdio-mcp-proxy
+    ## @param global.proxy.tfyInfraManagerHost tfy infra manager host for service routing
+    tfyInfraManagerHost: >-
+      {{ .Release.Name }}-tfy-infra-manager
     ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
     managedClusterOnboardingServiceURL: ""
     ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
@@ -311,6 +320,7 @@ global:
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
       enabled: true
+      runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
@@ -447,6 +457,7 @@ truefoundryBootstrap:
   ## @param truefoundryBootstrap.securityContext [object] Security context for the bootstrap container
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -499,8 +510,6 @@ truefoundryBootstrap:
 mlfoundryServer:
   ## @param mlfoundryServer.enabled Bool to enable the mlfoundry server
   enabled: true
-  ## @param mlfoundryServer.reducedResources Use lower CPU/memory requests and limits for the slim codegen mlfoundry server
-  reducedResources: false
   ## @param mlfoundryServer.tolerations Tolerations specific to the mlfoundry server
   tolerations: []
   ## @param mlfoundryServer.commonAnnotations [object] Annotations for the mlfoundry server
@@ -543,6 +552,7 @@ mlfoundryServer:
   ## @param mlfoundryServer.securityContext [object] Security context for the mlfoundry server
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -645,23 +655,15 @@ mlfoundryServer:
   extraVolumeMounts: []
   ## @param mlfoundryServer.env [object] Environment variables for the mlfoundry server
   env:
-    NUM_APP_WORKERS: "2"
+    NUM_APP_WORKERS: "1"
     PROMETHEUS_FASTAPI_INSTRUMENTATOR: "1"
     PROMETHEUS_MULTIPROC_DIR: /tmp
     prometheus_multiproc_dir: /tmp
-    DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
-    DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
-    DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
-    DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
-    DB_POSTGRES_SCHEMA: mlfoundry
-    DB_PORT: "5432"
-    DB_DIALECT: postgresql+psycopg2
     AUTH_SERVER_URL: https://auth.truefoundry.com
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
-    LLM_GATEWAY_URL: LM_GATEWAY_URL="{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
@@ -714,6 +716,7 @@ s3proxy:
   ## @param s3proxy.securityContext [object] Security context for the s3 proxy
   securityContext:
     enabled: true
+    runAsNonRoot: true
     capabilities:
       drop:
         - ALL
@@ -833,7 +836,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.157.0"
+    tag: "v0.157.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -858,6 +861,7 @@ servicefoundryServer:
   ## @param servicefoundryServer.securityContext [object] Security context for the servicefoundry server
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -1026,6 +1030,7 @@ servicefoundryServer:
     METRICS_DASHBOARD_URL: http://{{ .Release.Name }}-tfy-metrics-dashboard:8080/admin/metrics-dashboard/
     HEADLAMP_URL: http://{{ .Release.Name }}-headlamp:4466/admin/kubernetes/
     FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
+    FE_ENABLE_INFRA_ONBOARDING_PAGE: "{{ .Values.tfyInfraManager.enabled }}"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1110,6 +1115,7 @@ sparkHistoryServer:
   ## @param sparkHistoryServer.securityContext [object] Security context for the spark history server
   securityContext:
     enabled: true
+    runAsNonRoot: true
     capabilities:
       drop:
         - ALL
@@ -1257,6 +1263,7 @@ tfyK8sController:
   ## @param tfyK8sController.securityContext [object] Security context for the tfyK8sController
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -1415,6 +1422,7 @@ sfyManifestService:
   ## @param sfyManifestService.securityContext [object] Security context for the sfy manifest service
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: false
     allowPrivilegeEscalation: false
     capabilities:
@@ -1647,6 +1655,127 @@ stdioMcpProxy:
   env:
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 ###################################################################################################################
+######################################### Tfy Infra Manager ######################################################
+###################################################################################################################
+## @section tfyInfraManager tfy infra manager values
+tfyInfraManager:
+  ## @param tfyInfraManager.enabled Bool to enable the tfy infra manager
+  enabled: false
+  ## @param tfyInfraManager.annotations [object] Annotations for the tfy infra manager
+  annotations: {}
+  ## @param tfyInfraManager.tolerations Tolerations specific to the tfy infra manager
+  tolerations: []
+  ## tfyInfraManager.image Image for the tfy infra manager
+  image:
+    ## @param tfyInfraManager.image.registry Registry for the tfy infra manager image (overrides global.registry if specified)
+    registry: ""
+    ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
+    repository: "tfy-private-images/tfy-infra-manager"
+    ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
+    tag: "v0.1.0"
+  ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
+  # replicaCount: 1
+  ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
+  environmentName: default
+  ## @param tfyInfraManager.envSecretName Secret name for the tfy infra manager environment variables
+  envSecretName: tfy-infra-manager-env-secret
+  ## @param tfyInfraManager.imagePullPolicy Image pull policy for the tfy infra manager
+  imagePullPolicy: IfNotPresent
+  ## @param tfyInfraManager.nameOverride Override name for the tfy infra manager
+  nameOverride: ""
+  ## @param tfyInfraManager.fullnameOverride Full name override for the tfy infra manager
+  fullnameOverride: ""
+  ## @param tfyInfraManager.podAnnotations Annotations for the tfy infra manager pods
+  podAnnotations: {}
+  ## @param tfyInfraManager.podSecurityContext [object] Security context for the tfy infra manager pods
+  podSecurityContext:
+    enabled: false
+  ## @param tfyInfraManager.commonLabels Common labels for the tfy infra manager pods
+  commonLabels: {}
+  ## @param tfyInfraManager.commonAnnotations [object] Common annotations for the tfy infra manager pods
+  commonAnnotations: {}
+  ## @param tfyInfraManager.podLabels [object] Labels for the tfy infra manager pods
+  podLabels: {}
+  ## @param tfyInfraManager.deploymentLabels [object] Deployment-specific labels for the tfy infra manager
+  deploymentLabels: {}
+  ## @param tfyInfraManager.deploymentAnnotations [object] Deployment-specific annotations for the tfy infra manager
+  deploymentAnnotations: {}
+  ## @param tfyInfraManager.securityContext [object] Security context for the tfy infra manager
+  securityContext:
+    enabled: true
+    readOnlyRootFilesystem: false
+  ## @param tfyInfraManager.resources [object] Resource requests and limits for the tfy infra manager (defaults: 100m/500m CPU, 64Mi/128Mi memory, 256Mi ephemeral-storage)
+  resources: {}
+  ## tfyInfraManager.livenessProbe Liveness probe settings for the tfy infra manager
+  livenessProbe:
+    ## @param tfyInfraManager.livenessProbe.failureThreshold Liveness probe failure threshold for tfy infra manager
+    failureThreshold: 3
+    ## @param tfyInfraManager.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfy infra manager
+    initialDelaySeconds: 15
+    ## @param tfyInfraManager.livenessProbe.periodSeconds Liveness probe period for tfy infra manager
+    periodSeconds: 10
+    ## @param tfyInfraManager.livenessProbe.successThreshold Liveness probe success threshold for tfy infra manager
+    successThreshold: 1
+    ## @param tfyInfraManager.livenessProbe.timeoutSeconds Liveness probe timeout for tfy infra manager
+    timeoutSeconds: 1
+  ## tfyInfraManager.readinessProbe Readiness probe settings for the tfy infra manager
+  readinessProbe:
+    ## @param tfyInfraManager.readinessProbe.failureThreshold Readiness probe failure threshold for tfy infra manager
+    failureThreshold: 3
+    ## @param tfyInfraManager.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfy infra manager
+    initialDelaySeconds: 5
+    ## @param tfyInfraManager.readinessProbe.periodSeconds Readiness probe period for tfy infra manager
+    periodSeconds: 10
+    ## @param tfyInfraManager.readinessProbe.successThreshold Readiness probe success threshold for tfy infra manager
+    successThreshold: 1
+    ## @param tfyInfraManager.readinessProbe.timeoutSeconds Readiness probe timeout for tfy infra manager
+    timeoutSeconds: 1
+  ## @param tfyInfraManager.nodeSelector Node selector for the tfy infra manager
+  nodeSelector: {}
+  ## @param tfyInfraManager.affinity Affinity settings for the tfy infra manager
+  affinity: {}
+  ## @param tfyInfraManager.topologySpreadConstraints Topology spread constraints for the tfy infra manager
+  topologySpreadConstraints: []
+  ## tfyInfraManager.service Service settings for the tfy infra manager
+  service:
+    ## @param tfyInfraManager.service.type Service type for the tfy infra manager
+    type: ClusterIP
+    ## @param tfyInfraManager.service.port Service port for the tfy infra manager
+    port: 8080
+    ## @param tfyInfraManager.service.annotations Annotations for the tfy infra manager service
+    annotations: {}
+    ## @param tfyInfraManager.service.labels [object] Labels for the tfy infra manager service
+    labels: {}
+  ## tfyInfraManager.serviceAccount Service account settings for the tfy infra manager
+  serviceAccount:
+    ## @param tfyInfraManager.serviceAccount.create Bool to create a service account for the tfy infra manager
+    create: true
+    ## @param tfyInfraManager.serviceAccount.name Name of the tfy infra manager service account
+    name: "tfy-infra-manager"
+    ## @param tfyInfraManager.serviceAccount.annotations [object] Annotations for the tfy infra manager service account
+    annotations: {}
+    ## @param tfyInfraManager.serviceAccount.labels [object] Labels for the tfy infra manager service account
+    labels: {}
+    ## @param tfyInfraManager.serviceAccount.automountServiceAccountToken Automount service account token for the tfy infra manager service account
+    automountServiceAccountToken: true
+  ## @param tfyInfraManager.extraVolumes Extra volumes for the tfy infra manager
+  extraVolumes: []
+  ## @param tfyInfraManager.extraVolumeMounts Extra volume mounts for the tfy infra manager
+  extraVolumeMounts: []
+  ## @param tfyInfraManager.imagePullSecrets Image pull credentials for the tfy infra manager
+  imagePullSecrets: []
+  ## @param tfyInfraManager.env [object] Environment variables for the tfy infra manager
+  ## MANAGED_DELIVERY_ENABLED=true requires additional managed-delivery env vars; see the
+  ## tfy-infra-manager repo's .env.default for the full contract.
+  env:
+    SERVER_PORT: "{{ .Values.tfyInfraManager.service.port }}"
+    APP_BASE_PATH: /admin/infra-manager
+    SFY_BASE_URL: http://{{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}/v1
+    BUNDLE_SOURCE: artifactory
+    TEMPLATE_CHANNEL: general
+    LOG_LEVEL: info
+    MANAGED_DELIVERY_ENABLED: "false"
+###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
 ## @section tfyBuild Truefoundry tfy build settings
@@ -1829,6 +1958,21 @@ tfyBuild:
       imagePullSecrets: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes Image size threshold for the SOCI index build and push
       imageSizeThresholdBytes: 419430400
+      resources:
+        requests:
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.cpu CPU request for the SOCI index build and push
+          cpu: 500m
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.ephemeral-storage Ephemeral storage request for the SOCI index build and push
+          ephemeral-storage: 10Gi
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.memory Memory request for the SOCI index build and push
+          memory: 1Gi
+        limits:
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.cpu CPU limit for the SOCI index build and push
+          cpu: 1000m
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.ephemeral-storage Ephemeral storage limit for the SOCI index build and push
+          ephemeral-storage: 30Gi
+          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.memory Memory limit for the SOCI index build and push
+          memory: 2Gi
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs Extra environment variables for the SOCI index build and push
       extraEnvs: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts Extra volume mounts for the SOCI index build and push
@@ -2232,6 +2376,7 @@ tfyController:
   ## @param tfyController.securityContext [object] Security context for the tfyController
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -2385,6 +2530,7 @@ tfyWorkflowAdmin:
   ## @param tfyWorkflowAdmin.securityContext [object] Security context for the tfyWorkflowAdmin
   securityContext:
     enabled: true
+    runAsNonRoot: true
     capabilities:
       drop:
         - ALL
@@ -2917,6 +3063,7 @@ deltaFusionIngestor:
   ## @param deltaFusionIngestor.securityContext [object] Security context for the container
   securityContext:
     enabled: true
+    runAsNonRoot: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -3086,6 +3233,7 @@ deltaFusionCompaction:
   ## @param deltaFusionCompaction.securityContext [object] Security context for the deltaFusionCompaction cron job
   securityContext:
     enabled: true
+    runAsNonRoot: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -3228,6 +3376,7 @@ deltaFusionQueryServer:
   ## @param deltaFusionQueryServer.securityContext [object] Security context for the deltaFusionQueryServer
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -3411,7 +3560,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.157.0"
+    tag: "v0.157.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
@@ -3448,6 +3597,7 @@ tfyProxy:
   ## @param tfyProxy.securityContext [object] Security context for the tfyProxy
   securityContext:
     enabled: true
+    runAsNonRoot: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:

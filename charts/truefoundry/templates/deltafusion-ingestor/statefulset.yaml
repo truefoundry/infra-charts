@@ -24,11 +24,9 @@ spec:
       imagePullSecrets:
         {{- include "deltafusion-ingestor.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "deltafusion-ingestor.serviceAccountName" . }}
-      securityContext:
       {{- if .Values.deltaFusionIngestor.podSecurityContext.enabled }}
+      securityContext:
         {{- toYaml (omit .Values.deltaFusionIngestor.podSecurityContext "enabled") | nindent 8 }}
-      {{- else }}
-        fsGroup: {{ .Values.deltaFusionIngestor.podSecurityContext.fsGroup | default 100 }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:

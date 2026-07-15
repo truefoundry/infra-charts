@@ -459,6 +459,15 @@ data:
       }
       {{- end }}
 
+      {{- if .Values.tfyInfraManager.enabled }}
+      # /admin/infra-manager → / on upstream:8080 (IM serves SPA + API at root;
+      # APP_BASE_PATH only rewrites the SPA <base href>, the proxy strips the prefix)
+      handle /admin/infra-manager /admin/infra-manager/* {
+        uri strip_prefix /admin/infra-manager
+        reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}
+      }
+      {{- end }}
+
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
