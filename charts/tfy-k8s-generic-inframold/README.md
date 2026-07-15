@@ -149,6 +149,7 @@ Inframold, the superchart that configure your cluster on generic for truefoundry
 | --------------------------------------- | ------------------------------------------------------- | ------- |
 | `istio.enabled`                         | Flag to enable Istio                                    | `true`  |
 | `istio.enabled`                         | Flag to enable Istio Base                               | `true`  |
+| `istio.ingress.enabled`                 | Flag to enable Istio Ingress                            | `true`  |
 | `istio.base.valuesOverride`             | Config override from default config values              | `{}`    |
 | `istio.base.syncPolicy`                 | ArgoCD syncPolicy for the istio-base Application        | `{}`    |
 | `istio.awsElbControllerChecker.enabled` | Flag to enable AWS ELB Controller Checker               | `false` |
