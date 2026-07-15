@@ -80,6 +80,7 @@ global:
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
       enabled: true
+      runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
@@ -136,6 +137,7 @@ deploymentAnnotations: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
   enabled: true
+  runAsNonRoot: true
   capabilities:
     drop:
       - ALL
@@ -242,6 +244,12 @@ httpRoute:
   ## @param httpRoute.hostnames [array] Hostnames for the HTTPRoute
   hostnames: []
   #  - "llm-gateway.example.com"
+  ## httpRoute.timeouts Timeouts applied to the HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
+  timeouts:
+    ## @param httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
+    request: 1800s
+    ## @param httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
+    backendRequest: 600s
   ## Istio configuration
 istio:
   ## istio.virtualservice Virtual service configuration
@@ -321,6 +329,7 @@ proxy:
   ## @param proxy.securityContext [object] Security context for the proxy container (mirrors the main container's defaults)
   securityContext:
     enabled: true
+    runAsNonRoot: true
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
@@ -407,6 +416,18 @@ autoscaling:
   targetCPUUtilizationPercentage: 60
   # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
   # targetMemoryUtilizationPercentage: 70
+  ## @param autoscaling.behavior [object] HPA scaling behavior policies (autoscaling/v2 `.spec.behavior`)
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+        - type: Pods
+          value: 1
+          periodSeconds: 60
   ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
@@ -471,7 +492,7 @@ redis:
   master:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
-      - "--maxmemory-policy allkeys-lru"
+      - "--maxmemory-policy volatile-lru"
       - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}

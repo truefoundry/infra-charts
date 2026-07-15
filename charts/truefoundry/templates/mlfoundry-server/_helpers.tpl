@@ -216,14 +216,6 @@ Expand the name of the chart.
 - name: MULTITENANT
   value: "true"
 {{- end }}
-- name: K8S_SERVICE_ACCOUNT_NAME
-  valueFrom:
-    fieldRef:
-      fieldPath: spec.serviceAccountName
-- name: MLFOUNDRY_WIF_K8S_NAMESPACE
-  valueFrom:
-    fieldRef:
-      fieldPath: metadata.namespace
 {{- end }}
 
 {{/*
@@ -247,7 +239,7 @@ Resource Tier
 {{- end }}
 {{- end }}
 
-{{- define "mlfoundry-server.defaultResources.reduced.small" }}
+{{- define "mlfoundry-server.defaultResources.small" }}
 requests:
   cpu: 100m
   memory: 400Mi
@@ -258,7 +250,7 @@ limits:
   ephemeral-storage: 256Mi
 {{- end }}
 
-{{- define "mlfoundry-server.defaultResources.reduced.medium" }}
+{{- define "mlfoundry-server.defaultResources.medium" }}
 requests:
   cpu: 100m
   memory: 500Mi
@@ -269,7 +261,7 @@ limits:
   ephemeral-storage: 256Mi
 {{- end }}
 
-{{- define "mlfoundry-server.defaultResources.reduced.large" }}
+{{- define "mlfoundry-server.defaultResources.large" }}
 requests:
   cpu: 100m
   memory: 650Mi
@@ -280,59 +272,16 @@ limits:
   ephemeral-storage: 256Mi
 {{- end }}
 
-{{- define "mlfoundry-server.defaultResources.small" }}
-requests:
-  cpu: 100m
-  memory: 512Mi
-  ephemeral-storage: 128Mi
-limits:
-  cpu: 200m
-  memory: 1024Mi
-  ephemeral-storage: 256Mi
-{{- end }}
-
-{{- define "mlfoundry-server.defaultResources.medium" }}
-requests:
-  cpu: 200m
-  memory: 1024Mi
-  ephemeral-storage: 128Mi
-limits:
-  cpu: 400m
-  memory: 2048Mi
-  ephemeral-storage: 256Mi
-{{- end }}
-
-{{- define "mlfoundry-server.defaultResources.large" }}
-requests:
-  cpu: 600m
-  memory: 1536Mi
-  ephemeral-storage: 128Mi
-limits:
-  cpu: 1200m
-  memory: 3072Mi
-  ephemeral-storage: 256Mi
-{{- end }}
-
 {{- define "mlfoundry-server.resources" }}
 {{- $tier := include "mlfoundry-server.resourceTier" . }}
 
 {{- $defaultsYaml := "" }}
-{{- if .Values.mlfoundryServer.reducedResources }}
-{{- if eq $tier "small" }}
-  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.small" . }}
-{{- else if eq $tier "medium" }}
-  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.medium" . }}
-{{- else if eq $tier "large" }}
-  {{- $defaultsYaml = include "mlfoundry-server.defaultResources.reduced.large" . }}
-{{- end }}
-{{- else }}
 {{- if eq $tier "small" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.small" . }}
 {{- else if eq $tier "medium" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.medium" . }}
 {{- else if eq $tier "large" }}
   {{- $defaultsYaml = include "mlfoundry-server.defaultResources.large" . }}
-{{- end }}
 {{- end }}
 
 {{- $defaults := fromYaml $defaultsYaml | default dict }}

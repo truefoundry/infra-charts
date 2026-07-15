@@ -257,9 +257,11 @@ false
 {{- if eq (include "tfy-sandbox-server.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
+  {{- if .Values.global.customCA.securityContext.enabled }}
   {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml (omit . "enabled") | nindent 4 }}
+  {{- end }}
   {{- end }}
   command: ["sh", "-c"]
   args:
