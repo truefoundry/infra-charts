@@ -1,0 +1,20 @@
+{{- if .Values.tfyInfraManager.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tfy-infra-manager.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-infra-manager.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-infra-manager.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.tfyInfraManager.service.type }}
+  ports:
+    - port: {{ .Values.tfyInfraManager.service.port }}
+      targetPort: {{ .Values.tfyInfraManager.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-infra-manager") | nindent 4 }}
+{{- end }}

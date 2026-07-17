@@ -1,0 +1,102 @@
+{{- if .Values.tfyInfraManager.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-infra-manager.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-infra-manager.deploymentLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-infra-manager.deploymentAnnotations" . | nindent 4 }}
+spec:
+  replicas: {{- include "tfy-infra-manager.replicas" . | indent 1 }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-infra-manager") | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- include "tfy-infra-manager.podAnnotations" . | nindent 8 }}
+      labels:
+        {{- include "tfy-infra-manager.podLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-infra-manager.serviceAccountName" . }}
+      {{- if .Values.tfyInfraManager.podSecurityContext.enabled }}
+      {{- with .Values.tfyInfraManager.podSecurityContext }}
+      securityContext:
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
+      initContainers:
+        {{- include "truefoundry.customCA.initContainer" . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "tfy-infra-manager"
+          {{- if .Values.tfyInfraManager.securityContext.enabled }}
+          {{- with .Values.tfyInfraManager.securityContext }}
+          securityContext:
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          env:
+            {{- include "tfy-infra-manager.env" . | trim | nindent 12 }}
+          image: "{{ .Values.tfyInfraManager.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyInfraManager.image.repository }}:{{ .Values.tfyInfraManager.image.tag }}"
+          imagePullPolicy: {{ .Values.tfyInfraManager.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tfyInfraManager.service.port }}
+              protocol: TCP
+          resources:
+            {{- include "tfy-infra-manager.resources" . | indent 12 }}
+          livenessProbe:
+            failureThreshold: {{ .Values.tfyInfraManager.livenessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyInfraManager.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyInfraManager.livenessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyInfraManager.livenessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyInfraManager.livenessProbe.timeoutSeconds }}
+            httpGet:
+              path: /api/health
+              port: {{ .Values.tfyInfraManager.service.port }}
+          readinessProbe:
+            failureThreshold: {{ .Values.tfyInfraManager.readinessProbe.failureThreshold }}
+            initialDelaySeconds: {{ .Values.tfyInfraManager.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.tfyInfraManager.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.tfyInfraManager.readinessProbe.successThreshold }}
+            timeoutSeconds: {{ .Values.tfyInfraManager.readinessProbe.timeoutSeconds }}
+            httpGet:
+              path: /api/health
+              port: {{ .Values.tfyInfraManager.service.port }}
+          volumeMounts:
+            {{- include "tfy-infra-manager.volumeMounts" . | nindent 12 }}
+      imagePullSecrets:
+        {{- include "tfy-infra-manager.imagePullSecrets" . | nindent 8 }}
+      volumes:
+        {{- include "tfy-infra-manager.volumes" . | nindent 8 }}
+      {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyInfraManager.nodeSelector) }}
+      {{- if $mergedNodeSelector }}
+      nodeSelector:
+        {{- toYaml $mergedNodeSelector | nindent 8 }}
+      {{- end }}
+      {{- $mergedAffinity := dict | merge .Values.tfyInfraManager.affinity .Values.global.affinity }}
+      {{- if $mergedAffinity }}
+      affinity:
+      {{- toYaml $mergedAffinity | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.tfyInfraManager.topologySpreadConstraints }}
+        {{- toYaml .Values.tfyInfraManager.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "truefoundry.selectorLabels" (dict "context" . "name" "tfy-infra-manager") | nindent 14 }}
+        {{- end }}
+      tolerations:
+        {{- .Values.global.tolerations | toYaml | nindent 8 }}
+        {{- if .Values.tfyInfraManager.tolerations }}
+        {{- .Values.tfyInfraManager.tolerations | toYaml | nindent 8 }}
+        {{- end }}
+{{- end }}

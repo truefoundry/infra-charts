@@ -29,9 +29,9 @@ spec:
         {{- include "tfy-otel-collector.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-otel-collector.serviceAccountName" . }}
-      {{- if .Values.podSecurityContext.enabled }}
+      {{- with (include "tfy-otel-collector.podSecurityContext" (dict "local" .Values.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
+        {{- . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- $initContainers := include "tfy-otel-collector.customCA.initContainer" . | trim }}
@@ -41,9 +41,9 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          {{- if .Values.securityContext.enabled }}
+          {{- with (include "tfy-otel-collector.containerSecurityContext" (dict "local" .Values.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml (omit .Values.securityContext "enabled") | nindent 12 }}
+            {{- . | nindent 12 }}
           {{- end }}
           env:
             {{- include "tfy-otel-collector.env" . | trim | nindent 12 }}
