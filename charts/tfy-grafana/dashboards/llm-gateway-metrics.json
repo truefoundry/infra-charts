@@ -3806,6 +3806,559 @@
       ],
       "title": "Iteration Limit Reached",
       "type": "timeseries"
+    },
+    {
+      "type": "row",
+      "id": 59,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "title": "Span Export Health",
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 60,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 41
+      },
+      "title": "Spans Accepted (rate)",
+      "description": "Rate of ai_gateway_spans_accepted_total \u2014 spans that passed the gateway's span processor checks and were handed to the exporter. Top of the export funnel; baseline for what should reach the collector.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "cps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(ai_gateway_spans_accepted_total{tenant_name=~\"$tenant_name\"}[5m]))",
+          "legendFormat": "accepted"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 61,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 41
+      },
+      "title": "Spans Exported by Outcome (rate)",
+      "description": "Rate of ai_gateway_spans_exported_total split success vs failed. Counts SPANS (advances by the batch's span count when each export batch settles; retries are not double-counted) — same per-span unit as ai_gateway_spans_accepted_total, so the two are directly comparable. At steady state 'success' should track 'accepted'; any 'failed' is telemetry lost at the collector hop.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "cps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "success"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (outcome) (rate(ai_gateway_spans_exported_total{tenant_name=~\"$tenant_name\"}[5m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 62,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 41
+      },
+      "title": "Span Drops (rate)",
+      "description": "Rate of ai_gateway_span_drops_total \u2014 spans dropped by the gateway span processor BEFORE export (should_trace off, or missing created_by_subject). Distinct from export failures: these never entered the exporter. See 'Drops by Reason' for the breakdown.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "cps",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(ai_gateway_span_drops_total{tenant_name=~\"$tenant_name\"}[5m]))",
+          "legendFormat": "drops"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 63,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "title": "Successful Exports by Tenant (rate)",
+      "description": "rate(ai_gateway_spans_exported_total{outcome=\"success\"}) grouped by tenant_name \u2014 spans that actually reached the collector per tenant. Compare against 'Accepted by Tenant' to spot per-tenant loss.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (tenant_name) (rate(ai_gateway_spans_exported_total{tenant_name=~\"$tenant_name\", outcome=\"success\"}[5m]))",
+          "legendFormat": "{{tenant_name}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 64,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "title": "Failed Exports by Tenant & Reason (rate)",
+      "description": "rate(ai_gateway_spans_exported_total{outcome=\"failed\"}) grouped by tenant_name AND reason. Reason buckets: timeout / connection_refused / http_4xx / http_5xx / unknown. A tenant spiking here is losing telemetry; the reason says where to look.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "cps",
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (tenant_name, reason) (rate(ai_gateway_spans_exported_total{tenant_name=~\"$tenant_name\", outcome=\"failed\"}[5m]))",
+          "legendFormat": "{{tenant_name}} \u00b7 {{reason}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 65,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "title": "Accepted by Tenant (rate)",
+      "description": "rate(ai_gateway_spans_accepted_total) grouped by tenant_name \u2014 per-tenant baseline entering the export path. High accepted but low successful export = downstream loss for that tenant.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (tenant_name) (rate(ai_gateway_spans_accepted_total{tenant_name=~\"$tenant_name\"}[5m]))",
+          "legendFormat": "{{tenant_name}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 66,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "title": "Drops by Reason (rate)",
+      "description": "rate(ai_gateway_span_drops_total) grouped by reason. should_trace_false = tracing intentionally off (usually expected). missing_created_by_subject_child = request context not propagated. missing_created_by_subject_root = 'should never happen' bug \u2014 investigate any non-zero.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "cps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "missing_created_by_subject_root"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (reason) (rate(ai_gateway_span_drops_total{tenant_name=~\"$tenant_name\"}[5m]))",
+          "legendFormat": "{{reason}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": 67,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "title": "Failed Exports by Tenant & Reason \u2014 total over selected range",
+      "description": "Total count (not a rate) of failed exported spans over the dashboard's time range, per tenant \u00d7 reason, via increase(...[$__range]). Tracks the time picker \u2014 widen the range to include when failures occurred. NOTE: increase() extrapolates to range edges, so values are estimates and may be fractional. Empty means the counter didn't grow in the selected window (failures may be older).",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true
+          },
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed spans (range total)"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 100
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "failed spans (range total)",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (tenant_name, reason) (increase(ai_gateway_spans_exported_total{tenant_name=~\"$tenant_name\", outcome=\"failed\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "tenant_name": "Tenant",
+              "reason": "Reason",
+              "Value": "failed spans (range total)"
+            }
+          }
+        }
+      ]
     }
   ],
   "preload": false,
@@ -3914,5 +4467,5 @@
   "timezone": "",
   "title": "AI Gateway",
   "uid": "f48ec727-e7cc-4cfd-86de-7ab68db8803f",
-  "version": 1
+  "version": 2
 }
