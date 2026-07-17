@@ -18,20 +18,16 @@ spec:
       labels:
         {{- include "bootstrap.podlabels" . | nindent 8 }}
     spec:
-      {{- if .Values.truefoundryBootstrap.podSecurityContext.enabled }}
-      {{- with .Values.truefoundryBootstrap.podSecurityContext }}
+      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.truefoundryBootstrap.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-        {{- toYaml (omit . "enabled") | nindent 8 }}
-      {{- end }}
+        {{- . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "bootstrap.serviceAccountName" . }}
       containers:
       - name: truefoundry-bootstrap-job
-        {{- if .Values.truefoundryBootstrap.securityContext.enabled }}
-        {{- with .Values.truefoundryBootstrap.securityContext }}
+        {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.truefoundryBootstrap.securityContext "global" .Values.global.containerSecurityContext)) }}
         securityContext:
-          {{- toYaml (omit . "enabled") | nindent 10 }}
-        {{- end }}
+          {{- . | nindent 10 }}
         {{- end }}
         image: {{ .Values.truefoundryBootstrap.image.registry | default .Values.global.image.registry }}/{{ .Values.truefoundryBootstrap.image.repository }}:{{ .Values.truefoundryBootstrap.image.tag }}
         resources:

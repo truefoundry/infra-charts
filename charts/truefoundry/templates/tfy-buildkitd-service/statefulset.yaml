@@ -24,9 +24,9 @@ spec:
       imagePullSecrets:
         {{- include "tfy-buildkitd-service.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "tfy-buildkitd-service.serviceAccountName" . }}
-      {{- if .Values.tfyBuildkitdService.podSecurityContext.enabled }}
+      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyBuildkitdService.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-        {{- toYaml (omit .Values.tfyBuildkitdService.podSecurityContext "enabled") | nindent 8 }}
+        {{- . | nindent 8 }}
       {{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
@@ -37,9 +37,9 @@ spec:
               {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 14 }}
       containers:
         - name: tfy-buildkitd-service
-          {{- if .Values.tfyBuildkitdService.securityContext.enabled }}
+          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyBuildkitdService.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml (omit .Values.tfyBuildkitdService.securityContext "enabled") | nindent 12 }}
+            {{- . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.tfyBuildkitdService.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuildkitdService.image.repository }}:{{ .Values.tfyBuildkitdService.image.tag }}"
           imagePullPolicy: {{ .Values.tfyBuildkitdService.image.pullPolicy }}
