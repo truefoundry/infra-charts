@@ -459,6 +459,19 @@ data:
       }
       {{- end }}
 
+      {{- if .Values.tfyInfraManager.enabled }}
+      # /admin/infra-manager and /admin/infra-manager/* → / on upstream:8080 (IM serves SPA + API at root
+      @infra_manager path /admin/infra-manager /admin/infra-manager/*
+      handle @infra_manager {
+        forward_auth {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }} {
+          uri /auth/forward-auth/tenant-admin
+          copy_headers X-Forwarded-User X-Forwarded-Email X-Tenant-Name
+        }
+        uri strip_prefix /admin/infra-manager
+        reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}
+      }
+      {{- end }}
+
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}

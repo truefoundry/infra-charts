@@ -30,11 +30,9 @@ spec:
         {{- include "tfy-proxy.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-proxy.serviceAccountName" . }}
-      {{- if .Values.tfyProxy.podSecurityContext.enabled }}
-      {{- with .Values.tfyProxy.podSecurityContext }}
+      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyProxy.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-        {{- toYaml (omit . "enabled") | nindent 8 }}
-      {{- end }}
+        {{- . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.tfyProxy.terminationGracePeriodSeconds | default 300 }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
@@ -43,11 +41,9 @@ spec:
       {{- end }}
       containers:
         - name: "tfy-proxy"
-          {{- if .Values.tfyProxy.securityContext.enabled }}
-          {{- with .Values.tfyProxy.securityContext }}
+          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyProxy.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml (omit . "enabled") | nindent 12 }}
-          {{- end }}
+            {{- . | nindent 12 }}
           {{- end }}
           env:
             {{- include "tfy-proxy.env" . | trim | nindent 12 }}
