@@ -24,11 +24,9 @@ spec:
       imagePullSecrets:
         {{- include "deltafusion-ingestor.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "deltafusion-ingestor.serviceAccountName" . }}
+      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.deltaFusionIngestor.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-      {{- if .Values.deltaFusionIngestor.podSecurityContext.enabled }}
-        {{- toYaml (omit .Values.deltaFusionIngestor.podSecurityContext "enabled") | nindent 8 }}
-      {{- else }}
-        fsGroup: {{ .Values.deltaFusionIngestor.podSecurityContext.fsGroup | default 100 }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -36,11 +34,9 @@ spec:
       {{- end }}
       containers:
         - name: "deltafusion-ingestor"
-          {{- if .Values.deltaFusionIngestor.securityContext.enabled }}
-          {{- with .Values.deltaFusionIngestor.securityContext }}
+          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.deltaFusionIngestor.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml (omit . "enabled") | nindent 12 }}
-          {{- end }}
+            {{- . | nindent 12 }}
           {{- end }}
           {{- if .Values.deltaFusionIngestor.image.optimized }}
           image: "{{ .Values.deltaFusionIngestor.image.registry | default .Values.global.image.registry }}/{{ .Values.deltaFusionIngestor.image.repository }}:{{ .Values.deltaFusionIngestor.image.tag }}-optimized"

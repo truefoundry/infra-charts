@@ -801,14 +801,7 @@ spec:
         {{- toYaml . | nindent 10 }}
         {{- end }}
         resources:
-          requests:
-            cpu: 500m
-            ephemeral-storage: 10Gi
-            memory: 700Mi
-          limits:
-            cpu: 1000m
-            ephemeral-storage: 30Gi
-            memory: 1024Mi
+          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources | nindent 10 }}
         securityContext:
           privileged: true
         volumeMounts:
