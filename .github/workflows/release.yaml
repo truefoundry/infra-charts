@@ -1,10 +1,32 @@
+# truefoundry and tfy-llm-gateway are released from their OWN
+# release/truefoundry-X.Y.Z branch (the release/ prefix keeps the branch out
+# of chart-releaser's identically-named tag namespace — see
+# truefoundry/helm-charts' release-public-truefoundry.yaml), not from main.
+# That workflow only fast-forwards main for the current latest shipped line.
+# The "Exclude branch-released charts from main" step below makes that
+# exclusion robust on the main trigger regardless of what main's Chart.yaml
+# happens to contain; the release/truefoundry-* trigger relies on
+# chart-releaser's own CR_SKIP_EXISTING to no-op on any OTHER chart that
+# hasn't changed there.
 name: Release Charts
 
 on:
   push:
     branches:
       - main
+      - "release/truefoundry-[0-9]*"
   workflow_dispatch:
+
+# Every run of this workflow ends by regenerating index.html on gh-pages and
+# pushing it (chart-releaser also pushes index.yaml there). Rapid consecutive
+# pushes — e.g. a release branch cut + chart copy + README regen landing
+# within a minute — used to run concurrently and race each other on gh-pages,
+# failing the loser with a non-fast-forward rejection. Queue them instead
+# (never cancel: each triggering commit may carry a different chart to
+# release).
+concurrency:
+  group: release-charts-gh-pages
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -23,10 +45,36 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Exclude branch-released charts from main
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          # chart-releaser scans the working tree, not git history — removing
+          # these on disk (this ephemeral checkout is discarded after the job,
+          # nothing is pushed) is enough to keep it from ever tagging/releasing
+          # them off a main push.
+          rm -rf charts/truefoundry charts/tfy-llm-gateway
+
       - name: Set up Helm
         uses: azure/setup-helm@v4.3.0
         with:
           version: v3.17.3
+
+      # Chart dependencies resolved from an OCI registry (e.g. truefoundry's
+      # tfy-llm-gateway dep) may live in a registry that doesn't allow
+      # anonymous pulls (fork/sandbox registries; prod's is public). Log in
+      # when creds are configured so chart-releaser's dependency resolution
+      # works either way.
+      - name: Helm registry login (for OCI chart dependencies)
+        env:
+          REGISTRY_HOST: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
+          REGISTRY_USER: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
+          REGISTRY_PASS: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
+        run: |
+          if [ -n "$REGISTRY_HOST" ] && [ -n "$REGISTRY_USER" ]; then
+            helm registry login "$REGISTRY_HOST" -u "$REGISTRY_USER" -p "$REGISTRY_PASS"
+          else
+            echo "Registry host/creds unset; relying on anonymous pulls."
+          fi
 
       - name: Add Helm dependencies
         run: |
@@ -47,6 +95,34 @@ jobs:
         env:
           CR_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
           CR_SKIP_EXISTING: true
+          # Never let a newly-created release take the repo's "Latest" badge
+          # implicitly — GitHub defaults it to the newest-CREATED release, so
+          # an older-line hotfix (e.g. truefoundry-0.140.6 shipped after
+          # 0.148.0) would steal the badge from the actual newest version.
+          # The step below re-asserts the correct one deterministically.
+          CR_MAKE_RELEASE_LATEST: false
+
+      # Deterministically point the repo's "Latest" badge at the
+      # highest-semver FINAL truefoundry release, regardless of creation
+      # order (chart-releaser above never sets it).
+      - name: Mark highest truefoundry release as Latest
+        env:
+          GH_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
+        run: |
+          # `|| true` on the grep: zero matching tags is a legitimate state
+          # (fresh repo, or only RC/other-chart releases exist) handled by the
+          # empty-HIGHEST branch below — without it, grep's non-zero exit
+          # would abort the whole step under `pipefail` before that handler
+          # runs, killing the rest of the job (including the gh-pages steps).
+          HIGHEST=$(gh api "repos/${GITHUB_REPOSITORY}/releases" --paginate --jq '.[].tag_name' \
+            | { grep -E '^truefoundry-[0-9]+\.[0-9]+\.[0-9]+$' || true; } \
+            | sed 's/truefoundry-//' | sort -V | tail -1)
+          if [ -z "$HIGHEST" ]; then
+            echo "No final truefoundry-X.Y.Z release found; leaving Latest untouched."
+            exit 0
+          fi
+          RID=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/truefoundry-${HIGHEST}" --jq .id)
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/releases/${RID}" -f make_latest=true --jq '"Latest -> " + .tag_name'
 
       - name: Checkout to gh-pages
         uses: actions/checkout@v4

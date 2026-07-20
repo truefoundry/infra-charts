@@ -104,6 +104,11 @@ spec:
             cluster-name: "{{ .Values.clusterName }}"
             volume-type: csi-ebs
             truefoundry.com/managed: "true"
+            truefoundry-cluster-name: "{{ .Values.clusterName }}"
+            truefoundry-managed: "true"
+            {{- range $k, $v := .Values.tags }}
+            {{ $k }}: {{ $v | quote }}
+            {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
             {{- toYaml $mergedTolerations | nindent 14 }}
@@ -140,8 +145,5 @@ spec:
         {{- end }}
   project: tfy-apps
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.aws.awsEbsCsiDriver.syncPolicy | nindent 4 }}
 {{- end }}

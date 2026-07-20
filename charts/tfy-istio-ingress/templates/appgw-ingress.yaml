@@ -1,0 +1,90 @@
+{{- $allHosts := list }}
+{{- range .Values.appgw.ingress.domains }}
+{{- range .hosts }}
+{{- $allHosts = append $allHosts . }}
+{{- end }}
+{{- end }}
+{{- $hasWildcard := has "*" $allHosts }}
+{{- if and .Values.appgw.ingress.enabled .Values.appgw.ingress.domains }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-appgw-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-istio-ingress.appgwLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-istio-ingress.appgwAnnotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
+  rules:
+  {{- if $hasWildcard }}
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}
+            port:
+              number: 80
+  {{- else }}
+  {{- range $allHosts }}
+  - host: {{ . | quote }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $.Release.Name }}
+            port:
+              number: 80
+  {{- end }}
+  {{- end }}
+  tls:
+    {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
+{{- if and .Values.appgw.ingress.flyte.enabled .Values.appgw.ingress.domains }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-appgw-flyte-ingress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-istio-ingress.appgwLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-istio-ingress.appgwAnnotations" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.appgw.ingress.ingressClassName }}
+  rules:
+  {{- if $hasWildcard }}
+  - http:
+      paths:
+      - path: /flyteidl.service.AdminService
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}
+            port:
+              number: 80
+      {{- include "tfy-istio-ingress.additionalHttp2Paths" (dict "paths" .Values.appgw.ingress.additionalHttp2Paths "releaseName" $.Release.Name) | nindent 6 }}
+  {{- else }}
+  {{- range $allHosts }}
+  - host: {{ . | quote }}
+    http:
+      paths:
+      - path: /flyteidl.service.AdminService
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $.Release.Name }}
+            port:
+              number: 80
+      {{- include "tfy-istio-ingress.additionalHttp2Paths" (dict "paths" $.Values.appgw.ingress.additionalHttp2Paths "releaseName" $.Release.Name) | nindent 6 }}
+  {{- end }}
+  {{- end }}
+  tls:
+    {{- toYaml .Values.appgw.ingress.domains | nindent 4 }}
+{{- end }}
+{{- end }}

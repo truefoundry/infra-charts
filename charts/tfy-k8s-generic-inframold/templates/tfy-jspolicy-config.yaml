@@ -26,9 +26,5 @@ spec:
       values: ""
       {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.jspolicy.config.syncPolicy | nindent 4 }}
 {{- end }}

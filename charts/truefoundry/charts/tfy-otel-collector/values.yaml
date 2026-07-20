@@ -41,6 +41,14 @@ global:
     registry: "tfy.jfrog.io"
   ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
   namespaceOverride: ""
+  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
+  podSecurityContext:
+    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
+    enabled: true
+  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
+  containerSecurityContext:
+    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
+    enabled: true
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -66,7 +74,9 @@ global:
         sizeLimit: ""
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
-      enabled: true
+      ## Enable/disable this to override the global.containerSecurityContext
+      # enabled: true
+      runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
@@ -113,7 +123,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.151.0
+  tag: v0.158.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -138,7 +148,8 @@ podAnnotations: {}
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext:
-  enabled: true
+  ## Enable/disable this to override the global.podSecurityContext
+  # enabled: true
   runAsNonRoot: true
   runAsUser: 1001
 ## @param commonLabels [object] Common labels
@@ -151,7 +162,9 @@ deploymentAnnotations: {}
 deploymentLabels: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
-  enabled: true
+  ## Enable/disable this to override the global.containerSecurityContext
+  # enabled: true
+  runAsNonRoot: true
   capabilities:
     drop:
       - ALL

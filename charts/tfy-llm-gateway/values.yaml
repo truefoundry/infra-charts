@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.151.0"
+  gatewayChartVersion: "0.158.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -54,6 +54,14 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
+  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
+  podSecurityContext:
+    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
+    enabled: true
+  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
+  containerSecurityContext:
+    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
+    enabled: true
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -79,7 +87,9 @@ global:
         sizeLimit: ""
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
-      enabled: true
+      ## Enable/disable this to override the global.containerSecurityContext
+      # enabled: true
+      runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
@@ -102,7 +112,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.151.0
+  tag: v0.158.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -122,7 +132,8 @@ podAnnotations: {}
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext:
-  enabled: true
+  ## Enable/disable this to override the global.podSecurityContext
+  # enabled: true
   runAsNonRoot: true
   runAsUser: 1001
 ## @param commonLabels Common labels
@@ -135,7 +146,9 @@ deploymentLabels: {}
 deploymentAnnotations: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
-  enabled: true
+  ## Enable/disable this to override the global.containerSecurityContext
+  # enabled: true
+  runAsNonRoot: true
   capabilities:
     drop:
       - ALL
@@ -242,6 +255,12 @@ httpRoute:
   ## @param httpRoute.hostnames [array] Hostnames for the HTTPRoute
   hostnames: []
   #  - "llm-gateway.example.com"
+  ## httpRoute.timeouts Timeouts applied to the HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
+  timeouts:
+    ## @param httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
+    request: 1800s
+    ## @param httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
+    backendRequest: 600s
   ## Istio configuration
 istio:
   ## istio.virtualservice Virtual service configuration
@@ -320,7 +339,9 @@ proxy:
       memory: 256Mi
   ## @param proxy.securityContext [object] Security context for the proxy container (mirrors the main container's defaults)
   securityContext:
-    enabled: true
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
@@ -407,6 +428,18 @@ autoscaling:
   targetCPUUtilizationPercentage: 60
   # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
   # targetMemoryUtilizationPercentage: 70
+  ## @param autoscaling.behavior [object] HPA scaling behavior policies (autoscaling/v2 `.spec.behavior`)
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      selectPolicy: Max
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+        - type: Pods
+          value: 1
+          periodSeconds: 60
   ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
@@ -438,6 +471,13 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Sandbox configuration
+sandbox:
+  ## sandbox.devMode devMode sandbox configuration
+  devMode:
+    ## @param sandbox.devMode.enabled Enable devMode sandbox
+    enabled: true
+
 ## Redis dependency configuration
 redis:
   global:
@@ -464,18 +504,12 @@ redis:
   master:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
-      - "--maxmemory-policy allkeys-lru"
+      - "--maxmemory-policy volatile-lru"
       - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
     ## @skip redis.master.tolerations Tolerations for Redis master pods
-    tolerations:
-      - key: class.truefoundry.io/control-plane
-        effect: NoSchedule
-        operator: Exists
-      - key: class.truefoundry.com/component
-        value: critical
-        effect: NoSchedule
+    tolerations: []
     ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
     affinity:
       nodeAffinity:

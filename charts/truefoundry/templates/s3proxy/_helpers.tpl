@@ -194,6 +194,9 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumes = append $volumes (dict "name" "config-vol" "configMap" (dict "name" (include "s3proxy.configmapName" .))) }}
+{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "s3proxy.resourceTier" "defaultResourcesPrefix" "s3proxy.defaultResources" "resourcesValues" .Values.s3proxy.resources) | fromYaml }}
+{{- $tmpSizeLimit := .Values.s3proxy.emptyDir.tmpdir.sizeLimit | default $tmpVolume.emptyDir.sizeLimit -}}
+{{- $volumes = append $volumes (dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $tmpSizeLimit)) -}}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
@@ -210,6 +213,7 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumeMounts = append $volumeMounts (dict "name" "config-vol" "mountPath" "/opt/s3proxy/config.properties" "subPath" "config.properties") }}
+{{- $volumeMounts = append $volumeMounts (dict "name" "tmp-dir" "mountPath" "/tmp") -}}
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}

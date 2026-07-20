@@ -1,0 +1,93 @@
+# truefoundry / tfy-llm-gateway are ONLY ever supposed to reach this repo via
+# truefoundry/helm-charts' release-start.yml pipeline, landing on their own
+# truefoundry-X.Y.Z branch (see release.yaml's "Exclude branch-released
+# charts from main" step — main never publishes these two, on purpose).
+#
+# A manual version bump against THIS repo's main would otherwise merge
+# silently and just as silently never publish (release.yaml strips these
+# chart directories before chart-releaser runs on a main push). Worse, if
+# the exclusion were ever removed/bypassed, a manual bump could get
+# chart-releaser to publish a version helm-charts has no tag for — and if
+# the real orchestrated pipeline later tries to ship that SAME version
+# number, chart-releaser's skip-existing logic would silently skip the real
+# release in favor of the stray manual one. Block the mistake here, at PR
+# time, instead of relying on either failure mode.
+#
+# NOTE: for this to actually BLOCK a merge (not just show as a failing,
+# ignorable check), this job must be added as a required status check on
+# main via this repo's branch ruleset. The workflow alone only reports
+# failure; GitHub only prevents merging when a failing check is required.
+name: Block version bump on main
+
+# NOTE: no `paths:` filter, deliberately — this job is wired as a REQUIRED
+# status check on main, and a required check that never reports (because the
+# PR didn't touch the filtered paths) shows as "Expected" and blocks the
+# merge forever. Running on every PR is cheap: the version-diff below no-ops
+# when the Chart.yaml files didn't change.
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  block-version-bump:
+    # NOTE: the promote-PR exemption below is implemented as step-level
+    # conditions (job always runs, reports an explicit SUCCESS for exempt
+    # PRs) rather than a job-level `if` that skips the whole job. This job
+    # is wired as a REQUIRED status check; an explicit success removes any
+    # dependence on GitHub's "skipped check satisfies required checks"
+    # semantics, which differ between skip mechanisms and have changed
+    # historically.
+    runs-on: ubuntu-latest
+    steps:
+      # The pipeline's own promote-to-main PRs use the release branch itself
+      # as the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
+      # release-public-truefoundry.yaml) and are the ONE sanctioned way these
+      # chart versions reach main — pass those explicitly. The exemption is
+      # deliberately strict: the head must live in THIS repo (a fork branch
+      # named release/truefoundry-* is not a pipeline promote) and must match
+      # the exact release/truefoundry-X.Y.Z semver shape (a prefix-only match
+      # would also exempt e.g. release/truefoundry-experiment). GitHub
+      # expressions have no regex, so the match is done in shell here.
+      - name: Determine whether this is a sanctioned promote PR
+        id: promote
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ] \
+             && printf '%s' "$HEAD_REF" | grep -Eq '^release/truefoundry-[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "exempt=true" >> "$GITHUB_OUTPUT"
+            echo "Head branch '$HEAD_REF' is this repo's own release branch promote — version bumps are expected here."
+          else
+            echo "exempt=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch PR base commit
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
+        run: git fetch --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+
+      - name: Fail if Chart.yaml version changed
+        if: ${{ steps.promote.outputs.exempt == 'false' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          FAILED=0
+          for CHART in charts/truefoundry/Chart.yaml charts/tfy-llm-gateway/Chart.yaml; do
+            if ! git cat-file -e "${BASE_SHA}:${CHART}" 2>/dev/null; then
+              continue
+            fi
+            BASE_VERSION=$(git show "${BASE_SHA}:${CHART}" | yq e '.version' -)
+            HEAD_VERSION=$(yq e '.version' "$CHART")
+            if [ "$BASE_VERSION" != "$HEAD_VERSION" ]; then
+              echo "::error file=${CHART}::${CHART} version changed from ${BASE_VERSION} to ${HEAD_VERSION} in a PR targeting main. This chart is released exclusively through truefoundry/helm-charts' release-start.yml pipeline, which lands it on its own truefoundry-X.Y.Z branch here — a version bumped directly on main here is never published (and could silently block a future real release at the same version)."
+              FAILED=1
+            fi
+          done
+          exit $FAILED

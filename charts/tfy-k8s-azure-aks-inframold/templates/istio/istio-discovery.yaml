@@ -18,7 +18,7 @@ spec:
   source:
     chart: istiod
     repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/charts{{ else }}https://istio-release.storage.googleapis.com/charts{{ end }}
-    targetRevision: 1.28.2
+    targetRevision: 1.30.0
     helm:
       values: |-
         {{- if .Values.istio.discovery.valuesOverride }}
@@ -74,9 +74,5 @@ spec:
         {{- end }}
 
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.istio.discovery.syncPolicy | nindent 4 }}
 {{- end }}

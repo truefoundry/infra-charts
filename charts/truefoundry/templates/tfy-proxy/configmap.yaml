@@ -212,6 +212,12 @@ data:
       }
       {{- end }}
 
+      # /mcp → /v1/tfy-mcp on upstream:3000
+      handle /mcp {
+        rewrite * /v1/tfy-mcp
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
       # /api/svc → / on upstream:3000
       handle /api/svc/* {
         uri strip_prefix /api/svc
@@ -232,14 +238,6 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # OAuth2 MCP routes - reroute clean external URLs to internal service paths
-      # External clients access clean URLs that get rewritten to upstream paths:
-      # - /.well-known/* → /oauth2-mcp/.well-known/*
-      # - /oauth2/authorize → /oauth2-mcp/authorize
-      # - /oauth2/token → /oauth2-mcp/token
-      # - /oauth2/register → /oauth2-mcp/register
-      # - /oauth2/callback → /oauth2-mcp/callback
-
       {{- if .Values.global.proxy.llmGateway.external }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
@@ -257,15 +255,18 @@ data:
       }
       {{- end }}
 
-      # /.well-known/* → /oauth2-mcp/.well-known/*
-      handle /.well-known/* {
-        uri replace /.well-known /oauth2-mcp/.well-known
+      # RFC 8414 well-known discovery (prepended form) -> server's path-appended form on upstream:3000
+      # /.well-known/openid-configuration/api/svc/<rest> -> /<rest>/.well-known/openid-configuration
+      handle /.well-known/openid-configuration/api/svc/* {
+        uri replace /.well-known/openid-configuration/api/svc ""
+        rewrite {path}/.well-known/openid-configuration
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
-      # /oauth2/* → /oauth2-mcp/* (authorize, token, register, callback)
-      handle /oauth2/* {
-        uri replace /oauth2 /oauth2-mcp
+      # /.well-known/oauth-authorization-server/api/svc/<rest> -> /<rest>/.well-known/oauth-authorization-server
+      handle /.well-known/oauth-authorization-server/api/svc/* {
+        uri replace /.well-known/oauth-authorization-server/api/svc ""
+        rewrite {path}/.well-known/oauth-authorization-server
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
       }
 
@@ -311,11 +312,60 @@ data:
       }
       {{- end }}
 
-      # /api/ml -> / on upstream:5000
+      {{- if .Values.global.proxy.mlfToSvcEnabled }}
+      # /api/ml: whitelist → servicefoundry; default → mlfoundry (kill switch: global.proxy.mlfToSvcEnabled)
+      # mlfoundry-only legacy paths (not on svc) — must precede @ml_to_svc blanket mlfoundry-artifacts/*
+      @ml_on_mlf {
+        path /api/ml/api/2.0/mlflow/mlfoundry-artifacts/model-versions/export-deployment-files-by-fqn
+      }
+      handle @ml_on_mlf {
+        uri strip_prefix /api/ml
+        reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}
+      }
+
+      @ml_to_svc {
+        path /api/ml/v1/ml-repos /api/ml/v1/ml-repos/*
+        path /api/ml/v1/artifacts /api/ml/v1/artifacts/*
+        path /api/ml/v1/artifact-versions /api/ml/v1/artifact-versions/*
+        path /api/ml/v1/models /api/ml/v1/models/*
+        path /api/ml/v1/model-versions /api/ml/v1/model-versions/*
+        path /api/ml/v1/agent-skills /api/ml/v1/agent-skills/*
+        path /api/ml/v1/agent-skill-versions /api/ml/v1/agent-skill-versions/*
+        path /api/ml/v1/prompts /api/ml/v1/prompts/*
+        path /api/ml/v1/prompt-versions /api/ml/v1/prompt-versions/*
+        path /api/ml/v1/data-directories /api/ml/v1/data-directories/*
+        path /api/ml/v1/x/artifact-versions /api/ml/v1/x/artifact-versions/*
+        path /api/ml/v1/x/deleted-entities /api/ml/v1/x/deleted-entities/*
+        path /api/ml/v1/x/delete-entity /api/ml/v1/x/delete-entity/*
+        path /api/ml/v1/x/prompts/count /api/ml/v1/x/prompts/count/*
+        path /api/ml/v1/x/prompt-versions /api/ml/v1/x/prompt-versions/*
+        path /api/ml/v1/x/prompt-versions/validate /api/ml/v1/x/prompt-versions/validate/*
+        path /api/ml/v1/x/agent-skill-versions/bulk-get /api/ml/v1/x/agent-skill-versions/bulk-get/*
+        path /api/ml/v1/x/agent-skill-versions/presigned-urls /api/ml/v1/x/agent-skill-versions/presigned-urls/*
+        path /api/ml/api/2.0/mlflow/runs /api/ml/api/2.0/mlflow/runs/*
+        path /api/ml/api/2.0/mlflow/metrics /api/ml/api/2.0/mlflow/metrics/*
+        path /api/ml/api/2.0/mlflow/mlfoundry-artifacts /api/ml/api/2.0/mlflow/mlfoundry-artifacts/*
+        path /api/ml/api/2.0/mlflow/experiments/hard-delete
+        path /api/ml/api/2.0/mlflow/experiments/columns
+        path /api/ml/api/2.0/preview/mlflow/runs/search
+        path /api/ml/api/2.0mlflow/runs/get-by-name
+      }
+      handle @ml_to_svc {
+        uri strip_prefix /api/ml
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+
       handle /api/ml/* {
         uri strip_prefix /api/ml
         reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}
       }
+      {{- else }}
+      # /api/ml -> / on upstream:5000 (kill switch off: global.proxy.mlfToSvcEnabled=false)
+      handle /api/ml/* {
+        uri strip_prefix /api/ml
+        reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}
+      }
+      {{- end }}
 
       {{- if .Values.global.proxy.tfyLLMAgentURL }}
       # /api/agent → / on upstream:8080
@@ -406,6 +456,19 @@ data:
       handle /admin/kubernetes/* {
         uri replace /admin/kubernetes /api/kubernetes/proxy
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}
+      }
+      {{- end }}
+
+      {{- if .Values.tfyInfraManager.enabled }}
+      # /admin/infra-manager and /admin/infra-manager/* → / on upstream:8080 (IM serves SPA + API at root
+      @infra_manager path /admin/infra-manager /admin/infra-manager/*
+      handle @infra_manager {
+        forward_auth {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }} {
+          uri /auth/forward-auth/tenant-admin
+          copy_headers X-Forwarded-User X-Forwarded-Email X-Tenant-Name
+        }
+        uri strip_prefix /admin/infra-manager
+        reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}
       }
       {{- end }}
 

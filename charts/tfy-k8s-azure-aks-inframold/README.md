@@ -18,36 +18,40 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### argocd parameters
 
-| Name                    | Description                                | Value  |
-| ----------------------- | ------------------------------------------ | ------ |
-| `argocd.enabled`        | Flag to enable ArgoCD                      | `true` |
-| `argocd.tolerations`    | Tolerations for ArgoCD                     | `[]`   |
-| `argocd.affinity`       | Affinity for ArgoCD                        | `{}`   |
-| `argocd.valuesOverride` | Config override from default config values | `{}`   |
+| Name                    | Description                                  | Value  |
+| ----------------------- | -------------------------------------------- | ------ |
+| `argocd.enabled`        | Flag to enable ArgoCD                        | `true` |
+| `argocd.syncPolicy`     | ArgoCD syncPolicy for the argocd Application | `{}`   |
+| `argocd.tolerations`    | Tolerations for ArgoCD                       | `[]`   |
+| `argocd.affinity`       | Affinity for ArgoCD                          | `{}`   |
+| `argocd.valuesOverride` | Config override from default config values   | `{}`   |
 
 ### argoWorkflows parameters
 
-| Name                           | Description                                | Value  |
-| ------------------------------ | ------------------------------------------ | ------ |
-| `argoWorkflows.enabled`        | Flag to enable Argo Workflows              | `true` |
-| `argoWorkflows.tolerations`    | Tolerations for Argo Workflows             | `[]`   |
-| `argoWorkflows.affinity`       | Affinity for Argo Workflows                | `{}`   |
-| `argoWorkflows.valuesOverride` | Config override from default config values | `{}`   |
+| Name                           | Description                                          | Value  |
+| ------------------------------ | ---------------------------------------------------- | ------ |
+| `argoWorkflows.enabled`        | Flag to enable Argo Workflows                        | `true` |
+| `argoWorkflows.syncPolicy`     | ArgoCD syncPolicy for the argo-workflows Application | `{}`   |
+| `argoWorkflows.tolerations`    | Tolerations for Argo Workflows                       | `[]`   |
+| `argoWorkflows.affinity`       | Affinity for Argo Workflows                          | `{}`   |
+| `argoWorkflows.valuesOverride` | Config override from default config values           | `{}`   |
 
 ### argoRollouts parameters
 
-| Name                          | Description                                | Value  |
-| ----------------------------- | ------------------------------------------ | ------ |
-| `argoRollouts.enabled`        | Flag to enable Argo Rollouts               | `true` |
-| `argoRollouts.tolerations`    | Tolerations for Argo Rollouts              | `[]`   |
-| `argoRollouts.affinity`       | Affinity for Argo Rollouts                 | `{}`   |
-| `argoRollouts.valuesOverride` | Config override from default config values | `{}`   |
+| Name                          | Description                                         | Value  |
+| ----------------------------- | --------------------------------------------------- | ------ |
+| `argoRollouts.enabled`        | Flag to enable Argo Rollouts                        | `true` |
+| `argoRollouts.syncPolicy`     | ArgoCD syncPolicy for the argo-rollouts Application | `{}`   |
+| `argoRollouts.tolerations`    | Tolerations for Argo Rollouts                       | `[]`   |
+| `argoRollouts.affinity`       | Affinity for Argo Rollouts                          | `{}`   |
+| `argoRollouts.valuesOverride` | Config override from default config values          | `{}`   |
 
 ### certManager parameters
 
 | Name                                     | Description                                                                       | Value  |
 | ---------------------------------------- | --------------------------------------------------------------------------------- | ------ |
 | `certManager.enabled`                    | Flag to enable Cert Manager                                                       | `true` |
+| `certManager.syncPolicy`                 | ArgoCD syncPolicy for the cert-manager Application                                | `{}`   |
 | `certManager.tolerations`                | Tolerations for Cert Manager                                                      | `[]`   |
 | `certManager.podLabels`                  | Pod labels for Cert Manager. For Azure will be applied to serviceaccount as well. | `{}`   |
 | `certManager.serviceAccount.annotations` | Service account annotations for Cert Manager.                                     | `{}`   |
@@ -56,37 +60,41 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### certManager issuers parameters
 
-| Name                                | Description                                        | Value  |
-| ----------------------------------- | -------------------------------------------------- | ------ |
-| `certManager.config.enabled`        | Flag to enable certManager config                  | `true` |
-| `certManager.config.issuers`        | Map of issuers and their certificate configuration | `{}`   |
-| `certManager.config.valuesOverride` | Config override from default config values         | `{}`   |
+| Name                                | Description                                                   | Value  |
+| ----------------------------------- | ------------------------------------------------------------- | ------ |
+| `certManager.config.enabled`        | Flag to enable certManager config                             | `true` |
+| `certManager.config.syncPolicy`     | ArgoCD syncPolicy for the tfy-cert-manager-config Application | `{}`   |
+| `certManager.config.issuers`        | Map of issuers and their certificate configuration            | `{}`   |
+| `certManager.config.valuesOverride` | Config override from default config values                    | `{}`   |
 
 ### metricsServer parameters
 
-| Name                           | Description                                | Value   |
-| ------------------------------ | ------------------------------------------ | ------- |
-| `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
-| `metricsServer.enabled`        | Flag to enable Metrics Server              | `false` |
-| `metricsServer.tolerations`    | Tolerations for Metrics Server             | `[]`    |
-| `metricsServer.affinity`       | Affinity for Metrics Server                | `{}`    |
-| `metricsServer.valuesOverride` | Config override from default config values | `{}`    |
+| Name                           | Description                                          | Value   |
+| ------------------------------ | ---------------------------------------------------- | ------- |
+| `metricsServer.enabled`        | Flag to enable Metrics Server                        | `false` |
+| `metricsServer.enabled`        | Flag to enable Metrics Server                        | `false` |
+| `metricsServer.syncPolicy`     | ArgoCD syncPolicy for the metrics-server Application | `{}`    |
+| `metricsServer.tolerations`    | Tolerations for Metrics Server                       | `[]`    |
+| `metricsServer.affinity`       | Affinity for Metrics Server                          | `{}`    |
+| `metricsServer.valuesOverride` | Config override from default config values           | `{}`    |
 
 ### gpu parameters
 
-| Name                 | Description                                | Value      |
-| -------------------- | ------------------------------------------ | ---------- |
-| `gpu.enabled`        | Flag to enable Tfy GPU Operator            | `true`     |
-| `gpu.clusterType`    | Cluster type for Tfy GPU Operator          | `azureAks` |
-| `gpu.valuesOverride` | Config override from default config values | `{}`       |
+| Name                 | Description                                            | Value      |
+| -------------------- | ------------------------------------------------------ | ---------- |
+| `gpu.enabled`        | Flag to enable Tfy GPU Operator                        | `true`     |
+| `gpu.syncPolicy`     | ArgoCD syncPolicy for the tfy-gpu-operator Application | `{}`       |
+| `gpu.clusterType`    | Cluster type for Tfy GPU Operator                      | `azureAks` |
+| `gpu.valuesOverride` | Config override from default config values             | `{}`       |
 
 ### truefoundry parameters
 
-| Name                          | Description                                | Value   |
-| ----------------------------- | ------------------------------------------ | ------- |
-| `truefoundry.enabled`         | Flag to enable TrueFoundry                 | `false` |
-| `truefoundry.devMode.enabled` | Flag to enable TrueFoundry Dev mode        | `false` |
-| `truefoundry.valuesOverride`  | Config override from default config values | `{}`    |
+| Name                          | Description                                       | Value   |
+| ----------------------------- | ------------------------------------------------- | ------- |
+| `truefoundry.enabled`         | Flag to enable TrueFoundry                        | `false` |
+| `truefoundry.syncPolicy`      | ArgoCD syncPolicy for the truefoundry Application | `{}`    |
+| `truefoundry.devMode.enabled` | Flag to enable TrueFoundry Dev mode               | `false` |
+| `truefoundry.valuesOverride`  | Config override from default config values        | `{}`    |
 
 ### truefoundryBootstrap parameters
 
@@ -128,34 +136,38 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 
 ### tfyLogs parameters
 
-| Name                     | Description                                | Value  |
-| ------------------------ | ------------------------------------------ | ------ |
-| `tfyLogs.enabled`        | Flag to enable Tfy Logs                    | `true` |
-| `tfyLogs.valuesOverride` | Config override from default config values | `{}`   |
-| `tfyLogs.affinity`       | Affinity for tfyLogs statefulset pod       | `{}`   |
-| `tfyLogs.tolerations`    | Tolerations for tfyLogs statefulset pod    | `[]`   |
+| Name                     | Description                                    | Value  |
+| ------------------------ | ---------------------------------------------- | ------ |
+| `tfyLogs.enabled`        | Flag to enable Tfy Logs                        | `true` |
+| `tfyLogs.syncPolicy`     | ArgoCD syncPolicy for the tfy-logs Application | `{}`   |
+| `tfyLogs.valuesOverride` | Config override from default config values     | `{}`   |
+| `tfyLogs.affinity`       | Affinity for tfyLogs statefulset pod           | `{}`   |
+| `tfyLogs.tolerations`    | Tolerations for tfyLogs statefulset pod        | `[]`   |
 
 ### istio parameters
 
-| Name                                    | Description                                | Value   |
-| --------------------------------------- | ------------------------------------------ | ------- |
-| `istio.enabled`                         | Flag to enable Istio                       | `true`  |
-| `istio.enabled`                         | Flag to enable Istio Base                  | `true`  |
-| `istio.base.valuesOverride`             | Config override from default config values | `{}`    |
-| `istio.awsElbControllerChecker.enabled` | Flag to enable AWS ELB Controller Checker  | `false` |
-| `istio.gateway.annotations`             | Annotations for Istio Gateway              | `{}`    |
-| `istio.gateway.affinity`                | Affinity for the gateway pods              | `{}`    |
-| `istio.gateway.tolerations`             | Tolerations for the gateway pods           | `[]`    |
-| `istio.gateway.valuesOverride`          | Config override from default config values | `{}`    |
+| Name                                    | Description                                             | Value   |
+| --------------------------------------- | ------------------------------------------------------- | ------- |
+| `istio.enabled`                         | Flag to enable Istio                                    | `true`  |
+| `istio.enabled`                         | Flag to enable Istio Base                               | `true`  |
+| `istio.base.valuesOverride`             | Config override from default config values              | `{}`    |
+| `istio.base.syncPolicy`                 | ArgoCD syncPolicy for the istio-base Application        | `{}`    |
+| `istio.awsElbControllerChecker.enabled` | Flag to enable AWS ELB Controller Checker               | `false` |
+| `istio.gateway.annotations`             | Annotations for Istio Gateway                           | `{}`    |
+| `istio.gateway.affinity`                | Affinity for the gateway pods                           | `{}`    |
+| `istio.gateway.tolerations`             | Tolerations for the gateway pods                        | `[]`    |
+| `istio.gateway.valuesOverride`          | Config override from default config values              | `{}`    |
+| `istio.gateway.syncPolicy`              | ArgoCD syncPolicy for the tfy-istio-ingress Application | `{}`    |
 
 ### istio discovery parameters
 
-| Name                             | Description                                | Value                  |
-| -------------------------------- | ------------------------------------------ | ---------------------- |
-| `istio.discovery.hub`            | Hub for the istio image                    | `gcr.io/istio-release` |
-| `istio.discovery.tolerations`    | Tolerations for Istio Discovery            | `[]`                   |
-| `istio.discovery.affinity`       | Affinity for Istio Discovery               | `{}`                   |
-| `istio.discovery.valuesOverride` | Config override from default config values | `{}`                   |
+| Name                             | Description                                           | Value                  |
+| -------------------------------- | ----------------------------------------------------- | ---------------------- |
+| `istio.discovery.hub`            | Hub for the istio image                               | `gcr.io/istio-release` |
+| `istio.discovery.tolerations`    | Tolerations for Istio Discovery                       | `[]`                   |
+| `istio.discovery.affinity`       | Affinity for Istio Discovery                          | `{}`                   |
+| `istio.discovery.valuesOverride` | Config override from default config values            | `{}`                   |
+| `istio.discovery.syncPolicy`     | ArgoCD syncPolicy for the istio-discovery Application | `{}`                   |
 
 ### istio tfyGateway parameters
 
@@ -172,24 +184,27 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | Name                  | Description                                | Value  |
 | --------------------- | ------------------------------------------ | ------ |
 | `keda.enabled`        | Flag to enable Keda                        | `true` |
+| `keda.syncPolicy`     | ArgoCD syncPolicy for the keda Application | `{}`   |
 | `keda.tolerations`    | Tolerations for Keda                       | `[]`   |
 | `keda.affinity`       | Affinity for Keda                          | `{}`   |
 | `keda.valuesOverride` | Config override from default config values | `{}`   |
 
 ### sparkOperator parameters
 
-| Name                           | Description                                | Value   |
-| ------------------------------ | ------------------------------------------ | ------- |
-| `sparkOperator.enabled`        | Flag to enable Spark Operator              | `false` |
-| `sparkOperator.tolerations`    | Tolerations for Spark Operator             | `[]`    |
-| `sparkOperator.affinity`       | Affinity for Spark Operator                | `{}`    |
-| `sparkOperator.valuesOverride` | Config override from default config values | `{}`    |
+| Name                           | Description                                          | Value   |
+| ------------------------------ | ---------------------------------------------------- | ------- |
+| `sparkOperator.enabled`        | Flag to enable Spark Operator                        | `false` |
+| `sparkOperator.syncPolicy`     | ArgoCD syncPolicy for the spark-operator Application | `{}`    |
+| `sparkOperator.tolerations`    | Tolerations for Spark Operator                       | `[]`    |
+| `sparkOperator.affinity`       | Affinity for Spark Operator                          | `{}`    |
+| `sparkOperator.valuesOverride` | Config override from default config values           | `{}`    |
 
 ### prometheus parameters
 
 | Name                                     | Description                                                               | Value  |
 | ---------------------------------------- | ------------------------------------------------------------------------- | ------ |
 | `prometheus.enabled`                     | Flag to enable Prometheus                                                 | `true` |
+| `prometheus.syncPolicy`                  | ArgoCD syncPolicy for the prometheus Application                          | `{}`   |
 | `prometheus.additionalScrapeConfigs`     | Additional scrape configs for Prometheus                                  | `[]`   |
 | `prometheus.alertmanager`                | Alertmanager configuration for Prometheus                                 | `{}`   |
 | `prometheus.affinity`                    | Affinity for prometheus statefulset pod                                   | `{}`   |
@@ -197,53 +212,60 @@ Inframold, the superchart that configure your cluster on azure for truefoundry.
 | `prometheus.valuesOverride`              | Config override from default config values                                | `{}`   |
 | `prometheus.prometheusNodeExporter.port` | Port for prometheus-node-exporter service and container (default 9100)    | `9100` |
 | `prometheus.config.enabled`              | Flag to enable prometheus config (requires prometheus.enabled to be true) | `true` |
+| `prometheus.config.syncPolicy`           | ArgoCD syncPolicy for the tfy-prometheus-config Application               | `{}`   |
 | `prometheus.config.valuesOverride`       | Config override from default config values                                | `{}`   |
 | `prometheus.config.extraObjects`         | Extra objects for prometheus config                                       | `[]`   |
 
 ### grafana parameters
 
-| Name                     | Description                                | Value   |
-| ------------------------ | ------------------------------------------ | ------- |
-| `grafana.enabled`        | Flag to enable Grafana                     | `false` |
-| `grafana.tolerations`    | Tolerations for Grafana                    | `[]`    |
-| `grafana.affinity`       | Affinity for Grafana                       | `{}`    |
-| `grafana.valuesOverride` | Config override from default config values | `{}`    |
+| Name                     | Description                                   | Value   |
+| ------------------------ | --------------------------------------------- | ------- |
+| `grafana.enabled`        | Flag to enable Grafana                        | `false` |
+| `grafana.syncPolicy`     | ArgoCD syncPolicy for the grafana Application | `{}`    |
+| `grafana.tolerations`    | Tolerations for Grafana                       | `[]`    |
+| `grafana.affinity`       | Affinity for Grafana                          | `{}`    |
+| `grafana.valuesOverride` | Config override from default config values    | `{}`    |
 
 ### tfyAgent parameters
 
-| Name                          | Description                                | Value  |
-| ----------------------------- | ------------------------------------------ | ------ |
-| `tfyAgent.enabled`            | Flag to enable Tfy Agent                   | `true` |
-| `tfyAgent.valuesOverride`     | Config override from default config values | `{}`   |
-| `tfyAgent.tolerations`        | Tolerations for the agent pods             | `[]`   |
-| `tfyAgent.affinity`           | Affinity for the agent pods                | `{}`   |
-| `tfyAgent.clusterToken`       | cluster token                              | `""`   |
-| `tfyAgent.clusterTokenSecret` | Secret name for cluster token              | `""`   |
+| Name                          | Description                                     | Value  |
+| ----------------------------- | ----------------------------------------------- | ------ |
+| `tfyAgent.enabled`            | Flag to enable Tfy Agent                        | `true` |
+| `tfyAgent.syncPolicy`         | ArgoCD syncPolicy for the tfy-agent Application | `{}`   |
+| `tfyAgent.valuesOverride`     | Config override from default config values      | `{}`   |
+| `tfyAgent.tolerations`        | Tolerations for the agent pods                  | `[]`   |
+| `tfyAgent.affinity`           | Affinity for the agent pods                     | `{}`   |
+| `tfyAgent.clusterToken`       | cluster token                                   | `""`   |
+| `tfyAgent.clusterTokenSecret` | Secret name for cluster token                   | `""`   |
 
 ### elasti parameters
 
-| Name                    | Description                                | Value  |
-| ----------------------- | ------------------------------------------ | ------ |
-| `elasti.enabled`        | Flag to enable Elasti                      | `true` |
-| `elasti.tolerations`    | Tolerations for Elasti                     | `[]`   |
-| `elasti.affinity`       | Affinity for Elasti                        | `{}`   |
-| `elasti.valuesOverride` | Config override from default config values | `{}`   |
+| Name                    | Description                                  | Value  |
+| ----------------------- | -------------------------------------------- | ------ |
+| `elasti.enabled`        | Flag to enable Elasti                        | `true` |
+| `elasti.syncPolicy`     | ArgoCD syncPolicy for the elasti Application | `{}`   |
+| `elasti.tolerations`    | Tolerations for Elasti                       | `[]`   |
+| `elasti.affinity`       | Affinity for Elasti                          | `{}`   |
+| `elasti.valuesOverride` | Config override from default config values   | `{}`   |
 
 ### jspolicy parameters
 
-| Name                             | Description                                              | Value   |
-| -------------------------------- | -------------------------------------------------------- | ------- |
-| `jspolicy.enabled`               | Flag to enable jspolicy. No policy is applied by default | `false` |
-| `jspolicy.enabled`               | Flag to enable jspolicy                                  | `false` |
-| `jspolicy.valuesOverride`        | Config override from default config values               | `{}`    |
-| `jspolicy.affinity`              | Affinity for jspolicy                                    | `{}`    |
-| `jspolicy.tolerations`           | Tolerations for jspolicy                                 | `[]`    |
-| `jspolicy.config.valuesOverride` | Config override from default config values               | `{}`    |
+| Name                             | Description                                               | Value   |
+| -------------------------------- | --------------------------------------------------------- | ------- |
+| `jspolicy.enabled`               | Flag to enable jspolicy. No policy is applied by default  | `false` |
+| `jspolicy.enabled`               | Flag to enable jspolicy                                   | `false` |
+| `jspolicy.syncPolicy`            | ArgoCD syncPolicy for the jspolicy Application            | `{}`    |
+| `jspolicy.valuesOverride`        | Config override from default config values                | `{}`    |
+| `jspolicy.affinity`              | Affinity for jspolicy                                     | `{}`    |
+| `jspolicy.tolerations`           | Tolerations for jspolicy                                  | `[]`    |
+| `jspolicy.config.valuesOverride` | Config override from default config values                | `{}`    |
+| `jspolicy.config.syncPolicy`     | ArgoCD syncPolicy for the tfy-jspolicy-config Application | `{}`    |
 
 ### tfy-workflow-propeller parameters
 
-| Name                                  | Description                                | Value   |
-| ------------------------------------- | ------------------------------------------ | ------- |
-| `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.         | `false` |
-| `tfyWorkflowPropeller.valuesOverride` | Config override from default config values | `{}`    |
-| `helm.resourcePolicy`                 | Resource policy for the helm chart         | `keep`  |
+| Name                                  | Description                                                  | Value   |
+| ------------------------------------- | ------------------------------------------------------------ | ------- |
+| `tfyWorkflowPropeller.enabled`        | Flag to enable workflow-propeller.                           | `false` |
+| `tfyWorkflowPropeller.syncPolicy`     | ArgoCD syncPolicy for the tfy-workflow-propeller Application | `{}`    |
+| `tfyWorkflowPropeller.valuesOverride` | Config override from default config values                   | `{}`    |
+| `helm.resourcePolicy`                 | Resource policy for the helm chart                           | `keep`  |

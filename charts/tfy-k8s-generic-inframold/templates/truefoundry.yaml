@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.151.5
+    targetRevision: 0.158.2
     repoURL: "tfy.jfrog.io/tfy-helm"
     chart: truefoundry
     helm:
@@ -186,9 +186,5 @@ spec:
         {{- end }}
 
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
-      - Prune=true
+    {{- toYaml .Values.truefoundry.syncPolicy | nindent 4 }}
 {{- end }}

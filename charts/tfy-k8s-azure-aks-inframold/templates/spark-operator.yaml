@@ -89,9 +89,5 @@ spec:
         {{- end }}
       {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.sparkOperator.syncPolicy | nindent 4 }}
 {{- end }}

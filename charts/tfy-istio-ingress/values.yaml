@@ -1,3 +1,9 @@
+## @section Gateway API CRDs
+##
+## @param installGatewayCrds Install the Gateway API CRDs sub-chart. Set to false to only install the istio gateway sub-chart and skip the CRDs.
+##
+installGatewayCrds: true
+
 ## @section ALB Configuration
 ## Configuration for AWS Application Load Balancer
 ##
@@ -24,6 +30,57 @@ alb:
     ##     servicePort: 80
     ##     serviceName: test-service
     additionalHttp2Paths: []
+
+## @section AppGW Configuration
+## Configuration for Azure Application Gateway (AKS)
+##
+appgw:
+  ## @param appgw.ingress.enabled Enable AppGW ingress
+  ##
+  ingress:
+    enabled: false
+    ## @param appgw.ingress.ingressClassName Ingress class name for AppGW
+    ##
+    ingressClassName: azure-application-gateway
+    ## @param appgw.ingress.labels Additional labels for the AppGW ingress
+    ##
+    labels: {}
+    ## @param appgw.ingress.annotations Additional annotations for the AppGW ingress
+    ##
+    annotations: {}
+    ## @param appgw.ingress.flyte.enabled Enable HTTP2 AppGW ingress path for Flyte
+    ## When enabled, the Flyte ingress reuses appgw.ingress.domains for host-based routing and TLS —
+    ## it does not have its own separate domains list.
+    ##
+    flyte:
+      enabled: true
+    ## @param appgw.ingress.additionalHttp2Paths Additional HTTP2 paths to be configured
+    ## Example:
+    ## additionalHttp2Paths:
+    ##   - path: /test123
+    ##     pathType: Prefix
+    ##     servicePort: 80
+    ##     serviceName: test-service
+    additionalHttp2Paths: []
+    ## @param appgw.ingress.domains List of domains for host-based routing, shared by the main and Flyte AppGW ingresses
+    ## Each entry has a list of hosts and may optionally include a secretName for TLS termination.
+    ## The secretName can reference a Kubernetes TLS secret synced from Azure Key Vault
+    ## via the Secrets Store CSI Driver, or any other Kubernetes TLS secret.
+    ## Example:
+    ## domains:
+    ##   - hosts:
+    ##       - example.com
+    ##     secretName: example-tls
+    ##   - hosts:
+    ##       - api.example.com
+    ##     secretName: api-example-tls
+    ## Wildcard example (matches any host, takes precedence over the entries above):
+    ## domains:
+    ##   - hosts:
+    ##       - "*"
+    ##     secretName: wildcard-tls
+    domains: []
+
 ## @section Gateway Configuration
 ## Configuration for the Gateway component
 ##

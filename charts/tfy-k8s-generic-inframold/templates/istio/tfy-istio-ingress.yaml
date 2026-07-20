@@ -18,7 +18,7 @@ spec:
   source:
     chart: tfy-istio-ingress
     repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
-    targetRevision: 0.3.5
+    targetRevision: 0.3.6
     helm:
       values: |-
         {{- if .Values.istio.gateway.valuesOverride }}
@@ -84,8 +84,5 @@ spec:
                 {{- end }}
         {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.istio.gateway.syncPolicy | nindent 4 }}
 {{- end }}

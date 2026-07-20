@@ -3,6 +3,12 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ## Parameters
 
+### Gateway API CRDs
+
+| Name                 | Description                                                                                                         | Value  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------- | ------ |
+| `installGatewayCrds` | Install the Gateway API CRDs sub-chart. Set to false to only install the istio gateway sub-chart and skip the CRDs. | `true` |
+
 ### ALB Configuration
 
 | Name                               | Description                                | Value   |
@@ -12,6 +18,18 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `alb.ingress.annotations`          | Additional annotations for the ALB ingress | `{}`    |
 | `alb.ingress.flyte.enabled`        | Enable HTTP2 ALB ingress path for Flyte    | `true`  |
 | `alb.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured    | `[]`    |
+
+### AppGW Configuration
+
+| Name                                 | Description                                                                          | Value                       |
+| ------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------- |
+| `appgw.ingress.enabled`              | Enable AppGW ingress                                                                 | `false`                     |
+| `appgw.ingress.ingressClassName`     | Ingress class name for AppGW                                                         | `azure-application-gateway` |
+| `appgw.ingress.labels`               | Additional labels for the AppGW ingress                                              | `{}`                        |
+| `appgw.ingress.annotations`          | Additional annotations for the AppGW ingress                                         | `{}`                        |
+| `appgw.ingress.flyte.enabled`        | Enable HTTP2 AppGW ingress path for Flyte                                            | `true`                      |
+| `appgw.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured                                              | `[]`                        |
+| `appgw.ingress.domains`              | List of domains for host-based routing, shared by the main and Flyte AppGW ingresses | `[]`                        |
 
 ### Gateway Configuration
 

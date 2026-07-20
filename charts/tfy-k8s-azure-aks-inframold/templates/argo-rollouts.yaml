@@ -17,7 +17,7 @@ spec:
   source:
     chart: argo-rollouts
     repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/argo-helm{{ else }}https://argoproj.github.io/argo-helm{{ end }}
-    targetRevision: 2.40.5
+    targetRevision: 2.40.9
     helm:
       values: |-
         {{- if .Values.argoRollouts.valuesOverride }}
@@ -67,8 +67,5 @@ spec:
           {{- end }}
         {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.argoRollouts.syncPolicy | nindent 4 }}
 {{- end }}

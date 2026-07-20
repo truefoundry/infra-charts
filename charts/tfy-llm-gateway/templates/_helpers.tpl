@@ -14,6 +14,24 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  Compute the tfy-sandbox-server subchart's Service name from the parent chart context.
+  Mirrors the logic in tfy-sandbox-server.fullname but uses the subchart's scoped values.
+*/}}
+{{- define "tfy-llm-gateway.sandbox.fullname" -}}
+{{- $sandboxValues := index .Values "tfy-sandbox-server" -}}
+{{- if $sandboxValues.fullnameOverride -}}
+{{- $sandboxValues.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "tfy-sandbox-server" $sandboxValues.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
   Create a default fully qualified app name.
   We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
   If release name contains chart name it will be used as a full name.
@@ -324,6 +342,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
+{{- if and .Values.sandbox.devMode.enabled (not .Values.env.SANDBOX_SETTINGS_SERVER_URL) }}
+- name: SANDBOX_SETTINGS_SERVER_URL
+  value: {{ printf "http://%s.%s.svc.cluster.local:8080" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
+{{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
   value: "true"
@@ -537,6 +559,22 @@ false
 {{- end -}}
 {{- end -}}
 
+{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-llm-gateway.podSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-llm-gateway.containerSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
 {{/*
   Custom CA initContainer (only when not using direct mount)
 */}}
@@ -545,11 +583,9 @@ false
 {{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
-  {{- if .Values.global.customCA.securityContext.enabled }}
-  {{- with .Values.global.customCA.securityContext }}
+  {{- with (include "tfy-llm-gateway.containerSecurityContext" (dict "local" .Values.global.customCA.securityContext "global" .Values.global.containerSecurityContext)) }}
   securityContext:
-    {{- toYaml (omit . "enabled") | nindent 4 }}
-  {{- end }}
+    {{- . | nindent 4 }}
   {{- end }}
   command: ["sh", "-c"]
   args:

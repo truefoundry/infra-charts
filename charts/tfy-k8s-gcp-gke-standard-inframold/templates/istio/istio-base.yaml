@@ -18,7 +18,7 @@ spec:
   source:
     chart: base
     repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/charts{{ else }}https://istio-release.storage.googleapis.com/charts{{ end }}
-    targetRevision: 1.28.2
+    targetRevision: 1.30.0
     helm:
       {{- if .Values.istio.base.valuesOverride }}
       values: |-
@@ -27,9 +27,5 @@ spec:
       values: ""
       {{- end }}
   syncPolicy:
-    automated: {}
-    syncOptions:
-      - RespectIgnoreDifferences=true
-      - CreateNamespace=true
-      - ServerSideApply=true
+    {{- toYaml .Values.istio.base.syncPolicy | nindent 4 }}
 {{- end }}

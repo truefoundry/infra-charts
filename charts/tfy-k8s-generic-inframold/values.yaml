@@ -61,6 +61,18 @@ affinity: {}
 ## existing ArgoCD is same as the ArgoCD configuration required by Truefoundry.
 argocd:
   enabled: true
+
+  ## @param argocd.syncPolicy [object] ArgoCD syncPolicy for the argocd Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param argocd.tolerations [array] Tolerations for ArgoCD
   ##
   tolerations: []
@@ -76,6 +88,18 @@ argocd:
 ##
 argoWorkflows:
   enabled: true
+
+  ## @param argoWorkflows.syncPolicy [object] ArgoCD syncPolicy for the argo-workflows Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param argoWorkflows.tolerations [array] Tolerations for Argo Workflows
   ##
   tolerations: []
@@ -92,6 +116,18 @@ argoWorkflows:
 ##
 argoRollouts:
   enabled: true
+
+  ## @param argoRollouts.syncPolicy [object] ArgoCD syncPolicy for the argo-rollouts Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param argoRollouts.tolerations [array] Tolerations for Argo Rollouts
   ##
   tolerations: []
@@ -107,6 +143,14 @@ argoRollouts:
 ##
 certManager:
   enabled: true
+  ## @param certManager.syncPolicy [object] ArgoCD syncPolicy for the cert-manager Application
+  ##
+  syncPolicy:
+    automated: {}
+    retry: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
   ## @param certManager.tolerations [array] Tolerations for Cert Manager
   ##
   tolerations: []
@@ -126,6 +170,14 @@ certManager:
   config:
     ## @param certManager.config.enabled Flag to enable certManager config
     enabled: true
+    ## @param certManager.config.syncPolicy [object] ArgoCD syncPolicy for the tfy-cert-manager-config Application
+    ##
+    syncPolicy:
+      automated: {}
+      retry: {}
+      syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
     ## @param certManager.config.issuers [object] Map of issuers and their certificate configuration
     issuers: {}
 #      issuer1:
@@ -163,6 +215,12 @@ certManager:
 metricsServer:
   ## @param metricsServer.enabled Flag to enable Metrics Server
   enabled: false
+  ## @param metricsServer.syncPolicy [object] ArgoCD syncPolicy for the metrics-server Application
+  ##
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - ServerSideApply=true
   ## @param metricsServer.tolerations [array] Tolerations for Metrics Server
   ##
   tolerations:
@@ -182,6 +240,24 @@ metricsServer:
 ##
 gpu:
   enabled: true
+
+  ## @param gpu.syncPolicy [object] ArgoCD syncPolicy for the tfy-gpu-operator Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated:
+      prune: true
+      selfHeal: false
+    retry:
+      limit: 5
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - FailOnSharedResource=true
+      - ApplyOutOfSyncOnly=true
+
   ## @param gpu.clusterType Cluster type for Tfy GPU Operator
   ##
   clusterType: generic
@@ -196,6 +272,17 @@ gpu:
 ##
 truefoundry:
   enabled: false
+  ## @param truefoundry.syncPolicy [object] ArgoCD syncPolicy for the truefoundry Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "istio-system, prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - Prune=true
   ## @param truefoundry.devMode.enabled Flag to enable TrueFoundry Dev mode
   ##
   devMode:
@@ -281,6 +368,19 @@ truefoundry:
 ##
 tfyLogs:
   enabled: true
+
+  ## @param tfyLogs.syncPolicy [object] ArgoCD syncPolicy for the tfy-logs Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param tfyLogs.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -305,6 +405,14 @@ istio:
     ## @param istio.base.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
+    ## @param istio.base.syncPolicy [object] ArgoCD syncPolicy for the istio-base Application
+    ##
+    syncPolicy:
+      automated: {}
+      syncOptions:
+        - RespectIgnoreDifferences=true
+        - CreateNamespace=true
+        - ServerSideApply=true
 
   ## @param istio.awsElbControllerChecker.enabled Flag to enable AWS ELB Controller Checker
   ##
@@ -326,6 +434,13 @@ istio:
     ## @param istio.gateway.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
+    ## @param istio.gateway.syncPolicy [object] ArgoCD syncPolicy for the tfy-istio-ingress Application
+    ##
+    syncPolicy:
+      automated: {}
+      syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
 
   ## @section istio discovery parameters
   discovery:
@@ -340,6 +455,14 @@ istio:
     ## @param istio.discovery.valuesOverride Config override from default config values
     ##
     valuesOverride: {}
+    ## @param istio.discovery.syncPolicy [object] ArgoCD syncPolicy for the istio-discovery Application
+    ##
+    syncPolicy:
+      automated: {}
+      syncOptions:
+        - RespectIgnoreDifferences=true
+        - CreateNamespace=true
+        - ServerSideApply=true
   ## @section istio tfyGateway parameters
   tfyGateway:
     ## @param istio.tfyGateway.httpsRedirect Flag to enable HTTPS redirect for Istio Gateway
@@ -366,6 +489,19 @@ istio:
 ##
 keda:
   enabled: true
+
+  ## @param keda.syncPolicy [object] ArgoCD syncPolicy for the keda Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param keda.tolerations [array] Tolerations for Keda
   ##
   tolerations: []
@@ -381,6 +517,14 @@ keda:
 ##
 sparkOperator:
   enabled: false
+  ## @param sparkOperator.syncPolicy [object] ArgoCD syncPolicy for the spark-operator Application
+  ##
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
   ## @param sparkOperator.tolerations [array] Tolerations for Spark Operator
   ##
   tolerations: []
@@ -397,6 +541,19 @@ sparkOperator:
 ##
 prometheus:
   enabled: true
+
+  ## @param prometheus.syncPolicy [object] ArgoCD syncPolicy for the prometheus Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "tfy-agent, keda, grafana"
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param prometheus.additionalScrapeConfigs [array] Additional scrape configs for Prometheus
   ##
   additionalScrapeConfigs: []
@@ -434,6 +591,14 @@ prometheus:
     ##
     enabled: true
 
+    ## @param prometheus.config.syncPolicy [object] ArgoCD syncPolicy for the tfy-prometheus-config Application
+    ##
+    syncPolicy:
+      automated: {}
+      syncOptions:
+        - CreateNamespace=false
+        - ServerSideApply=true
+
     ## @param prometheus.config.valuesOverride [object] Config override from default config values
     ##
     valuesOverride: {}
@@ -447,6 +612,16 @@ prometheus:
 ##
 grafana:
   enabled: false
+  ## @param grafana.syncPolicy [object] ArgoCD syncPolicy for the grafana Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus, tfy-logs"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
   ## @param grafana.tolerations [array] Tolerations for Grafana
   ##
   tolerations: []
@@ -462,6 +637,18 @@ grafana:
 ##
 tfyAgent:
   enabled: true
+
+  ## @param tfyAgent.syncPolicy [object] ArgoCD syncPolicy for the tfy-agent Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param tfyAgent.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -488,6 +675,18 @@ tfyAgent:
 ##
 elasti:
   enabled: true
+
+  ## @param elasti.syncPolicy [object] ArgoCD syncPolicy for the elasti Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
   ## @param elasti.tolerations [array] Tolerations for Elasti
   ##
   tolerations: []
@@ -504,6 +703,14 @@ elasti:
 jspolicy:
   ## @param jspolicy.enabled Flag to enable jspolicy
   enabled: false
+  ## @param jspolicy.syncPolicy [object] ArgoCD syncPolicy for the jspolicy Application
+  ##
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - CreateNamespace=true
+      - ServerSideApply=true
   ## @param jspolicy.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}
@@ -520,12 +727,30 @@ jspolicy:
   ##
   config:
     valuesOverride: {}
+    ## @param jspolicy.config.syncPolicy [object] ArgoCD syncPolicy for the tfy-jspolicy-config Application
+    ##
+    syncPolicy:
+      automated: {}
+      syncOptions:
+        - RespectIgnoreDifferences=true
+        - CreateNamespace=true
+        - ServerSideApply=true
 
 ## @section tfy-workflow-propeller parameters
 ## @param tfyWorkflowPropeller.enabled Flag to enable workflow-propeller.
 ##
 tfyWorkflowPropeller:
   enabled: false
+  ## @param tfyWorkflowPropeller.syncPolicy [object] ArgoCD syncPolicy for the tfy-workflow-propeller Application
+  ##
+  syncPolicy:
+    managedNamespaceMetadata:
+      annotations:
+        truefoundry.com/allowed-ingress-namespaces: "prometheus"
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
   ## @param tfyWorkflowPropeller.valuesOverride [object] Config override from default config values
   ##
   valuesOverride: {}

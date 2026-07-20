@@ -27,6 +27,8 @@ spec:
     truefoundry.com/component_type: control-plane
     karpenter.sh/discovery: {{ .Values.cluster.name }}
     cluster-name: {{ .Values.cluster.name }}
+    truefoundry-cluster-name: {{ .Values.cluster.name }}
+    truefoundry-managed: "true"
   {{- range $key, $val := .Values.karpenter.controlPlaneNodeTemplate.extraTags }}
     {{ $key }}: {{ $val | quote }} 
   {{- end }}
