@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.158.1
+  controlPlaneChartVersion: 0.159.0
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -299,8 +299,12 @@ global:
   namespaceOverride: ""
   ## @param global.clusterDomain Kubernetes cluster domain used for constructing FQDNs
   clusterDomain: "cluster.local"
-  ## @param global.enableSentry Bool to enable Sentry integration for the control plane
-  enableSentry: true
+  ## global.airgapped Airgapped installation configuration. When enabled, disables features that require
+  ## outbound internet access (e.g. Sentry telemetry, asset proxy calls to huggingface.co /
+  ## catalogue.truefoundry.com / assets.production.truefoundry.com).
+  airgapped:
+    ## @param global.airgapped.enabled Bool to enable airgapped mode for the control plane
+    enabled: false
   ## global.wif Workload Identity Federation (WIF) RBAC settings.
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting control-plane service accounts permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
@@ -851,7 +855,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.158.1"
+    tag: "v0.159.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1047,6 +1051,8 @@ servicefoundryServer:
     METRICS_DASHBOARD_URL: http://{{ .Release.Name }}-tfy-metrics-dashboard:8080/admin/metrics-dashboard/
     HEADLAMP_URL: http://{{ .Release.Name }}-headlamp:4466/admin/kubernetes/
     FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
+    ENABLE_ASSETS_PROXY: '{{ include "truefoundry.sentryEnabled" . }}'
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     FE_ENABLE_INFRA_ONBOARDING_PAGE: "{{ .Values.tfyInfraManager.enabled }}"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
@@ -1078,6 +1084,8 @@ servicefoundryServer:
     imageMutationPolicy: "{{ .Release.Name }}-image-mutation-policy-cm"
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
     k8sManifestValidationPolicy: "{{ .Release.Name }}-k8s-manifest-validation-policy-cm"
+    ## @param servicefoundryServer.configs.defaultPolicies Default policies ConfigMap name for servicefoundry server
+    defaultPolicies: "{{ .Release.Name }}-default-policies-cm"
     ## @param servicefoundryServer.configs.buildJobTemplate Build Job Template config map name for servicefoundry server. If empty, automatically uses the generated config map name from tfy-build chart when tfyBuild.jobTemplate.enabled is true
     buildJobTemplate: ""
 ###################################################################################################################
@@ -1249,7 +1257,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.158.1"
+    tag: "v0.159.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1384,7 +1392,7 @@ tfyK8sController:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     NODE_ENV: production
-    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     RUN_CLUSTER_STATUS_CRON: "true"
     MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     RUN_MODEL_CONFIG_SYNC_CRON: "true"
@@ -1572,7 +1580,7 @@ stdioMcpProxy:
     ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
     repository: "tfy-private-images/stdio-mcp-proxy"
     ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
-    tag: "v0.149.0"
+    tag: "v0.159.0"
   ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
   # replicaCount: 1
   ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
@@ -1696,7 +1704,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.158.0"
+    tag: "v0.159.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -1856,6 +1864,8 @@ tfyBuild:
   truefoundryWorkflows:
     ## @param tfyBuild.truefoundryWorkflows.enabled Bool to enable truefoundry workflows
     enabled: true
+    ## @param tfyBuild.truefoundryWorkflows.activeDeadlineSeconds Active deadline seconds for the build workflow and build-and-push steps
+    activeDeadlineSeconds: 14400
     ## tfyBuild.truefoundryWorkflows.sfyBuilder SfyBuilder settings for the tfyBuild server
     sfyBuilder:
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs Extra environment variables for sfyBuilder
@@ -2126,6 +2136,8 @@ tfyConfigs:
     imageMutationPolicyOverride: {}
     ## @param tfyConfigs.configs.k8sManifestValidationPolicyOverride K8s manifest validation policy configuration. Default content is in files/tfy-configs/k8s-manifest-validation-policy.yaml
     k8sManifestValidationPolicyOverride: {}
+    ## @param tfyConfigs.configs.defaultPoliciesOverride Default policies configuration. Default content is in files/tfy-configs/default-policies.yaml
+    defaultPoliciesOverride: {}
     ## @param tfyConfigs.configs.cicdTemplates CICD templates configuration. key of this map is yaml file name and value is the file contents. You must have a key named `cicd-providers.yaml` in this dictionary
     cicdTemplates: {}
     codeSnippet:
@@ -2368,7 +2380,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.150.0
+    tag: v0.159.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2495,7 +2507,7 @@ tfyController:
     PROXY_SERVER_ENABLED: "true"
     DEPLOYMENT_CONTROLLER_ENABLED: "true"
     JOB_RUNS_CONTROLLER_ENABLED: "true"
-    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     MIGRATION_CONTROLLER_ENABLED: "false"
     MIGRATION_CONTROLLER_INTERVAL_MINUTES: "60"
     MIGRATION_CONTROLLER_APPLICATION_HEALTH_CHECK_TIMEOUT_MINUTES: "5"
@@ -2524,7 +2536,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.150.0
+    tag: v0.159.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2707,7 +2719,7 @@ tfyNats:
     ## @skip tfyNats.config.merge Configuration to merge
     merge:
       00$include: accounts/resolver.conf
-      max_payload: 2097152
+      max_payload: 5242880
       max_control_line: 10240
     ## tfyNats.config.cluster Cluster configuration
     cluster:
@@ -2758,7 +2770,7 @@ tfyNats:
       ## @param tfyNats.reloader.image.registry Registry for the reloader image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.reloader.image.repository Reloader image repository (without registry)
-      repository: "tfy-mirror/natsio/nats-server-config-reloader"
+      repository: "tfy-images/nats-server-config-reloader"
       ## @param tfyNats.reloader.image.tag Reloader image tag
       tag: "0.23.0"
     ## @param tfyNats.reloader.enabled Bool to enable config reloader
@@ -2789,9 +2801,9 @@ tfyNats:
       ## @param tfyNats.promExporter.image.registry Registry for the promExporter image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.promExporter.image.repository Exporter image repository (without registry)
-      repository: "tfy-mirror/natsio/prometheus-nats-exporter"
+      repository: "tfy-images/prometheus-nats-exporter"
       ## @param tfyNats.promExporter.image.tag Exporter image tag
-      tag: "0.18.0"
+      tag: "0.20.1"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
     ## @param tfyNats.promExporter.merge [object] Nats prom exporter container merge
@@ -2828,7 +2840,7 @@ tfyNats:
       ## @param tfyNats.container.image.registry Registry for the container image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.container.image.tag Container image tag
-      tag: 2.12.6-alpine
+      tag: 2.14.2
       ## @param tfyNats.container.image.repository Container image repository (without registry)
       repository: "tfy-mirror/nats"
     ## @skip tfyNats.container.patch Container patches
@@ -3007,7 +3019,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.158.0"
+    tag: "v0.159.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3173,7 +3185,7 @@ deltaFusionIngestor:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "false"
     GRPC_PORT: "8001"
@@ -3193,7 +3205,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.158.0"
+    tag: "v0.159.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3334,7 +3346,7 @@ deltaFusionCompaction:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "true"
     COMPACTION_ENABLED: "true"
@@ -3377,7 +3389,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.158.0
+    tag: v0.159.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3572,7 +3584,7 @@ deltaFusionQueryServer:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
-    SENTRY_ENABLED: '{{ .Values.global.enableSentry | default "false" }}'
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     AUTH_SERVER_URL: "{{ .Values.global.authServerUrl }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     ALLOCATOR: snmalloc
@@ -3595,7 +3607,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.158.0"
+    tag: "v0.159.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).

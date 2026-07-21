@@ -342,9 +342,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
-{{- if and .Values.sandbox.devMode.enabled (not .Values.env.SANDBOX_SETTINGS_SERVER_URL) }}
-- name: SANDBOX_SETTINGS_SERVER_URL
+{{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_SERVER_URL) }}
+- name: TFY_SANDBOX_SERVER_URL
   value: {{ printf "http://%s.%s.svc.cluster.local:8080" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
+{{- end }}
+{{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_NATS_BRIDGE_URL) }}
+- name: TFY_SANDBOX_NATS_BRIDGE_URL
+  value: {{ printf "ws://%s.%s.svc.cluster.local:4444" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
 {{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
