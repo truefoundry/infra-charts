@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.159.0
+  controlPlaneChartVersion: 0.159.1
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -2209,6 +2209,8 @@ tfyConfigs:
 tfyBuildkitdService:
   ## @param tfyBuildkitdService.enabled Bool to enable the buildkitd service
   enabled: true
+  ## @param tfyBuildkitdService.useTcpSocketProbe Use a tcpSocket liveness/readiness probe instead of the default `buildctl debug workers` exec probe. Enable for OpenShift/ROSA where the exec probe fails.
+  useTcpSocketProbe: false
   ## @param tfyBuildkitdService.nameOverride Override the buildkitd service name
   nameOverride: ""
   ## @param tfyBuildkitdService.fullnameOverride Override the buildkitd service full name
@@ -3607,7 +3609,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.159.0"
+    tag: "v0.159.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
