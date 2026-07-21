@@ -256,6 +256,10 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 - name: K8S_MANIFEST_VALIDATION_POLICY_CONFIG_PATH
   value: /opt/truefoundry/configs/k8s-manifest-validation-policy/k8s-manifest-validation-policy.yaml
 {{- end }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
+- name: DEFAULT_POLICIES_CONFIG_PATH
+  value: /opt/truefoundry/configs/default-policies/default-policies.yaml
+{{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
 - name: LLM_CODE_SNIPPET_TEMPLATE_DIRECTORY
   value: /opt/truefoundry/configs/llm-gateway/code-snippet
@@ -323,6 +327,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumes = append $volumes (dict "name" "configs-k8s-manifest-validation-policy" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .))) }}
+{{- end }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
+  {{- $volumes = append $volumes (dict "name" "configs-default-policies" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.defaultPolicies .))) }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
@@ -397,6 +404,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.k8sManifestValidationPolicy .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-k8s-manifest-validation-policy" "mountPath" "/opt/truefoundry/configs/k8s-manifest-validation-policy") }}
+{{- end }}
+{{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-default-policies" "mountPath" "/opt/truefoundry/configs/default-policies") }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
