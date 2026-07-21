@@ -1,0 +1,99 @@
+# Default policies loaded from ConfigMap / file. Not persisted to the database.
+# Set DEFAULT_POLICIES_CONFIG_PATH to the mounted path in production.
+# Each item under policies is a full PolicyManifest (same schema as tenant policies).
+#
+# Missing / invalid file → no default policies (safe no-op).
+
+policies:
+  - type: policy
+    name: model-server-security-context
+    description: >-
+      Applies pod and container securityContext for model-server deployments based on
+      labels.tfy_model_server. Covers all supported model server types in one policy.
+    operation:
+      type: mutate
+      order: 10
+    mode: enforce
+    entities:
+      - service
+    actions:
+      - apply
+    code: |
+      import { MutationInput, MutationOutput } from './types';
+
+      type Sec = {
+        runAsNonRoot?: boolean;
+        runAsUser?: number;
+        runAsGroup?: number;
+        fsGroup?: number;
+        allowPrivilegeEscalation?: boolean;
+        dropAll?: boolean;
+      };
+
+      // Per model-server settings. Omit a server to leave securityContext unchanged.
+      // vLLM: official non-root UID 2000 / GID 0. Others: drop caps without forcing non-root
+      // on stock root images (SGLang, TGI, TEI, NIM, Triton, etc.).
+      const SETTINGS: Record<string, Sec> = {
+        vLLM: {
+          runAsNonRoot: true,
+          runAsUser: 2000,
+          runAsGroup: 0,
+          fsGroup: 0,
+          allowPrivilegeEscalation: false,
+          dropAll: true,
+        },
+        SGLang: { allowPrivilegeEscalation: false, dropAll: true },
+        NIM: { allowPrivilegeEscalation: false, dropAll: true },
+        Infinity: { allowPrivilegeEscalation: false, dropAll: true },
+      };
+
+      function podSC(s: Sec): Record<string, unknown> {
+        const out: Record<string, unknown> = {};
+        if (s.runAsNonRoot) out.runAsNonRoot = true;
+        if (s.runAsUser !== undefined) out.runAsUser = s.runAsUser;
+        if (s.runAsGroup !== undefined) out.runAsGroup = s.runAsGroup;
+        if (s.fsGroup !== undefined) out.fsGroup = s.fsGroup;
+        return out;
+      }
+
+      function containerSC(s: Sec): Record<string, unknown> {
+        const out: Record<string, unknown> = {};
+        if (s.runAsNonRoot) out.runAsNonRoot = true;
+        if (s.runAsUser !== undefined) out.runAsUser = s.runAsUser;
+        if (s.runAsGroup !== undefined) out.runAsGroup = s.runAsGroup;
+        if (s.allowPrivilegeEscalation === false) out.allowPrivilegeEscalation = false;
+        if (s.dropAll) out.capabilities = { drop: ['ALL'] };
+        return out;
+      }
+
+      export function mutate(input: MutationInput): MutationOutput {
+        const manifests = input.generatedK8sManifests || [];
+        const labels = (input.context.inputManifest as { labels?: Record<string, string> })?.labels;
+        const server = labels?.tfy_model_server;
+        const settings = server ? SETTINGS[server] : undefined;
+        if (!settings) {
+          return { generatedK8sManifests: manifests };
+        }
+
+        const psc = podSC(settings);
+        const csc = containerSC(settings);
+        if (Object.keys(psc).length === 0 && Object.keys(csc).length === 0) {
+          return { generatedK8sManifests: manifests };
+        }
+
+        for (const m of manifests) {
+          if (m.kind !== 'Deployment' && m.kind !== 'Rollout') continue;
+          const podSpec = m.spec?.template?.spec;
+          if (!podSpec) continue;
+          if (Object.keys(psc).length > 0) {
+            podSpec.securityContext = { ...(podSpec.securityContext || {}), ...psc };
+          }
+          if (Object.keys(csc).length > 0) {
+            for (const c of podSpec.containers || []) {
+              c.securityContext = { ...(c.securityContext || {}), ...csc };
+            }
+          }
+        }
+
+        return { generatedK8sManifests: manifests };
+      }
