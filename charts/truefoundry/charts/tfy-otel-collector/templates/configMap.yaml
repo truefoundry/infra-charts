@@ -88,6 +88,7 @@ data:
         cache_ttl: 5m
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
     processors:
+      tfytelemetryprocessor: {}
       batch:
         timeout: 2s
         send_batch_size: 200
@@ -151,7 +152,7 @@ data:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [resource, filter, groupbyattrs, transform, batch] # resource → filter → groupbyattrs → transform (defaults) → batch
+          processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
