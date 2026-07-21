@@ -342,6 +342,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: REDIS_HOST
   value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
+{{- if and .Values.sandbox.devMode.enabled (not (hasKey .Values.env "SANDBOX_ENABLED")) }}
+- name: SANDBOX_ENABLED
+  value: "true"
+{{- end }}
 {{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_SERVER_URL) }}
 - name: TFY_SANDBOX_SERVER_URL
   value: {{ printf "http://%s.%s.svc.cluster.local:8080" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
