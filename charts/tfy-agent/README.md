@@ -304,3 +304,9 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | ----------------------------------------------------- | ---------------------------------------------- | ------------------ |
 | `external-secrets-operator.clusterSecretStore.create` | Bool value to create the cluster secret store. | `true`             |
 | `external-secrets-operator.clusterSecretStore.name`   | Name of the ClusterSecretStore resource        | `tfy-secret-store` |
+
+### reloader (stakater/reloader) configuration parameters
+
+| Name               | Description                                                                                     | Value  |
+| ------------------ | ----------------------------------------------------------------------------------------------- | ------ |
+| `reloader.enabled` | Bool value to deploy the stakater/reloader subchart. Disable this to use your own Reloader. | `true` |
