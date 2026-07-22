@@ -57,18 +57,6 @@
 {{- end }}
 {{- end }}
 
-{{/*
-  Whether Sentry is enabled for the control plane.
-  Forced to "false" when airgapped mode is enabled, otherwise "true".
-*/}}
-{{- define "truefoundry.sentryEnabled" -}}
-{{- if and .Values.global.airgapped .Values.global.airgapped.enabled -}}
-false
-{{- else -}}
-true
-{{- end -}}
-{{- end -}}
-
 {{- define "global.imagePullSecrets" -}}
 {{- if .Values.global.imagePullSecrets -}}
 {{- toYaml .Values.global.imagePullSecrets -}}
