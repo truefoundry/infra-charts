@@ -60,3 +60,28 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resolve the Kubernetes volume name for a podVolumeMounts mountDetail entry.
+*/}}
+{{- define "tfy-kyverno.podVolumeMountName" -}}
+{{- if .volumeName -}}
+{{- .volumeName -}}
+{{- else if eq .type "secret" -}}
+{{- .secretName -}}
+{{- else if eq .type "configMap" -}}
+{{- .configMapName -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Render env vars for podVolumeMounts ClusterPolicy rules.
+*/}}
+{{- define "tfy-kyverno.podVolumeMountEnvVars" -}}
+{{- range $m := .mountDetails }}
+{{- range $name, $value := $m.envVars }}
+- name: {{ $name | quote }}
+  value: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- end }}

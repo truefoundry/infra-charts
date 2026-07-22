@@ -40,13 +40,15 @@ syncConfigMaps:
   ## @param syncConfigMaps.excludeNamespaces Namespaces to exclude from syncing ConfigMaps
   excludeNamespaces: []
   ## @param syncConfigMaps.includeNamespaces Namespaces to include for syncing ConfigMaps. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true
+  ## example
+  ## includeNamespaces: [tfy-*]
   includeNamespaces: []
+
   ## @param syncConfigMaps.items List of ConfigMaps to sync across namespaces
   ## Example:
   ##   - namespace: truefoundry
   ##     name: ca-cert-bundle
   items: []
-
 ## @section syncSecrets Configuration options for syncing Secrets across namespaces
 ## Syncing secrets requires additional RBAC permissions for both the Kyverno admission
 ## controller and the background controller to read source secrets and create/update/delete generated secrets for synchronization.
@@ -70,12 +72,20 @@ syncSecrets:
 podVolumeMounts:
   ## @param podVolumeMounts.enabled Enable or disable adding volume mounts to pods
   enabled: false
-  ## @param podVolumeMounts.excludeNamespaces Namespaces to exclude from adding volume mounts to pods
+  ## @param podVolumeMounts.useClusterPolicy Use ClusterPolicy (kyverno.io/v1) instead of MutatingPolicy (policies.kyverno.io/v1). ClusterPolicy supports wildcard namespace patterns (e.g. tfy-*), configMap items, env vars, and readOnly volume mounts
+  useClusterPolicy: true
+  ## @param podVolumeMounts.policyName Name of the ClusterPolicy when useClusterPolicy is true. Defaults to `<release-name>-pod-volume-mounts`
+  policyName: "" #Example: custom-ca-cert-policy
+  ## @param podVolumeMounts.configMapName Default ConfigMap name for the built-in CA volume mount. Used when mountDetails is not overridden
+  configMapName: "" #Example: ca-cert-bundle
+  ## @param podVolumeMounts.mountInitContainers Mount volumes into init containers when enabled
+  mountInitContainers: false
+  ## @param podVolumeMounts.excludeNamespaces Namespaces to exclude from adding volume mounts to pods. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true
   excludeNamespaces: []
-
-  ## @param podVolumeMounts.includeNamespaces Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included
+  ## @param podVolumeMounts.includeNamespaces Namespaces to include for adding volume mounts to pods. When non-empty, only these namespaces will be included. Supports wildcard patterns (e.g. tfy-*) when useClusterPolicy is true
+  ## example
+  ## includeNamespaces: [tfy-*]
   includeNamespaces: []
-
   ## @param podVolumeMounts.objectSelector Label selector to match specific pods. When set, only pods matching these labels will be mutated
   ## Example:
   ##   matchLabels:
@@ -85,18 +95,14 @@ podVolumeMounts:
   ##       operator: In
   ##       values: ["truefoundry", "my-app"]
   objectSelector: {}
-
-  ## @param podVolumeMounts.mountDetails The details of the volume mounts to add
+  ## @param podVolumeMounts.mountDetails Override the chart default volume mounts from files/default-pod-volume-mounts.yaml. When empty, chart defaults are used. Set configMapName on each entry or use podVolumeMounts.configMapName for the built-in default
+  mountDetails: []
+  ## @param podVolumeMounts.additionalMountDetails Additional volume mounts appended to the effective mount list
   ## Example:
   ##   - type: secret
   ##     secretName: my-secret
   ##     mountPath: /var/run/secrets/my-secret
-  ##     subPath: my-subPath
-  ##   - type: configMap
-  ##     configMapName: my-configmap
-  ##     mountPath: /my/configmap/path
-  ##     subPath: my-subPath
-  mountDetails: []
+  additionalMountDetails: []
 
 ## @param additionalKyvernoPolicies Additional Kyverno clusterpolicies to apply
 additionalKyvernoPolicies: []
