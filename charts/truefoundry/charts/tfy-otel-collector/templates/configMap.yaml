@@ -32,6 +32,15 @@ data:
             enabled: true
             path: "/health/config"
       pprof:
+      tfyingestorproxy:
+        endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
+        deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
+        tfy_api_key: ${env:TFY_API_KEY}
+        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
+        cache_ttl: 5m
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
     
     receivers:
       otlp:
@@ -88,6 +97,7 @@ data:
         cache_ttl: 5m
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
     processors:
+      tfytelemetryprocessor: {}
       batch:
         timeout: 2s
         send_batch_size: 200
@@ -147,11 +157,12 @@ data:
                     port: 8888
       extensions:
         - tfyauth
+        - tfyingestorproxy
         - healthcheckv2
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [resource, filter, groupbyattrs, transform, batch] # resource → filter → groupbyattrs → transform (defaults) → batch
+          processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # tfytelemetryprocessor → resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
