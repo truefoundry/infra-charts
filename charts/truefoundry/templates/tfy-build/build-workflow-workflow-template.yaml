@@ -17,7 +17,7 @@ spec:
       "truefoundry.com/buildName":
         expression: workflow.name
   entrypoint: build
-  activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+  activeDeadlineSeconds: 14400
   onExit: exit-handler
   arguments:
     parameters:
@@ -245,7 +245,7 @@ spec:
           - name: scripts
             mountPath: /scripts
     - name: build-and-push-with-buildkit-sidecar
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       metadata:
         annotations:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
@@ -411,7 +411,7 @@ spec:
               - debug
               - workers
     - name: build-and-push-with-external-buildkit
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       metadata:
         annotations:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
@@ -554,7 +554,7 @@ spec:
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
           )
     - name: update-status
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       retryStrategy:
         limit: 4
         retryPolicy: "Always"
