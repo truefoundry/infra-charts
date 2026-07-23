@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.159.4
+  controlPlaneChartVersion: 0.159.5
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -162,6 +162,8 @@ global:
         {{ .Release.Name }}-tfy-otel-collector
       ## @param global.proxy.tfyOtelCollector.port OTEL collector port for OTEL collector service
       port: 4318
+      ## @param global.proxy.tfyOtelCollector.ingestorProxyPort Agent session ingest proxy port
+      ingestorProxyPort: 4319
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: >-
       {{ .Release.Name }}-tfy-controller
@@ -1009,7 +1011,7 @@ servicefoundryServer:
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
     MANIFEST_SERVICE_URL: http://{{ .Release.Name }}-sfy-manifest-service:8080
     MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
-    MLFOUNDRY_MIGRATION_V1_PROXY_ENABLED: "{{ .Values.global.mlfoundryMigrationV1ProxyEnabled | default false }}"
+    MLFOUNDRY_MIGRATION_V1_PROXY_ENABLED: "true"
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     NATS_CONTROLPLANE_ACCOUNT_SEED: ${k8s-secret/truefoundry-tfy-nats-secret/NATS_CONTROLPLANE_ACCOUNT_SEED}
     NATS_URL: http://{{ .Release.Name }}-tfy-nats:4222
@@ -2844,7 +2846,7 @@ tfyNats:
       ## @param tfyNats.container.image.tag Container image tag
       tag: 2.14.2
       ## @param tfyNats.container.image.repository Container image repository (without registry)
-      repository: "tfy-mirror/nats"
+      repository: "tfy-images/nats"
     ## @skip tfyNats.container.patch Container patches
     patch:
       - op: add
@@ -2873,12 +2875,16 @@ tfyNats:
     #   allowPrivilegeEscalation: false
   podTemplate:
     ## @param tfyNats.podTemplate.merge [object] Pod template merges
-    merge: {}
-    # spec:
-    #   securityContext:
-    #     fsGroup: 1000
-    #     runAsUser: 1000
-    #     runAsNonRoot: true
+    merge:
+      spec:
+        securityContext:
+          $tplYaml: |-
+            {{- if .Values.global.podSecurityContext.enabled }}
+            fsGroup: 1001
+            runAsUser: 1001
+            runAsGroup: 1001
+            runAsNonRoot: true
+            {{- end }}
     ## @param tfyNats.podTemplate.patch [array] Pod template patches
     patch:
       - op: add
@@ -2936,6 +2942,18 @@ tfy-llm-gateway:
   env:
     CONTROL_PLANE_URL: http://{{ .Release.Name }}-tfy-proxy:8080
     PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+  ## tfy-llm-gateway.proxy TLS sidecar (tfy-proxy) overrides.
+  ## The sidecar image is built from truefoundry-frontend-app, not the gateway
+  ## repo. Pinning the tag here (parent-chart override) lets a frontend-app-only
+  ## release update deployed sidecars without republishing the gateway OCI
+  ## chart. Gateway Chart.yaml versions must stay on the gateway image-tag line;
+  ## inventing a parallel version from the umbrella chart_version would collide
+  ## when a later gateway release reuses that number (OCI publish skips).
+  proxy:
+    ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
+    image:
+      ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
+      tag: "v0.159.1"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
