@@ -307,7 +307,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### reloader (stakater/reloader) configuration parameters
 
-| Name                             | Description                                                                                 | Value         |
-| -------------------------------- | ------------------------------------------------------------------------------------------- | ------------- |
-| `reloader.enabled`               | Bool value to deploy the stakater/reloader subchart. Disable this to use your own Reloader. | `true`        |
-| `reloader.reloader.reloadStrategy` | Strategy Reloader uses to trigger reloads.                                                 | `annotations` |
+| Name                               | Description                                                                                 | Value         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- | ------------- |
+| `reloader.enabled`                 | Bool value to deploy the stakater/reloader subchart. Disable this to use your own Reloader. | `true`        |
+| `reloader.reloader.reloadStrategy` | Strategy Reloader uses to trigger reloads.                                                  | `annotations` |
