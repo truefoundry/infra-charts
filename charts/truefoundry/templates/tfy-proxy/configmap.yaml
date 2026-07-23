@@ -460,13 +460,9 @@ data:
       {{- end }}
 
       {{- if .Values.tfyInfraManager.enabled }}
-      # /admin/infra-manager and /admin/infra-manager/* → / on upstream:8080 (IM serves SPA + API at root
-      @infra_manager path /admin/infra-manager /admin/infra-manager/*
-      handle @infra_manager {
-        forward_auth {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }} {
-          uri /auth/forward-auth/tenant-admin
-          copy_headers X-Forwarded-User X-Forwarded-Email X-Tenant-Name
-        }
+      # /admin/infra-manager → / on upstream:8080 (IM serves SPA + API at root;
+      # APP_BASE_PATH only rewrites the SPA <base href>, the proxy strips the prefix)
+      handle /admin/infra-manager /admin/infra-manager/* {
         uri strip_prefix /admin/infra-manager
         reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}
       }

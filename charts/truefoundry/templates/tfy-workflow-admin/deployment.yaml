@@ -22,9 +22,11 @@ spec:
         {{- include "tfy-workflow-admin.server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyWorkflowAdmin.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.tfyWorkflowAdmin.podSecurityContext.enabled }}
+      {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -38,9 +40,11 @@ spec:
           - >-
             flyteadmin migrate run --config ${ADMIN_CONFIG_FILE_PATH} &&
             flyteadmin serve --config ${ADMIN_CONFIG_FILE_PATH}
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyWorkflowAdmin.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.tfyWorkflowAdmin.securityContext.enabled }}
+          {{- with .Values.tfyWorkflowAdmin.securityContext }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}
@@ -145,9 +149,11 @@ spec:
         {{- include "tfy-workflow-admin.scheduler.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-workflow-admin.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyWorkflowAdmin.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.tfyWorkflowAdmin.podSecurityContext.enabled }}
+      {{- with .Values.tfyWorkflowAdmin.podSecurityContext }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -160,9 +166,11 @@ spec:
             - run
             - '--config'
             - $(SCHEDULER_CONFIG_FILE_PATH)
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyWorkflowAdmin.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.tfyWorkflowAdmin.securityContext.enabled }}
+          {{- with .Values.tfyWorkflowAdmin.securityContext }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "tfy-workflow-admin.env" . | trim | nindent 12 }}

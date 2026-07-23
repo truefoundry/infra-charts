@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.159.1"
+  gatewayChartVersion: "0.157.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -54,14 +54,6 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
-  podSecurityContext:
-    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
-  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
-  containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -87,8 +79,7 @@ global:
         sizeLimit: ""
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
-      ## Enable/disable this to override the global.containerSecurityContext
-      # enabled: true
+      enabled: true
       runAsNonRoot: true
       runAsUser: 1001
       runAsGroup: 1001
@@ -112,7 +103,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.159.1
+  tag: v0.157.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -132,8 +123,7 @@ podAnnotations: {}
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext:
-  ## Enable/disable this to override the global.podSecurityContext
-  # enabled: true
+  enabled: true
   runAsNonRoot: true
   runAsUser: 1001
 ## @param commonLabels Common labels
@@ -146,8 +136,7 @@ deploymentLabels: {}
 deploymentAnnotations: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
-  ## Enable/disable this to override the global.containerSecurityContext
-  # enabled: true
+  enabled: true
   runAsNonRoot: true
   capabilities:
     drop:
@@ -339,8 +328,7 @@ proxy:
       memory: 256Mi
   ## @param proxy.securityContext [object] Security context for the proxy container (mirrors the main container's defaults)
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
+    enabled: true
     runAsNonRoot: true
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -509,7 +497,13 @@ redis:
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
     ## @skip redis.master.tolerations Tolerations for Redis master pods
-    tolerations: []
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: class.truefoundry.com/component
+        value: critical
+        effect: NoSchedule
     ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
     affinity:
       nodeAffinity:
