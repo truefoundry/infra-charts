@@ -21,9 +21,11 @@ spec:
         {{- include "spark-history-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "spark-history-server.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.sparkHistoryServer.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.sparkHistoryServer.podSecurityContext.enabled }}
+      {{- with .Values.sparkHistoryServer.podSecurityContext }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -31,9 +33,11 @@ spec:
       {{- end }}
       containers:
         - name: "spark-history-server"
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.sparkHistoryServer.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.sparkHistoryServer.securityContext.enabled }}
+          {{- with .Values.sparkHistoryServer.securityContext }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "spark-history-server.env" . | trim | nindent 12 }}

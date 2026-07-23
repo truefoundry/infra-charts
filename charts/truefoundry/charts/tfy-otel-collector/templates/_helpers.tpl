@@ -468,22 +468,6 @@ false
 {{- end -}}
 {{- end -}}
 
-{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
-{{- define "tfy-otel-collector.podSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
-{{- end -}}
-{{- end -}}
-
-{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
-{{- define "tfy-otel-collector.containerSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
-{{- end -}}
-{{- end -}}
-
 {{/*
   Custom CA initContainer (only when not using direct mount)
 */}}
@@ -492,9 +476,11 @@ false
 {{- if eq (include "tfy-otel-collector.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
-  {{- with (include "tfy-otel-collector.containerSecurityContext" (dict "local" .Values.global.customCA.securityContext "global" .Values.global.containerSecurityContext)) }}
+  {{- if .Values.global.customCA.securityContext.enabled }}
+  {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    {{- . | nindent 4 }}
+    {{- toYaml (omit . "enabled") | nindent 4 }}
+  {{- end }}
   {{- end }}
   command: ["sh", "-c"]
   args:
