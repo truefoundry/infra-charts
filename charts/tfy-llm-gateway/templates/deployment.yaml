@@ -38,9 +38,9 @@ spec:
         {{- toYaml .Values.dnsConfig | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
-      {{- with (include "tfy-llm-gateway.podSecurityContext" (dict "local" .Values.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.podSecurityContext.enabled }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit .Values.podSecurityContext "enabled") | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- if or .Values.initContainers (and .Values.global.customCA.enabled (eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false")) }}
@@ -54,9 +54,9 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          {{- with (include "tfy-llm-gateway.containerSecurityContext" (dict "local" .Values.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.securityContext.enabled }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit .Values.securityContext "enabled") | nindent 12 }}
           {{- end }}
           env:
             {{- include "tfy-llm-gateway.env" . | trim | nindent 12 }}
@@ -104,9 +104,9 @@ spec:
           {{- end }}
         {{- if .Values.proxy.tls.enabled }}
         - name: {{ .Values.proxy.name }}
-          {{- with (include "tfy-llm-gateway.containerSecurityContext" (dict "local" .Values.proxy.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.proxy.securityContext.enabled }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit .Values.proxy.securityContext "enabled") | nindent 12 }}
           {{- end }}
           image: "{{ .Values.proxy.image.registry | default .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.proxy.imagePullPolicy | default .Values.imagePullPolicy }}
