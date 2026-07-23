@@ -1,6 +1,6 @@
 apiVersion: v2
 name: truefoundry
-version: 0.159.4
+version: 0.158.4
 description: "TrueFoundry Control Plane Components"
 maintainers:
   - name: truefoundry
@@ -9,7 +9,7 @@ dependencies:
     name: nats
     alias: tfyNats
     repository: https://nats-io.github.io/k8s/helm/charts/
-    version: 2.14.2
+    version: 2.12.6
   - condition: devMode.enabled
     name: postgresql
     repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
@@ -21,13 +21,13 @@ dependencies:
     condition: extraResources.enabled
   - name: tfy-llm-gateway
     repository: oci://tfy.jfrog.io/tfy-helm
-    version: 0.159.1
+    version: 0.158.1
     condition: tfy-llm-gateway.enabled
     tags:
       - llmGateway
   - name: tfy-otel-collector
     repository: file://charts/tfy-otel-collector
-    version: 0.159.0
+    version: 0.158.1
     condition: tfy-otel-collector.enabled
     tags:
       - tracing

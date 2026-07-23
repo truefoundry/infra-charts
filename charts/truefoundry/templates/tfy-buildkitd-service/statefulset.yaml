@@ -64,24 +64,6 @@ spec:
             - name: http
               containerPort: {{ .Values.tfyBuildkitdService.service.port }}
               protocol: TCP
-          {{- if .Values.tfyBuildkitdService.useTcpSocketProbe }}
-          livenessProbe:
-            tcpSocket:
-              port: {{ .Values.tfyBuildkitdService.service.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 5
-          readinessProbe:
-            tcpSocket:
-              port: {{ .Values.tfyBuildkitdService.service.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 5
-          {{- else }}
           livenessProbe:
             exec:
               command:
@@ -118,7 +100,6 @@ spec:
               {{- end }}
                 - debug
                 - workers
-          {{- end }}
           resources:
             {{- include "tfy-buildkitd-service.resources" . | indent 12 }}
           volumeMounts:
