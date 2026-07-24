@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.159.1"
+  gatewayChartVersion: "0.160.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -112,7 +112,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.159.1
+  tag: v0.160.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -328,7 +328,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: ""
+    tag: "v0.160.0"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -478,6 +478,70 @@ sandbox:
     ## @param sandbox.devMode.enabled Enable devMode sandbox
     enabled: true
 
+## @section agentsLtsWriteJob Agents LTS write CronJob
+agentsLtsWriteJob:
+  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job
+  enabled: false
+  ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
+  resourceTier: ""
+  ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
+  schedule: "*/30 * * * *"
+  ## @param agentsLtsWriteJob.timeZone Time zone for the agents LTS write cron job
+  timeZone: UTC
+  ## @param agentsLtsWriteJob.concurrencyPolicy Concurrency policy for the agents LTS write cron job
+  concurrencyPolicy: Forbid
+  ## @param agentsLtsWriteJob.startingDeadlineSeconds Starting deadline seconds for the agents LTS write cron job
+  startingDeadlineSeconds: 300
+  ## @param agentsLtsWriteJob.restartPolicy Restart policy for the agents LTS write cron job
+  restartPolicy: Never
+  ## @param agentsLtsWriteJob.backoffLimit Backoff limit for the agents LTS write cron job
+  backoffLimit: 0
+  ## @param agentsLtsWriteJob.activeDeadlineSeconds Max TTL in seconds for the agents LTS write job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
+  ## @param agentsLtsWriteJob.ttlSecondsAfterFinished TTL seconds after finished for the agents LTS write cron job
+  ttlSecondsAfterFinished: 604800
+  ## @param agentsLtsWriteJob.successfulJobsHistoryLimit Successful jobs history limit for the agents LTS write cron job
+  successfulJobsHistoryLimit: 1
+  ## @param agentsLtsWriteJob.failedJobsHistoryLimit Failed jobs history limit for the agents LTS write cron job
+  failedJobsHistoryLimit: 5
+  ## @skip agentsLtsWriteJob.command
+  command:
+    - "npm"
+    - "run"
+    - "agents-jobs:write-to-lts"
+  ## @param agentsLtsWriteJob.envSecretName Environment secret name for 2-part ${k8s-secret/...} refs
+  envSecretName: tfy-llm-gateway-env-secret
+  ## @param agentsLtsWriteJob.imagePullPolicy Image pull policy for the agents LTS write cron job
+  imagePullPolicy: IfNotPresent
+  ## @param agentsLtsWriteJob.podSecurityContext [object] Security context for the agents LTS write cron job pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param agentsLtsWriteJob.securityContext [object] Security context for the agents LTS write cron job container
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+  ## @param agentsLtsWriteJob.serviceAccount.name Optional service account override (defaults to the gateway service account)
+  serviceAccount:
+    name: ""
+  ## @param agentsLtsWriteJob.resources Resource requests/limits override (merged over resourceTier defaults)
+  resources: {}
+  ## @param agentsLtsWriteJob.env [object] Environment variables for the agents LTS write cron job (job code supplies defaults for LTS_*/LOG_LEVEL/SENTRY/etc.)
+  env:
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
+
 ## Redis dependency configuration
 redis:
   global:
@@ -504,7 +568,7 @@ redis:
   master:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
-      - "--maxmemory-policy volatile-lru"
+      - "--maxmemory-policy allkeys-lru"
       - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
@@ -534,7 +598,7 @@ redis:
                     - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
-      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy allkeys-lru
     ## redis.master.persistence Persistence configuration
     persistence:
       ## @param redis.master.persistence.size Persistence volume size

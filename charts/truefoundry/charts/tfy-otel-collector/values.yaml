@@ -123,7 +123,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.159.0
+  tag: v0.160.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -240,8 +240,10 @@ podDisruptionBudget:
 service:
   ## @param service.type Service type
   type: ClusterIP
-  ## @param service.port Service port
+  ## @param service.port Service port (OTLP HTTP)
   port: 4318
+  ## @param service.ingestorProxyPort Agent session ingest proxy port
+  ingestorProxyPort: 4319
   ## @param service.annotations Service annotations
   annotations: {}
   ## @param service.labels Service labels
