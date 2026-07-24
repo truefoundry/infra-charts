@@ -1,0 +1,78 @@
+{{- if .Values.agentsLtsWriteJob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "tfy-llm-gateway.agentsLtsWriteJob.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-llm-gateway.agentsLtsWriteJob.cronJobLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.agentsLtsWriteJob.cronJobAnnotations" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.agentsLtsWriteJob.schedule | quote }}
+  timeZone: {{ .Values.agentsLtsWriteJob.timeZone | quote }}
+  concurrencyPolicy: {{ .Values.agentsLtsWriteJob.concurrencyPolicy }}
+  startingDeadlineSeconds: {{ .Values.agentsLtsWriteJob.startingDeadlineSeconds }}
+  failedJobsHistoryLimit: {{ .Values.agentsLtsWriteJob.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.agentsLtsWriteJob.successfulJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.agentsLtsWriteJob.backoffLimit }}
+      activeDeadlineSeconds: {{ .Values.agentsLtsWriteJob.activeDeadlineSeconds }}
+      ttlSecondsAfterFinished: {{ .Values.agentsLtsWriteJob.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          annotations:
+            {{- include "tfy-llm-gateway.agentsLtsWriteJob.podAnnotations" . | nindent 12 }}
+          labels:
+            {{- include "tfy-llm-gateway.agentsLtsWriteJob.podLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: {{ .Values.agentsLtsWriteJob.restartPolicy }}
+          imagePullSecrets:
+            {{- include "tfy-llm-gateway.imagePullSecrets" . | nindent 12 }}
+          serviceAccountName: {{ include "tfy-llm-gateway.agentsLtsWriteJob.serviceAccountName" . }}
+          {{- with (include "tfy-llm-gateway.podSecurityContext" (dict "local" .Values.agentsLtsWriteJob.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- if and .Values.global.customCA.enabled (eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false") }}
+          initContainers:
+            {{- include "tfy-llm-gateway.customCA.initContainer" . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: agents-lts-write-job
+              {{- with (include "tfy-llm-gateway.containerSecurityContext" (dict "local" .Values.agentsLtsWriteJob.securityContext "global" .Values.global.containerSecurityContext)) }}
+              securityContext:
+                {{- . | nindent 16 }}
+              {{- end }}
+              image: "{{ .Values.image.registry | default .Values.global.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.agentsLtsWriteJob.imagePullPolicy }}
+              env:
+                {{- include "tfy-llm-gateway.agentsLtsWriteJob.env" . | trim | nindent 16 }}
+              {{- if .Values.agentsLtsWriteJob.command }}
+              command:
+                {{- toYaml .Values.agentsLtsWriteJob.command | nindent 16 }}
+              {{- end }}
+              {{- with .Values.agentsLtsWriteJob.args }}
+              args:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              resources:
+                {{- include "tfy-llm-gateway.agentsLtsWriteJob.resources" . | nindent 16 }}
+              volumeMounts:
+                {{- include "tfy-llm-gateway.agentsLtsWriteJob.volumeMounts" . | nindent 16 }}
+          volumes:
+            {{- include "tfy-llm-gateway.agentsLtsWriteJob.volumes" . | nindent 12 }}
+          {{- $mergedNodeSelector := include "tfy-llm-gateway.agentsLtsWriteJob.nodeSelector" . | fromYaml }}
+          {{- if $mergedNodeSelector }}
+          nodeSelector:
+            {{- toYaml $mergedNodeSelector | nindent 12 }}
+          {{- end }}
+          {{- $mergedAffinity := include "tfy-llm-gateway.agentsLtsWriteJob.affinity" . | fromYaml }}
+          {{- if $mergedAffinity }}
+          affinity:
+            {{- toYaml $mergedAffinity | nindent 12 }}
+          {{- end }}
+          tolerations:
+            {{- include "tfy-llm-gateway.agentsLtsWriteJob.tolerations" . | nindent 12 }}
+{{- end }}
