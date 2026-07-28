@@ -47,15 +47,11 @@ rules:
     verbs: ["list"]
 
   {{/* This allows us to read Karpenter configuration and status to troubleshoot cluster auto scaling issues */}}
+  {{/* This allows us to read Karpenter NodeOverlays to support fractional GPUs */}}
   - apiGroups: ["karpenter.k8s.aws", "karpenter.sh"]
-    resources: ["ec2nodeclasses", "nodepools"]
+    resources: ["ec2nodeclasses", "nodepools", "nodeoverlays"]
     verbs: ["list"]
 
-  {{/* This allows us to read Karpenter NodeOverlays to support fractional GPUs */}}
-  - apiGroups: ["karpenter.sh"]
-    resources: ["nodeoverlays"]
-    verbs: ["get", "list", "watch"]
-  
   {{- else }}
   - apiGroups: ["*"]
     resources: ["*"]
