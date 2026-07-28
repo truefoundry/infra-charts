@@ -22,6 +22,25 @@ All requests must include a `<tunnel-identifier>` prefix segment immediately fol
 
 The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded to the upstream service. The remaining path after the host:port is forwarded as-is.
 
+### Restricting upstream hosts (`caddy.allowedHosts`)
+
+By default Caddy proxies to whatever `host:port` is present in the request path, i.e. any address reachable from the Caddy pod's network. In a shared cluster this means the blast radius is "anything the pod can reach", not just the services you intend to expose.
+
+Set `caddy.allowedHosts` to lock routing down to an explicit allowlist:
+
+```yaml
+caddy:
+  allowedHosts:
+    - my-mcp-server.internal
+    - some-svc.my-namespace.svc.cluster.local
+```
+
+When the list is non-empty, only those hostnames are routable across all four URL formats; requests to any other target return `404`. Entries are **hostnames only — do not include a port** (the port is still taken from the request path). Hostnames are matched exactly (regex metacharacters are escaped), so `svc.ns.svc.cluster.local` will not match `evil-svc.ns.svc.cluster.local`.
+
+Onboarding a new host is a values change followed by `helm upgrade`. The Caddy config is mounted via `subPath` (which does not hot-reload), but the deployment carries a `checksum/config` annotation, so the upgrade rolls the Caddy pods automatically to pick up the new allowlist.
+
+An empty list (the default) preserves the previous behaviour of proxying to any reachable host.
+
 ## Parameters
 
 ### Configuration values for tfy-cloudflared
@@ -100,6 +119,7 @@ The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded 
 | Name                               | Description                                        | Value                                 |
 | ---------------------------------- | -------------------------------------------------- | ------------------------------------- |
 | `caddy.enabled`                    | Deploy the Caddy private endpoint router manifests | `true`                                |
+| `caddy.allowedHosts`               | Restrict Caddy to proxy only these upstream hosts (hostnames without port). Empty list allows any host reachable from the pod's network. | `[]` |
 | `caddy.replicaCount`               | Number of Caddy replicas to deploy                 | `2`                                   |
 | `caddy.image.repository`           | Image repository for Caddy                         | `public.ecr.aws/docker/library/caddy` |
 | `caddy.image.tag`                  | Image tag for Caddy                                | `2.6.3`                               |
