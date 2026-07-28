@@ -420,7 +420,19 @@ data:
       {{- end }}
 
       {{- if (or .Values.tags.llmGatewayRequestLogging .Values.tags.tracing) }}
-      # /api/otel/ → / on upstream:4318
+      # Agent session ingest (large payloads) → ingest proxy :4319
+      # Use single-path handles (not a named matcher) so they sort above /api/otel/*
+      # by path length and always win over the OTLP catch-all.
+      # Strip /api/otel/ingestor-proxy so upstream sees /agent-session-turns|events/...
+      handle /api/otel/ingestor-proxy/agent-session-turns/* {
+        uri strip_prefix /api/otel/ingestor-proxy
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}
+      }
+      handle /api/otel/ingestor-proxy/agent-session-events/* {
+        uri strip_prefix /api/otel/ingestor-proxy
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}
+      }
+      # /api/otel/ → / on upstream:4318 (OTLP)
       handle /api/otel/* {
         uri strip_prefix /api/otel
         reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}

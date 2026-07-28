@@ -32,6 +32,15 @@ data:
             enabled: true
             path: "/health/config"
       pprof:
+      tfyingestorproxy:
+        endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
+        deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
+        tfy_api_key: ${env:TFY_API_KEY}
+        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
+        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
+        cache_ttl: 5m
+        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
+        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
     
     receivers:
       otlp:
@@ -135,6 +144,13 @@ data:
             statements:
               # Error spans, Model gateway type, default tfy.error_type when unset (missing key => nil in OTTL)
               - set(attributes["tfy.error_type"], "unknown") where status.code == STATUS_CODE_ERROR and attributes["tfy.span_type"] == "Model" and attributes["tfy.error_type"] == nil
+      transform/metrics:
+        error_mode: ignore
+        metric_statements:
+          - context: datapoint
+            statements:
+              # Copy pod_name from resource attributes onto the metric datapoint as "pod"
+              - set(attributes["pod"], resource.attributes["pod"])
     service:
       telemetry:
         logs:
@@ -148,6 +164,7 @@ data:
                     port: 8888
       extensions:
         - tfyauth
+        - tfyingestorproxy
         - healthcheckv2
       pipelines:
         traces:
@@ -156,6 +173,6 @@ data:
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
-          processors: []
+          processors: [transform/metrics]
           exporters: [tfymetricsexporter]
 

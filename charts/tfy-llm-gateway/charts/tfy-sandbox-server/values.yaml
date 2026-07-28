@@ -161,9 +161,9 @@ probes:
     ## @param probes.startup.periodSeconds Startup probe period in seconds
     periodSeconds: 10
     ## @param probes.startup.timeoutSeconds Startup probe timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param probes.startup.failureThreshold Startup probe failure threshold
-    failureThreshold: 3
+    failureThreshold: 30
   ## probes.liveness Liveness probe configuration
   liveness:
     ## @param probes.liveness.enabled Enable the liveness probe
@@ -175,9 +175,9 @@ probes:
     ## @param probes.liveness.periodSeconds Liveness probe period in seconds
     periodSeconds: 10
     ## @param probes.liveness.timeoutSeconds Liveness probe timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     ## @param probes.liveness.failureThreshold Liveness probe failure threshold
-    failureThreshold: 3
+    failureThreshold: 5
   ## probes.readiness Readiness probe configuration
   readiness:
     ## @param probes.readiness.enabled Enable the readiness probe
@@ -189,18 +189,18 @@ probes:
     ## @param probes.readiness.periodSeconds Readiness probe period in seconds
     periodSeconds: 10
     ## @param probes.readiness.timeoutSeconds Readiness probe timeout in seconds
-    timeoutSeconds: 1
+    timeoutSeconds: 3
     ## @param probes.readiness.failureThreshold Readiness probe failure threshold
     failureThreshold: 3
 ## @skip resources
 resources:
   requests:
     cpu: 500m
-    memory: 200Mi
+    memory: 256Mi
     ephemeral-storage: 1Gi
   limits:
-    cpu: "1"
-    memory: 500Mi
+    cpu: "2"
+    memory: 2Gi
     ephemeral-storage: 2Gi
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext: {}
