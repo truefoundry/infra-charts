@@ -46,6 +46,11 @@ rules:
     resources: ["customresourcedefinitions"]
     verbs: ["list"]
 
+  {{/* Cluster-wide list for ExternalSecret discovery across namespaces */}}
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["list"]
+
   {{/* This allows us to read Karpenter configuration and status to troubleshoot cluster auto scaling issues */}}
   - apiGroups: ["karpenter.k8s.aws", "karpenter.sh"]
     resources: ["ec2nodeclasses", "nodepools"]
