@@ -40,15 +40,18 @@ jobs:
     # historically.
     runs-on: ubuntu-latest
     steps:
-      # The pipeline's own promote-to-main PRs use the release branch itself
-      # as the PR head (release/truefoundry-X.Y.Z -> main, see helm-charts'
-      # release-public-truefoundry.yaml) and are the ONE sanctioned way these
-      # chart versions reach main — pass those explicitly. The exemption is
-      # deliberately strict: the head must live in THIS repo (a fork branch
-      # named release/truefoundry-* is not a pipeline promote) and must match
-      # the exact release/truefoundry-X.Y.Z semver shape (a prefix-only match
-      # would also exempt e.g. release/truefoundry-experiment). GitHub
-      # expressions have no regex, so the match is done in shell here.
+      # The pipeline's own promote-to-main PRs are the ONE sanctioned way these
+      # chart versions reach main — pass those explicitly. helm-charts'
+      # release-public-truefoundry.yaml opens them from one of two heads:
+      #   - release/truefoundry-X.Y.Z            (legacy: release branch itself)
+      #   - promote/truefoundry-X.Y.Z-to-main    (throwaway head cut from the
+      #     release branch with main merged in, so conflicts can be resolved
+      #     without mutating/re-publishing the release branch — INFRA-1206).
+      # The exemption is deliberately strict: the head must live in THIS repo (a
+      # fork branch named the same is not a pipeline promote) and must match one
+      # of the exact semver shapes above (a prefix-only match would also exempt
+      # e.g. release/truefoundry-experiment). GitHub expressions have no regex,
+      # so the match is done in shell here.
       - name: Determine whether this is a sanctioned promote PR
         id: promote
         env:
@@ -56,9 +59,9 @@ jobs:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           if [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ] \
-             && printf '%s' "$HEAD_REF" | grep -Eq '^release/truefoundry-[0-9]+\.[0-9]+\.[0-9]+$'; then
+             && printf '%s' "$HEAD_REF" | grep -Eq '^(release/truefoundry-[0-9]+\.[0-9]+\.[0-9]+|promote/truefoundry-[0-9]+\.[0-9]+\.[0-9]+-to-main)$'; then
             echo "exempt=true" >> "$GITHUB_OUTPUT"
-            echo "Head branch '$HEAD_REF' is this repo's own release branch promote — version bumps are expected here."
+            echo "Head branch '$HEAD_REF' is this repo's own release/promote branch — version bumps are expected here."
           else
             echo "exempt=false" >> "$GITHUB_OUTPUT"
           fi
