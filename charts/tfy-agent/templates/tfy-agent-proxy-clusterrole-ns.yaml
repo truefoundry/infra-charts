@@ -104,6 +104,11 @@ rules:
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkapplications", "sparkconnects"]
     verbs: ["create", "get", "delete"]
+
+  {{/* This allows us to manage ExternalSecrets for workloads */}}
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["get", "list", "create", "patch", "delete"]
 {{- end }}
 {{- end }}
 {{- end }}
