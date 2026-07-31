@@ -362,6 +362,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: AGENT_SESSION_RESTORE_FROM_LTS_ENABLED
   value: {{ .Values.agentsLtsWriteJob.enabled | quote }}
 {{- end }}
+{{- if not (hasKey .Values.env "GATEWAY_ID") }}
+- name: GATEWAY_ID
+  value: {{ .Values.gatewayId | quote }}
+{{- end }}
 {{- end }}
 
 {{/*
