@@ -275,14 +275,14 @@ tfyAgent:
   ## @param tfyAgent.livenessProbe.initialDelaySeconds Initial delay seconds value for liveness probe of tfyAgent container
   ##
   livenessProbe:
-    failureThreshold: 5
+    failureThreshold: 6
     httpGet:
       path: /
       port: 3000
       scheme: HTTP
-    periodSeconds: 10
+    periodSeconds: 20
     successThreshold: 1
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     initialDelaySeconds: 600
 
   ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
@@ -301,7 +301,7 @@ tfyAgent:
       scheme: HTTP
     periodSeconds: 10
     successThreshold: 1
-    timeoutSeconds: 1
+    timeoutSeconds: 5
     initialDelaySeconds: 30
 
   ## SecurityContext holds pod-level security attributes and common container settings.
