@@ -99,6 +99,7 @@ An empty list (the default) preserves the previous behaviour of proxying to any 
 | `probes.readiness.periodSeconds`       | Readiness probe period in seconds                           | `10`                                             |
 | `probes.readiness.timeoutSeconds`      | Readiness probe timeout in seconds                          | `5`                                              |
 | `probes.readiness.failureThreshold`    | Readiness probe failure threshold                           | `3`                                              |
+| `resources`                            | Resource requests and limits for cloudflared                | `{}`                                             |
 | `podSecurityContext`                   | Pod security context                                        | `{}`                                             |
 | `securityContext`                      | Container security context                                  | `{}`                                             |
 | `nodeSelector`                         | Node selector                                               | `{}`                                             |
