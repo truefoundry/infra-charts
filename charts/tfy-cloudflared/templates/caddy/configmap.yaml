@@ -43,11 +43,6 @@ data:
     	}
 
     	respond /healthz 200
-{{- if .Values.caddy.allowedHosts }}
-
-    	# Host allowlist is active (caddy.allowedHosts). Only the hosts baked into
-    	# the matchers below are proxied; every other target falls through to 404.
-{{- end }}
 
     	@direct_url_http path_regexp direct_url_http ^/[^/]+/http:/{1,2}{{ $hostGroup }}:([0-9]+)(?:/(.*))?$
     	handle @direct_url_http {
