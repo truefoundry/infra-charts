@@ -240,7 +240,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "b7161a6296aa002cd5b364e9aacf63cb02e9f816"
+    tag: "50166888cb002065c7c9fc47de64fd4b436510e3"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -258,11 +258,11 @@ tfyAgent:
   resources:
     limits:
       cpu: 1.6
-      memory: 3800Mi
+      memory: 4000Mi
       ephemeral-storage: 256Mi
     requests:
-      cpu: 800m
-      memory: 1900Mi
+      cpu: 1.2
+      memory: 2000Mi
       ephemeral-storage: 128Mi
 
   ## @param tfyAgent.livenessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
@@ -283,7 +283,7 @@ tfyAgent:
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
-    initialDelaySeconds: 15
+    initialDelaySeconds: 600
 
   ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
@@ -302,7 +302,7 @@ tfyAgent:
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
-    initialDelaySeconds: 15
+    initialDelaySeconds: 30
 
   ## SecurityContext holds pod-level security attributes and common container settings.
   ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
