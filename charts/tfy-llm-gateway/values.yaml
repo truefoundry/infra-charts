@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.161.0"
+  gatewayChartVersion: "0.162.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -112,7 +112,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.161.0
+  tag: v0.162.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -120,6 +120,8 @@ fullnameOverride: ""
 
 ## @param environmentName The environment name
 environmentName: default
+## @param gatewayId Unique gateway identifier populated as GATEWAY_ID
+gatewayId: ""
 ## @param envSecretName The environment secret name
 envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
@@ -328,7 +330,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.161.0"
+    tag: "v0.162.0"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -481,7 +483,7 @@ sandbox:
 ## @section agentsLtsWriteJob Agents LTS write CronJob
 agentsLtsWriteJob:
   ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job
-  enabled: false
+  enabled: true
   ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
   resourceTier: ""
   ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
@@ -568,7 +570,7 @@ redis:
   master:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
-      - "--maxmemory-policy allkeys-lru"
+      - "--maxmemory-policy volatile-lru"
       - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
@@ -598,7 +600,7 @@ redis:
                     - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
-      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy allkeys-lru
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy volatile-lru
     ## redis.master.persistence Persistence configuration
     persistence:
       ## @param redis.master.persistence.size Persistence volume size
