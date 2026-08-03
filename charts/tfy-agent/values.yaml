@@ -240,7 +240,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "b7161a6296aa002cd5b364e9aacf63cb02e9f816"
+    tag: "50166888cb002065c7c9fc47de64fd4b436510e3"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -275,7 +275,7 @@ tfyAgent:
   ## @param tfyAgent.livenessProbe.initialDelaySeconds Initial delay seconds value for liveness probe of tfyAgent container
   ##
   livenessProbe:
-    failureThreshold: 20
+    failureThreshold: 5
     httpGet:
       path: /
       port: 3000
@@ -283,7 +283,7 @@ tfyAgent:
     periodSeconds: 10
     successThreshold: 1
     timeoutSeconds: 1
-    initialDelaySeconds: 15
+    initialDelaySeconds: 600
 
   ## @param tfyAgent.readinessProbe.failureThreshold Failure threshhold value for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.httpGet.path Path for http request for liveness probe of tfyAgent container
@@ -294,7 +294,7 @@ tfyAgent:
   ## @param tfyAgent.readinessProbe.timeoutSeconds Timeout seconds value for liveness probe of tfyAgent container
   ## @param tfyAgent.readinessProbe.initialDelaySeconds Initial delay seconds value for liveness probe of tfyAgent container
   readinessProbe:
-    failureThreshold: 20
+    failureThreshold: 5
     httpGet:
       path: /
       port: 3000
