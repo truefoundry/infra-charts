@@ -1,4 +1,19 @@
 {{- if .Values.caddy.enabled }}
+{{- /*
+  Build the host capture group used by every proxy matcher. When
+  caddy.allowedHosts is empty the group stays "([^/]+)" (any host reachable
+  from the pod's network). When it is set, the group becomes an alternation of
+  the regex-escaped hostnames, so requests to any other target fail to match
+  every matcher and fall through to the final `respond 404`.
+*/}}
+{{- $hostGroup := "([^/]+)" -}}
+{{- if .Values.caddy.allowedHosts -}}
+{{-   $quoted := list -}}
+{{-   range .Values.caddy.allowedHosts -}}
+{{-     $quoted = append $quoted (regexQuoteMeta (. | toString)) -}}
+{{-   end -}}
+{{-   $hostGroup = printf "(%s)" (join "|" $quoted) -}}
+{{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -29,7 +44,7 @@ data:
 
     	respond /healthz 200
 
-    	@direct_url_http path_regexp direct_url_http ^/[^/]+/http:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	@direct_url_http path_regexp direct_url_http ^/[^/]+/http:/{1,2}{{ $hostGroup }}:([0-9]+)(?:/(.*))?$
     	handle @direct_url_http {
     		rewrite * /{re.direct_url_http.3}
 
@@ -52,7 +67,7 @@ data:
     		}
     	}
 
-    	@direct_url_https path_regexp direct_url_https ^/[^/]+/https:/{1,2}([^/]+):([0-9]+)(?:/(.*))?$
+    	@direct_url_https path_regexp direct_url_https ^/[^/]+/https:/{1,2}{{ $hostGroup }}:([0-9]+)(?:/(.*))?$
     	handle @direct_url_https {
     		rewrite * /{re.direct_url_https.3}
 
@@ -77,7 +92,7 @@ data:
     		}
     	}
 
-    	@direct_https path_regexp direct_https ^/[^/]+/https/([^/]+):([0-9]+)(?:/(.*))?$
+    	@direct_https path_regexp direct_https ^/[^/]+/https/{{ $hostGroup }}:([0-9]+)(?:/(.*))?$
     	handle @direct_https {
     		rewrite * /{re.direct_https.3}
 
@@ -102,7 +117,7 @@ data:
     		}
     	}
 
-    	@direct_http path_regexp direct_http ^/[^/]+/([^/]+):([0-9]+)(?:/(.*))?$
+    	@direct_http path_regexp direct_http ^/[^/]+/{{ $hostGroup }}:([0-9]+)(?:/(.*))?$
     	handle @direct_http {
     		rewrite * /{re.direct_http.3}
 

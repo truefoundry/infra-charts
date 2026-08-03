@@ -1,5 +1,10 @@
 ## Changelog
 
+### 0.4.0
+
+- Added `caddy.allowedHosts` to restrict which upstream hosts the Caddy router will proxy to. When set, only the listed hostnames are routable; requests to any other target return `404`. The default (empty list) preserves the previous behaviour of proxying to any host reachable from the pod's network.
+- The Caddy deployment now carries a `checksum/config` annotation, so `helm upgrade` automatically rolls the Caddy pods when the Caddyfile changes (the config is mounted via `subPath`, which does not hot-reload). Onboarding a new host to `caddy.allowedHosts` therefore takes effect on the next `helm upgrade`.
+
 ### 0.3.0
 
 - **Breaking:** Default install namespace changed from `cloudflared` to `tfy-cloudflared`.

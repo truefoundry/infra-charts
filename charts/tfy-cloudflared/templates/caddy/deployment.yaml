@@ -16,6 +16,8 @@ spec:
     metadata:
       labels:
         {{- include "tfy-cloudflared.caddySelectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/caddy/configmap.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ include "tfy-cloudflared.caddyServiceAccountName" . }}
       containers:
