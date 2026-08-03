@@ -1,0 +1,14 @@
+mountDetails:
+  - type: configMap
+    volumeName: custom-ca-cert
+    configMapName: ca-cert-bundle
+    configMapItems:
+      - key: ca-certificates.crt
+        path: ca-certificates.crt
+    mountPath: /etc/ssl/certs/ca-certificates.crt
+    subPath: ca-certificates.crt
+    readOnly: true
+    envVars:
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      SSL_CERT_DIR: /etc/ssl/certs

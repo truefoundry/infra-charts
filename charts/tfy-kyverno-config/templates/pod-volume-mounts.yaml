@@ -1,4 +1,192 @@
-{{- if and .Values.podVolumeMounts.enabled .Values.podVolumeMounts.mountDetails -}}
+{{- if .Values.podVolumeMounts.enabled -}}
+{{- $defaultMountDetails := (.Files.Get "files/default-pod-volume-mounts.yaml" | fromYaml).mountDetails -}}
+{{- $configMapName := .Values.podVolumeMounts.configMapName | default "ca-cert-bundle" -}}
+{{- range $m := $defaultMountDetails -}}
+{{- if eq $m.type "configMap" -}}
+{{- $_ := set $m "configMapName" $configMapName -}}
+{{- end -}}
+{{- end -}}
+{{- $baseMountDetails := ternary .Values.podVolumeMounts.mountDetails $defaultMountDetails (gt (len .Values.podVolumeMounts.mountDetails) 0) -}}
+{{- $mountDetails := concat $baseMountDetails (.Values.podVolumeMounts.additionalMountDetails | default list) -}}
+{{- if gt (len $mountDetails) 0 -}}
+{{- if .Values.podVolumeMounts.useClusterPolicy }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: {{ .Values.podVolumeMounts.policyName | default (printf "%s-pod-volume-mounts" (include "tfy-kyverno.fullname" .)) }}
+spec:
+  background: false
+  rules:
+    - name: add-volumes
+      match:
+        resources:
+          kinds:
+            - Pod
+          {{- if .Values.podVolumeMounts.includeNamespaces }}
+          namespaces:
+            {{- range .Values.podVolumeMounts.includeNamespaces }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.podVolumeMounts.objectSelector }}
+          selector:
+            {{- with .Values.podVolumeMounts.objectSelector.matchLabels }}
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.podVolumeMounts.objectSelector.matchExpressions }}
+            matchExpressions:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          {{- end }}
+      {{- if .Values.podVolumeMounts.excludeNamespaces }}
+      exclude:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- range .Values.podVolumeMounts.excludeNamespaces }}
+                - {{ . | quote }}
+                {{- end }}
+      {{- end }}
+      mutate:
+        patchStrategicMerge:
+          spec:
+            volumes:
+              {{- range $m := $mountDetails }}
+              - name: {{ include "tfy-kyverno.podVolumeMountName" $m | quote }}
+                {{- if eq $m.type "secret" }}
+                secret:
+                  secretName: {{ $m.secretName | quote }}
+                {{- else if eq $m.type "configMap" }}
+                configMap:
+                  name: {{ $m.configMapName | quote }}
+                  {{- with $m.configMapItems }}
+                  items:
+                    {{- toYaml . | nindent 20 }}
+                  {{- end }}
+                {{- end }}
+              {{- end }}
+    - name: patch-all-containers
+      match:
+        resources:
+          kinds:
+            - Pod
+          {{- if .Values.podVolumeMounts.includeNamespaces }}
+          namespaces:
+            {{- range .Values.podVolumeMounts.includeNamespaces }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.podVolumeMounts.objectSelector }}
+          selector:
+            {{- with .Values.podVolumeMounts.objectSelector.matchLabels }}
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.podVolumeMounts.objectSelector.matchExpressions }}
+            matchExpressions:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          {{- end }}
+      {{- if .Values.podVolumeMounts.excludeNamespaces }}
+      exclude:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- range .Values.podVolumeMounts.excludeNamespaces }}
+                - {{ . | quote }}
+                {{- end }}
+      {{- end }}
+      mutate:
+        foreach:
+          - list: request.object.spec.containers
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - name: "{{`{{ element.name }}`}}"
+                    {{- if include "tfy-kyverno.podVolumeMountEnvVars" (dict "mountDetails" $mountDetails) }}
+                    env:
+                      {{- include "tfy-kyverno.podVolumeMountEnvVars" (dict "mountDetails" $mountDetails) | nindent 22 }}
+                    {{- end }}
+                    volumeMounts:
+                      {{- range $m := $mountDetails }}
+                      - name: {{ include "tfy-kyverno.podVolumeMountName" $m | quote }}
+                        mountPath: {{ $m.mountPath | quote }}
+                        {{- if $m.subPath }}
+                        subPath: {{ $m.subPath | quote }}
+                        {{- end }}
+                        {{- if $m.readOnly }}
+                        readOnly: true
+                        {{- end }}
+                      {{- end }}
+    {{- if .Values.podVolumeMounts.mountInitContainers }}
+    - name: patch-all-initcontainers
+      match:
+        resources:
+          kinds:
+            - Pod
+          {{- if .Values.podVolumeMounts.includeNamespaces }}
+          namespaces:
+            {{- range .Values.podVolumeMounts.includeNamespaces }}
+            - {{ . | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.podVolumeMounts.objectSelector }}
+          selector:
+            {{- with .Values.podVolumeMounts.objectSelector.matchLabels }}
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- with .Values.podVolumeMounts.objectSelector.matchExpressions }}
+            matchExpressions:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          {{- end }}
+      {{- if .Values.podVolumeMounts.excludeNamespaces }}
+      exclude:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- range .Values.podVolumeMounts.excludeNamespaces }}
+                - {{ . | quote }}
+                {{- end }}
+      {{- end }}
+      preconditions:
+        all:
+          {{- $initContainersPrecondition := "{{ request.object.spec.initContainers || `[]` | length(@) }}" }}
+          - key: {{ $initContainersPrecondition | quote }}
+            operator: GreaterThan
+            value: 0
+      mutate:
+        foreach:
+          - list: request.object.spec.initContainers
+            patchStrategicMerge:
+              spec:
+                initContainers:
+                  - name: "{{`{{ element.name }}`}}"
+                    {{- if include "tfy-kyverno.podVolumeMountEnvVars" (dict "mountDetails" $mountDetails) }}
+                    env:
+                      {{- include "tfy-kyverno.podVolumeMountEnvVars" (dict "mountDetails" $mountDetails) | nindent 22 }}
+                    {{- end }}
+                    volumeMounts:
+                      {{- range $m := $mountDetails }}
+                      - name: {{ include "tfy-kyverno.podVolumeMountName" $m | quote }}
+                        mountPath: {{ $m.mountPath | quote }}
+                        {{- if $m.subPath }}
+                        subPath: {{ $m.subPath | quote }}
+                        {{- end }}
+                        {{- if $m.readOnly }}
+                        readOnly: true
+                        {{- end }}
+                      {{- end }}
+    {{- end }}
+{{- else }}
 apiVersion: policies.kyverno.io/v1
 kind: MutatingPolicy
 metadata:
@@ -46,15 +234,13 @@ spec:
     - name: has-new-volumes
       expression: >-
         !has(object.spec.volumes) ||
-        {{- range $i, $m := .Values.podVolumeMounts.mountDetails }}
-        {{- $volName := "" }}
-        {{- if eq $m.type "secret" }}{{ $volName = $m.secretName }}{{ else if eq $m.type "configMap" }}{{ $volName = $m.configMapName }}{{ end }}
+        {{- range $i, $m := $mountDetails }}
+        {{- $volName := include "tfy-kyverno.podVolumeMountName" $m }}
         {{ if $i }}||{{ end }} !object.spec.volumes.exists(v, v.name == "{{ $volName }}")
         {{- end }}
   mutations:
-    {{- range $m := .Values.podVolumeMounts.mountDetails }}
-    {{- $volName := "" }}
-    {{- if eq $m.type "secret" }}{{ $volName = $m.secretName }}{{ else if eq $m.type "configMap" }}{{ $volName = $m.configMapName }}{{ end }}
+    {{- range $m := $mountDetails }}
+    {{- $volName := include "tfy-kyverno.podVolumeMountName" $m }}
     - patchType: ApplyConfiguration
       applyConfiguration:
         expression: |
@@ -64,14 +250,14 @@ spec:
               volumes: [
                 {{- if eq $m.type "secret" }}
                 Object.spec.volumes{
-                  name: "{{ $m.secretName }}",
+                  name: "{{ $volName }}",
                   secret: Object.spec.volumes.secret{
                     secretName: "{{ $m.secretName }}"
                   }
                 }
                 {{- else if eq $m.type "configMap" }}
                 Object.spec.volumes{
-                  name: "{{ $m.configMapName }}",
+                  name: "{{ $volName }}",
                   configMap: Object.spec.volumes.configMap{
                     name: "{{ $m.configMapName }}",
                     defaultMode: 420
@@ -92,7 +278,7 @@ spec:
                     }
                   ]
                 }
-              ),
+              ){{- if $.Values.podVolumeMounts.mountInitContainers }},
               initContainers: has(object.spec.initContainers) ?
                 object.spec.initContainers.map(c,
                   Object.spec.initContainers{
@@ -107,7 +293,7 @@ spec:
                       }
                     ]
                   }
-                ) : []
+                ) : []{{- end }}
             }
           } : Object{}
     {{- end }}
@@ -116,4 +302,6 @@ spec:
       enabled: true
   webhookConfiguration:
     timeoutSeconds: 10
+{{- end }}
+{{- end }}
 {{- end -}}
