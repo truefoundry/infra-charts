@@ -28,22 +28,6 @@
 {{- end }}
 {{- end }}
 
-{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
-{{- define "truefoundry.podSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
-{{- end -}}
-{{- end -}}
-
-{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
-{{- define "truefoundry.containerSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
-{{- end -}}
-{{- end -}}
-
 {{/*
   Service Account Annotations
   */}}
@@ -56,18 +40,6 @@
 {}
 {{- end }}
 {{- end }}
-
-{{/*
-  Whether Sentry is enabled for the control plane.
-  Forced to "false" when airgapped mode is enabled, otherwise "true".
-*/}}
-{{- define "truefoundry.sentryEnabled" -}}
-{{- if and .Values.global.airgapped .Values.global.airgapped.enabled -}}
-false
-{{- else -}}
-true
-{{- end -}}
-{{- end -}}
 
 {{- define "global.imagePullSecrets" -}}
 {{- if .Values.global.imagePullSecrets -}}
@@ -304,9 +276,11 @@ false
 {{- if eq (include "truefoundry.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
-  {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.global.customCA.securityContext "global" .Values.global.containerSecurityContext)) }}
+  {{- if .Values.global.customCA.securityContext.enabled }}
+  {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    {{- . | nindent 4 }}
+    {{- toYaml (omit . "enabled") | nindent 4 }}
+  {{- end }}
   {{- end }}
   command: ["sh", "-c"]
   args:
