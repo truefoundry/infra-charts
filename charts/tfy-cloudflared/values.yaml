@@ -144,13 +144,14 @@ probes:
     ## @param probes.readiness.failureThreshold Readiness probe failure threshold
     failureThreshold: 3
 
-## @skip resources [object] Resource requests and limits for cloudflared
-resources: {}
-# requests:
-#   cpu: 50m
-#   memory: 64Mi
-# limits:
-#   memory: 128Mi
+## @param resources [object] Resource requests and limits for cloudflared
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
 
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext: {}
@@ -227,7 +228,13 @@ caddy:
     ## @param caddy.serviceAccount.annotations [object] Caddy service account annotations
     annotations: {}
   ## @param caddy.resources [object] Resource requests and limits for Caddy
-  resources: {}
+  resources:
+    requests:
+      cpu: 300m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   ## @param caddy.nodeSelector [object] Node selector for Caddy pods
   nodeSelector: {}
   ## @param caddy.tolerations [array] Tolerations for Caddy pods
