@@ -24,9 +24,9 @@ spec:
       imagePullSecrets:
         {{- include "tfy-buildkitd-service.imagePullSecrets" . | nindent 8 }}
       serviceAccountName: {{ include "tfy-buildkitd-service.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyBuildkitdService.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.tfyBuildkitdService.podSecurityContext.enabled }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit .Values.tfyBuildkitdService.podSecurityContext "enabled") | nindent 8 }}
       {{- end }}
       topologySpreadConstraints:
         - maxSkew: 1
@@ -37,9 +37,9 @@ spec:
               {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 14 }}
       containers:
         - name: tfy-buildkitd-service
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyBuildkitdService.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.tfyBuildkitdService.securityContext.enabled }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit .Values.tfyBuildkitdService.securityContext "enabled") | nindent 12 }}
           {{- end }}
           image: "{{ .Values.tfyBuildkitdService.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuildkitdService.image.repository }}:{{ .Values.tfyBuildkitdService.image.tag }}"
           imagePullPolicy: {{ .Values.tfyBuildkitdService.image.pullPolicy }}
@@ -64,24 +64,6 @@ spec:
             - name: http
               containerPort: {{ .Values.tfyBuildkitdService.service.port }}
               protocol: TCP
-          {{- if .Values.tfyBuildkitdService.useTcpSocketProbe }}
-          livenessProbe:
-            tcpSocket:
-              port: {{ .Values.tfyBuildkitdService.service.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 5
-          readinessProbe:
-            tcpSocket:
-              port: {{ .Values.tfyBuildkitdService.service.port }}
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 5
-          {{- else }}
           livenessProbe:
             exec:
               command:
@@ -118,7 +100,6 @@ spec:
               {{- end }}
                 - debug
                 - workers
-          {{- end }}
           resources:
             {{- include "tfy-buildkitd-service.resources" . | indent 12 }}
           volumeMounts:

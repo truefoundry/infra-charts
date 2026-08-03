@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.162.0"
+  gatewayChartVersion: "0.151.1"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -54,14 +54,6 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
-  podSecurityContext:
-    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
-  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
-  containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -87,9 +79,7 @@ global:
         sizeLimit: ""
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
-      ## Enable/disable this to override the global.containerSecurityContext
-      # enabled: true
-      runAsNonRoot: true
+      enabled: true
       runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
@@ -112,7 +102,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.162.0
+  tag: v0.151.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -120,8 +110,6 @@ fullnameOverride: ""
 
 ## @param environmentName The environment name
 environmentName: default
-## @param gatewayId Unique gateway identifier populated as GATEWAY_ID
-gatewayId: ""
 ## @param envSecretName The environment secret name
 envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
@@ -134,8 +122,7 @@ podAnnotations: {}
 commonAnnotations: {}
 ## @param podSecurityContext [object] Pod security context
 podSecurityContext:
-  ## Enable/disable this to override the global.podSecurityContext
-  # enabled: true
+  enabled: true
   runAsNonRoot: true
   runAsUser: 1001
 ## @param commonLabels Common labels
@@ -148,9 +135,7 @@ deploymentLabels: {}
 deploymentAnnotations: {}
 ## @param securityContext [object] Security context configuration
 securityContext:
-  ## Enable/disable this to override the global.containerSecurityContext
-  # enabled: true
-  runAsNonRoot: true
+  enabled: true
   capabilities:
     drop:
       - ALL
@@ -257,12 +242,6 @@ httpRoute:
   ## @param httpRoute.hostnames [array] Hostnames for the HTTPRoute
   hostnames: []
   #  - "llm-gateway.example.com"
-  ## httpRoute.timeouts Timeouts applied to the HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
-  timeouts:
-    ## @param httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
-    request: 1800s
-    ## @param httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
-    backendRequest: 600s
   ## Istio configuration
 istio:
   ## istio.virtualservice Virtual service configuration
@@ -330,7 +309,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.162.0"
+    tag: v0.150.0
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -341,9 +320,7 @@ proxy:
       memory: 256Mi
   ## @param proxy.securityContext [object] Security context for the proxy container (mirrors the main container's defaults)
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
@@ -430,18 +407,6 @@ autoscaling:
   targetCPUUtilizationPercentage: 60
   # @param autoscaling.targetMemoryUtilizationPercentage Target memory utilization percentage
   # targetMemoryUtilizationPercentage: 70
-  ## @param autoscaling.behavior [object] HPA scaling behavior policies (autoscaling/v2 `.spec.behavior`)
-  behavior:
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      selectPolicy: Max
-      policies:
-        - type: Percent
-          value: 10
-          periodSeconds: 60
-        - type: Pods
-          value: 1
-          periodSeconds: 60
   ## Rollout configuration
 rollout:
   ## @param rollout.enabled Enable rollout (rolling update)
@@ -473,77 +438,6 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
-## Sandbox configuration
-sandbox:
-  ## sandbox.devMode devMode sandbox configuration
-  devMode:
-    ## @param sandbox.devMode.enabled Enable devMode sandbox
-    enabled: true
-
-## @section agentsLtsWriteJob Agents LTS write CronJob
-agentsLtsWriteJob:
-  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job
-  enabled: true
-  ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
-  resourceTier: ""
-  ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
-  schedule: "*/30 * * * *"
-  ## @param agentsLtsWriteJob.timeZone Time zone for the agents LTS write cron job
-  timeZone: UTC
-  ## @param agentsLtsWriteJob.concurrencyPolicy Concurrency policy for the agents LTS write cron job
-  concurrencyPolicy: Forbid
-  ## @param agentsLtsWriteJob.startingDeadlineSeconds Starting deadline seconds for the agents LTS write cron job
-  startingDeadlineSeconds: 300
-  ## @param agentsLtsWriteJob.restartPolicy Restart policy for the agents LTS write cron job
-  restartPolicy: Never
-  ## @param agentsLtsWriteJob.backoffLimit Backoff limit for the agents LTS write cron job
-  backoffLimit: 2
-  ## @param agentsLtsWriteJob.activeDeadlineSeconds Max TTL in seconds for the agents LTS write job - job is killed after this duration (default 6h)
-  activeDeadlineSeconds: 21600
-  ## @param agentsLtsWriteJob.ttlSecondsAfterFinished TTL seconds after finished for the agents LTS write cron job
-  ttlSecondsAfterFinished: 604800
-  ## @param agentsLtsWriteJob.successfulJobsHistoryLimit Successful jobs history limit for the agents LTS write cron job
-  successfulJobsHistoryLimit: 1
-  ## @param agentsLtsWriteJob.failedJobsHistoryLimit Failed jobs history limit for the agents LTS write cron job
-  failedJobsHistoryLimit: 5
-  ## @skip agentsLtsWriteJob.command
-  command:
-    - "npm"
-    - "run"
-    - "agents-jobs:write-to-lts"
-  ## @param agentsLtsWriteJob.envSecretName Environment secret name for 2-part ${k8s-secret/...} refs
-  envSecretName: tfy-llm-gateway-env-secret
-  ## @param agentsLtsWriteJob.imagePullPolicy Image pull policy for the agents LTS write cron job
-  imagePullPolicy: IfNotPresent
-  ## @param agentsLtsWriteJob.podSecurityContext [object] Security context for the agents LTS write cron job pods
-  podSecurityContext:
-    ## Enable/disable this to override the global.podSecurityContext
-    # enabled: true
-    runAsNonRoot: true
-    runAsUser: 1001
-  ## @param agentsLtsWriteJob.securityContext [object] Security context for the agents LTS write cron job container
-  securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-  ## @param agentsLtsWriteJob.serviceAccount.name Optional service account override (defaults to the gateway service account)
-  serviceAccount:
-    name: ""
-  ## @param agentsLtsWriteJob.resources Resource requests/limits override (merged over resourceTier defaults)
-  resources: {}
-  ## @param agentsLtsWriteJob.env [object] Environment variables for the agents LTS write cron job (job code supplies defaults for LTS_*/LOG_LEVEL/SENTRY/etc.)
-  env:
-    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
-    TENANT_NAME: "{{ .Values.global.tenantName }}"
-    GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
-    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-    AUTH_SERVER_URL: https://auth.truefoundry.com
-
 ## Redis dependency configuration
 redis:
   global:
@@ -570,12 +464,18 @@ redis:
   master:
     ## @param redis.master.extraFlags [array] Additional command line flags for Redis master
     extraFlags:
-      - "--maxmemory-policy volatile-lru"
+      - "--maxmemory-policy allkeys-lru"
       - "--maxmemory 4608mb"
     ## @param redis.master.nodeSelector [object] Node selector for Redis master pods (e.g. {"karpenter.sh/capacity-type": "on-demand"} for AWS)
     nodeSelector: {}
     ## @skip redis.master.tolerations Tolerations for Redis master pods
-    tolerations: []
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: class.truefoundry.com/component
+        value: critical
+        effect: NoSchedule
     ## @skip redis.master.affinity Affinity rules for Redis master pods (default: avoid spot nodes across all cloud providers)
     affinity:
       nodeAffinity:
@@ -600,7 +500,7 @@ redis:
                     - spot
     ## @param redis.master.configmap Redis master configmap configuration
     configmap: >-
-      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy volatile-lru
+      # Basic Redis config appendonly yes                     # Enable AOF appendfsync everysec               # Standard durability vs performance balance # AOF Rewrite (Consolidation) Settings auto-aof-rewrite-percentage 100    # Default threshold auto-aof-rewrite-min-size 64mb     # Minimum size before rewriting # Force AOF rewrite every 24 hours using system-based triggering # by setting an active-expire-cycle to help reduce fragmentation # and using cron-trigger for rewrite via Redis "CONFIG SET" supported: aof-rewrite-incremental-fsync yes # Optional: reduce memory fragmentation in long-running single-pod Redis maxmemory-policy noeviction
     ## redis.master.persistence Persistence configuration
     persistence:
       ## @param redis.master.persistence.size Persistence volume size
