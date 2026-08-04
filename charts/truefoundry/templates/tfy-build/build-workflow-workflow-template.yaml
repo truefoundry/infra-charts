@@ -12,6 +12,11 @@ spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
   imagePullSecrets:
     {{- include "tfy-build.imagePullSecrets" . | nindent 4 }}
+  # Applied to every pod Argo creates for this workflow so that they are selected by the
+  # in-release NetworkPolicies, which match on app.kubernetes.io/instance.
+  podMetadata:
+    labels:
+      {{- include "tfy-build.podLabels" . | nindent 6 }}
   workflowMetadata:
     labelsFrom:
       "truefoundry.com/buildName":
