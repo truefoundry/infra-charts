@@ -106,6 +106,44 @@ gateway:
       cpu: 500m
       memory: 1024Mi
 
+  ## Spread the gateway across nodes and across availability zones, so that losing a single node or a
+  ## single zone cannot take out every replica of the ingress.
+  ##
+  ## Both entries are best-effort: the scheduler prefers an even spread but still places a pod when an
+  ## even spread is not possible. That is safe on every cluster, including single-zone clusters and
+  ## bare-metal clusters whose nodes carry no `topology.kubernetes.io/zone` label.
+  ##
+  ## On a cluster you know has at least three zones, you can make the zone spread a hard requirement by
+  ## setting `whenUnsatisfiable: DoNotSchedule` and adding `minDomains: 3` to the zone entry. Kubernetes
+  ## only honours `minDomains` alongside `DoNotSchedule` and rejects it otherwise, which is why it is
+  ## absent below. Weigh it carefully for an ingress: `DoNotSchedule` refuses to place a pod on any node
+  ## missing the zone label, and where the nodes the gateway is allowed onto span fewer than `minDomains`
+  ## zones it caps the gateway at one replica per zone and leaves the surplus Pending, which also stops
+  ## it autoscaling under load. Any nodeSelector/affinity you set narrows the nodes that count, so it is
+  ## that subset which has to cover the zones, not the cluster as a whole.
+  ##
+  ## Helm cannot template a sub-chart's values, so the selector below is written out literally rather
+  ## than derived from the release name. The istio gateway sub-chart labels its pods `app: <release>`
+  ## and `istio: <release>`, so under a release name other than `tfy-istio-ingress` this selector matches
+  ## no pods and the spread quietly does nothing; override the list to fix the names up in that case.
+  ## @param gateway.topologySpreadConstraints [array] Topology spread constraints for the gateway pods
+  ##
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: tfy-istio-ingress
+          istio: tfy-istio-ingress
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: tfy-istio-ingress
+          istio: tfy-istio-ingress
+
 ## @section tfyGateway Configuration for the tfyGateway.
 ##
 tfyGateway:
