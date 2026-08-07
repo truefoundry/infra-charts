@@ -28231,6 +28231,25 @@ entries:
     version: 0.1.0
   tfy-llm-gateway:
   - apiVersion: v2
+    created: "2026-08-07T17:54:43.519023889Z"
+    dependencies:
+    - condition: redis.enabled
+      name: redis
+      repository: ""
+      version: 24.0.0
+    - condition: sandbox.devMode.enabled
+      name: tfy-sandbox-server
+      repository: file://charts/tfy-sandbox-server
+      version: 0.3.3
+    description: Truefoundry LLM Gateway deployment chart
+    digest: 1eb9b84ae6159715f08eb6557c3640987d412e841b5448b8f883a949c9068c32
+    maintainers:
+    - name: truefoundry
+    name: tfy-llm-gateway
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-llm-gateway-0.165.0/tfy-llm-gateway-0.165.0.tgz
+    version: 0.165.0
+  - apiVersion: v2
     created: "2026-08-07T12:42:01.995503907Z"
     dependencies:
     - condition: redis.enabled
@@ -37924,6 +37943,54 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/true-ai-0.1.0/true-ai-0.1.0.tgz
     version: 0.1.0
   truefoundry:
+  - apiVersion: v2
+    created: "2026-08-07T17:54:43.866312463Z"
+    dependencies:
+    - alias: tfyNats
+      condition: tfyNats.enabled
+      name: nats
+      repository: https://nats-io.github.io/k8s/helm/charts/
+      version: 2.14.2
+    - condition: devMode.enabled
+      name: postgresql
+      repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
+      version: 18.1.1
+    - alias: extraResources
+      condition: extraResources.enabled
+      name: tfy-manifests-template
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.0
+    - condition: tfy-llm-gateway.enabled
+      name: tfy-llm-gateway
+      repository: oci://tfy.jfrog.io/tfy-helm
+      tags:
+      - llmGateway
+      version: 0.165.0
+    - condition: tfy-otel-collector.enabled
+      name: tfy-otel-collector
+      repository: file://charts/tfy-otel-collector
+      tags:
+      - tracing
+      - llmGatewayRequestLogging
+      version: 0.165.0
+    - alias: victoriaMetricsMonitoring
+      condition: victoriaMetricsMonitoring.enabled
+      name: tfy-victoria-metrics-config
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.1.3
+    - alias: truefoundryMonitoring
+      condition: truefoundryMonitoring.enabled
+      name: truefoundry-monitoring
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.1.6
+    description: TrueFoundry Control Plane Components
+    digest: 548611f73bed6a0a4acd4d282dfdf6e2e0f10672057f808e61e4ecd21e6da7a9
+    maintainers:
+    - name: truefoundry
+    name: truefoundry
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.165.0/truefoundry-0.165.0.tgz
+    version: 0.165.0
   - apiVersion: v2
     created: "2026-08-07T12:42:02.496998053Z"
     dependencies:
@@ -57027,4 +57094,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-monitoring-0.1.0/truefoundry-monitoring-0.1.0.tgz
     version: 0.1.0
-generated: "2026-08-07T17:25:42.401480693Z"
+generated: "2026-08-07T17:54:43.871042777Z"
