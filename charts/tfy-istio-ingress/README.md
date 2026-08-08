@@ -1,6 +1,49 @@
 # Tfy-istio-ingress helm chart packaged by TrueFoundry
 Tfy-istio-ingress is a Helm chart that facilitates the deployment and configuration of Istio Ingress Gateway on a Kubernetes cluster.
 
+## Spreading the gateway across availability zones
+
+The gateway is spread across `topology.kubernetes.io/zone` in addition to `kubernetes.io/hostname`, so
+that losing a single node or a single zone cannot take out every replica of the ingress.
+
+The default is best-effort: the scheduler prefers an even spread but will still place a pod when an even
+spread is not possible. This is safe on every cluster, including single-zone clusters and bare-metal
+clusters whose nodes carry no zone label.
+
+On a cluster that you know has at least three zones, you can make the zone spread a hard requirement:
+
+```yaml
+gateway:
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: tfy-istio-ingress
+          istio: tfy-istio-ingress
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      minDomains: 3
+      labelSelector:
+        matchLabels:
+          app: tfy-istio-ingress
+          istio: tfy-istio-ingress
+```
+
+Weigh this carefully for an ingress. With `DoNotSchedule` the scheduler refuses to place a pod on any
+node missing the zone label, and where the nodes the gateway is allowed onto span fewer than
+`minDomains` zones it caps the gateway at one replica per zone and leaves the surplus Pending — which
+also stops it autoscaling under load. Any nodeSelector or affinity you set narrows the nodes that count,
+so it is that subset which has to cover the zones, not the cluster as a whole. `minDomains` additionally
+requires Kubernetes 1.28 or newer, and Kubernetes only honours it together with `DoNotSchedule`.
+
+The label selector is written out literally because Helm cannot template a sub-chart's values. The istio
+gateway sub-chart labels its pods `app: <release name>` and `istio: <release name>`, so if you install
+under a release name other than `tfy-istio-ingress`, fix up the selector to match or the spread will
+quietly do nothing. To turn spreading off entirely, set `gateway.topologySpreadConstraints: []`.
+
 ## Parameters
 
 ### Gateway API CRDs
@@ -39,6 +82,7 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 | `gateway.autoscaling.maxReplicas`                    | Maximum number of replicas for autoscaling the Gateway.          | `100` |
 | `gateway.autoscaling.targetCPUUtilizationPercentage` | CPU utilization percentage wrt requests for scaling gateway pods | `70`  |
 | `gateway.resources`                                  | Resource section for the gateway pods                            | `{}`  |
+| `gateway.topologySpreadConstraints`                  | Topology spread constraints for the gateway pods                 | `[]`  |
 
 ### tfyGateway Configuration for the tfyGateway.
 
