@@ -15,20 +15,19 @@ rules:
   - apiGroups: ["apps"]
     resources: ["replicasets", "deployments"]
     verbs: ["list", "watch"]
+  {{- if not (or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode) }}
   - apiGroups: ["networking.istio.io"]
     resources: ["gateways", "virtualservices"]
     verbs: ["list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["list", "watch"]
+  {{- end }}
   - apiGroups: ["argoproj.io"]
     resources: ["applications", "rollouts", "workflowtemplates", "workflows"]
     verbs: ["list", "watch"]
-  - apiGroups: ["kubeflow.org"]
-    resources: ["notebooks"]
-    verbs: ["list", "watch"]
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkapplications"]
-    verbs: ["list", "watch"]
-  - apiGroups: ["networking.k8s.io"]
-    resources: ["ingresses"]
     verbs: ["list", "watch"]
 {{- end }}
 {{- end }}
