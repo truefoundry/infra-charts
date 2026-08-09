@@ -87,9 +87,10 @@ The solution consists of two main components:
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namespace.
 
-| Name                            | Description                             | Value                      |
-| ------------------------------- | --------------------------------------- | -------------------------- |
-| `resourceQuota.enabled`         | Create the ResourceQuota.               | `true`                     |
-| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota | `{}`                       |
-| `resourceQuota.labels`          | Labels to add to the ResourceQuota      | `{}`                       |
-| `resourceQuota.priorityClasses` | PriorityClasses to enable.              | `["system-node-critical"]` |
+| Name                            | Description                                   | Value                      |
+| ------------------------------- | --------------------------------------------- | -------------------------- |
+| `resourceQuota.enabled`         | Create the ResourceQuota.                     | `true`                     |
+| `resourceQuota.annotations`     | Annotations to add to the ResourceQuota       | `{}`                       |
+| `resourceQuota.labels`          | Labels to add to the ResourceQuota            | `{}`                       |
+| `resourceQuota.priorityClasses` | PriorityClasses to enable.                    | `["system-node-critical"]` |
+| `extraManifests`                | Extra manifests to deploy alongside the chart | `[]`                       |
