@@ -51,6 +51,10 @@ data:
             {{- end }}
         spec:
           serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
+          # Build scripts never call the Kube API (callbacks over HTTP, remote buildkit),
+          # so the pod does not need a mounted SA token. Denying it removes a control-plane
+          # privesc primitive if untrusted build input achieves in-pod code execution.
+          automountServiceAccountToken: false
           imagePullSecrets:
             {{- include "tfy-build.imagePullSecrets" . | nindent 12 }}
           restartPolicy: Never
