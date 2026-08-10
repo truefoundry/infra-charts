@@ -1,5 +1,9 @@
 ## Changelog
 
+### 0.4.2
+
+- **Security:** Disabled the Caddy admin API (`admin off`, previously `admin 0.0.0.0:2019`) and removed `containerPort: 2019` from the Caddy deployment. The admin API is unauthenticated by default and was bound to the pod IP, so any pod on the cluster network could reach it and replace the running config at runtime (MitM of MCP traffic, repointing upstreams to internal targets, or DoS). It is not needed for the proxy: the Caddyfile is a static mounted config and pods already roll on change via the `checksum/config` annotation, so runtime reconfiguration is never used. Probes (`/healthz` on port 80) and the Service (port 80 only) are unaffected.
+
 ### 0.4.0
 
 - Added `caddy.allowedHosts` to restrict which upstream hosts the Caddy router will proxy to. When set, only the listed hostnames are routable; requests to any other target return `404`. The default (empty list) preserves the previous behaviour of proxying to any host reachable from the pod's network.
