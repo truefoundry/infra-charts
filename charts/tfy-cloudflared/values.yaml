@@ -201,6 +201,12 @@ caddy:
   enabled: true
   ## @param caddy.allowedHosts [array] Restrict Caddy to proxy only these upstream hosts. Entries are hostnames without a port (e.g. `my-mcp-server.internal` or `svc.ns.svc.cluster.local`). An empty list allows any host reachable from the pod's network.
   allowedHosts: []
+  ## Network policy for the Caddy router
+  networkPolicy:
+    ## @param caddy.networkPolicy.enabled Create a NetworkPolicy that only allows cloudflared pods (plus any `caddy.networkPolicy.extraFrom` peers) to reach the Caddy router on port 80. Requires a CNI that enforces NetworkPolicy; it is inert otherwise. Kubelet health probes originate from the node and are not blocked by this policy on common CNIs.
+    enabled: true
+    ## @param caddy.networkPolicy.extraFrom [array] Additional NetworkPolicyPeer entries appended to the ingress `from` list (e.g. another in-cluster gateway or a specific namespace).
+    extraFrom: []
   ## @param caddy.replicaCount Number of Caddy replicas to deploy
   replicaCount: 2
   image:
