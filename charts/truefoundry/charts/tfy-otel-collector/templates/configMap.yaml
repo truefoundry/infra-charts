@@ -29,10 +29,9 @@ data:
           status:
             enabled: true
             path: "/health/status"
-          # config endpoint disabled: it serves the fully resolved collector
-          # config (including the resolved TFY_API_KEY) unauthenticated.
           config:
-            enabled: false
+            enabled: true
+            path: "/health/config"
       pprof:
       tfyingestorproxy:
         endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
@@ -60,6 +59,9 @@ data:
               authenticator: tfyauth
 
     exporters:
+      debug:
+        verbosity: detailed # For debug output during troubleshooting
+      nop:
       tfydeltafusionexporter:
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
         deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT:-60s}
@@ -194,14 +196,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # tfytelemetryprocessor (per-tenant metrics, reads auth ctx before batch) → resource → filter → groupbyattrs → transform (defaults) → batch
-          exporters: [forward]
-        traces/deltafusion:
-          receivers: [forward]
-          processors: [transform/drop_gen_ai]
-          exporters: [tfydeltafusionexporter]
-        traces/otel:
-          receivers: [forward]
-          exporters: [tfytracesexporter]
+          exporters: [tfydeltafusionexporter, tfytracesexporter]
         metrics:
           receivers: [otlp]
           processors: [transform/metrics]
