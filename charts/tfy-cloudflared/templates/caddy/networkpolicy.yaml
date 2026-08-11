@@ -18,7 +18,7 @@ spec:
         - podSelector:
             matchLabels:
               {{- include "tfy-cloudflared.selectorLabels" . | nindent 14 }}
-        {{- with .Values.caddy.networkPolicy.extraFrom }}
+        {{- with .Values.caddy.networkPolicy.allowedIngressFrom }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
       ports:

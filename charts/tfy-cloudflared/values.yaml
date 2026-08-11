@@ -203,10 +203,10 @@ caddy:
   allowedHosts: []
   ## Network policy for the Caddy router
   networkPolicy:
-    ## @param caddy.networkPolicy.enabled Create a NetworkPolicy that only allows cloudflared pods (plus any `caddy.networkPolicy.extraFrom` peers) to reach the Caddy router on port 80. Requires a CNI that enforces NetworkPolicy; it is inert otherwise. Kubelet health probes originate from the node and are not blocked by this policy on common CNIs.
+    ## @param caddy.networkPolicy.enabled Create a NetworkPolicy that only allows cloudflared pods (plus any `caddy.networkPolicy.allowedIngressFrom` peers) to reach the Caddy router on port 80. Requires a CNI that enforces NetworkPolicy; it is inert otherwise. Kubelet health probes originate from the node and are not blocked by this policy on common CNIs.
     enabled: true
-    ## @param caddy.networkPolicy.extraFrom [array] Additional NetworkPolicyPeer entries appended to the ingress `from` list (e.g. another in-cluster gateway or a specific namespace).
-    extraFrom: []
+    ## @param caddy.networkPolicy.allowedIngressFrom [array] Additional NetworkPolicyPeer entries appended to the ingress `from` list (e.g. another in-cluster gateway or a specific namespace).
+    allowedIngressFrom: []
   ## @param caddy.replicaCount Number of Caddy replicas to deploy
   replicaCount: 2
   image:
