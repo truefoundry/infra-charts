@@ -45,6 +45,10 @@ global:
   podSecurityContext:
     ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
     enabled: true
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
+    runAsNonRoot: true
+    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
+    runAsUser: 1001
   ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
   containerSecurityContext:
     ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
@@ -123,7 +127,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.160.0
+  tag: v0.165.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -146,12 +150,8 @@ nameOverride: ""
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
-## @param podSecurityContext [object] Pod security context
-podSecurityContext:
-  ## Enable/disable this to override the global.podSecurityContext
-  # enabled: true
-  runAsNonRoot: true
-  runAsUser: 1001
+## @param podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
+podSecurityContext: {}
 ## @param commonLabels [object] Common labels
 commonLabels: {}
 ## @param podLabels [object] Pod annotations
