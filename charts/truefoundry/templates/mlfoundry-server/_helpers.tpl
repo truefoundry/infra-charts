@@ -218,6 +218,14 @@ Expand the name of the chart.
 - name: MULTITENANT
   value: "true"
 {{- end }}
+- name: K8S_SERVICE_ACCOUNT_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.serviceAccountName
+- name: MLFOUNDRY_WIF_K8S_NAMESPACE
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.namespace
 {{- end }}
 
 {{/*
@@ -244,33 +252,33 @@ Resource Tier
 {{- define "mlfoundry-server.defaultResources.small" }}
 requests:
   cpu: 100m
-  memory: 400Mi
+  memory: 512Mi
   ephemeral-storage: 128Mi
 limits:
   cpu: 200m
-  memory: 600Mi
+  memory: 1024Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "mlfoundry-server.defaultResources.medium" }}
 requests:
-  cpu: 100m
-  memory: 500Mi
+  cpu: 200m
+  memory: 1024Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 200m
-  memory: 700Mi
+  cpu: 400m
+  memory: 2048Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
 {{- define "mlfoundry-server.defaultResources.large" }}
 requests:
-  cpu: 100m
-  memory: 650Mi
+  cpu: 600m
+  memory: 1536Mi
   ephemeral-storage: 128Mi
 limits:
-  cpu: 200m
-  memory: 850Mi
+  cpu: 1200m
+  memory: 3072Mi
   ephemeral-storage: 256Mi
 {{- end }}
 
