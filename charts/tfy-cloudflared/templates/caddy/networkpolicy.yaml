@@ -1,0 +1,33 @@
+{{- if and .Values.caddy.enabled .Values.caddy.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tfy-cloudflared.caddyFullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.caddyCommonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.commonAnnotations" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tfy-cloudflared.caddySelectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "tfy-cloudflared.selectorLabels" . | nindent 14 }}
+        {{- with .Values.caddy.networkPolicy.allowedIngressFrom }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    # Explicitly allow all egress so a cluster-wide default-deny-egress
+    # NetworkPolicy does not block Caddy from reaching MCP upstreams or DNS.
+    # Upstream targets are scoped at the app layer by caddy.allowedHosts.
+    - {}
+{{- end }}

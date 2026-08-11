@@ -1,5 +1,10 @@
 ## Changelog
 
+### 0.5.0
+
+- **Security:** Disabled the Caddy admin API (`admin off`, previously `admin 0.0.0.0:2019`) and removed `containerPort: 2019` from the Caddy deployment. The admin API is unauthenticated by default and was bound to the pod IP, so any pod on the cluster network could reach it and replace the running config at runtime (MitM of MCP traffic, repointing upstreams to internal targets, or DoS). It is not needed for the proxy: the Caddyfile is a static mounted config and pods already roll on change via the `checksum/config` annotation, so runtime reconfiguration is never used. Probes (`/healthz` on port 80) and the Service (port 80 only) are unaffected.
+- Added a NetworkPolicy for the Caddy router (`caddy.networkPolicy.enabled`, default `true`). It restricts ingress to `caddy:80` to cloudflared pods only, so other pods on the cluster network can no longer use the router as an open proxy to internal targets. Extra ingress peers can be allowed via `caddy.networkPolicy.allowedIngressFrom`. The policy also explicitly allows all egress from Caddy, so a cluster-wide default-deny-egress policy does not block it from reaching upstreams or DNS. It is only enforced on clusters whose CNI supports NetworkPolicy (inert otherwise); kubelet health probes come from the node and are not affected on common CNIs. This complements — and does not replace — `caddy.allowedHosts`, which scopes the upstream targets Caddy will dial.
+
 ### 0.4.0
 
 - Added `caddy.allowedHosts` to restrict which upstream hosts the Caddy router will proxy to. When set, only the listed hostnames are routable; requests to any other target return `404`. The default (empty list) preserves the previous behaviour of proxying to any host reachable from the pod's network.
