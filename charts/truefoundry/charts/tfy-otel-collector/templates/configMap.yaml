@@ -10,12 +10,11 @@ metadata:
 data:
   config.yaml: |-
     extensions:
-      tfyauth: # Custom authorisation
+      tfyauth: # Custom authorisation 
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         cache_ttl: 5m
         tfy_api_key: ${env:TFY_API_KEY}
-        tfy_api_keys_to_verify: ${env:TFY_API_KEYS_TO_VERIFY:-[]}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
       healthcheckv2:
@@ -29,22 +28,20 @@ data:
           status:
             enabled: true
             path: "/health/status"
-          # config endpoint disabled: it serves the fully resolved collector
-          # config (including the resolved TFY_API_KEY) unauthenticated.
           config:
-            enabled: false
+            enabled: true
+            path: "/health/config"
       pprof:
       tfyingestorproxy:
         endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
         tfy_api_key: ${env:TFY_API_KEY}
-        tfy_api_keys_to_verify: ${env:TFY_API_KEYS_TO_VERIFY:-[]}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         cache_ttl: 5m
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-
+    
     receivers:
       otlp:
         protocols:
@@ -60,22 +57,14 @@ data:
               authenticator: tfyauth
 
     exporters:
-      tfydeltafusionexporter:
+      debug:
+        verbosity: detailed # For debug output during troubleshooting
+      nop:
+      tfytracesexporter:
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
         deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT:-60s}
         deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES:-2}
         deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL:-10s}
-        servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
-        servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
-        servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
-        servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-        tfy_api_key: ${env:TFY_API_KEY}
-        cache_ttl: 5m
-        retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
-        # legacy = combined /gateway-model-metrics only, split = real + virtual endpoints only, dual = both
-        model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-legacy}
-        timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
-      tfytracesexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
@@ -90,6 +79,7 @@ data:
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-200ms}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
+        retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
       tfymetricsexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
@@ -106,9 +96,6 @@ data:
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
-    connectors:
-      # Fan-out after shared processors so batch/filter/etc. run once.
-      forward:
     processors:
       tfytelemetryprocessor: {}
       batch:
@@ -157,16 +144,6 @@ data:
             statements:
               # Error spans, Model gateway type, default tfy.error_type when unset (missing key => nil in OTTL)
               - set(attributes["tfy.error_type"], "unknown") where status.code == STATUS_CODE_ERROR and attributes["tfy.span_type"] == "Model" and attributes["tfy.error_type"] == nil
-      # DeltaFusion-only: strip gen_ai.* attrs before ingest (external OTEL path keeps them).
-      transform/drop_gen_ai:
-        error_mode: ignore
-        trace_statements:
-          - context: span
-            statements:
-              - delete_matching_keys(attributes, "^gen_ai\\..*")
-          - context: resource
-            statements:
-              - delete_matching_keys(attributes, "^gen_ai\\..*")
       transform/metrics:
         error_mode: ignore
         metric_statements:
@@ -190,17 +167,9 @@ data:
         - tfyingestorproxy
         - healthcheckv2
       pipelines:
-        # Shared ingest path — processors (incl. batch) run once, then forward fans out.
         traces:
           receivers: [otlp]
-          processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # tfytelemetryprocessor (per-tenant metrics, reads auth ctx before batch) → resource → filter → groupbyattrs → transform (defaults) → batch
-          exporters: [forward]
-        traces/deltafusion:
-          receivers: [forward]
-          processors: [transform/drop_gen_ai]
-          exporters: [tfydeltafusionexporter]
-        traces/otel:
-          receivers: [forward]
+          processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # tfytelemetryprocessor → resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
