@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.166.1
+  controlPlaneChartVersion: 0.166.2
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -164,6 +164,8 @@ global:
       port: 4318
       ## @param global.proxy.tfyOtelCollector.ingestorProxyPort Agent session ingest proxy port
       ingestorProxyPort: 4319
+    ## @skip global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled
+    proxyServerControlPlaneToComputePlaneRoutesEnabled: true
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: >-
       {{ .Release.Name }}-tfy-controller
@@ -853,7 +855,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.166.1"
+    tag: "v0.166.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
