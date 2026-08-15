@@ -57,6 +57,13 @@ cloudflared:
       ## @param cloudflared.networkPolicy.external.enabled Allow egress to the Cloudflare edge. Disabling this breaks the tunnel.
       enabled: true
       ## @param cloudflared.networkPolicy.external.cidrs [array] Pin egress to exactly these IP ranges — Cloudflare's documented Tunnel edge blocks (region1 `198.41.192.0/24`, region2 `198.41.200.0/24`, and their IPv6 `/48`s). These enclosing blocks give headroom over the individual `/32`s Cloudflare lists; set the `/32`s to tighten further. If Cloudflare rotates edge IPs the tunnel can break — widen or empty this list to recover. An empty list falls back to all external IPs except `fallbackPrivateCIDRs`.
+      ## Source: Cloudflare Tunnel firewall requirements
+      ## https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/tunnel-with-firewall/
+      ## Those docs list individual /32s for region1.v2.argotunnel.com (198.41.192.x)
+      ## and region2.v2.argotunnel.com (198.41.200.x), plus IPv6 2606:4700:a0::/a8::,
+      ## reached on port 7844 (TCP/UDP for http2/quic). We use the enclosing /24 and
+      ## /48 blocks so new edge IPs within them don't break the tunnel. Verify against
+      ## the doc if Cloudflare changes ranges.
       cidrs:
         - 198.41.192.0/24
         - 198.41.200.0/24
