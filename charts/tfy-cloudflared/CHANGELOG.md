@@ -1,5 +1,11 @@
 ## Changelog
 
+### 0.6.0
+
+- Added an egress NetworkPolicy for cloudflared (`cloudflared.networkPolicy.enabled`, default `true`). It pins cloudflared's in-cluster egress to the Caddy router (`caddy:80`) only, so a compromised or misconfigured tunnel cannot forward requests to any other pod on the cluster network. Only `Egress` is restricted, so metrics scraping (ingress to cloudflared) is unaffected. The policy is only rendered when `caddy.enabled=true`, and is only enforced on clusters whose CNI supports NetworkPolicy (inert otherwise). This is the outbound counterpart to the Caddy ingress policy added in 0.5.0.
+  - **Outbound edge is IP-pinned by default.** `cloudflared.networkPolicy.external.cidrs` limits the tunnel's external egress to Cloudflare's documented edge blocks (region1 `198.41.192.0/24`, region2 `198.41.200.0/24`, and their IPv6 `/48`s) on port `7844` TCP/UDP (`external.ports`). This stops cloudflared from opening arbitrary outbound connections. **Note:** these are hardcoded Cloudflare IPs — if Cloudflare rotates its edge ranges the tunnel can fail to connect; widen or empty `external.cidrs` to recover. Emptying `external.cidrs` falls back to `0.0.0.0/0` minus `external.fallbackPrivateCIDRs` (any external IP, still no in-cluster pods).
+  - DNS (port 53) egress is allowed via `cloudflared.networkPolicy.allowDNS`; extra egress peers via `cloudflared.networkPolicy.allowedEgressTo`.
+
 ### 0.5.0
 
 - **Security:** Disabled the Caddy admin API (`admin off`, previously `admin 0.0.0.0:2019`) and removed `containerPort: 2019` from the Caddy deployment. The admin API is unauthenticated by default and was bound to the pod IP, so any pod on the cluster network could reach it and replace the running config at runtime (MitM of MCP traffic, repointing upstreams to internal targets, or DoS). It is not needed for the proxy: the Caddyfile is a static mounted config and pods already roll on change via the `checksum/config` annotation, so runtime reconfiguration is never used. Probes (`/healthz` on port 80) and the Service (port 80 only) are unaffected.
