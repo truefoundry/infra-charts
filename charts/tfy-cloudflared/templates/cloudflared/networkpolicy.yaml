@@ -64,8 +64,10 @@ spec:
       {{- end }}
     {{- end }}
     {{- end }}
-    {{- with .Values.cloudflared.networkPolicy.allowedEgressTo }}
-    - to:
-        {{- toYaml . | nindent 8 }}
+    {{- with .Values.cloudflared.networkPolicy.extraEgress }}
+    # Operator-supplied egress rules, appended verbatim. Each entry is a full
+    # egress rule with its own `to` and `ports`, so the escape hatch stays
+    # port-scoped instead of opening every port.
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 {{- end }}

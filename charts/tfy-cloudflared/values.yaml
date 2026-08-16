@@ -81,8 +81,15 @@ cloudflared:
         - 172.16.0.0/12
         - 192.168.0.0/16
         - 100.64.0.0/10
-    ## @param cloudflared.networkPolicy.allowedEgressTo [array] Additional NetworkPolicyPeer entries appended to the egress `to` list (e.g. another in-cluster router).
-    allowedEgressTo: []
+    ## @param cloudflared.networkPolicy.extraEgress [array] Escape hatch for additional egress. Each entry is a full NetworkPolicyEgressRule (its own `to` and `ports`) appended verbatim to the policy, so you keep it port-scoped rather than opening every port. Empty by default.
+    extraEgress: []
+    #  - to:
+    #      - podSelector:
+    #          matchLabels:
+    #            app.kubernetes.io/name: some-other-router
+    #    ports:
+    #      - protocol: TCP
+    #        port: 8080
 
 ## @param replicaCount Number of cloudflared replicas to deploy
 replicaCount: 2
