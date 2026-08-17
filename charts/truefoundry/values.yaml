@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.166.4
+  controlPlaneChartVersion: 0.162.8
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -164,8 +164,6 @@ global:
       port: 4318
       ## @param global.proxy.tfyOtelCollector.ingestorProxyPort Agent session ingest proxy port
       ingestorProxyPort: 4319
-    ## @skip global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled
-    proxyServerControlPlaneToComputePlaneRoutesEnabled: true
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: >-
       {{ .Release.Name }}-tfy-controller
@@ -317,10 +315,6 @@ global:
   podSecurityContext:
     ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
-    runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
-    runAsUser: 1001
   ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere).
   containerSecurityContext:
     ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
@@ -470,8 +464,12 @@ truefoundryBootstrap:
     labels: {}
     ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
     annotations: {}
-  ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context for the bootstrap container
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param truefoundryBootstrap.securityContext [object] Security context for the bootstrap container
   securityContext:
     ## Enable/disable this to override the global.containerSecurityContext
@@ -546,7 +544,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.166.0"
+    tag: "v0.162.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -563,8 +561,12 @@ mlfoundryServer:
   podAnnotations: {}
   ## @param mlfoundryServer.podLabels [object] Labels for the mlfoundry server pods
   podLabels: {}
-  ## @param mlfoundryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param mlfoundryServer.podSecurityContext [object] Security context for the mlfoundry server pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param mlfoundryServer.securityContext [object] Security context for the mlfoundry server
   securityContext:
     ## Enable/disable this to override the global.containerSecurityContext
@@ -715,12 +717,12 @@ s3proxy:
   fullnameOverride: ""
   ## @param s3proxy.podAnnotations Annotations for the s3 proxy pods
   podAnnotations: {}
-  ## @param s3proxy.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; overrides runAsUser below.
+  ## @param s3proxy.podSecurityContext [object] Security context for the s3 proxy pods
   podSecurityContext:
     ## Enable/disable this to override the global.podSecurityContext
     # enabled: true
-    ## runAsNonRoot inherited from global.podSecurityContext
     runAsUser: 65532
+    runAsNonRoot: true
   ## @param s3proxy.commonLabels Common labels for the s3 proxy pods
   commonLabels: {}
   ## @param s3proxy.commonAnnotations [object] Common annotations for the s3 proxy pods
@@ -855,7 +857,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.166.3"
+    tag: "v0.162.5"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -868,8 +870,12 @@ servicefoundryServer:
   nameOverride: ""
   ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
   fullnameOverride: ""
-  ## @param servicefoundryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param servicefoundryServer.podSecurityContext [object] Security context for the servicefoundry server pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param servicefoundryServer.podLabels [object] Pod-specific labels for the servicefoundry server
   podLabels: {}
   ## @param servicefoundryServer.podAnnotations [object] Pod-specific annotations for the servicefoundry server
@@ -1104,7 +1110,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.166.0"
+    tag: "v0.162.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1117,13 +1123,13 @@ sparkHistoryServer:
   fullnameOverride: ""
   ## @param sparkHistoryServer.podAnnotations Annotations for the spark history server pods
   podAnnotations: {}
-  ## @param sparkHistoryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; overrides runAsUser and adds fsGroup below.
+  ## @param sparkHistoryServer.podSecurityContext [object] Security context for the spark history server pods
   podSecurityContext:
     ## Enable/disable this to override the global.podSecurityContext
     # enabled: true
-    ## runAsNonRoot inherited from global.podSecurityContext
     fsGroup: 1000
     runAsUser: 65534
+    runAsNonRoot: true
   ## @param sparkHistoryServer.commonLabels Common labels for the spark history server pods
   commonLabels: {}
   ## @param sparkHistoryServer.commonAnnotations [object] Common annotations for the spark history server pods
@@ -1253,7 +1259,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.166.0"
+    tag: "v0.162.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1268,8 +1274,12 @@ tfyK8sController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyK8sController.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyK8sController.podSecurityContext [object] Security context for the tfyK8sController pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
   ## @param tfyK8sController.commonAnnotations [object] Common annotations for the tfyK8sController pods
@@ -1410,7 +1420,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.166.0"
+    tag: "v0.148.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1425,8 +1435,12 @@ sfyManifestService:
   fullnameOverride: ""
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
-  ## @param sfyManifestService.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param sfyManifestService.podSecurityContext [object] Security context for the sfy manifest service pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
   ## @param sfyManifestService.commonAnnotations [object] Common annotations for the sfy manifest service pods
@@ -1568,7 +1582,7 @@ stdioMcpProxy:
     ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
     repository: "tfy-private-images/stdio-mcp-proxy"
     ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
-    tag: "v0.166.0"
+    tag: "v0.159.0"
   ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
   # replicaCount: 1
   ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
@@ -1692,7 +1706,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.166.0"
+    tag: "v0.162.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -2370,7 +2384,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.166.0
+    tag: v0.159.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2385,8 +2399,12 @@ tfyController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyController.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyController.podSecurityContext [object] Security context for the tfyController pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
   ## @param tfyController.commonAnnotations [object] Common annotations for the tfyController pods
@@ -2522,7 +2540,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.166.0
+    tag: v0.162.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2537,8 +2555,12 @@ tfyWorkflowAdmin:
   fullnameOverride: ""
   ## @param tfyWorkflowAdmin.podAnnotations Annotations for the tfyWorkflowAdmin pods
   podAnnotations: {}
-  ## @param tfyWorkflowAdmin.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyWorkflowAdmin.podSecurityContext [object] Security context for the tfyWorkflowAdmin pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
   ## @param tfyWorkflowAdmin.commonLabels Common labels for the tfyWorkflowAdmin pods
   commonLabels: {}
   ## @param tfyWorkflowAdmin.commonAnnotations [object] Common annotations for the tfyWorkflowAdmin pods
@@ -2933,7 +2955,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.166.0"
+      tag: "v0.162.0"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3019,7 +3041,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.166.0"
+    tag: "v0.160.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3094,13 +3116,14 @@ deltaFusionIngestor:
   podLabels: {}
   ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
   podAnnotations: {}
-  ## @param deltaFusionIngestor.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; adds fsGroup below.
+  ## @param deltaFusionIngestor.podSecurityContext [object] Pod security context for the container
   podSecurityContext:
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
     ## Enable/disable this to override the global.podSecurityContext
     # enabled: true
-    ## runAsNonRoot and runAsUser inherited from global.podSecurityContext
     fsGroup: 100
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionIngestor.securityContext [object] Security context for the container
   securityContext:
     ## Enable/disable this to override the global.containerSecurityContext
@@ -3204,7 +3227,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.166.0"
+    tag: "v0.160.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3265,13 +3288,14 @@ deltaFusionCompaction:
   podLabels: {}
   ## @param deltaFusionCompaction.podAnnotations Annotations for the deltaFusionCompaction cron job
   podAnnotations: {}
-  ## @param deltaFusionCompaction.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; adds fsGroup below.
+  ## @param deltaFusionCompaction.podSecurityContext [object] Security context for the deltaFusionCompaction cron job
   podSecurityContext:
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
     ## Enable/disable this to override the global.podSecurityContext
     # enabled: true
-    ## runAsNonRoot and runAsUser inherited from global.podSecurityContext
     fsGroup: 100
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionCompaction.securityContext [object] Security context for the deltaFusionCompaction cron job
   securityContext:
     ## Enable/disable this to override the global.containerSecurityContext
@@ -3387,7 +3411,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.166.0
+    tag: v0.162.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3407,8 +3431,12 @@ deltaFusionQueryServer:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param deltaFusionQueryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param deltaFusionQueryServer.podSecurityContext [object] Security context for the deltaFusionQueryServer pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionQueryServer.commonLabels Common labels for the deltaFusionQueryServer pods
   commonLabels: {}
   ## @param deltaFusionQueryServer.commonAnnotations Common annotations for the deltaFusionQueryServer pods
@@ -3601,7 +3629,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.166.0"
+    tag: "v0.162.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
@@ -3622,8 +3650,12 @@ tfyProxy:
   podAnnotations: {}
   ## @param tfyProxy.podLabels [object] Labels for the tfyProxy pods
   podLabels: {}
-  ## @param tfyProxy.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyProxy.podSecurityContext [object] Security context for the tfyProxy pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
   commonAnnotations: {}
   ## @param tfyProxy.deploymentLabels [object] Deployment-specific labels for the tfyProxy pods
