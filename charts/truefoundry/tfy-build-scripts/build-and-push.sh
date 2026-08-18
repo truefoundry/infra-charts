@@ -40,9 +40,11 @@ if [ -d "$SOURCE_CODE_DOWNLOAD_PATH" ]; then
     cd "$SOURCE_CODE_DOWNLOAD_PATH"
 fi
 
-# Here we are eval-ing because BUILD_CONFIG is already shlex quoted, so by eval-ing first we want to shlex unquote it
-# And then when calling tfy build, we pass it in quotes so that bash will take care of correctly quoting it
-eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
+# BUILD_CONFIG arrives already shlex-quoted (server-side shlex.quote), so eval unquotes it back
+# to the raw JSON. Do NOT wrap the RHS in $(echo $BUILD_CONFIG): an unquoted expansion word-splits
+# and glob-expands the value before eval, which can corrupt the config and, in the worst case,
+# break the shlex quoting. Assigning the quoted token directly is the intended, safe round-trip.
+eval "BUILD_CONFIG_CORRECTED=$BUILD_CONFIG"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
 start_time=$(date +%s)
