@@ -449,19 +449,11 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
 
-      # /api/proxy-server/proxy/cluster/connect → /proxy/cluster/connect on upstream:8123
-      handle /api/proxy-server/proxy/cluster/connect {
-        uri strip_prefix /api/proxy-server
-        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
-      }
-
-      {{- if .Values.global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled }}
       # /api/proxy-server/ → / on upstream:8123
       handle /api/proxy-server/* {
         uri strip_prefix /api/proxy-server
         reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
-      {{- end }}
       {{- end }}
 
       {{- if .Values.s3proxy.enabled }}
