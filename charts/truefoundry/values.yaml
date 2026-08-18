@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.166.4
+  controlPlaneChartVersion: 0.166.6
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -546,7 +546,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.166.0"
+    tag: "v0.166.1"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -672,15 +672,23 @@ mlfoundryServer:
   extraVolumeMounts: []
   ## @param mlfoundryServer.env [object] Environment variables for the mlfoundry server
   env:
-    NUM_APP_WORKERS: "1"
+    NUM_APP_WORKERS: "2"
     PROMETHEUS_FASTAPI_INSTRUMENTATOR: "1"
     PROMETHEUS_MULTIPROC_DIR: /tmp
     prometheus_multiproc_dir: /tmp
+    DB_NAME: ${k8s-secret/truefoundry-creds/DB_NAME}
+    DB_USERNAME: ${k8s-secret/truefoundry-creds/DB_USERNAME}
+    DB_PASSWORD: ${k8s-secret/truefoundry-creds/DB_PASSWORD}
+    DB_HOST: ${k8s-secret/truefoundry-creds/DB_HOST}
+    DB_POSTGRES_SCHEMA: mlfoundry
+    DB_PORT: "5432"
+    DB_DIALECT: postgresql+psycopg2
     AUTH_SERVER_URL: https://auth.truefoundry.com
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
@@ -855,7 +863,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.166.3"
+    tag: "v0.166.4"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
