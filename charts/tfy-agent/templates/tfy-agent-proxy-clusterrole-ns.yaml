@@ -82,6 +82,11 @@ rules:
     resources: ["workflows"]
     verbs: ["create", "get", "patch"]
 
+  {{/* This allows us to pause/resume scheduled jobs by patching CronWorkflow suspend field */}}
+  - apiGroups: ["argoproj.io"]
+    resources: ["cronworkflows"]
+    verbs: ["get", "patch"]
+
   - apiGroups: ["kubeflow.org"]
     resources: ["notebooks"]
     verbs: ["get", "update", "delete"]
