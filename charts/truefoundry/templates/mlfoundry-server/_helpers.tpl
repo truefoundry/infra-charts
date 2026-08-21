@@ -316,10 +316,6 @@ limits:
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $final = concat $final $mtlsData.items -}}
-{{- end -}}
 {{- toYaml $final }}
 {{- end }}
 
@@ -330,10 +326,6 @@ limits:
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $final = concat $final $mtlsData.items -}}
 {{- end -}}
 {{- toYaml $final }}
 {{- end }}
