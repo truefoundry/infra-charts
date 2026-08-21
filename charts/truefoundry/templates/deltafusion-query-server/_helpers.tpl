@@ -397,6 +397,10 @@ Tolerations for the deltafusion-query-server service
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
+{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
+{{- if $mtlsData.items -}}
+{{- $volumes = concat $volumes $mtlsData.items -}}
+{{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
@@ -411,6 +415,10 @@ Tolerations for the deltafusion-query-server service
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
+{{- end -}}
+{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
+{{- if $mtlsData.items -}}
+{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
