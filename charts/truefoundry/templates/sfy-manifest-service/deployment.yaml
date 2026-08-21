@@ -64,28 +64,24 @@ spec:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
           volumeMounts:
-          {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumeMounts }}
-          {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}
+          {{- if .Values.global.customCA.enabled }}
           {{- with .Values.sfyManifestService.extraVolumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.global.customCA.enabled }}
           {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
-          {{- end }}
-          {{- else }} []
+          {{- else }}
+          {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
           {{- end }}
       imagePullSecrets:
         {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
-      {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumes }}
-      {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
+      {{- if .Values.global.customCA.enabled }}
       {{- with .Values.sfyManifestService.extraVolumes }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.global.customCA.enabled }}
       {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
-      {{- end }}
-      {{- else }} []
+      {{- else }}
+      {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
       {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
       {{- if $mergedNodeSelector }}
