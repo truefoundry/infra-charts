@@ -5,6 +5,30 @@
 {{- default .Release.Namespace .Values.global.namespaceOverride }}
 {{- end }}
 
+{{/*
+  mTLS volume/volumeMount, mounting the cert issued by the parent chart's bootstrap job.
+  Gated on global.mTLS.enabled (set from the umbrella chart; absent when this subchart is
+  installed standalone, in which case these emit nothing). Mounts the external secret when
+  global.mTLS.externalMtlsSecret is set, else the bootstrap-created secret.
+*/}}
+{{- define "tfy-sandbox-server.mtls.volume" -}}
+{{- $tls := (.Values.global).mTLS | default dict -}}
+{{- if $tls.enabled }}
+- name: truefoundry-mtls
+  secret:
+    secretName: {{ $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" }}
+    optional: true
+{{- end }}
+{{- end -}}
+{{- define "tfy-sandbox-server.mtls.volumeMount" -}}
+{{- $tls := (.Values.global).mTLS | default dict -}}
+{{- if $tls.enabled }}
+- name: truefoundry-mtls
+  mountPath: /etc/tls/truefoundry
+  readOnly: true
+{{- end }}
+{{- end -}}
+
 {{- define "tfy-sandbox-server.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
