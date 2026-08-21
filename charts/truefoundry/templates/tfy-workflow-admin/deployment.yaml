@@ -82,6 +82,7 @@ spec:
           {{- if .Values.global.customCA.enabled }}
             {{- include "truefoundry.customCA.volumeMounts" . | nindent 10 }}
           {{- end }}
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
       imagePullSecrets:
         {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -94,6 +95,7 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
         {{- end }}
+        {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
       {{- if $mergedNodeSelector }}
       nodeSelector:
@@ -180,6 +182,7 @@ spec:
           {{- if .Values.global.customCA.enabled }}
             {{- include "truefoundry.customCA.volumeMounts" . | nindent 10 }}
           {{- end }}
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
       imagePullSecrets:
         {{- include "tfy-workflow-admin.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -192,6 +195,7 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
         {{- end }}
+        {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.tfyWorkflowAdmin.nodeSelector) }}
       {{- if $mergedNodeSelector }}
       nodeSelector:
