@@ -130,14 +130,12 @@ Common labels.
     secretKeyRef:
       name: {{ $.Values.stdioMcpProxy.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -236,10 +234,6 @@ limits:
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $final = concat $final $mtlsData.items -}}
-{{- end -}}
 {{- toYaml $final }}
 {{- end }}
 
@@ -249,10 +243,6 @@ limits:
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $final = concat $final $mtlsData.items -}}
 {{- end -}}
 {{- toYaml $final }}
 {{- end }}

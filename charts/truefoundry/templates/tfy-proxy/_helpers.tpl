@@ -226,14 +226,12 @@ Expand the name of the chart.
     secretKeyRef:
       name: {{ $.Values.tfyProxy.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -278,10 +276,6 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTier" (.Values.global.resourceTier | default "medium") "defaultResourcesPrefix" "tfy-proxy.defaultResources" "resourcesValues" .Values.tfyProxy.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
@@ -312,10 +306,6 @@ Expand the name of the chart.
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
