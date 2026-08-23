@@ -50,6 +50,7 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.tfyK8sController.service.port }}
+              scheme: {{ .Values.tfyK8sController.livenessProbe.scheme }}
             periodSeconds: {{ .Values.tfyK8sController.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.tfyK8sController.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.tfyK8sController.livenessProbe.failureThreshold }}
@@ -59,6 +60,7 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.tfyK8sController.service.port }}
+              scheme: {{ .Values.tfyK8sController.readinessProbe.scheme }}
             periodSeconds: {{ .Values.tfyK8sController.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.tfyK8sController.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.tfyK8sController.readinessProbe.failureThreshold }}
