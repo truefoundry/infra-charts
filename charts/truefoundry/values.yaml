@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.168.2
+  controlPlaneChartVersion: 0.168.3
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -572,7 +572,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.168.0"
+    tag: "v0.168.1"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -626,6 +626,8 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for mlfoundry server
     timeoutSeconds: 1
+    ## @param mlfoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## mlfoundryServer.readinessProbe Readiness probe settings for the mlfoundry server
   readinessProbe:
     ## @param mlfoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for mlfoundry server
@@ -638,6 +640,8 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for mlfoundry server
     timeoutSeconds: 1
+    ## @param mlfoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
   nodeSelector: {}
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
@@ -807,6 +811,8 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.livenessProbe.timeoutSeconds Liveness probe timeout for s3 proxy
     timeoutSeconds: 1
+    ## @param s3proxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## s3proxy.readinessProbe Readiness probe settings for the s3 proxy
   readinessProbe:
     ## @param s3proxy.readinessProbe.failureThreshold Readiness probe failure threshold for s3 proxy
@@ -819,6 +825,8 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.readinessProbe.timeoutSeconds Readiness probe timeout for s3 proxy
     timeoutSeconds: 1
+    ## @param s3proxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param s3proxy.nodeSelector Node selector for the s3 proxy
   nodeSelector: {}
   ## @param s3proxy.affinity Affinity settings for the s3 proxy
@@ -889,7 +897,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.168.0"
+    tag: "v0.168.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -943,6 +951,8 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for servicefoundry server
     timeoutSeconds: 1
+    ## @param servicefoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## servicefoundryServer.readinessProbe Readiness probe settings for the servicefoundry server
   readinessProbe:
     ## @param servicefoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for servicefoundry server
@@ -955,6 +965,8 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for servicefoundry server
     timeoutSeconds: 1
+    ## @param servicefoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
   nodeSelector: {}
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
@@ -1216,6 +1228,8 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.livenessProbe.timeoutSeconds Liveness probe timeout for spark history server
     timeoutSeconds: 1
+    ## @param sparkHistoryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## sparkHistoryServer.readinessProbe Readiness probe settings for the spark history server
   readinessProbe:
     ## @param sparkHistoryServer.readinessProbe.failureThreshold Readiness probe failure threshold for spark history server
@@ -1228,6 +1242,8 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.readinessProbe.timeoutSeconds Readiness probe timeout for spark history server
     timeoutSeconds: 1
+    ## @param sparkHistoryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param sparkHistoryServer.nodeSelector Node selector for the spark history server
   nodeSelector: {}
   ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
@@ -1287,7 +1303,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.168.1"
+    tag: "v0.168.2"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1349,6 +1365,8 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyK8sController
     timeoutSeconds: 1
+    ## @param tfyK8sController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## tfyK8sController.readinessProbe Readiness probe settings for the tfyK8sController
   readinessProbe:
     ## @param tfyK8sController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyK8sController
@@ -1361,6 +1379,8 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyK8sController
     timeoutSeconds: 1
+    ## @param tfyK8sController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param tfyK8sController.nodeSelector Node selector for the tfyK8sController
   nodeSelector: {}
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
@@ -1506,6 +1526,8 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.livenessProbe.timeoutSeconds Liveness probe timeout for sfy manifest service
     timeoutSeconds: 1
+    ## @param sfyManifestService.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## sfyManifestService.readinessProbe Readiness probe settings for the sfy manifest service
   readinessProbe:
     ## @param sfyManifestService.readinessProbe.failureThreshold Readiness probe failure threshold for sfy manifest service
@@ -1518,6 +1540,8 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.readinessProbe.timeoutSeconds Readiness probe timeout for sfy manifest service
     timeoutSeconds: 1
+    ## @param sfyManifestService.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
   nodeSelector: {}
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
@@ -1651,6 +1675,8 @@ stdioMcpProxy:
     successThreshold: 1
     ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
+    ## @param stdioMcpProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
   readinessProbe:
     ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
@@ -1663,6 +1689,8 @@ stdioMcpProxy:
     successThreshold: 1
     ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
+    ## @param stdioMcpProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
   nodeSelector: {}
   ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
@@ -1772,6 +1800,8 @@ tfyInfraManager:
     successThreshold: 1
     ## @param tfyInfraManager.livenessProbe.timeoutSeconds Liveness probe timeout for tfy infra manager
     timeoutSeconds: 1
+    ## @param tfyInfraManager.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## tfyInfraManager.readinessProbe Readiness probe settings for the tfy infra manager
   readinessProbe:
     ## @param tfyInfraManager.readinessProbe.failureThreshold Readiness probe failure threshold for tfy infra manager
@@ -1784,6 +1814,8 @@ tfyInfraManager:
     successThreshold: 1
     ## @param tfyInfraManager.readinessProbe.timeoutSeconds Readiness probe timeout for tfy infra manager
     timeoutSeconds: 1
+    ## @param tfyInfraManager.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param tfyInfraManager.nodeSelector Node selector for the tfy infra manager
   nodeSelector: {}
   ## @param tfyInfraManager.affinity Affinity settings for the tfy infra manager
@@ -2477,6 +2509,8 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyController
     timeoutSeconds: 1
+    ## @param tfyController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## tfyController.readinessProbe Readiness probe settings for the tfyController
   readinessProbe:
     ## @param tfyController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyController
@@ -2489,6 +2523,8 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyController
     timeoutSeconds: 1
+    ## @param tfyController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param tfyController.nodeSelector Node selector for the tfyController
   nodeSelector: {}
   ## @param tfyController.affinity Affinity settings for the tfyController
@@ -3053,7 +3089,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.168.1"
+    tag: "v0.168.2"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3080,6 +3116,8 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
+      ## @param deltaFusionIngestor.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
+      scheme: HTTP
     ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
       ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
@@ -3094,6 +3132,8 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
+      ## @param deltaFusionIngestor.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
+      scheme: HTTP
   ## deltaFusionIngestor.storage Persistent volume claim settings
   storage:
     ## @param deltaFusionIngestor.storage.enabled Bool to enable storage
@@ -3238,7 +3278,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.168.1"
+    tag: "v0.168.2"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3421,7 +3461,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.168.0
+    tag: v0.168.1
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3479,6 +3519,8 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
+      ## @param deltaFusionQueryServer.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
+      scheme: HTTP
     ## deltaFusionQueryServer.healthcheck.readiness Readiness probe settings
     readiness:
       ## @param deltaFusionQueryServer.healthcheck.readiness.path Readiness probe path
@@ -3493,6 +3535,8 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
+      ## @param deltaFusionQueryServer.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
+      scheme: HTTP
   ## @param deltaFusionQueryServer.nodeSelector Node selector for the deltaFusionQueryServer
   nodeSelector: {}
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
@@ -3718,6 +3762,8 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
     timeoutSeconds: 1
+    ## @param tfyProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
   readinessProbe:
     ## @param tfyProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyProxy
@@ -3730,6 +3776,8 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
     timeoutSeconds: 1
+    ## @param tfyProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
   ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
   nodeSelector: {}
   ## @param tfyProxy.affinity Affinity settings for the tfyProxy

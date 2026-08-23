@@ -58,6 +58,7 @@ spec:
             httpGet:
               path: /api/health
               port: {{ .Values.tfyInfraManager.service.port }}
+              scheme: {{ .Values.tfyInfraManager.livenessProbe.scheme }}
           readinessProbe:
             failureThreshold: {{ .Values.tfyInfraManager.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.tfyInfraManager.readinessProbe.initialDelaySeconds }}
@@ -67,6 +68,7 @@ spec:
             httpGet:
               path: /api/health
               port: {{ .Values.tfyInfraManager.service.port }}
+              scheme: {{ .Values.tfyInfraManager.readinessProbe.scheme }}
           volumeMounts:
             {{- include "tfy-infra-manager.volumeMounts" . | nindent 12 }}
       imagePullSecrets:
