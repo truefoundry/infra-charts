@@ -60,7 +60,11 @@ spec:
             httpGet:
               path: {{ .Values.deltaFusionIngestor.healthcheck.readiness.path }}
               port: {{ .Values.deltaFusionIngestor.service.port }}
-              scheme: HTTP
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: {{ .Values.deltaFusionIngestor.healthcheck.readiness.scheme }}
+              {{- end }}
             initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.readiness.timeoutSeconds }}
@@ -70,7 +74,11 @@ spec:
             httpGet:
               path: {{ .Values.deltaFusionIngestor.healthcheck.liveness.path }}
               port: {{ .Values.deltaFusionIngestor.service.port }}
-              scheme: HTTP
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: {{ .Values.deltaFusionIngestor.healthcheck.liveness.scheme }}
+              {{- end }}
             initialDelaySeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionIngestor.healthcheck.liveness.timeoutSeconds }}
