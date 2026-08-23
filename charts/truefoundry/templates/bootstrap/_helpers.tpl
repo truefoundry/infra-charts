@@ -115,11 +115,13 @@ requests:
     clients that connect by the short names. Every component's fullname helper is called
     unconditionally; a SAN for a service that isn't deployed is harmless, which lets us skip
     per-service enable guards.
+  - localhost is included so in-pod HTTPS probes / local loops (e.g. servicefoundry-server)
+    can verify the leaf when dialing 127.0.0.1/localhost.
   - global.mTLS.extraDnsNames are appended.
 */}}
 {{- define "bootstrap.mtlsDnsNames" -}}
 {{- $ns := include "global.namespace" . | trim -}}
-{{- $names := list (printf "*.%s.svc" $ns) (printf "*.%s.svc.cluster.local" $ns) -}}
+{{- $names := list "localhost" (printf "*.%s.svc" $ns) (printf "*.%s.svc.cluster.local" $ns) -}}
 {{- /* Component Service names: fullname helpers + the two non-.svc special cases. */}}
 {{- $svcs := list -}}
 {{- $fullnameHelpers := list
@@ -132,7 +134,6 @@ requests:
   "spark-history-server.fullname"
   "stdio-mcp-proxy.fullname"
   "tfy-buildkitd-service.fullname"
-  "tfy-controller.fullname"
   "tfy-infra-manager.fullname"
   "tfy-k8s-controller.fullname"
   "tfy-proxy.fullname" -}}

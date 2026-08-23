@@ -54,7 +54,11 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.mlfoundryServer.service.port }}
-              scheme: HTTP
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: {{ .Values.mlfoundryServer.livenessProbe.scheme }}
+              {{- end }}
           readinessProbe:
             failureThreshold: {{ .Values.mlfoundryServer.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.mlfoundryServer.readinessProbe.initialDelaySeconds }}
@@ -64,7 +68,11 @@ spec:
             httpGet:
               path: /health
               port: {{ .Values.mlfoundryServer.service.port }}
-              scheme: HTTP
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
+              scheme: {{ .Values.mlfoundryServer.readinessProbe.scheme }}
+              {{- end }}
           volumeMounts:
             {{- include "mlfoundry-server.volumeMounts" . | nindent 12 }}
       imagePullSecrets:

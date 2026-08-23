@@ -394,3 +394,15 @@ limits:
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
 {{- end }}
+
+{{/*
+  Append a reverse_proxy / forward_auth block that uses the shared
+  (internal_mtls) Caddy snippet when global.mTLS.enabled. Certs are mounted
+  at /etc/tls/truefoundry by truefoundry.mtlsVolumeMount.
+  Usage: reverse_proxy host:port{{- include "tfy-proxy.withInternalMtls" . }}
+*/}}
+{{- define "tfy-proxy.withInternalMtls" -}}
+{{- if .Values.global.mTLS.enabled }} {
+          import internal_mtls
+        }{{- end }}
+{{- end }}
