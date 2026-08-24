@@ -6,6 +6,30 @@
 {{- end }}
 
 {{/*
+  mTLS volume/volumeMount, mounting the cert issued by the parent chart's bootstrap job.
+  Gated on global.mTLS.enabled (set from the umbrella chart; absent when this subchart is
+  installed standalone, in which case these emit nothing). Mounts the external secret when
+  global.mTLS.externalMtlsSecret is set, else the bootstrap-created secret.
+*/}}
+{{- define "tfy-otel-collector.mtls.volume" -}}
+{{- $tls := (.Values.global).mTLS | default dict -}}
+{{- if $tls.enabled }}
+- name: truefoundry-mtls
+  secret:
+    secretName: {{ $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" }}
+    optional: true
+{{- end }}
+{{- end -}}
+{{- define "tfy-otel-collector.mtls.volumeMount" -}}
+{{- $tls := (.Values.global).mTLS | default dict -}}
+{{- if $tls.enabled }}
+- name: truefoundry-mtls
+  mountPath: /etc/tls/truefoundry
+  readOnly: true
+{{- end }}
+{{- end -}}
+
+{{/*
 Expand the name of the chart.
 */}}
 
@@ -276,6 +300,7 @@ Deployment Volumes
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "tfy-otel-collector.customCA.volumes" . }}
+{{- include "tfy-otel-collector.mtls.volume" . }}
 {{- end }}
 
 {{/*
@@ -292,6 +317,7 @@ Deployment VolumeMounts
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "tfy-otel-collector.customCA.volumeMounts" . }}
+{{- include "tfy-otel-collector.mtls.volumeMount" . }}
 {{- end }}
 
 {{- define "tfy-otel-collector.resources" }}

@@ -54,6 +54,7 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
+              scheme: {{ .Values.sfyManifestService.livenessProbe.scheme }}
           readinessProbe:
             failureThreshold: {{ .Values.sfyManifestService.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.sfyManifestService.readinessProbe.initialDelaySeconds }}
@@ -63,25 +64,30 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
+              scheme: {{ .Values.sfyManifestService.readinessProbe.scheme }}
           volumeMounts:
-          {{- if .Values.global.customCA.enabled }}
+          {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumeMounts }}
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}
           {{- with .Values.sfyManifestService.extraVolumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if .Values.global.customCA.enabled }}
           {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
-          {{- else }}
-          {{- toYaml .Values.sfyManifestService.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+          {{- else }} []
           {{- end }}
       imagePullSecrets:
         {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
-      {{- if .Values.global.customCA.enabled }}
+      {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumes }}
+      {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
       {{- with .Values.sfyManifestService.extraVolumes }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.global.customCA.enabled }}
       {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
-      {{- else }}
-      {{- toYaml .Values.sfyManifestService.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- else }} []
       {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
       {{- if $mergedNodeSelector }}

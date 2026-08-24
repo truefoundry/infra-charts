@@ -94,6 +94,7 @@ spec:
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 10 }}
           {{- end }}
+          {{- include "tfy-llm-gateway.mtls.volumeMount" . | nindent 10 }}
           {{- if .Values.oidc.enabled }}
           - name: oidc-config
             mountPath: /etc/oidc
@@ -146,6 +147,7 @@ spec:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
+      {{- include "tfy-llm-gateway.mtls.volume" . | nindent 6 }}
       {{- if .Values.oidc.enabled }}
       - name: oidc-config
         configMap:

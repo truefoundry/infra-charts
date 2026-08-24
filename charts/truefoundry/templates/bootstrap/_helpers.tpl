@@ -108,6 +108,58 @@ requests:
 {{- end -}}
 
 {{/*
+  mTLS leaf SAN DNS names.
+  - Namespace wildcards (*.<ns>.svc, *.<ns>.svc.cluster.local) cover the FQDN forms of every
+    service in the release namespace (a cert wildcard matches the single <svc> label).
+  - Each service also gets its bare name (<release>-<component>) and <name>.<ns> form, for
+    clients that connect by the short names. Every component's fullname helper is called
+    unconditionally; a SAN for a service that isn't deployed is harmless, which lets us skip
+    per-service enable guards.
+  - localhost is included so in-pod HTTPS probes / local loops (e.g. servicefoundry-server)
+    can verify the leaf when dialing 127.0.0.1/localhost.
+  - global.mTLS.extraDnsNames are appended.
+*/}}
+{{- define "bootstrap.mtlsDnsNames" -}}
+{{- $ns := include "global.namespace" . | trim -}}
+{{- $names := list "localhost" (printf "*.%s.svc" $ns) (printf "*.%s.svc.cluster.local" $ns) -}}
+{{- /* Component Service names: fullname helpers + the two non-.svc special cases. */}}
+{{- $svcs := list -}}
+{{- $fullnameHelpers := list
+  "deltafusion-ingestor.fullname"
+  "deltafusion-query-server.fullname"
+  "mlfoundry-server.fullname"
+  "s3proxy.fullname"
+  "servicefoundry-server.fullname"
+  "sfy-manifest-service.fullname"
+  "spark-history-server.fullname"
+  "stdio-mcp-proxy.fullname"
+  "tfy-buildkitd-service.fullname"
+  "tfy-infra-manager.fullname"
+  "tfy-k8s-controller.fullname"
+  "tfy-proxy.fullname" -}}
+{{- range $h := $fullnameHelpers -}}
+{{- $svcs = append $svcs (include $h $) -}}
+{{- end -}}
+{{- /* tfy-workflow-admin's Service is <fullname>-server. */}}
+{{- $svcs = append $svcs (printf "%s-server" (include "tfy-workflow-admin.fullname" .)) -}}
+{{- /* Subcharts: Service name is <release>-<subchart>. */}}
+{{- $svcs = append $svcs (printf "%s-tfy-llm-gateway" .Release.Name) -}}
+{{- $svcs = append $svcs (printf "%s-tfy-otel-collector" .Release.Name) -}}
+{{- $svcs = append $svcs (printf "%s-tfy-sandbox-server" .Release.Name) -}}
+{{- /* Each service -> bare name and <name>.<ns>. */}}
+{{- range $svc := $svcs -}}
+{{- $names = append $names $svc -}}
+{{- $names = append $names (printf "%s.%s" $svc $ns) -}}
+{{- end -}}
+{{- range $d := .Values.global.mTLS.extraDnsNames -}}
+{{- $names = append $names $d -}}
+{{- end -}}
+{{- range $n := $names }}
+- {{ $n | quote }}
+{{- end }}
+{{- end -}}
+
+{{/*
   serviceaccount name
 */}}
 {{- define "bootstrap.serviceAccountName" -}}
