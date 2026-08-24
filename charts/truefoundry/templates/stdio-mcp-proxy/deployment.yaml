@@ -54,7 +54,6 @@ spec:
             httpGet:
               path: /healthz
               port: {{ .Values.stdioMcpProxy.service.port }}
-              scheme: {{ .Values.stdioMcpProxy.livenessProbe.scheme }}
           readinessProbe:
             failureThreshold: {{ .Values.stdioMcpProxy.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.stdioMcpProxy.readinessProbe.initialDelaySeconds }}
@@ -64,7 +63,6 @@ spec:
             httpGet:
               path: /healthz
               port: {{ .Values.stdioMcpProxy.service.port }}
-              scheme: {{ .Values.stdioMcpProxy.readinessProbe.scheme }}
           volumeMounts:
             {{- include "stdio-mcp-proxy.volumeMounts" . | nindent 12 }}
       imagePullSecrets:
