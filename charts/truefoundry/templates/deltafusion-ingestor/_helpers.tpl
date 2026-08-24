@@ -358,10 +358,6 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-ingestor.resourceTier" "defaultResourcesPrefix" "deltafusion-ingestor.defaultResources" "resourcesValues" .Values.deltaFusionIngestor.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
@@ -376,7 +372,6 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "truefoundry.customCA.volumeMounts" . -}}
-{{- include "truefoundry.mtlsVolumeMount" . -}}
 {{- end -}}
 
 {{- define "deltafusion-ingestor.imagePullSecrets" -}}
@@ -671,10 +666,6 @@ Tolerations for the deltafusion-compaction service
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-compaction.resourceTier" "defaultResourcesPrefix" "deltafusion-compaction.defaultResources" "resourcesValues" .Values.deltaFusionCompaction.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
@@ -690,10 +681,6 @@ Tolerations for the deltafusion-compaction service
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
 {{- $volumeMounts = append $volumeMounts $tmpMount -}}

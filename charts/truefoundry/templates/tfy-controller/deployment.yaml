@@ -49,7 +49,7 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
-              scheme: {{ .Values.tfyController.livenessProbe.scheme }}
+              scheme: HTTP
             failureThreshold: {{ .Values.tfyController.livenessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.tfyController.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.tfyController.livenessProbe.periodSeconds }}
@@ -64,7 +64,7 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
-              scheme: {{ .Values.tfyController.readinessProbe.scheme }}
+              scheme: HTTP
           volumeMounts:
             {{- include "tfy-controller.volumeMounts" . | nindent 12 }}
       imagePullSecrets:
