@@ -7,56 +7,6 @@
 {{- end }}
 
 {{/*
-  mTLS volume, injected into every enabled service's pod spec.
-  Emits nothing unless global.mTLS.enabled, so appending its include after each
-  deployment's existing volumes is a no-op when disabled. Mounts the external secret
-  when global.mTLS.externalMtlsSecret is set, otherwise the bootstrap-created secret.
-*/}}
-{{- define "truefoundry.mtlsVolume" -}}
-{{- if .Values.global.mTLS.enabled }}
-- name: truefoundry-mtls
-  secret:
-    secretName: {{ .Values.global.mTLS.externalMtlsSecret | default .Values.global.mTLS.tlsSecretName }}
-    optional: true
-{{- end }}
-{{- end -}}
-
-{{/*
-  mTLS volumeMount, paired with truefoundry.mtlsVolume. Fixed mount path.
-*/}}
-{{- define "truefoundry.mtlsVolumeMount" -}}
-{{- if .Values.global.mTLS.enabled }}
-- name: truefoundry-mtls
-  mountPath: /etc/tls/truefoundry
-  readOnly: true
-{{- end }}
-{{- end -}}
-
-{{/*
-  mTLS volume as a JSON {items: [...]} for helpers that build a $volumes list and toYaml it.
-  Empty items when disabled. Concat into the list before the final toYaml, e.g.
-    {{- $mtls := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-    {{- $volumes = concat $volumes $mtls.items -}}
-*/}}
-{{- define "truefoundry.mtlsVolumeItems" -}}
-{{- $items := list -}}
-{{- if .Values.global.mTLS.enabled -}}
-{{- $items = append $items (dict "name" "truefoundry-mtls" "secret" (dict "secretName" (.Values.global.mTLS.externalMtlsSecret | default .Values.global.mTLS.tlsSecretName) "optional" true)) -}}
-{{- end -}}
-{{- dict "items" $items | toJson -}}
-{{- end -}}
-
-{{/*
-  mTLS volumeMount as a JSON {items: [...]}, paired with truefoundry.mtlsVolumeItems.
-*/}}
-{{- define "truefoundry.mtlsVolumeMountItems" -}}
-{{- $items := list -}}
-{{- if .Values.global.mTLS.enabled -}}
-{{- $items = append $items (dict "name" "truefoundry-mtls" "mountPath" "/etc/tls/truefoundry" "readOnly" true) -}}
-{{- end -}}
-{{- dict "items" $items | toJson -}}
-{{- end -}}
-{{/*
   Global Labels
 */}}
 {{- define "global.labels" }}
