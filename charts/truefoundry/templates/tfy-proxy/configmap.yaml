@@ -566,6 +566,7 @@ data:
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
       }
 
       # Catch-all: WS first, then assets, then SPA
@@ -576,6 +577,7 @@ data:
         }
 
         reverse_proxy @websocket {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
 
         @assets {
           path /assets/*
