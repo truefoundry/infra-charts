@@ -73,7 +73,7 @@ data:
         cache_ttl: 5m
         retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
         # legacy = combined /gateway-model-metrics only, split = real + virtual endpoints only, dual = both
-        model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-dual}
+        model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-legacy}
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
       tfytracesexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
@@ -106,7 +106,6 @@ data:
         tfy_api_key: ${env:TFY_API_KEY}
         cache_ttl: 5m
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
-        filter_metrics_by_temporality: ${env:TFY_METRICS_FILTER_BY_TEMPORALITY:-false}
     connectors:
       # Fan-out after shared processors so batch/filter/etc. run once.
       forward:
@@ -179,7 +178,6 @@ data:
       telemetry:
         logs:
           level: "${env:LOG_LEVEL:-INFO}"
-          encoding: "${env:LOG_ENCODING:-json}"
         metrics:
           readers:
             - pull:
