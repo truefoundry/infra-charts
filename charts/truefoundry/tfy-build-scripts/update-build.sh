@@ -54,11 +54,40 @@ if [[ "$status" != "null" ]]; then
 fi
 
 echo "Final payload: $FINAL_PAYLOAD"
+
+# servicefoundry-server may serve HTTPS and require a client certificate when global.mTLS.enabled.
+# The chart mounts the same mTLS secret used by other services (at /etc/tls/truefoundry); present
+# it here — otherwise this callback is rejected and the build finishes successfully but never
+# reports its status, which looks like a hung build rather than an auth failure.
+#
+# Detected by checking for the files rather than by an env var, so the script works unchanged whether
+# or not mTLS is enabled, and on older charts that mount nothing.
+TLS_DIR="${TLS_DIR:-/etc/tls/truefoundry}"
+TLS_ARGS=()
+if [[ -r "$TLS_DIR/tls.crt" && -r "$TLS_DIR/tls.key" && -r "$TLS_DIR/ca.crt" ]]; then
+    echo "Using client certificate from $TLS_DIR for the callback"
+    # --cacert, not -k: verifying the server is the point of having our own CA, and skipping it would
+    # leave the connection open to interception while still handing over our certificate.
+    TLS_ARGS=(--cacert "$TLS_DIR/ca.crt" --cert "$TLS_DIR/tls.crt" --key "$TLS_DIR/tls.key")
+    # BUILD_CALLBACK_URL may still be http:// even when servicefoundry-server serves HTTPS under mTLS.
+    # Upgrade the scheme so curl uses TLS instead of plain HTTP against an HTTPS listener.
+    if [[ "$CALLBACK_URL" == http://* ]]; then
+        CALLBACK_URL="https://${CALLBACK_URL#http://}"
+        echo "Upgraded CALLBACK_URL to https: $CALLBACK_URL"
+    fi
+elif [[ "$CALLBACK_URL" == https://* ]]; then
+    # Worth surfacing: an https callback with no certificate mounted is the exact configuration that
+    # fails silently, so say so before curl does.
+    echo "Warning: CALLBACK_URL is https but no client certificate found in $TLS_DIR." >&2
+    echo "If servicefoundry-server requires mutual TLS, set global.mTLS.enabled=true." >&2
+fi
+
 curl --no-progress-meter --show-error -X "PATCH" \
     -H "Content-Type: application/json" \
     -d "$FINAL_PAYLOAD" \
     --retry 3 \
     --retry-delay 10 \
+    "${TLS_ARGS[@]}" \
     "$CALLBACK_URL" > /dev/null
 
 echo -n "$status" > /opt/truefoundry/output/buildStatus
