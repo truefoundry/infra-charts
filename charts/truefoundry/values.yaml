@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.170.1
+  controlPlaneChartVersion: 0.166.10
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -365,32 +365,6 @@ global:
     emptyDir:
       sslCerts:
         sizeLimit: ""
-  ## mTLS certificates issued by the bootstrap job and mounted into services.
-  ## The bootstrap job maintains two secrets:
-  ##  - the CA secret "truefoundry-internal-ca": ca.crt + ca.key (the CA private key; read only
-  ##    by the bootstrap job for signing/renewal, never mounted into application pods).
-  ##  - tlsSecretName: ca.crt + tls.key + tls.crt (the leaf, mounted into every service).
-  ## Renewal reuses the CA from the CA secret.
-  mTLS:
-    ## @param global.mTLS.enabled Bool to create/renew the mTLS certificate and mount it into services
-    enabled: false
-    ## @param global.mTLS.tlsSecretName Secret (mounted into services) holding ca.crt + tls.key + tls.crt
-    tlsSecretName: "truefoundry-internal-tls"
-    ## @param global.mTLS.externalMtlsSecret Use an existing secret with this name instead of creating one. When set, the bootstrap job does not create/renew the secret; services mount the named secret as-is.
-    ## The mTLS secret (whether bootstrap-created or externally provided) is expected to
-    ## contain the following keys, mounted at /etc/tls/truefoundry:
-    ##   tls.crt  - the leaf certificate (PEM)
-    ##   tls.key  - the leaf private key (PEM)
-    ##   ca.crt   - the CA certificate used to verify peers (PEM)
-    externalMtlsSecret: ""
-    ## @param global.mTLS.caDays Root CA validity in days (default ~10y)
-    caDays: 3650
-    ## @param global.mTLS.leafDays Leaf cert validity in days (default ~1y)
-    leafDays: 365
-    ## @param global.mTLS.renewBeforeDays Reissue the leaf when it expires within this many days
-    renewBeforeDays: 60
-    ## @param global.mTLS.extraDnsNames Extra DNS SANs appended to the leaf cert (namespace service wildcards are added automatically)
-    extraDnsNames: []
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -572,7 +546,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.170.0"
+    tag: "v0.166.1"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -626,8 +600,6 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for mlfoundry server
     timeoutSeconds: 1
-    ## @param mlfoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## mlfoundryServer.readinessProbe Readiness probe settings for the mlfoundry server
   readinessProbe:
     ## @param mlfoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for mlfoundry server
@@ -640,8 +612,6 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for mlfoundry server
     timeoutSeconds: 1
-    ## @param mlfoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
   nodeSelector: {}
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
@@ -718,15 +688,8 @@ mlfoundryServer:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
-    LLM_GATEWAY_URL: "LM_GATEWAY_URL=\"{{ .Values.global.controlPlaneURL }}/api/llm\""
+    LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    SENTRY_ENABLED: 'true'
-    TFY_SERVICE_ROOT_PATH: /api/ml
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -818,8 +781,6 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.livenessProbe.timeoutSeconds Liveness probe timeout for s3 proxy
     timeoutSeconds: 1
-    ## @param s3proxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## s3proxy.readinessProbe Readiness probe settings for the s3 proxy
   readinessProbe:
     ## @param s3proxy.readinessProbe.failureThreshold Readiness probe failure threshold for s3 proxy
@@ -832,8 +793,6 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.readinessProbe.timeoutSeconds Readiness probe timeout for s3 proxy
     timeoutSeconds: 1
-    ## @param s3proxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param s3proxy.nodeSelector Node selector for the s3 proxy
   nodeSelector: {}
   ## @param s3proxy.affinity Affinity settings for the s3 proxy
@@ -904,7 +863,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.170.0"
+    tag: "v0.166.6"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -958,8 +917,6 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for servicefoundry server
     timeoutSeconds: 1
-    ## @param servicefoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## servicefoundryServer.readinessProbe Readiness probe settings for the servicefoundry server
   readinessProbe:
     ## @param servicefoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for servicefoundry server
@@ -972,8 +929,6 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for servicefoundry server
     timeoutSeconds: 1
-    ## @param servicefoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
   nodeSelector: {}
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
@@ -1064,7 +1019,7 @@ servicefoundryServer:
     NATS_QGROUP_NAME: ""
     FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server:8089
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller:8123
-    BUILD_CALLBACK_URL: "http://{{ .Release.Name }}-servicefoundry-server:3000"
+    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     LLM_GATEWAY_ENABLED: "{{ .Values.tags.llmGateway }}"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
@@ -1101,9 +1056,6 @@ servicefoundryServer:
     FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
     SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1158,7 +1110,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.170.0"
+    tag: "v0.166.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1236,8 +1188,6 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.livenessProbe.timeoutSeconds Liveness probe timeout for spark history server
     timeoutSeconds: 1
-    ## @param sparkHistoryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## sparkHistoryServer.readinessProbe Readiness probe settings for the spark history server
   readinessProbe:
     ## @param sparkHistoryServer.readinessProbe.failureThreshold Readiness probe failure threshold for spark history server
@@ -1250,8 +1200,6 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.readinessProbe.timeoutSeconds Readiness probe timeout for spark history server
     timeoutSeconds: 1
-    ## @param sparkHistoryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param sparkHistoryServer.nodeSelector Node selector for the spark history server
   nodeSelector: {}
   ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
@@ -1311,7 +1259,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.170.1"
+    tag: "v0.166.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1373,8 +1321,6 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyK8sController
     timeoutSeconds: 1
-    ## @param tfyK8sController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyK8sController.readinessProbe Readiness probe settings for the tfyK8sController
   readinessProbe:
     ## @param tfyK8sController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyK8sController
@@ -1387,8 +1333,6 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyK8sController
     timeoutSeconds: 1
-    ## @param tfyK8sController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyK8sController.nodeSelector Node selector for the tfyK8sController
   nodeSelector: {}
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
@@ -1435,6 +1379,7 @@ tfyK8sController:
   ## @param tfyK8sController.env [object] Environment variables for the tfyK8sController
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
     CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats:4222
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
@@ -1452,8 +1397,6 @@ tfyK8sController:
     DELTAFUSION_INGESTOR_URL: http://{{ .Release.Name }}-deltafusion-ingestor:8000
     DELTAFUSION_QUERY_SERVER_URL: http://{{ .Release.Name }}-deltafusion-query-server:8080
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1473,7 +1416,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.170.0"
+    tag: "v0.166.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1535,8 +1478,6 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.livenessProbe.timeoutSeconds Liveness probe timeout for sfy manifest service
     timeoutSeconds: 1
-    ## @param sfyManifestService.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## sfyManifestService.readinessProbe Readiness probe settings for the sfy manifest service
   readinessProbe:
     ## @param sfyManifestService.readinessProbe.failureThreshold Readiness probe failure threshold for sfy manifest service
@@ -1549,8 +1490,6 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.readinessProbe.timeoutSeconds Readiness probe timeout for sfy manifest service
     timeoutSeconds: 1
-    ## @param sfyManifestService.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
   nodeSelector: {}
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
@@ -1617,10 +1556,6 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
-    TLS_ENABLED: 'false'
-    TLS_MUTUAL: 'false'
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
 ###################################################################################################################
 ####################################### stdio-mcp-proxy ###########################################################
 ###################################################################################################################
@@ -1639,7 +1574,7 @@ stdioMcpProxy:
     ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
     repository: "tfy-private-images/stdio-mcp-proxy"
     ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
-    tag: "v0.170.0"
+    tag: "v0.166.0"
   ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
   # replicaCount: 1
   ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
@@ -1688,8 +1623,6 @@ stdioMcpProxy:
     successThreshold: 1
     ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
-    ## @param stdioMcpProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
   readinessProbe:
     ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
@@ -1702,8 +1635,6 @@ stdioMcpProxy:
     successThreshold: 1
     ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
-    ## @param stdioMcpProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
   nodeSelector: {}
   ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
@@ -1748,9 +1679,7 @@ stdioMcpProxy:
   imagePullSecrets: []
   ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
   env:
-    MCP_PROXY_CONFIG_JSON: ${k8s-secret/stdio-mcp-proxy-env-secret/MCP_PROXY_CONFIG_JSON}
-    MCP_SUBPROCESS_TTL_MINUTES: '20'
-    MCP_REAP_INTERVAL_MINUTES: '5'
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 ###################################################################################################################
 ######################################### Tfy Infra Manager ######################################################
 ###################################################################################################################
@@ -1769,7 +1698,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.170.0"
+    tag: "v0.166.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -1815,8 +1744,6 @@ tfyInfraManager:
     successThreshold: 1
     ## @param tfyInfraManager.livenessProbe.timeoutSeconds Liveness probe timeout for tfy infra manager
     timeoutSeconds: 1
-    ## @param tfyInfraManager.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyInfraManager.readinessProbe Readiness probe settings for the tfy infra manager
   readinessProbe:
     ## @param tfyInfraManager.readinessProbe.failureThreshold Readiness probe failure threshold for tfy infra manager
@@ -1829,8 +1756,6 @@ tfyInfraManager:
     successThreshold: 1
     ## @param tfyInfraManager.readinessProbe.timeoutSeconds Readiness probe timeout for tfy infra manager
     timeoutSeconds: 1
-    ## @param tfyInfraManager.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyInfraManager.nodeSelector Node selector for the tfy infra manager
   nodeSelector: {}
   ## @param tfyInfraManager.affinity Affinity settings for the tfy infra manager
@@ -1869,22 +1794,13 @@ tfyInfraManager:
   ## MANAGED_DELIVERY_ENABLED=true requires additional managed-delivery env vars; see the
   ## tfy-infra-manager repo's .env.default for the full contract.
   env:
-    SERVER_PORT: "8080"
+    SERVER_PORT: "{{ .Values.tfyInfraManager.service.port }}"
     APP_BASE_PATH: /admin/infra-manager
-    SFY_BASE_URL: http://servicefoundry-server:3000/v1
+    SFY_BASE_URL: http://{{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}/v1
     BUNDLE_SOURCE: artifactory
     TEMPLATE_CHANNEL: general
     LOG_LEVEL: info
     MANAGED_DELIVERY_ENABLED: "false"
-    SCALR_HOSTNAME: truefoundry.scalr.io
-    SCALR_TOKEN: ${k8s-secret/tfy-infra-manager-env-secret/SCALR_TOKEN}
-    SCALR_ACCOUNT_ID: ''
-    SCALR_TENANT_PREFIX: ''
-    SCALR_STORAGE_PROFILE_ID: ''
-    SCALR_DEFAULT_AGENT_POOL_ID: ''
-    SENTRY_ENABLED: 'true'
-    AUTH_SERVER_URL: ''
-    TENANT_NAME: ''
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -2460,7 +2376,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.170.0
+    tag: v0.166.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2533,8 +2449,6 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyController
     timeoutSeconds: 1
-    ## @param tfyController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyController.readinessProbe Readiness probe settings for the tfyController
   readinessProbe:
     ## @param tfyController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyController
@@ -2547,8 +2461,6 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyController
     timeoutSeconds: 1
-    ## @param tfyController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyController.nodeSelector Node selector for the tfyController
   nodeSelector: {}
   ## @param tfyController.affinity Affinity settings for the tfyController
@@ -2598,10 +2510,6 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats:4222
     DELETE_APPLICATIONS_CONTROLLER_ENABLED: "true"
     DEPLOYMENT_PROCESSING_CONCURRENCY_LIMIT: "5"
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: "/etc/tls/truefoundry"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
 ###################################################################################################################
@@ -2620,7 +2528,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.170.0
+    tag: v0.166.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -3031,7 +2939,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.170.1"
+      tag: "v0.166.1"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3117,7 +3025,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.170.0"
+    tag: "v0.166.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3144,8 +3052,6 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
-      ## @param deltaFusionIngestor.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
     ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
       ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
@@ -3160,8 +3066,6 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
-      ## @param deltaFusionIngestor.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
   ## deltaFusionIngestor.storage Persistent volume claim settings
   storage:
     ## @param deltaFusionIngestor.storage.enabled Bool to enable storage
@@ -3292,10 +3196,6 @@ deltaFusionIngestor:
     GRPC_PORT: "8001"
     ENABLE_ARROW_FLIGHT_SERVER: "{{ .Values.deltaFusionQueryServer.enableLiveLogs }}"
     FLIGHT_DO_GET_MAX_ENCODED_MESSAGE_BYTES: "3500000"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -3310,7 +3210,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.170.0"
+    tag: "v0.166.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3450,7 +3350,7 @@ deltaFusionCompaction:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    SENTRY_ENABLED: '{{ .Values.global.enableSentry }}'
+    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "true"
     COMPACTION_ENABLED: "true"
@@ -3461,10 +3361,6 @@ deltaFusionCompaction:
     DELTA_LOG_BUFFER_SIZE: "64"
     SERVICEFOUNDRY_CONCURRENCY: "5"
     VACUUM_PARALLELISM: "64"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    OBJECT_STORE_PARALLELISM: '64'
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################
@@ -3497,7 +3393,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.170.0
+    tag: v0.166.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3555,8 +3451,6 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
-      ## @param deltaFusionQueryServer.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
     ## deltaFusionQueryServer.healthcheck.readiness Readiness probe settings
     readiness:
       ## @param deltaFusionQueryServer.healthcheck.readiness.path Readiness probe path
@@ -3571,8 +3465,6 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
-      ## @param deltaFusionQueryServer.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
   ## @param deltaFusionQueryServer.nodeSelector Node selector for the deltaFusionQueryServer
   nodeSelector: {}
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
@@ -3693,13 +3585,9 @@ deltaFusionQueryServer:
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
     SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
-    AUTH_SERVER_URL: "https://auth.truefoundry.com"
+    AUTH_SERVER_URL: "{{ .Values.global.authServerUrl }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    ALLOCATOR: jemalloc
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
+    ALLOCATOR: snmalloc
   ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
   enableLiveLogs: true
 ## @section tfyProxy Truefoundry tfy proxy values
@@ -3719,13 +3607,11 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.170.1"
+    tag: "v0.166.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
   useMcpV2: true
-  ## @param tfyProxy.restrictInternalApis Restrict access to internal-only servicefoundry APIs (/api/svc/internal/*) from external users. When enabled, the tfy-proxy Caddyfile returns 403 for these paths; in-cluster callers reach them by hitting servicefoundry-server directly (bypassing this proxy).
-  restrictInternalApis: false
   ## @param tfyProxy.existingProxyConfigMapName Name of an existing ConfigMap containing Caddy configuration for tfyProxy. The ConfigMap must include `Caddyfile` as the key.
   existingProxyConfigMapName: ""
   ## @param tfyProxy.proxyConfigOverride Nginx proxy configuration override for tfyProxy
@@ -3804,8 +3690,6 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
   readinessProbe:
     ## @param tfyProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyProxy
@@ -3818,8 +3702,6 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
   nodeSelector: {}
   ## @param tfyProxy.affinity Affinity settings for the tfyProxy
