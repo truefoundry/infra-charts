@@ -146,6 +146,7 @@ requests:
 {{- $svcs = append $svcs (printf "%s-tfy-llm-gateway" .Release.Name) -}}
 {{- $svcs = append $svcs (printf "%s-tfy-otel-collector" .Release.Name) -}}
 {{- $svcs = append $svcs (printf "%s-tfy-sandbox-server" .Release.Name) -}}
+{{- $svcs = append $svcs (printf "%s-tfy-nats" .Release.Name) -}}
 {{- /* Each service -> bare name and <name>.<ns>. */}}
 {{- range $svc := $svcs -}}
 {{- $names = append $names $svc -}}
