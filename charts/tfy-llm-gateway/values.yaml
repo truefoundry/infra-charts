@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.169.0"
+  gatewayChartVersion: "0.170.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -109,6 +109,21 @@ global:
       repository: "tfy-mirror/alpine"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
       tag: "3.21"
+  ## global.mTLS mTLS certificate mounted into the gateway pod. When installed under the
+  ## truefoundry umbrella chart this is overridden by the parent's global.mTLS (the bootstrap
+  ## job there issues the certificate). Set enabled here only when installing this chart
+  ## standalone and supplying the certificate secret via externalMtlsSecret.
+  mTLS:
+    ## @param global.mTLS.enabled Bool to mount the mTLS certificate into the gateway and serve/probe over HTTPS
+    enabled: false
+    ## @param global.mTLS.tlsSecretName Secret (mounted at /etc/tls/truefoundry) holding ca.crt + tls.key + tls.crt
+    tlsSecretName: "truefoundry-internal-tls"
+    ## @param global.mTLS.externalMtlsSecret Use an existing secret with this name instead of the bootstrap-created one. Required when installing this chart standalone with mTLS enabled.
+    ## The secret is expected to contain the following keys, mounted at /etc/tls/truefoundry:
+    ##   tls.crt  - the leaf certificate (PEM)
+    ##   tls.key  - the leaf private key (PEM)
+    ##   ca.crt   - the CA certificate used to verify peers (PEM)
+    externalMtlsSecret: ""
 ## Image configuration for llm-gateway
 image:
   ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
@@ -116,7 +131,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.169.0
+  tag: v0.170.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -168,6 +183,8 @@ healthcheck:
     port: 8787
     ## @param healthcheck.readiness.path Path to probe
     path: /
+    ## @param healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
+    scheme: HTTP
     ## @param healthcheck.readiness.initialDelaySeconds Initial delay in seconds
     initialDelaySeconds: 30
     ## @param healthcheck.readiness.periodSeconds Period in seconds
@@ -184,6 +201,8 @@ healthcheck:
     port: 8787
     ## @param healthcheck.liveness.path Path to probe
     path: /
+    ## @param healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
+    scheme: HTTP
     ## @param healthcheck.liveness.initialDelaySeconds Initial delay in seconds
     initialDelaySeconds: 600
     ## @param healthcheck.liveness.periodSeconds Period in seconds
@@ -330,7 +349,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.169.0"
+    tag: "v0.170.0"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -457,8 +476,11 @@ env:
   CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
   GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
   CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-  STDIO_MCP_PROXY_BASE_URL: "{{ .Values.global.controlPlaneURL }}/api/stdio-mcp-proxy"
   MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
+  TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
+  TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
+  TLS_DIR: /etc/tls/truefoundry
+  TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
