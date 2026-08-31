@@ -1,19 +1,4 @@
 {{- if .Values.rbac.create }}
-{{/*
-Deliberately NOT aggregated into the built-in "view" ClusterRole: aggregating would grant
-exec to everyone holding view. Rendered whenever rbac.create is set, independent of which
-tiers are enabled, so a binding can reference it before its tier exists.
-*/}}
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: tailnet-pod-exec
-  labels:
-    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
-rules:
-  - apiGroups: [""]
-    resources: ["pods/exec", "pods/portforward"]
-    verbs: ["create"]
 {{- if .Values.rbac.breakGlass.enabled }}
 ---
 {{/*
@@ -42,10 +27,10 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  # The ClusterRole name is part of the binding name deliberately, redundant though it
-  # reads for an already-prefixed role. roleRef is immutable, so renaming a role has to
-  # produce a NEW binding; shortening this to keep the old name would instead mutate an
-  # existing binding's roleRef and fail the sync.
+  # The ClusterRole name is part of the binding name deliberately. roleRef is immutable,
+  # so a binding name that embeds the role renames itself into a NEW object when the role
+  # changes, which syncs clean; holding the name fixed instead would mutate an existing
+  # binding's roleRef and fail the sync.
   name: tailnet-k8s-{{ $tier }}-{{ $role }}
   labels:
     {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}

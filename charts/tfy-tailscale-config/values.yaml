@@ -271,7 +271,7 @@ rbac:
     ## @param rbac.breakGlass.clusterRole ClusterRole granted to the break-glass group.
     ##
     clusterRole: cluster-admin
-  ## @param rbac.tiers [object] Access tiers, each binding an impersonated group to a list of ClusterRoles. The "tailnet-pod-exec" ClusterRole is created whenever rbac.create is set, regardless of which tiers are enabled.
+  ## @param rbac.tiers [object] Access tiers, each binding an impersonated group to a list of ClusterRoles. Every role named here must already exist -- a binding to a missing ClusterRole is accepted and grants nothing.
   ##
   tiers:
     admin:
@@ -282,9 +282,15 @@ rbac:
     operator:
       enabled: true
       group: tailnet-k8s-operator
+      ## This tier was "view plus exec" -- read everything, debug a running pod, no
+      ## Secrets and no mutation. The exec half is gone: pods/exec granted cluster-wide
+      ## returns any pod's ServiceAccount token, and the API server proxy's own account
+      ## can impersonate any user or group, so the tier reached cluster-admin by design
+      ## rather than by misconfiguration. Nothing in the operator's required privileges
+      ## can be narrowed to prevent it. Until the access model settles this, the tier is
+      ## view-only and identical to viewer.
       clusterRoles:
         - view
-        - tailnet-pod-exec
     viewer:
       enabled: true
       group: tailnet-k8s-viewer

@@ -160,13 +160,13 @@ for the same reason.
 
 ### RBAC
 
-| Name                          | Description                                                                                                                                                                                   | Value           |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `rbac.create`                 | Create the tailnet RBAC ClusterRole and ClusterRoleBindings.                                                                                                                                  | `true`          |
-| `rbac.breakGlass.enabled`     | Bind a break-glass group directly to cluster-admin, independent of the SCIM-synced tiers.                                                                                                     | `true`          |
-| `rbac.breakGlass.group`       | Impersonated group name for break-glass access.                                                                                                                                               | `tailnet-infra` |
-| `rbac.breakGlass.clusterRole` | ClusterRole granted to the break-glass group.                                                                                                                                                 | `cluster-admin` |
-| `rbac.tiers`                  | Access tiers, each binding an impersonated group to a list of ClusterRoles. The "tailnet-pod-exec" ClusterRole is created whenever rbac.create is set, regardless of which tiers are enabled. | `{}`            |
+| Name                          | Description                                                                                                                                                                                | Value           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| `rbac.create`                 | Create the tailnet RBAC ClusterRole and ClusterRoleBindings.                                                                                                                               | `true`          |
+| `rbac.breakGlass.enabled`     | Bind a break-glass group directly to cluster-admin, independent of the SCIM-synced tiers.                                                                                                  | `true`          |
+| `rbac.breakGlass.group`       | Impersonated group name for break-glass access.                                                                                                                                            | `tailnet-infra` |
+| `rbac.breakGlass.clusterRole` | ClusterRole granted to the break-glass group.                                                                                                                                              | `cluster-admin` |
+| `rbac.tiers`                  | Access tiers, each binding an impersonated group to a list of ClusterRoles. Every role named here must already exist -- a binding to a missing ClusterRole is accepted and grants nothing. | `{}`            |
 
 ### TrueFoundry integrations
 
