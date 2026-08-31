@@ -103,7 +103,6 @@ spec:
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-sandbox-server.customCA.volumeMounts" . | nindent 12 }}
             {{- end }}
-            {{- include "tfy-sandbox-server.mtls.volumeMount" . | nindent 12 }}
       imagePullSecrets:
         {{- include "tfy-sandbox-server.imagePullSecrets" . | nindent 8 }}
       volumes:
@@ -120,7 +119,6 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-sandbox-server.customCA.volumes" . | nindent 8 }}
         {{- end }}
-        {{- include "tfy-sandbox-server.mtls.volume" . | nindent 8 }}
       nodeSelector:
         {{- include "tfy-sandbox-server.nodeSelector" . | nindent 8 }}
       affinity:
