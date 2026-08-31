@@ -94,7 +94,11 @@ jobs:
           password: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
           registry: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
 
+      # Public ECR login avoids rate limits when inspecting public.ecr.aws images.
+      # OIDC trust may not cover every dispatch target branch — continue without it.
       - name: Configure AWS credentials
+        id: aws-ecr-creds
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
@@ -102,6 +106,8 @@ jobs:
 
       - name: Login to Amazon ECR
         id: login-ecr
+        continue-on-error: true
+        if: steps.aws-ecr-creds.outcome == 'success'
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
@@ -113,7 +119,6 @@ jobs:
 
 
       - name: Copy current manifest for changelog
-        if: always()
         run: |
           cp charts/tfy-k8s-aws-eks-inframold/artifacts-manifest.json charts/tfy-k8s-aws-eks-inframold/old-artifacts-manifest.json
 
