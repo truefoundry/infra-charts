@@ -1,0 +1,17 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.certificate.name | default (printf "%s-wildcard" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  namespace: {{ .Values.certificate.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.certificate.secretName | default (printf "%s-wildcard-tls" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  duration: {{ .Values.certificate.duration }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  issuerRef:
+    {{- toYaml .Values.certificate.issuerRef | nindent 4 }}
+  dnsNames:
+    {{- toYaml .Values.certificate.dnsNames | nindent 4 }}
+{{- end }}

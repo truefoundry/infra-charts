@@ -1,0 +1,74 @@
+{{- if .Values.proxyGroups.ingress.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: {{ .Values.proxyGroups.ingress.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    # Deleting a ProxyGroup garbage-collects its state Secrets, which destroys the proxies'
+    # tailnet device identities -- they re-register on new 100.x addresses and any DNS
+    # record pointing at them is orphaned. Never let a sync prune this.
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  type: ingress
+  replicas: {{ .Values.proxyGroups.ingress.replicas }}
+  {{- if .Values.proxyClasses.default.enabled }}
+  proxyClass: {{ .Values.proxyClasses.default.name }}
+  {{- end }}
+  # DEVICE tags. These are not what access rules match -- see serviceTags in values.yaml.
+  tags:
+    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "ingress" "base" true) | nindent 4 }}
+  hostnamePrefix: {{ include "tfy-tailscale-config.ingressHostnamePrefix" . }}
+{{- end }}
+{{- if .Values.proxyGroups.apiserver.enabled }}
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: {{ .Values.proxyGroups.apiserver.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  type: kube-apiserver
+  replicas: {{ .Values.proxyGroups.apiserver.replicas }}
+  {{- if .Values.proxyClasses.apiserver.enabled }}
+  proxyClass: {{ .Values.proxyClasses.apiserver.name }}
+  {{- end }}
+  # For a kube-apiserver ProxyGroup these tags reach the SERVICE as well as the devices, so
+  # the coarse tags here cover both -- unlike the ingress group, where the Service is tagged
+  # separately by serviceTags.
+  tags:
+    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "apiserver" "base" true) | nindent 4 }}
+  {{- with .Values.proxyGroups.apiserver.hostnamePrefix }}
+  hostnamePrefix: {{ include "tfy-tailscale-config.apiserverHostnamePrefix" $ }}
+  {{- end }}
+  kubeAPIServer:
+    mode: {{ .Values.proxyGroups.apiserver.mode }}
+    hostname: {{ include "tfy-tailscale-config.apiserverHostname" . }}
+{{- end }}
+{{- if .Values.proxyGroups.egress.enabled }}
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyGroup
+metadata:
+  name: {{ .Values.proxyGroups.egress.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  type: egress
+  replicas: {{ .Values.proxyGroups.egress.replicas }}
+  {{- if .Values.proxyClasses.default.enabled }}
+  proxyClass: {{ .Values.proxyClasses.default.name }}
+  {{- end }}
+  # DEVICE tags -- and for egress these ARE what access rules match, as `src`. An egress
+  # ProxyGroup advertises no Tailscale Service, so there is nothing for serviceTags or
+  # proxyConfig.defaultTags to attach to and no autoApprovers entry is needed.
+  tags:
+    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "egress" "base" true) | nindent 4 }}
+  hostnamePrefix: {{ include "tfy-tailscale-config.egressHostnamePrefix" . }}
+{{- end }}

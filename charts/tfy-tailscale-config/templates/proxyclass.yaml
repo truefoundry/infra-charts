@@ -1,0 +1,61 @@
+{{- if .Values.proxyClasses.default.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: {{ .Values.proxyClasses.default.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.proxyClasses.default.metricsEnabled }}
+  metrics:
+    enable: true
+  {{- end }}
+  statefulSet:
+    pod:
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tailscaleContainer:
+        {{- with .Values.placement.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+{{- end }}
+{{- if .Values.proxyClasses.apiserver.enabled }}
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: {{ .Values.proxyClasses.apiserver.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.proxyClasses.apiserver.metricsEnabled }}
+  metrics:
+    enable: true
+  {{- end }}
+  statefulSet:
+    pod:
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tailscaleContainer:
+        # Pinned deliberately. This image is unreachable from the operator chart's values;
+        # a ProxyClass is the only place it can be set, and unpinned it runs :latest on the
+        # highest-privilege pod in the namespace.
+        image: {{ .Values.proxyClasses.apiserver.image }}
+        {{- with .Values.placement.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+{{- end }}

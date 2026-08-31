@@ -1,0 +1,31 @@
+# Mode H: a platform surface routed through Istio on a name we own, rather than given its
+# own Tailscale Service and ts.net certificate.
+#
+# istioGateway.hosts must cover mgmt.baseDomain or the render fails -- Istio would otherwise
+# drop the route silently and answer 404 with nothing reporting a misconfiguration.
+clusterName: tfy-example-ctl
+clusterSlug: example-ctl
+
+mgmt:
+  enabled: true
+  baseDomain: mgmt.example-ctl.internal.example.com
+  items:
+    argocd:
+      namespace: argocd
+      service: argocd-server
+      port: 80
+
+istioGateway:
+  enabled: true
+  hosts:
+    - "*.mgmt.example-ctl.internal.example.com"
+    - "*.app.example-ctl.internal.example.com"
+  credentialName: example-ctl-internal-tls
+
+certificate:
+  enabled: true
+  name: example-ctl-internal
+  secretName: example-ctl-internal-tls
+  dnsNames:
+    - "*.mgmt.example-ctl.internal.example.com"
+    - "*.app.example-ctl.internal.example.com"

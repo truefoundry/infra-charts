@@ -1,0 +1,29 @@
+{{- if .Values.istioGateway.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  # Must NOT be named "tfy-istio-ingress": the control plane reads the LoadBalancer status
+  # of a Service with that exact name to auto-populate cluster base domains.
+  name: {{ .Values.istioGateway.service.name }}
+  namespace: {{ .Values.istioGateway.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    # No override of its own: this Service shares ingresses.proxyGroup.
+    tailscale.com/proxy-group: {{ include "tfy-tailscale-config.proxyGroupRef" (dict "root" $ "explicit" .Values.ingresses.proxyGroup "role" "ingress" "what" "the istioGateway Service" "key" "ingresses.proxyGroup") }}
+    tailscale.com/hostname: {{ include "tfy-tailscale-config.gatewayServiceHostname" . | quote }}
+    # SERVICE tags -- what access rules match. An explicit annotation overrides
+    # proxyConfig.defaultTags for this Service, so it must stay in step with the admin-UI
+    # Ingresses or the gateway VIP silently ends up with different tags from them.
+    tailscale.com/tags: {{ include "tfy-tailscale-config.ingressServiceTags" . | quote }}
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    {{- toYaml .Values.istioGateway.selector | nindent 4 }}
+  ports:
+    - name: https
+      port: 443
+      targetPort: {{ .Values.istioGateway.port }}
+      protocol: TCP
+{{- end }}

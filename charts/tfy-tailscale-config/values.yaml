@@ -1,0 +1,510 @@
+## @section Cluster identity
+##
+## Every tailnet-global name and ACL tag in this chart derives from clusterSlug. Cluster
+## naming across the fleet is not systematically parseable (role, region and environment
+## appear in different orders, and two clusters carry no "tfy-" prefix at all), so nothing
+## other than the slug is ever derived from the name.
+
+## @param clusterName Name of the cluster, as supplied by the inframold.
+##
+clusterName: "cluster-name"
+## @param clusterSlug Short identifier used in tailnet hostnames and ACL tags. Defaults to clusterName with a leading "tfy-" removed, if present.
+##
+clusterSlug: ""
+
+## @section Tailnet device tags
+##
+## These tag the proxy DEVICES, via ProxyGroup.spec.tags. They are NOT what access rules
+## match -- see the serviceTags section below. Devices tagged one way and Services another
+## reports healthy and is unreachable.
+##
+## Every tag named here must exist in the tailnet policy file's tagOwners before a device
+## claims it, or the ProxyGroup stalls at "0/N proxy backends ready" with no error.
+
+tailnet:
+  ## @param tailnet.baseTag Device tag carried by every proxy. Never name this in an access rule -- it is the chart default on every cluster, so a rule naming it silently widens to the whole fleet.
+  ##
+  baseTag: "tag:k8s"
+  ## @param tailnet.roleTags [object] Per-role DEVICE tags. Each defaults to "tag:k8s-<role>-<clusterSlug>". Override to pin an existing tag; tags must match ^tag:[a-zA-Z][a-zA-Z0-9-]*$ (no underscores).
+  ##
+  roleTags:
+    apiserver: ""
+    ingress: ""
+    recorder: ""
+    egress: ""
+  ## Coarse tags from the registry columns behind the slug, rendered as
+  ## "tag:k8s-<role>-<dimension>-<value>". Access rules target these, so "everything in
+  ## dev" is one rule rather than one per cluster. Each empty value is omitted.
+  ##
+  ## These are applied ALONGSIDE the per-cluster role tag, never instead of it -- a device's
+  ## identity is the union of its tags, and only a tag unique to one cluster can scope a rule
+  ## to it. The per-cluster tag stays for the case that genuinely needs it: isolating a single
+  ## cluster for incident work.
+  ##
+  ## Tags are immutable once a device is provisioned, so adding a dimension here later means
+  ## re-provisioning every device that should carry it. Set them at creation or not at all.
+  coarse:
+    ## @param tailnet.coarse.env Environment token -- dev, stage, prod, demo.
+    ##
+    env: ""
+    ## @param tailnet.coarse.cloud Cloud token -- aws, azu, gcp.
+    ##
+    cloud: ""
+    ## @param tailnet.coarse.plane Plane token -- ctl, cmp, gtw.
+    ##
+    plane: ""
+
+## @section Tailnet service tags
+##
+## These tag the Tailscale SERVICES. Access rules match these, not the device tags above.
+##
+## The authoritative value for Ingress- and LoadBalancer-backed Services is
+## proxyConfig.defaultTags on the OPERATOR release, which this chart does not own. The
+## value here is applied via the tailscale.com/tags annotation on the resources this chart
+## does own, and is used to render the policy fragment. An explicit annotation OVERRIDES
+## defaultTags for that Service, so the two must be kept in step or the gateway VIP
+## silently ends up with different tags from the admin UIs.
+
+serviceTags:
+  ## @param serviceTags.ingress Comma-separated tags applied to Services fronted by the ingress ProxyGroup. Note this is a STRING, not a list -- unlike ProxyGroup.spec.tags. Defaults to "<tailnet.baseTag>,<tailnet.roleTags.ingress>".
+  ##
+  ingress: ""
+
+## @section Placement
+##
+## Applied to both ProxyClasses and to the Recorder. The Recorder CRD has no proxyClass
+## field, so without this its placement would have to be restated by hand and would drift.
+
+placement:
+  ## @param placement.tolerations [array] Tolerations for Tailscale proxy and recorder pods.
+  ##
+  tolerations: []
+  ## @param placement.affinity [object] Affinity for Tailscale proxy and recorder pods.
+  ##
+  affinity: {}
+  ## @param placement.resources [object] Resource requests and limits for Tailscale proxy and recorder containers.
+  ##
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+## @section Proxy classes
+
+proxyClasses:
+  ## @param proxyClasses.default.enabled Create the default ProxyClass, used by ingress proxies.
+  ##
+  default:
+    enabled: true
+    ## @param proxyClasses.default.name Name of the default ProxyClass.
+    ##
+    name: tfy-default
+    ## @param proxyClasses.default.metricsEnabled Expose proxy metrics.
+    ##
+    metricsEnabled: true
+  apiserver:
+    ## @param proxyClasses.apiserver.enabled Create the ProxyClass used by the kube-apiserver ProxyGroup.
+    ##
+    enabled: true
+    ## @param proxyClasses.apiserver.name Name of the kube-apiserver ProxyClass.
+    ##
+    name: tfy-apiserver
+    ## @param proxyClasses.apiserver.image Pinned k8s-proxy image. This image is NOT settable through the operator chart's values -- a ProxyClass is the only way to override it, and leaving it unpinned runs :latest on the highest-privilege pod in the namespace.
+    ##
+    image: tailscale/k8s-proxy:v1.102.2
+    ## @param proxyClasses.apiserver.metricsEnabled Expose proxy metrics.
+    ##
+    metricsEnabled: true
+
+## @section Proxy groups
+##
+## hostnamePrefix and kubeAPIServer.hostname are tailnet-global and WRITE-ONCE: changing
+## one re-registers the devices on new 100.x addresses, which orphans any DNS record
+## pointing at them. Pin them explicitly rather than letting a derived default drift.
+
+proxyGroups:
+  ingress:
+    ## @param proxyGroups.ingress.enabled Deploy a ProxyGroup of type "ingress".
+    ##
+    enabled: true
+    ## @param proxyGroups.ingress.name Kubernetes object name of the ingress ProxyGroup.
+    ##
+    name: ingress-proxies
+    ## @param proxyGroups.ingress.replicas Number of ingress proxy replicas. Reducing this DELETES devices and their state Secrets -- it is not a safe casual edit.
+    ##
+    replicas: 2
+    ## @param proxyGroups.ingress.hostnamePrefix Tailnet-global device hostname prefix. Defaults to "<clusterSlug>-ing". Max 62 chars, lowercase, must match ^[a-z0-9][a-z0-9-]{0,61}$.
+    ##
+    hostnamePrefix: ""
+  apiserver:
+    ## @param proxyGroups.apiserver.enabled Deploy a ProxyGroup of type "kube-apiserver".
+    ##
+    enabled: true
+    ## @param proxyGroups.apiserver.name Kubernetes object name of the kube-apiserver ProxyGroup.
+    ##
+    name: k8s-apiserver
+    ## @param proxyGroups.apiserver.replicas Number of kube-apiserver proxy replicas. Reducing this DELETES devices and their state Secrets.
+    ##
+    replicas: 2
+    ## @param proxyGroups.apiserver.hostname Tailnet-global hostname, must be UNIQUE across the whole tailnet. Defaults to "<clusterSlug>-k8s". Max 63 chars, must not end in a dash.
+    ##
+    hostname: ""
+    ## @param proxyGroups.apiserver.hostnamePrefix Tailnet-global DEVICE hostname prefix. Deliberately has NO default -- see below. Max 62 chars, must match ^[a-z0-9][a-z0-9-]{0,61}$.
+    ##
+    ## Distinct from `hostname` above, which names the Tailscale SERVICE that kubectl talks
+    ## to. This names the proxy DEVICES behind it. Unset, the operator falls back to the
+    ## Kubernetes object name -- "k8s-apiserver-0" and "-1", unqualified in a namespace that
+    ## is flat and tailnet-global, so a second cluster creating a ProxyGroup of that name
+    ## silently gets a "-1" suffix instead of an error.
+    hostnamePrefix: ""
+    ## @param proxyGroups.apiserver.mode kube-apiserver proxy mode. "auth" impersonates tailnet identities against Kubernetes RBAC.
+    ##
+    mode: auth
+  egress:
+    ## @param proxyGroups.egress.enabled Deploy a ProxyGroup of type "egress", so cluster pods can reach tailnet targets. Off by default -- most clusters egress nowhere.
+    ##
+    enabled: false
+    ## @param proxyGroups.egress.name Kubernetes object name of the egress ProxyGroup.
+    ##
+    name: egress-proxies
+    ## @param proxyGroups.egress.replicas Number of egress proxy replicas. Reducing this DELETES devices and their state Secrets.
+    ##
+    replicas: 2
+    ## @param proxyGroups.egress.hostnamePrefix Tailnet-global device hostname prefix. Defaults to "<clusterSlug>-egress". Max 62 chars, must match ^[a-z0-9][a-z0-9-]{0,61}$.
+    ##
+    hostnamePrefix: ""
+
+## @section Egress targets
+##
+## Each entry mirrors one tailnet target into the cluster as an ExternalName Service. The
+## operator creates a ClusterIP Service and EndpointSlice per target in ITS OWN namespace,
+## maps every port declared here to an ephemeral port on that Service, and then REWRITES
+## spec.externalName to point at it.
+##
+## Two things follow, and both bite:
+##
+## 1. `ports` is mandatory and exhaustive. Standalone egress infers ports; ProxyGroup
+##    egress does not, and a port left out is simply not forwarded, with nothing logged.
+##
+## 2. spec.externalName is operator-owned. The chart writes a placeholder. Argo CD must
+##    carry an ignoreDifferences rule for it or selfHeal reverts the operator's value on
+##    every reconcile and egress flaps -- see helm/argocd/tfy-tailscale-config.yaml.
+##
+## Unlike every other Tailscale object in this chart, egress needs NO service tags: an
+## egress ProxyGroup advertises nothing, so there is no Tailscale Service to tag. Access
+## rules match the proxy DEVICE tags instead, and as `src` rather than `dst`.
+
+egress:
+  ## @param egress.enabled Mirror the targets below into the cluster as ExternalName Services.
+  ##
+  enabled: false
+  ## @param egress.proxyGroup ProxyGroup that carries this traffic. Defaults to proxyGroups.egress.name.
+  ##
+  proxyGroup: ""
+  ## @param egress.items [object] Map of tailnet targets to mirror. Each takes a namespace, exactly one of fqdn or ip, a list of ports, and an optional name for the Service object (defaulting to the key).
+  ##
+  ## Prefer `fqdn`: the proxy re-resolves it, so a target that changes address needs no
+  ## chart change. `ip` is for an address behind a subnet router, which this design has none of.
+  items: {}
+  # items:
+  #   control-plane-gateway:
+  #     namespace: tfy-agent
+  #     fqdn: example-ctl-gw.tailnet-name.ts.net
+  #     ports:
+  #       - name: https
+  #         port: 443
+  #         protocol: TCP
+
+## @section Session recording
+##
+## Recording is switched ON by the `recorder` key on each cap/kubernetes grant in the
+## tailnet policy file, NOT by anything here. Enforcement (enforceRecorder) is likewise a
+## policy-file setting and CANNOT be set from this chart -- there is no such field on the
+## Recorder CRD. This chart only deploys the recorder itself.
+
+recorder:
+  ## @param recorder.enabled Deploy a Recorder for kubectl session recording.
+  ##
+  enabled: true
+  ## @param recorder.name Kubernetes object name. Tailnet-global and WRITE-ONCE -- the DEVICE is named "<name>-0", so the effective budget is 61 characters, not 63. Defaults to "<clusterSlug>-recorder".
+  ##
+  name: ""
+  ## @param recorder.replicas Number of recorder replicas.
+  ##
+  replicas: 1
+  ## @param recorder.enableUI Serve the recorder's web UI on the tailnet.
+  ##
+  enableUI: true
+  ## @param recorder.storage [object] Recording storage. An empty object means emptyDir, which loses every recording on pod restart; set s3 for durable storage.
+  ##
+  storage: {}
+  # storage:
+  #   s3:
+  #     bucket: ""
+  #     region: ""
+
+## @section RBAC
+##
+## Group names must match the impersonate.groups values in the tailnet policy file
+## EXACTLY, and these bindings must exist BEFORE the policy impersonates them -- otherwise
+## users authenticate successfully and are authorized for nothing.
+##
+## Four tiers are rendered; only two are ever impersonated. tailnet-k8s-operator and
+## tailnet-k8s-viewer are bound on both clusters and named by no grant in the policy. They
+## are inert, not broken -- but do not read the tier list here as evidence of what access
+## exists. See network-paths.md §6.
+
+rbac:
+  ## @param rbac.create Create the tailnet RBAC ClusterRole and ClusterRoleBindings.
+  ##
+  create: true
+  breakGlass:
+    ## @param rbac.breakGlass.enabled Bind a break-glass group directly to cluster-admin, independent of the SCIM-synced tiers.
+    ##
+    enabled: true
+    ## @param rbac.breakGlass.group Impersonated group name for break-glass access.
+    ##
+    group: tailnet-infra
+    ## @param rbac.breakGlass.clusterRole ClusterRole granted to the break-glass group.
+    ##
+    clusterRole: cluster-admin
+  ## @param rbac.tiers [object] Access tiers, each binding an impersonated group to a list of ClusterRoles. The "tailnet-pod-exec" ClusterRole is created whenever rbac.create is set, regardless of which tiers are enabled.
+  ##
+  tiers:
+    admin:
+      enabled: true
+      group: tailnet-k8s-admin
+      clusterRoles:
+        - cluster-admin
+    operator:
+      enabled: true
+      group: tailnet-k8s-operator
+      clusterRoles:
+        - view
+        - tailnet-pod-exec
+    viewer:
+      enabled: true
+      group: tailnet-k8s-viewer
+      clusterRoles:
+        - view
+
+## @section TrueFoundry integrations
+##
+## Everything below assumes infrastructure that a generic cluster does not have, and is
+## therefore off by default.
+
+## @section Platform surfaces on their own tailnet names (Mode I)
+##
+## Each surface here gets its own Tailscale Service and its own <host>.<tailnet>.ts.net
+## certificate, issued by the ProxyGroup's -0 pod and SERIALISED across hostnames -- budget
+## 10-15 minutes for a batch, not seconds, and note Let's Encrypt allows only 5 failed
+## validations per hostname per hour.
+##
+## Prefer the `mgmt` block below for anything that can be served through Istio. This block is
+## for what cannot be, and for surfaces not yet migrated.
+
+ingresses:
+  ## @param ingresses.enabled Publish admin UIs to the tailnet as Tailscale Ingresses.
+  ##
+  enabled: false
+  ## @param ingresses.proxyGroup ProxyGroup that fronts these Ingresses. Defaults to proxyGroups.ingress.name.
+  ##
+  proxyGroup: ""
+  ## @param ingresses.items [object] Map of admin UIs to expose. Each entry takes namespace, service, port, and an optional host (defaulting to "<clusterSlug>-<key>"). The operator keeps only the first DNS label of the host.
+  ##
+  items: {}
+  # items:
+  #   argocd:
+  #     namespace: argocd
+  #     service: argocd-server
+  #     port: 80
+
+## @section Platform surfaces on our own domain (Mode H)
+##
+## Routes a platform surface through the Istio gateway on a name WE own, instead of giving
+## it its own Tailscale Service and ts.net hostname (Mode I, the `ingresses` block above).
+##
+## Prefer this. A ts.net name belongs to the vendor and stops resolving the day the tailnet
+## does; a surface here rides the wildcard certificate and DNS record that already exist, so
+## it costs one Istio route and NO certificate -- no ACME order, no serialised issuance, no
+## Let's Encrypt rate limit.
+##
+## The two blocks coexist so surfaces can move one at a time. Do not list the same surface
+## in both: two front doors for one backend, and the ts.net one keeps its Tailscale Service.
+
+mgmt:
+  ## @param mgmt.enabled Route the surfaces below through the Istio gateway.
+  ##
+  enabled: false
+  ## @param mgmt.baseDomain Host suffix for these surfaces, e.g. "mgmt.<clusterSlug>.internal.example.com". Must be covered by istioGateway.hosts and certificate.dnsNames -- the render fails if the gateway does not serve it.
+  ##
+  baseDomain: ""
+  ## @param mgmt.gateway Gateway to bind to, as "<namespace>/<name>". Defaults to the one this chart creates. Setting it skips the coverage check, since another chart's hosts are not visible here.
+  ##
+  gateway: ""
+  ## @param mgmt.items [object] Map of surfaces to route. Each takes namespace, service, port, an optional host (defaulting to the key) and an optional name for the VirtualService object.
+  ##
+  items: {}
+  # items:
+  #   argocd:
+  #     namespace: argocd
+  #     service: argocd-server
+  #     port: 80
+
+istioGateway:
+  ## @param istioGateway.enabled Create a second Istio Gateway listener and a Tailscale Service in front of it. Requires an existing Istio ingress gateway deployment.
+  ##
+  enabled: false
+  ## @param istioGateway.name Name of the Istio Gateway resource.
+  ##
+  name: tfy-tailnet-wildcard
+  ## @param istioGateway.namespace Namespace holding the Istio ingress gateway.
+  ##
+  namespace: istio-system
+  ## @param istioGateway.selector [object] Pod selector for the existing Istio ingress gateway deployment.
+  ##
+  selector:
+    istio: tfy-istio-ingress
+  ## @param istioGateway.port Port the tailnet listener binds on. Deliberately not 443, which the public gateway already uses.
+  ##
+  port: 8443
+  ## @param istioGateway.hosts [array] Hosts served on the tailnet listener.
+  ##
+  hosts: []
+  ## @param istioGateway.credentialName TLS secret for the tailnet listener. Must match certificate.secretName when that is enabled.
+  ##
+  credentialName: ""
+  service:
+    ## @param istioGateway.service.name Name of the Tailscale LoadBalancer Service. Must NOT be "tfy-istio-ingress" -- the control plane reads that name to auto-populate base domains.
+    ##
+    name: istio-ingress-tailnet
+    ## @param istioGateway.service.hostname Tailnet hostname for the gateway Service. Defaults to "<clusterSlug>-gw".
+    ##
+    hostname: ""
+
+## @section Plain L3 Services on the tailnet (Mode J ingress)
+##
+## A second front door onto pods that already have one, exposed to the tailnet as a
+## Tailscale Service with NO TLS termination anywhere in the path.
+##
+## This is the block to use when the CLIENT is another cluster rather than a browser.
+## `ingresses` (L7) makes Tailscale terminate HTTPS with a ts.net certificate, which
+## forces the client to dial the ts.net name; a pod reaching this through an egress
+## mirror dials the mirror's own cluster-local name and cannot. `istioGateway` keeps TLS
+## but terminates it in Istio, which routes on SNI -- same problem, same reason.
+##
+## L3 sidesteps both: the proxy DNATs TCP to the ClusterIP and the backend answers plain
+## HTTP, so the dialled name stops mattering. The cost is that the hop from the consuming
+## pod to its egress proxy is plaintext; over the tailnet itself it is WireGuard.
+
+tailnetServices:
+  ## @param tailnetServices.enabled Expose the Services listed below to the tailnet at L3.
+  ##
+  enabled: false
+  ## @param tailnetServices.proxyGroup ProxyGroup that fronts them. Defaults to proxyGroups.ingress.name.
+  ##
+  proxyGroup: ""
+  ## @param tailnetServices.items [object] Map of targets. Each needs namespace, selector, hostname and ports; name defaults to "<key>-tailnet" and tags to the ingress Service tags.
+  ##
+  items: {}
+  # items:
+  #   cp:
+  #     namespace: truefoundry
+  #     name: tfy-proxy-tailnet
+  #     hostname: example-ctl-cp     # WRITE-ONCE
+  #     selector:
+  #       truefoundry.com/component: tfy-proxy
+  #     ports:
+  #       - { name: http, port: 80, targetPort: 8080, protocol: TCP }
+
+
+## @section ACME issuer
+##
+## For a cluster that HAS cert-manager but no Issuer. cert-manager itself is a cluster
+## prerequisite and is deliberately not installed here: this chart would own its six
+## cluster-scoped CRDs, and deleting a CRD deletes every object of that type cluster-wide,
+## including certificates this chart never created.
+##
+## ClusterIssuer by default, and the reason is where the DNS-01 CREDENTIAL ends up.
+##
+## Only the TLS Secret is pinned to istio-system: Istio's SDS reads credentialName from the
+## namespace of the gateway WORKLOAD, and the Certificate follows it because cert-manager
+## writes the Secret beside the Certificate. The issuer is not pinned by anything.
+##
+## A namespaced Issuer must sit with its Certificates, and it reads its solver credential
+## from its own namespace -- which would put a token that can edit DNS for the whole parent
+## zone into istio-system, alongside the ingress gateway and istiod. A ClusterIssuer reads
+## that credential from cert-manager's --cluster-resource-namespace (its own namespace by
+## default) instead, and one of them serves every namespace on the cluster.
+
+issuer:
+  ## @param issuer.enabled Create the ACME issuer named below. Requires cert-manager already installed.
+  ##
+  enabled: false
+  ## @param issuer.kind Issuer or ClusterIssuer. ClusterIssuer keeps the DNS-01 credential out of istio-system and serves every namespace; use Issuer only to match an existing namespaced one.
+  ##
+  kind: ClusterIssuer
+  ## @param issuer.name Name of the issuer. Must match certificate.issuerRef.name when both are enabled -- the render fails otherwise.
+  ##
+  name: letsencrypt-cloudflare
+  ## @param issuer.namespace Namespace for the issuer. Used only when kind is Issuer; a ClusterIssuer is cluster-scoped.
+  ##
+  namespace: istio-system
+  ## @param issuer.email Contact address for the ACME account. Required by Let's Encrypt.
+  ##
+  email: ""
+  ## @param issuer.server ACME directory URL. Defaults to Let's Encrypt PRODUCTION, whose weekly budget is shared across every name under the parent domain -- iterate on https://acme-staging-v02.api.letsencrypt.org/directory instead.
+  ##
+  server: https://acme-v02.api.letsencrypt.org/directory
+  ## @param issuer.privateKeySecretRef Secret the ACME account key is written to. Created by cert-manager, not by this chart.
+  ##
+  privateKeySecretRef: letsencrypt-cloudflare-account-key
+  ## @param issuer.solvers [array] Solver list, passed through verbatim. A DNS-01 solver works identically on EKS, AKS and GKE, so one definition covers the fleet. Any Secret named here must already exist -- this chart never templates a credential -- in cert-manager's --cluster-resource-namespace for a ClusterIssuer, or in issuer.namespace for an Issuer.
+  ##
+  solvers: []
+  # solvers:
+  #   - dns01:
+  #       cloudflare:
+  #         apiTokenSecretRef:
+  #           name: truefoundry-tech-cloudflare-api-token
+  #           key: api-token
+  #     selector:
+  #       dnsZones:
+  #         - truefoundry.tech
+
+certificate:
+  ## @param certificate.enabled Create a cert-manager Certificate for the tailnet wildcard. Requires cert-manager, and an Issuer -- either pre-existing or from the issuer block above.
+  ##
+  enabled: false
+  ## @param certificate.name Name of the Certificate resource.
+  ##
+  name: ""
+  ## @param certificate.namespace Namespace for the Certificate.
+  ##
+  namespace: istio-system
+  ## @param certificate.secretName Secret the issued certificate is written to.
+  ##
+  secretName: ""
+  ## @param certificate.issuerRef [object] cert-manager issuer reference. Points at an existing Issuer unless the issuer block above creates one.
+  ##
+  issuerRef:
+    name: letsencrypt-cloudflare
+    kind: Issuer
+  ## @param certificate.dnsNames [array] DNS names on the certificate.
+  ##
+  dnsNames: []
+  ## @param certificate.duration Certificate lifetime. Use Go's normalised form -- the API server rewrites "2160h" to "2160h0m0s", which Argo CD then reports as permanent drift.
+  ##
+  duration: 2160h0m0s
+  ## @param certificate.renewBefore How long before expiry renewal starts. Normalised form, same reason as duration.
+  ##
+  renewBefore: 360h0m0s
+
+## @section Extra
+
+## @param extraObjects [array] Arbitrary additional manifests to render with this chart.
+##
+extraObjects: []

@@ -1,0 +1,66 @@
+{{- if .Values.rbac.create }}
+{{/*
+Deliberately NOT aggregated into the built-in "view" ClusterRole: aggregating would grant
+exec to everyone holding view. Rendered whenever rbac.create is set, independent of which
+tiers are enabled, so a binding can reference it before its tier exists.
+*/}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tailnet-pod-exec
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/portforward"]
+    verbs: ["create"]
+{{- if .Values.rbac.breakGlass.enabled }}
+---
+{{/*
+Break-glass, deliberately independent of the SCIM-synced tiers below so that an IdP or
+SCIM failure cannot remove the last path into the cluster.
+*/}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tailnet-infra-cluster-admin
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+subjects:
+  - kind: Group
+    name: {{ .Values.rbac.breakGlass.group }}
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.rbac.breakGlass.clusterRole }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- range $tier, $cfg := .Values.rbac.tiers }}
+{{- if $cfg.enabled }}
+{{- range $role := $cfg.clusterRoles }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  # The ClusterRole name is part of the binding name deliberately, redundant though it
+  # reads for an already-prefixed role. roleRef is immutable, so renaming a role has to
+  # produce a NEW binding; shortening this to keep the old name would instead mutate an
+  # existing binding's roleRef and fail the sync.
+  name: tailnet-k8s-{{ $tier }}-{{ $role }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+subjects:
+  - kind: Group
+    # Must match impersonate.groups in the tailnet policy file EXACTLY, and must exist
+    # before the policy impersonates it -- otherwise users authenticate successfully and
+    # are authorized for nothing.
+    name: {{ $cfg.group }}
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: {{ $role }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

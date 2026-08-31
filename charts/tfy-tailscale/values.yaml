@@ -1,0 +1,91 @@
+## @section Namespace
+##
+## The operator namespace needs istio-injection disabled -- a sidecar's iptables fights
+## the proxy DNAT.
+##
+## The name is not configurable. It is always .Release.Namespace, since that is where
+## upstream puts every resource; set it with `helm -n` or Argo's destination.namespace.
+##
+## Anything else that creates the namespace first -- Argo's CreateNamespace=true, or
+## `helm --create-namespace` -- collides with this template and needs create=false, with
+## the labels moved to syncPolicy.managedNamespaceMetadata or applied by hand. Omitting
+## the helm flag does not help: Helm needs the namespace before it can write the release
+## Secret.
+
+namespace:
+  ## @param namespace.create Create the operator namespace with the labels below.
+  ##
+  create: true
+  ## @param namespace.labels [object] Labels applied to the namespace.
+  ##
+  labels:
+    istio-injection: disabled
+  ## @param namespace.annotations [object] Annotations applied to the namespace.
+  ##
+  annotations: {}
+
+## @section Upstream operator
+##
+## Everything under this key is passed straight through to the upstream
+## tailscale-operator chart. The key is hyphenated, so templates reading it need
+## `index .Values "tailscale-operator" ...` rather than dot notation.
+##
+## Only fleet-wide defaults belong here. operatorConfig.hostname and
+## proxyConfig.defaultTags are tailnet-global -- they collide across clusters, so each
+## cluster's own values file supplies them.
+
+tailscale-operator:
+  ## @param tailscale-operator.enabled Install the upstream operator chart.
+  ##
+  enabled: true
+
+  ## @param tailscale-operator.installCRDs Install the tailscale.com CRDs. Leave true unless something else already owns them (multi-tailnet, vcluster).
+  ##
+  installCRDs: true
+
+  oauth:
+    ## @param tailscale-operator.oauth.clientId OAuth client ID. Not a secret under workload identity federation.
+    ##
+    clientId: ""
+    ## @param tailscale-operator.oauth.audience WIF audience. Mutually exclusive with clientSecret; requires clientId.
+    ##
+    audience: ""
+    ## @param tailscale-operator.oauth.clientSecret Static OAuth client secret. Do not commit. Prefer audience.
+    ##
+    clientSecret: ""
+
+  operatorConfig:
+    ## @param tailscale-operator.operatorConfig.defaultTags [array] ACL tag the operator itself carries. Tailnet-wide, not per-cluster: wired into the Terraform OAuth client, and owns every other tag.
+    ##
+    defaultTags:
+      - "tag:k8s-operator"
+    ## @param tailscale-operator.operatorConfig.logging Operator log level.
+    ##
+    logging: info
+    ## @param tailscale-operator.operatorConfig.resources [object] Operator resource requests and limits.
+    ##
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  proxyConfig:
+    ## @param tailscale-operator.proxyConfig.defaultProxyClass ProxyClass applied to proxies that do not name one. Matches the ProxyClass shipped by tfy-tailscale-config.
+    ##
+    defaultProxyClass: tfy-default
+
+  apiServerProxyConfig:
+    ## @param tailscale-operator.apiServerProxyConfig.allowImpersonation Create the ClusterRole permissions the auth-mode API server proxy needs. Required by a kube-apiserver ProxyGroup in auth mode.
+    ##
+    allowImpersonation: "true"
+    ## @param tailscale-operator.apiServerProxyConfig.mode Run an in-process API server proxy. Left "false" -- a kube-apiserver ProxyGroup provides an HA one instead.
+    ##
+    mode: "false"
+
+  ingressClass:
+    ## @param tailscale-operator.ingressClass.enabled Create the "tailscale" IngressClass.
+    ##
+    enabled: true
