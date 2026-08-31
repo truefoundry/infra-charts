@@ -216,20 +216,9 @@ Expand the name of the chart.
 
 {{/*
   Create the env file
-
-  When proxy TLS is enabled, set XDG_* to the emptyDir mounts at /config and /data.
-  With readOnlyRootFilesystem, Caddy otherwise writes under $HOME/.config and
-  $HOME/.local (often /.config and /.local) and fails with "read-only file system".
-  User-supplied tfyProxy.env can override these.
   */}}
 {{- define "tfy-proxy.env" }}
-{{- $userEnv := (include "tfy-proxy.parseEnv" .) | fromYaml | default dict -}}
-{{- $defaults := dict -}}
-{{- if .Values.global.proxy.tls.enabled -}}
-{{- $defaults = dict "XDG_CONFIG_HOME" "/config" "XDG_DATA_HOME" "/data" -}}
-{{- end -}}
-{{- $merged := mergeOverwrite $defaults $userEnv -}}
-{{- range $key, $val := $merged }}
+{{- range $key, $val := (include "tfy-proxy.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -237,14 +226,12 @@ Expand the name of the chart.
     secretKeyRef:
       name: {{ $.Values.tfyProxy.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -289,10 +276,6 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTier" (.Values.global.resourceTier | default "medium") "defaultResourcesPrefix" "tfy-proxy.defaultResources" "resourcesValues" .Values.tfyProxy.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
@@ -323,10 +306,6 @@ Expand the name of the chart.
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
@@ -404,36 +383,4 @@ limits:
 
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
-{{- end }}
-
-{{/*
-  Append a reverse_proxy / forward_auth block that uses the shared
-  (internal_mtls) Caddy snippet when global.mTLS.enabled. Certs are mounted
-  at /etc/tls/truefoundry by truefoundry.mtlsVolumeMount.
-  Usage: reverse_proxy host:port{{- include "tfy-proxy.withInternalMtls" . }}
-*/}}
-{{- define "tfy-proxy.withInternalMtls" -}}
-{{- if .Values.global.mTLS.enabled }} {
-          import internal_mtls
-        }{{- end }}
-{{- end }}
-
-{{/*
-  Append a reverse_proxy transport that dials the NATS websocket upstream (:8080)
-  over TLS. The NATS websocket listener is server-TLS ONLY (browsers / tfy-agent
-  present no client cert), so Caddy trusts the internal CA but does NOT send a
-  client cert — unlike (internal_mtls). Rendered exactly when the NATS websocket
-  listener is TLS (tfyNats.config.websocket.tls.enabled), which also requires
-  global.mTLS.enabled (the CA is at /etc/tls/truefoundry, mounted only then).
-  Without this, enabling websocket.tls makes Caddy's plaintext hop fail
-  ("client sent an HTTP request to an HTTPS server") and browser NATS breaks.
-  Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
-*/}}
-{{- define "tfy-proxy.withNatsWebsocketTls" -}}
-{{- if and .Values.global.mTLS.enabled .Values.tfyNats.config.websocket.tls.enabled }} {
-          transport http {
-            tls
-            tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
-          }
-        }{{- end }}
 {{- end }}

@@ -45,10 +45,6 @@ global:
   podSecurityContext:
     ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
-    runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
-    runAsUser: 1001
   ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
   containerSecurityContext:
     ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
@@ -112,14 +108,13 @@ env:
   SFY_SERVER_REQUEST_MAX_RETRIES: "2"
   SFY_SERVER_REQUEST_RETRY_INTERVAL: 10s
   TFY_OTEL_EXPORTER_BATCH_WINDOW: 2s
-  TFY_OTEL_EXPORTER_BATCH_SIZE: "50 # smaller this number, more parallelism while calling OTLP exporter endpoint"
+  TFY_OTEL_EXPORTER_BATCH_SIZE: "50"
   TFY_OTEL_EXPORTER_QUEUE_SIZE: "100"
   TFY_OTEL_EXPORTER_REQUEST_TIMEOUT: 60s
   TFY_OTEL_EXPORTER_REQUEST_MAX_RETRIES: "3"
   TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL: 1s
   TFY_OTEL_EXPORTER_TICKER_INTERVAL: 1s
   TFY_OTEL_EXPORTER_TIMEOUT: 60s
-  TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
 
 ## Image configuration for otel-collector
 image:
@@ -128,7 +123,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.170.0
+  tag: v0.160.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -151,8 +146,12 @@ nameOverride: ""
 podAnnotations: {}
 ## @param commonAnnotations Common annotations
 commonAnnotations: {}
-## @param podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-podSecurityContext: {}
+## @param podSecurityContext [object] Pod security context
+podSecurityContext:
+  ## Enable/disable this to override the global.podSecurityContext
+  # enabled: true
+  runAsNonRoot: true
+  runAsUser: 1001
 ## @param commonLabels [object] Common labels
 commonLabels: {}
 ## @param podLabels [object] Pod annotations
@@ -191,8 +190,6 @@ healthcheck:
     successThreshold: 1
     ## @param healthcheck.readiness.failureThreshold Failure threshold
     failureThreshold: 3
-    ## @param healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## healthcheck.liveness Liveness probe configuration
   liveness:
     ## @param healthcheck.liveness.port Port to probe
@@ -209,8 +206,6 @@ healthcheck:
     successThreshold: 1
     ## @param healthcheck.liveness.failureThreshold Failure threshold
     failureThreshold: 3
-    ## @param healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
 ## @skip resources [object] Resource configuration
 # resources:
 #  limits:
