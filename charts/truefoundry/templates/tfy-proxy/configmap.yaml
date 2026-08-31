@@ -294,6 +294,9 @@ data:
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          {{- if .Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
           header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
         }
       }
@@ -480,6 +483,9 @@ data:
       handle /api/llm/* {
         uri strip_prefix /api/llm
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          {{- if .Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
           header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
         }
       }

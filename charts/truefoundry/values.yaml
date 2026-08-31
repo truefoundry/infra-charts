@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.170.3
+  controlPlaneChartVersion: 0.170.4
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -904,7 +904,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.170.1"
+    tag: "v0.170.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -3804,7 +3804,7 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    ## @param tfyProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS). Ignored when global.proxy.tls.enabled is true.
     scheme: HTTP
   ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
   readinessProbe:
@@ -3818,7 +3818,7 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    ## @param tfyProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS). Ignored when global.proxy.tls.enabled is true.
     scheme: HTTP
   ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
   nodeSelector: {}
