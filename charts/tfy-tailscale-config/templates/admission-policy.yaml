@@ -1,99 +1,87 @@
-{{- if .Values.proxyGroupAdmissionPolicy.enabled }}
+{{- if .Values.tailnetAdmissionPolicy.enabled }}
 {{/*
-A ProxyGroup is cluster-scoped in effect: any namespace may point the
-tailscale.com/proxy-group annotation at one, and upstream treats a namespace holding no
-ProxyGroupPolicy as allow-all. So on a cluster with tenant namespaces, every one of them
-can attach a Service or Ingress to these shared proxies and borrow the tailnet identity
-they carry -- egress grants match the proxy DEVICE tags as src, and an ingress attaches
-under the shared Service tags.
+Any namespace can hand a Service or Ingress to the operator and get a tailnet device
+carrying a tag the operator is authorised to mint -- via the proxy-group annotation, or a
+standalone proxy from tailnet-fqdn/tailnet-ip, or an exposed LoadBalancer. Upstream's
+ProxyGroupPolicy covers only the first, is namespace-scoped, and treats a namespace
+holding no policy as allow-all, so denying means an object in every namespace and a new
+namespace is permitted from the moment it exists. This inverts that: deny cluster-wide,
+allow the namespaces the chart can account for.
 
-ProxyGroupPolicy cannot fix that: it is namespace-scoped with no cluster-wide form, so
-denying means writing an object into every namespace, and a namespace created afterwards
-is allow-all from the moment it exists. This inverts the default instead -- deny
-everywhere, allow the namespaces this chart can account for.
+Two policies rather than one. matchConditions apply to every matched resource, so a single
+policy spanning Services and Ingresses would evaluate expressions against a kind that
+cannot have the field -- and a matchCondition error under failurePolicy: Fail denies the
+request, which would make every Service in the cluster unwritable.
+
+Annotations are matched by prefix, not enumerated: the set of triggering annotations has
+already changed across operator releases, and a missed one fails open silently.
 */}}
+{{- $ns := include "tfy-tailscale-config.annotationNamespaces" . }}
+{{- $operator := printf "system:serviceaccount:%s:operator" .Release.Namespace }}
+{{- range $kind := list "services" "ingresses" }}
+{{- $isSvc := eq $kind "services" }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
-  name: {{ .Values.proxyGroupAdmissionPolicy.name }}
+  name: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
   annotations:
-    # Wave -1 so the policy lands before the Services and Ingresses it governs.
-    # ValidatingAdmissionPolicy is not in Argo's kind-ordering table, so as an unknown
-    # kind it otherwise sorts LAST -- measured on a live sync, nine positions after the
-    # Services. That ordering breaks the chart's ordinary workflow: adding an
-    # egress/ingress/tailnetServices item in a new namespace widens the allowlist and
-    # creates the annotated object in the same release, and the object would be admitted
-    # against the OLD allowlist and denied.
-    #
-    # It is also the right direction when the allowlist NARROWS: the policy tightens
-    # before anything it governs is applied.
-    #
-    # Plain `helm install`/`upgrade` is not fixed by this -- its kind order is fixed and
-    # unknown kinds sort last there too. Both clusters are Argo-managed; a
-    # pre-install/pre-upgrade hook would be the fix if that changes.
+    # Ahead of the resources it governs: as an unknown kind it otherwise sorts last, and a
+    # release that widens the allowlist and adds a resource in the new namespace would have
+    # the resource admitted against the old list.
     argocd.argoproj.io/sync-wave: "-1"
   labels:
-    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
 spec:
-  # Fail closed. A policy that cannot be evaluated must not silently become allow-all,
-  # which is the failure mode this whole object exists to remove.
   failurePolicy: Fail
   matchConstraints:
     resourceRules:
-      - apiGroups: [""]
+      - apiGroups: [{{ if $isSvc }}""{{ else }}"networking.k8s.io"{{ end }}]
         apiVersions: ["v1"]
         operations: ["CREATE", "UPDATE"]
-        resources: ["services"]
-      - apiGroups: ["networking.k8s.io"]
-        apiVersions: ["v1"]
-        operations: ["CREATE", "UPDATE"]
-        resources: ["ingresses"]
+        resources: [{{ $kind | quote }}]
   matchConditions:
-    # Only resources actually asking for a ProxyGroup are in scope; everything else is
-    # none of this policy's business and must not pay its evaluation cost.
-    - name: requests-a-proxy-group
+    # The operator rewrites spec.externalName on egress Services every reconcile. Denying
+    # its own writes would wedge reconciliation, and it can already mint any tag.
+    - name: not-the-operator
+      expression: request.userInfo.username != {{ $operator | quote }}
+    # Every field access is has()-guarded: an unguarded miss is a CEL error, and an error
+    # here denies under failurePolicy Fail.
+    - name: asks-for-a-tailnet-device
       expression: >-
-        has(object.metadata.annotations) &&
-        'tailscale.com/proxy-group' in object.metadata.annotations
+        (has(object.metadata.annotations) &&
+         object.metadata.annotations.exists(k, k.startsWith("tailscale.com/")))
+        {{- if $isSvc }}
+        || (has(object.spec.loadBalancerClass) && object.spec.loadBalancerClass == "tailscale")
+        {{- else }}
+        || (has(object.spec.ingressClassName) && object.spec.ingressClassName == "tailscale")
+        || (has(object.metadata.annotations) &&
+            "kubernetes.io/ingress.class" in object.metadata.annotations &&
+            object.metadata.annotations["kubernetes.io/ingress.class"] == "tailscale")
+        {{- end }}
   validations:
-    # request.namespace rather than object.metadata.namespace: on CREATE the object's own
-    # field may be empty and filled in by the API server after admission.
-    - expression: request.namespace in {{ include "tfy-tailscale-config.annotationNamespaces" . }}
-      # Double-quoted CEL strings throughout: CEL has no '' escape, so an apostrophe in a
-      # single-quoted string is a parse error the API server only reports at apply time.
+    # request.namespace, not object.metadata.namespace: the latter may be empty on CREATE.
+    - expression: request.namespace in {{ $ns }}
+      # Double-quoted: CEL has no '' escape, and the error surfaces only at apply time.
       messageExpression: >-
-        "namespace " + request.namespace + " may not use the tailscale.com/proxy-group " +
-        "annotation. The shared ProxyGroups carry the tailnet identity of this cluster, so " +
-        "attaching to one from an arbitrary namespace borrows that identity. Add the " +
-        "namespace to proxyGroupAdmissionPolicy.additionalNamespaces if it owns tailnet " +
-        "resources this chart does not render."
-
+        "namespace " + request.namespace + " may not create Tailscale-managed resources. " +
+        "They mint a tailnet device carrying this cluster's identity. Add the namespace to " +
+        "tailnetAdmissionPolicy.additionalNamespaces if it owns tailnet resources this " +
+        "chart does not render."
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding
 metadata:
-  name: {{ .Values.proxyGroupAdmissionPolicy.name }}
+  name: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
   annotations:
-    # Wave -1 so the policy lands before the Services and Ingresses it governs.
-    # ValidatingAdmissionPolicy is not in Argo's kind-ordering table, so as an unknown
-    # kind it otherwise sorts LAST -- measured on a live sync, nine positions after the
-    # Services. That ordering breaks the chart's ordinary workflow: adding an
-    # egress/ingress/tailnetServices item in a new namespace widens the allowlist and
-    # creates the annotated object in the same release, and the object would be admitted
-    # against the OLD allowlist and denied.
-    #
-    # It is also the right direction when the allowlist NARROWS: the policy tightens
-    # before anything it governs is applied.
-    #
-    # Plain `helm install`/`upgrade` is not fixed by this -- its kind order is fixed and
-    # unknown kinds sort last there too. Both clusters are Argo-managed; a
-    # pre-install/pre-upgrade hook would be the fix if that changes.
     argocd.argoproj.io/sync-wave: "-1"
   labels:
-    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
 spec:
-  policyName: {{ .Values.proxyGroupAdmissionPolicy.name }}
-  # No matchResources: the binding is deliberately cluster-wide. Scoping it to a namespace
-  # set here would reintroduce exactly the enumeration problem ProxyGroupPolicy has.
+  policyName: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
+  # No matchResources: cluster-wide by design.
   validationActions: ["Deny"]
+{{- if not (eq $kind "ingresses") }}
+---
+{{- end }}
+{{- end }}
 {{- end }}

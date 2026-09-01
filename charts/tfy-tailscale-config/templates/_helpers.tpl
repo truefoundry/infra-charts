@@ -352,7 +352,7 @@ those writes go through the same admission path.
 {{- if .Values.istioGateway.enabled -}}
 {{- $_ := set $ns .Values.istioGateway.namespace true -}}
 {{- end -}}
-{{- range $extra := .Values.proxyGroupAdmissionPolicy.additionalNamespaces -}}
+{{- range $extra := .Values.tailnetAdmissionPolicy.additionalNamespaces -}}
 {{- $_ := set $ns $extra true -}}
 {{- end -}}
 {{- keys $ns | sortAlpha | toJson -}}

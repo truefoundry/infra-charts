@@ -297,11 +297,12 @@ rbac:
       clusterRoles:
         - view
 
-## @section Shared-proxy admission policy
+## @section Tailnet admission policy
 ##
-## A ProxyGroup is cluster-scoped in effect. Any namespace can point the
-## tailscale.com/proxy-group annotation at one, and the operator treats a namespace holding
-## no ProxyGroupPolicy as ALLOW-ALL. On a cluster with tenant namespaces that means any of
+## Any namespace can hand a Service or Ingress to the operator and get a tailnet device
+## carrying a tag the operator can mint -- the proxy-group annotation, a standalone proxy
+## from tailnet-fqdn/tailnet-ip, or an exposed LoadBalancer. Upstream's ProxyGroupPolicy
+## covers only the first, and treats a namespace holding no policy as ALLOW-ALL. On a cluster with tenant namespaces that means any of
 ## them can attach to these shared proxies and borrow the tailnet identity the proxies
 ## carry -- an egress grant matches the proxy DEVICE tags as src, and an ingress attaches
 ## under the shared Service tags. No tailnet credential of the tenant's own is needed.
@@ -315,23 +316,23 @@ rbac:
 ##
 ## 1. Not retroactive. Resources already carrying the annotation are only evaluated when
 ##    next modified, so enabling this does not flag existing drift.
-## 2. It gates the ANNOTATION only, matching ProxyGroupPolicy's own scope. If the operator
-##    still serves an Ingress that names ingressClassName: tailscale with no annotation,
-##    that route onto the tailnet is not covered here.
+## 2. Annotations are matched by PREFIX (tailscale.com/*) rather than enumerated, plus
+##    loadBalancerClass and ingressClassName. Writes by the operator's own ServiceAccount
+##    are exempt, so it cannot deny its own reconcile loop.
 ## 3. The allowlist is derived from this chart's values, so it cannot see a namespace that
 ##    owns tailnet resources configured elsewhere. Use additionalNamespaces for those.
 ##
 ## Requires Kubernetes 1.30+, where ValidatingAdmissionPolicy reached v1 -- which is why
 ## this chart's kubeVersion floor is 1.30.
 
-proxyGroupAdmissionPolicy:
-  ## @param proxyGroupAdmissionPolicy.enabled Deny the tailscale.com/proxy-group annotation outside the derived namespace allowlist. Cluster-wide: it governs every namespace, not only this release's.
+tailnetAdmissionPolicy:
+  ## @param tailnetAdmissionPolicy.enabled Deny Tailscale-managed Services and Ingresses outside the derived namespace allowlist. Cluster-wide: it governs every namespace, not only this release's.
   ##
   enabled: true
-  ## @param proxyGroupAdmissionPolicy.name Name of the ValidatingAdmissionPolicy and its binding.
+  ## @param tailnetAdmissionPolicy.name Base name; each policy and binding is suffixed -services or -ingresses.
   ##
-  name: tailnet-proxy-group-allowlist
-  ## @param proxyGroupAdmissionPolicy.additionalNamespaces [array] Namespaces allowed on top of the derived set. For namespaces that own tailnet resources this chart does not render -- the derived list covers only ingresses.items, egress.items, tailnetServices.items, istioGateway.namespace and the release namespace.
+  name: tailnet-namespace-allowlist
+  ## @param tailnetAdmissionPolicy.additionalNamespaces [array] Namespaces allowed on top of the derived set. For namespaces that own tailnet resources this chart does not render -- the derived list covers only ingresses.items, egress.items, tailnetServices.items, istioGateway.namespace and the release namespace.
   ##
   additionalNamespaces: []
 
