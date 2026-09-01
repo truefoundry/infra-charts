@@ -11,7 +11,17 @@ spec:
   duration: {{ .Values.certificate.duration }}
   renewBefore: {{ .Values.certificate.renewBefore }}
   issuerRef:
-    {{- toYaml .Values.certificate.issuerRef | nindent 4 }}
+    name: {{ .Values.certificate.issuerRef.name }}
+    # Never conditional. Argo CD applies server-side and owns this field, so a render that
+    # omits it REMOVES it from the live Certificate -- and the CRD has no server-side
+    # default, so cert-manager falls back to Issuer and a ClusterIssuer silently stops
+    # resolving at the next renewal.
+    kind: {{ include "tfy-tailscale-config.certificateIssuerKind" . }}
+    {{- with .Values.certificate.issuerRef.group }}
+    # External issuers live outside cert-manager.io; dropping this resolves the kind in the
+    # wrong API group and the Certificate sits Pending.
+    group: {{ . }}
+    {{- end }}
   dnsNames:
     {{- toYaml .Values.certificate.dnsNames | nindent 4 }}
 {{- end }}

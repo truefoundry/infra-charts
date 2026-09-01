@@ -581,11 +581,12 @@ certificate:
   ## @param certificate.secretName Secret the issued certificate is written to.
   ##
   secretName: ""
-  ## @param certificate.issuerRef [object] cert-manager issuer reference. Points at an existing Issuer unless the issuer block above creates one.
+  ## @param certificate.issuerRef [object] cert-manager issuer reference. Points at an existing issuer unless the issuer block above creates one. `kind` empty resolves to issuer.kind when issuer.enabled, and otherwise FAILS the render rather than guessing -- an issuer this chart did not create may be either kind, and naming the wrong one leaves the Certificate Pending forever. `group` is only for issuers outside cert-manager.io.
   ##
   issuerRef:
     name: letsencrypt-cloudflare
-    kind: Issuer
+    kind: ""
+    group: ""
   ## @param certificate.dnsNames [array] DNS names on the certificate.
   ##
   dnsNames: []

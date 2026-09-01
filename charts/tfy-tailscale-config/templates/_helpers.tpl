@@ -357,3 +357,26 @@ those writes go through the same admission path.
 {{- end -}}
 {{- keys $ns | sortAlpha | toJson -}}
 {{- end -}}
+
+{{/*
+The kind of issuer the Certificate references, resolved in three steps: an explicit
+certificate.issuerRef.kind, else issuer.kind when this chart creates the issuer, else fail.
+
+The last branch is deliberate. issuer.enabled false means the issuer exists somewhere this
+chart cannot see, so any default here is a guess -- and a Certificate naming the wrong kind
+never issues, reporting the failure only on the Certificate.
+
+toString rather than truthiness: a kind of `false` or `0` would otherwise be treated as
+unset and silently replaced.
+*/}}
+{{- define "tfy-tailscale-config.certificateIssuerKind" -}}
+{{- $ref := .Values.certificate.issuerRef | default dict -}}
+{{- $explicit := $ref.kind | toString -}}
+{{- if ne $explicit "" -}}
+{{- $explicit -}}
+{{- else if .Values.issuer.enabled -}}
+{{- .Values.issuer.kind | default "ClusterIssuer" -}}
+{{- else -}}
+{{- fail "tfy-tailscale-config: certificate.issuerRef.kind is empty and this chart is not creating an issuer (issuer.enabled is false). Set it to \"Issuer\" or \"ClusterIssuer\" to match the issuer that already exists -- the two are separate resources and a Certificate naming the wrong one sits Pending forever, with the error reported only on the Certificate." -}}
+{{- end -}}
+{{- end -}}

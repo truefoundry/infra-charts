@@ -23,6 +23,9 @@ istioGateway:
   credentialName: example-ctl-internal-tls
 
 certificate:
+  # No issuer block here, so the chart cannot infer the kind and refuses to guess.
+  issuerRef:
+    kind: ClusterIssuer
   enabled: true
   name: example-ctl-internal
   secretName: example-ctl-internal-tls
