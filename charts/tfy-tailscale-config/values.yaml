@@ -360,11 +360,35 @@ ingresses:
   ## @param ingresses.items [object] Map of admin UIs to expose. Each entry takes namespace, service, port, and an optional host (defaulting to "<clusterSlug>-<key>"). The operator keeps only the first DNS label of the host.
   ##
   items: {}
+  ## Deliberately empty rather than pre-populated with the surfaces most clusters run.
+  ## Two reasons. Service names are not stable -- kube-prometheus-stack names its Service
+  ## after the Helm release -- and a wrong name renders clean, serves a valid certificate
+  ## and 503s, because nothing here can check it: helm lookup returns empty during
+  ## `helm template`, and Argo CD's repo-server renders with no cluster credentials.
+  ## Second, routing one of these is an exposure decision, not a convenience default;
+  ## note the auth column below.
   # items:
   #   argocd:
   #     namespace: argocd
   #     service: argocd-server
+  #     # Port 80, not 443: argocd-server runs with --insecure and serves plaintext on
+  #     # 8080 behind both ports. The gateway has already terminated TLS, so 443 would be
+  #     # TLS into a plaintext listener. Has its own login.
   #     port: 80
+  #   prometheus:
+  #     namespace: prometheus
+  #     # <helm release>-kube-prometheus-prometheus. Confirm the name on the cluster; the
+  #     # release prefix is not fixed. prometheus-operated is stabler but headless.
+  #     service: prometheus-kube-prometheus-prometheus
+  #     # NO AUTHENTICATION. Routing this means every metric is readable by anyone who can
+  #     # reach *.mgmt on the tailnet.
+  #     port: 9090
+  #   argo-workflows:
+  #     namespace: argo-workflows
+  #     service: argo-workflows-server
+  #     # Authentication depends on the server's --auth-mode. In `server` mode there is
+  #     # none, which makes this workflow submission, not a dashboard.
+  #     port: 2746
 
 ## @section Platform surfaces on our own domain (Mode H)
 ##
@@ -392,11 +416,35 @@ mgmt:
   ## @param mgmt.items [object] Map of surfaces to route. Each takes namespace, service, port, an optional host (defaulting to the key) and an optional name for the VirtualService object.
   ##
   items: {}
+  ## Deliberately empty rather than pre-populated with the surfaces most clusters run.
+  ## Two reasons. Service names are not stable -- kube-prometheus-stack names its Service
+  ## after the Helm release -- and a wrong name renders clean, serves a valid certificate
+  ## and 503s, because nothing here can check it: helm lookup returns empty during
+  ## `helm template`, and Argo CD's repo-server renders with no cluster credentials.
+  ## Second, routing one of these is an exposure decision, not a convenience default;
+  ## note the auth column below.
   # items:
   #   argocd:
   #     namespace: argocd
   #     service: argocd-server
+  #     # Port 80, not 443: argocd-server runs with --insecure and serves plaintext on
+  #     # 8080 behind both ports. The gateway has already terminated TLS, so 443 would be
+  #     # TLS into a plaintext listener. Has its own login.
   #     port: 80
+  #   prometheus:
+  #     namespace: prometheus
+  #     # <helm release>-kube-prometheus-prometheus. Confirm the name on the cluster; the
+  #     # release prefix is not fixed. prometheus-operated is stabler but headless.
+  #     service: prometheus-kube-prometheus-prometheus
+  #     # NO AUTHENTICATION. Routing this means every metric is readable by anyone who can
+  #     # reach *.mgmt on the tailnet.
+  #     port: 9090
+  #   argo-workflows:
+  #     namespace: argo-workflows
+  #     service: argo-workflows-server
+  #     # Authentication depends on the server's --auth-mode. In `server` mode there is
+  #     # none, which makes this workflow submission, not a dashboard.
+  #     port: 2746
 
 istioGateway:
   ## @param istioGateway.enabled Create a second Istio Gateway listener and a Tailscale Service in front of it. Requires an existing Istio ingress gateway deployment.
