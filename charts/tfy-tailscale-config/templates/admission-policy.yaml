@@ -1,0 +1,67 @@
+{{- if .Values.proxyGroupAdmissionPolicy.enabled }}
+{{/*
+A ProxyGroup is cluster-scoped in effect: any namespace may point the
+tailscale.com/proxy-group annotation at one, and upstream treats a namespace holding no
+ProxyGroupPolicy as allow-all. So on a cluster with tenant namespaces, every one of them
+can attach a Service or Ingress to these shared proxies and borrow the tailnet identity
+they carry -- egress grants match the proxy DEVICE tags as src, and an ingress attaches
+under the shared Service tags.
+
+ProxyGroupPolicy cannot fix that: it is namespace-scoped with no cluster-wide form, so
+denying means writing an object into every namespace, and a namespace created afterwards
+is allow-all from the moment it exists. This inverts the default instead -- deny
+everywhere, allow the namespaces this chart can account for.
+*/}}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: {{ .Values.proxyGroupAdmissionPolicy.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  # Fail closed. A policy that cannot be evaluated must not silently become allow-all,
+  # which is the failure mode this whole object exists to remove.
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["services"]
+      - apiGroups: ["networking.k8s.io"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["ingresses"]
+  matchConditions:
+    # Only resources actually asking for a ProxyGroup are in scope; everything else is
+    # none of this policy's business and must not pay its evaluation cost.
+    - name: requests-a-proxy-group
+      expression: >-
+        has(object.metadata.annotations) &&
+        'tailscale.com/proxy-group' in object.metadata.annotations
+  validations:
+    # request.namespace rather than object.metadata.namespace: on CREATE the object's own
+    # field may be empty and filled in by the API server after admission.
+    - expression: request.namespace in {{ include "tfy-tailscale-config.annotationNamespaces" . }}
+      # Double-quoted CEL strings throughout: CEL has no '' escape, so an apostrophe in a
+      # single-quoted string is a parse error the API server only reports at apply time.
+      messageExpression: >-
+        "namespace " + request.namespace + " may not use the tailscale.com/proxy-group " +
+        "annotation. The shared ProxyGroups carry the tailnet identity of this cluster, so " +
+        "attaching to one from an arbitrary namespace borrows that identity. Add the " +
+        "namespace to proxyGroupAdmissionPolicy.additionalNamespaces if it owns tailnet " +
+        "resources this chart does not render."
+
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: {{ .Values.proxyGroupAdmissionPolicy.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  policyName: {{ .Values.proxyGroupAdmissionPolicy.name }}
+  # No matchResources: the binding is deliberately cluster-wide. Scoping it to a namespace
+  # set here would reintroduce exactly the enumeration problem ProxyGroupPolicy has.
+  validationActions: ["Deny"]
+{{- end }}

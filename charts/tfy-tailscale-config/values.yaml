@@ -297,6 +297,44 @@ rbac:
       clusterRoles:
         - view
 
+## @section Shared-proxy admission policy
+##
+## A ProxyGroup is cluster-scoped in effect. Any namespace can point the
+## tailscale.com/proxy-group annotation at one, and the operator treats a namespace holding
+## no ProxyGroupPolicy as ALLOW-ALL. On a cluster with tenant namespaces that means any of
+## them can attach to these shared proxies and borrow the tailnet identity the proxies
+## carry -- an egress grant matches the proxy DEVICE tags as src, and an ingress attaches
+## under the shared Service tags. No tailnet credential of the tenant's own is needed.
+##
+## ProxyGroupPolicy cannot close this. It is namespace-scoped with no cluster-wide form, so
+## denial needs an object in every namespace, and any namespace created afterwards is
+## allow-all from the moment it exists. This policy inverts the default instead: deny
+## cluster-wide, allow the namespaces this chart can account for.
+##
+## THREE LIMITS, none of them silent by accident:
+##
+## 1. Not retroactive. Resources already carrying the annotation are only evaluated when
+##    next modified, so enabling this does not flag existing drift.
+## 2. It gates the ANNOTATION only, matching ProxyGroupPolicy's own scope. If the operator
+##    still serves an Ingress that names ingressClassName: tailscale with no annotation,
+##    that route onto the tailnet is not covered here.
+## 3. The allowlist is derived from this chart's values, so it cannot see a namespace that
+##    owns tailnet resources configured elsewhere. Use additionalNamespaces for those.
+##
+## Requires Kubernetes 1.30+, where ValidatingAdmissionPolicy reached v1 -- which is why
+## this chart's kubeVersion floor is 1.30.
+
+proxyGroupAdmissionPolicy:
+  ## @param proxyGroupAdmissionPolicy.enabled Deny the tailscale.com/proxy-group annotation outside the derived namespace allowlist. Cluster-wide: it governs every namespace, not only this release's.
+  ##
+  enabled: true
+  ## @param proxyGroupAdmissionPolicy.name Name of the ValidatingAdmissionPolicy and its binding.
+  ##
+  name: tailnet-proxy-group-allowlist
+  ## @param proxyGroupAdmissionPolicy.additionalNamespaces [array] Namespaces allowed on top of the derived set. For namespaces that own tailnet resources this chart does not render -- the derived list covers only ingresses.items, egress.items, tailnetServices.items, istioGateway.namespace and the release namespace.
+  ##
+  additionalNamespaces: []
+
 ## @section TrueFoundry integrations
 ##
 ## Everything below assumes infrastructure that a generic cluster does not have, and is

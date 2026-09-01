@@ -168,6 +168,14 @@ for the same reason.
 | `rbac.breakGlass.clusterRole` | ClusterRole granted to the break-glass group.                                                                                                                                              | `cluster-admin` |
 | `rbac.tiers`                  | Access tiers, each binding an impersonated group to a list of ClusterRoles. Every role named here must already exist -- a binding to a missing ClusterRole is accepted and grants nothing. | `{}`            |
 
+### Shared-proxy admission policy
+
+| Name                                             | Description                                                                                                                                                                                                                                                | Value                           |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `proxyGroupAdmissionPolicy.enabled`              | Deny the tailscale.com/proxy-group annotation outside the derived namespace allowlist. Cluster-wide: it governs every namespace, not only this release's.                                                                                                  | `true`                          |
+| `proxyGroupAdmissionPolicy.name`                 | Name of the ValidatingAdmissionPolicy and its binding.                                                                                                                                                                                                     | `tailnet-proxy-group-allowlist` |
+| `proxyGroupAdmissionPolicy.additionalNamespaces` | Namespaces allowed on top of the derived set. For namespaces that own tailnet resources this chart does not render -- the derived list covers only ingresses.items, egress.items, tailnetServices.items, istioGateway.namespace and the release namespace. | `[]`                            |
+
 ### TrueFoundry integrations
 
 

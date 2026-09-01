@@ -326,3 +326,34 @@ Gateway we cannot see its hosts, so the caller is on their own.
 {{- end -}}
 {{- $base -}}
 {{- end -}}
+
+{{/*
+The namespaces allowed to carry the tailscale.com/proxy-group annotation, as a JSON array
+-- which is also valid CEL list syntax, so it interpolates straight into the admission
+policy.
+
+Derived, not configured. Exactly four templates here emit that annotation and each takes
+its namespace from a values key, so the legitimate set is already known; a hand-maintained
+list would drift from the items blocks it mirrors.
+
+.Release.Namespace is always included: the operator reconciles its own Services there and
+those writes go through the same admission path.
+*/}}
+{{- define "tfy-tailscale-config.annotationNamespaces" -}}
+{{- $ns := dict .Release.Namespace true -}}
+{{- range $block := list "ingresses" "egress" "tailnetServices" -}}
+{{- $cfg := index $.Values $block | default dict -}}
+{{- if $cfg.enabled -}}
+{{- range $key, $item := $cfg.items -}}
+{{- if $item.namespace -}}{{- $_ := set $ns $item.namespace true -}}{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- if .Values.istioGateway.enabled -}}
+{{- $_ := set $ns .Values.istioGateway.namespace true -}}
+{{- end -}}
+{{- range $extra := .Values.proxyGroupAdmissionPolicy.additionalNamespaces -}}
+{{- $_ := set $ns $extra true -}}
+{{- end -}}
+{{- keys $ns | sortAlpha | toJson -}}
+{{- end -}}
