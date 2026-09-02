@@ -270,9 +270,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 */}}
 {{- define "tfy-llm-gateway.proxy.validate" -}}
 {{- if .Values.proxy.tls.enabled }}
-{{- if ((.Values.global).mTLS).enabled }}
-{{- fail "proxy.tls.enabled and global.mTLS.enabled are mutually exclusive: the Caddy proxy terminates TLS and forwards plain HTTP to the gateway, but mTLS makes the gateway serve HTTPS itself. Enable only one." }}
-{{- end }}
 {{- if not .Values.proxy.tls.secretName }}
 {{- fail "proxy.tls.enabled is true but proxy.tls.secretName is empty. Set proxy.tls.secretName to a Secret containing tls.crt and tls.key." }}
 {{- end }}
