@@ -42,12 +42,10 @@ spec:
           operator: In
           values:
           - linux
-        {{- if .Values.karpenter.controlPlaneNodePool.instanceGeneration }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
-            - {{ .Values.karpenter.controlPlaneNodePool.instanceGeneration | quote }}
-        {{- end }}
+            - {{ .Values.karpenter.controlPlaneNodePool.instanceGeneration | default "5" | quote }}
         {{- $controlPlaneAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
         {{- $controlPlaneAllowedValuesAreCategories := false }}
         {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.allowed }}

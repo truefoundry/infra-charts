@@ -42,12 +42,10 @@ spec:
           operator: In
           values:
           - linux
-        {{- if .Values.karpenter.critical.instanceGeneration }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
-            - {{ .Values.karpenter.critical.instanceGeneration | quote }}
-        {{- end }}
+            - {{ .Values.karpenter.critical.instanceGeneration | default "5" | quote }}
         {{- $criticalAllowedInstanceValues := .Values.karpenter.critical.instanceFamilies.allowed }}
         {{- $criticalAllowedValuesAreCategories := false }}
         {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories.allowed }}

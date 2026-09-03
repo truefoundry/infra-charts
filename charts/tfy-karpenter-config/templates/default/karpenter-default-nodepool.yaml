@@ -44,12 +44,10 @@ spec:
           operator: In
           values:
           - linux
-        {{- if .Values.karpenter.defaultNodePool.instanceGeneration }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
-            - {{ .Values.karpenter.defaultNodePool.instanceGeneration | quote }}
-        {{- end }}
+            - {{ .Values.karpenter.defaultNodePool.instanceGeneration | default "5" | quote }}
         {{- $defaultAllowedInstanceValues := .Values.karpenter.defaultNodePool.instanceFamilies.allowed }}
         {{- $defaultAllowedValuesAreCategories := false }}
         {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.defaultNodePool.instanceCategories.allowed }}
