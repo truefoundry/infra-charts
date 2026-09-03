@@ -64,6 +64,9 @@ spec:
   {{- end }}
         volumeSize: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
+        {{- if .Values.karpenter.defaultNodeTemplate.rootVolumeThroughput }}
+        throughput: {{ .Values.karpenter.defaultNodeTemplate.rootVolumeThroughput }}
+        {{- end }}
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.defaultNodeTemplate.encrypted }}
         {{- if .Values.karpenter.defaultNodeTemplate.kmsKeyID }}

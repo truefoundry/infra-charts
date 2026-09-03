@@ -63,6 +63,9 @@ spec:
   {{- end }}
         volumeSize: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeSize }}
         volumeType: gp3
+        {{- if .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeThroughput }}
+        throughput: {{ .Values.karpenter.gpuDefaultNodeTemplate.rootVolumeThroughput }}
+        {{- end }}
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.gpuDefaultNodeTemplate.encrypted }}
         {{- if .Values.karpenter.gpuDefaultNodeTemplate.kmsKeyID }}

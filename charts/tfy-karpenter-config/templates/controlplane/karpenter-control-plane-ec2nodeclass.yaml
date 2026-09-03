@@ -64,6 +64,9 @@ spec:
   {{- end }}
         volumeSize: {{ .Values.karpenter.controlPlaneNodeTemplate.rootVolumeSize }}
         volumeType: gp3
+        {{- if .Values.karpenter.controlPlaneNodeTemplate.rootVolumeThroughput }}
+        throughput: {{ .Values.karpenter.controlPlaneNodeTemplate.rootVolumeThroughput }}
+        {{- end }}
         deleteOnTermination: true
         encrypted: {{ .Values.karpenter.controlPlaneNodeTemplate.encrypted }}
         {{- if .Values.karpenter.controlPlaneNodeTemplate.kmsKeyID }}
