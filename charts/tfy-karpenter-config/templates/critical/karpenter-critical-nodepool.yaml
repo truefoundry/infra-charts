@@ -45,7 +45,7 @@ spec:
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
-            - "4"
+            - {{ .Values.karpenter.critical.instanceGeneration | quote }}
         {{- $criticalAllowedInstanceValues := .Values.karpenter.critical.instanceFamilies.allowed }}
         {{- $criticalAllowedValuesAreCategories := false }}
         {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.critical.instanceCategories.allowed }}

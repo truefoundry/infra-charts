@@ -45,7 +45,7 @@ spec:
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
-            - "4"
+            - {{ .Values.karpenter.controlPlaneNodePool.instanceGeneration | quote }}
         {{- $controlPlaneAllowedInstanceValues := .Values.karpenter.controlPlaneNodePool.instanceFamilies.allowed }}
         {{- $controlPlaneAllowedValuesAreCategories := false }}
         {{- if and .Values.karpenter.eksAutoMode.enabled .Values.karpenter.controlPlaneNodePool.instanceCategories.allowed }}
