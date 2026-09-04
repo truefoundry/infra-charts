@@ -216,20 +216,9 @@ Expand the name of the chart.
 
 {{/*
   Create the env file
-
-  When proxy TLS is enabled, set XDG_* to the emptyDir mounts at /config and /data.
-  With readOnlyRootFilesystem, Caddy otherwise writes under $HOME/.config and
-  $HOME/.local (often /.config and /.local) and fails with "read-only file system".
-  User-supplied tfyProxy.env can override these.
   */}}
 {{- define "tfy-proxy.env" }}
-{{- $userEnv := (include "tfy-proxy.parseEnv" .) | fromYaml | default dict -}}
-{{- $defaults := dict -}}
-{{- if .Values.global.proxy.tls.enabled -}}
-{{- $defaults = dict "XDG_CONFIG_HOME" "/config" "XDG_DATA_HOME" "/data" -}}
-{{- end -}}
-{{- $merged := mergeOverwrite $defaults $userEnv -}}
-{{- range $key, $val := $merged }}
+{{- range $key, $val := (include "tfy-proxy.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
