@@ -21,5 +21,10 @@ spec:
       path: {{ .Values.deltaFusionIngestor.serviceMonitor.path }}
       honorLabels: true
       interval: {{ .Values.deltaFusionIngestor.serviceMonitor.interval }}
+      {{- if .Values.global.mTLS.enabled }}
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      {{- end }}
 {{- end -}}
 {{- end }}

@@ -132,8 +132,8 @@ requests:
   "servicefoundry-server.fullname"
   "sfy-manifest-service.fullname"
   "spark-history-server.fullname"
-  "stdio-mcp-proxy.fullname"
   "tfy-buildkitd-service.fullname"
+  "tfy-controller.fullname"
   "tfy-infra-manager.fullname"
   "tfy-k8s-controller.fullname"
   "tfy-proxy.fullname" -}}
