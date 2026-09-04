@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.171.3
+  controlPlaneChartVersion: 0.171.4
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -103,6 +103,8 @@ global:
       {{ .Release.Name }}-mlfoundry-server
     ## @param global.proxy.mlfToSvcEnabled Kill switch for /api/ml edge routing. When true, whitelisted /api/ml paths are routed to servicefoundry and all others stay on mlfoundry. When false, all /api/ml traffic goes to mlfoundry (legacy behavior).
     mlfToSvcEnabled: true
+    ## @param global.proxy.rewriteUpstreamHost Bool to rewrite the upstream Host header to the dialed service's host:port on every internal reverse_proxy, and pass the original external host as X-Forwarded-Host. Needed when an Istio AuthorizationPolicy matches on the destination host (:authority): without it Caddy forwards the external browser Host and Istio denies the request. X-Forwarded-Host lets backends still recover the original host (redirects, cookie domains, OAuth/MCP callbacks). Only affects internal in-cluster routes; external-URL routes (auth, agent, external llm-gateway, trt-engine-builder) keep their own explicit Host.
+    rewriteUpstreamHost: false
     ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
       {{ .Release.Name }}-tfy-workflow-admin-server
@@ -112,9 +114,6 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector
-    ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
-    stdioMcpProxyHost: >-
-      {{ .Release.Name }}-stdio-mcp-proxy
     ## @param global.proxy.tfyInfraManagerHost tfy infra manager host for service routing
     tfyInfraManagerHost: >-
       {{ .Release.Name }}-tfy-infra-manager
@@ -1098,12 +1097,13 @@ servicefoundryServer:
     NATS_UI_URL: http://{{ .Release.Name }}-tfy-nats-ui:8080/admin/nats/
     METRICS_DASHBOARD_URL: http://{{ .Release.Name }}-tfy-metrics-dashboard:8080/admin/metrics-dashboard/
     HEADLAMP_URL: http://{{ .Release.Name }}-headlamp:4466/admin/kubernetes/
-    FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
+    FE_ENABLE_STDIO_MCP_SERVER: "false"
     SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
+    TLS_MUTUAL_EXEMPT_PATHS: /v1/health,/metrics
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1311,7 +1311,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.171.1"
+    tag: "v0.171.2"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1473,7 +1473,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.171.0"
+    tag: "v0.171.1"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1617,8 +1617,8 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
-    TLS_ENABLED: 'false'
-    TLS_MUTUAL: 'false'
+    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
+    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
     TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
     HELM_PULL_TIMEOUT_SECONDS: '120'
@@ -1629,136 +1629,6 @@ sfyManifestService:
     HELM_CACHE_HOME: /tmp/helm-cache
     HELM_CONFIG_HOME: /tmp/helm-config
     XDG_CACHE_HOME: /tmp/.cache
-###################################################################################################################
-####################################### stdio-mcp-proxy ###########################################################
-###################################################################################################################
-## @section stdioMcpProxy stdio MCP proxy values
-stdioMcpProxy:
-  ## @param stdioMcpProxy.enabled Bool to enable the stdio MCP proxy
-  enabled: false
-  ## @param stdioMcpProxy.annotations [object] Annotations for the stdio MCP proxy
-  annotations: {}
-  ## @param stdioMcpProxy.tolerations Tolerations specific to the stdio MCP proxy
-  tolerations: []
-  ## stdioMcpProxy.image Image for the stdio MCP proxy
-  image:
-    ## @param stdioMcpProxy.image.registry Registry for the stdio MCP proxy image (overrides global.registry if specified)
-    registry: ""
-    ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
-    repository: "tfy-private-images/stdio-mcp-proxy"
-    ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
-    tag: "v0.171.0"
-  ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
-  # replicaCount: 1
-  ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
-  environmentName: default
-  ## @param stdioMcpProxy.envSecretName Secret name for the stdio MCP proxy environment variables
-  envSecretName: stdio-mcp-proxy-env-secret
-  ## @param stdioMcpProxy.imagePullPolicy Image pull policy for the stdio MCP proxy
-  imagePullPolicy: IfNotPresent
-  ## @param stdioMcpProxy.nameOverride Override name for the stdio MCP proxy
-  nameOverride: ""
-  ## @param stdioMcpProxy.fullnameOverride Full name override for the stdio MCP proxy
-  fullnameOverride: ""
-  ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
-  podAnnotations: {}
-  ## @param stdioMcpProxy.podSecurityContext [object] Security context for the stdio MCP proxy pods
-  podSecurityContext:
-    enabled: false
-  ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
-  commonLabels: {}
-  ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
-  commonAnnotations: {}
-  ## @param stdioMcpProxy.podLabels [object] Labels for the stdio MCP proxy pods
-  podLabels: {}
-  ## @param stdioMcpProxy.deploymentLabels [object] Deployment-specific labels for the stdio MCP proxy
-  deploymentLabels: {}
-  ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
-  deploymentAnnotations: {}
-  ## @param stdioMcpProxy.securityContext [object] Security context for the stdio MCP proxy
-  securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    readOnlyRootFilesystem: false
-  ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
-  resourceTierOverride: ""
-  ## @param stdioMcpProxy.resources [object] Resource requests and limits for the stdio MCP proxy
-  resources: {}
-  ## stdioMcpProxy.livenessProbe Liveness probe settings for the stdio MCP proxy
-  livenessProbe:
-    ## @param stdioMcpProxy.livenessProbe.failureThreshold Liveness probe failure threshold for stdio MCP proxy
-    failureThreshold: 3
-    ## @param stdioMcpProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for stdio MCP proxy
-    initialDelaySeconds: 15
-    ## @param stdioMcpProxy.livenessProbe.periodSeconds Liveness probe period for stdio MCP proxy
-    periodSeconds: 10
-    ## @param stdioMcpProxy.livenessProbe.successThreshold Liveness probe success threshold for stdio MCP proxy
-    successThreshold: 1
-    ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
-    timeoutSeconds: 1
-    ## @param stdioMcpProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
-  ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
-  readinessProbe:
-    ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
-    failureThreshold: 3
-    ## @param stdioMcpProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for stdio MCP proxy
-    initialDelaySeconds: 5
-    ## @param stdioMcpProxy.readinessProbe.periodSeconds Readiness probe period for stdio MCP proxy
-    periodSeconds: 10
-    ## @param stdioMcpProxy.readinessProbe.successThreshold Readiness probe success threshold for stdio MCP proxy
-    successThreshold: 1
-    ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
-    timeoutSeconds: 1
-    ## @param stdioMcpProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
-  ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
-  nodeSelector: {}
-  ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
-  affinity: {}
-  ## @param stdioMcpProxy.topologySpreadConstraints Topology spread constraints for the stdio MCP proxy
-  topologySpreadConstraints: []
-  ## stdioMcpProxy.serviceMonitor ServiceMonitor settings for the stdio MCP proxy
-  serviceMonitor:
-    ## @param stdioMcpProxy.serviceMonitor.enabled Enable ServiceMonitor for the stdio MCP proxy
-    enabled: false
-    ## @param stdioMcpProxy.serviceMonitor.labels [object] Labels for the ServiceMonitor
-    labels: {}
-    ## @param stdioMcpProxy.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
-    annotations: {}
-  ## stdioMcpProxy.service Service settings for the stdio MCP proxy
-  service:
-    ## @param stdioMcpProxy.service.type Service type for the stdio MCP proxy
-    type: ClusterIP
-    ## @param stdioMcpProxy.service.port Service port for the stdio MCP proxy
-    port: 8000
-    ## @param stdioMcpProxy.service.annotations Annotations for the stdio MCP proxy service
-    annotations: {}
-    ## @param stdioMcpProxy.service.labels [object] Labels for the stdio MCP proxy service
-    labels: {}
-  ## stdioMcpProxy.serviceAccount Service account settings for the stdio MCP proxy
-  serviceAccount:
-    ## @param stdioMcpProxy.serviceAccount.create Bool to create a service account for the stdio MCP proxy
-    create: true
-    ## @param stdioMcpProxy.serviceAccount.name Name of the stdio MCP proxy service account
-    name: "stdio-mcp-proxy"
-    ## @param stdioMcpProxy.serviceAccount.annotations [object] Annotations for the stdio MCP proxy service account
-    annotations: {}
-    ## @param stdioMcpProxy.serviceAccount.labels [object] Labels for the stdio MCP proxy service account
-    labels: {}
-    ## @param stdioMcpProxy.serviceAccount.automountServiceAccountToken Automount service account token for the stdio MCP proxy service account
-    automountServiceAccountToken: true
-  ## @param stdioMcpProxy.extraVolumes Extra volumes for the stdio MCP proxy
-  extraVolumes: []
-  ## @param stdioMcpProxy.extraVolumeMounts Extra volume mounts for the stdio MCP proxy
-  extraVolumeMounts: []
-  ## @param stdioMcpProxy.imagePullSecrets Image pull credentials for the stdio MCP proxy
-  imagePullSecrets: []
-  ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
-  env:
-    MCP_PROXY_CONFIG_JSON: ${k8s-secret/stdio-mcp-proxy-env-secret/MCP_PROXY_CONFIG_JSON}
-    MCP_SUBPROCESS_TTL_MINUTES: '20'
-    MCP_REAP_INTERVAL_MINUTES: '5'
 ###################################################################################################################
 ######################################### Tfy Infra Manager ######################################################
 ###################################################################################################################
@@ -1893,6 +1763,10 @@ tfyInfraManager:
     SENTRY_ENABLED: 'true'
     AUTH_SERVER_URL: ''
     TENANT_NAME: ''
+    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
+    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
+    TLS_DIR: /etc/tls/truefoundry
+    TLS_MUTUAL_EXEMPT_PATHS: /api/health,/api/version
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -2609,6 +2483,7 @@ tfyController:
     TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
     TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
     TLS_DIR: "/etc/tls/truefoundry"
+    TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
     TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
@@ -3304,6 +3179,7 @@ deltaFusionIngestor:
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
+    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -3708,6 +3584,7 @@ deltaFusionQueryServer:
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
+    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
   ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
   enableLiveLogs: true
 ## @section tfyProxy Truefoundry tfy proxy values

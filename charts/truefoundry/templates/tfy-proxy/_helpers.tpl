@@ -419,6 +419,51 @@ limits:
 {{- end }}
 
 {{/*
+  Trailing block for a reverse_proxy that dials an internal in-cluster
+  TrueFoundry service. Emits (when enabled): the Host / X-Forwarded-Host rewrite
+  (global.proxy.rewriteUpstreamHost), the (internal_mtls) import
+  (global.mTLS.enabled), and any caller-supplied extra reverse_proxy directives.
+
+  Dual input shape:
+    - Bare context: {{- include "tfy-proxy.upstreamOpts" . }}
+    - Dict with extra headers (each item is a full directive line placed inside
+      the reverse_proxy block, e.g. an extra header_up):
+        {{- include "tfy-proxy.upstreamOpts"
+              (dict "ctx" . "extraHeaders" (list "header_up x-foo bar")) }}
+
+  The { ... } block is opened when ANY of rewriteUpstreamHost, mTLS, or a
+  non-empty extraHeaders list applies — so a route whose only need is an extra
+  header still gets it emitted even when both flags are off.
+*/}}
+{{- define "tfy-proxy.upstreamOpts" -}}
+{{- $ctx := . -}}
+{{- $extraHeaders := list -}}
+{{- if and (kindIs "map" .) (hasKey . "ctx") -}}
+{{- $ctx = .ctx -}}
+{{- $extraHeaders = default (list) .extraHeaders -}}
+{{- end -}}
+{{- if or $ctx.Values.global.proxy.rewriteUpstreamHost $ctx.Values.global.mTLS.enabled (gt (len $extraHeaders) 0) }} {
+          {{- if $ctx.Values.global.proxy.rewriteUpstreamHost }}
+          header_up Host {http.reverse_proxy.upstream.hostport}
+          header_up X-Forwarded-Host {http.request.host}
+          {{- end }}
+          {{- if $ctx.Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
+          {{- range $extraHeaders }}
+          {{ . }}
+          {{- end }}
+        }{{- end }}
+{{- end }}
+
+{{- define "tfy-proxy.rewriteUpstreamHostOnly" -}}
+{{- if .Values.global.proxy.rewriteUpstreamHost }} {
+          header_up Host {http.reverse_proxy.upstream.hostport}
+          header_up X-Forwarded-Host {http.request.host}
+        }{{- end }}
+{{- end }}
+
+{{/*
   Append a reverse_proxy transport that dials the NATS websocket upstream (:8080)
   over TLS. The NATS websocket listener is server-TLS ONLY (browsers / tfy-agent
   present no client cert), so Caddy trusts the internal CA but does NOT send a
@@ -430,7 +475,8 @@ limits:
   Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
 */}}
 {{- define "tfy-proxy.withNatsWebsocketTls" -}}
-{{- if and .Values.global.mTLS.enabled .Values.tfyNats.config.websocket.tls.enabled }} {
+{{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
+{{- if and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) }} {
           transport http {
             tls
             tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
