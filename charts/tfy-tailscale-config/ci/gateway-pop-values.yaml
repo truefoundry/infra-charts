@@ -1,0 +1,25 @@
+# Gateway PoP: kubectl access only. No ingress ProxyGroup, no recorder, no admin UIs.
+# The most common shape in a fleet: many clusters need kubectl access and nothing else.
+clusterName: tfy-example-gtw
+proxyGroups:
+  ingress:
+    enabled: false
+  apiserver:
+    replicas: 1
+proxyClasses:
+  default:
+    enabled: false
+recorder:
+  enabled: false
+rbac:
+  tiers:
+    operator:
+      enabled: false
+    viewer:
+      enabled: false
+
+# Exercises the escape hatch for a namespace owning tailnet resources this chart
+# does not render.
+tailnetAdmissionPolicy:
+  additionalNamespaces:
+    - platform-networking

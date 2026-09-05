@@ -1,0 +1,37 @@
+{{- if .Values.ingresses.enabled }}
+{{- $pg := include "tfy-tailscale-config.proxyGroupRef" (dict "root" $ "explicit" .Values.ingresses.proxyGroup "role" "ingress" "what" "ingresses" "key" "ingresses.proxyGroup") }}
+{{- $slug := include "tfy-tailscale-config.clusterSlug" . }}
+{{- $svcTag := include "tfy-tailscale-config.ingressServiceTags" . }}
+{{- range $key, $ui := .Values.ingresses.items }}
+{{- include "tfy-tailscale-config.requireFields" (dict "block" "ingresses" "key" $key "item" $ui "fields" (list "namespace" "service" "port")) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $ui.name | default (printf "%s-tailnet" $key) }}
+  namespace: {{ $ui.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+  annotations:
+    tailscale.com/proxy-group: {{ $pg }}
+    # Tags the SERVICE, which is what access rules match. Kept explicit so it cannot drift
+    # from the gateway Service silently -- an annotation overrides proxyConfig.defaultTags.
+    tailscale.com/tags: {{ $svcTag | quote }}
+spec:
+  ingressClassName: tailscale
+  tls:
+    # The operator keeps only the FIRST DNS label of this host.
+    - hosts:
+        - {{ $ui.host | default (printf "%s-%s" $slug $key) | quote }}
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $ui.service }}
+                port:
+                  number: {{ $ui.port }}
+{{- end }}
+{{- end }}

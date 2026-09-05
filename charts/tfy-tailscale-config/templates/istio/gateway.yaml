@@ -1,0 +1,32 @@
+{{- if .Values.istioGateway.enabled }}
+{{- $credential := .Values.istioGateway.credentialName | default (printf "%s-tls" .Values.istioGateway.name) }}
+{{- if .Values.certificate.enabled }}
+{{- $secret := .Values.certificate.secretName | default (printf "%s-wildcard-tls" (include "tfy-tailscale-config.clusterSlug" .)) }}
+{{- if ne $credential $secret }}
+{{- fail (printf "tfy-tailscale-config: the gateway listener reads TLS from %q but the Certificate writes %q. Istio has no certificate for the listener and resets every connection on it, with nothing reporting why. The two defaults derive from different values and never match, so set istioGateway.credentialName and certificate.secretName to the same name." $credential $secret) }}
+{{- end }}
+{{- end }}
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.istioGateway.name }}
+  namespace: {{ .Values.istioGateway.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  # Selects EXISTING istio ingress gateway pods -- this creates no new workload.
+  selector:
+    {{- toYaml .Values.istioGateway.selector | nindent 4 }}
+  servers:
+    - port:
+        # Deliberately not 443: the public gateway already binds that, and this listener
+        # serves a different host list reached only over the tailnet.
+        number: {{ .Values.istioGateway.port }}
+        name: https-tailnet
+        protocol: HTTPS
+      hosts:
+        {{- toYaml .Values.istioGateway.hosts | nindent 8 }}
+      tls:
+        mode: SIMPLE
+        credentialName: {{ $credential }}
+{{- end }}

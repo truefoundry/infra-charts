@@ -1,0 +1,38 @@
+{{- if .Values.recorder.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: Recorder
+metadata:
+  # Tailnet-global: the operator names the DEVICE after the pod ("<name>-0"), not after any
+  # hostname field -- the Recorder CRD has none. So this name is the tailnet-global value.
+  name: {{ include "tfy-tailscale-config.recorderName" . }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  enableUI: {{ .Values.recorder.enableUI }}
+  replicas: {{ .Values.recorder.replicas }}
+  # No base tag: a Recorder carries only its own role tags, and it advertises no Tailscale
+  # Service, so it takes no autoApprovers entry either.
+  tags:
+    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "recorder" "base" false) | nindent 4 }}
+  {{- with .Values.recorder.storage }}
+  storage:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  statefulSet:
+    pod:
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      container:
+        {{- with .Values.placement.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+{{- end }}

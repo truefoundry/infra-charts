@@ -1,0 +1,48 @@
+{{- if .Values.egress.enabled }}
+{{- $pg := include "tfy-tailscale-config.proxyGroupRef" (dict "root" $ "explicit" .Values.egress.proxyGroup "role" "egress" "what" "egress" "key" "egress.proxyGroup") }}
+{{- range $key, $target := .Values.egress.items }}
+{{- include "tfy-tailscale-config.requireFields" (dict "block" "egress" "key" $key "item" $target "fields" (list "namespace")) }}
+{{- if and $target.fqdn $target.ip }}
+{{- fail (printf "tfy-tailscale-config: egress.items.%s sets both fqdn and ip. A Service carrying both annotations is accepted by the API server and behaves unpredictably -- pick one." $key) }}
+{{- end }}
+{{- if not (or $target.fqdn $target.ip) }}
+{{- fail (printf "tfy-tailscale-config: egress.items.%s needs one of fqdn or ip." $key) }}
+{{- end }}
+{{- if not $target.ports }}
+{{- fail (printf "tfy-tailscale-config: egress.items.%s needs an explicit ports list. ProxyGroup egress does NOT infer ports the way standalone egress does, and an omitted port is silently not forwarded." $key) }}
+{{- end }}
+{{- if gt (len $target.ports) 1 }}
+{{- range $target.ports }}
+{{- if not .name }}
+{{- fail (printf "tfy-tailscale-config: egress.items.%s declares several ports, so every one needs a name -- Kubernetes requires it, and the operator keys its port mapping on it." $key) }}
+{{- end }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $target.name | default $key }}
+  namespace: {{ $target.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+  annotations:
+    tailscale.com/proxy-group: {{ $pg }}
+    {{- if $target.fqdn }}
+    tailscale.com/tailnet-fqdn: {{ $target.fqdn | quote }}
+    {{- else }}
+    tailscale.com/tailnet-ip: {{ $target.ip | quote }}
+    {{- end }}
+    # No tailscale.com/tags. Egress advertises no Tailscale Service, so there is nothing
+    # to tag; the grant matches this ProxyGroup's DEVICE tags as `src` instead.
+spec:
+  type: ExternalName
+  # A placeholder, deliberately. The operator overwrites this with the ClusterIP Service
+  # it generates in its own namespace. Argo CD ignores the field -- see
+  # helm/argocd/tfy-tailscale-config.yaml -- because selfHeal would otherwise revert the
+  # operator on every reconcile and egress would flap.
+  externalName: placeholder
+  ports:
+    {{- toYaml $target.ports | nindent 4 }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,87 @@
+{{- if .Values.tailnetAdmissionPolicy.enabled }}
+{{/*
+Any namespace can hand a Service or Ingress to the operator and get a tailnet device
+carrying a tag the operator is authorised to mint -- via the proxy-group annotation, or a
+standalone proxy from tailnet-fqdn/tailnet-ip, or an exposed LoadBalancer. Upstream's
+ProxyGroupPolicy covers only the first, is namespace-scoped, and treats a namespace
+holding no policy as allow-all, so denying means an object in every namespace and a new
+namespace is permitted from the moment it exists. This inverts that: deny cluster-wide,
+allow the namespaces the chart can account for.
+
+Two policies rather than one. matchConditions apply to every matched resource, so a single
+policy spanning Services and Ingresses would evaluate expressions against a kind that
+cannot have the field -- and a matchCondition error under failurePolicy: Fail denies the
+request, which would make every Service in the cluster unwritable.
+
+Annotations are matched by prefix, not enumerated: the set of triggering annotations has
+already changed across operator releases, and a missed one fails open silently.
+*/}}
+{{- $ns := include "tfy-tailscale-config.annotationNamespaces" . }}
+{{- $operator := printf "system:serviceaccount:%s:operator" .Release.Namespace }}
+{{- range $kind := list "services" "ingresses" }}
+{{- $isSvc := eq $kind "services" }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
+  annotations:
+    # Ahead of the resources it governs: as an unknown kind it otherwise sorts last, and a
+    # release that widens the allowlist and adds a resource in the new namespace would have
+    # the resource admitted against the old list.
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [{{ if $isSvc }}""{{ else }}"networking.k8s.io"{{ end }}]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: [{{ $kind | quote }}]
+  matchConditions:
+    # The operator rewrites spec.externalName on egress Services every reconcile. Denying
+    # its own writes would wedge reconciliation, and it can already mint any tag.
+    - name: not-the-operator
+      expression: request.userInfo.username != {{ $operator | quote }}
+    # Every field access is has()-guarded: an unguarded miss is a CEL error, and an error
+    # here denies under failurePolicy Fail.
+    - name: asks-for-a-tailnet-device
+      expression: >-
+        (has(object.metadata.annotations) &&
+         object.metadata.annotations.exists(k, k.startsWith("tailscale.com/")))
+        {{- if $isSvc }}
+        || (has(object.spec.loadBalancerClass) && object.spec.loadBalancerClass == "tailscale")
+        {{- else }}
+        || (has(object.spec.ingressClassName) && object.spec.ingressClassName == "tailscale")
+        || (has(object.metadata.annotations) &&
+            "kubernetes.io/ingress.class" in object.metadata.annotations &&
+            object.metadata.annotations["kubernetes.io/ingress.class"] == "tailscale")
+        {{- end }}
+  validations:
+    # request.namespace, not object.metadata.namespace: the latter may be empty on CREATE.
+    - expression: request.namespace in {{ $ns }}
+      # Double-quoted: CEL has no '' escape, and the error surfaces only at apply time.
+      messageExpression: >-
+        "namespace " + request.namespace + " may not create Tailscale-managed resources. " +
+        "They mint a tailnet device carrying this cluster's identity. Add the namespace to " +
+        "tailnetAdmissionPolicy.additionalNamespaces if it owns tailnet resources this " +
+        "chart does not render."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+spec:
+  policyName: {{ $.Values.tailnetAdmissionPolicy.name }}-{{ $kind }}
+  # No matchResources: cluster-wide by design.
+  validationActions: ["Deny"]
+{{- if not (eq $kind "ingresses") }}
+---
+{{- end }}
+{{- end }}
+{{- end }}
