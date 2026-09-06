@@ -34,6 +34,9 @@ data:
           config:
             enabled: false
       pprof:
+      # Agent-session ingest proxy (:4319). Mesh TLS is enforced in-process by the
+      # extension when TLS_ENABLED/TLS_MUTUAL are set (PEM under TLS_DIR) — custom
+      # extensions have no collector-config `tls:` block like OTLP receivers.
       tfyingestorproxy:
         endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
@@ -53,11 +56,23 @@ data:
             include_metadata: true
             auth:
               authenticator: tfyauth
+            {{- if .Values.global.mTLS.enabled }}
+            tls:
+              cert_file: /etc/tls/truefoundry/tls.crt
+              key_file: /etc/tls/truefoundry/tls.key
+              client_ca_file: /etc/tls/truefoundry/ca.crt
+            {{- end }}
           http:
             endpoint: 0.0.0.0:4318
             include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
             auth:
               authenticator: tfyauth
+            {{- if .Values.global.mTLS.enabled }}
+            tls:
+              cert_file: /etc/tls/truefoundry/tls.crt
+              key_file: /etc/tls/truefoundry/tls.key
+              client_ca_file: /etc/tls/truefoundry/ca.crt
+            {{- end }}
 
     exporters:
       tfydeltafusionexporter:
