@@ -33,6 +33,13 @@ data:
           # config (including the resolved TFY_API_KEY) unauthenticated.
           config:
             enabled: false
+          # Server TLS only (no client_ca_file): kubelet httpGet cannot present a
+          # mesh client cert. Chart probes flip to scheme HTTPS when mTLS is on.
+          {{- if .Values.global.mTLS.enabled }}
+          tls:
+            cert_file: /etc/tls/truefoundry/tls.crt
+            key_file: /etc/tls/truefoundry/tls.key
+          {{- end }}
       pprof:
       # Agent-session ingest proxy (:4319). Mesh TLS is enforced in-process by the
       # extension when TLS_ENABLED/TLS_MUTUAL are set (PEM under TLS_DIR) — custom
