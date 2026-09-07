@@ -42,7 +42,7 @@ fi
 
 # Here we are eval-ing because BUILD_CONFIG is already shlex quoted, so by eval-ing first we want to shlex unquote it
 # And then when calling tfy build, we pass it in quotes so that bash will take care of correctly quoting it
-eval "BUILD_CONFIG_CORRECTED=$BUILD_CONFIG"
+eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
 start_time=$(date +%s)

@@ -73,7 +73,11 @@ spec:
             httpGet:
               path: {{ .Values.healthcheck.liveness.path }}
               port: {{ .Values.healthcheck.liveness.port }}
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
               scheme: {{ .Values.healthcheck.liveness.scheme }}
+              {{- end }}
             initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 30 }}
             periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 1 }}
@@ -83,7 +87,11 @@ spec:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
               port: {{ .Values.healthcheck.readiness.port }}
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
               scheme: {{ .Values.healthcheck.readiness.scheme }}
+              {{- end }}
             initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 1 }}
