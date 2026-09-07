@@ -465,13 +465,12 @@ limits:
 
 {{/*
   Append a reverse_proxy transport that dials the NATS websocket upstream (:8080)
-  over TLS. The NATS websocket listener is server-TLS ONLY (browsers / tfy-agent
-  present no client cert), so Caddy trusts the internal CA but does NOT send a
-  client cert — unlike (internal_mtls). Rendered exactly when the NATS websocket
-  listener is TLS (tfyNats.config.websocket.tls.enabled), which also requires
-  global.mTLS.enabled (the CA is at /etc/tls/truefoundry, mounted only then).
-  Without this, enabling websocket.tls makes Caddy's plaintext hop fail
-  ("client sent an HTTP request to an HTTPS server") and browser NATS breaks.
+  over mesh mTLS. Browsers hit tfy-proxy with public TLS only; the proxy->NATS
+  hop must present the mesh client cert when websocket.tls.verify is enabled
+  (same CA mount as (internal_mtls)). Rendered when global.mTLS.enabled and
+  tfyNats.config.websocket.tls.enabled. Without tls, Caddy's plaintext hop
+  fails against an HTTPS websocket listener; without tls_client_auth, NATS
+  rejects with "certificate required".
   Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
 */}}
 {{- define "tfy-proxy.withNatsWebsocketTls" -}}
@@ -480,6 +479,7 @@ limits:
           transport http {
             tls
             tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
+            tls_client_auth /etc/tls/truefoundry/tls.crt /etc/tls/truefoundry/tls.key
           }
         }{{- end }}
 {{- end }}
