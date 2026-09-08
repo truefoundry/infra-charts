@@ -1,0 +1,103 @@
+## @section Namespace
+##
+## This chart does NOT create its namespace, deliberately. It is a namespaced chart and the
+## namespace is cluster-scoped -- creating it means the release owns an object it lives
+## inside, needs cluster-level RBAC to install, and a `helm uninstall` would take the
+## namespace and every proxy state Secret in it with it.
+##
+## The namespace is a PREREQUISITE. Create it before installing, by whatever owns
+## cluster-scoped prerequisites:
+##
+##   kubectl create namespace tailscale
+##
+## Under Argo CD use `syncOptions: [CreateNamespace=true]` with
+## `syncPolicy.managedNamespaceMetadata` for any labels. Note that servicefoundry-generated
+## Applications can express neither -- there, the namespace must already exist.
+##
+## Nothing here needs a label on the namespace. Sidecar injection is suppressed per-pod via
+## `sidecar.istio.io/inject: "false"`, which both charts default ON -- operatorConfig.podLabels
+## below, and placement.podLabels in tfy-tailscale-config -- and which survives the namespace
+## being recreated, unlike a namespace label. Helm merges maps, so emptying either map does not
+## remove the label; a cluster that wants a sidecar sets the key to "true" instead.
+
+## @section Upstream operator
+##
+## Everything under this key is passed straight through to the upstream
+## tailscale-operator chart. The key is hyphenated, so templates reading it need
+## `index .Values "tailscale-operator" ...` rather than dot notation.
+##
+## Only fleet-wide defaults belong here. operatorConfig.hostname and
+## proxyConfig.defaultTags are tailnet-global -- they collide across clusters, so each
+## cluster's own values file supplies them.
+
+tailscale-operator:
+  ## @param tailscale-operator.enabled Install the upstream operator chart.
+  ##
+  enabled: true
+
+  ## @param tailscale-operator.installCRDs Install the tailscale.com CRDs. Leave true unless something else already owns them (multi-tailnet, vcluster).
+  ##
+  installCRDs: true
+
+  ## ns/tailscale is one trust domain. allowImpersonation below creates a ServiceAccount
+  ## that can impersonate any group, and anything able to create a workload or a Secret
+  ## here can assume it -- the operator by design, and the proxy pods too. Scoping that
+  ## with resourceNames buys nothing while a cluster-admin tier stays impersonable. Every
+  ## ProxyGroup Role also carries unscoped `secrets [list, watch]`, which RBAC cannot
+  ## narrow at all. So prefer `audience` below over `clientSecret`, which would put a
+  ## static OAuth client here, and leave mode "false" -- it keeps the operator SA off
+  ## the impersonation binding.
+  oauth:
+    ## @param tailscale-operator.oauth.clientId OAuth client ID. Not a secret under workload identity federation.
+    ##
+    clientId: ""
+    ## @param tailscale-operator.oauth.audience WIF audience. Mutually exclusive with clientSecret; requires clientId.
+    ##
+    audience: ""
+    ## @param tailscale-operator.oauth.clientSecret Static OAuth client secret. Do not commit. Prefer audience.
+    ##
+    clientSecret: ""
+
+  operatorConfig:
+    ## @param tailscale-operator.operatorConfig.defaultTags [array] ACL tag the operator itself carries. Tailnet-wide, not per-cluster: wired into the Terraform OAuth client, and owns every other tag.
+    ##
+    defaultTags:
+      - "tag:k8s-operator"
+    ## @param tailscale-operator.operatorConfig.logging Operator log level.
+    ##
+    logging: info
+    ## @param tailscale-operator.operatorConfig.podLabels [object] Labels applied to the operator pod. Defaults to suppressing Istio sidecar injection.
+    ##
+    ## Quoted deliberately: unquoted `false` is a YAML bool, and the API server rejects a bool
+    ## label value at apply time. `helm template` renders it happily, so CI does not catch it.
+    ##
+    podLabels:
+      sidecar.istio.io/inject: "false"
+    ## @param tailscale-operator.operatorConfig.resources [object] Operator resource requests and limits.
+    ##
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  proxyConfig:
+    ## @param tailscale-operator.proxyConfig.defaultProxyClass ProxyClass applied to proxies that do not name one. Matches the ProxyClass shipped by tfy-tailscale-config.
+    ##
+    defaultProxyClass: tfy-default
+
+  apiServerProxyConfig:
+    ## Flipping this on has a cost -- see the trust-domain note above `oauth:`.
+    ## @param tailscale-operator.apiServerProxyConfig.allowImpersonation Create the ClusterRole permissions the auth-mode API server proxy needs. Required by a kube-apiserver ProxyGroup in auth mode.
+    ##
+    allowImpersonation: "true"
+    ## @param tailscale-operator.apiServerProxyConfig.mode Run an in-process API server proxy. Left "false" -- a kube-apiserver ProxyGroup provides an HA one instead.
+    ##
+    mode: "false"
+
+  ingressClass:
+    ## @param tailscale-operator.ingressClass.enabled Create the "tailscale" IngressClass.
+    ##
+    enabled: true

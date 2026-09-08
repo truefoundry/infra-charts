@@ -1,0 +1,20 @@
+# Renders the operator with a full credential set.
+#
+# This chart's validate.yaml refuses to render without credentials and a per-cluster
+# hostname, by design -- every one of those failures is silent at runtime. That makes the
+# repo's default `helm template <chart>` with no values file fail, so CI renders this file
+# instead. See the ci/ branch in .github/workflows/validate-chart-template.yaml.
+#
+# The clientId and audience below are shaped like real ones and are not secrets even when
+# real: under workload identity federation they are only valid paired with a token the
+# cluster's own OIDC issuer signs. These two are fabricated regardless.
+tailscale-operator:
+  oauth:
+    clientId: "kEXAMPLE1CNTRL-kEXAMPLE21CNTRL"
+    audience: "api.tailscale.com/kEXAMPLE1CNTRL-kEXAMPLE21CNTRL"
+  operatorConfig:
+    hostname: example-ctl-operator
+  proxyConfig:
+    # Comma-separated STRING, not a list -- the list form tags devices, this tags
+    # Services, and validate.yaml fails on a list for exactly that reason.
+    defaultTags: "tag:k8s,tag:k8s-ingress-example"

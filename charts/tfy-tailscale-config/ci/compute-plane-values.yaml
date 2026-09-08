@@ -1,0 +1,36 @@
+# Compute plane: egress only. Nothing here is exposed to the tailnet -- no ingress
+# ProxyGroup, no admin UIs, no recorder, no gateway Service. This is the shape of a
+# cluster whose whole purpose is reaching the control plane's gateway VIP from inside it.
+clusterName: tfy-example-cmp
+clusterSlug: example-cmp
+
+tailnet:
+  coarse:
+    env: dev
+    cloud: gcp
+    plane: cmp
+
+proxyGroups:
+  ingress:
+    enabled: false
+  apiserver:
+    # kubectl over the tailnet is optional here. On for the fixture so the
+    # apiserver path stays covered; a real compute plane may set this false.
+    replicas: 1
+    hostnamePrefix: example-cmp-apiserver
+  egress:
+    enabled: true
+
+egress:
+  enabled: true
+  items:
+    control-plane-gateway:
+      namespace: tfy-agent
+      fqdn: example-ctl-gw.tailnet-name.ts.net
+      ports:
+        - name: https
+          port: 443
+          protocol: TCP
+
+recorder:
+  enabled: false

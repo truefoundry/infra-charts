@@ -56,6 +56,7 @@ jobs:
           helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
           helm repo add external-secrets https://charts.external-secrets.io
           helm repo add stakater https://stakater.github.io/stakater-charts
+          helm repo add tailscale https://pkgs.tailscale.com/helmcharts
           helm repo update
 
       - name: Run chart-testing (lint)
@@ -79,13 +80,30 @@ jobs:
               echo "🛠️  Building dependencies for chart: $chart"
               helm dependency build "$chart"
 
-              echo "🛠️  Rendering chart templates for: $chart"
-              helm template "$chart" --output-dir ./output --include-crds --debug
-              if [ $? -ne 0 ]; then
-                echo "❌ helm template failed for $chart."
-                exit 1
+              shopt -s nullglob
+              ci_values=("$chart"/ci/*.yaml)
+              shopt -u nullglob
+
+              if ((${#ci_values[@]} > 0)); then
+                for values in "${ci_values[@]}"; do
+                  echo "🛠️  Rendering chart templates for: $chart (values: $values)"
+                  helm template "$chart" -f "$values" --output-dir "./output/$(basename "$chart")-$(basename "$values" .yaml)" --include-crds --debug
+                  if [ $? -ne 0 ]; then
+                    echo "❌ helm template failed for $chart with $values."
+                    exit 1
+                  else
+                    echo "✅ Chart template succeeded for $chart with $values."
+                  fi
+                done
               else
-                echo "✅ Chart template succeeded for $chart."
+                echo "🛠️  Rendering chart templates for: $chart"
+                helm template "$chart" --output-dir ./output --include-crds --debug
+                if [ $? -ne 0 ]; then
+                  echo "❌ helm template failed for $chart."
+                  exit 1
+                else
+                  echo "✅ Chart template succeeded for $chart."
+                fi
               fi
             else
               echo "⚠️ Skipping validation for $chart: not a directory."
