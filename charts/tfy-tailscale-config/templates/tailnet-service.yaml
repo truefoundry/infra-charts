@@ -1,0 +1,54 @@
+{{- if .Values.tailnetServices.enabled }}
+{{- $pg := include "tfy-tailscale-config.proxyGroupRef" (dict "root" $ "explicit" .Values.tailnetServices.proxyGroup "role" "ingress" "what" "tailnetServices" "key" "tailnetServices.proxyGroup") }}
+{{- $defaultTags := include "tfy-tailscale-config.ingressServiceTags" . }}
+{{- range $key, $svc := .Values.tailnetServices.items }}
+{{- if not $svc.namespace }}
+{{- fail (printf "tfy-tailscale-config: tailnetServices.items.%s needs a namespace." $key) }}
+{{- end }}
+{{- if not $svc.selector }}
+{{- fail (printf "tfy-tailscale-config: tailnetServices.items.%s needs a selector. This Service selects an EXISTING workload's pods; it does not create one." $key) }}
+{{- end }}
+{{- if not $svc.hostname }}
+{{- fail (printf "tfy-tailscale-config: tailnetServices.items.%s needs an explicit hostname. It is tailnet-global and write-once, so it is never derived." $key) }}
+{{- end }}
+{{- if not $svc.ports }}
+{{- fail (printf "tfy-tailscale-config: tailnetServices.items.%s needs an explicit ports list." $key) }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name | default (printf "%s-tailnet" $key) }}
+  namespace: {{ $svc.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+  annotations:
+    tailscale.com/proxy-group: {{ $pg }}
+    # WRITE-ONCE. Changing it re-registers the Tailscale Service on a new VIP and every
+    # egress mirror pointing at the old MagicDNS name resolves to nothing.
+    tailscale.com/hostname: {{ $svc.hostname | quote }}
+    # SERVICE tags -- what access rules match, NOT the ProxyGroup's device tags. An
+    # explicit annotation overrides proxyConfig.defaultTags. A tag with no
+    # autoApprovers.services entry in the policy stalls the ProxyGroup at
+    # "0/N proxy backends ready" and logs nothing.
+    tailscale.com/tags: {{ $svc.tags | default $defaultTags | quote }}
+spec:
+  # LoadBalancer + loadBalancerClass is L3: the proxy DNATs TCP straight to this Service's
+  # ClusterIP and never terminates TLS. That is the point. The `ingresses` block above is
+  # L7, where Tailscale terminates HTTPS with a ts.net certificate -- which forces the
+  # client to dial the ts.net name, and a client dialling an egress mirror cannot.
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  # Default OFF. A LoadBalancer Service allocates a nodePort on EVERY node otherwise, and
+  # the Tailscale proxy does not use it -- it DNATs to the ClusterIP. For a backend served
+  # in the clear that nodePort is a second, unauthenticated front door on the node network,
+  # which is exactly what this design is trying not to have.
+  allocateLoadBalancerNodePorts: {{ $svc.allocateNodePorts | default false }}
+  # An EXISTING workload's pod labels. Nothing here creates or scales anything; this is a
+  # second front door onto pods that already have one.
+  selector:
+    {{- toYaml $svc.selector | nindent 4 }}
+  ports:
+    {{- toYaml $svc.ports | nindent 4 }}
+{{- end }}
+{{- end }}

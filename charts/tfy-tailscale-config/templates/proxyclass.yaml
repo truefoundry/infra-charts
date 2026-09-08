@@ -1,0 +1,80 @@
+{{- if .Values.proxyClasses.default.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: {{ .Values.proxyClasses.default.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.proxyClasses.default.metricsEnabled }}
+  metrics:
+    enable: true
+  {{- end }}
+  statefulSet:
+    pod:
+      {{- with .Values.placement.podLabels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tailscaleContainer:
+        # No securityContext here, deliberately. The operator runs this container and its
+        # sysctler init container privileged, for kernel-mode TUN (TS_USERSPACE=false).
+        # A ProxyClass securityContext REPLACES the operator's rather than merging with it,
+        # and the CRD exposes no volumeMounts or devices, so dropping privileged means
+        # adopting a cluster-wide TUN device-plugin DaemonSet -- upstream names that as the
+        # only route. Consequently ns/tailscale cannot enforce PSA baseline.
+        # Setting one here is the edit that silently breaks the ingress data path, into the
+        # operator's characteristic "0/N proxy backends ready". The narrower hardening that
+        # IS safe -- allowPrivilegeEscalation and seccompProfile on tfy-apiserver, which is
+        # not privileged -- waits for a first deploy where the ProxyGroup can be watched
+        # reaching ready.
+        {{- with (.Values.proxyClasses.default.resources | default .Values.placement.resources) }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+{{- end }}
+{{- if .Values.proxyClasses.apiserver.enabled }}
+---
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: {{ .Values.proxyClasses.apiserver.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.proxyClasses.apiserver.metricsEnabled }}
+  metrics:
+    enable: true
+  {{- end }}
+  statefulSet:
+    pod:
+      {{- with .Values.placement.podLabels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.placement.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tailscaleContainer:
+        # Pinned deliberately. This image is unreachable from the operator chart's values;
+        # a ProxyClass is the only place it can be set, and unpinned it runs :latest on the
+        # highest-privilege pod in the namespace.
+        image: {{ .Values.proxyClasses.apiserver.image }}
+        {{- with (.Values.proxyClasses.apiserver.resources | default .Values.placement.resources) }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+{{- end }}

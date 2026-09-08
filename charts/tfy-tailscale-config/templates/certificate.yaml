@@ -1,0 +1,55 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.certificate.name | default (printf "%s-wildcard" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  namespace: {{ .Values.certificate.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.certificate.secretName | default (printf "%s-wildcard-tls" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  duration: {{ .Values.certificate.duration }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    # Never conditional. Argo CD applies server-side and owns this field, so a render that
+    # omits it REMOVES it from the live Certificate -- and the CRD has no server-side
+    # default, so cert-manager falls back to Issuer and a ClusterIssuer silently stops
+    # resolving at the next renewal.
+    kind: {{ include "tfy-tailscale-config.certificateIssuerKind" . }}
+    {{- with .Values.certificate.issuerRef.group }}
+    # External issuers live outside cert-manager.io; dropping this resolves the kind in the
+    # wrong API group and the Certificate sits Pending.
+    group: {{ . }}
+    {{- end }}
+  dnsNames:
+    {{- toYaml .Values.certificate.dnsNames | nindent 4 }}
+{{- end }}
+{{- range $name, $cert := .Values.certificates }}
+{{- include "tfy-tailscale-config.requireFields" (dict "block" "certificates" "key" $name "item" $cert "fields" (list "secretName" "dnsNames")) }}
+{{- if and $.Values.certificate.enabled (eq $cert.secretName ($.Values.certificate.secretName | default (printf "%s-wildcard-tls" (include "tfy-tailscale-config.clusterSlug" $)))) }}
+{{- fail (printf "tfy-tailscale-config: certificates.%s writes the same Secret %q as the certificate block. Two cert-manager Certificates on one Secret take it over in turn and re-issue over each other until Let's Encrypt refuses the SAN set, and BOTH report Ready throughout. Give it its own secretName, or add the names to certificate.dnsNames instead." $name $cert.secretName) }}
+{{- end }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $name }}
+  namespace: {{ $cert.namespace | default $.Values.certificate.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+spec:
+  secretName: {{ $cert.secretName }}
+  duration: {{ $cert.duration | default $.Values.certificate.duration }}
+  renewBefore: {{ $cert.renewBefore | default $.Values.certificate.renewBefore }}
+  issuerRef:
+    name: {{ (default dict $cert.issuerRef).name | default $.Values.certificate.issuerRef.name }}
+    # Same reasoning as the Certificate above: Argo owns this field server-side, so a render
+    # that omits it removes it, and the CRD defaults to Issuer rather than failing.
+    kind: {{ (default dict $cert.issuerRef).kind | default (include "tfy-tailscale-config.certificateIssuerKind" $) }}
+    {{- with (default dict $cert.issuerRef).group | default $.Values.certificate.issuerRef.group }}
+    group: {{ . }}
+    {{- end }}
+  dnsNames:
+    {{- toYaml $cert.dnsNames | nindent 4 }}
+{{- end }}
