@@ -1,0 +1,36 @@
+{{- if .Values.mgmt.enabled }}
+{{- $gw := .Values.mgmt.gateway | default (printf "%s/%s" .Values.istioGateway.namespace .Values.istioGateway.name) }}
+{{- $base := include "tfy-tailscale-config.mgmtBaseDomain" . }}
+{{- range $key, $ui := .Values.mgmt.items }}
+{{- include "tfy-tailscale-config.requireFields" (dict "block" "mgmt" "key" $key "item" $ui "fields" (list "namespace" "service" "port")) }}
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  # In the workload's namespace, matching how servicefoundry writes its own -- a
+  # VirtualService may live anywhere, but keeping it beside the Service it routes to means
+  # deleting the namespace takes the route with it.
+  name: {{ $ui.name | default (printf "%s-mgmt-vs" $key) }}
+  namespace: {{ $ui.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" $ | nindent 4 }}
+spec:
+  # Istio intersects these hosts with the GATEWAY's server hosts. If the intersection is
+  # empty the route is silently dropped -- no error, no event, just a 404 from Envoy. The
+  # mgmtBaseDomain helper asserts coverage when this chart owns the gateway; with
+  # mgmt.gateway pointed elsewhere its hosts are not visible here and the caller carries it.
+  gateways:
+    - {{ $gw }}
+  hosts:
+    - {{ printf "%s.%s" ($ui.host | default $key) $base | quote }}
+  http:
+    - route:
+        - destination:
+            # FQDN rather than the short name: unambiguous no matter which namespace the
+            # VirtualService ends up in.
+            host: {{ printf "%s.%s.svc.cluster.local" $ui.service $ui.namespace | quote }}
+            port:
+              number: {{ $ui.port }}
+          weight: 100
+{{- end }}
+{{- end }}

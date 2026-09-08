@@ -1,0 +1,27 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.certificate.name | default (printf "%s-wildcard" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  namespace: {{ .Values.certificate.namespace }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.certificate.secretName | default (printf "%s-wildcard-tls" (include "tfy-tailscale-config.clusterSlug" .)) }}
+  duration: {{ .Values.certificate.duration }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    # Never conditional. Argo CD applies server-side and owns this field, so a render that
+    # omits it REMOVES it from the live Certificate -- and the CRD has no server-side
+    # default, so cert-manager falls back to Issuer and a ClusterIssuer silently stops
+    # resolving at the next renewal.
+    kind: {{ include "tfy-tailscale-config.certificateIssuerKind" . }}
+    {{- with .Values.certificate.issuerRef.group }}
+    # External issuers live outside cert-manager.io; dropping this resolves the kind in the
+    # wrong API group and the Certificate sits Pending.
+    group: {{ . }}
+    {{- end }}
+  dnsNames:
+    {{- toYaml .Values.certificate.dnsNames | nindent 4 }}
+{{- end }}

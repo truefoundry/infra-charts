@@ -1,0 +1,44 @@
+{{- if .Values.issuer.enabled }}
+{{- $kind := .Values.issuer.kind | default "ClusterIssuer" }}
+{{- if not (has $kind (list "Issuer" "ClusterIssuer")) }}
+{{- fail (printf "tfy-tailscale-config: issuer.kind is %q; it must be \"Issuer\" or \"ClusterIssuer\"." $kind) }}
+{{- end }}
+{{- if not .Values.issuer.solvers }}
+{{- fail "tfy-tailscale-config: issuer.enabled requires issuer.solvers. An ACME issuer with no solver accepts orders and never validates one, so every Certificate sits Pending with no error on the issuer itself." }}
+{{- end }}
+{{- if .Values.certificate.enabled }}
+{{- $ref := .Values.certificate.issuerRef }}
+{{- if ne ($ref.name | toString) .Values.issuer.name }}
+{{- fail (printf "tfy-tailscale-config: the Certificate points at issuer %q but this chart creates %q. cert-manager reports a missing issuer only on the Certificate, so the mismatch surfaces as a permanently Pending certificate." $ref.name .Values.issuer.name) }}
+{{- end }}
+{{- $refKind := include "tfy-tailscale-config.certificateIssuerKind" . }}
+{{- if ne $refKind $kind }}
+{{- fail (printf "tfy-tailscale-config: this chart creates a %s but certificate.issuerRef.kind is %q. The two kinds are separate resources and a Certificate naming the wrong one never issues -- set certificate.issuerRef.kind to %q." $kind $refKind $kind) }}
+{{- end }}
+{{- if and (eq $kind "Issuer") (ne .Values.certificate.namespace .Values.issuer.namespace) }}
+{{- fail (printf "tfy-tailscale-config: the Certificate is in %q but its Issuer is in %q. A namespaced Issuer only serves Certificates in its own namespace; use a ClusterIssuer to serve several." .Values.certificate.namespace .Values.issuer.namespace) }}
+{{- end }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: {{ $kind }}
+metadata:
+  name: {{ .Values.issuer.name }}
+  {{- if eq $kind "Issuer" }}
+  namespace: {{ .Values.issuer.namespace }}
+  {{- end }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: {{ .Values.issuer.server }}
+    email: {{ .Values.issuer.email | required "tfy-tailscale-config: issuer.enabled requires issuer.email -- Let's Encrypt rejects a registration without one." | quote }}
+    privateKeySecretRef:
+      # cert-manager writes the ACME account key here on first use. Deleting it registers
+      # a NEW account and restarts this issuer's rate-limit budget as a side effect.
+      #
+      # For a ClusterIssuer this lands in --cluster-resource-namespace, NOT in the
+      # Certificate's namespace -- as does any Secret the solvers below name.
+      name: {{ .Values.issuer.privateKeySecretRef }}
+    solvers:
+      {{- toYaml .Values.issuer.solvers | nindent 6 }}
+{{- end }}

@@ -56,6 +56,7 @@ jobs:
           helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
           helm repo add external-secrets https://charts.external-secrets.io
           helm repo add stakater https://stakater.github.io/stakater-charts
+          helm repo add tailscale https://pkgs.tailscale.com/helmcharts
           helm repo update
 
       - name: Run chart-testing (lint)
@@ -79,14 +80,23 @@ jobs:
               echo "🛠️  Building dependencies for chart: $chart"
               helm dependency build "$chart"
 
-              echo "🛠️  Rendering chart templates for: $chart"
-              helm template "$chart" --output-dir ./output --include-crds --debug
-              if [ $? -ne 0 ]; then
-                echo "❌ helm template failed for $chart."
-                exit 1
+              # A chart whose values are genuinely required cannot render bare, and
+              # `helm lint` does not catch it: Helm's `fail` is logged at INFO and lint
+              # still exits 0. Render each ci/ values file when the chart ships them --
+              # ct lint already honours ci/, so this keeps the two steps consistent --
+              # and fall back to the bare render for the charts that have no ci/ dir.
+              if ls "$chart"/ci/*.yaml >/dev/null 2>&1; then
+                for values in "$chart"/ci/*.yaml; do
+                  echo "🛠️  Rendering $chart with $(basename "$values")"
+                  helm template "$chart" -f "$values" \
+                    --output-dir "./output/$(basename "$chart")/$(basename "$values" .yaml)" \
+                    --include-crds --debug
+                done
               else
-                echo "✅ Chart template succeeded for $chart."
+                echo "🛠️  Rendering chart templates for: $chart"
+                helm template "$chart" --output-dir ./output --include-crds --debug
               fi
+              echo "✅ Chart template succeeded for $chart."
             else
               echo "⚠️ Skipping validation for $chart: not a directory."
             fi
