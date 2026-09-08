@@ -62,6 +62,9 @@ proxy stalls at `0/N proxy backends ready` with nothing logged.
 
 ## Parameters
 
+### Namespace
+
+
 ### Upstream operator
 
 | Name                                                         | Description                                                                                                                          | Value         |
