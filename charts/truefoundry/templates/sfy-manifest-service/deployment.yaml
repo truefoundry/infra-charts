@@ -54,7 +54,11 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
               scheme: {{ .Values.sfyManifestService.livenessProbe.scheme }}
+              {{- end }}
           readinessProbe:
             failureThreshold: {{ .Values.sfyManifestService.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.sfyManifestService.readinessProbe.initialDelaySeconds }}
@@ -64,7 +68,11 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.sfyManifestService.service.port }}
+              {{- if .Values.global.mTLS.enabled }}
+              scheme: HTTPS
+              {{- else }}
               scheme: {{ .Values.sfyManifestService.readinessProbe.scheme }}
+              {{- end }}
           volumeMounts:
           {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumeMounts }}
           {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}

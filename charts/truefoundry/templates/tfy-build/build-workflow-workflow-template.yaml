@@ -290,6 +290,7 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
+      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
       {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
@@ -361,6 +362,7 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
           {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
@@ -456,6 +458,7 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
+      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
       {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
@@ -532,6 +535,7 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
           {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
@@ -578,6 +582,7 @@ spec:
           - name: tfyIsGlobalBuilderUsed
           - name: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
+      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
         - name: scripts
           projected:
             defaultMode: 0755
@@ -617,6 +622,7 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
+          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
         source: |
           #!/bin/bash
           set -eu

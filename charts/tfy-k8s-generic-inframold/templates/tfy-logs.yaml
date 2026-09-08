@@ -70,6 +70,174 @@ spec:
               {{- toYaml .Values.imagePullSecrets | nindent 14 }}
             {{- end }}
             enabled: true
+            {{- $redactEnabled := true }}
+            {{- if and (hasKey .Values.tfyLogs "redactSensitiveLogs") (hasKey .Values.tfyLogs.redactSensitiveLogs "enabled") }}
+            {{- $redactEnabled = .Values.tfyLogs.redactSensitiveLogs.enabled }}
+            {{- end }}
+            {{- $extraTransforms := (((.Values.tfyLogs).customConfig).transforms) | default dict }}
+            {{- $extraSinks := (((.Values.tfyLogs).customConfig).sinks) | default dict }}
+            {{- $extraSources := (((.Values.tfyLogs).customConfig).sources) | default dict }}
+            {{- /* Opting out: drop default vlogs→redact wiring so chart parser→vlogs applies. */}}
+            {{- if and (not $redactEnabled) (hasKey $extraSinks "vlogs") }}
+            {{- $vlogsInputs := index (index $extraSinks "vlogs") "inputs" | default list }}
+            {{- if eq (toJson $vlogsInputs) (toJson (list "redact_sensitive_logs")) }}
+            {{- $extraSinks = omit $extraSinks "vlogs" }}
+            {{- end }}
+            {{- end }}
+            {{- $hasExtraConfig := or (gt (len $extraTransforms) 0) (gt (len $extraSinks) 0) (gt (len $extraSources) 0) }}
+            {{- if or $redactEnabled $hasExtraConfig }}
+            customConfig:
+              {{- if or $redactEnabled (gt (len $extraTransforms) 0) }}
+              transforms:
+                {{- if $redactEnabled }}
+                redact_sensitive_logs:
+                  type: remap
+                  inputs:
+                    - parser
+                  source: |
+                    # Redact sensitive data across the ENTIRE event.
+                    # Serialize -> redact -> re-parse so secrets are caught in any field.
+                    # On parse failure never forward the unredacted original.
+                    original = .
+                    raw = encode_json(.)
+
+                    # key=value (URLs / query strings)
+                    raw = replace(raw, r'(?i)(secret_ref|client_id|client_secret|refresh_token|access_token|api_key|apikey|password|authorization)=[^\s"\\&]+', "$$1=[REDACTED]")
+
+                    # Bearer tokens
+                    raw = replace(raw, r'(?i)Bearer [A-Za-z0-9._~+/=-]+', "Bearer [REDACTED]")
+
+                    # Bare secret headers
+                    raw = replace(raw, r'(?i)(x-api-key|api-key|x-auth-token):\s*[^\s"\\]+', "$$1: [REDACTED]")
+
+                    # AWS access key IDs
+                    raw = replace(raw, r'\bAKIA[0-9A-Z]{16}\b', "[REDACTED_AWS_KEY]")
+
+                    # AWS secret access key (contextual)
+                    raw = replace(raw, r'(?i)aws(.{0,20})?(secret|access)(.{0,20})?=\s*[A-Za-z0-9/+=]{40}', "aws$$1$$2$$3=[REDACTED]")
+                    raw = replace(raw, r'(?i)(aws_?secret_?access_?key|secret_?access_?key)\s*[:=]\s*[\'"]?[A-Za-z0-9/+=]{40}[\'"]?', "$$1=[REDACTED]")
+
+                    # Google API keys / OAuth
+                    raw = replace(raw, r'\bAIza[0-9A-Za-z\-_]{32,40}\b', "[REDACTED_GOOGLE_API_KEY]")
+                    raw = replace(raw, r'\bya29\.[0-9A-Za-z\-_]{20,}\b', "[REDACTED_GOOGLE_OAUTH]")
+
+                    # Slack
+                    raw = replace(raw, r'\bxox[abpqr]-[0-9A-Za-z\-]{10,48}\b', "[REDACTED_SLACK_TOKEN]")
+                    raw = replace(raw, r'xox(?:a|b|p|o|s|r)-(?:\d+-)+[a-z0-9]+', "[REDACTED_SLACK_TOKEN]")
+                    raw = replace(raw, r'https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+', "[REDACTED_SLACK_WEBHOOK]")
+
+                    # Private keys / certificates
+                    raw = replace(raw, r'-----BEGIN (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----[\s\S]{40,}-----END (?:RSA|DSA|EC|OPENSSH) PRIVATE KEY-----', "[REDACTED_PRIVATE_KEY]")
+                    raw = replace(raw, r'-----BEGIN (?:RSA |EC |DSA |ENCRYPTED )?PRIVATE KEY-----[\s\S]{40,}-----END (?:RSA |EC |DSA |ENCRYPTED )?PRIVATE KEY-----', "[REDACTED_PRIVATE_KEY]")
+                    raw = replace(raw, r'-----BEGIN OPENSSH PRIVATE KEY-----[\s\S]{40,}-----END OPENSSH PRIVATE KEY-----', "[REDACTED_OPENSSH_KEY]")
+                    raw = replace(raw, r'-----BEGIN PGP PRIVATE KEY BLOCK-----[\s\S]{40,}-----END PGP PRIVATE KEY BLOCK-----', "[REDACTED_PGP_KEY]")
+                    raw = replace(raw, r'-----BEGIN SSH2 ENCRYPTED PRIVATE KEY-----\s*\n(?:[A-Za-z0-9+/=]{40,}\s*\n)+-----END SSH2 ENCRYPTED PRIVATE KEY-----', "[REDACTED_SSH2_KEY]")
+                    raw = replace(raw, r'-----BEGIN CERTIFICATE-----[\s\S]{40,}-----END CERTIFICATE-----', "[REDACTED_CERTIFICATE]")
+                    raw = replace(raw, r'(?:^|\n)PuTTY-User-Key-File-\d+:\s*\S+', "[REDACTED_PUTTY_KEY]")
+
+                    # JWTs
+                    raw = replace(raw, r'\beyJ[a-zA-Z0-9_\-]{10,}\.eyJ[a-zA-Z0-9_\-]{10,}\.[a-zA-Z0-9_\-]{10,}\b', "[REDACTED_JWT]")
+                    raw = replace(raw, r'\beyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.?[A-Za-z0-9\-_.+/=]*?\b', "[REDACTED_JWT]")
+
+                    # Contextual hex / base64 blobs near secret keywords
+                    raw = replace(raw, r'(?i)\b(?:secret|api[_-]?key|token|pass(?:word|wd)?|credential|auth[_-]?(?:token|key)?|private[_-]?key|signing[_-]?key|encryption[_-]?key)\b.{0,30}?\b[a-f0-9]{32,}\b', "[REDACTED]")
+                    raw = replace(raw, r'(?i)\b(?:secret|api[_-]?key|token|pass(?:word|wd)?|credential|auth[_-]?(?:token|key)?|private[_-]?key|signing[_-]?key|encryption[_-]?key)\b.{0,30}?\b[A-Za-z0-9+/]{24,}={0,2}\b', "[REDACTED]")
+
+                    # Provider / SaaS tokens
+                    raw = replace(raw, r'\bpat[A-Za-z0-9]{14}\.[a-f0-9]{64}\b', "[REDACTED_AIRTABLE]")
+                    raw = replace(raw, r'\bsk-ant-api\d+-[A-Za-z0-9_-]{90,}\b', "[REDACTED_ANTHROPIC]")
+                    raw = replace(raw, r'(?:\s|=|:|"|^)AKC[a-zA-Z0-9]{10,}(?:\s|"|$)', "[REDACTED_ARTIFACTORY]")
+                    raw = replace(raw, r'(?:\s|=|:|"|^)AP[\dABCDEF][a-zA-Z0-9]{8,}(?:\s|"|$)', "[REDACTED_ARTIFACTORY]")
+                    raw = replace(raw, r'[\?&]sv=\d{4}-\d{2}-\d{2}[^ \n]*?&sig=[A-Za-z0-9%+/=]{16,}', "[REDACTED_AZURE_SAS]")
+                    raw = replace(raw, r'AccountKey=[A-Za-z0-9+/=]{88}', "AccountKey=[REDACTED]")
+                    raw = replace(raw, r'DefaultEndpointsProtocol=(?:http|https);AccountName=[A-Za-z0-9\-]+;AccountKey=[A-Za-z0-9+/=]{40,};EndpointSuffix=core\.windows\.net', "[REDACTED_AZURE_CONN]")
+                    raw = replace(raw, r'://[^:/?#\[\]@!$&\'()*+,;=\s]+:[^:/?#\[\]@!$&\'()*+,;=\s]+@', "://[REDACTED]@")
+                    raw = replace(raw, r'https?://[\w\-]+:([0-9a-f]{64}|[a-z]{24})@[\w\-]+\.cloudant\.com', "[REDACTED_CLOUDANT_URL]")
+                    raw = replace(raw, r'\bdapi[A-Za-z0-9]{32}\b', "[REDACTED_DATABRICKS]")
+                    raw = replace(raw, r'\bdop_v1_[a-f0-9]{64}\b', "[REDACTED_DIGITALOCEAN]")
+                    raw = replace(raw, r'\b[MNO][A-Za-z0-9_-]{23,25}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27}\b', "[REDACTED_DISCORD_TOKEN]")
+                    raw = replace(raw, r'https://(?:canary\.|ptb\.)?discord(?:app)?\.com/api/webhooks/\d{5,30}/[A-Za-z0-9_-]{30,}', "[REDACTED_DISCORD_WEBHOOK]")
+                    raw = replace(raw, r'\bsl\.[A-Za-z0-9_-]{120,}\b', "[REDACTED_DROPBOX]")
+                    raw = replace(raw, r'\bEAA[A-Za-z0-9]{30,}\b', "[REDACTED_FACEBOOK]")
+                    raw = replace(raw, r'\bAAAA[A-Za-z0-9_-]{7,}:[A-Za-z0-9_-]{140,}\b', "[REDACTED_FCM]")
+                    raw = replace(raw, r'(?i)(secret|token|key)\s*[:=]\s*[\'"]?[a-zA-Z0-9+/=]{20,}[\'"]?', "$$1=[REDACTED]")
+                    raw = replace(raw, r'\bgithub_pat_[A-Za-z0-9_]{20,255}\b', "[REDACTED_GITHUB]")
+                    raw = replace(raw, r'\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36}\b', "[REDACTED_GITHUB]")
+                    raw = replace(raw, r'\b(?:glpat|gldt|glft|glsoat|glrt)-[A-Za-z0-9_\-]{20,50}\b|\bGR1348941[A-Za-z0-9_\-]{20,50}\b|\bglcbt-(?:[0-9a-fA-F]{2}_)?[A-Za-z0-9_\-]{20,50}\b|\bglimt-[A-Za-z0-9_\-]{25}\b|\bglptt-[A-Za-z0-9_\-]{40}\b|\bglagent-[A-Za-z0-9_\-]{50,1024}\b|\bgloas-[A-Za-z0-9_\-]{64}\b', "[REDACTED_GITLAB]")
+                    raw = replace(raw, r'\bgsk_[A-Za-z0-9]{52}\b', "[REDACTED_GROQ]")
+                    raw = replace(raw, r'\blin_api_[A-Za-z0-9]{40,}\b', "[REDACTED_LINEAR]")
+                    raw = replace(raw, r'\b[0-9a-z]{32}-us[0-9]{1,2}\b', "[REDACTED_MAILCHIMP]")
+                    raw = replace(raw, r'\b[ps]k\.[A-Za-z0-9\-_.]{30,}\b', "[REDACTED_MAPBOX]")
+                    raw = replace(raw, r'mongodb://[^\s@]+:[^\s@]+@', "mongodb://[REDACTED]@")
+                    raw = replace(raw, r'mysql://[^\s@]+:[^\s@]+@', "mysql://[REDACTED]@")
+                    raw = replace(raw, r'postgresql://[^\s@]+:[^\s@]+@', "postgresql://[REDACTED]@")
+                    raw = replace(raw, r'\bsecret_[A-Za-z0-9]{32,}\b', "[REDACTED_NOTION]")
+                    raw = replace(raw, r'\bnpm_[A-Za-z0-9]{30,}\b', "[REDACTED_NPM]")
+                    raw = replace(raw, r'//[^\n]+/:_authToken=\s*((npm_.+)|([A-Fa-f0-9-]{36}))', "//[REDACTED]/:_authToken=[REDACTED]")
+                    raw = replace(raw, r'\b(?:sk-[A-Za-z0-9-_]*[A-Za-z0-9]{20}T3BlbkFJ[A-Za-z0-9]{20}|sk-[A-Za-z0-9]{20,})\b', "[REDACTED_OPENAI]")
+                    raw = replace(raw, r'(?i)\b(pass(?:word)?|pwd)\s*[:=]\s*[\'"][^\'"\n]{8,}[\'"]', "$$1=[REDACTED]")
+                    raw = replace(raw, r'\bpypi-(?:AgEIcHlwaS5vcmc|AgENdGVzdC5weXBpLm9yZw)[A-Za-z0-9-_]{70,}\b', "[REDACTED_PYPI]")
+                    raw = replace(raw, r'\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}\b', "[REDACTED_SENDGRID]")
+                    raw = replace(raw, r'\bshp(?:at|pa|ss)_[0-9a-f]{32}\b', "[REDACTED_SHOPIFY]")
+                    raw = replace(raw, r'https?://api\.softlayer\.com/soap/(?:v3|v3\.1)/[a-z0-9]{64}', "[REDACTED_SOFTLAYER]")
+                    raw = replace(raw, r'\bEAAA[A-Za-z0-9]{60}\b', "[REDACTED_SQUARE]")
+                    raw = replace(raw, r'\bsq0csp-[0-9A-Za-z_\-]{43}\b', "[REDACTED_SQUARE_OAUTH]")
+                    raw = replace(raw, r'\bpk_live_[A-Za-z0-9]{20,}\b', "[REDACTED_STRIPE_PK]")
+                    raw = replace(raw, r'\b(?:r|s)k_live_[0-9A-Za-z]{24,}\b', "[REDACTED_STRIPE_SK]")
+                    raw = replace(raw, r'\b\d{8,10}:[0-9A-Za-z_-]{35}\b', "[REDACTED_TELEGRAM]")
+                    raw = replace(raw, r'\bAC[0-9a-fA-F]{32}\b', "[REDACTED_TWILIO_SID]")
+                    raw = replace(raw, r'\bSK[0-9a-fA-F]{32}\b', "[REDACTED_TWILIO_KEY]")
+                    raw = replace(raw, r'(?i)(?:twilio_)?auth_?token[\'"]?\s*[:=]\s*[\'"]?[0-9a-f]{32}[\'"]?', "auth_token=[REDACTED]")
+
+                    # Safety net: key <separators> value for JSON / escaped-JSON / colon forms
+                    raw = replace(raw, r'(?i)(client_id|client_secret|refresh_token|access_token|secret_ref|api_key|apikey|password)([\s:="\\]+)[^\s",}\\]+', "$$1$$2[REDACTED]")
+
+                    parsed, err = parse_json(raw)
+                    if err == null {
+                      . = object(parsed) ?? original
+                    } else {
+                      # Never forward unredacted original after a failed re-parse.
+                      # Keep safe metadata; put the already-redacted payload in message.
+                      . = {
+                        "message": raw,
+                        "redact_parse_failed": true,
+                        "timestamp": original.timestamp,
+                        "namespace": original.namespace,
+                        "pod": original.pod,
+                        "container": original.container,
+                        "service": original.service,
+                        "app": original.app,
+                        "node": original.node,
+                        "cluster": original.cluster,
+                        "job_name": original.job_name,
+                        "level": original.level
+                      }
+                    }
+                {{- end }}
+                {{- range $name, $cfg := $extraTransforms }}
+                {{- if or (not $redactEnabled) (ne $name "redact_sensitive_logs") }}
+                {{ $name }}:
+                  {{- toYaml $cfg | nindent 18 }}
+                {{- end }}
+                {{- end }}
+              {{- end }}
+              {{- if or (and $redactEnabled (not (hasKey $extraSinks "vlogs"))) (gt (len $extraSinks) 0) }}
+              sinks:
+                {{- if and $redactEnabled (not (hasKey $extraSinks "vlogs")) }}
+                vlogs:
+                  inputs:
+                    - redact_sensitive_logs
+                {{- end }}
+                {{- range $name, $cfg := $extraSinks }}
+                {{ $name }}:
+                  {{- toYaml $cfg | nindent 18 }}
+                {{- end }}
+              {{- end }}
+              {{- if gt (len $extraSources) 0 }}
+              sources:
+                {{- toYaml $extraSources | nindent 16 }}
+              {{- end }}
+            {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:

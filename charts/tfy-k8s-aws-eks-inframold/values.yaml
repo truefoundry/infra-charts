@@ -590,6 +590,21 @@ tfyLogs:
   ##
   valuesOverride: {}
 
+  ## @param tfyLogs.redactSensitiveLogs.enabled Enable Vector redact_sensitive_logs transform (default true).
+  ## Set to false to opt out (e.g. CPU cost). Opt-out drops the default vlogs→redact wiring so chart defaults apply.
+  ##
+  redactSensitiveLogs:
+    enabled: true
+
+  ## @param tfyLogs.customConfig [object] Extra Vector customConfig merged into templates/tfy-logs.yaml.
+  ## When redactSensitiveLogs.enabled is true, sink inputs should use redact_sensitive_logs.
+  ##
+  customConfig:
+    sinks:
+      vlogs:
+        inputs:
+          - redact_sensitive_logs
+
   ## @param tfyLogs.affinity [object] Affinity for tfyLogs statefulset pod
   ##
   affinity:

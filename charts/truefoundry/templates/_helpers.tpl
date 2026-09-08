@@ -56,6 +56,20 @@
 {{- end -}}
 {{- dict "items" $items | toJson -}}
 {{- end -}}
+
+{{/*
+  mTLS volume for build job / workflow pods. Uses global.mTLS as the source of truth.
+  defaultMode 0444 because build containers may run as an arbitrary UID with no guaranteed
+  fsGroup, so the key must be world-readable inside the pod.
+*/}}
+{{- define "truefoundry.mtlsVolumeForBuildJobs" -}}
+{{- if .Values.global.mTLS.enabled }}
+- name: truefoundry-mtls
+  secret:
+    secretName: {{ .Values.global.mTLS.externalMtlsSecret | default .Values.global.mTLS.tlsSecretName }}
+    defaultMode: 0444
+{{- end }}
+{{- end -}}
 {{/*
   Global Labels
 */}}

@@ -33,7 +33,17 @@ data:
           # config (including the resolved TFY_API_KEY) unauthenticated.
           config:
             enabled: false
+          # Server TLS only (no client_ca_file): kubelet httpGet cannot present a
+          # mesh client cert. Chart probes flip to scheme HTTPS when mTLS is on.
+          {{- if .Values.global.mTLS.enabled }}
+          tls:
+            cert_file: /etc/tls/truefoundry/tls.crt
+            key_file: /etc/tls/truefoundry/tls.key
+          {{- end }}
       pprof:
+      # Agent-session ingest proxy (:4319). Mesh TLS is enforced in-process by the
+      # extension when TLS_ENABLED/TLS_MUTUAL are set (PEM under TLS_DIR) — custom
+      # extensions have no collector-config `tls:` block like OTLP receivers.
       tfyingestorproxy:
         endpoint: 0.0.0.0:{{ .Values.service.ingestorProxyPort }}
         deltafusion_ingestor_base_url: ${env:DELTAFUSION_INGESTOR_BASE_URL}
@@ -53,11 +63,23 @@ data:
             include_metadata: true
             auth:
               authenticator: tfyauth
+            {{- if .Values.global.mTLS.enabled }}
+            tls:
+              cert_file: /etc/tls/truefoundry/tls.crt
+              key_file: /etc/tls/truefoundry/tls.key
+              client_ca_file: /etc/tls/truefoundry/ca.crt
+            {{- end }}
           http:
             endpoint: 0.0.0.0:4318
             include_metadata: true # Want to maintain the headers. Have to keep include_metada = true
             auth:
               authenticator: tfyauth
+            {{- if .Values.global.mTLS.enabled }}
+            tls:
+              cert_file: /etc/tls/truefoundry/tls.crt
+              key_file: /etc/tls/truefoundry/tls.key
+              client_ca_file: /etc/tls/truefoundry/ca.crt
+            {{- end }}
 
     exporters:
       tfydeltafusionexporter:
@@ -73,7 +95,7 @@ data:
         cache_ttl: 5m
         retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
         # legacy = combined /gateway-model-metrics only, split = real + virtual endpoints only, dual = both
-        model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-legacy}
+        model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-dual}
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
       tfytracesexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}

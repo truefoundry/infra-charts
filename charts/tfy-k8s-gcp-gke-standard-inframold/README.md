@@ -137,13 +137,15 @@ Inframold, the superchart that configure your cluster on gcp for truefoundry.
 
 ### tfyLogs parameters
 
-| Name                     | Description                                    | Value  |
-| ------------------------ | ---------------------------------------------- | ------ |
-| `tfyLogs.enabled`        | Flag to enable Tfy Logs                        | `true` |
-| `tfyLogs.syncPolicy`     | ArgoCD syncPolicy for the tfy-logs Application | `{}`   |
-| `tfyLogs.valuesOverride` | Config override from default config values     | `{}`   |
-| `tfyLogs.affinity`       | Affinity for tfyLogs statefulset pod           | `{}`   |
-| `tfyLogs.tolerations`    | Tolerations for tfyLogs statefulset pod        | `[]`   |
+| Name                                  | Description                                                    | Value  |
+| ------------------------------------- | -------------------------------------------------------------- | ------ |
+| `tfyLogs.enabled`                     | Flag to enable Tfy Logs                                        | `true` |
+| `tfyLogs.syncPolicy`                  | ArgoCD syncPolicy for the tfy-logs Application                 | `{}`   |
+| `tfyLogs.valuesOverride`              | Config override from default config values                     | `{}`   |
+| `tfyLogs.redactSensitiveLogs.enabled` | Enable Vector redact_sensitive_logs transform (default true).  | `true` |
+| `tfyLogs.customConfig`                | Extra Vector customConfig merged into templates/tfy-logs.yaml. | `{}`   |
+| `tfyLogs.affinity`                    | Affinity for tfyLogs statefulset pod                           | `{}`   |
+| `tfyLogs.tolerations`                 | Tolerations for tfyLogs statefulset pod                        | `[]`   |
 
 ### istio parameters
 

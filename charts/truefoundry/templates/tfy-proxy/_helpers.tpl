@@ -216,9 +216,20 @@ Expand the name of the chart.
 
 {{/*
   Create the env file
+
+  When proxy TLS is enabled, set XDG_* to the emptyDir mounts at /config and /data.
+  With readOnlyRootFilesystem, Caddy otherwise writes under $HOME/.config and
+  $HOME/.local (often /.config and /.local) and fails with "read-only file system".
+  User-supplied tfyProxy.env can override these.
   */}}
 {{- define "tfy-proxy.env" }}
-{{- range $key, $val := (include "tfy-proxy.parseEnv" .) | fromYaml }}
+{{- $userEnv := (include "tfy-proxy.parseEnv" .) | fromYaml | default dict -}}
+{{- $defaults := dict -}}
+{{- if .Values.global.proxy.tls.enabled -}}
+{{- $defaults = dict "XDG_CONFIG_HOME" "/config" "XDG_DATA_HOME" "/data" -}}
+{{- end -}}
+{{- $merged := mergeOverwrite $defaults $userEnv -}}
+{{- range $key, $val := $merged }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -404,5 +415,71 @@ limits:
 {{- define "tfy-proxy.withInternalMtls" -}}
 {{- if .Values.global.mTLS.enabled }} {
           import internal_mtls
+        }{{- end }}
+{{- end }}
+
+{{/*
+  Trailing block for a reverse_proxy that dials an internal in-cluster
+  TrueFoundry service. Emits (when enabled): the Host / X-Forwarded-Host rewrite
+  (global.proxy.rewriteUpstreamHost), the (internal_mtls) import
+  (global.mTLS.enabled), and any caller-supplied extra reverse_proxy directives.
+
+  Dual input shape:
+    - Bare context: {{- include "tfy-proxy.upstreamOpts" . }}
+    - Dict with extra headers (each item is a full directive line placed inside
+      the reverse_proxy block, e.g. an extra header_up):
+        {{- include "tfy-proxy.upstreamOpts"
+              (dict "ctx" . "extraHeaders" (list "header_up x-foo bar")) }}
+
+  The { ... } block is opened when ANY of rewriteUpstreamHost, mTLS, or a
+  non-empty extraHeaders list applies — so a route whose only need is an extra
+  header still gets it emitted even when both flags are off.
+*/}}
+{{- define "tfy-proxy.upstreamOpts" -}}
+{{- $ctx := . -}}
+{{- $extraHeaders := list -}}
+{{- if and (kindIs "map" .) (hasKey . "ctx") -}}
+{{- $ctx = .ctx -}}
+{{- $extraHeaders = default (list) .extraHeaders -}}
+{{- end -}}
+{{- if or $ctx.Values.global.proxy.rewriteUpstreamHost $ctx.Values.global.mTLS.enabled (gt (len $extraHeaders) 0) }} {
+          {{- if $ctx.Values.global.proxy.rewriteUpstreamHost }}
+          header_up Host {http.reverse_proxy.upstream.hostport}
+          header_up X-Forwarded-Host {http.request.host}
+          {{- end }}
+          {{- if $ctx.Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
+          {{- range $extraHeaders }}
+          {{ . }}
+          {{- end }}
+        }{{- end }}
+{{- end }}
+
+{{- define "tfy-proxy.rewriteUpstreamHostOnly" -}}
+{{- if .Values.global.proxy.rewriteUpstreamHost }} {
+          header_up Host {http.reverse_proxy.upstream.hostport}
+          header_up X-Forwarded-Host {http.request.host}
+        }{{- end }}
+{{- end }}
+
+{{/*
+  Append a reverse_proxy transport that dials the NATS websocket upstream (:8080)
+  over mesh mTLS. Browsers hit tfy-proxy with public TLS only; the proxy->NATS
+  hop must present the mesh client cert when websocket.tls.verify is enabled
+  (same CA mount as (internal_mtls)). Rendered when global.mTLS.enabled and
+  tfyNats.config.websocket.tls.enabled. Without tls, Caddy's plaintext hop
+  fails against an HTTPS websocket listener; without tls_client_auth, NATS
+  rejects with "certificate required".
+  Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
+*/}}
+{{- define "tfy-proxy.withNatsWebsocketTls" -}}
+{{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
+{{- if and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) }} {
+          transport http {
+            tls
+            tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
+            tls_client_auth /etc/tls/truefoundry/tls.crt /etc/tls/truefoundry/tls.key
+          }
         }{{- end }}
 {{- end }}
