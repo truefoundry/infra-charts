@@ -302,8 +302,7 @@ Expand the name of the chart.
 
 
 {{- define "tfy-proxy.volumeMounts" -}}
-{{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
-{{- $defaultVolumeMounts := dict "name" $cmName "mountPath" "/etc/caddy/Caddyfile" "subPath" "Caddyfile" -}}
+{{- $defaultVolumeMounts := dict "name" (include "tfy-proxy.fullname" .) "mountPath" "/etc/caddy/Caddyfile" "subPath" "Caddyfile" -}}
 
 {{- $caddyData := dict "name" "caddy-data" "mountPath" "/data" -}}
 {{- $caddyConfigData := dict "name" "caddy-config-data" "mountPath" "/config" -}}
