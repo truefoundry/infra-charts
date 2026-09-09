@@ -256,9 +256,7 @@ spec:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
           karpenter.sh/do-not-disrupt: 'true'
           karpenter.sh/do-not-evict: 'true'
-      retryStrategy:
-        limit: 2
-        retryPolicy: "Always"
+      {{- include "tfy-build.buildRetryStrategy" . | nindent 6 }}
       inputs:
         parameters:
           - name: buildSource
@@ -324,7 +322,7 @@ spec:
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
-        env: 
+        env:
           - name: BUILD_SOURCE
             value: "{{`{{inputs.parameters.buildSource}}`}}"
           - name: BUILD_CONFIG
@@ -374,7 +372,7 @@ spec:
         {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
         {{- toYaml . | nindent 10 }}
         {{- end }}
-        resources: 
+        resources:
           {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
         source: |
           #!/bin/bash
@@ -424,9 +422,7 @@ spec:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
           karpenter.sh/do-not-disrupt: 'true'
           karpenter.sh/do-not-evict: 'true'
-      retryStrategy:
-        limit: 2
-        retryPolicy: "Always"
+      {{- include "tfy-build.buildRetryStrategy" . | nindent 6 }}
       inputs:
         parameters:
           - name: buildSource
