@@ -145,6 +145,27 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
+  retryStrategy for the build-and-push steps.
+  Rendered from .Values.tfyBuild.truefoundryWorkflows.buildRetryStrategy so operators can differentiate
+  transient build/infrastructure failures (retry) from intentional security-gate decisions such as a
+  Checkmarx policy failure (do not retry, e.g. via an exit-code expression).
+  limit and retryPolicy always render; expression and backoff render only when set.
+*/}}
+{{- define "tfy-build.buildRetryStrategy" -}}
+{{- $retry := .Values.tfyBuild.truefoundryWorkflows.buildRetryStrategy -}}
+retryStrategy:
+  limit: {{ $retry.limit }}
+  retryPolicy: {{ $retry.retryPolicy | quote }}
+{{- with $retry.expression }}
+  expression: {{ . | quote }}
+{{- end }}
+{{- with $retry.backoff }}
+  backoff:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+
+{{/*
   Image pull secrets for tfy-build - allows component-specific override
 */}}
 {{- define "tfy-build.imagePullSecrets" -}}

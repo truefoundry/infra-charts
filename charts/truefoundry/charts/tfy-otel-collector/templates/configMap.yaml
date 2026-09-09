@@ -13,7 +13,8 @@ data:
       tfyauth: # Custom authorisation
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
-        cache_ttl: 5m
+        cache_soft_ttl: 5m
+        cache_hard_ttl: 1h
         tfy_api_key: ${env:TFY_API_KEY}
         tfy_api_keys_to_verify: ${env:TFY_API_KEYS_TO_VERIFY:-[]}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
@@ -51,7 +52,8 @@ data:
         tfy_api_keys_to_verify: ${env:TFY_API_KEYS_TO_VERIFY:-[]}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
-        cache_ttl: 5m
+        cache_soft_ttl: 5m
+        cache_hard_ttl: 1h
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
 
@@ -92,7 +94,8 @@ data:
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
         tfy_api_key: ${env:TFY_API_KEY}
-        cache_ttl: 5m
+        cache_soft_ttl: 5m
+        cache_hard_ttl: 1h
         retain_special_span_attributes: ${env:RETAIN_SPECIAL_SPAN_ATTRIBUTES:-false}
         # legacy = combined /gateway-model-metrics only, split = real + virtual endpoints only, dual = both
         model_metrics_ingest_mode: ${env:MODEL_METRICS_INGEST_MODE:-dual}
@@ -111,7 +114,8 @@ data:
         tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-200ms}
         tfy_api_key: ${env:TFY_API_KEY}
-        cache_ttl: 5m
+        cache_soft_ttl: 5m
+        cache_hard_ttl: 1h
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
       tfymetricsexporter:
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
@@ -126,7 +130,8 @@ data:
         tfy_otel_exporter_request_retry_interval: ${env:TFY_OTEL_EXPORTER_REQUEST_RETRY_INTERVAL:-1s}
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-1s}
         tfy_api_key: ${env:TFY_API_KEY}
-        cache_ttl: 5m
+        cache_soft_ttl: 5m
+        cache_hard_ttl: 1h
         timeout: ${env:TFY_OTEL_EXPORTER_TIMEOUT:-60s}
         filter_metrics_by_temporality: ${env:TFY_METRICS_FILTER_BY_TEMPORALITY:-false}
     connectors:
@@ -156,6 +161,14 @@ data:
             action: upsert
           - key: tfyservicename
             from_context: auth.tfyservicename
+            action: upsert
+          - key: istfyllmgateway
+            from_context: auth.istfyllmgateway
+            action: upsert
+      resource/metrics: # metrics-only resource attrs; omits Authorization/subject/project to avoid leaking auth to tenant backends
+        attributes:
+          - key: tfytenantname
+            from_context: auth.tfytenant
             action: upsert
           - key: istfyllmgateway
             from_context: auth.istfyllmgateway
@@ -197,6 +210,19 @@ data:
             statements:
               # Copy pod_name from resource attributes onto the metric datapoint as "pod"
               - set(attributes["pod"], resource.attributes["pod"])
+      filter/metrics:
+        error_mode: ignore
+        metrics:
+          datapoint:
+            # Mirror the traces filter (see `filter.traces.span` above), using the
+            # metric datapoint label `tenant_name` in place of the span attribute
+            # `tfy.request.tenant_name`.
+            # for non gateway metrics, tfytenantname is must, if not present, then drop the datapoint
+            # for gateway metrics, tenant_name datapoint label is must, if not present, then drop the datapoint
+            # for gateway metrics, tenant_name must be equal to tfytenantname, if tfytenantname is present
+            - '(resource.attributes["istfyllmgateway"] == "false" and resource.attributes["tfytenantname"] == "")'
+            - '(resource.attributes["istfyllmgateway"] == "true" and attributes["tenant_name"] == "")'
+            - '(resource.attributes["istfyllmgateway"] == "true" and resource.attributes["tfytenantname"] != "" and attributes["tenant_name"] != resource.attributes["tfytenantname"])'
     service:
       telemetry:
         logs:
@@ -228,6 +254,6 @@ data:
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
-          processors: [transform/metrics]
+          processors: [resource/metrics, transform/metrics, filter/metrics]
           exporters: [tfymetricsexporter]
 
