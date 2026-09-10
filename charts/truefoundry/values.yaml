@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.172.0
+  controlPlaneChartVersion: 0.170.6
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -103,8 +103,6 @@ global:
       {{ .Release.Name }}-mlfoundry-server
     ## @param global.proxy.mlfToSvcEnabled Kill switch for /api/ml edge routing. When true, whitelisted /api/ml paths are routed to servicefoundry and all others stay on mlfoundry. When false, all /api/ml traffic goes to mlfoundry (legacy behavior).
     mlfToSvcEnabled: true
-    ## @param global.proxy.rewriteUpstreamHost Bool to rewrite the upstream Host header to the dialed service's host:port on every internal reverse_proxy, and pass the original external host as X-Forwarded-Host. Needed when an Istio AuthorizationPolicy matches on the destination host (:authority): without it Caddy forwards the external browser Host and Istio denies the request. X-Forwarded-Host lets backends still recover the original host (redirects, cookie domains, OAuth/MCP callbacks). Only affects internal in-cluster routes; external-URL routes (auth, agent, external llm-gateway, trt-engine-builder) keep their own explicit Host.
-    rewriteUpstreamHost: false
     ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
       {{ .Release.Name }}-tfy-workflow-admin-server
@@ -114,6 +112,9 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector
+    ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
+    stdioMcpProxyHost: >-
+      {{ .Release.Name }}-stdio-mcp-proxy
     ## @param global.proxy.tfyInfraManagerHost tfy infra manager host for service routing
     tfyInfraManagerHost: >-
       {{ .Release.Name }}-tfy-infra-manager
@@ -571,7 +572,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.172.0"
+    tag: "v0.170.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -903,7 +904,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.172.0"
+    tag: "v0.170.2"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1097,7 +1098,7 @@ servicefoundryServer:
     NATS_UI_URL: http://{{ .Release.Name }}-tfy-nats-ui:8080/admin/nats/
     METRICS_DASHBOARD_URL: http://{{ .Release.Name }}-tfy-metrics-dashboard:8080/admin/metrics-dashboard/
     HEADLAMP_URL: http://{{ .Release.Name }}-headlamp:4466/admin/kubernetes/
-    FE_ENABLE_STDIO_MCP_SERVER: "false"
+    FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
     SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
     TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
@@ -1157,7 +1158,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.172.0"
+    tag: "v0.170.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1310,7 +1311,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.172.0"
+    tag: "v0.170.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1453,8 +1454,6 @@ tfyK8sController:
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1474,7 +1473,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.172.0"
+    tag: "v0.170.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1618,18 +1617,140 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
+    TLS_ENABLED: 'false'
+    TLS_MUTUAL: 'false'
     TLS_DIR: /etc/tls/truefoundry
     TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
-    HELM_PULL_TIMEOUT_SECONDS: '120'
-    HELM_MAX_DECOMPRESSED_BYTES: '104857600'
-    HELM_MAX_PACKAGE_DEPENDENCIES: '50'
-    HELM_MAX_PACKAGE_UNPACKED_BYTES: '524288000'
-    HOME: /tmp
-    HELM_CACHE_HOME: /tmp/helm-cache
-    HELM_CONFIG_HOME: /tmp/helm-config
-    XDG_CACHE_HOME: /tmp/.cache
+###################################################################################################################
+####################################### stdio-mcp-proxy ###########################################################
+###################################################################################################################
+## @section stdioMcpProxy stdio MCP proxy values
+stdioMcpProxy:
+  ## @param stdioMcpProxy.enabled Bool to enable the stdio MCP proxy
+  enabled: false
+  ## @param stdioMcpProxy.annotations [object] Annotations for the stdio MCP proxy
+  annotations: {}
+  ## @param stdioMcpProxy.tolerations Tolerations specific to the stdio MCP proxy
+  tolerations: []
+  ## stdioMcpProxy.image Image for the stdio MCP proxy
+  image:
+    ## @param stdioMcpProxy.image.registry Registry for the stdio MCP proxy image (overrides global.registry if specified)
+    registry: ""
+    ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
+    repository: "tfy-private-images/stdio-mcp-proxy"
+    ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
+    tag: "v0.170.0"
+  ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
+  # replicaCount: 1
+  ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
+  environmentName: default
+  ## @param stdioMcpProxy.envSecretName Secret name for the stdio MCP proxy environment variables
+  envSecretName: stdio-mcp-proxy-env-secret
+  ## @param stdioMcpProxy.imagePullPolicy Image pull policy for the stdio MCP proxy
+  imagePullPolicy: IfNotPresent
+  ## @param stdioMcpProxy.nameOverride Override name for the stdio MCP proxy
+  nameOverride: ""
+  ## @param stdioMcpProxy.fullnameOverride Full name override for the stdio MCP proxy
+  fullnameOverride: ""
+  ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
+  podAnnotations: {}
+  ## @param stdioMcpProxy.podSecurityContext [object] Security context for the stdio MCP proxy pods
+  podSecurityContext:
+    enabled: false
+  ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
+  commonLabels: {}
+  ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
+  commonAnnotations: {}
+  ## @param stdioMcpProxy.podLabels [object] Labels for the stdio MCP proxy pods
+  podLabels: {}
+  ## @param stdioMcpProxy.deploymentLabels [object] Deployment-specific labels for the stdio MCP proxy
+  deploymentLabels: {}
+  ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
+  deploymentAnnotations: {}
+  ## @param stdioMcpProxy.securityContext [object] Security context for the stdio MCP proxy
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    readOnlyRootFilesystem: false
+  ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
+  resourceTierOverride: ""
+  ## @param stdioMcpProxy.resources [object] Resource requests and limits for the stdio MCP proxy
+  resources: {}
+  ## stdioMcpProxy.livenessProbe Liveness probe settings for the stdio MCP proxy
+  livenessProbe:
+    ## @param stdioMcpProxy.livenessProbe.failureThreshold Liveness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 15
+    ## @param stdioMcpProxy.livenessProbe.periodSeconds Liveness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.livenessProbe.successThreshold Liveness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+    ## @param stdioMcpProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
+  ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
+  readinessProbe:
+    ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
+    failureThreshold: 3
+    ## @param stdioMcpProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for stdio MCP proxy
+    initialDelaySeconds: 5
+    ## @param stdioMcpProxy.readinessProbe.periodSeconds Readiness probe period for stdio MCP proxy
+    periodSeconds: 10
+    ## @param stdioMcpProxy.readinessProbe.successThreshold Readiness probe success threshold for stdio MCP proxy
+    successThreshold: 1
+    ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
+    timeoutSeconds: 1
+    ## @param stdioMcpProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
+    scheme: HTTP
+  ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
+  nodeSelector: {}
+  ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
+  affinity: {}
+  ## @param stdioMcpProxy.topologySpreadConstraints Topology spread constraints for the stdio MCP proxy
+  topologySpreadConstraints: []
+  ## stdioMcpProxy.serviceMonitor ServiceMonitor settings for the stdio MCP proxy
+  serviceMonitor:
+    ## @param stdioMcpProxy.serviceMonitor.enabled Enable ServiceMonitor for the stdio MCP proxy
+    enabled: false
+    ## @param stdioMcpProxy.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param stdioMcpProxy.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
+  ## stdioMcpProxy.service Service settings for the stdio MCP proxy
+  service:
+    ## @param stdioMcpProxy.service.type Service type for the stdio MCP proxy
+    type: ClusterIP
+    ## @param stdioMcpProxy.service.port Service port for the stdio MCP proxy
+    port: 8000
+    ## @param stdioMcpProxy.service.annotations Annotations for the stdio MCP proxy service
+    annotations: {}
+    ## @param stdioMcpProxy.service.labels [object] Labels for the stdio MCP proxy service
+    labels: {}
+  ## stdioMcpProxy.serviceAccount Service account settings for the stdio MCP proxy
+  serviceAccount:
+    ## @param stdioMcpProxy.serviceAccount.create Bool to create a service account for the stdio MCP proxy
+    create: true
+    ## @param stdioMcpProxy.serviceAccount.name Name of the stdio MCP proxy service account
+    name: "stdio-mcp-proxy"
+    ## @param stdioMcpProxy.serviceAccount.annotations [object] Annotations for the stdio MCP proxy service account
+    annotations: {}
+    ## @param stdioMcpProxy.serviceAccount.labels [object] Labels for the stdio MCP proxy service account
+    labels: {}
+    ## @param stdioMcpProxy.serviceAccount.automountServiceAccountToken Automount service account token for the stdio MCP proxy service account
+    automountServiceAccountToken: true
+  ## @param stdioMcpProxy.extraVolumes Extra volumes for the stdio MCP proxy
+  extraVolumes: []
+  ## @param stdioMcpProxy.extraVolumeMounts Extra volume mounts for the stdio MCP proxy
+  extraVolumeMounts: []
+  ## @param stdioMcpProxy.imagePullSecrets Image pull credentials for the stdio MCP proxy
+  imagePullSecrets: []
+  ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
+  env:
+    MCP_PROXY_CONFIG_JSON: ${k8s-secret/stdio-mcp-proxy-env-secret/MCP_PROXY_CONFIG_JSON}
+    MCP_SUBPROCESS_TTL_MINUTES: '20'
+    MCP_REAP_INTERVAL_MINUTES: '5'
 ###################################################################################################################
 ######################################### Tfy Infra Manager ######################################################
 ###################################################################################################################
@@ -1648,7 +1769,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.172.0"
+    tag: "v0.170.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -1823,6 +1944,19 @@ tfyBuild:
     enabled: true
     ## @param tfyBuild.truefoundryWorkflows.activeDeadlineSeconds Active deadline seconds for the build workflow and build-and-push steps
     activeDeadlineSeconds: 14400
+    ## tfyBuild.truefoundryWorkflows.buildRetryStrategy Argo retryStrategy applied to the build-and-push steps (buildkit sidecar and external buildkit).
+    ## Lets you differentiate transient build/infrastructure failures (which should retry) from intentional security-gate
+    ## decisions such as a Checkmarx policy failure (which should not retry). Use `expression` to skip retries on specific
+    ## exit codes, e.g. map a Checkmarx policy failure to an exit code like 101 and stop retrying on it.
+    buildRetryStrategy:
+      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.limit Maximum number of retries for the build-and-push steps
+      limit: 2
+      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.retryPolicy Argo retry policy (Always, OnFailure, OnError, OnTransientError)
+      retryPolicy: "Always"
+      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.expression Optional Argo expression gating whether a retry happens. Empty string means no expression (always retry per retryPolicy). E.g. 'lastRetry.exitCode != 101' to stop retrying when the build gate fails with exit code 101.
+      expression: ""
+      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.backoff [object] Optional Argo backoff config for retries. Empty object means no backoff. E.g. {duration: 1s, factor: 2, maxDuration: 30m}
+      backoff: {}
     ## tfyBuild.truefoundryWorkflows.sfyBuilder SfyBuilder settings for the tfyBuild server
     sfyBuilder:
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs Extra environment variables for sfyBuilder
@@ -2339,7 +2473,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.172.0
+    tag: v0.170.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2499,7 +2633,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.172.0
+    tag: v0.170.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2910,7 +3044,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.172.0"
+      tag: "v0.170.1"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -2996,7 +3130,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.172.0"
+    tag: "v0.170.1"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3189,7 +3323,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.172.0"
+    tag: "v0.170.1"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3376,7 +3510,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.172.0
+    tag: v0.170.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3598,7 +3732,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.172.0"
+    tag: "v0.170.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).

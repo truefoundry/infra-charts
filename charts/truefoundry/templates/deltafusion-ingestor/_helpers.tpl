@@ -413,14 +413,6 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
-CronJob metadata.name must be <= 52 characters so spawned Job names (name + "-" + 11-char
-timestamp suffix) stay within the 63-character DNS label limit.
-*/}}
-{{- define "deltafusion-compaction.cronJobName" -}}
-{{- include "deltafusion-compaction.fullname" . | trunc 52 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "deltafusion-compaction.chart" -}}
