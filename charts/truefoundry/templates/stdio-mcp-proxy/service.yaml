@@ -1,0 +1,20 @@
+{{- if .Values.stdioMcpProxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "stdio-mcp-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "stdio-mcp-proxy.serviceLabels" . | nindent 4 }}
+  annotations:
+    {{- include "stdio-mcp-proxy.serviceAnnotations" . | nindent 4 }}
+spec:
+  type: {{ .Values.stdioMcpProxy.service.type }}
+  ports:
+    - port: {{ .Values.stdioMcpProxy.service.port }}
+      targetPort: {{ .Values.stdioMcpProxy.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "truefoundry.selectorLabels" (dict "context" . "name" "stdio-mcp-proxy") | nindent 4 }}
+{{- end }}
