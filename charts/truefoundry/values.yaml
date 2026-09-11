@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.172.2
+  controlPlaneChartVersion: 0.172.3
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -154,6 +154,13 @@ global:
       backendURL: ""
       ## @param global.proxy.llmGateway.backendPort Backend Port for the LLM gateway
       backendPort: 8787
+    ## global.proxy.trueforge TrueForge settings for service routing
+    trueforge:
+      ## @param global.proxy.trueforge.host TrueForge host for service routing
+      host: >-
+        {{ .Release.Name }}-trueforge
+      ## @param global.proxy.trueforge.port TrueForge port for service routing
+      port: 8790
     ## global.proxy.tfyOtelCollector OTEL collector settings for service routing
     tfyOtelCollector:
       ## @param global.proxy.tfyOtelCollector.host OTEL collector host for OTEL collector service
@@ -210,6 +217,8 @@ global:
     password: ""
   ## @param global.tfyApiKey API key for truefoundry
   tfyApiKey: ""
+  ## @param global.trueforgeApiKey API key used by the TrueForge controller to call the TrueForge server. Empty means the bootstrap job generates one into the `trueforge-api-key` Secret on first install and preserves it across upgrades. To bring your own key without putting it in values, pre-create that Secret with a `TRUEFORGE_API_KEY` key before installing.
+  trueforgeApiKey: ""
   ## global.image [object] Global image configuration
   image:
     ## @param global.image.registry Default registry for all images
@@ -685,6 +694,8 @@ mlfoundryServer:
   serviceMonitor:
     ## @param mlfoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the mlfoundry server
     enabled: false
+    ## @param mlfoundryServer.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
     ## @param mlfoundryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param mlfoundryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -903,7 +914,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.172.2"
+    tag: "v0.172.3"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1031,6 +1042,8 @@ servicefoundryServer:
   serviceMonitor:
     ## @param servicefoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the servicefoundry server
     enabled: true
+    ## @param servicefoundryServer.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
     ## @param servicefoundryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param servicefoundryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -1310,7 +1323,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.172.0"
+    tag: "v0.172.1"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1424,6 +1437,8 @@ tfyK8sController:
   serviceMonitor:
     ## @param tfyK8sController.serviceMonitor.enabled Enable ServiceMonitor for the tfyK8sController
     enabled: true
+    ## @param tfyK8sController.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
     ## @param tfyK8sController.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param tfyK8sController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -1455,6 +1470,7 @@ tfyK8sController:
     TLS_DIR: /etc/tls/truefoundry
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
+    TRUEFORGE_URL: http://{{ .Release.Name }}-trueforge:8790
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -1562,6 +1578,8 @@ sfyManifestService:
   serviceMonitor:
     ## @param sfyManifestService.serviceMonitor.enabled Enable ServiceMonitor for the sfy manifest service
     enabled: true
+    ## @param sfyManifestService.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
     ## @param sfyManifestService.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param sfyManifestService.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -2280,6 +2298,8 @@ tfyBuildkitdService:
 ###################################################################################################################
 ## postgresql Settings corresponding to the postgresql database. During cleanup, make sure to remove any stray pvc that might be created.
 postgresql:
+  ## @param postgresql.fullnameOverride Fixed name matching the devMode DB_HOST in truefoundry-creds, which does not depend on the release name
+  fullnameOverride: truefoundry-postgresql
   ## @skip postgresql.global Global settings for the postgresql database
   global:
     security:
@@ -2383,6 +2403,8 @@ tfyController:
   serviceMonitor:
     ## @param tfyController.serviceMonitor.enabled Enable ServiceMonitor for the tfyController
     enabled: true
+    ## @param tfyController.serviceMonitor.interval Interval for the ServiceMonitor
+    interval: 10s
     ## @param tfyController.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param tfyController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -2917,6 +2939,202 @@ tfy-llm-gateway:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
     networkPolicy:
       enabled: false
+  ## tfy-llm-gateway.sandbox Sandbox dev mode. The tfy-sandbox-server subchart is
+  ## off by default in the gateway chart; the control plane turns it on here so it
+  ## runs alongside the bundled gateway (SaaS overrides this off, Daytona is used there).
+  sandbox:
+    devMode:
+      ## @param tfy-llm-gateway.sandbox.devMode.enabled Run tfy-sandbox-server with the bundled gateway
+      enabled: true
+  ## Schedule dispatch is owned by the TrueForge controller.
+  agentsLtsWriteJob:
+    ## @param tfy-llm-gateway.agentsLtsWriteJob.enabled Agents LTS write CronJob (superseded by TrueForge)
+    enabled: true
+###################################################################################################################
+####################################### Shared control-plane Redis ################################################
+###################################################################################################################
+## @section redis Shared control-plane Redis (bundled)
+## `redis` and `externalRedis` are mutually exclusive. TrueForge is the only consumer today
+## (via trueforge.externalRedis); the bundled LLM gateway can be pointed at the same instance
+## later so a CP+GP install does not run two Redises forever.
+## Turn both off on dedicated gateway planes and on SaaS, where TrueForge uses its own ElastiCache.
+redis:
+  ## @param redis.enabled Deploy a Redis for the control plane
+  enabled: true
+  ## @param redis.nameOverride Name for this Redis, which keeps it distinct from the gateway's bundled Redis; the Service name is release-prefixed
+  nameOverride: truefoundry-redis
+  ## @skip redis.global Global settings for the bundled Redis
+  global:
+    security:
+      allowInsecureImages: true
+  ## @param redis.architecture Redis architecture
+  architecture: standalone
+  ## redis.auth Authentication configuration
+  auth:
+    ## @param redis.auth.enabled Enable Redis authentication (off: the instance stays inside the cluster trust boundary)
+    enabled: false
+  ## redis.image Image for Redis
+  image:
+    ## @param redis.image.registry Registry for the Redis image
+    registry: tfy.jfrog.io
+    ## @param redis.image.repository Repository for the Redis image (without registry)
+    repository: tfy-mirror/bitnamilegacy/redis
+    ## @param redis.image.tag Tag for the Redis image
+    tag: 8.2.1-debian-12-r0
+  ## @skip redis.networkPolicy NetworkPolicy for the bundled Redis (the chart-level networkPolicy section covers it)
+  networkPolicy:
+    enabled: false
+  ## redis.master Master configuration
+  master:
+    ## redis.master.persistence Persistence configuration
+    persistence:
+      ## @param redis.master.persistence.enabled Enable persistence
+      enabled: true
+      ## @param redis.master.persistence.size Persistence volume size
+      size: 8Gi
+    ## @param redis.master.nodeSelector [object] Node selector for the Redis master pod
+    nodeSelector: {}
+    ## @skip redis.master.tolerations Tolerations for the Redis master pod
+    tolerations:
+      - key: class.truefoundry.io/control-plane
+        effect: NoSchedule
+        operator: Exists
+      - key: "cloud.google.com/gke-spot"
+        value: "true"
+        effect: NoSchedule
+        operator: Equal
+      - key: kubernetes.azure.com/scalesetpriority
+        value: spot
+        effect: NoSchedule
+        operator: Equal
+## @section externalRedis Existing Redis for the control plane
+## Mutually exclusive with `redis`. Set this to reuse a Redis you already run.
+externalRedis:
+  ## @param externalRedis.enabled Use an existing Redis instead of the bundled one
+  enabled: false
+  ## @param externalRedis.url Full connection URL, e.g. redis://:password@redis-master.databases.svc:6379
+  url: ""
+###################################################################################################################
+####################################### TrueForge #################################################################
+###################################################################################################################
+## @section trueforge TrueForge server and schedule controller
+trueforge:
+  ## @param trueforge.enabled Deploy TrueForge on the control plane (turn off on dedicated gateway planes)
+  enabled: true
+  ## TrueForge uses the control-plane database rather than its bundled PostgreSQL.
+  ## @skip trueforge.postgresql Bundled PostgreSQL (disabled)
+  postgresql:
+    enabled: false
+  ## @param trueforge.externalPostgres [object] Control-plane PostgreSQL connection used by TrueForge (schema `trueforge`, hardcoded in the app)
+  externalPostgres:
+    # host / database / user are overridden from truefoundry-creds via
+    # trueforge.env below: the dependency chart only accepts valueFrom for the
+    # password. These literals are the devMode defaults and the fallback.
+    host: truefoundry-postgresql
+    port: 5432
+    database: truefoundry
+    user: postgres
+    password:
+      valueFrom:
+        secretKeyRef:
+          name: truefoundry-creds
+          key: DB_PASSWORD
+    # Matches the other control-plane services: TLS off by default. Set
+    # require/verify-* per install; verify-* trusts the CA bundle from
+    # global.customCA. Do not use "prefer": node-postgres treats it as
+    # verify-full, so it hard-fails against a non-TLS database.
+    sslMode: disable
+  ## TrueForge always uses an external Redis in control-plane installations.
+  ## @skip trueforge.redis Bundled Redis (disabled)
+  redis:
+    enabled: false
+  ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis (top-level `redis` when bundled, otherwise `externalRedis`)
+  externalRedis:
+    url:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_URL
+  ## @param trueforge.apiKey [object] Controller to server key, generated and preserved by the bootstrap job (or rendered from global.trueforgeApiKey)
+  apiKey:
+    valueFrom:
+      secretKeyRef:
+        name: trueforge-api-key
+        key: TRUEFORGE_API_KEY
+  ## @param trueforge.env [object] Control-plane integration, passed through the dependency chart's generic env map.
+  ## The TrueForge chart is platform-neutral, so everything TrueFoundry-specific is set from here.
+  ## Keys that the dependency chart already computes are replaced in place, not duplicated.
+  ## Sandbox integration (TRUEFOUNDRY_SANDBOX_ENABLED / _API_KEY / _SETTINGS_SERVER_URL) is
+  ## added here per install when the shared sandbox is used.
+  env:
+    TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL
+    TRUEFOUNDRY_API_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: truefoundry-creds
+          key: TFY_API_KEY
+    TRUEFOUNDRY_MTLS_ENABLED:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: TRUEFOUNDRY_MTLS_ENABLED
+    # Both mTLS hops share truefoundry-internal-tls, so this points at the
+    # directory the dependency chart already mounts for its inbound listener.
+    TRUEFOUNDRY_MTLS_CERTS_DIR: /etc/tls/truefoundry
+    # Overrides of values the dependency chart computes from its own fields.
+    PUBLIC_BASE_URL:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: PUBLIC_BASE_URL
+    POSTGRES_HOST:
+      valueFrom:
+        secretKeyRef:
+          name: truefoundry-creds
+          key: DB_HOST
+    POSTGRES_DB:
+      valueFrom:
+        secretKeyRef:
+          name: truefoundry-creds
+          key: DB_NAME
+    POSTGRES_USER:
+      valueFrom:
+        secretKeyRef:
+          name: truefoundry-creds
+          key: DB_USERNAME
+  ## trueforge.server TrueForge server (API and UI)
+  server:
+    ## @param trueforge.server.deploymentAnnotations [object] Annotations for the TrueForge server Deployment (rolls out after servicefoundry-server wave 2, services wave 3, gateway and sandbox wave 5)
+    deploymentAnnotations:
+      argocd.argoproj.io/sync-wave: "6"
+    ## @param trueforge.server.publicBaseUrl Public base URL, injected from the trueforge-config ConfigMap instead
+    publicBaseUrl: ""
+  ## trueforge.controller TrueForge schedule controller
+  controller:
+    ## @param trueforge.controller.enabled Deploy the TrueForge schedule controller
+    enabled: true
+    ## @param trueforge.controller.deploymentAnnotations [object] Annotations for the TrueForge controller Deployment (must roll out after the server, never in the same wave)
+    deploymentAnnotations:
+      argocd.argoproj.io/sync-wave: "7"
+    # controller.serverUrl stays empty: the chart computes the in-cluster
+    # Service URL (https when mTLS is on).
+  ## @param trueforge.mtls [object] Inbound mTLS, kept in sync with global.mTLS.enabled
+  mtls:
+    enabled: false
+    secretName: truefoundry-internal-tls
+    certsDir: /etc/tls/truefoundry
+  ## @param trueforge.imagePullSecrets [array] Image pull secrets for TrueForge (empty inherits global.imagePullSecrets)
+  imagePullSecrets: []
+  ## @param trueforge.nodeSelector [object] Node selector for TrueForge (merged over global.nodeSelector)
+  nodeSelector: {}
+  ## @param trueforge.affinity [object] Affinity for TrueForge (merged over global.affinity)
+  affinity: {}
+  ## @param trueforge.tolerations [array] Tolerations for TrueForge (appended to global.tolerations)
+  tolerations: []
 ###################################################################################################################
 ####################################### TrueFoundry OTel Collector ################################################
 ###################################################################################################################

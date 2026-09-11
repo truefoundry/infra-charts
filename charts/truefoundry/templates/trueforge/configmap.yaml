@@ -1,0 +1,22 @@
+{{- if (index .Values "trueforge" "enabled") }}
+{{- if ne .Values.global.mTLS.enabled (index .Values "trueforge" "mtls" "enabled") }}
+{{- fail "global.mTLS.enabled and trueforge.mtls.enabled must have the same value" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trueforge-config
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "truefoundry.labels" (dict "context" . "name" "trueforge-config") | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    {{- with .Values.global.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+data:
+  # Public origin including the /trueforge prefix (OAuth / MCP callbacks).
+  PUBLIC_BASE_URL: {{ printf "%s/trueforge" (trimSuffix "/" .Values.global.controlPlaneURL) | quote }}
+  TRUEFOUNDRY_MTLS_ENABLED: {{ .Values.global.mTLS.enabled | quote }}
+  TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL: {{ printf "%s://%s:%v" (ternary "https" "http" .Values.global.mTLS.enabled) (tpl .Values.global.proxy.servicefoundryServerHost .) .Values.servicefoundryServer.service.port | quote }}
+{{- end }}
