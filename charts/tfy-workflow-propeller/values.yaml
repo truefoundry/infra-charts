@@ -115,6 +115,12 @@ flyte-core:
     enabled: true
     ## @param flyte-core.flytepropeller.createCRDs to disable CRD creation from the subchart (managed by templates/flyteworkflow-crd.yaml instead)
     createCRDs: false
+    ## flyte-core.flytepropeller.image to set the flytepropeller image
+    image:
+      ## @param flyte-core.flytepropeller.image.repository to set the flytepropeller image repository
+      repository: cr.flyte.org/flyteorg/flytepropeller-release
+      ## @param flyte-core.flytepropeller.image.tag to set the flytepropeller image tag (pinned to match flyte-core chart version)
+      tag: v1.15.3
     resources:
       limits:
         ## @param flyte-core.flytepropeller.resources.limits.cpu to set the cpu limit
@@ -136,6 +142,84 @@ flyte-core:
       annotations:
         ## @param flyte-core.flytepropeller.serviceAccount.annotations.eks.amazonaws.com/role-arn to set the role arn to access service account
         eks.amazonaws.com/role-arn: <to_be_provided>
+      ## @param flyte-core.flytepropeller.serviceAccount.rbacScope to set RBAC scope (`cluster` or `namespace`)
+      rbacScope: cluster
+      ## @param flyte-core.flytepropeller.serviceAccount.rbacRules [array] to configure ClusterRole/Role rules for flytepropeller
+      rbacRules:
+        # Allow access to PODS
+        - apiGroups:
+            - ""
+          resources:
+            - pods
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - update
+            - delete
+            - patch
+        # Allow Event recording access
+        - apiGroups:
+            - ""
+          resources:
+            - events
+          verbs:
+            - create
+            - update
+            - delete
+            - patch
+        # Allow access to namespaces
+        - apiGroups:
+            - ""
+          resources:
+            - namespaces
+            - podtemplates
+          verbs:
+            - get
+            - list
+            - watch
+        # Allow leader election via Lease
+        - apiGroups:
+            - coordination.k8s.io
+          resources:
+            - leases
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - update
+            - delete
+            - patch
+        # Allow Access to CRD
+        - apiGroups:
+            - apiextensions.k8s.io
+          resources:
+            - customresourcedefinitions
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - delete
+            - update
+        # Allow Access to all resources under flyte.lyft.com
+        - apiGroups:
+            - flyte.lyft.com
+          resources:
+            - flyteworkflows
+            - flyteworkflows/finalizers
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - update
+            - delete
+            - patch
+            - post
+            - deletecollection
   ## @param flyte-core.workflow_scheduler.enabled to enable workflow scheduler
   workflow_scheduler:
     enabled: false
