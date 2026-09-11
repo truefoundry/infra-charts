@@ -123,16 +123,10 @@ spec:
         {{- include "tfy-sandbox-server.mtls.volume" . | nindent 8 }}
       nodeSelector:
         {{- include "tfy-sandbox-server.nodeSelector" . | nindent 8 }}
-      {{- $mergedAffinity := dict | merge .Values.affinity .Values.global.affinity }}
-      {{- if $mergedAffinity }}
       affinity:
-      {{- toYaml $mergedAffinity | nindent 8 }}
-      {{- end }}
+        {{- include "tfy-sandbox-server.affinity" . | nindent 8 }}
       tolerations:
-        {{- .Values.global.tolerations | toYaml | nindent 8 }}
-        {{- if .Values.tolerations }}
-        {{- .Values.tolerations | toYaml | nindent 8 }}
-        {{- end }}
+        {{- include "tfy-sandbox-server.tolerations" . | nindent 8 }}
       {{- with .Values.topologySpreadConstraints }}
       topologySpreadConstraints:
         {{- toYaml . | nindent 8 }}
