@@ -208,6 +208,32 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+  Affinity
+*/}}
+{{- define "tfy-sandbox-server.affinity" -}}
+{{- if .Values.affinity -}}
+{{ toYaml .Values.affinity }}
+{{- else if .Values.global.affinity -}}
+{{ toYaml .Values.global.affinity }}
+{{- else -}}
+{}
+{{- end }}
+{{- end -}}
+
+{{/*
+  Tolerations
+*/}}
+{{- define "tfy-sandbox-server.tolerations" -}}
+{{- if .Values.tolerations -}}
+{{ toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{ toYaml .Values.global.tolerations }}
+{{- else -}}
+[]
+{{- end }}
+{{- end -}}
+
+{{/*
   Node Selector
 */}}
 {{- define "tfy-sandbox-server.nodeSelector" -}}

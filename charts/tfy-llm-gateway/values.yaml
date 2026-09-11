@@ -8,7 +8,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.172.1"
+  gatewayChartVersion: "0.170.3"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -131,7 +131,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.172.1
+  tag: v0.170.3
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -349,7 +349,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.172.4"
+    tag: "v0.170.1"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -481,7 +481,6 @@ env:
   TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
-  TRUEFORGE_URL: '{{ .Values.global.controlPlaneURL }}/trueforge'
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
@@ -500,13 +499,13 @@ oidc:
 sandbox:
   ## sandbox.devMode devMode sandbox configuration
   devMode:
-    ## @param sandbox.devMode.enabled Enable the tfy-sandbox-server subchart (control-plane installs turn this on from the truefoundry chart; dedicated gateway planes leave it off)
-    enabled: false
+    ## @param sandbox.devMode.enabled Enable devMode sandbox
+    enabled: true
 
 ## @section agentsLtsWriteJob Agents LTS write CronJob
 agentsLtsWriteJob:
-  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job (schedule dispatch moved to the TrueForge controller)
-  enabled: false
+  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job
+  enabled: true
   ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
   resourceTier: ""
   ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
