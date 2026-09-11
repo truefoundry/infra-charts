@@ -571,6 +571,16 @@ data:
       }
       {{- end }}
 
+      {{- if (index .Values "trueforge" "enabled") }}
+      # /trueforge and /trueforge/* → / on the TrueForge server (UI is built with
+      # the /trueforge/ base path; the server itself listens on / and /api/...).
+      @trueforge path /trueforge /trueforge/*
+      handle @trueforge {
+        uri strip_prefix /trueforge
+        reverse_proxy {{ tpl .Values.global.proxy.trueforge.host . }}:{{ .Values.global.proxy.trueforge.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+      {{- end }}
+
       # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
