@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.172.5
+  controlPlaneChartVersion: 0.172.9
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -914,7 +914,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.172.5"
+    tag: "v0.172.7"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1323,7 +1323,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.172.1"
+    tag: "v0.172.4"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -2933,7 +2933,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.172.4"
+      tag: "v0.172.7"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3027,6 +3027,7 @@ trueforge:
     enabled: false
   ## @param trueforge.externalPostgres [object] Postgres for TrueForge (schema `trueforge`, hardcoded in the app). Defaults to the control-plane database via truefoundry-creds (global.database / devMode / existingTruefoundryCredsSecret). Override this object to point TrueForge at a different Postgres. Do not also set POSTGRES_* under trueforge.env — the dependency chart replaces those keys in place and they would win over this section.
   externalPostgres:
+    enabled: true
     host:
       valueFrom:
         secretKeyRef:
@@ -3059,6 +3060,7 @@ trueforge:
     enabled: false
   ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis (top-level `redis` when bundled, otherwise `externalRedis`)
   externalRedis:
+    enabled: true
     url:
       valueFrom:
         secretKeyRef:
@@ -3811,7 +3813,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.172.4"
+    tag: "v0.172.7"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
