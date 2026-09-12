@@ -18,6 +18,14 @@ alb:
     ## @param alb.ingress.idleTimeoutSeconds ALB idle timeout in seconds. Raise for long-lived connections such as websockets, SSE, and streamed logs (AWS ALB valid range 1-4000).
     ##
     idleTimeoutSeconds: 600
+    ## @param alb.ingress.accessLogs.enabled Enable ALB access logs delivery to S3
+    ## @param alb.ingress.accessLogs.bucket S3 bucket for ALB access logs. Required when accessLogs.enabled=true. Must already exist in the ALB's region with a policy allowing ELB log delivery.
+    ## @param alb.ingress.accessLogs.prefix Optional S3 key prefix for ALB access logs
+    ##
+    accessLogs:
+      enabled: false
+      bucket: ""
+      prefix: ""
     ## @param alb.ingress.annotations Additional annotations for the ALB ingress
     ##
     annotations: {}

@@ -10,7 +10,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/group.name: {{ .Release.Name }}
-    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds={{ .Values.alb.ingress.idleTimeoutSeconds }},routing.http2.enabled=true
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds={{ .Values.alb.ingress.idleTimeoutSeconds }},routing.http2.enabled=true,access_logs.s3.enabled={{ .Values.alb.ingress.accessLogs.enabled }}{{- if .Values.alb.ingress.accessLogs.enabled }},access_logs.s3.bucket={{ required "alb.ingress.accessLogs.bucket is required when alb.ingress.accessLogs.enabled is true" .Values.alb.ingress.accessLogs.bucket }}{{- if .Values.alb.ingress.accessLogs.prefix }},access_logs.s3.prefix={{ .Values.alb.ingress.accessLogs.prefix }}{{- end }}{{- end }}
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-FIPS-2023-04
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/backend-protocol: "HTTP"
