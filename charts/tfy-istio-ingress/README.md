@@ -11,13 +11,14 @@ Tfy-istio-ingress is a Helm chart that facilitates the deployment and configurat
 
 ### ALB Configuration
 
-| Name                               | Description                                | Value   |
-| ---------------------------------- | ------------------------------------------ | ------- |
-| `alb.ingress.enabled`              | Enable ALB ingress                         | `false` |
-| `alb.ingress.ingressClassName`     | Ingress class name for ALB                 | `alb`   |
-| `alb.ingress.annotations`          | Additional annotations for the ALB ingress | `{}`    |
-| `alb.ingress.flyte.enabled`        | Enable HTTP2 ALB ingress path for Flyte    | `true`  |
-| `alb.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured    | `[]`    |
+| Name                               | Description                                                                                                                            | Value   |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `alb.ingress.enabled`              | Enable ALB ingress                                                                                                                     | `false` |
+| `alb.ingress.ingressClassName`     | Ingress class name for ALB                                                                                                             | `alb`   |
+| `alb.ingress.idleTimeoutSeconds`   | ALB idle timeout in seconds. Raise for long-lived connections such as websockets, SSE, and streamed logs (AWS ALB valid range 1-4000). | `600`   |
+| `alb.ingress.annotations`          | Additional annotations for the ALB ingress                                                                                             | `{}`    |
+| `alb.ingress.flyte.enabled`        | Enable HTTP2 ALB ingress path for Flyte                                                                                                | `true`  |
+| `alb.ingress.additionalHttp2Paths` | Additional HTTP2 paths to be configured                                                                                                | `[]`    |
 
 ### AppGW Configuration
 
