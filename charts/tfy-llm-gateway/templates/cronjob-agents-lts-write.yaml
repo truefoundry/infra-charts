@@ -1,4 +1,5 @@
-{{- if .Values.agentsLtsWriteJob.enabled }}
+{{- include "tfy-llm-gateway.managedAgents.validate" . }}
+{{- if eq (include "tfy-llm-gateway.agentsLtsWriteJob.enabled" .) "true" }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
