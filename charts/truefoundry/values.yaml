@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.172.17
+  controlPlaneChartVersion: 0.172.20
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -914,7 +914,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.172.14"
+    tag: "v0.172.16"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1116,6 +1116,9 @@ servicefoundryServer:
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
+    FE_ENABLE_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
+    ENABLE_VEND_TOKEN_FOR_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
+    ENABLE_TRUEFOUNDRY_MANAGED_AGENT_WRITES: "{{ not .Values.trueforge.enabled }}"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1323,7 +1326,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.172.6"
+    tag: "v0.172.7"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1471,6 +1474,7 @@ tfyK8sController:
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
     TRUEFORGE_URL: http://{{ .Release.Name }}-trueforge:8790
+    RUN_TRUEFORGE_MIGRATIONS: "{{ .Values.trueforge.enabled }}"
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -2960,7 +2964,7 @@ tfy-llm-gateway:
 ## Turn both off on dedicated gateway planes and on SaaS, where TrueForge uses its own ElastiCache.
 redis:
   ## @param redis.enabled Deploy a Redis for the control plane
-  enabled: true
+  enabled: false
   ## @param redis.nameOverride Name for this Redis, which keeps it distinct from the gateway's bundled Redis; the Service name is release-prefixed
   nameOverride: truefoundry-redis
   ## @skip redis.global Global settings for the bundled Redis
@@ -3020,7 +3024,7 @@ externalRedis:
 ## @section trueforge TrueForge server and schedule controller
 trueforge:
   ## @param trueforge.enabled Deploy TrueForge on the control plane (turn off on dedicated gateway planes)
-  enabled: true
+  enabled: false
   ## TrueForge uses the control-plane database rather than its bundled PostgreSQL.
   ## @skip trueforge.postgresql Bundled PostgreSQL (disabled)
   postgresql:
@@ -3051,9 +3055,15 @@ trueforge:
           key: DB_PASSWORD
     # Matches the other control-plane services: TLS off by default. Set
     # require/verify-* per install; verify-* trusts the CA bundle from
-    # global.customCA. Do not use "prefer": node-postgres treats it as
-    # verify-full, so it hard-fails against a non-TLS database.
+    # global.customCA. prefer/require/verify-ca/verify-full all enable TLS with
+    # Node default verification (≈ verify-full). Use no-verify to encrypt
+    # without verifying the server cert.
     sslMode: disable
+    # Optional client / CA TLS. Mount PEMs via trueforge.extraVolumes /
+    # extraVolumeMounts, then set these to the in-pod paths.
+    sslCertPath: ""
+    sslKeyPath: ""
+    sslCaPath: ""
   ## TrueForge always uses an external Redis in control-plane installations.
   ## @skip trueforge.redis Bundled Redis (disabled)
   redis:
@@ -3078,6 +3088,7 @@ trueforge:
   ## Sandbox integration (TRUEFOUNDRY_SANDBOX_ENABLED / _API_KEY / _SETTINGS_SERVER_URL) is
   ## added here per install when the shared sandbox is used.
   env:
+    AUTOMATICALLY_MOVE_TRUEFORGE_TABLES_FROM_PUBLIC_TO_TRUEFORGE_SCHEMA: "false"
     TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL:
       valueFrom:
         configMapKeyRef:
@@ -3211,7 +3222,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.172.0"
+    tag: "v0.172.1"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3404,7 +3415,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.172.0"
+    tag: "v0.172.1"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3591,7 +3602,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.172.1
+    tag: v0.172.2
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
