@@ -47,8 +47,8 @@ spec:
           {{- else }}
           truefoundryImagePullConfigJSON: {{ .Values.truefoundry.truefoundryImagePullConfigJSON }}
           {{- end }}
-          tenantName: {{ .Values.tenantName }}
-          controlPlaneURL: {{ .Values.controlPlaneURL }}
+          tenantName: {{ .Values.tenantName | quote }}
+          controlPlaneURL: {{ .Values.controlPlaneURL | quote }}
           {{- if .Values.truefoundry.existingTruefoundryCredsSecret }}
           existingTruefoundryCredsSecret: {{ .Values.truefoundry.existingTruefoundryCredsSecret }}
           {{- else }}

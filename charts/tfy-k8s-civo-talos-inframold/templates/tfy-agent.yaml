@@ -36,8 +36,8 @@ spec:
 
         config:
           clusterToken: {{ .Values.tfyAgent.clusterToken }}
-          tenantName: {{ .Values.tenantName }}
-          controlPlaneURL: {{ .Values.controlPlaneURL }}
+          tenantName: {{ .Values.tenantName | quote }}
+          controlPlaneURL: {{ .Values.controlPlaneURL | quote }}
           clusterTokenSecret: {{ .Values.tfyAgent.clusterTokenSecret }}
         tfyAgent:
           {{- if .Values.registry }}
