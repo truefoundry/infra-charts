@@ -36,6 +36,10 @@ spec:
           - --
           - java
           - -Dtruefoundry.jwks-uri=$(SFY_SERVER_URL)/v1/keys/jwks
+          # tfy-proxy strips this prefix before the request arrives, so
+          # restore it when verifying signatures: clients sign the URL they
+          # were handed, prefix and all.
+          - -Dtruefoundry.signature-path-prefix=/api/s3proxy
           - -jar
           - ./s3proxy
           - --properties
