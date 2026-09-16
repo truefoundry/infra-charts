@@ -16,7 +16,7 @@ metadata:
     {{- end }}
 data:
   # Public origin including the /trueforge prefix (OAuth / MCP callbacks).
-  PUBLIC_BASE_URL: {{ printf "%s/trueforge" (trimSuffix "/" .Values.global.controlPlaneURL) | quote }}
+  PUBLIC_BASE_URL: {{ printf "%s/trueforge" (trimSuffix "/" (.Values.global.controlPlaneURL | default "")) | quote }}
   TRUEFOUNDRY_MTLS_ENABLED: {{ .Values.global.mTLS.enabled | quote }}
   TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL: {{ printf "%s://%s:%v" (ternary "https" "http" .Values.global.mTLS.enabled) (tpl .Values.global.proxy.servicefoundryServerHost .) .Values.servicefoundryServer.service.port | quote }}
 {{- end }}
