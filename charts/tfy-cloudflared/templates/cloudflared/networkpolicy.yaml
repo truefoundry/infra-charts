@@ -1,0 +1,93 @@
+{{- if .Values.cloudflared.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tfy-cloudflared.fullname" . }}
+  labels:
+    {{- include "tfy-cloudflared.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-cloudflared.commonAnnotations" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tfy-cloudflared.selectorLabels" . | nindent 6 }}
+  # cloudflared may forward tunnel requests to the Caddy router (and nothing
+  # else in-cluster) on egress. Ingress is restricted to the metrics port,
+  # which also serves the probe endpoints.
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only the metrics port is reachable (it serves both /metrics and the
+    # probe endpoints). Open from anywhere by default; scope the sources with
+    # `cloudflared.networkPolicy.ingress.allowedFrom`.
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.cloudflared.metricsPort }}
+      {{- with .Values.cloudflared.networkPolicy.ingress.allowedFrom }}
+      from:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  egress:
+    {{- if .Values.caddy.enabled }}
+    # Forward incoming tunnel requests only to the Caddy router on port 80.
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "tfy-cloudflared.caddySelectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 80
+    {{- end }}
+    {{- if .Values.cloudflared.networkPolicy.allowDNS }}
+    # Allow DNS to any resolver on port 53 — no destination pinned, so this
+    # works with the CoreDNS Service ClusterIP, NodeLocal DNSCache (a node
+    # link-local IP), or an external resolver, without hardcoding any of them.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- if .Values.cloudflared.networkPolicy.external.enabled }}
+    {{- $ext := .Values.cloudflared.networkPolicy.external }}
+    {{- if $ext.cidrs }}
+    # Outbound tunnel pinned to Cloudflare's documented edge IP ranges.
+    - to:
+        {{- range $ext.cidrs }}
+        - ipBlock:
+            cidr: {{ . }}
+        {{- end }}
+      {{- with $ext.ports }}
+      ports:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- else }}
+    # Outbound tunnel to any external IP (IPv4 + IPv6) except private/cluster
+    # ranges, so cloudflared cannot reach other in-cluster pods/services by IP.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            {{- with $ext.fallbackPrivateCIDRs }}
+            except:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+        - ipBlock:
+            cidr: ::/0
+            {{- with $ext.fallbackPrivateCIDRsV6 }}
+            except:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+      {{- with $ext.ports }}
+      ports:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.cloudflared.networkPolicy.extraEgress }}
+    # Operator-supplied egress rules, appended verbatim. Each entry is a full
+    # egress rule with its own `to` and `ports`, so the escape hatch stays
+    # port-scoped instead of opening every port.
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
