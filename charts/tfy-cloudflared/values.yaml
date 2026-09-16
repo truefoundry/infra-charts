@@ -46,11 +46,15 @@ cloudflared:
   extraEnv: []
   #  - name: TUNNEL_LOGLEVEL
   #    value: debug
-  ## Egress NetworkPolicy for cloudflared
+  ## NetworkPolicy for cloudflared
   networkPolicy:
-    ## @param cloudflared.networkPolicy.enabled Create an egress-only NetworkPolicy on the cloudflared pods so incoming tunnel requests can only be forwarded to the Caddy router (port 80) and no other in-cluster pod. DNS and the external Cloudflare edge are allowed separately (see below). Ingress to cloudflared (e.g. metrics scraping) is left unrestricted. Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
+    ## @param cloudflared.networkPolicy.enabled Create a NetworkPolicy on the cloudflared pods so incoming tunnel requests can only be forwarded to the Caddy router (port 80) and no other in-cluster pod. DNS and the external Cloudflare edge are allowed separately (see below). Ingress is restricted to the metrics port (which also serves the probes). Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
     enabled: true
-    ## @param cloudflared.networkPolicy.allowDNS Allow egress to DNS (port 53 UDP/TCP in any namespace) so the Caddy service and Cloudflare edge hostnames resolve.
+    ## Ingress to cloudflared. Only the metrics port is opened; it serves both /metrics and the probe endpoints.
+    ingress:
+      ## @param cloudflared.networkPolicy.ingress.allowedFrom [array] NetworkPolicyPeer entries allowed to reach the cloudflared metrics port. Empty (default) allows ingress from anywhere to that port only.
+      allowedFrom: []
+    ## @param cloudflared.networkPolicy.allowDNS Allow egress on port 53 (UDP/TCP) to any destination so the Caddy Service and Cloudflare edge hostnames resolve. Left unpinned on purpose so it works with any resolver — CoreDNS Service ClusterIP, NodeLocal DNSCache (a node link-local IP), or an external resolver — without hardcoding one.
     allowDNS: true
     ## Egress to the Cloudflare edge (the outbound tunnel).
     external:
@@ -75,12 +79,17 @@ cloudflared:
           port: 7844
         - protocol: UDP
           port: 7844
-      ## @param cloudflared.networkPolicy.external.fallbackPrivateCIDRs [array] Only used when `cidrs` is empty: private/cluster CIDRs excluded from the `0.0.0.0/0` fallback so cloudflared cannot reach in-cluster IPs directly.
+      ## @param cloudflared.networkPolicy.external.fallbackPrivateCIDRs [array] Only used when `cidrs` is empty: private/cluster IPv4 CIDRs excluded from the `0.0.0.0/0` fallback so cloudflared cannot reach in-cluster IPs directly.
       fallbackPrivateCIDRs:
         - 10.0.0.0/8
         - 172.16.0.0/12
         - 192.168.0.0/16
         - 100.64.0.0/10
+      ## @param cloudflared.networkPolicy.external.fallbackPrivateCIDRsV6 [array] Only used when `cidrs` is empty: private/cluster IPv6 CIDRs excluded from the `::/0` fallback so cloudflared cannot reach in-cluster IPs directly.
+      fallbackPrivateCIDRsV6:
+        - fc00::/7
+        - fe80::/10
+        - ::1/128
     ## @param cloudflared.networkPolicy.extraEgress [array] Escape hatch for additional egress. Each entry is a full NetworkPolicyEgressRule (its own `to` and `ports`) appended verbatim to the policy, so you keep it port-scoped rather than opening every port. Empty by default.
     extraEgress: []
     #  - to:
