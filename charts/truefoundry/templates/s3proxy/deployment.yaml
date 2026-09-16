@@ -36,6 +36,12 @@ spec:
           - --
           - java
           - -Dtruefoundry.jwks-uri=$(SFY_SERVER_URL)/v1/keys/jwks
+          {{- if .Values.global.mTLS.enabled }}
+          # The control plane answers only a caller presenting the
+          # certificate mounted here, and serves one only the internal CA
+          # vouches for, so the JWKS fetch needs both to reach it.
+          - -Dtruefoundry.mesh-tls-dir=/etc/tls/truefoundry
+          {{- end }}
           # tfy-proxy strips this prefix before the request arrives, so
           # restore it when verifying signatures: clients sign the URL they
           # were handed, prefix and all.
