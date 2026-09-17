@@ -192,6 +192,19 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+  Tolerations
+*/}}
+{{- define "tfy-sandbox-server.tolerations" -}}
+{{- if .Values.tolerations -}}
+{{- toYaml .Values.tolerations }}
+{{- else if .Values.global.tolerations -}}
+{{- toYaml .Values.global.tolerations }}
+{{- else -}}
+[]
+{{- end }}
+{{- end -}}
+
+{{/*
   Custom CA validation
 */}}
 {{- define "tfy-sandbox-server.customCA.validate" -}}
