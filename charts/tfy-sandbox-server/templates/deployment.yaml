@@ -24,6 +24,7 @@ spec:
         {{- include "tfy-sandbox-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-sandbox-server.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.automountServiceAccountToken | default false }}
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
