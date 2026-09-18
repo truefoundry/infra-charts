@@ -615,15 +615,32 @@ Shared control-plane Redis connection URL.
 only consumer today; the bundled LLM gateway can be pointed at the same instance
 later so a CP+GP install does not run two Redises forever.
 
-Renders the URL, or an empty string when neither source is enabled.
+Renders the URL, or an empty string when neither source is enabled or when the
+user brings their own `trueforge-creds` Secret (externalRedis.existingSecret) -
+in that case the URL never passes through values or a rendered manifest.
 */}}
 {{- define "truefoundry.redis.url" -}}
 {{- if and .Values.redis.enabled .Values.externalRedis.enabled -}}
 {{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
 {{- end -}}
 {{- if .Values.externalRedis.enabled -}}
-{{- required "externalRedis.url is required when externalRedis.enabled is true" .Values.externalRedis.url -}}
+{{- if and .Values.externalRedis.url .Values.externalRedis.existingSecret -}}
+{{- fail "externalRedis.url and externalRedis.existingSecret are mutually exclusive" -}}
+{{- end -}}
+{{- if not .Values.externalRedis.existingSecret -}}
+{{- required "externalRedis requires either url or existingSecret: true (pre-create the trueforge-creds Secret with a REDIS_URL key)" .Values.externalRedis.url -}}
+{{- end -}}
 {{- else if .Values.redis.enabled -}}
 {{- printf "redis://%s-master.%s.svc.cluster.local:6379" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Whether a control-plane Redis is configured at all: bundled, external by URL,
+or external via a user-managed trueforge-creds Secret. Renders "true" or "".
+*/}}
+{{- define "truefoundry.redis.available" -}}
+{{- if or .Values.redis.enabled (and .Values.externalRedis.enabled (or .Values.externalRedis.url .Values.externalRedis.existingSecret)) -}}
+true
 {{- end -}}
 {{- end -}}
