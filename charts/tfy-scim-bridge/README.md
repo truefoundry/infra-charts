@@ -40,15 +40,23 @@ On that GCP SA, grant **Service Account Token Creator** to:
 
 `serviceAccount:<gke-project>.svc.id.goog[<namespace>/<k8s-sa>]`
 
-The chart creates K8s SA `<release>-tfy-scim-bridge` in the install namespace.
+By default the pod runs on the namespace `default` SA, so `<k8s-sa>` is `default`. Annotate that SA yourself if you want ADC to become the robot SA:
 
-Optional (ADC becomes the robot SA). Annotate the K8s SA and grant **Workload Identity User**:
+```bash
+kubectl -n <namespace> annotate sa default \
+  iam.gke.io/gcp-service-account=robot@gcp-project.iam.gserviceaccount.com
+```
+
+Because the binding is on `default`, every pod in that namespace can impersonate the robot SA. Install into a namespace dedicated to this bridge, or use a dedicated SA instead:
 
 ```yaml
 serviceAccount:
+  create: true
   annotations:
     iam.gke.io/gcp-service-account: robot@gcp-project.iam.gserviceaccount.com
 ```
+
+That creates K8s SA `<release>-tfy-scim-bridge`, and the Token Creator binding must name it instead of `default`. Annotations are ignored when `serviceAccount.create` is `false`.
 
 The robot SA still needs domain-wide delegation in Google Admin (Directory readonly scopes) with `googleAdminEmail` as the impersonated admin.
 
