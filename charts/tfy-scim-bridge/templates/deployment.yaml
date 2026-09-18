@@ -44,7 +44,8 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "tfy-scim-bridge.secretName" . }}
-                  key: {{ .Values.secret.existingKey }}
+                  {{- /* An empty key name is never valid, so fall back instead of rendering it. */}}
+                  key: {{ .Values.secret.existingKey | default "SCIM_TOKEN" }}
             - name: POLL_INTERVAL_SECONDS
               value: {{ .Values.pollIntervalSeconds | quote }}
             - name: DRY_RUN
