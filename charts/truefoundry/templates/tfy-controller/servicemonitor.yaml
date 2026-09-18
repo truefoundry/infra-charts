@@ -19,7 +19,7 @@ spec:
     - targetPort: 8123
       path: /metrics
       honorLabels: true
-      interval: 10s
+      interval: {{ .Values.tfyController.serviceMonitor.interval }}
       {{- if .Values.global.mTLS.enabled }}
       scheme: https
       tlsConfig:
