@@ -49,6 +49,13 @@ spec:
               value: {{ .Values.pollIntervalSeconds | quote }}
             - name: DRY_RUN
               value: {{ .Values.dryRun | quote }}
+            {{- if .Values.secret.googleSaJsonB64 }}
+            - name: GOOGLE_SA_JSON_B64
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "tfy-scim-bridge.secretName" . }}
+                  key: GOOGLE_SA_JSON_B64
+            {{- end }}
           {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
