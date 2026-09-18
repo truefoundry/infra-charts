@@ -472,20 +472,13 @@ limits:
   rejects with "certificate required".
   Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
 */}}
-{{- define "tfy-proxy.natsUpstreamOpts" -}}
+{{- define "tfy-proxy.withNatsWebsocketTls" -}}
 {{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
-{{- $wsTls := and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) -}}
-{{- if or .Values.global.proxy.rewriteUpstreamHost $wsTls }} {
-          {{- if .Values.global.proxy.rewriteUpstreamHost }}
-          header_up Host {http.reverse_proxy.upstream.hostport}
-          header_up X-Forwarded-Host {http.request.host}
-          {{- end }}
-          {{- if $wsTls }}
+{{- if and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) }} {
           transport http {
             tls
             tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
             tls_client_auth /etc/tls/truefoundry/tls.crt /etc/tls/truefoundry/tls.key
           }
-          {{- end }}
         }{{- end }}
 {{- end }}
