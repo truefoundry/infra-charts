@@ -47,16 +47,16 @@ pollIntervalSeconds: 300
 dryRun: true
 
 secret:
-  ## @param secret.create Create a Secret for SCIM_TOKEN from secret.scimToken
-  create: true
-  ## @param secret.scimToken SCIM bearer token (do not commit real values)
-  scimToken: ""
-  ## @param secret.existingName Use this Secret instead of creating one
+  ## @param secret.existingName Use this Secret instead of creating one. Empty creates a Secret from scimToken / googleSaJsonB64.
   existingName: ""
-  ## @param secret.existingKey Key in the Secret that holds the token
-  existingKey: SCIM_TOKEN
-  ## @param secret.googleSaJsonB64 Base64 SA JSON for GOOGLE_SA_JSON_B64 (key-file auth without a volume)
+  ## @param secret.scimToken SCIM bearer token (used only when existingName is empty)
+  scimToken: ""
+  ## @param secret.scimTokenKey Key in the Secret that holds the SCIM token
+  scimTokenKey: SCIM_TOKEN
+  ## @param secret.googleSaJsonB64 Base64 SA JSON (used only when existingName is empty)
   googleSaJsonB64: ""
+  ## @param secret.googleSaJsonB64Key Key in the Secret that holds the base64 SA JSON. Set this to mount GOOGLE_SA_JSON_B64 from an existing Secret.
+  googleSaJsonB64Key: ""
 
 ## @param extraEnv [array] Extra environment variables
 extraEnv: []

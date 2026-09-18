@@ -72,3 +72,11 @@ app.kubernetes.io/component: tfy-scim-bridge
 {{- include "tfy-scim-bridge.fullname" . -}}
 {{- end -}}
 {{- end }}
+
+{{- define "tfy-scim-bridge.scimTokenKey" -}}
+{{- .Values.secret.scimTokenKey | default "SCIM_TOKEN" -}}
+{{- end }}
+
+{{- define "tfy-scim-bridge.googleSaJsonB64Key" -}}
+{{- .Values.secret.googleSaJsonB64Key | default "GOOGLE_SA_JSON_B64" -}}
+{{- end }}

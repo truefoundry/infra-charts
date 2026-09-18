@@ -44,18 +44,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "tfy-scim-bridge.secretName" . }}
-                  {{- /* An empty key name is never valid, so fall back instead of rendering it. */}}
-                  key: {{ .Values.secret.existingKey | default "SCIM_TOKEN" }}
+                  key: {{ include "tfy-scim-bridge.scimTokenKey" . }}
             - name: POLL_INTERVAL_SECONDS
               value: {{ .Values.pollIntervalSeconds | quote }}
             - name: DRY_RUN
               value: {{ .Values.dryRun | quote }}
-            {{- if .Values.secret.googleSaJsonB64 }}
+            {{- if or .Values.secret.googleSaJsonB64 .Values.secret.googleSaJsonB64Key }}
             - name: GOOGLE_SA_JSON_B64
               valueFrom:
                 secretKeyRef:
                   name: {{ include "tfy-scim-bridge.secretName" . }}
-                  key: GOOGLE_SA_JSON_B64
+                  key: {{ include "tfy-scim-bridge.googleSaJsonB64Key" . }}
             {{- end }}
           {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
