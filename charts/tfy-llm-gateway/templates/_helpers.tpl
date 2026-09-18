@@ -333,6 +333,81 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+  Validate managed agents and Redis configuration. A missing gatewayId is not fatal:
+  the umbrella chart supplies it and a standalone install still has to render, so it is
+  emitted as a warning comment in the rendered output instead.
+*/}}
+{{- define "tfy-llm-gateway.validate" -}}
+{{- if and .Values.redis.enabled .Values.externalRedis.enabled -}}
+{{- fail "redis.enabled and externalRedis.enabled cannot both be true" -}}
+{{- end -}}
+{{- if or .Values.agentsLtsWriteJob.enabled .Values.sandbox.devMode.enabled -}}
+{{- if not (or .Values.redis.enabled .Values.externalRedis.enabled) -}}
+{{- fail "redis.enabled or externalRedis.enabled is required when agents features are true" -}}
+{{- end -}}
+{{- if not .Values.gatewayId }}
+# WARNING: agent feature components are enabled but gatewayId is empty; managed agent features stay off until gatewayId is set.
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+  Redis environment shared by the gateway and LTS write job.
+*/}}
+{{- define "tfy-llm-gateway.redis.env" -}}
+{{- $env := dict -}}
+{{- if .Values.redis.enabled -}}
+  {{- $_ := set $env "REDIS_HOST" (printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .)) -}}
+{{- else if .Values.externalRedis.enabled -}}
+  {{- with .Values.externalRedis.host }}
+    {{- $_ := set $env "REDIS_HOST" . -}}
+  {{- end -}}
+  {{- $_ := set $env "REDIS_PORT" .Values.externalRedis.port -}}
+  {{- $_ := set $env "REDIS_DB" .Values.externalRedis.db -}}
+  {{- with .Values.externalRedis.auth.username }}
+    {{- $_ := set $env "REDIS_USERNAME" . -}}
+  {{- end -}}
+  {{- with .Values.externalRedis.auth.password }}
+    {{- $_ := set $env "REDIS_PASSWORD" . -}}
+  {{- end -}}
+  {{- $_ := set $env "REDIS_TLS_ENABLED" .Values.externalRedis.tls.enabled -}}
+  {{- if .Values.externalRedis.tls.enabled -}}
+    {{- with .Values.externalRedis.tls.caCert }}
+      {{- $_ := set $env "REDIS_TLS_CA_CERT" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.tls.serverName }}
+      {{- $_ := set $env "REDIS_TLS_SERVERNAME" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.tls.cert }}
+      {{- $_ := set $env "REDIS_TLS_CERT" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.tls.key }}
+      {{- $_ := set $env "REDIS_TLS_KEY" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.tls.keyPassphrase }}
+      {{- $_ := set $env "REDIS_TLS_KEY_PASSPHRASE" . -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $_ := set $env "REDIS_SENTINEL_ENABLED" .Values.externalRedis.sentinel.enabled -}}
+  {{- if .Values.externalRedis.sentinel.enabled -}}
+    {{- with .Values.externalRedis.sentinel.nodes }}
+      {{- $_ := set $env "REDIS_SENTINEL_NODES" (join "," .) -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.sentinel.masterName }}
+      {{- $_ := set $env "REDIS_SENTINEL_MASTER_NAME" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.sentinel.auth.username }}
+      {{- $_ := set $env "REDIS_SENTINEL_USERNAME" . -}}
+    {{- end -}}
+    {{- with .Values.externalRedis.sentinel.auth.password }}
+      {{- $_ := set $env "REDIS_SENTINEL_PASSWORD" . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- toYaml $env -}}
+{{- end -}}
+
+{{/*
   Parse env from template
   */}}
 {{- define "tfy-llm-gateway.parseEnv" -}}
@@ -343,7 +418,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the env file
   */}}
 {{- define "tfy-llm-gateway.env" }}
-{{- range $key, $val := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
+{{- include "tfy-llm-gateway.validate" . }}
+{{- $env := include "tfy-llm-gateway.redis.env" . | fromYaml | default dict }}
+{{- $explicitEnv := (include "tfy-llm-gateway.parseEnv" .) | fromYaml | default dict }}
+{{- $env = mergeOverwrite $env $explicitEnv }}
+{{- range $key, $val := $env }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -366,10 +445,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 - name: {{ $key }}
   value: {{ $val | quote }}
 {{- end }}
-{{- end }}
-{{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
-- name: REDIS_HOST
-  value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
 {{- if and .Values.sandbox.devMode.enabled (not (hasKey .Values.env "SANDBOX_ENABLED")) }}
 - name: SANDBOX_ENABLED
@@ -839,7 +914,11 @@ limits:
 {{- end }}
 
 {{- define "tfy-llm-gateway.agentsLtsWriteJob.env" }}
-{{- range $key, $val := (include "tfy-llm-gateway.agentsLtsWriteJob.parseEnv" .) | fromYaml }}
+{{- include "tfy-llm-gateway.validate" . }}
+{{- $env := include "tfy-llm-gateway.redis.env" . | fromYaml | default dict }}
+{{- $explicitEnv := (include "tfy-llm-gateway.agentsLtsWriteJob.parseEnv" .) | fromYaml | default dict }}
+{{- $env = mergeOverwrite $env $explicitEnv }}
+{{- range $key, $val := $env }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -860,10 +939,6 @@ limits:
 - name: {{ $key }}
   value: {{ $val | quote }}
 {{- end }}
-{{- end }}
-{{- if and .Values.redis.enabled (not (and .Values.agentsLtsWriteJob.env .Values.agentsLtsWriteJob.env.REDIS_HOST)) }}
-- name: REDIS_HOST
-  value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
 {{- end }}
 

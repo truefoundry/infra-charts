@@ -24,14 +24,18 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.172.17
+  controlPlaneChartVersion: 0.172.25
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
     enabled: false
-  # If you have an existing truefoundry-creds secret, provide the name here.
-  # This will ignore `.global.database` and `.global.tfyApiKey` values.
-  ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
+  # Set any non-empty value to skip rendering the `truefoundry-creds` Secret and
+  # bring your own instead. The pre-created Secret must be named exactly
+  # `truefoundry-creds` (services reference that name directly, not this value)
+  # and live in the release namespace with keys DB_HOST, DB_USERNAME,
+  # DB_PASSWORD, DB_NAME and TFY_API_KEY. `.global.database` and
+  # `.global.tfyApiKey` are ignored when this is set.
+  ## @param global.existingTruefoundryCredsSecret Non-empty skips rendering the `truefoundry-creds` Secret; pre-create it (that exact name) with DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME and TFY_API_KEY
   existingTruefoundryCredsSecret: ""
   ## global.ingress Ingress configuration for the control plane
   ingress:
@@ -914,7 +918,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.172.14"
+    tag: "v0.172.18"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1116,6 +1120,10 @@ servicefoundryServer:
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
+    FE_ENABLE_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
+    ENABLE_VEND_TOKEN_FOR_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
+    ENABLE_TRUEFOUNDRY_MANAGED_AGENT_WRITES: "{{ not .Values.trueforge.enabled }}"
+    TRUEFORGE_BASE_URL: '{{ .Values.global.controlPlaneURL }}/trueforge'
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1323,7 +1331,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.172.6"
+    tag: "v0.172.7"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1471,6 +1479,7 @@ tfyK8sController:
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
     TRUEFORGE_URL: http://{{ .Release.Name }}-trueforge:8790
+    RUN_TRUEFORGE_MIGRATIONS: "{{ .Values.trueforge.enabled }}"
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
@@ -2933,23 +2942,12 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.172.7"
+      tag: "v0.172.9"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
     networkPolicy:
       enabled: false
-  ## tfy-llm-gateway.sandbox Sandbox dev mode. The tfy-sandbox-server subchart is
-  ## off by default in the gateway chart; the control plane turns it on here so it
-  ## runs alongside the bundled gateway (SaaS overrides this off, Daytona is used there).
-  sandbox:
-    devMode:
-      ## @param tfy-llm-gateway.sandbox.devMode.enabled Run tfy-sandbox-server with the bundled gateway
-      enabled: true
-  ## Schedule dispatch is owned by the TrueForge controller.
-  agentsLtsWriteJob:
-    ## @param tfy-llm-gateway.agentsLtsWriteJob.enabled Agents LTS write CronJob (superseded by TrueForge)
-    enabled: true
 ###################################################################################################################
 ####################################### Shared control-plane Redis ################################################
 ###################################################################################################################
@@ -2960,7 +2958,7 @@ tfy-llm-gateway:
 ## Turn both off on dedicated gateway planes and on SaaS, where TrueForge uses its own ElastiCache.
 redis:
   ## @param redis.enabled Deploy a Redis for the control plane
-  enabled: true
+  enabled: false
   ## @param redis.nameOverride Name for this Redis, which keeps it distinct from the gateway's bundled Redis; the Service name is release-prefixed
   nameOverride: truefoundry-redis
   ## @skip redis.global Global settings for the bundled Redis
@@ -3009,23 +3007,34 @@ redis:
         operator: Equal
 ## @section externalRedis Existing Redis for the control plane
 ## Mutually exclusive with `redis`. Set this to reuse a Redis you already run.
+## The URL reaches consumers through the chart-rendered `trueforge-creds`
+## Secret. To keep a password-bearing URL out of values, leave `url` empty,
+## set `existingSecret: true` and pre-create that Secret yourself (exact name
+## `trueforge-creds`, key `REDIS_URL`, release namespace), e.g. via
+## ExternalSecrets or SealedSecrets - the same pattern as
+## `global.existingTruefoundryCredsSecret` for the database.
 externalRedis:
   ## @param externalRedis.enabled Use an existing Redis instead of the bundled one
   enabled: false
-  ## @param externalRedis.url Full connection URL, e.g. redis://:password@redis-master.databases.svc:6379
+  ## @param externalRedis.url Full connection URL, e.g. redis://:password@redis-master.databases.svc:6379. Rendered into the `trueforge-creds` Secret. Mutually exclusive with `existingSecret`.
   url: ""
+  ## @param externalRedis.existingSecret Set true to bring your own `trueforge-creds` Secret (that exact name, key `REDIS_URL`) instead of putting the URL in values; the chart then renders no `trueforge-creds` Secret
+  existingSecret: false
 ###################################################################################################################
 ####################################### TrueForge #################################################################
 ###################################################################################################################
 ## @section trueforge TrueForge server and schedule controller
 trueforge:
   ## @param trueforge.enabled Deploy TrueForge on the control plane (turn off on dedicated gateway planes)
-  enabled: true
+  enabled: false
+  ## @param trueforge.truefoundry.devSandboxServerEnabled Deploy a dedicated tfy-sandbox-server for TrueForge (Service `<release>-trueforge-tfy-sandbox-server`) and wire TRUEFOUNDRY_SANDBOX_* env to it
+  truefoundry:
+    devSandboxServerEnabled: false
   ## TrueForge uses the control-plane database rather than its bundled PostgreSQL.
   ## @skip trueforge.postgresql Bundled PostgreSQL (disabled)
   postgresql:
     enabled: false
-  ## @param trueforge.externalPostgres [object] Postgres for TrueForge (schema `trueforge`, hardcoded in the app). Defaults to the control-plane database via truefoundry-creds (global.database / devMode / existingTruefoundryCredsSecret). Override this object to point TrueForge at a different Postgres. Do not also set POSTGRES_* under trueforge.env — the dependency chart replaces those keys in place and they would win over this section.
+  ## @param trueforge.externalPostgres [object] Postgres for TrueForge (schema `trueforge`, hardcoded in the app). Defaults to the control-plane database via truefoundry-creds (global.database / devMode / existingTruefoundryCredsSecret). Override this object to point TrueForge at a different Postgres. Do not also set POSTGRES_* under trueforge.env - the dependency chart replaces those keys in place and they would win over this section.
   externalPostgres:
     enabled: true
     host:
@@ -3051,14 +3060,20 @@ trueforge:
           key: DB_PASSWORD
     # Matches the other control-plane services: TLS off by default. Set
     # require/verify-* per install; verify-* trusts the CA bundle from
-    # global.customCA. Do not use "prefer": node-postgres treats it as
-    # verify-full, so it hard-fails against a non-TLS database.
+    # global.customCA. prefer/require/verify-ca/verify-full all enable TLS with
+    # Node default verification (≈ verify-full). Use no-verify to encrypt
+    # without verifying the server cert.
     sslMode: disable
+    # Optional client / CA TLS. Mount PEMs via trueforge.extraVolumes /
+    # extraVolumeMounts, then set these to the in-pod paths.
+    sslCertPath: ""
+    sslKeyPath: ""
+    sslCaPath: ""
   ## TrueForge always uses an external Redis in control-plane installations.
   ## @skip trueforge.redis Bundled Redis (disabled)
   redis:
     enabled: false
-  ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis (top-level `redis` when bundled, otherwise `externalRedis`)
+  ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis via the `trueforge-creds` Secret, which is chart-rendered from top-level `redis`/`externalRedis.url`, or user-managed when `externalRedis.existingSecret` is set
   externalRedis:
     enabled: true
     url:
@@ -3075,9 +3090,11 @@ trueforge:
   ## @param trueforge.env [object] Control-plane integration, passed through the dependency chart's generic env map.
   ## The TrueForge chart is platform-neutral, so everything TrueFoundry-specific is set from here.
   ## Keys that the dependency chart already computes are replaced in place, not duplicated.
-  ## Sandbox integration (TRUEFOUNDRY_SANDBOX_ENABLED / _API_KEY / _SETTINGS_SERVER_URL) is
-  ## added here per install when the shared sandbox is used.
+  ## Sandbox integration: trueforge.truefoundry.devSandboxServerEnabled deploys a dedicated
+  ## sandbox server and computes TRUEFOUNDRY_SANDBOX_* in the dependency chart; set those
+  ## keys here only to override it (e.g. an external provider needing _API_KEY).
   env:
+    AUTOMATICALLY_MOVE_TRUEFORGE_TABLES_FROM_PUBLIC_TO_TRUEFORGE_SCHEMA: "false"
     TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL:
       valueFrom:
         configMapKeyRef:
@@ -3211,7 +3228,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.172.0"
+    tag: "v0.172.2"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3404,7 +3421,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.172.0"
+    tag: "v0.172.2"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3591,7 +3608,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.172.1
+    tag: v0.172.2
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3813,7 +3830,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.172.7"
+    tag: "v0.172.9"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
