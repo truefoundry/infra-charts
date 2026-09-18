@@ -19,7 +19,7 @@ spec:
     - targetPort: {{ .Values.mlfoundryServer.service.port }}
       path: /metrics
       honorLabels: true
-      interval: 10s
+      interval: {{ .Values.mlfoundryServer.serviceMonitor.interval }}
       {{- if .Values.global.mTLS.enabled }}
       scheme: https
       tlsConfig:
