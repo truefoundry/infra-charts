@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "tfy-scim-bridge.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount | default 1 }}
+  replicas: {{ .Values.replicaCount }}
   strategy:
     type: Recreate
   selector:
@@ -30,7 +30,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           image: {{ include "tfy-scim-bridge.image" . }}
-          imagePullPolicy: {{ .Values.imagePullPolicy | default "IfNotPresent" }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
           env:
             - name: GOOGLE_ADMIN_EMAIL
               value: {{ required "googleAdminEmail is required" .Values.googleAdminEmail | quote }}
@@ -44,9 +44,9 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "tfy-scim-bridge.secretName" . }}
-                  key: {{ .Values.secret.existingKey | default "SCIM_TOKEN" }}
+                  key: {{ .Values.secret.existingKey }}
             - name: POLL_INTERVAL_SECONDS
-              value: {{ .Values.pollIntervalSeconds | default 300 | quote }}
+              value: {{ .Values.pollIntervalSeconds | quote }}
             - name: DRY_RUN
               value: {{ .Values.dryRun | quote }}
           {{- with .Values.extraEnv }}
