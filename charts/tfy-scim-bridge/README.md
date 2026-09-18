@@ -53,21 +53,3 @@ serviceAccount:
 The robot SA still needs domain-wide delegation in Google Admin (Directory readonly scopes) with `googleAdminEmail` as the impersonated admin.
 
 ## Parameters
-
-| Name | Description | Default |
-| --- | --- | --- |
-| `image.registry` | Image registry | `tfy.jfrog.io` |
-| `image.repository` | Image repository | `tfy-images/tfy-scim-bridge` |
-| `image.tag` | Image tag | `0.1.0` |
-| `replicaCount` | Must stay 1 | `1` |
-| `serviceAccount.create` | Create a dedicated ServiceAccount | `true` |
-| `serviceAccount.annotations` | e.g. GKE WI annotation | `{}` |
-| `googleAdminEmail` | Workspace admin to impersonate | `""` |
-| `googleServiceAccountEmail` | GCP SA used for DWD | `""` |
-| `googleGroupEmails` | Comma-separated groups; empty = whole directory | `""` |
-| `scimBaseUrl` | TrueFoundry SCIM URL | `""` |
-| `pollIntervalSeconds` | Sync interval | `300` |
-| `dryRun` | Log SCIM writes only | `true` |
-| `secret.create` | Create Secret from `secret.scimToken` | `true` |
-| `secret.scimToken` | SCIM bearer token | `""` |
-| `secret.existingName` | Use an existing Secret instead | `""` |
