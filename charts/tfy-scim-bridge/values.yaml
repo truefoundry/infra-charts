@@ -1,0 +1,80 @@
+global:
+  ## @param global.imagePullSecrets [array] Existing truefoundry image pull secret name
+  imagePullSecrets: []
+
+## @param nameOverride Override the component name used in labels
+nameOverride: ""
+## @param fullnameOverride If set, overrides the Deployment full name
+fullnameOverride: ""
+## @param replicaCount Keep at 1. This is a polling worker; extra replicas duplicate syncs.
+replicaCount: 1
+
+image:
+  ## @param image.registry Image registry
+  registry: "tfy.jfrog.io"
+  ## @param image.repository Container image repository
+  repository: "tfy-images/tfy-scim-bridge"
+  ## @param image.tag Image tag (set to the published tfy-scim-bridge-v* version)
+  tag: "0.1.1"
+## @param imagePullPolicy Image pull policy
+imagePullPolicy: IfNotPresent
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated ServiceAccount. Leave false to run on the namespace default SA. Annotations only apply when true.
+  create: false
+  ## @param serviceAccount.name Override ServiceAccount name
+  name: ""
+  ## @param serviceAccount.annotations [object] e.g. iam.gke.io/gcp-service-account for GKE WI
+  annotations: {}
+  ## @param serviceAccount.labels [object] Extra labels for the ServiceAccount
+  labels: {}
+  ## @param serviceAccount.automountServiceAccountToken Needed for GKE Workload Identity
+  automountServiceAccountToken: true
+
+## @param googleAdminEmail Workspace user admin to impersonate (DWD subject)
+googleAdminEmail: ""
+## @param googleServiceAccountEmail GCP SA email used for Directory DWD (required on GKE WI)
+googleServiceAccountEmail: ""
+## @param googleGroupEmails Comma-separated group emails to sync. Empty = whole directory.
+googleGroupEmails: ""
+## @param scimBaseUrl TrueFoundry SCIM base URL (.../scim/v2/<tenant>/<ssoId>)
+scimBaseUrl: ""
+## @param pollIntervalSeconds Seconds between sync ticks
+pollIntervalSeconds: 300
+## @param dryRun If true, log intended SCIM writes without applying them
+dryRun: true
+
+secret:
+  ## @param secret.existingName Use this Secret instead of creating one. Empty creates a Secret from scimToken / googleSaJsonB64.
+  existingName: ""
+  ## @param secret.scimToken SCIM bearer token (used only when existingName is empty)
+  scimToken: ""
+  ## @param secret.scimTokenKey Key in the Secret that holds the SCIM token
+  scimTokenKey: SCIM_TOKEN
+  ## @param secret.googleSaJsonB64 Base64 SA JSON (used only when existingName is empty)
+  googleSaJsonB64: ""
+  ## @param secret.googleSaJsonB64Key Key in the Secret that holds the base64 SA JSON. Set this to mount GOOGLE_SA_JSON_B64 from an existing Secret.
+  googleSaJsonB64Key: ""
+
+## @param extraEnv [array] Extra environment variables
+extraEnv: []
+## @param resources [object] Container resources
+resources:
+  requests:
+    cpu: 200m
+    memory: 200Mi
+  limits:
+    cpu: 500m
+    memory: 500Mi
+## @param podSecurityContext [object] Pod security context
+podSecurityContext: {}
+## @param securityContext [object] Container security context
+securityContext: {}
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+## @param tolerations [array] Tolerations
+tolerations: []
+## @param affinity [object] Affinity
+affinity: {}

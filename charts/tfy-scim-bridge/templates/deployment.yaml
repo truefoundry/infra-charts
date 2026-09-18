@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tfy-scim-bridge.fullname" . }}
+  labels:
+    {{- include "tfy-scim-bridge.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "tfy-scim-bridge.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tfy-scim-bridge.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tfy-scim-bridge.serviceAccountName" . }}
+      imagePullSecrets:
+        {{- include "tfy-scim-bridge.imagePullSecrets" . | nindent 8 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: tfy-scim-bridge
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: {{ include "tfy-scim-bridge.image" . }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          env:
+            - name: GOOGLE_ADMIN_EMAIL
+              value: {{ required "googleAdminEmail is required" .Values.googleAdminEmail | quote }}
+            - name: GOOGLE_SERVICE_ACCOUNT_EMAIL
+              value: {{ .Values.googleServiceAccountEmail | quote }}
+            - name: GOOGLE_GROUP_EMAILS
+              value: {{ .Values.googleGroupEmails | quote }}
+            - name: SCIM_BASE_URL
+              value: {{ required "scimBaseUrl is required" .Values.scimBaseUrl | quote }}
+            - name: SCIM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "tfy-scim-bridge.secretName" . }}
+                  key: {{ include "tfy-scim-bridge.scimTokenKey" . }}
+            - name: POLL_INTERVAL_SECONDS
+              value: {{ .Values.pollIntervalSeconds | quote }}
+            - name: DRY_RUN
+              value: {{ .Values.dryRun | quote }}
+            {{- if or .Values.secret.googleSaJsonB64 .Values.secret.googleSaJsonB64Key }}
+            - name: GOOGLE_SA_JSON_B64
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "tfy-scim-bridge.secretName" . }}
+                  key: {{ include "tfy-scim-bridge.googleSaJsonB64Key" . }}
+            {{- end }}
+          {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
