@@ -29,6 +29,11 @@ data:
       servers {
         protocols h1 h2 h2c
 
+        {{- if .Values.tfyProxy.clientIp.enabled }}
+        trusted_proxies static {{ .Values.tfyProxy.clientIp.trustedProxies }}
+        client_ip_headers {{ .Values.tfyProxy.clientIp.headers }}
+        {{- end }}
+
         timeouts {
           write 0
           idle 0
@@ -581,10 +586,10 @@ data:
       }
       {{- end }}
 
-      # NATS WS direct path
+      # NATS WS direct path (Host rewrite matters here too — see tfy-proxy.natsUpstreamOpts)
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
+        {{- include "tfy-proxy.natsUpstreamOpts" . }}
       }
 
       # Catch-all: WS first, then assets, then SPA
@@ -595,7 +600,7 @@ data:
         }
 
         reverse_proxy @websocket {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
+        {{- include "tfy-proxy.natsUpstreamOpts" . }}
 
         @assets {
           path /assets/*
