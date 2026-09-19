@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.173.1
+  controlPlaneChartVersion: 0.173.2
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -96,7 +96,7 @@ global:
     ## @param global.proxy.enabled Bool to enable proxy for the control plane
     enabled: true
     ## @param global.proxy.enforceSecurityHeaders Bool to enforce security headers for the proxy
-    enforceSecurityHeaders: false
+    enforceSecurityHeaders: true
     ## @param global.proxy.contentSecurityPolicy Content-Security-Policy header value used when enforceSecurityHeaders is true
     contentSecurityPolicy: "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://widget.usepylon.com; worker-src 'self' blob:;"
     ## @param global.proxy.servicefoundryServerHost Servicefoundry server host for service routing
@@ -184,10 +184,10 @@ global:
       {{ .Release.Name }}-tfy-proxy
     ## global.proxy.cors CORS configuration for the proxy
     cors:
-      ## @param global.proxy.cors.enabled Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list, all origins are allowed. When specific origins are listed, only those are allowed.
+      ## @param global.proxy.cors.enabled Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list (or ["*"]), all origins are allowed. When specific origins are listed, only those are allowed.
       enabled: true
-      ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS (e.g. ["https://example.com"]). Leave empty to allow all origins when CORS is enabled.
-      allowedOrigins: []
+      ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS. Supports Helm templating (resolved via tpl). Defaults to controlPlaneURL. Set to [] or ["*"] to allow all origins when CORS is enabled.
+      allowedOrigins: ["{{ .Values.global.controlPlaneURL }}"]
     ## global.proxy.tls TLS configuration for the proxy
     ## When enabled, the Secret named by `secretName` is projected into
     ## /etc/caddy/tls inside the tfy-proxy container, and Caddy is configured with:
@@ -916,7 +916,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.173.0"
+    tag: "v0.173.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -2939,7 +2939,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.173.0"
+      tag: "v0.173.1"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3833,7 +3833,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.173.0"
+    tag: "v0.173.1"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.
