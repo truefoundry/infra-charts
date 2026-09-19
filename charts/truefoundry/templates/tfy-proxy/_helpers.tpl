@@ -489,3 +489,41 @@ limits:
           {{- end }}
         }{{- end }}
 {{- end }}
+
+{{/*
+  Resolve CORS allowedOrigins via tpl.
+  Default values use "{{ .Values.global.controlPlaneURL }}".
+  Set to [] or ["*"] to allow all origins.
+*/}}
+{{- define "tfy-proxy.cors.allowedOrigins" -}}
+{{- $origins := list -}}
+{{- range (.Values.global.proxy.cors.allowedOrigins | default list) }}
+{{- $resolved := trim (tpl (toString .) $) -}}
+{{- if $resolved -}}
+{{- $origins = append $origins $resolved -}}
+{{- end -}}
+{{- end -}}
+{{- $origins | toYaml -}}
+{{- end -}}
+
+{{/*
+  Build a regex alternation from resolved CORS allowedOrigins.
+  Returns empty string when the list is empty (caller should allow all).
+*/}}
+{{- define "tfy-proxy.cors.allowedOriginsRegex" -}}
+{{- $allowedOrigins := include "tfy-proxy.cors.allowedOrigins" . | fromYamlArray -}}
+{{- $regexParts := list -}}
+{{- range $allowedOrigins }}
+{{- $origin := . -}}
+{{- if eq $origin "*" -}}
+{{- $regexParts = append $regexParts ".*" -}}
+{{- else if contains "://" $origin -}}
+{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
+{{- $regexParts = append $regexParts $escaped -}}
+{{- else -}}
+{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
+{{- $regexParts = append $regexParts (printf "https?://%s" $escaped) -}}
+{{- end -}}
+{{- end -}}
+{{- $regexParts | join "|" -}}
+{{- end -}}
