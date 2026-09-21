@@ -126,7 +126,6 @@ data:
             - name: {{ $value.id | replace "." "-" }}
               mountPath: /truefoundry-build-secrets/
             {{- end }}
-            {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}
             {{- if .Values.tfyBuild.jobTemplate.extraVolumeMounts }}
             {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumeMounts | nindent 12 }}
             {{- end }}
@@ -148,7 +147,7 @@ data:
               defaultMode: 493
               sources:
               - configMap:
-                  name: {{ include "tfy-build.fullname" . }}-scripts
+                  name: tfy-build-scripts
                   items:
                   - key: download-code.sh
                     path: download-code.sh
@@ -162,7 +161,6 @@ data:
                     path: build-soci-index.sh
                   - key: update-build.sh
                     path: update-build.sh
-          {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 10 }}
           {{- if .Values.tfyBuild.jobTemplate.extraVolumes }}
           {{- toYaml .Values.tfyBuild.jobTemplate.extraVolumes | nindent 10 }}
           {{- end }}
