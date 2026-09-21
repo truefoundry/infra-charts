@@ -474,16 +474,18 @@ env:
   GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
   CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
   MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
-  TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-  TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
+  TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
+  TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
-  TRUEFORGE_URL: '{{ .Values.global.controlPlaneURL }}/trueforge'
-  CORS_ALLOWED_ORIGINS: '{{ .Values.global.controlPlaneURL }}'
+  TRUEFORGE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
+  CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
   enabled: true
+  ## @param serviceMonitor.interval Interval for the ServiceMonitor
+  interval: 10s
   ## @param serviceMonitor.additionalLabels Additional labels for the service monitor
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
