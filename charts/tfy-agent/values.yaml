@@ -83,16 +83,17 @@ config:
   ##
   tenantName: ""
 
-  ## @param config.clusterSecretStoreName Name of the ClusterSecretStore used by ExternalSecrets for this cluster.
-  ## Synced to control-plane cluster metadata as clusterSecretStoreName. Defaults to tfy-secret-store.
-  ## Ignored when config.logicalClusters is non-empty (each entry has its own store name).
+  ## @param config.clusterSecretStoreName Name of the ClusterSecretStore for single-cluster installs.
+  ## Synced to control-plane cluster metadata. Defaults to tfy-secret-store (backward compatible).
+  ## Ignored when config.logicalClusters is non-empty — each store is named after the logical cluster `name`.
   ##
   clusterSecretStoreName: "tfy-secret-store"
 
   ## @param config.logicalClusters Optional list of logical clusters sharing this physical Kubernetes cluster.
   ## When set, one ClusterSecretStore (and token secret) is created per entry.
-  ## Each entry: name (required), clusterToken or clusterTokenSecret, optional controlPlaneURL, tenantName,
-  ## namespaces, clusterSecretStoreName (default: tfy-secret-store-<name>).
+  ## `name` MUST match the TrueFoundry control-plane cluster name (same as cluster id/fqn in the token).
+  ## The ClusterSecretStore is created with that same name (no separate store-name config).
+  ## Each entry: name (required), clusterToken or clusterTokenSecret, optional controlPlaneURL, tenantName, namespaces.
   ##
   logicalClusters: []
 
