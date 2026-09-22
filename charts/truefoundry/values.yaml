@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.173.10
+  controlPlaneChartVersion: 0.173.11
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -889,7 +889,7 @@ s3proxy:
     jcloudsProvider: aws-s3
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
   env:
-    SFY_SERVER_URL: http{{ if .Values.global.mTLS.enabled }}s{{ end }}://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
 ###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
