@@ -80,6 +80,8 @@ global:
     securityContext:
       ## Enable/disable this to override the global.containerSecurityContext
       # enabled: true
+      runAsNonRoot: true
+      runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
@@ -128,7 +130,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.173.0
+  tag: v0.172.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -283,8 +285,6 @@ rollout:
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
   enabled: true
-  ## @param serviceMonitor.interval Scrape interval for the service monitor
-  interval: 10s
   ## @param serviceMonitor.additionalLabels Additional labels for the service monitor
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
