@@ -293,11 +293,11 @@ recorder:
 ## health check can never pass, and the LoadBalancer hostname is never resolved into an
 ## endpoint, so the resource sits in EndpointsPending forever with nothing logged.
 ##
-## The relay's DEVICE TAGS must be owned in the tailnet policy file BEFORE enabling this.
+## The relay's DEVICE TAG must be owned in the tailnet policy file BEFORE enabling this.
 ## An undeclared tag is rejected outright and the device silently fails to register; tags
-## are immutable afterwards, so the fix is delete and re-provision, not an edit. A cluster
-## with tailnet.coarse set needs all four of tag:k8s-relay-<clusterSlug>,
-## tag:k8s-relay-env-<env>, tag:k8s-relay-cloud-<cloud> and tag:k8s-relay-plane-<plane>.
+## are immutable afterwards, so the fix is delete and re-provision, not an edit. A relay
+## carries tag:k8s-relay-<clusterSlug> and nothing else -- deliberately no coarse tags,
+## since the only rule that may ever name a relay is a per-cluster cap/relay grant.
 
 peerRelay:
   ## @param peerRelay.enabled Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.

@@ -13,13 +13,26 @@ metadata:
     argocd.argoproj.io/sync-options: Prune=false
 spec:
   replicas: {{ .Values.peerRelay.replicas }}
-  # DEVICE tags, and no base tag. A peer relay advertises no routes and no exit node, and
-  # autoApprovers governs only those, so it takes no autoApprovers entry -- the Recorder
-  # precedent. (The CRD's spec.tags field doc mentions autoapprovers; that is inherited
-  # ProxyGroup boilerplate.) Every tag rendered here must be owned in the policy file before
-  # this is enabled: an undeclared tag is rejected and the device never registers.
+  # DEVICE tags: the per-cluster role tag ONLY -- no base tag and, unlike every other role
+  # here, no coarse tags.
+  #
+  # A relay is named by exactly one kind of rule: a cap/relay grant whose dst is this
+  # cluster's relay. A coarse "every relay on cloud-aws" dst is not a rule we can ever write
+  # -- coarse tags are dual-owned across the dev and production operators, so such a grant
+  # would let a dev operator mint a device that relays production sessions, which is the
+  # dev -> prod reopening policy.hujson forbids permanently. Coarse relay tags would
+  # therefore be owned by nothing and consumed by nothing, while still costing a tagOwners
+  # entry per cluster per dimension and a silent registration failure whenever one is
+  # missed. The Recorder's coarse tags are exactly that dead weight today.
+  #
+  # No base tag either: a peer relay advertises no routes and no exit node, and autoApprovers
+  # governs only those, so it takes no autoApprovers entry. (The CRD's spec.tags field doc
+  # mentions autoapprovers; that is inherited ProxyGroup boilerplate.)
+  #
+  # This tag must be owned in the policy file before the relay is enabled: an undeclared tag
+  # is rejected and the device never registers, silently.
   tags:
-    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "relay" "base" false) | nindent 4 }}
+    - {{ include "tfy-tailscale-config.roleTag" (dict "root" . "role" "relay") | quote }}
   hostnamePrefix: {{ include "tfy-tailscale-config.relayHostnamePrefix" . }}
   {{- if .Values.peerRelay.proxyClass }}
   proxyClass: {{ .Values.peerRelay.proxyClass }}
