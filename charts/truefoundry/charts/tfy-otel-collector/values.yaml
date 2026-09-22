@@ -91,9 +91,10 @@ global:
       ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)
       registry: ""
       ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
-      repository: "tfy-mirror/alpine"
+      ## Chainguard bash (not Alpine): Alpine BusyBox is flagged for CVE-2025-60876 with no fixed tag.
+      repository: "tfy-images/bash"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
-      tag: "3.21"
+      tag: "5"
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
@@ -120,6 +121,7 @@ env:
   TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
   TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
+  CLIENT_IP_HEADER: CF-Connecting-IP
 
 ## Image configuration for otel-collector
 image:
@@ -128,7 +130,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.173.0
+  tag: v0.174.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
