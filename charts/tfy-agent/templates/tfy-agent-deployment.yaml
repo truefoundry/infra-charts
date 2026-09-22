@@ -66,6 +66,8 @@ spec:
             {{- end }}
             - name: WORKLOAD_NAMESPACE
               value: {{ .Release.Namespace | quote }}
+            - name: CLUSTER_SECRET_STORE_NAME
+              value: {{ .Values.config.clusterSecretStoreName | default "tfy-secret-store" | quote }}
             - name: CLUSTER_TOKEN
               valueFrom:
                 secretKeyRef:

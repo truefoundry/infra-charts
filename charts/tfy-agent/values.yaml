@@ -83,6 +83,19 @@ config:
   ##
   tenantName: ""
 
+  ## @param config.clusterSecretStoreName Name of the ClusterSecretStore used by ExternalSecrets for this cluster.
+  ## Synced to control-plane cluster metadata as clusterSecretStoreName. Defaults to tfy-secret-store.
+  ## Ignored when config.logicalClusters is non-empty (each entry has its own store name).
+  ##
+  clusterSecretStoreName: "tfy-secret-store"
+
+  ## @param config.logicalClusters Optional list of logical clusters sharing this physical Kubernetes cluster.
+  ## When set, one ClusterSecretStore (and token secret) is created per entry.
+  ## Each entry: name (required), clusterToken or clusterTokenSecret, optional controlPlaneURL, tenantName,
+  ## namespaces, clusterSecretStoreName (default: tfy-secret-store-<name>).
+  ##
+  logicalClusters: []
+
   ## @param config.controlPlaneNatsClusterIP ClusterIP at which nats should connect
   ##
   controlPlaneNatsClusterIP: "ws://truefoundry-tfy-nats.truefoundry.svc.cluster.local:8080"
