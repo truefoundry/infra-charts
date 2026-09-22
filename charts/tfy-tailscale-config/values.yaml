@@ -283,21 +283,15 @@ recorder:
 ## @section Peer relay
 
 ##
-## A peer relay carries traffic for devices that cannot reach each other directly. Every
-## cluster behind an AWS NAT Gateway or Azure NAT is hard NAT, so without one all of its
-## traffic falls back to Tailscale's DERP relays -- measured at roughly a tenth of the
-## throughput of a relayed-through-peer-relay path. See
+## A cluster behind an AWS NAT Gateway or Azure NAT is hard NAT: without a relay its tailnet
+## traffic falls back to DERP, measured at roughly a tenth of the throughput. See
 ## docs/planning/peer-relay-poc.md in truefoundry/tailscale-platform.
 ##
-## REQUIRES OPERATOR 1.102.3+. On 1.102.2 the relay never becomes reachable: the NLB
-## health check can never pass, and the LoadBalancer hostname is never resolved into an
-## endpoint, so the resource sits in EndpointsPending forever with nothing logged.
-##
-## The relay's DEVICE TAG must be owned in the tailnet policy file BEFORE enabling this.
-## An undeclared tag is rejected outright and the device silently fails to register; tags
-## are immutable afterwards, so the fix is delete and re-provision, not an edit. A relay
-## carries tag:k8s-relay-<clusterSlug> and nothing else -- deliberately no coarse tags,
-## since the only rule that may ever name a relay is a per-cluster cap/relay grant.
+## Two prerequisites this chart cannot check:
+##   1. OPERATOR 1.102.3+. On 1.102.2 the relay never becomes reachable and sits in
+##      EndpointsPending forever, with nothing logged.
+##   2. tag:k8s-relay-<clusterSlug> owned in the policy file. An undeclared tag is rejected
+##      and the device never registers; tags are immutable, so recovery is delete-and-recreate.
 
 peerRelay:
   ## @param peerRelay.enabled Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.
@@ -318,12 +312,11 @@ peerRelay:
   service:
     ## @param peerRelay.service.annotations [object] Extra annotations for the relay's LoadBalancer Service. On EKS the AWS Load Balancer Controller provisions an NLB across every discovered AZ with cross-zone balancing, and the operator advertises its address -- no AWS-specific configuration is needed.
     ##
-    ## spec.aws.elasticIPs is deliberately NOT exposed. Pinning Elastic IPs pins each
-    ## replica's Service to one subnet, which enables exactly one AZ on its NLB, and a pod
-    ## scheduled in another zone is then unreachable WHILE STILL REPORTING READY --
-    ## upstream measured 0 of 100 UDP probes arriving. If you truly need fixed addresses,
-    ## set the aws-load-balancer-eip-allocations and -subnets annotations here AND pin the
-    ## pods to the matching zone with peerRelay.proxyClass, deliberately and together.
+    ## spec.aws.elasticIPs is deliberately NOT exposed: pinning EIPs confines the whole
+    ## PeerRelay to one AZ, and a pod scheduled elsewhere is unreachable while still
+    ## reporting ready (upstream measured 0 of 100 UDP probes arriving). If you need fixed
+    ## addresses, set the eip-allocations and subnets annotations here AND zone-pin the pods
+    ## via peerRelay.proxyClass, together.
     annotations: {}
 
 ## @section RBAC
