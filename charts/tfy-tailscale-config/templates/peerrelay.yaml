@@ -6,27 +6,21 @@ metadata:
   labels:
     {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
   annotations:
-    # Deleting this garbage-collects the state Secret and with it the relay's device
-    # identity. Tags are immutable after creation, so a tag change is delete-and-recreate.
+    # Deleting this destroys the state Secret and with it the relay's device identity.
     argocd.argoproj.io/sync-options: Prune=false
 spec:
   replicas: {{ .Values.peerRelay.replicas }}
-  # The per-cluster role tag ONLY. No coarse tags: the only rule that may name a relay is a
-  # per-cluster cap/relay grant, and a coarse dst is forbidden -- coarse tags are dual-owned
-  # across the dev and prod operators, so it would let a dev operator mint a device that
-  # relays production sessions. No base tag either; a relay advertises no routes or exit
-  # node, so autoApprovers does not apply.
-  #
-  # Must be owned in the policy file first: an undeclared tag is rejected and the device
-  # then never registers, silently.
+  # Per-cluster tag only. No coarse tags: a coarse cap/relay dst is forbidden, since coarse
+  # tags are dual-owned across the dev and prod operators. Must be owned in the policy file
+  # first -- an undeclared tag is rejected and the device then never registers, silently.
   tags:
     - {{ include "tfy-tailscale-config.roleTag" (dict "root" . "role" "relay") | quote }}
   hostnamePrefix: {{ include "tfy-tailscale-config.relayHostnamePrefix" . }}
   {{- if .Values.peerRelay.proxyClass }}
   proxyClass: {{ .Values.peerRelay.proxyClass }}
   {{- else if .Values.proxyClasses.default.enabled }}
-  # Explicit by necessity: the operator's default-proxy-class mechanism does not apply to a
-  # PeerRelay, and the CRD has no statefulSet stanza, so this is the only route to placement.
+  # Explicit by necessity: the operator's default proxy class does not apply to a PeerRelay,
+  # and the CRD has no statefulSet stanza, so this is the only route to placement.
   proxyClass: {{ .Values.proxyClasses.default.name }}
   {{- else }}
   {{- fail "tfy-tailscale-config: peerRelay.enabled is true but no ProxyClass resolves -- proxyClasses.default.enabled is false and peerRelay.proxyClass is unset. A PeerRelay takes all placement from its ProxyClass, so it would schedule with no tolerations, affinity or pod labels. Set peerRelay.proxyClass." }}

@@ -283,15 +283,12 @@ recorder:
 ## @section Peer relay
 
 ##
-## A cluster behind an AWS NAT Gateway or Azure NAT is hard NAT: without a relay its tailnet
-## traffic falls back to DERP, measured at roughly a tenth of the throughput. See
-## docs/planning/peer-relay-poc.md in truefoundry/tailscale-platform.
+## A cluster behind an AWS or Azure NAT Gateway is hard NAT: without a relay its tailnet
+## traffic falls back to DERP, at roughly a tenth of the throughput.
 ##
-## Two prerequisites this chart cannot check:
-##   1. OPERATOR 1.102.3+. On 1.102.2 the relay never becomes reachable and sits in
-##      EndpointsPending forever, with nothing logged.
-##   2. tag:k8s-relay-<clusterSlug> owned in the policy file. An undeclared tag is rejected
-##      and the device never registers; tags are immutable, so recovery is delete-and-recreate.
+## Two prerequisites this chart cannot check, both of which fail silently:
+##   1. Operator 1.102.3+. On 1.102.2 the relay sits in EndpointsPending forever.
+##   2. tag:k8s-relay-<clusterSlug> owned in the policy file, before enabling.
 
 peerRelay:
   ## @param peerRelay.enabled Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.
@@ -312,10 +309,9 @@ peerRelay:
   service:
     ## @param peerRelay.service.annotations [object] Extra annotations for the relay's LoadBalancer Service. On EKS the AWS Load Balancer Controller provisions an NLB across every discovered AZ with cross-zone balancing, and the operator advertises its address -- no AWS-specific configuration is needed.
     ##
-    ## spec.aws.elasticIPs is deliberately NOT exposed: pinning EIPs confines the whole
-    ## PeerRelay to one AZ, and a pod scheduled elsewhere is unreachable while still
-    ## reporting ready (upstream measured 0 of 100 UDP probes arriving). If you need fixed
-    ## addresses, set the eip-allocations and subnets annotations here AND zone-pin the pods
+    ## spec.aws.elasticIPs is deliberately NOT exposed: it confines the PeerRelay to one AZ,
+    ## and a pod scheduled elsewhere is unreachable while still reporting ready. For fixed
+    ## addresses set the eip-allocations and subnets annotations here AND zone-pin the pods
     ## via peerRelay.proxyClass, together.
     annotations: {}
 
