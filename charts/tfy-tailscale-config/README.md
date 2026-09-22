@@ -162,6 +162,17 @@ for the same reason.
 | `recorder.storage`   | Recording storage. An empty object means emptyDir, which loses every recording on pod restart; set s3 for durable storage.                                                       | `{}`   |
 | `recorder.resources` | Overrides placement.resources for the recorder container. REPLACES that block outright -- it is not merged, so restate requests as well as limits.                               | `{}`   |
 
+### Peer relay
+
+| Name                            | Description                                                                                                                                                                                                                                                                                         | Value        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `peerRelay.enabled`             | Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.                                                                                                                        | `false`      |
+| `peerRelay.name`                | Kubernetes object name. The PeerRelay CRD is CLUSTER-scoped, so this name is cluster-global.                                                                                                                                                                                                        | `peer-relay` |
+| `peerRelay.replicas`            | Number of relay replicas. Each joins the tailnet as its own device with its own load balancer -- scaling this up increases the cloud bill accordingly.                                                                                                                                              | `1`          |
+| `peerRelay.hostnamePrefix`      | Device hostname prefix. The DEVICE is named "<prefix>-0", so the effective budget is 61 characters. Defaults to "<clusterSlug>-relay".                                                                                                                                                              | `""`         |
+| `peerRelay.proxyClass`          | ProxyClass for placement. Defaults to proxyClasses.default.name when that is enabled. A PeerRelay takes ALL placement from its ProxyClass -- the operator's default-proxy-class mechanism does NOT apply to it -- so the template fails rather than render a relay with no tolerations or affinity. | `""`         |
+| `peerRelay.service.annotations` | Extra annotations for the relay's LoadBalancer Service. On EKS the AWS Load Balancer Controller provisions an NLB across every discovered AZ with cross-zone balancing, and the operator advertises its address -- no AWS-specific configuration is needed.                                         | `{}`         |
+
 ### RBAC
 
 | Name                          | Description                                                                                                                                                                                | Value           |

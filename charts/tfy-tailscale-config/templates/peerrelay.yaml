@@ -1,0 +1,39 @@
+{{- if .Values.peerRelay.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: PeerRelay
+metadata:
+  name: {{ .Values.peerRelay.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    # Deleting a PeerRelay garbage-collects its state Secret, which destroys the relay's
+    # tailnet device identity. Its tags are immutable once the device exists, so a change to
+    # the tag scheme is a delete-and-re-provision, never an in-place edit. Never let a sync
+    # prune this.
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  replicas: {{ .Values.peerRelay.replicas }}
+  # DEVICE tags, and no base tag. A peer relay advertises no routes and no exit node, and
+  # autoApprovers governs only those, so it takes no autoApprovers entry -- the Recorder
+  # precedent. (The CRD's spec.tags field doc mentions autoapprovers; that is inherited
+  # ProxyGroup boilerplate.) Every tag rendered here must be owned in the policy file before
+  # this is enabled: an undeclared tag is rejected and the device never registers.
+  tags:
+    {{- include "tfy-tailscale-config.deviceTags" (dict "root" . "role" "relay" "base" false) | nindent 4 }}
+  hostnamePrefix: {{ include "tfy-tailscale-config.relayHostnamePrefix" . }}
+  {{- if .Values.peerRelay.proxyClass }}
+  proxyClass: {{ .Values.peerRelay.proxyClass }}
+  {{- else if .Values.proxyClasses.default.enabled }}
+  # Set explicitly, and not omittable: the operator's default-proxy-class mechanism does NOT
+  # apply to a PeerRelay, and a PeerRelay has no statefulSet stanza of its own, so the
+  # ProxyClass is the only route to tolerations, affinity and pod labels.
+  proxyClass: {{ .Values.proxyClasses.default.name }}
+  {{- else }}
+  {{- fail "tfy-tailscale-config: peerRelay.enabled is true but no ProxyClass resolves -- proxyClasses.default.enabled is false and peerRelay.proxyClass is unset. A PeerRelay takes ALL placement from its ProxyClass (the operator's default-proxy-class mechanism does not apply to it), so it would otherwise schedule with no tolerations, no affinity and no pod labels. Set peerRelay.proxyClass." }}
+  {{- end }}
+  {{- with .Values.peerRelay.service.annotations }}
+  service:
+    annotations:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}

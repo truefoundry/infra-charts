@@ -32,6 +32,7 @@ tailnet:
     ingress: ""
     recorder: ""
     egress: ""
+    relay: ""
   ## Coarse tags from the registry columns behind the slug, rendered as
   ## "tag:k8s-<role>-<dimension>-<value>". Access rules target these, so "everything in
   ## dev" is one rule rather than one per cluster. Each empty value is omitted.
@@ -278,6 +279,52 @@ recorder:
   ## @param recorder.resources [object] Overrides placement.resources for the recorder container. REPLACES that block outright -- it is not merged, so restate requests as well as limits.
   ##
   resources: {}
+
+## @section Peer relay
+
+##
+## A peer relay carries traffic for devices that cannot reach each other directly. Every
+## cluster behind an AWS NAT Gateway or Azure NAT is hard NAT, so without one all of its
+## traffic falls back to Tailscale's DERP relays -- measured at roughly a tenth of the
+## throughput of a relayed-through-peer-relay path. See
+## docs/planning/peer-relay-poc.md in truefoundry/tailscale-platform.
+##
+## REQUIRES OPERATOR 1.102.3+. On 1.102.2 the relay never becomes reachable: the NLB
+## health check can never pass, and the LoadBalancer hostname is never resolved into an
+## endpoint, so the resource sits in EndpointsPending forever with nothing logged.
+##
+## The relay's DEVICE TAGS must be owned in the tailnet policy file BEFORE enabling this.
+## An undeclared tag is rejected outright and the device silently fails to register; tags
+## are immutable afterwards, so the fix is delete and re-provision, not an edit. A cluster
+## with tailnet.coarse set needs all four of tag:k8s-relay-<clusterSlug>,
+## tag:k8s-relay-env-<env>, tag:k8s-relay-cloud-<cloud> and tag:k8s-relay-plane-<plane>.
+
+peerRelay:
+  ## @param peerRelay.enabled Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.
+  ##
+  enabled: false
+  ## @param peerRelay.name Kubernetes object name. The PeerRelay CRD is CLUSTER-scoped, so this name is cluster-global.
+  ##
+  name: peer-relay
+  ## @param peerRelay.replicas Number of relay replicas. Each joins the tailnet as its own device with its own load balancer -- scaling this up increases the cloud bill accordingly.
+  ##
+  replicas: 1
+  ## @param peerRelay.hostnamePrefix Device hostname prefix. The DEVICE is named "<prefix>-0", so the effective budget is 61 characters. Defaults to "<clusterSlug>-relay".
+  ##
+  hostnamePrefix: ""
+  ## @param peerRelay.proxyClass ProxyClass for placement. Defaults to proxyClasses.default.name when that is enabled. A PeerRelay takes ALL placement from its ProxyClass -- the operator's default-proxy-class mechanism does NOT apply to it -- so the template fails rather than render a relay with no tolerations or affinity.
+  ##
+  proxyClass: ""
+  service:
+    ## @param peerRelay.service.annotations [object] Extra annotations for the relay's LoadBalancer Service. On EKS the AWS Load Balancer Controller provisions an NLB across every discovered AZ with cross-zone balancing, and the operator advertises its address -- no AWS-specific configuration is needed.
+    ##
+    ## spec.aws.elasticIPs is deliberately NOT exposed. Pinning Elastic IPs pins each
+    ## replica's Service to one subnet, which enables exactly one AZ on its NLB, and a pod
+    ## scheduled in another zone is then unreachable WHILE STILL REPORTING READY --
+    ## upstream measured 0 of 100 UDP probes arriving. If you truly need fixed addresses,
+    ## set the aws-load-balancer-eip-allocations and -subnets annotations here AND pin the
+    ## pods to the matching zone with peerRelay.proxyClass, deliberately and together.
+    annotations: {}
 
 ## @section RBAC
 ##
