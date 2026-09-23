@@ -131,9 +131,7 @@
 {{- define "tfy-buildkitd-service.resources" }}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- $defaultsYaml := "" }}
-{{- if eq $tier "small" }}
-  {{- $defaultsYaml = include "tfy-buildkitd-service.defaultResources.small" . }}
-{{- else if eq $tier "medium" }}
+{{- if eq $tier "medium" }}
   {{- $defaultsYaml = include "tfy-buildkitd-service.defaultResources.medium" . }}
 {{- else if eq $tier "large" }}
   {{- $defaultsYaml = include "tfy-buildkitd-service.defaultResources.large" . }}
@@ -148,17 +146,6 @@
 {{- $limits := merge $overridesLimits $defaultsLimits }}
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
-{{- end }}
-
-{{- define "tfy-buildkitd-service.defaultResources.small" }}
-requests:
-  cpu: 1000m
-  memory: 4096Mi
-  ephemeral-storage: 100Mi
-limits:
-  cpu: 2500m
-  memory: 8192Mi
-  ephemeral-storage: 100Mi
 {{- end }}
 
 {{- define "tfy-buildkitd-service.defaultResources.medium" }}
@@ -187,8 +174,6 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.tfyBuildkitdService.replicaCount -}}
 {{ .Values.tfyBuildkitdService.replicaCount }}
-{{- else if eq $tier "small" -}}
-1
 {{- else if eq $tier "medium" -}}
 1
 {{- else if eq $tier "large" -}}
@@ -200,8 +185,6 @@ limits:
 {{- $tier := .Values.global.resourceTier | default "medium" }}
 {{- if .Values.tfyBuildkitdService.storage.size -}}
 {{ .Values.tfyBuildkitdService.storage.size }}
-{{- else if eq $tier "small" -}}
-100Gi
 {{- else if eq $tier "medium" -}}
 200Gi
 {{- else if eq $tier "large" -}}
