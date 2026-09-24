@@ -5,7 +5,16 @@ eks-node-monitoring-agent:
     ## @param eks-node-monitoring-agent.nodeAgent.image.override Override the image for the eks-node-monitoring-agent
     ##
     image:
-      override: public.ecr.aws/truefoundrycloud/eks/eks-node-monitoring-agent:v1.5.1-eksbuild.1
+      override: public.ecr.aws/truefoundrycloud/eks/eks-node-monitoring-agent:v1.7.1-eksbuild.1
+    ## @param eks-node-monitoring-agent.nodeAgent.resources [object] Resources for eks-node-monitoring-agent
+    ##
+    resources:
+      requests:
+        cpu: 60m
+        memory: 128Mi
+      limits:
+        cpu: 250m
+        memory: 200Mi
 
   dcgmAgent:
     ## @param eks-node-monitoring-agent.dcgmAgent.image.override Override the image for the dcgm-exporter
