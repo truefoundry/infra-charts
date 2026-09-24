@@ -75,6 +75,10 @@ config:
   ##
   clusterTokenSecret: ""
 
+  ## @param config.multiLogicalClusterEnabled Enable multiple logical clusters on one physical cluster
+  ##
+  multiLogicalClusterEnabled: false
+
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
   controlPlaneURL: ""
@@ -135,6 +139,21 @@ config:
   # allowedNamespaces:
   #   - default
   #   - namespace-1
+
+## @param logicalClusters Logical clusters served by this agent when config.multiLogicalClusterEnabled is true.
+## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
+## provide tokenSecretKey matching a key in that existing Secret.
+##
+logicalClusters: []
+# Example:
+# logicalClusters:
+#   - name: team-a
+#     token: ""
+#     tokenSecretKey: CLUSTER_TOKEN_TEAM_A
+#     controlPlaneURL: https://tenant-a.example.com
+#     tenantName: tenant-a
+#     namespaces: ["*"]
+#     # clusterSecretStoreName: custom-store
 
   ## @param nameOverride String to override partial name passed in helm install command
   ##

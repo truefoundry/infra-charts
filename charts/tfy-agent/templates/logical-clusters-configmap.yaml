@@ -1,0 +1,30 @@
+{{- if .Values.config.multiLogicalClusterEnabled }}
+{{- if not .Values.logicalClusters }}
+{{- fail "config.multiLogicalClusterEnabled is true but logicalClusters is empty" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}-logical-clusters
+  labels:
+    {{- include "tfy-agent.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-agent.commonAnnotations" . | nindent 4 }}
+data:
+  logical-clusters.yaml: |
+    clusters:
+    {{- range $index, $cluster := .Values.logicalClusters }}
+      {{- $name := required (printf "logicalClusters[%d].name is required" $index) $cluster.name }}
+      {{- $tenantName := required (printf "logicalClusters[%d].tenantName is required" $index) $cluster.tenantName }}
+      {{- $tokenKey := default (printf "CLUSTER_TOKEN_%s" $name) $cluster.tokenSecretKey }}
+      - name: {{ $name | quote }}
+        tokenFile: {{ printf "/etc/tfy-agent/logical-cluster-tokens/%s" $tokenKey | quote }}
+        controlPlaneURL: {{ required (printf "logicalClusters[%d].controlPlaneURL is required" $index) $cluster.controlPlaneURL | quote }}
+        tenantName: {{ $tenantName | quote }}
+        clusterSecretStoreName: {{ default (printf "tfy-secret-store-%s" $tenantName) $cluster.clusterSecretStoreName | quote }}
+        namespaces:
+        {{- range $namespace := required (printf "logicalClusters[%d].namespaces is required" $index) $cluster.namespaces }}
+          - {{ $namespace | quote }}
+        {{- end }}
+    {{- end }}
+{{- end }}
