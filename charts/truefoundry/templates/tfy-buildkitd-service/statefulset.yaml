@@ -138,7 +138,6 @@ spec:
           {{- with .Values.tfyBuildkitdService.extraVolumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}
       volumes:
         - name: buildkit-config
           configMap:
@@ -154,7 +153,6 @@ spec:
       {{- with .Values.tfyBuildkitdService.extraVolumes }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
       nodeSelector:
         {{- include "tfy-buildkitd-service.nodeSelector" . | nindent 8 }}
       affinity:

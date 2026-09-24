@@ -73,11 +73,6 @@ spec:
             httpGet:
               path: {{ .Values.healthcheck.liveness.path }}
               port: {{ .Values.healthcheck.liveness.port }}
-              {{- if ((.Values.global).mTLS).enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.healthcheck.liveness.scheme | default "HTTP" }}
-              {{- end }}
             initialDelaySeconds: {{ .Values.healthcheck.liveness.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .Values.healthcheck.liveness.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.healthcheck.liveness.timeoutSeconds | default 5 }}
@@ -87,11 +82,6 @@ spec:
             httpGet:
               path: {{ .Values.healthcheck.readiness.path }}
               port: {{ .Values.healthcheck.readiness.port }}
-              {{- if ((.Values.global).mTLS).enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.healthcheck.readiness.scheme | default "HTTP" }}
-              {{- end }}
             initialDelaySeconds: {{ .Values.healthcheck.readiness.initialDelaySeconds | default 10 }}
             periodSeconds: {{ .Values.healthcheck.readiness.periodSeconds | default 10 }}
             timeoutSeconds: {{ .Values.healthcheck.readiness.timeoutSeconds | default 5 }}
@@ -104,7 +94,6 @@ spec:
           {{- if gt (len .Values.extraVolumeMounts) 0 }}
           {{- toYaml .Values.extraVolumeMounts | nindent 10 }}
           {{- end }}
-          {{- include "tfy-llm-gateway.mtls.volumeMount" . | nindent 10 }}
           {{- if .Values.oidc.enabled }}
           - name: oidc-config
             mountPath: /etc/oidc
@@ -157,7 +146,6 @@ spec:
       {{- if gt (len .Values.extraVolumes) 0 }}
       {{- toYaml .Values.extraVolumes | nindent 6 }}
       {{- end }}
-      {{- include "tfy-llm-gateway.mtls.volume" . | nindent 6 }}
       {{- if .Values.oidc.enabled }}
       - name: oidc-config
         configMap:
