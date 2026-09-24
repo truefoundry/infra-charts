@@ -73,7 +73,7 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
-            {{- if .Values.config.multiLogicalClusterEnabled }}
+            {{- if gt (len .Values.clustersConfig) 1 }}
             - name: MULTI_LOGICAL_CLUSTER_ENABLED
               value: "true"
             - name: LOGICAL_CLUSTERS_CONFIG_PATH
@@ -107,11 +107,11 @@ spec:
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
             {{- end }}
-            {{- if .Values.config.multiLogicalClusterEnabled }}
-            - name: logical-clusters-config
+            {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: clusters-config
               mountPath: /etc/tfy-agent/logical-clusters
               readOnly: true
-            - name: logical-cluster-tokens
+            - name: cluster-tokens
               mountPath: /etc/tfy-agent/logical-cluster-tokens
               readOnly: true
             {{- end }}
@@ -126,11 +126,11 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
         {{- end }}
-        {{- if .Values.config.multiLogicalClusterEnabled }}
-        - name: logical-clusters-config
+        {{- if gt (len .Values.clustersConfig) 1 }}
+        - name: clusters-config
           configMap:
-            name: {{ include "tfy-agent.fullname" . }}-logical-clusters
-        - name: logical-cluster-tokens
+            name: {{ include "tfy-agent.fullname" . }}-clusters-config
+        - name: cluster-tokens
           secret:
             secretName: {{ include "tfy-agent.secretName" . }}
         {{- end }}

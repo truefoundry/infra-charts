@@ -1,0 +1,26 @@
+{{- if gt (len .Values.clustersConfig) 1 }}
+{{- include "tfy-agent.clustersConfig.validate" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-agent.fullname" . }}-clusters-config
+  labels:
+    {{- include "tfy-agent.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-agent.commonAnnotations" . | nindent 4 }}
+data:
+  logical-clusters.yaml: |
+    clusters:
+    {{- range $index, $cluster := .Values.clustersConfig }}
+      {{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson }}
+      - name: {{ index $resolved "name" | quote }}
+        tokenFile: {{ printf "/etc/tfy-agent/logical-cluster-tokens/%s" (index $resolved "tokenSecretKey") | quote }}
+        controlPlaneURL: {{ index $resolved "controlPlaneURL" | quote }}
+        tenantName: {{ index $resolved "tenantName" | quote }}
+        clusterSecretStoreName: {{ index $resolved "clusterSecretStoreName" | quote }}
+        namespaces:
+        {{- range $namespace := index $resolved "namespaces" }}
+          - {{ $namespace | quote }}
+        {{- end }}
+    {{- end }}
+{{- end }}

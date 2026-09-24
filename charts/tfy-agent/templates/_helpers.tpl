@@ -422,6 +422,79 @@ Uses external-secrets templating (not Helm) for .remoteRef.key.
 {{- end }}
 
 {{/*
+Resolve one clustersConfig[] entry. Expects dict with keys: index, cluster.
+*/}}
+{{- define "tfy-agent.clustersConfig.resolved" -}}
+{{- $index := .index -}}
+{{- $cluster := .cluster -}}
+{{- $name := required (printf "clustersConfig[%d].name is required" $index) $cluster.name -}}
+{{- $tenantName := required (printf "clustersConfig[%d].tenantName is required" $index) $cluster.tenantName -}}
+{{- $controlPlaneURL := required (printf "clustersConfig[%d].controlPlaneURL is required" $index) $cluster.controlPlaneURL | trimSuffix "/" -}}
+{{- dict
+  "name" $name
+  "tenantName" $tenantName
+  "controlPlaneURL" $controlPlaneURL
+  "clusterSecretStoreName" (default (printf "tfy-secret-store-%s" $tenantName) $cluster.clusterSecretStoreName)
+  "tokenSecretKey" (default (printf "CLUSTER_TOKEN_%s" $name) $cluster.tokenSecretKey)
+  "namespaces" (required (printf "clustersConfig[%d].namespaces is required" $index) $cluster.namespaces)
+  | toJson -}}
+{{- end }}
+
+{{/*
+Validate that logical clusters sharing a tenant use the same ClusterSecretStore
+and controlPlaneURL, and that a ClusterSecretStore is not shared across tenants.
+*/}}
+{{- define "tfy-agent.clustersConfig.validate" -}}
+{{- $seenStores := dict -}}
+{{- $seenTenants := dict -}}
+{{- range $index, $cluster := .Values.clustersConfig -}}
+{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson -}}
+{{- $tenantName := index $resolved "tenantName" -}}
+{{- $storeName := index $resolved "clusterSecretStoreName" -}}
+{{- $tenantConfig := printf "%s|%s" $storeName (index $resolved "controlPlaneURL") -}}
+{{- if and (hasKey $seenTenants $tenantName) (ne (get $seenTenants $tenantName) $tenantConfig) -}}
+{{- fail (printf "logical clusters sharing tenant %q must use the same ClusterSecretStore and controlPlaneURL" $tenantName) -}}
+{{- end -}}
+{{- $_ := set $seenTenants $tenantName $tenantConfig -}}
+{{- if hasKey $seenStores $storeName -}}
+{{- if ne (get $seenStores $storeName) $tenantName -}}
+{{- fail (printf "ClusterSecretStore %q cannot be shared by different tenants" $storeName) -}}
+{{- end -}}
+{{- else -}}
+{{- $_ := set $seenStores $storeName $tenantName -}}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+Unique ClusterSecretStores derived from clustersConfig, in first-seen order.
+Namespaces are the union of the namespaces of every logical cluster using the store.
+JSON object: {stores: [{clusterSecretStoreName, controlPlaneURL, tokenSecretKey, namespaces}, ...]}.
+*/}}
+{{- define "tfy-agent.clustersConfig.uniqueSecretStores" -}}
+{{- include "tfy-agent.clustersConfig.validate" . -}}
+{{- $storePositions := dict -}}
+{{- $stores := list -}}
+{{- range $index, $cluster := .Values.clustersConfig -}}
+{{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson -}}
+{{- $storeName := index $resolved "clusterSecretStoreName" -}}
+{{- if hasKey $storePositions $storeName -}}
+{{- $store := index $stores (get $storePositions $storeName) -}}
+{{- $_ := set $store "namespaces" (concat (index $store "namespaces") (index $resolved "namespaces") | uniq | sortAlpha) -}}
+{{- else -}}
+{{- $_ := set $storePositions $storeName (len $stores) -}}
+{{- $stores = append $stores (dict
+  "clusterSecretStoreName" $storeName
+  "controlPlaneURL" (index $resolved "controlPlaneURL")
+  "tokenSecretKey" (index $resolved "tokenSecretKey")
+  "namespaces" (index $resolved "namespaces" | uniq | sortAlpha)
+) -}}
+{{- end -}}
+{{- end -}}
+{{- dict "stores" $stores | toJson -}}
+{{- end }}
+
+{{/*
 ServiceAccount Labels for tfy-agent
 Priority: global.serviceAccount.labels < commonLabels < component.serviceAccount.labels
 */}}

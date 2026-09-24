@@ -75,10 +75,6 @@ config:
   ##
   clusterTokenSecret: ""
 
-  ## @param config.multiLogicalClusterEnabled Enable multiple logical clusters on one physical cluster
-  ##
-  multiLogicalClusterEnabled: false
-
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
   controlPlaneURL: ""
@@ -140,13 +136,16 @@ config:
   #   - default
   #   - namespace-1
 
-## @param logicalClusters Logical clusters served by this agent when config.multiLogicalClusterEnabled is true.
+## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled
+## automatically when this list has more than one entry.
 ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
 ## provide tokenSecretKey matching a key in that existing Secret.
+## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
+## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
 ##
-logicalClusters: []
+clustersConfig: []
 # Example:
-# logicalClusters:
+# clustersConfig:
 #   - name: team-a
 #     token: ""
 #     tokenSecretKey: CLUSTER_TOKEN_TEAM_A
