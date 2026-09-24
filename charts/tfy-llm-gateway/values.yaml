@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.174.0"
+  gatewayChartVersion: "0.172.8"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -92,6 +92,8 @@ global:
     securityContext:
       ## Enable/disable this to override the global.containerSecurityContext
       # enabled: true
+      runAsNonRoot: true
+      runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
@@ -128,7 +130,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.174.0
+  tag: v0.172.8
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -346,7 +348,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.174.0"
+    tag: "v0.172.12"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -474,18 +476,15 @@ env:
   GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
   CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
   MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
-  TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-  TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
+  TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
+  TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
-  TRUEFORGE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
-  CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
+  TRUEFORGE_URL: '{{ .Values.global.controlPlaneURL }}/trueforge'
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
   enabled: true
-  ## @param serviceMonitor.interval Interval for the ServiceMonitor
-  interval: 10s
   ## @param serviceMonitor.additionalLabels Additional labels for the service monitor
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
