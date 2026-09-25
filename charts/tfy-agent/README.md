@@ -136,6 +136,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `config.nodeEnv`                         |                                                                                                                     | `production`                                                           |
 | `config.nodeOptions`                     | Node options for tfyAgent                                                                                           | `""`                                                                   |
 | `config.allowedNamespaces`               | A list of namespaces the control plane will have access to for namespaced resources.                                | `[]`                                                                   |
+| `clustersConfig`                         | Logical clusters served by this agent. Multi-logical-cluster mode is enabled                                        | `[]`                                                                   |
 | `nameOverride`                           | String to override partial name passed in helm install command                                                      | `""`                                                                   |
 | `fullnameOverride`                       | String to override full name passed in helm install command                                                         | `""`                                                                   |
 
