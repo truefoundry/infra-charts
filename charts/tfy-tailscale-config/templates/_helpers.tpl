@@ -190,6 +190,19 @@ Length and charset are enforced per name, against patterns that differ by field:
 {{- end -}}
 
 {{/*
+The peer relay's DEVICE hostname prefix. Write-once like every other name here: the device
+is "<prefix>-0", so the budget is 61 characters, not 62 as for the ingress group.
+*/}}
+{{- define "tfy-tailscale-config.relayHostnamePrefix" -}}
+{{- $v := .Values.peerRelay.hostnamePrefix | default (printf "%s-relay" (include "tfy-tailscale-config.clusterSlug" .)) -}}
+{{- $v = $v | lower | trunc 61 | trimSuffix "-" -}}
+{{- if not (regexMatch "^[a-z0-9][a-z0-9-]*$" $v) -}}
+{{- fail (printf "tfy-tailscale-config: peerRelay.hostnamePrefix %q must match ^[a-z0-9][a-z0-9-]{0,61}$. Set peerRelay.hostnamePrefix explicitly." $v) -}}
+{{- end -}}
+{{- $v -}}
+{{- end -}}
+
+{{/*
 The egress ProxyGroup's DEVICE hostname prefix. Unlike the apiserver equivalent below this
 DOES default, and clusters run on that default -- so it is write-once like any other name
 here, not a free choice.

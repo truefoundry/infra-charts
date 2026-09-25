@@ -32,6 +32,7 @@ tailnet:
     ingress: ""
     recorder: ""
     egress: ""
+    relay: ""
   ## Coarse tags from the registry columns behind the slug, rendered as
   ## "tag:k8s-<role>-<dimension>-<value>". Access rules target these, so "everything in
   ## dev" is one rule rather than one per cluster. Each empty value is omitted.
@@ -278,6 +279,41 @@ recorder:
   ## @param recorder.resources [object] Overrides placement.resources for the recorder container. REPLACES that block outright -- it is not merged, so restate requests as well as limits.
   ##
   resources: {}
+
+## @section Peer relay
+
+##
+## A cluster behind an AWS or Azure NAT Gateway is hard NAT: without a relay its tailnet
+## traffic falls back to DERP, at roughly a tenth of the throughput.
+##
+## Two prerequisites this chart cannot check, both of which fail silently:
+##   1. Operator 1.102.3+. On 1.102.2 the relay sits in EndpointsPending forever.
+##   2. tag:k8s-relay-<clusterSlug> owned in the policy file, before enabling.
+
+peerRelay:
+  ## @param peerRelay.enabled Deploy a PeerRelay for this cluster. Off by default: each replica is fronted by its own cloud load balancer and bills accordingly, and only hard-NAT clusters gain anything.
+  ##
+  enabled: false
+  ## @param peerRelay.name Kubernetes object name. The PeerRelay CRD is CLUSTER-scoped, so this name is cluster-global.
+  ##
+  name: peer-relay
+  ## @param peerRelay.replicas Number of relay replicas. Each joins the tailnet as its own device with its own load balancer -- scaling this up increases the cloud bill accordingly.
+  ##
+  replicas: 1
+  ## @param peerRelay.hostnamePrefix Device hostname prefix. The DEVICE is named "<prefix>-0", so the effective budget is 61 characters. Defaults to "<clusterSlug>-relay".
+  ##
+  hostnamePrefix: ""
+  ## @param peerRelay.proxyClass ProxyClass for placement. Defaults to proxyClasses.default.name when that is enabled. A PeerRelay takes ALL placement from its ProxyClass -- the operator's default-proxy-class mechanism does NOT apply to it -- so the template fails rather than render a relay with no tolerations or affinity.
+  ##
+  proxyClass: ""
+  service:
+    ## @param peerRelay.service.annotations [object] Extra annotations for the relay's LoadBalancer Service. On EKS the AWS Load Balancer Controller provisions an NLB across every discovered AZ with cross-zone balancing, and the operator advertises its address -- no AWS-specific configuration is needed.
+    ##
+    ## spec.aws.elasticIPs is deliberately NOT exposed: it confines the PeerRelay to one AZ,
+    ## and a pod scheduled elsewhere is unreachable while still reporting ready. For fixed
+    ## addresses set the eip-allocations and subnets annotations here AND zone-pin the pods
+    ## via peerRelay.proxyClass, together.
+    annotations: {}
 
 ## @section RBAC
 ##

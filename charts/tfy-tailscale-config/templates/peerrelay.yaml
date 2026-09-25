@@ -1,0 +1,33 @@
+{{- if .Values.peerRelay.enabled }}
+apiVersion: tailscale.com/v1alpha1
+kind: PeerRelay
+metadata:
+  name: {{ .Values.peerRelay.name }}
+  labels:
+    {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
+  annotations:
+    # Deleting this destroys the state Secret and with it the relay's device identity.
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  replicas: {{ .Values.peerRelay.replicas }}
+  # Per-cluster tag only. No coarse tags: a coarse cap/relay dst is forbidden, since coarse
+  # tags are dual-owned across the dev and prod operators. Must be owned in the policy file
+  # first -- an undeclared tag is rejected and the device then never registers, silently.
+  tags:
+    - {{ include "tfy-tailscale-config.roleTag" (dict "root" . "role" "relay") | quote }}
+  hostnamePrefix: {{ include "tfy-tailscale-config.relayHostnamePrefix" . }}
+  {{- if .Values.peerRelay.proxyClass }}
+  proxyClass: {{ .Values.peerRelay.proxyClass }}
+  {{- else if .Values.proxyClasses.default.enabled }}
+  # Explicit by necessity: the operator's default proxy class does not apply to a PeerRelay,
+  # and the CRD has no statefulSet stanza, so this is the only route to placement.
+  proxyClass: {{ .Values.proxyClasses.default.name }}
+  {{- else }}
+  {{- fail "tfy-tailscale-config: peerRelay.enabled is true but no ProxyClass resolves -- proxyClasses.default.enabled is false and peerRelay.proxyClass is unset. A PeerRelay takes all placement from its ProxyClass, so it would schedule with no tolerations, affinity or pod labels. Set peerRelay.proxyClass." }}
+  {{- end }}
+  {{- with .Values.peerRelay.service.annotations }}
+  service:
+    annotations:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}
