@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.174.9
+  controlPlaneChartVersion: 0.175.0
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -584,7 +584,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.174.0"
+    tag: "v0.175.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -918,7 +918,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.174.7"
+    tag: "v0.175.0"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1177,7 +1177,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.174.0"
+    tag: "v0.175.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1330,7 +1330,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.174.0"
+    tag: "v0.175.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1499,7 +1499,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.174.0"
+    tag: "v0.175.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1675,7 +1675,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.174.0"
+    tag: "v0.175.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -2368,7 +2368,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.174.0
+    tag: v0.175.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2531,7 +2531,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.174.0
+    tag: v0.175.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2697,6 +2697,8 @@ tfyWorkflowAdmin:
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     SVC_FOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
+    TLS_DIR: /etc/tls/truefoundry
 ###################################################################################################################
 ################################################# Tfy Nats  #######################################################
 ###################################################################################################################
@@ -2943,7 +2945,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.174.3"
+      tag: "v0.175.0"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3018,19 +3020,58 @@ redis:
         operator: Equal
 ## @section externalRedis Existing Redis for the control plane
 ## Mutually exclusive with `redis`. Set this to reuse a Redis you already run.
-## The URL reaches consumers through the chart-rendered `trueforge-creds`
-## Secret. To keep a password-bearing URL out of values, leave `url` empty,
-## set `existingSecret: true` and pre-create that Secret yourself (exact name
-## `trueforge-creds`, key `REDIS_URL`, release namespace), e.g. via
-## ExternalSecrets or SealedSecrets - the same pattern as
-## `global.existingTruefoundryCredsSecret` for the database.
+## When trueforge is enabled, url/host/port/db/auth/tls/sentinel are copied into
+## the trueforge-creds Secret and injected into TrueForge from there. All fields
+## must be string literals; `trueforge.externalRedis.*` valueFrom refs do not work
+## here because the `trueforge.env.REDIS_*` overrides replace those env keys.
+## To keep credentials out of values, leave these fields empty, set
+## `existingSecret: true` and pre-create `trueforge-creds` yourself (exact name,
+## release namespace), e.g. via ExternalSecrets or SealedSecrets.
 externalRedis:
-  ## @param externalRedis.enabled Use an existing Redis instead of the bundled one
+  ## @param externalRedis.enabled Use an existing Redis instead of the bundled one. Required for url, host, sentinel, and existingSecret to take effect.
   enabled: false
   ## @param externalRedis.url Full connection URL, e.g. redis://:password@redis-master.databases.svc:6379. Rendered into the `trueforge-creds` Secret. Mutually exclusive with `existingSecret`.
   url: ""
-  ## @param externalRedis.existingSecret Set true to bring your own `trueforge-creds` Secret (that exact name, key `REDIS_URL`) instead of putting the URL in values; the chart then renders no `trueforge-creds` Secret
+  ## @param externalRedis.existingSecret Set true to bring your own `trueforge-creds` Secret (that exact name) instead of putting credentials in values; the chart then renders no `trueforge-creds` Secret. The `REDIS_URL` key must exist (empty is fine when using host/sentinel keys); the other `REDIS_*` keys are optional and default in the app when absent
   existingSecret: false
+  ## @param externalRedis.host Standalone Redis host
+  host: ""
+  ## @param externalRedis.port Redis port
+  port: 6379
+  ## @param externalRedis.db Redis database
+  db: 0
+  auth:
+    ## @param externalRedis.auth.username Redis username
+    username: ""
+    ## @param externalRedis.auth.password Redis password
+    password: ""
+  tls:
+    ## @param externalRedis.tls.enabled Enable TLS
+    enabled: false
+    ## @param externalRedis.tls.caCert CA certificate path or PEM
+    caCert: ""
+    ## @param externalRedis.tls.rejectUnauthorized Verify the server certificate. Set false only for self-signed certs without a CA
+    rejectUnauthorized: true
+    ## @param externalRedis.tls.serverName TLS server name
+    serverName: ""
+    ## @param externalRedis.tls.cert Client certificate path or PEM
+    cert: ""
+    ## @param externalRedis.tls.key Client key path or PEM
+    key: ""
+    ## @param externalRedis.tls.keyPassphrase Client key passphrase
+    keyPassphrase: ""
+  sentinel:
+    ## @param externalRedis.sentinel.enabled Enable Redis Sentinel
+    enabled: false
+    ## @param externalRedis.sentinel.nodes [array] Sentinel nodes as host:port entries
+    nodes: []
+    ## @param externalRedis.sentinel.masterName Sentinel master name
+    masterName: ""
+    auth:
+      ## @param externalRedis.sentinel.auth.username Sentinel username
+      username: ""
+      ## @param externalRedis.sentinel.auth.password Sentinel password
+      password: ""
 ###################################################################################################################
 ####################################### TrueForge #################################################################
 ###################################################################################################################
@@ -3084,7 +3125,10 @@ trueforge:
   ## @skip trueforge.redis Bundled Redis (disabled)
   redis:
     enabled: false
-  ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis via the `trueforge-creds` Secret, which is chart-rendered from top-level `redis`/`externalRedis.url`, or user-managed when `externalRedis.existingSecret` is set
+  ## @param trueforge.externalRedis [object] Points TrueForge at the shared control-plane Redis via the `trueforge-creds` Secret, which is chart-rendered from top-level `redis`/`externalRedis`, or user-managed when `externalRedis.existingSecret` is set.
+  ## Only the url ref lives here; the dependency chart rejects a second transport
+  ## in its values, so REDIS_HOST and the other REDIS_* keys ride trueforge.env.
+  ## The Secret holds exactly one non-empty transport and the app reads it at runtime.
   externalRedis:
     enabled: true
     url:
@@ -3101,11 +3145,130 @@ trueforge:
   ## @param trueforge.env [object] Control-plane integration, passed through the dependency chart's generic env map.
   ## The TrueForge chart is platform-neutral, so everything TrueFoundry-specific is set from here.
   ## Keys that the dependency chart already computes are replaced in place, not duplicated.
+  ## Redis host/port/db/auth/tls/sentinel come from trueforge-creds (top-level `redis` / `externalRedis`).
   ## Sandbox integration: trueforge.truefoundry.devSandboxServerEnabled deploys a dedicated
   ## sandbox server and computes TRUEFOUNDRY_SANDBOX_* in the dependency chart; set those
   ## keys here only to override it (e.g. an external provider needing _API_KEY).
   env:
     AUTOMATICALLY_MOVE_TRUEFORGE_TABLES_FROM_PUBLIC_TO_TRUEFORGE_SCHEMA: "false"
+    REDIS_HOST:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_HOST
+          optional: true
+    REDIS_PORT:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_PORT
+          optional: true
+    REDIS_DB:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_DB
+          optional: true
+    REDIS_USERNAME:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_USERNAME
+          optional: true
+    REDIS_PASSWORD:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_PASSWORD
+          optional: true
+    REDIS_TLS_ENABLED:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_ENABLED
+          optional: true
+    REDIS_TLS_CA_CERT:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_CA_CERT
+          optional: true
+    REDIS_TLS_REJECT_UNAUTHORIZED:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_REJECT_UNAUTHORIZED
+          optional: true
+    REDIS_TLS_SERVERNAME:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_SERVERNAME
+          optional: true
+    REDIS_TLS_CERT:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_CERT
+          optional: true
+    REDIS_TLS_KEY:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_KEY
+          optional: true
+    REDIS_TLS_KEY_PASSPHRASE:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_TLS_KEY_PASSPHRASE
+          optional: true
+    REDIS_SENTINEL_ENABLED:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_SENTINEL_ENABLED
+          optional: true
+    REDIS_SENTINEL_NODES:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_SENTINEL_NODES
+          optional: true
+    REDIS_SENTINEL_MASTER_NAME:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_SENTINEL_MASTER_NAME
+          optional: true
+    REDIS_SENTINEL_USERNAME:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_SENTINEL_USERNAME
+          optional: true
+    REDIS_SENTINEL_PASSWORD:
+      valueFrom:
+        secretKeyRef:
+          name: trueforge-creds
+          key: REDIS_SENTINEL_PASSWORD
+          optional: true
+    SENTRY_ENABLED:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: SENTRY_ENABLED
+    TRUEFOUNDRY_AUTH_SERVER_URL:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: TRUEFOUNDRY_AUTH_SERVER_URL
+    TRUEFOUNDRY_TENANT_NAME:
+      valueFrom:
+        configMapKeyRef:
+          name: trueforge-config
+          key: TRUEFOUNDRY_TENANT_NAME
+    SENTRY_ADDITIONAL_TAGS: '{"priority":"p1","team":"agent-team"}'
     TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL:
       valueFrom:
         configMapKeyRef:
@@ -3239,7 +3402,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.174.1"
+    tag: "v0.175.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3434,7 +3597,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.174.1"
+    tag: "v0.175.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3527,7 +3690,17 @@ deltaFusionCompaction:
   ## @param deltaFusionCompaction.resourceTierOverride Resource tier override for the deltaFusionCompaction cron job
   resourceTierOverride: ""
   ## @param deltaFusionCompaction.resources Resource requests and limits for the deltaFusionCompaction cron job
+  ## When empty, CPU/memory/ephemeral-storage come from the resource tier (global.resourceTier, default medium).
+  ## Partial overrides merge on top of the tier defaults (missing keys are filled from the tier).
   resources: {}
+  ## @param deltaFusionCompaction.additionalJobs [object] Extra compaction CronJobs. Each entry is deep-merged onto deltaFusionCompaction (nameOverride/fullnameOverride/additionalJobs are not inherited). Set enabled: false on an entry to disable it.
+  additionalJobs:
+    metrics:
+      env:
+        COMPACTION_TABLES: "gateway_request_metrics,gateway_model_metrics,gateway_real_model_metrics,gateway_virtual_model_metrics,gateway_mcp_metrics,gateway_guardrail_metrics,gateway_config_metrics"
+    agents:
+      env:
+        COMPACTION_TABLES: "gateway_feedbacks,gateway_agent_metrics,agent_session_turns,agent_session_events"
   ## @param deltaFusionCompaction.extraVolumes Extra volumes for the deltaFusionCompaction cron job
   extraVolumes: []
   ## @param deltaFusionCompaction.extraVolumeMounts Extra volume mounts for the deltaFusionCompaction cron job
@@ -3592,6 +3765,9 @@ deltaFusionCompaction:
     DELTA_KERNEL_IGNORE_COLUMNS: EventsAttributestring,EventsAttributesstring
     DELTA_KERNEL_PREFER_LARGE_VARLEN: "false"
     COMPRESSION_CODEC: snappy
+    COMPACTION_TABLES: traces,traces_v2
+    COMPACTION_TARGET_FILE_SIZE_BYTES: '1073741824'
+    DELTA_TABLE_CACHE_TTL_SECONDS: '10800'
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################
@@ -3624,7 +3800,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.174.0
+    tag: v0.175.0
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3847,7 +4023,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.174.3"
+    tag: "v0.175.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.

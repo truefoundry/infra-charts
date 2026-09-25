@@ -19,4 +19,7 @@ data:
   PUBLIC_BASE_URL: {{ printf "%s/trueforge" (trimSuffix "/" (.Values.global.controlPlaneURL | default "")) | quote }}
   TRUEFOUNDRY_MTLS_ENABLED: {{ .Values.global.mTLS.enabled | quote }}
   TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL: {{ printf "%s://%s:%v" (ternary "https" "http" .Values.global.mTLS.enabled) (tpl .Values.global.proxy.servicefoundryServerHost .) .Values.servicefoundryServer.service.port | quote }}
+  SENTRY_ENABLED: {{ include "truefoundry.sentryEnabled" . | quote }}
+  TRUEFOUNDRY_AUTH_SERVER_URL: {{ tpl .Values.global.proxy.authServerURL . | quote }}
+  TRUEFOUNDRY_TENANT_NAME: {{ .Values.global.tenantName | quote }}
 {{- end }}
