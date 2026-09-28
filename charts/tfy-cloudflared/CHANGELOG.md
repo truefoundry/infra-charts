@@ -1,5 +1,9 @@
 ## Changelog
 
+### 0.7.0
+
+- **Breaking / Security:** `caddy.allowedHosts` is now required when `caddy.enabled` is true. Previously an empty list (the default) made the Caddy router proxy to whatever `host:port` appeared in the externally supplied request path, i.e. any address reachable from the Caddy pod's network — an SSRF entry point into the cluster through the tunnel. Rendering now fails with an explicit error instead of generating an open proxy config; set `caddy.allowedHosts` to the hostnames you intend to expose (or `caddy.enabled=false`). Blank entries are ignored so they cannot widen the allowlist.
+
 ### 0.6.0
 
 - Added a NetworkPolicy for cloudflared (`cloudflared.networkPolicy.enabled`, default `true`). It pins cloudflared's in-cluster egress to the Caddy router (`caddy:80`) only, so a compromised or misconfigured tunnel cannot forward requests to any other pod on the cluster network. Ingress is restricted to the metrics port (which also serves the probes); scope the allowed sources with `cloudflared.networkPolicy.ingress.allowedFrom` (default: from anywhere). The policy renders on `cloudflared.networkPolicy.enabled` alone — the Caddy egress peer is the only rule gated on `caddy.enabled` — and is only enforced on clusters whose CNI supports NetworkPolicy (inert otherwise). This is the outbound counterpart to the Caddy ingress policy added in 0.5.0.
