@@ -1,0 +1,23 @@
+{{- if and .Values.stdioMcpProxy.enabled .Values.stdioMcpProxy.serviceMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "stdio-mcp-proxy.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "stdio-mcp-proxy.serviceMonitorLabels" . | nindent 4 }}
+  annotations:
+    {{- include "stdio-mcp-proxy.serviceMonitorAnnotations" . | nindent 4 }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ include "global.namespace" . }}
+  selector:
+    matchLabels:
+      {{- include "truefoundry.selectorLabels" (dict "context" . "name" "stdio-mcp-proxy") | nindent 6 }}
+  endpoints:
+    - targetPort: 8000
+      path: /metrics
+      honorLabels: true
+      interval: 10s
+{{- end -}}
