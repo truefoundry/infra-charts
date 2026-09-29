@@ -29,11 +29,6 @@ data:
       servers {
         protocols h1 h2 h2c
 
-        {{- if .Values.tfyProxy.clientIp.enabled }}
-        trusted_proxies static {{ .Values.tfyProxy.clientIp.trustedProxies }}
-        client_ip_headers {{ .Values.tfyProxy.clientIp.headers }}
-        {{- end }}
-
         timeouts {
           write 0
           idle 0
@@ -51,16 +46,29 @@ data:
     }
 
     {{- if .Values.global.proxy.cors.enabled }}
-    {{- $corsOriginRegex := include "tfy-proxy.cors.allowedOriginsRegex" . }}
     (cors) {
       @cors_preflight method OPTIONS
       handle @cors_preflight {
-        {{- if $corsOriginRegex }}
+        {{- if .Values.global.proxy.cors.allowedOrigins }}
+        {{- $regexParts := list }}
+        {{- range .Values.global.proxy.cors.allowedOrigins }}
+        {{- $origin := . }}
+        {{- if eq $origin "*" }}
+          {{- $regexParts = append $regexParts ".*" }}
+        {{- else if contains "://" $origin }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts $escaped }}
+        {{- else }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+        {{- end }}
+        {{- end }}
+        {{- $regex := $regexParts | join "|" }}
         @origin_allowed {
-          expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         }
         @origin_pna_cors {
-          expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
           header Access-Control-Request-Private-Network true
         }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
@@ -78,12 +86,26 @@ data:
         respond "" 204
       }
 
-      {{- if $corsOriginRegex }}
+      {{- if .Values.global.proxy.cors.allowedOrigins }}
+      {{- $regexParts := list }}
+      {{- range .Values.global.proxy.cors.allowedOrigins }}
+      {{- $origin := . }}
+      {{- if eq $origin "*" }}
+        {{- $regexParts = append $regexParts ".*" }}
+      {{- else if contains "://" $origin }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts $escaped }}
+      {{- else }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+      {{- end }}
+      {{- end }}
+      {{- $regex := $regexParts | join "|" }}
       @origin {
-        expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
       }
       @origin_pna {
-        expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         header Access-Control-Request-Private-Network true
       }
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
@@ -92,7 +114,7 @@ data:
       header @origin >Vary "Origin"
 
       @not_origin {
-        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $regex }})$")
       }
       header @not_origin -Access-Control-Allow-Origin
       header @not_origin -Access-Control-Allow-Credentials
@@ -559,10 +581,10 @@ data:
       }
       {{- end }}
 
-      # NATS WS direct path (Host rewrite matters here too — see tfy-proxy.natsUpstreamOpts)
+      # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.natsUpstreamOpts" . }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
       }
 
       # Catch-all: WS first, then assets, then SPA
@@ -573,7 +595,7 @@ data:
         }
 
         reverse_proxy @websocket {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.natsUpstreamOpts" . }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
 
         @assets {
           path /assets/*
