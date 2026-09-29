@@ -39,8 +39,12 @@ spec:
             {{- else }}
             - name: CONTROL_PLANE_URL
               value: {{ .Values.config.controlPlaneControllerClusterIP | quote }}
+            {{- /* In-cluster path only for single-cluster mode. Multi mode dials
+                 per-entry public controlPlaneURLs and needs the API gateway path. */}}
+            {{- if le (len .Values.clustersConfig) 1 }}
             - name: CONTROL_PLANE_PATH
               value: "/proxy/cluster/connect"
+            {{- end }}
             {{- end }}
             - name: CLUSTER_TOKEN
               valueFrom:
@@ -48,6 +52,8 @@ spec:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
             {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: CONTROL_PLANE_PATH
+              value: "api/proxy-server/proxy/cluster/connect"
             - name: MULTI_LOGICAL_CLUSTER_ENABLED
               value: "true"
             - name: LOGICAL_CLUSTERS_CONFIG_PATH
