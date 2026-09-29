@@ -42,17 +42,17 @@ spec:
           {{- end }}
           flytepropeller:
             {{- toYaml .Values.tfyWorkflowPropeller.flyteCore.flytepropeller | nindent 12 }}
-          {{- if and .Values.tfyWorkflowPropeller.tfySignedURLServer (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer "env") (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer.env "DEFAULT_CLOUD_PROVIDER") }}
-          tfySignedURLServer:
-            env:
-              {{ if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "aws" -}}
-              AWS_REGION: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.connection.region }}
-              S3_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
-              {{- else if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "gcp" -}}
-              GS_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
-              {{- end -}}
-              {{- toYaml .Values.tfyWorkflowPropeller.tfySignedURLServer.env | nindent 14 -}}
-          {{- end }}
+        {{- if and .Values.tfyWorkflowPropeller.tfySignedURLServer (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer "env") (hasKey .Values.tfyWorkflowPropeller.tfySignedURLServer.env "DEFAULT_CLOUD_PROVIDER") }}
+        tfySignedURLServer:
+          env:
+            {{ if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "aws" -}}
+            AWS_REGION: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.connection.region }}
+            S3_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
+            {{- else if eq .Values.tfyWorkflowPropeller.tfySignedURLServer.env.DEFAULT_CLOUD_PROVIDER "gcp" -}}
+            GS_BUCKET_NAME: {{ .Values.tfyWorkflowPropeller.flyteCore.storage.bucketName }}
+            {{- end -}}
+            {{- toYaml .Values.tfyWorkflowPropeller.tfySignedURLServer.env | nindent 12 -}}
+        {{- end }}
         {{- end }}
   project: tfy-apps
   syncPolicy:
