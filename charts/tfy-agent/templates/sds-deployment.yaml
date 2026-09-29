@@ -39,6 +39,14 @@ spec:
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
         {{- end }}
+        {{- if gt (len .Values.clustersConfig) 1 }}
+        - name: clusters-config
+          configMap:
+            name: {{ include "tfy-agent.fullname" . }}-clusters-config
+        - name: cluster-tokens
+          secret:
+            secretName: {{ include "tfy-agent.secretName" . }}
+        {{- end }}
       {{- with .Values.sdsServer.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -63,6 +71,12 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" . }}
+            {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: MULTI_LOGICAL_CLUSTER_ENABLED
+              value: "true"
+            - name: LOGICAL_CLUSTERS_CONFIG_PATH
+              value: /etc/tfy-agent/logical-clusters/logical-clusters.yaml
+            {{- end }}
           {{- range $val := .Values.sdsServer.extraEnvVars }}
             - name: {{ $val.name }}
               value: {{ $val.value | quote }}
@@ -79,9 +93,19 @@ spec:
             {{- with .Values.sdsServer.resources }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if .Values.global.customCA.enabled }}
+          {{- if or .Values.global.customCA.enabled (gt (len .Values.clustersConfig) 1) }}
           volumeMounts:
+            {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: clusters-config
+              mountPath: /etc/tfy-agent/logical-clusters
+              readOnly: true
+            - name: cluster-tokens
+              mountPath: /etc/tfy-agent/logical-cluster-tokens
+              readOnly: true
+            {{- end }}
           {{- end }}
       topologySpreadConstraints:
         {{- with .Values.sdsServer.topologySpreadConstraints }}
