@@ -80,6 +80,8 @@ global:
     securityContext:
       ## Enable/disable this to override the global.containerSecurityContext
       # enabled: true
+      runAsNonRoot: true
+      runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
@@ -91,10 +93,9 @@ global:
       ## @param global.customCA.image.registry Registry override for the CA certificates initContainer image (defaults to global.image.registry)
       registry: ""
       ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
-      ## Chainguard bash (not Alpine): Alpine BusyBox is flagged for CVE-2025-60876 with no fixed tag.
-      repository: "tfy-images/bash"
+      repository: "tfy-mirror/alpine"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
-      tag: "5"
+      tag: "3.21"
 
 ## @param env [object] Environment variables for the tfyOtelCollector
 env:
@@ -121,7 +122,6 @@ env:
   TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
   TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
-  CLIENT_IP_HEADER: CF-Connecting-IP
 
 ## Image configuration for otel-collector
 image:
@@ -130,7 +130,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.175.0
+  tag: v0.172.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -285,8 +285,6 @@ rollout:
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
   enabled: true
-  ## @param serviceMonitor.interval Scrape interval for the service monitor
-  interval: 10s
   ## @param serviceMonitor.additionalLabels Additional labels for the service monitor
   additionalLabels: {}
   ## @param serviceMonitor.additionalAnnotations Additional annotations for the service monitor
