@@ -1,0 +1,14 @@
+{{/*
+Blocks removed in 0.2.0. Helm ignores unknown values, so without this a cluster still
+enabling one would render clean and Argo CD would prune the Gateway, Service,
+VirtualServices or Certificates it used to own. Disabled or empty blocks are left alone.
+*/}}
+{{- range $key := list "certificate" "istioGateway" "issuer" "mgmt" }}
+{{- $block := index $.Values $key | default dict }}
+{{- if $block.enabled }}
+{{- fail (printf "tfy-tailscale-config: %s was removed in 0.2.0 and is still enabled here. Upgrading would delete the objects it rendered. Move them to another release first, then drop the %s block." $key $key) }}
+{{- end }}
+{{- end }}
+{{- if .Values.certificates }}
+{{- fail "tfy-tailscale-config: certificates was removed in 0.2.0 and is still set here. Upgrading would delete those Certificates. Move them to another release first, then drop the certificates block." }}
+{{- end }}

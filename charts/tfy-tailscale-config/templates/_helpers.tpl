@@ -178,7 +178,6 @@ Length and charset are enforced per name, against patterns that differ by field:
   hostnamePrefix          ^[a-z0-9][a-z0-9-]{0,61}$            -> max 62
   kubeAPIServer.hostname  ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ -> max 63, no trailing dash
   Recorder name           device is "<name>-0"                 -> max 61, RFC 1123
-  gateway Service hostname                                     -> max 63, RFC 1123
 */}}
 {{- define "tfy-tailscale-config.ingressHostnamePrefix" -}}
 {{- $v := .Values.proxyGroups.ingress.hostnamePrefix | default (printf "%s-ing" (include "tfy-tailscale-config.clusterSlug" .)) -}}
@@ -252,15 +251,6 @@ write-once warnings exist to prevent. Opt in per cluster instead.
 {{- $v -}}
 {{- end -}}
 
-{{- define "tfy-tailscale-config.gatewayServiceHostname" -}}
-{{- $v := .Values.istioGateway.service.hostname | default (printf "%s-gw" (include "tfy-tailscale-config.clusterSlug" .)) -}}
-{{- $v = $v | lower | trunc 63 | trimSuffix "-" -}}
-{{- if not (regexMatch "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" $v) -}}
-{{- fail (printf "tfy-tailscale-config: gateway Service hostname %q must match ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$. Set istioGateway.service.hostname explicitly." $v) -}}
-{{- end -}}
-{{- $v -}}
-{{- end -}}
-
 {{/*
 Require the named fields on one item of an items map. Every items block interpolates
 namespace and a backend directly into an object; omitted, they render null or a printf
@@ -268,7 +258,7 @@ error rather than failing, and the result is a resource in the wrong namespace o
 to nowhere that reports healthy.
 
 Call as:
-  include "tfy-tailscale-config.requireFields" (dict "block" "mgmt" "key" $key "item" $ui "fields" (list "namespace" "service" "port"))
+  include "tfy-tailscale-config.requireFields" (dict "block" "ingresses" "key" $key "item" $ui "fields" (list "namespace" "service" "port"))
 */}}
 {{- define "tfy-tailscale-config.requireFields" -}}
 {{- $block := .block -}}
@@ -289,10 +279,7 @@ Synced and Healthy.
 
 An explicit value is passed through unchecked -- it names a ProxyGroup owned elsewhere.
 
-`what` names the thing that would break; `key` is the values key that overrides it. They
-are separate because the gateway Service has no override of its own and rides
-ingresses.proxyGroup, so naming it after itself would send the reader to a key that does
-not exist.
+`what` names the thing that would break; `key` is the values key that overrides it.
 
 Call as:
   include "tfy-tailscale-config.proxyGroupRef" (dict "root" $ "explicit" .Values.egress.proxyGroup "role" "egress" "what" "egress" "key" "egress.proxyGroup")
@@ -310,42 +297,11 @@ Call as:
 {{- end -}}
 
 {{/*
-The host suffix for platform surfaces routed through Istio (Mode H), e.g.
-"mgmt.example-ctl.internal.example.com".
-
-ASSERTS THE GATEWAY ACTUALLY SERVES IT. Istio intersects a VirtualService's hosts with the
-gateway's server hosts and silently drops the route when the intersection is empty -- Envoy
-answers 404 and nothing anywhere reports a misconfiguration. That is the same class of
-silent failure as a missing autoApprovers entry, and it is worth failing the render for.
-
-Only checked when this chart owns the gateway. With mgmt.gateway pointed at someone else's
-Gateway we cannot see its hosts, so the caller is on their own.
-*/}}
-{{- define "tfy-tailscale-config.mgmtBaseDomain" -}}
-{{- $base := .Values.mgmt.baseDomain | required "tfy-tailscale-config: mgmt.enabled requires mgmt.baseDomain (e.g. mgmt.<slug>.internal.example.com)" -}}
-{{- if and (not .Values.istioGateway.enabled) (not .Values.mgmt.gateway) -}}
-{{- fail "tfy-tailscale-config: mgmt.enabled with istioGateway.enabled false and no mgmt.gateway. The routes would bind to a Gateway this chart does not create, and Istio drops a route whose Gateway is missing without an error -- Envoy just answers 404. Enable istioGateway, or set mgmt.gateway to an existing one." -}}
-{{- end -}}
-{{- if and .Values.istioGateway.enabled (not .Values.mgmt.gateway) -}}
-{{- $covered := false -}}
-{{- range .Values.istioGateway.hosts -}}
-{{- if or (eq . (printf "*.%s" $base)) (eq . $base) -}}
-{{- $covered = true -}}
-{{- end -}}
-{{- end -}}
-{{- if not $covered -}}
-{{- fail (printf "tfy-tailscale-config: mgmt.baseDomain %q is not served by istioGateway.hosts %v. Istio would drop every mgmt route silently -- add \"*.%s\" to istioGateway.hosts (and to certificate.dnsNames)." $base .Values.istioGateway.hosts $base) -}}
-{{- end -}}
-{{- end -}}
-{{- $base -}}
-{{- end -}}
-
-{{/*
 The namespaces allowed to carry the tailscale.com/proxy-group annotation, as a JSON array
 -- which is also valid CEL list syntax, so it interpolates straight into the admission
 policy.
 
-Derived, not configured. Exactly four templates here emit that annotation and each takes
+Derived, not configured. Exactly three templates here emit that annotation and each takes
 its namespace from a values key, so the legitimate set is already known; a hand-maintained
 list would drift from the items blocks it mirrors.
 
@@ -362,49 +318,8 @@ those writes go through the same admission path.
 {{- end -}}
 {{- end -}}
 {{- end -}}
-{{- if .Values.istioGateway.enabled -}}
-{{- $_ := set $ns .Values.istioGateway.namespace true -}}
-{{- end -}}
 {{- range $extra := .Values.tailnetAdmissionPolicy.additionalNamespaces -}}
 {{- $_ := set $ns $extra true -}}
 {{- end -}}
 {{- keys $ns | sortAlpha | toJson -}}
-{{- end -}}
-
-{{/*
-The kind of issuer the Certificate references, resolved in three steps: an explicit
-certificate.issuerRef.kind, else issuer.kind when this chart creates the issuer, else fail.
-
-The last branch is deliberate. issuer.enabled false means the issuer exists somewhere this
-chart cannot see, so any default here is a guess -- and a Certificate naming the wrong kind
-never issues, reporting the failure only on the Certificate.
-
-toString rather than truthiness: a kind of `false` or `0` would otherwise be treated as
-unset and silently replaced.
-*/}}
-{{- define "tfy-tailscale-config.certificateIssuerKind" -}}
-{{- $ref := .Values.certificate.issuerRef | default dict -}}
-{{- $explicit := $ref.kind | toString -}}
-{{- if ne $explicit "" -}}
-{{- $explicit -}}
-{{- else if .Values.issuer.enabled -}}
-{{- .Values.issuer.kind | default "ClusterIssuer" -}}
-{{- else -}}
-{{- fail "tfy-tailscale-config: certificate.issuerRef.kind is empty and this chart is not creating an issuer (issuer.enabled is false). Set it to \"Issuer\" or \"ClusterIssuer\" to match the issuer that already exists -- the two are separate resources and a Certificate naming the wrong one sits Pending forever, with the error reported only on the Certificate." -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Pods the tailnet gateway Service sends to. Defaults to the Gateway's own selector, which is
-correct until a dedicated ingress deployment exists to move onto.
-*/}}
-{{- define "tfy-tailscale-config.istioGatewayServiceSelector" -}}
-{{- $sel := .Values.istioGateway.service.selector -}}
-{{- if not $sel -}}
-{{- $sel = .Values.istioGateway.selector -}}
-{{- end -}}
-{{- if not $sel -}}
-{{- fail "tfy-tailscale-config: istioGateway.enabled with no selector. An empty Service selector matches NOTHING -- the Tailscale Service comes up, advertises a VIP and reports healthy with zero endpoints, and every request to the gateway hostname hangs. Set istioGateway.selector, or istioGateway.service.selector." -}}
-{{- end -}}
-{{- toYaml $sel -}}
 {{- end -}}

@@ -1,0 +1,39 @@
+# Control plane: the full install. The Istio gateway, its routes and its certificates are
+# separate releases; this chart supplies the ProxyGroups they hang off and admits their
+# tailnet Service in istio-system.
+clusterName: tfy-example-ctl
+clusterSlug: example-ctl
+
+tailnet:
+  coarse:
+    env: dev
+    cloud: aws
+    plane: ctl
+
+ingresses:
+  enabled: true
+  items:
+    argocd:
+      namespace: argocd
+      service: argocd-server
+      port: 80
+
+tailnetServices:
+  enabled: true
+  items:
+    cp:
+      namespace: truefoundry
+      name: tfy-proxy-tailnet
+      hostname: example-ctl-cp
+      selector:
+        truefoundry.com/component: tfy-proxy
+      ports:
+        - name: http
+          port: 80
+          targetPort: 8080
+          protocol: TCP
+
+# The tailnet ingress Service lives in istio-system and is rendered by another release.
+tailnetAdmissionPolicy:
+  additionalNamespaces:
+    - istio-system
