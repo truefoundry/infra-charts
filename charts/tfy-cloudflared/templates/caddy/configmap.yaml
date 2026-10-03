@@ -1,19 +1,26 @@
 {{- if .Values.caddy.enabled }}
 {{- /*
-  Build the host capture group used by every proxy matcher. When
-  caddy.allowedHosts is empty the group stays "([^/]+)" (any host reachable
-  from the pod's network). When it is set, the group becomes an alternation of
-  the regex-escaped hostnames, so requests to any other target fail to match
-  every matcher and fall through to the final `respond 404`.
+  Build the host capture group used by every proxy matcher out of
+  caddy.allowedHosts: an alternation of the regex-escaped hostnames, so
+  requests to any other target fail to match every matcher and fall through
+  to the final `respond 404`.
+
+  The allowlist is mandatory. Without it the group would be "([^/]+)", i.e.
+  the upstream host is taken verbatim from the externally supplied request
+  path, turning the tunnel endpoint into an open proxy (SSRF) to anything
+  reachable from the Caddy pod's network.
 */}}
-{{- $hostGroup := "([^/]+)" -}}
-{{- if .Values.caddy.allowedHosts -}}
-{{-   $quoted := list -}}
-{{-   range .Values.caddy.allowedHosts -}}
-{{-     $quoted = append $quoted (regexQuoteMeta (. | toString)) -}}
+{{- $allowedHosts := list -}}
+{{- range (default (list) .Values.caddy.allowedHosts) -}}
+{{-   $host := trim (. | toString) -}}
+{{-   if $host -}}
+{{-     $allowedHosts = append $allowedHosts (regexQuoteMeta $host) -}}
 {{-   end -}}
-{{-   $hostGroup = printf "(%s)" (join "|" $quoted) -}}
 {{- end -}}
+{{- if not $allowedHosts -}}
+{{-   fail "caddy.allowedHosts must list at least one upstream hostname when caddy.enabled is true. Leaving it empty would let the Caddy router proxy to any host reachable from its pod network (SSRF). Set caddy.allowedHosts to the hostnames you intend to expose (e.g. svc.ns.svc.cluster.local), or set caddy.enabled=false." -}}
+{{- end -}}
+{{- $hostGroup := printf "(%s)" (join "|" $allowedHosts) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:

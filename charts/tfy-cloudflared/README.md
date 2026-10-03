@@ -22,11 +22,11 @@ All requests must include a `<tunnel-identifier>` prefix segment immediately fol
 
 The `<tunnel-identifier>` segment is consumed by Caddy and is **not** forwarded to the upstream service. The remaining path after the host:port is forwarded as-is.
 
-### Restricting upstream hosts (`caddy.allowedHosts`)
+### Restricting upstream hosts (`caddy.allowedHosts`, required)
 
-By default Caddy proxies to whatever `host:port` is present in the request path, i.e. any address reachable from the Caddy pod's network. In a shared cluster this means the blast radius is "anything the pod can reach", not just the services you intend to expose.
+The upstream `host:port` comes from the externally supplied request path, so without an allowlist Caddy would proxy to any address reachable from its pod network — the blast radius would be "anything the pod can reach" (an SSRF entry point into the cluster), not just the services you intend to expose.
 
-Set `caddy.allowedHosts` to lock routing down to an explicit allowlist:
+`caddy.allowedHosts` is therefore **required** whenever `caddy.enabled` is true: rendering the chart fails with an explicit error if it is empty. Set it to the explicit allowlist of hosts you want routable (or set `caddy.enabled=false` if you do not need the router):
 
 ```yaml
 caddy:
@@ -35,11 +35,9 @@ caddy:
     - some-svc.my-namespace.svc.cluster.local
 ```
 
-When the list is non-empty, only those hostnames are routable across all four URL formats; requests to any other target return `404`. Entries are **hostnames only — do not include a port** (the port is still taken from the request path). Hostnames are matched exactly (regex metacharacters are escaped), so `svc.ns.svc.cluster.local` will not match `evil-svc.ns.svc.cluster.local`.
+Only those hostnames are routable across all four URL formats; requests to any other target return `404`. Entries are **hostnames only — do not include a port** (the port is still taken from the request path). Hostnames are matched exactly (regex metacharacters are escaped), so `svc.ns.svc.cluster.local` will not match `evil-svc.ns.svc.cluster.local`.
 
 Onboarding a new host is a values change followed by `helm upgrade`. The Caddy config is mounted via `subPath` (which does not hot-reload), but the deployment carries a `checksum/config` annotation, so the upgrade rolls the Caddy pods automatically to pick up the new allowlist.
-
-An empty list (the default) preserves the previous behaviour of proxying to any reachable host.
 
 ## Parameters
 
@@ -129,7 +127,7 @@ An empty list (the default) preserves the previous behaviour of proxying to any 
 | Name                                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Value                                 |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | `caddy.enabled`                          | Deploy the Caddy private endpoint router manifests                                                                                                                                                                                                                                                                                                                                                                                                                          | `true`                                |
-| `caddy.allowedHosts`                     | Restrict Caddy to proxy only these upstream hosts. Entries are hostnames without a port (e.g. `my-mcp-server.internal` or `svc.ns.svc.cluster.local`). An empty list allows any host reachable from the pod's network.                                                                                                                                                                                                                                                      | `[]`                                  |
+| `caddy.allowedHosts`                     | Required when `caddy.enabled` is true: restrict Caddy to proxy only these upstream hosts. Entries are hostnames without a port (e.g. `my-mcp-server.internal` or `svc.ns.svc.cluster.local`). Rendering fails if the list is empty, because an unrestricted router would proxy to any host reachable from the pod's network (SSRF).                                                                                                                                         | `[]`                                  |
 | `caddy.networkPolicy.enabled`            | Create a NetworkPolicy that only allows cloudflared pods (plus any `caddy.networkPolicy.allowedIngressFrom` peers) to reach the Caddy router on port 80, and explicitly allows all egress from Caddy so a cluster-wide default-deny-egress policy does not block it from reaching MCP upstreams or DNS. Requires a CNI that enforces NetworkPolicy; it is inert otherwise. Kubelet health probes originate from the node and are not blocked by this policy on common CNIs. | `true`                                |
 | `caddy.networkPolicy.allowedIngressFrom` | Additional NetworkPolicyPeer entries appended to the ingress `from` list (e.g. another in-cluster gateway or a specific namespace).                                                                                                                                                                                                                                                                                                                                         | `[]`                                  |
 | `caddy.replicaCount`                     | Number of Caddy replicas to deploy                                                                                                                                                                                                                                                                                                                                                                                                                                          | `2`                                   |

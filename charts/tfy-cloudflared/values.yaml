@@ -252,7 +252,7 @@ extraVolumeMounts: []
 caddy:
   ## @param caddy.enabled Deploy the Caddy private endpoint router manifests
   enabled: true
-  ## @param caddy.allowedHosts [array] Restrict Caddy to proxy only these upstream hosts. Entries are hostnames without a port (e.g. `my-mcp-server.internal` or `svc.ns.svc.cluster.local`). An empty list allows any host reachable from the pod's network.
+  ## @param caddy.allowedHosts [array] Required when `caddy.enabled` is true: restrict Caddy to proxy only these upstream hosts. Entries are hostnames without a port (e.g. `my-mcp-server.internal` or `svc.ns.svc.cluster.local`). Rendering fails if the list is empty, because an unrestricted router would proxy to any host reachable from the pod's network (SSRF).
   allowedHosts: []
   ## Network policy for the Caddy router
   networkPolicy:
