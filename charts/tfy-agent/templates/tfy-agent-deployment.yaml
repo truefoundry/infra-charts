@@ -48,6 +48,8 @@ spec:
             {{- end }}
             - name: TENANT_NAME
               value:  {{ .Values.config.tenantName | quote }}
+            - name: CLUSTER_SECRET_STORE_NAME
+              value: {{ index .Values "external-secrets-operator" "clusterSecretStore" "name" | quote }}
             - name: OPENCOST_ENDPOINT
               value: {{ .Values.config.opencost.endpoint | quote }}
             - name: OPENCOST_POLL_INTERVAL
@@ -71,6 +73,12 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
+            {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: MULTI_LOGICAL_CLUSTER_ENABLED
+              value: "true"
+            - name: LOGICAL_CLUSTERS_CONFIG_PATH
+              value: /etc/tfy-agent/logical-clusters/logical-clusters.yaml
+            {{- end }}
             {{- if .Values.config.allowedNamespaces }}
             - name: NAMESPACE_ALLOW_LIST
               value: {{ .Values.config.allowedNamespaces | join "," | quote }}
@@ -99,6 +107,14 @@ spec:
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
             {{- end }}
+            {{- if gt (len .Values.clustersConfig) 1 }}
+            - name: clusters-config
+              mountPath: /etc/tfy-agent/logical-clusters
+              readOnly: true
+            - name: cluster-tokens
+              mountPath: /etc/tfy-agent/logical-cluster-tokens
+              readOnly: true
+            {{- end }}
       {{- with .Values.tfyAgent.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -109,6 +125,14 @@ spec:
         {{- end }}
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
+        {{- end }}
+        {{- if gt (len .Values.clustersConfig) 1 }}
+        - name: clusters-config
+          configMap:
+            name: {{ include "tfy-agent.fullname" . }}-clusters-config
+        - name: cluster-tokens
+          secret:
+            secretName: {{ include "tfy-agent.secretName" . }}
         {{- end }}
       {{- with .Values.tfyAgent.affinity }}
       affinity:
