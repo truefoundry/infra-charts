@@ -295,9 +295,10 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### eso (external-secrets operator) configuration parameters
 
-| Name                                | Description                                                                                                                                                                        | Value  |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `external-secrets-operator.enabled` | Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent. | `true` |
+| Name                                         | Description                                                                                                                                                                        | Value  |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `external-secrets-operator.enabled`          | Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent. | `true` |
+| `external-secrets-operator.crds.annotations` | Annotations to add to all External Secrets CRDs                                                                                                                                    | `{}`   |
 
 ### external-secrets-operator.clusterSecretStore ClusterSecretStore configuration
 
