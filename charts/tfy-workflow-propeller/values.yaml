@@ -141,7 +141,10 @@ flyte-core:
       create: true
       annotations:
         ## @param flyte-core.flytepropeller.serviceAccount.annotations.eks.amazonaws.com/role-arn to set the role arn to access service account
-        eks.amazonaws.com/role-arn: <to_be_provided>
+        ## Leave empty when unset. A non-empty placeholder is injected verbatim by the EKS
+        ## pod-identity webhook and every AssumeRoleWithWebIdentity call then fails validation,
+        ## which surfaces far downstream as workflows stuck before the start node.
+        eks.amazonaws.com/role-arn: ""
       ## @param flyte-core.flytepropeller.serviceAccount.rbacScope to set RBAC scope (`cluster` or `namespace`)
       rbacScope: cluster
       ## @param flyte-core.flytepropeller.serviceAccount.rbacRules [array] to configure ClusterRole/Role rules for flytepropeller
@@ -220,6 +223,24 @@ flyte-core:
             - patch
             - post
             - deletecollection
+        # Allow the spark plugin to manage SparkApplications. Propeller runs a
+        # cluster-scoped informer over these, so `list`/`watch` are required even
+        # when no spark task is executing.
+        - apiGroups:
+            - sparkoperator.k8s.io
+          resources:
+            - sparkapplications
+            - sparkapplications/status
+            - scheduledsparkapplications
+            - scheduledsparkapplications/status
+          verbs:
+            - get
+            - list
+            - watch
+            - create
+            - update
+            - delete
+            - patch
   ## @param flyte-core.workflow_scheduler.enabled to enable workflow scheduler
   workflow_scheduler:
     enabled: false
