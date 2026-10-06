@@ -16,8 +16,8 @@ spec:
     - {{ . }}
   {{- end }}
   hosts:
-  {{- range .Values.istio.virtualservice.hosts}}
-  - {{ . }}
+  {{- range $host := .Values.istio.virtualservice.hosts }}
+    - {{ tpl $host $ | quote }}
   {{- end }}
   http:
   - match:
