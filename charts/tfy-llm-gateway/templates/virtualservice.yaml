@@ -27,7 +27,10 @@ spec:
       status: 403
       body: 
         string: "Access denied"
-  - route:
+  - match:
+    - uri:
+        prefix: /
+    route:
     - destination:
         host: {{ include "tfy-llm-gateway.fullname" . }}.{{ include "global.namespace" . }}.svc.cluster.local
         port:
