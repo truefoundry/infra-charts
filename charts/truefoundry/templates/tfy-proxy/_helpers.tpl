@@ -216,20 +216,9 @@ Expand the name of the chart.
 
 {{/*
   Create the env file
-
-  When proxy TLS is enabled, set XDG_* to the emptyDir mounts at /config and /data.
-  With readOnlyRootFilesystem, Caddy otherwise writes under $HOME/.config and
-  $HOME/.local (often /.config and /.local) and fails with "read-only file system".
-  User-supplied tfyProxy.env can override these.
   */}}
 {{- define "tfy-proxy.env" }}
-{{- $userEnv := (include "tfy-proxy.parseEnv" .) | fromYaml | default dict -}}
-{{- $defaults := dict -}}
-{{- if .Values.global.proxy.tls.enabled -}}
-{{- $defaults = dict "XDG_CONFIG_HOME" "/config" "XDG_DATA_HOME" "/data" -}}
-{{- end -}}
-{{- $merged := mergeOverwrite $defaults $userEnv -}}
-{{- range $key, $val := $merged }}
+{{- range $key, $val := (include "tfy-proxy.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -289,10 +278,6 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTier" (.Values.global.resourceTier | default "medium") "defaultResourcesPrefix" "tfy-proxy.defaultResources" "resourcesValues" .Values.tfyProxy.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
@@ -302,7 +287,8 @@ Expand the name of the chart.
 
 
 {{- define "tfy-proxy.volumeMounts" -}}
-{{- $defaultVolumeMounts := dict "name" (include "tfy-proxy.fullname" .) "mountPath" "/etc/caddy/Caddyfile" "subPath" "Caddyfile" -}}
+{{- $cmName := (.Values.tfyProxy.existingProxyConfigMapName | default (include "tfy-proxy.fullname" .)) -}}
+{{- $defaultVolumeMounts := dict "name" $cmName "mountPath" "/etc/caddy/Caddyfile" "subPath" "Caddyfile" -}}
 
 {{- $caddyData := dict "name" "caddy-data" "mountPath" "/data" -}}
 {{- $caddyConfigData := dict "name" "caddy-config-data" "mountPath" "/config" -}}
@@ -322,10 +308,6 @@ Expand the name of the chart.
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
@@ -404,126 +386,3 @@ limits:
 {{- $merged := dict "requests" $requests "limits" $limits }}
 {{ toYaml $merged }}
 {{- end }}
-
-{{/*
-  Append a reverse_proxy / forward_auth block that uses the shared
-  (internal_mtls) Caddy snippet when global.mTLS.enabled. Certs are mounted
-  at /etc/tls/truefoundry by truefoundry.mtlsVolumeMount.
-  Usage: reverse_proxy host:port{{- include "tfy-proxy.withInternalMtls" . }}
-*/}}
-{{- define "tfy-proxy.withInternalMtls" -}}
-{{- if .Values.global.mTLS.enabled }} {
-          import internal_mtls
-        }{{- end }}
-{{- end }}
-
-{{/*
-  Trailing block for a reverse_proxy that dials an internal in-cluster
-  TrueFoundry service. Emits (when enabled): the Host / X-Forwarded-Host rewrite
-  (global.proxy.rewriteUpstreamHost), the (internal_mtls) import
-  (global.mTLS.enabled), and any caller-supplied extra reverse_proxy directives.
-
-  Dual input shape:
-    - Bare context: {{- include "tfy-proxy.upstreamOpts" . }}
-    - Dict with extra headers (each item is a full directive line placed inside
-      the reverse_proxy block, e.g. an extra header_up):
-        {{- include "tfy-proxy.upstreamOpts"
-              (dict "ctx" . "extraHeaders" (list "header_up x-foo bar")) }}
-
-  The { ... } block is opened when ANY of rewriteUpstreamHost, mTLS, or a
-  non-empty extraHeaders list applies — so a route whose only need is an extra
-  header still gets it emitted even when both flags are off.
-*/}}
-{{- define "tfy-proxy.upstreamOpts" -}}
-{{- $ctx := . -}}
-{{- $extraHeaders := list -}}
-{{- if and (kindIs "map" .) (hasKey . "ctx") -}}
-{{- $ctx = .ctx -}}
-{{- $extraHeaders = default (list) .extraHeaders -}}
-{{- end -}}
-{{- if or $ctx.Values.global.proxy.rewriteUpstreamHost $ctx.Values.global.mTLS.enabled (gt (len $extraHeaders) 0) }} {
-          {{- if $ctx.Values.global.proxy.rewriteUpstreamHost }}
-          header_up Host {http.reverse_proxy.upstream.hostport}
-          header_up X-Forwarded-Host {http.request.host}
-          {{- end }}
-          {{- if $ctx.Values.global.mTLS.enabled }}
-          import internal_mtls
-          {{- end }}
-          {{- range $extraHeaders }}
-          {{ . }}
-          {{- end }}
-        }{{- end }}
-{{- end }}
-
-{{- define "tfy-proxy.rewriteUpstreamHostOnly" -}}
-{{- if .Values.global.proxy.rewriteUpstreamHost }} {
-          header_up Host {http.reverse_proxy.upstream.hostport}
-          header_up X-Forwarded-Host {http.request.host}
-        }{{- end }}
-{{- end }}
-
-{{/*
-  Append a reverse_proxy transport that dials the NATS websocket upstream (:8080)
-  over mesh mTLS. Browsers hit tfy-proxy with public TLS only; the proxy->NATS
-  hop must present the mesh client cert when websocket.tls.verify is enabled
-  (same CA mount as (internal_mtls)). Rendered when global.mTLS.enabled and
-  tfyNats.config.websocket.tls.enabled. Without tls, Caddy's plaintext hop
-  fails against an HTTPS websocket listener; without tls_client_auth, NATS
-  rejects with "certificate required".
-  Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
-*/}}
-{{- define "tfy-proxy.natsUpstreamOpts" -}}
-{{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
-{{- $wsTls := and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) -}}
-{{- if or .Values.global.proxy.rewriteUpstreamHost $wsTls }} {
-          {{- if .Values.global.proxy.rewriteUpstreamHost }}
-          header_up Host {http.reverse_proxy.upstream.hostport}
-          header_up X-Forwarded-Host {http.request.host}
-          {{- end }}
-          {{- if $wsTls }}
-          transport http {
-            tls
-            tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
-            tls_client_auth /etc/tls/truefoundry/tls.crt /etc/tls/truefoundry/tls.key
-          }
-          {{- end }}
-        }{{- end }}
-{{- end }}
-
-{{/*
-  Resolve CORS allowedOrigins via tpl.
-  Default values use "{{ .Values.global.controlPlaneURL }}".
-  Set to [] or ["*"] to allow all origins.
-*/}}
-{{- define "tfy-proxy.cors.allowedOrigins" -}}
-{{- $origins := list -}}
-{{- range (.Values.global.proxy.cors.allowedOrigins | default list) }}
-{{- $resolved := trim (tpl (toString .) $) -}}
-{{- if $resolved -}}
-{{- $origins = append $origins $resolved -}}
-{{- end -}}
-{{- end -}}
-{{- $origins | toYaml -}}
-{{- end -}}
-
-{{/*
-  Build a regex alternation from resolved CORS allowedOrigins.
-  Returns empty string when the list is empty (caller should allow all).
-*/}}
-{{- define "tfy-proxy.cors.allowedOriginsRegex" -}}
-{{- $allowedOrigins := include "tfy-proxy.cors.allowedOrigins" . | fromYamlArray -}}
-{{- $regexParts := list -}}
-{{- range $allowedOrigins }}
-{{- $origin := . -}}
-{{- if eq $origin "*" -}}
-{{- $regexParts = append $regexParts ".*" -}}
-{{- else if contains "://" $origin -}}
-{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
-{{- $regexParts = append $regexParts $escaped -}}
-{{- else -}}
-{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
-{{- $regexParts = append $regexParts (printf "https?://%s" $escaped) -}}
-{{- end -}}
-{{- end -}}
-{{- $regexParts | join "|" -}}
-{{- end -}}
