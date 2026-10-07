@@ -39,12 +39,9 @@ spec:
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
-            {{- $userEnv := .Values.deltaFusionQueryServer.env | default dict }}
-            {{- if not (hasKey $userEnv "OPTIMIZED") }}
             {{- $optimizedEnv := include "deltafusion-query-server.optimizedEnv" . | trim }}
             {{- if $optimizedEnv }}
             {{- $optimizedEnv | nindent 12 }}
-            {{- end }}
             {{- end }}
             {{- if .Values.deltaFusionQueryServer.enableLiveLogs }}
             {{- $replicas := include "deltafusion-ingestor.replicas" . | trim | int }}
