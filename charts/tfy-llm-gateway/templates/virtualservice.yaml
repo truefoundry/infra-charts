@@ -17,7 +17,7 @@ spec:
   {{- end }}
   hosts:
   {{- range $host := .Values.istio.virtualservice.hosts }}
-    - {{ tpl $host $ | quote }}
+    - "{{ tpl $host $ }}"
   {{- end }}
   http:
   - match:
@@ -38,6 +38,6 @@ spec:
     {{- if .Values.istio.virtualservice.retries.enabled }}
     retries:
       attempts: {{ .Values.istio.virtualservice.retries.attempts }}
-      retryOn: {{ .Values.istio.virtualservice.retries.retryOn }}
+      retryOn: {{ .Values.istio.virtualservice.retries.retryOn | quote }}
     {{- end }}
 {{- end }}
