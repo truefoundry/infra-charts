@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.176.2"
+  gatewayChartVersion: "0.177.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -128,7 +128,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.176.2
+  tag: v0.177.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -346,7 +346,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.176.2"
+    tag: "v0.177.2"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -831,6 +831,13 @@ vector:
   tolerations: []
   ## @param vector.affinity [object] Affinity for Vector pods (falls back to global.affinity)
   affinity: {}
+  ## Upstream Vector defaults podLabels to vector.dev/exclude: "true",
+  ## see https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/#pod-exclusion which makes
+  ## kubernetes_logs Agents skip these pods. Null clears that key so Agents can collect them
+  ## (an empty map would deep-merge and leave the exclude label in place).
+  ## @param vector.podLabels [object] Labels on Vector pods (null out exclude to allow Agent collection)
+  podLabels:
+    vector.dev/exclude:
   ## vector.image Vector image
   image:
     ## @param vector.image.repository Vector image repository
@@ -858,7 +865,13 @@ vector:
     ## @param vector.persistence.storageClassName Storage class for the PVC (empty uses the cluster default)
     storageClassName: ""
   ## @param vector.resources [object] Resource requests/limits for Vector
-  resources: {}
+  resources:
+    requests:
+      cpu: "2"
+      memory: 1Gi
+    limits:
+      cpu: "3"
+      memory: 2Gi
   ## @skip vector.containerPorts
   containerPorts:
     - name: otlp-grpc
@@ -984,5 +997,7 @@ vector:
     path: /metrics
     ## @param vector.podMonitor.interval Scrape interval
     interval: 30s
+    ## kube-prometheus-stack only selects PodMonitors carrying its release label.
     ## @param vector.podMonitor.additionalLabels [object] Additional PodMonitor labels
-    additionalLabels: {}
+    additionalLabels:
+      release: prometheus
