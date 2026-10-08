@@ -1,0 +1,16 @@
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- $askTfy := $tc.configs.askTfyAgent | default dict -}}
+{{- if and $tc.enabled .Values.trueforge.enabled (default true $askTfy.enabled) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-ask-tfy-agent-cm
+  namespace: {{ include "global.namespace" . }}
+data:
+  ask-tfy-agent.yaml: |-
+    {{- if not $tc.configs.askTfyAgentOverride }}
+    {{ .Files.Get "files/tfy-configs/ask-tfy-agent.yaml" | nindent 4 }}
+    {{- else }}
+    {{ $tc.configs.askTfyAgentOverride | nindent 4 }}
+    {{- end }}
+{{- end }}
