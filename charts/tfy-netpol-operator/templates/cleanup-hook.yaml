@@ -1,0 +1,113 @@
+{{- if .Values.cleanupOnUninstall }}
+{{- /*
+Post-delete hook: removes every NetworkPolicy the operator created
+(label app.kubernetes.io/managed-by=tfy-netpol-operator) after `helm uninstall`.
+
+This must run POST-delete: if policies were deleted while the operator was
+still running, its drift watch would immediately recreate them. Because the
+release's ServiceAccount/RBAC are already gone by then, the hook ships its own
+short-lived SA + ClusterRole + binding, all removed again per hook-delete-policy.
+*/}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+  # "patch" is required to strip leftover Kopf finalizers before deleting.
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["list", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        {{- include "tfy-netpol-operator.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "tfy-netpol-operator.fullname" . }}-cleanup
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: cleanup
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - python
+            - -c
+            - |
+              import kubernetes
+              kubernetes.config.load_incluster_config()
+              api = kubernetes.client.NetworkingV1Api()
+              selector = "app.kubernetes.io/managed-by=tfy-netpol-operator"
+              items = api.list_network_policy_for_all_namespaces(label_selector=selector).items
+              for item in items:
+                  ns, name = item.metadata.namespace, item.metadata.name
+                  # Policies created by operator versions before the
+                  # optional=True fix carry a Kopf finalizer that nothing will
+                  # remove once the operator is gone; strip it so the delete
+                  # completes instead of hanging in Terminating.
+                  if item.metadata.finalizers:
+                      api.patch_namespaced_network_policy(
+                          name, ns, {"metadata": {"finalizers": None}}
+                      )
+                  api.delete_namespaced_network_policy(name, ns)
+                  print(f"deleted {ns}/{name}")
+              print(f"cleanup complete: {len(items)} policies deleted")
+{{- end }}
