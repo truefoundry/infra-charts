@@ -61,6 +61,8 @@ containers:
     env:
       - name: VECTOR_LOG
         value: "{{ .Values.logLevel | default "info" }}"
+      - name: VECTOR_MAX_DECOMPRESSED_SIZE_BYTES
+        value: {{ .Values.maxDecompressedSizeBytes | default 256000000 | quote }}
 {{- if .Values.env }}
 {{- with .Values.env }}
     {{- toYaml . | nindent 6 }}
