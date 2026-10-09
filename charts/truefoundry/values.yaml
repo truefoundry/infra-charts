@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.176.12
+  controlPlaneChartVersion: 0.178.1
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -395,10 +395,12 @@ global:
     externalMtlsSecret: ""
     ## @param global.mTLS.caDays Root CA validity in days (default ~10y)
     caDays: 3650
-    ## @param global.mTLS.leafDays Leaf cert validity in days (default ~1y)
-    leafDays: 365
-    ## @param global.mTLS.renewBeforeDays Reissue the leaf when it expires within this many days
-    renewBeforeDays: 60
+    ## @param global.mTLS.leafDays Leaf cert validity in days (default ~3y)
+    leafDays: 1095
+    ## @param global.mTLS.renewBeforeDays Reissue the leaf when it expires within this many days (default ~6mo)
+    renewBeforeDays: 180
+    ## @param global.mTLS.forceRenew Reissue the leaf on every bootstrap run regardless of remaining validity. Must be the boolean true; any other value is ignored. Use to roll the cert after changing leafDays or the SAN list; set back to false once the new cert is in place, otherwise every helm upgrade rotates it.
+    forceRenew: false
     ## @param global.mTLS.extraDnsNames Extra DNS SANs appended to the leaf cert (namespace service wildcards are added automatically)
     extraDnsNames: []
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
@@ -412,6 +414,10 @@ tags:
 ## devMode  When enabled creates a dev installation of the control plane for testing purposes
 devMode:
   ## @param devMode.enabled Bool to enable dev mode
+  enabled: false
+## @section metricsV2 Metrics v2 frontend feature flag
+metricsV2:
+  ## @param metricsV2.enabled Enable the metrics v2 frontend
   enabled: false
 ###################################################################################################################
 #################### Network policy for Truefoundry Control Plane(truefoundry namespace) ##########################
@@ -432,6 +438,15 @@ networkPolicy:
   ## - namespace: ingress-nginx
   ##   podSelector:
   ##     app.kubernetes.io/name: ingress-nginx
+  ## @param networkPolicy.extraIngress Raw ingress rules appended verbatim to the ingress-external policy, which selects the release's own pods (app.kubernetes.io/instance). Use this for sources allowedIngressFrom cannot express: ipBlock, port restrictions, matchExpressions, or same-namespace podSelectors.
+  ## NOTE: additive only. The policy renders only when allowedIngressFrom is non-empty, so extraIngress on its own is a no-op.
+  extraIngress: []
+  ## - from:
+  ##     - ipBlock:
+  ##         cidr: 10.0.0.0/8
+  ##   ports:
+  ##     - port: 8000
+  ##       protocol: TCP
   ###################################################################################################################
   ####################################### Monitoring Config ##########################################################
   ###################################################################################################################
@@ -582,7 +597,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.176.0"
+    tag: "v0.178.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -916,7 +931,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.176.6"
+    tag: "v0.178.1"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1118,6 +1133,7 @@ servicefoundryServer:
     TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
     TLS_DIR: /etc/tls/truefoundry
     FE_ENABLE_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
+    FE_ENABLE_METRICS_V2: "{{ .Values.metricsV2.enabled }}"
     ENABLE_VEND_TOKEN_FOR_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
     ENABLE_TRUEFOUNDRY_MANAGED_AGENT_WRITES: "{{ not .Values.trueforge.enabled }}"
     TRUEFORGE_BASE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
@@ -1153,6 +1169,8 @@ servicefoundryServer:
     k8sManifestValidationPolicy: "{{ .Release.Name }}-k8s-manifest-validation-policy-cm"
     ## @param servicefoundryServer.configs.defaultPolicies Default policies ConfigMap name for servicefoundry server
     defaultPolicies: "{{ .Release.Name }}-default-policies-cm"
+    ## @param servicefoundryServer.configs.askTfyAgent Ask TFY inline agent ConfigMap name for servicefoundry server
+    askTfyAgent: "{{ .Release.Name }}-ask-tfy-agent-cm"
     ## @param servicefoundryServer.configs.buildJobTemplate Build Job Template config map name for servicefoundry server. If empty, automatically uses the generated config map name from tfy-build chart when tfyBuild.jobTemplate.enabled is true
     buildJobTemplate: ""
 ###################################################################################################################
@@ -1175,7 +1193,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.176.0"
+    tag: "v0.178.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1328,7 +1346,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.176.0"
+    tag: "v0.178.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1497,7 +1515,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.176.1"
+    tag: "v0.178.1"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1661,7 +1679,7 @@ sfyManifestService:
 ## @section tfyInfraManager tfy infra manager values
 tfyInfraManager:
   ## @param tfyInfraManager.enabled Bool to enable the tfy infra manager
-  enabled: false
+  enabled: true
   ## @param tfyInfraManager.annotations [object] Annotations for the tfy infra manager
   annotations: {}
   ## @param tfyInfraManager.tolerations Tolerations specific to the tfy infra manager
@@ -1673,7 +1691,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.176.0"
+    tag: "v0.178.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -1775,7 +1793,7 @@ tfyInfraManager:
   env:
     SERVER_PORT: "8080"
     APP_BASE_PATH: /admin/infra-manager
-    SFY_BASE_URL: http://servicefoundry-server:3000/v1
+    SFY_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server:3000/v1
     BUNDLE_SOURCE: artifactory
     TEMPLATE_CHANNEL: general
     LOG_LEVEL: info
@@ -1787,8 +1805,8 @@ tfyInfraManager:
     SCALR_STORAGE_PROFILE_ID: ""
     SCALR_DEFAULT_AGENT_POOL_ID: ""
     SENTRY_ENABLED: "true"
-    AUTH_SERVER_URL: ""
-    TENANT_NAME: ""
+    AUTH_SERVER_URL: 'https://auth.truefoundry.com'
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -2133,6 +2151,15 @@ tfyConfigs:
     k8sManifestValidationPolicyOverride: {}
     ## @param tfyConfigs.configs.defaultPoliciesOverride Default policies configuration. Default content is in files/tfy-configs/default-policies.yaml
     defaultPoliciesOverride: {}
+    askTfyAgent:
+      ## @param tfyConfigs.configs.askTfyAgent.enabled Render ConfigMap and mount Ask TFY agent config when TrueForge is enabled
+      enabled: true
+      ## @param tfyConfigs.configs.askTfyAgent.webSearchEnabled Sets ASK_TFY_WEB_SEARCH_ENABLED on servicefoundry-server
+      webSearchEnabled: false
+      ## @param tfyConfigs.configs.askTfyAgent.skillsRef Sets ASK_TFY_SKILLS_REF when non-empty (default git ref when omitted from agent YAML)
+      skillsRef: ""
+    ## @param tfyConfigs.configs.askTfyAgentOverride When non-empty, replaces bundled files/tfy-configs/ask-tfy-agent.yaml
+    askTfyAgentOverride: ""
     ## @param tfyConfigs.configs.cicdTemplates CICD templates configuration. key of this map is yaml file name and value is the file contents. You must have a key named `cicd-providers.yaml` in this dictionary
     cicdTemplates: {}
     codeSnippet:
@@ -2379,7 +2406,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.176.0
+    tag: v0.178.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2542,7 +2569,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.176.0
+    tag: v0.178.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2956,7 +2983,7 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.176.2"
+      tag: "v0.178.0"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
@@ -3417,7 +3444,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.176.0"
+    tag: "v0.178.0"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3580,7 +3607,7 @@ deltaFusionIngestor:
     labels: {}
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
-    RUST_LOG: info
+    RUST_LOG: info,deltafusion_ingestor::routers::flight_server=warn
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PAYLOAD_SIZE_LIMIT: "1073741824"
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
@@ -3612,7 +3639,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.176.0"
+    tag: "v0.178.0"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3815,7 +3842,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.176.2
+    tag: v0.178.1
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -4038,7 +4065,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.176.2"
+    tag: "v0.178.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.
