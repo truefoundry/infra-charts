@@ -1,0 +1,79 @@
+## @section Image configuration
+image:
+  ## @param image.repository Operator image repository
+  repository: tfy.jfrog.io/tfy-images/tfy-netpol-operator
+  ## @param image.tag Operator image tag
+  tag: "0.6.0"
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+
+## @param imagePullSecrets [array] Image pull secrets
+imagePullSecrets: []
+
+## @section Deployment configuration
+## @param nameOverride Override the chart name used in resource names and labels
+nameOverride: ""
+## @param fullnameOverride Override the fully qualified resource name
+fullnameOverride: ""
+
+## @param replicaCount Number of operator replicas. Keep at 1: the operator runs with `--standalone` (no Kopf peering). For HA, enable peering in the image entrypoint and raise this.
+replicaCount: 1
+
+serviceAccount:
+  ## @param serviceAccount.create Create a dedicated ServiceAccount for the operator
+  create: true
+  ## @param serviceAccount.name ServiceAccount name (defaults to the release fullname when `create` is true, otherwise `default`)
+  name: ""
+  ## @param serviceAccount.annotations [object] Annotations for the ServiceAccount
+  annotations: {}
+
+## @param podAnnotations [object] Annotations for the operator pod
+podAnnotations: {}
+## @param podSecurityContext [object] Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  seccompProfile:
+    type: RuntimeDefault
+## @param securityContext [object] Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+## @param resources [object] Container resources
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+## @param nodeSelector [object] Node selector
+nodeSelector: {}
+## @param tolerations [array] Tolerations
+tolerations: []
+## @param affinity [object] Affinity
+affinity: {}
+
+## @param cleanupOnUninstall On `helm uninstall`, run a post-delete hook Job that deletes every NetworkPolicy the operator created (label `app.kubernetes.io/managed-by=tfy-netpol-operator`) across all namespaces. Set to false to keep the policies in place after uninstalling the operator.
+cleanupOnUninstall: true
+
+## @section Operator behavior (rendered into the ConfigMap)
+config:
+  ## @param config.dryRun Start in report-only mode. Set to false to enforce.
+  dryRun: true
+  ## @param config.allowWildcard Allow the `*` wildcard (allow-all-namespaces) in the namespace annotation
+  allowWildcard: false
+  ## @param config.defaultDenyIngress Create the explicit default-deny-ingress backstop policy in managed namespaces. Disable only if you intend to rely on the allow-ingress policy alone for isolation.
+  defaultDenyIngress: true
+  ## @param config.resyncIntervalSeconds Full resync interval in seconds
+  resyncIntervalSeconds: 300
+  ## @param config.baselineAllowedNamespaces [array] Always-allowed ingress source namespaces injected into every managed namespace so an empty/incomplete annotation cannot black-hole a namespace. Tune per cluster, e.g. `istio-system`, `prometheus`, `tfy-agent`.
+  baselineAllowedNamespaces: []
+  ## @param config.denylist [array] Extra namespaces the operator must never touch (`kube-*` / `openshift-*` are always excluded)
+  denylist: []
+  ## @param config.nodeCIDRs [array] Optional ipBlock CIDRs injected into the allow-ingress policy (node / hostNetwork edge cases), e.g. `10.0.0.0/16`
+  nodeCIDRs: []
