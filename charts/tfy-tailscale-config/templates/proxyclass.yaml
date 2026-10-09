@@ -6,9 +6,8 @@ metadata:
   labels:
     {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
 spec:
-  {{- if .Values.proxyClasses.default.metricsEnabled }}
-  metrics:
-    enable: true
+  {{- with include "tfy-tailscale-config.proxyClassMetrics" (dict "class" .Values.proxyClasses.default "key" "proxyClasses.default") }}
+  {{- . | nindent 2 }}
   {{- end }}
   statefulSet:
     pod:
@@ -50,9 +49,8 @@ metadata:
   labels:
     {{- include "tfy-tailscale-config.labels" . | nindent 4 }}
 spec:
-  {{- if .Values.proxyClasses.apiserver.metricsEnabled }}
-  metrics:
-    enable: true
+  {{- with include "tfy-tailscale-config.proxyClassMetrics" (dict "class" .Values.proxyClasses.apiserver "key" "proxyClasses.apiserver") }}
+  {{- . | nindent 2 }}
   {{- end }}
   statefulSet:
     pod:
