@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}-config
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    dryRun: {{ .Values.config.dryRun }}
+    allowWildcard: {{ .Values.config.allowWildcard }}
+    defaultDenyIngress: {{ .Values.config.defaultDenyIngress }}
+    resyncIntervalSeconds: {{ .Values.config.resyncIntervalSeconds }}
+    baselineAllowedNamespaces:
+      {{- toYaml .Values.config.baselineAllowedNamespaces | nindent 6 }}
+    denylist:
+      {{- toYaml .Values.config.denylist | nindent 6 }}
+    nodeCIDRs:
+      {{- toYaml .Values.config.nodeCIDRs | nindent 6 }}
