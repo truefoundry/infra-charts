@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.176.2"
+  gatewayChartVersion: "0.178.0"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -128,7 +128,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.176.2
+  tag: v0.178.0
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -346,7 +346,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.176.2"
+    tag: "v0.178.0"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -766,12 +766,16 @@ vector:
     whenFull: drop_newest
   ## vector.forward Delivery settings for the control plane sink
   forward:
+    ## Gzip the OTLP HTTP body (Content-Encoding: gzip) on the way to the control plane.
+    ## Vector's opentelemetry sink only speaks HTTP, so this does not apply to gRPC.
+    ## @param vector.forward.compression Compression for the control plane export: gzip, none, snappy, zlib, or zstd
+    compression: gzip
     ## @param vector.forward.timeoutSecs Request timeout in seconds
-    timeoutSecs: 30
+    timeoutSecs: 60
     ## @param vector.forward.retryInitialBackoffSecs Initial retry backoff in seconds
     retryInitialBackoffSecs: 1
     ## @param vector.forward.retryMaxDurationSecs Max retry backoff in seconds (retries are unlimited)
-    retryMaxDurationSecs: 60
+    retryMaxDurationSecs: 120
     ## Auth failures are not retried. 401 and 403 mean TFY_API_KEY is missing, wrong, or expired,
     ## and another attempt cannot fix that. This field only caps backoff, so retrying them runs
     ## forever and fills the disk buffer until new spans are dropped.
@@ -796,6 +800,12 @@ vector:
   ## vector::internal_events::http_client logs "Sending HTTP request" / "HTTP response. status=..."
   ## vector::sinks::util::http logs the response body on non-2xx.
   logLevel: "info,vector::internal_events::http_client=debug,vector::sinks::util::http=debug"
+  ## Max decompressed OTLP request body size (HTTP and gRPC). The chart writes this to
+  ## VECTOR_MAX_DECOMPRESSED_SIZE_BYTES; do not also set that under vector.env.
+  ## Quoted so Helm keeps it as a string (bare YAML numbers become float64 and can render
+  ## as 2.56e+08, which Vector rejects). Default is 256000000 bytes (~244 MiB).
+  ## @param vector.maxDecompressedSizeBytes Max decompressed input payload size in bytes (default "256000000")
+  maxDecompressedSizeBytes: "256000000"
   ## @param vector.env [array] Extra environment variables for Vector
   ## Vector collapses repeats of the same internal log line within this window (default 10s).
   ## 1 is the minimum; bursts inside one second still show as "suppressed N times".
@@ -831,6 +841,13 @@ vector:
   tolerations: []
   ## @param vector.affinity [object] Affinity for Vector pods (falls back to global.affinity)
   affinity: {}
+  ## Upstream Vector defaults podLabels to vector.dev/exclude: "true",
+  ## see https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/#pod-exclusion which makes
+  ## kubernetes_logs Agents skip these pods. Null clears that key so Agents can collect them
+  ## (an empty map would deep-merge and leave the exclude label in place).
+  ## @param vector.podLabels [object] Labels on Vector pods (null out exclude to allow Agent collection)
+  podLabels:
+    vector.dev/exclude:
   ## vector.image Vector image
   image:
     ## @param vector.image.repository Vector image repository
@@ -858,7 +875,15 @@ vector:
     ## @param vector.persistence.storageClassName Storage class for the PVC (empty uses the cluster default)
     storageClassName: ""
   ## @param vector.resources [object] Resource requests/limits for Vector
-  resources: {}
+  resources:
+    requests:
+      cpu: "2"
+      memory: 1Gi
+      ephemeral-storage: 256Mi
+    limits:
+      cpu: "3"
+      memory: 2Gi
+      ephemeral-storage: 512Mi
   ## @skip vector.containerPorts
   containerPorts:
     - name: otlp-grpc
@@ -984,5 +1009,7 @@ vector:
     path: /metrics
     ## @param vector.podMonitor.interval Scrape interval
     interval: 30s
+    ## kube-prometheus-stack only selects PodMonitors carrying its release label.
     ## @param vector.podMonitor.additionalLabels [object] Additional PodMonitor labels
-    additionalLabels: {}
+    additionalLabels:
+      release: prometheus
