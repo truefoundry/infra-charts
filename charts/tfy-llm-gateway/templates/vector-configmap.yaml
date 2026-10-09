@@ -25,6 +25,7 @@
         "type" "http"
         "uri" (printf "%s/api/otel/v1/traces" (trimSuffix "/" .Values.global.controlPlaneURL))
         "method" "post"
+        "compression" $forward.compression
         "encoding" (dict "codec" "otlp")
         "retry_strategy" (dict "type" "custom" "status_codes" $forward.retryStatusCodes)
         "request" (dict
