@@ -313,10 +313,12 @@ Inframold, the superchart that configure your cluster on aws for truefoundry.
 
 ### tfy-workflow-propeller parameters
 
-| Name                                        | Description                                                  | Value   |
-| ------------------------------------------- | ------------------------------------------------------------ | ------- |
-| `tfyWorkflowPropeller.enabled`              | Flag to enable workflow-propeller.                           | `false` |
-| `tfyWorkflowPropeller.syncPolicy`           | ArgoCD syncPolicy for the tfy-workflow-propeller Application | `{}`    |
-| `tfyWorkflowPropeller.valuesOverride`       | Config override from default config values                   | `{}`    |
-| `tfyWorkflowPropeller.flyteCore.flyteadmin` | Flyteadmin configuration for flyteCore                       | `{}`    |
-| `helm.resourcePolicy`                       | Resource policy for the helm chart                           | `keep`  |
+| Name                                                        | Description                                                  | Value   |
+| ----------------------------------------------------------- | ------------------------------------------------------------ | ------- |
+| `tfyWorkflowPropeller.enabled`                              | Flag to enable workflow-propeller.                           | `false` |
+| `tfyWorkflowPropeller.syncPolicy`                           | ArgoCD syncPolicy for the tfy-workflow-propeller Application | `{}`    |
+| `tfyWorkflowPropeller.valuesOverride`                       | Config override from default config values                   | `{}`    |
+| `tfyWorkflowPropeller.flyteCore.flyteadmin`                 | Flyteadmin configuration for flyteCore                       | `{}`    |
+| `tfyWorkflowPropeller.flyteCore.flytepropeller.affinity`    | Affinity to pin flytepropeller to critical nodes             | `{}`    |
+| `tfyWorkflowPropeller.flyteCore.flytepropeller.tolerations` | Tolerations for flytepropeller to run on critical nodes      | `[]`    |
+| `helm.resourcePolicy`                                       | Resource policy for the helm chart                           | `keep`  |
