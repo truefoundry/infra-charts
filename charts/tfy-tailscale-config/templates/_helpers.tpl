@@ -323,3 +323,32 @@ those writes go through the same admission path.
 {{- end -}}
 {{- keys $ns | sortAlpha | toJson -}}
 {{- end -}}
+
+{{/*
+The spec.metrics block of a ProxyClass, or nothing when metrics are off.
+
+The operator creates the ServiceMonitor itself, from serviceMonitor.enable, and only for a
+ProxyClass with metrics enabled; it also needs the monitoring.coreos.com CRDs installed.
+A ServiceMonitor without labels the Prometheus serviceMonitorSelector matches is created
+and never scraped, which looks identical to working.
+
+Call as:
+  include "tfy-tailscale-config.proxyClassMetrics" (dict "class" .Values.proxyClasses.default "key" "proxyClasses.default")
+*/}}
+{{- define "tfy-tailscale-config.proxyClassMetrics" -}}
+{{- $sm := .class.serviceMonitor | default dict -}}
+{{- if .class.metricsEnabled -}}
+metrics:
+  enable: true
+  {{- if $sm.enabled }}
+  serviceMonitor:
+    enable: true
+    {{- with $sm.labels }}
+    labels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- else if $sm.enabled -}}
+{{- fail (printf "tfy-tailscale-config: %s.serviceMonitor.enabled is true but %s.metricsEnabled is false. The operator only creates a ServiceMonitor for a ProxyClass with metrics enabled." .key .key) -}}
+{{- end -}}
+{{- end -}}

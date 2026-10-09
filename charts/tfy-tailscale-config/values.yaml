@@ -130,6 +130,13 @@ proxyClasses:
     ## @param proxyClasses.default.metricsEnabled Expose proxy metrics.
     ##
     metricsEnabled: true
+    ## @param proxyClasses.default.serviceMonitor.enabled Have the operator create a Prometheus Operator ServiceMonitor for these proxies. Needs metricsEnabled and the monitoring.coreos.com CRDs.
+    ##
+    serviceMonitor:
+      enabled: false
+      ## @param proxyClasses.default.serviceMonitor.labels [object] Labels on the ServiceMonitor. Set whatever the Prometheus serviceMonitorSelector matches (for kube-prometheus-stack, release: <release name>), or it is created and never scraped.
+      ##
+      labels: {}
     ## @param proxyClasses.default.resources [object] Overrides placement.resources for the ingress/egress ProxyClass. REPLACES that block outright -- it is not merged, so restate requests as well as limits.
     ##
     resources: {}
@@ -146,6 +153,13 @@ proxyClasses:
     ## @param proxyClasses.apiserver.metricsEnabled Expose proxy metrics.
     ##
     metricsEnabled: true
+    ## @param proxyClasses.apiserver.serviceMonitor.enabled Have the operator create a Prometheus Operator ServiceMonitor for these proxies. Needs metricsEnabled and the monitoring.coreos.com CRDs.
+    ##
+    serviceMonitor:
+      enabled: false
+      ## @param proxyClasses.apiserver.serviceMonitor.labels [object] Labels on the ServiceMonitor. Set whatever the Prometheus serviceMonitorSelector matches (for kube-prometheus-stack, release: <release name>), or it is created and never scraped.
+      ##
+      labels: {}
     ## @param proxyClasses.apiserver.resources [object] Overrides placement.resources for the kube-apiserver ProxyClass. REPLACES that block outright -- it is not merged, so restate requests as well as limits.
     ##
     resources: {}
