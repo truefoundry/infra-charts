@@ -237,6 +237,9 @@ data:
           level: "${env:LOG_LEVEL:-INFO}"
           encoding: "${env:LOG_ENCODING:-json}"
         metrics:
+          # detailed un-drops otelhttp/otelgrpc histograms, including
+          # http.server.request.duration (OTLP HTTP handler latency).
+          level: detailed
           readers:
             - pull:
                 exporter:
