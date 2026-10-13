@@ -813,7 +813,9 @@ sdsServer:
 networkPolicy:
   ## @param networkPolicy.enabled Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
   enabled: false
-  ## @param networkPolicy.kubeAPICIDRs [array] CIDRs of the Kubernetes API endpoints (TCP kubeAPIPort). Required when enabled. Policies match after Service DNAT, so the kubernetes ClusterIP is not enough; use the control-plane / API endpoint subnet CIDRs (EKS: subnets from `aws eks describe-cluster --name <cluster> --region <region>`).
+  ## @param networkPolicy.kubeAPIServiceIP ClusterIP of the `default/kubernetes` Service (e.g. 172.20.0.1 on EKS), added as a /32 to the Kubernetes API rule. Empty: looked up from the cluster at install time; `helm template` and Argo CD cannot look it up, so set it explicitly there (`kubectl -n default get svc kubernetes -o jsonpath='{.spec.clusterIP}'`).
+  kubeAPIServiceIP: ""
+  ## @param networkPolicy.kubeAPICIDRs [array] Kubernetes API endpoint CIDRs (TCP kubeAPIPort). Required when enabled. Pods dial the API through the `kubernetes` Service ClusterIP: AWS VPC CNI matches that ClusterIP before DNAT (set kubeAPIServiceIP or add a /32 here), while Calico / Cilium match the endpoint IPs after DNAT, so allow both. For the endpoints use the control-plane / API endpoint subnet CIDRs (EKS: subnets from `aws eks describe-cluster --name <cluster> --region <region>`).
   kubeAPICIDRs: []
   ## @param networkPolicy.kubeAPIPort TCP port of the Kubernetes API endpoints
   kubeAPIPort: 443

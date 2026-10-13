@@ -2,7 +2,7 @@
 {{- $np := .Values.networkPolicy }}
 {{- $needsAPI := or .Values.tfyAgent.enabled .Values.tfyAgentProxy.enabled }}
 {{- if and $needsAPI (not $np.kubeAPICIDRs) }}
-{{- fail "networkPolicy.kubeAPICIDRs is required when networkPolicy.enabled is true (tfy-agent and tfy-agent-proxy talk to the Kubernetes API). NetworkPolicy matches the API after Service DNAT, so the kubernetes ClusterIP alone is not enough; use the control-plane / API endpoint subnet CIDRs (EKS: aws eks describe-cluster --name <cluster> --region <region> --query cluster.resourcesVpcConfig.subnetIds, then aws ec2 describe-subnets for CidrBlock)." }}
+{{- fail "networkPolicy.kubeAPICIDRs is required when networkPolicy.enabled is true (tfy-agent and tfy-agent-proxy talk to the Kubernetes API). Allow both addresses pods use for the API: (1) the `kubernetes` Service ClusterIP — AWS VPC CNI matches it before DNAT — via networkPolicy.kubeAPIServiceIP or a /32 in kubeAPICIDRs (kubectl -n default get svc kubernetes -o jsonpath='{.spec.clusterIP}'); (2) the API endpoint subnet CIDRs — Calico/Cilium match after DNAT (EKS: aws eks describe-cluster --name <cluster> --region <region> --query cluster.resourcesVpcConfig.subnetIds, then aws ec2 describe-subnets for CidrBlock). Example: kubeAPIServiceIP: 172.20.0.1, kubeAPICIDRs: [10.0.0.0/19, 10.0.32.0/19]." }}
 {{- end }}
 {{- if .Values.tfyAgent.enabled }}
 ---

@@ -679,7 +679,8 @@ false
 {{- end -}}
 {{/*
 Egress rules shared by every tfy-agent component NetworkPolicy: DNS, the control plane
-(public endpoint and/or in-cluster namespaces) and, when kubeAPI is true, the Kubernetes API.
+(public endpoint and/or in-cluster namespaces) and, when kubeAPI is true, the Kubernetes API
+(kubeAPICIDRs plus the `kubernetes` Service ClusterIP, which AWS VPC CNI matches before DNAT).
 Usage: include "tfy-agent.networkPolicy.commonEgress" (dict "root" . "kubeAPI" true)
 
 DNS names its destinations (kube-system DNS pods plus the private ranges) instead of a bare
@@ -719,8 +720,14 @@ internet rule's private-range `except` (amazon-network-policy-controller-k8s#146
     - protocol: TCP
       port: 53
 {{- if .kubeAPI }}
+{{- $apiCIDRs := $np.kubeAPICIDRs | default list -}}
+{{- $apiServiceIP := $np.kubeAPIServiceIP | default (dig "spec" "clusterIP" "" (lookup "v1" "Service" "default" "kubernetes" | default dict)) -}}
+{{- if and $apiServiceIP (ne $apiServiceIP "None") -}}
+{{- $apiServiceCIDR := ternary (printf "%s/128" $apiServiceIP) (printf "%s/32" $apiServiceIP) (contains ":" $apiServiceIP) -}}
+{{- if not (has $apiServiceCIDR $apiCIDRs) }}{{ $apiCIDRs = append $apiCIDRs $apiServiceCIDR }}{{ end -}}
+{{- end }}
 - to:
-    {{- range $np.kubeAPICIDRs }}
+    {{- range $apiCIDRs }}
     - ipBlock:
         cidr: {{ . | quote }}
     {{- end }}
