@@ -212,12 +212,6 @@ data:
       }
       {{- end }}
 
-      # /mcp → /v1/tfy-mcp on upstream:3000
-      handle /mcp {
-        rewrite * /v1/tfy-mcp
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
       {{- if .Values.tfyProxy.restrictInternalApis }}
       # Block internal-only APIs from external users.
       # In-cluster callers reach these by hitting servicefoundry-server directly
@@ -266,18 +260,44 @@ data:
       }
       {{- end }}
 
-      # RFC 8414 well-known discovery (prepended form) -> server's path-appended form on upstream:3000
-      # /.well-known/openid-configuration/api/svc/<rest> -> /<rest>/.well-known/openid-configuration
+      # Legacy /api/svc forms -> the server's tenant-appended path. These keep their rewrite, because
+      # the server's :tenantName is one segment and can never match api/svc/<tenant> itself.
       handle /.well-known/openid-configuration/api/svc/* {
         uri replace /.well-known/openid-configuration/api/svc ""
         rewrite {path}/.well-known/openid-configuration
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
       }
 
-      # /.well-known/oauth-authorization-server/api/svc/<rest> -> /<rest>/.well-known/oauth-authorization-server
       handle /.well-known/oauth-authorization-server/api/svc/* {
         uri replace /.well-known/oauth-authorization-server/api/svc ""
         rewrite {path}/.well-known/oauth-authorization-server
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      # The RFC 8414 document name and both inserted forms, passed through untouched. Requires a
+      # server carrying the MCP-1725 aliases. Before those, only openid-configuration was served and
+      # these three rewrote onto it. Each still needs a rule of its own, because without one the SPA
+      # catch-all answers a JSON probe with index.html and a 200.
+      handle /*/.well-known/oauth-authorization-server {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      # The `not path` guards keep these two mutually exclusive with the /api/svc handles above. A
+      # multi-path named matcher is not comparable to a single path and acts as a barrier in Caddy's
+      # sort, so without the guard the broader handle can land above /api/svc/* and swallow it.
+      @oidcAuthServerInserted {
+        path /.well-known/oauth-authorization-server/*
+        not path /.well-known/oauth-authorization-server/api/svc/*
+      }
+      handle @oidcAuthServerInserted {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      @oidcDiscoveryInserted {
+        path /.well-known/openid-configuration/*
+        not path /.well-known/openid-configuration/api/svc/*
+      }
+      handle @oidcDiscoveryInserted {
         reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
       }
 
@@ -548,6 +568,46 @@ data:
         reverse_proxy {{ tpl .Values.global.proxy.trueforge.host . }}:{{ .Values.global.proxy.trueforge.port }}{{- include "tfy-proxy.upstreamOpts" . }}
       }
       {{- end }}
+
+      # Host-root OIDC routes - path-preserving -> upstream:3000
+      # The issuer is {origin}/{tenant}, so every document hangs off the tenant segment.
+      # Use path matchers, never path_regexp: Caddy sorts handle blocks by path specificity and
+      # does not rank a path_regexp against a path, so a regexp form can lose to handle /*.
+      @tfyProtocolRoutes {
+        path /*/oauth2/v1/*
+        path /*/.well-known/openid-configuration
+        path /*/.well-known/jwks.json
+        path /oauth2/v1/callback
+      }
+      handle @tfyProtocolRoutes {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      # --- TrueFoundry MCP server (servicefoundry-server's openapi-mcp module) ---
+      # Not the MCP gateway, which is tfy-llm-gateway under /api/llm/* with its own rule further up.
+      # A * between slashes matches one segment, so none of these can take /api/llm/... or an
+      # account-scoped SPA URL, and each outranks the SPA catch-all as its own handle.
+      handle /*/mcp {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      # Its metadata document, at the two paths the server registers. The RFC 9728 §3.1 URL is the
+      # inserted one, which the 401 challenge advertises. Appending to the resource would give
+      # /<tenant>/mcp/.well-known/oauth-protected-resource, which nothing serves.
+      handle /*/.well-known/oauth-protected-resource {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      handle /.well-known/oauth-protected-resource/*/mcp {
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
+
+      # TODO(MCP-1725): drop this route once no client calls /mcp. /<tenant>/mcp supersedes it.
+      # Target stays /v1/tfy-mcp, the only shape every supported server version answers on.
+      handle /mcp {
+        rewrite * /v1/tfy-mcp
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+      }
 
       # NATS WS direct path (Host rewrite matters here too — see tfy-proxy.natsUpstreamOpts)
       handle /nats-websocket/* {
