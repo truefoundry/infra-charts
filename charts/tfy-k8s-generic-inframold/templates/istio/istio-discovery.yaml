@@ -17,8 +17,8 @@ spec:
   project: tfy-apps
   source:
     chart: istiod
-    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/charts{{ else }}https://istio-release.storage.googleapis.com/charts{{ end }}
-    targetRevision: 1.30.0
+    repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/charts{{ else }}tfy.jfrog.io/tfy-helm/charts{{ end }}
+    targetRevision: 1.30.5
     helm:
       values: |-
         {{- if .Values.istio.discovery.valuesOverride }}
@@ -60,7 +60,7 @@ spec:
           {{- else if .Values.registry }}
           hub: {{ .Values.registry }}/istio-release
           {{- else }}
-          hub: gcr.io/istio-release
+          hub: tfy.jfrog.io/tfy-mirror/istio
           {{- end }}
           {{- if .Values.imagePullSecrets }}
           imagePullSecrets:
