@@ -114,6 +114,9 @@ pdb:
   ## @param pdb.annotations [object] PodDisruptionBudget annotations
   annotations: {}
 
+## @param automountServiceAccountToken Mount a Kubernetes API token into the cloudflared pods. Defaults to `false` — cloudflared is an outbound tunnel client and never calls the Kubernetes API, so the token is unused credential material sitting in the pod. Set on the pod spec rather than the ServiceAccount so it also applies to the namespace `default` service account used when `serviceAccount.create` is `false`.
+automountServiceAccountToken: false
+
 ## Service account configuration
 serviceAccount:
   ## @param serviceAccount.create Create a dedicated service account
@@ -260,6 +263,8 @@ caddy:
     enabled: true
     ## @param caddy.networkPolicy.allowedIngressFrom [array] Additional NetworkPolicyPeer entries appended to the ingress `from` list (e.g. another in-cluster gateway or a specific namespace).
     allowedIngressFrom: []
+  ## @param caddy.automountServiceAccountToken Mount a Kubernetes API token into the Caddy pods. Defaults to `false` — Caddy is a reverse proxy and never calls the Kubernetes API, so the token is unused credential material sitting in a pod that proxies arbitrary upstream traffic. Set on the pod spec rather than the ServiceAccount so it also applies to the namespace `default` service account used when `caddy.serviceAccount.create` is `false`.
+  automountServiceAccountToken: false
   ## @param caddy.replicaCount Number of Caddy replicas to deploy
   replicaCount: 2
   image:

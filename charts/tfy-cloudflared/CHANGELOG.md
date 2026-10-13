@@ -1,5 +1,11 @@
 ## Changelog
 
+### 0.7.0
+
+- **Security:** The cloudflared and Caddy pods no longer mount a Kubernetes API token (`automountServiceAccountToken: false`, new values `automountServiceAccountToken` and `caddy.automountServiceAccountToken`, both default `false`). Neither component calls the Kubernetes API — cloudflared is an outbound tunnel client and Caddy is a reverse proxy — so the token was unused credential material sitting in pods that terminate traffic from outside the cluster. The chart grants no RBAC, so the token carried no permissions on its own; this removes the token itself, so there is nothing to lift out of the pod and replay against the API server if either container is compromised.
+  - Set on the **pod spec**, not the ServiceAccount, deliberately: `serviceAccount.create` defaults to `false`, so the pods run under the namespace's `default` service account, which this chart does not own and must not mutate. The pod-spec field also takes precedence over the ServiceAccount setting, so it holds regardless of how the service account is configured.
+  - No action required on upgrade. If you have added a sidecar or `extraManifests` component that genuinely needs API access, set `automountServiceAccountToken: true` (or `caddy.automountServiceAccountToken: true`) to restore the previous behaviour.
+
 ### 0.6.0
 
 - Added a NetworkPolicy for cloudflared (`cloudflared.networkPolicy.enabled`, default `true`). It pins cloudflared's in-cluster egress to the Caddy router (`caddy:80`) only, so a compromised or misconfigured tunnel cannot forward requests to any other pod on the cluster network. Ingress is restricted to the metrics port (which also serves the probes); scope the allowed sources with `cloudflared.networkPolicy.ingress.allowedFrom` (default: from anywhere). The policy renders on `cloudflared.networkPolicy.enabled` alone — the Caddy egress peer is the only rule gated on `caddy.enabled` — and is only enforced on clusters whose CNI supports NetworkPolicy (inert otherwise). This is the outbound counterpart to the Caddy ingress policy added in 0.5.0.

@@ -20,6 +20,10 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/caddy/configmap.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ include "tfy-cloudflared.caddyServiceAccountName" . }}
+      # Caddy never calls the Kubernetes API. Set on the pod spec (not the
+      # ServiceAccount) because it has to hold for the namespace `default`
+      # service account too, which this chart does not own.
+      automountServiceAccountToken: {{ .Values.caddy.automountServiceAccountToken }}
       containers:
         - name: caddy
           image: {{ include "tfy-cloudflared.caddyImage" . | quote }}
