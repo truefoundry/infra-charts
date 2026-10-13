@@ -677,3 +677,96 @@ false
   value: /etc/ssl/certs/ca-certificates.crt
 {{- end }}
 {{- end -}}
+{{/*
+Egress rules shared by every tfy-agent component NetworkPolicy: DNS, the control plane
+(public endpoint and/or in-cluster namespaces) and, when kubeAPI is true, the Kubernetes API.
+Usage: include "tfy-agent.networkPolicy.commonEgress" (dict "root" . "kubeAPI" true)
+
+DNS names its destinations (kube-system DNS pods plus the private ranges) instead of a bare
+port-53 rule: the AWS VPC CNI agent merges every policy on a pod, and a bare rule loses to the
+internet rule's private-range `except` (amazon-network-policy-controller-k8s#146).
+*/}}
+{{- define "tfy-agent.networkPolicy.commonEgress" -}}
+{{- $np := .root.Values.networkPolicy -}}
+{{- $cp := $np.controlPlane -}}
+{{- $dnsCIDRs := list -}}
+{{- range $np.deniedInternetCIDRs }}
+{{- if and (not (contains ":" .)) (not (hasSuffix "/32" .)) }}
+{{- $dnsCIDRs = append $dnsCIDRs . }}
+{{- end }}
+{{- end }}
+{{- $dnsCIDRs = concat $dnsCIDRs ($np.dnsCIDRs | default list) -}}
+- to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: coredns
+    {{- range $dnsCIDRs }}
+    - ipBlock:
+        cidr: {{ . | quote }}
+    {{- end }}
+  ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+{{- if .kubeAPI }}
+- to:
+    {{- range $np.kubeAPICIDRs }}
+    - ipBlock:
+        cidr: {{ . | quote }}
+    {{- end }}
+  ports:
+    - protocol: TCP
+      port: {{ $np.kubeAPIPort }}
+{{- end }}
+{{- range $cp.namespaces }}
+- to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ .namespace | quote }}
+      {{- with .podSelector }}
+      podSelector:
+        matchLabels:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+  ports:
+    {{- range $cp.ports }}
+    - protocol: TCP
+      port: {{ . }}
+    {{- end }}
+{{- end }}
+{{- if $cp.internet }}
+{{- $v4 := list -}}
+{{- $v6 := list -}}
+{{- range $np.deniedInternetCIDRs }}
+{{- if contains ":" . }}{{ $v6 = append $v6 . }}{{ else }}{{ $v4 = append $v4 . }}{{ end }}
+{{- end }}
+- to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        {{- with $v4 }}
+        except:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+    - ipBlock:
+        cidr: ::/0
+        {{- with $v6 }}
+        except:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+  ports:
+    {{- range $np.internetPorts }}
+    - protocol: TCP
+      port: {{ . }}
+    {{- end }}
+{{- end }}
+{{- end -}}
