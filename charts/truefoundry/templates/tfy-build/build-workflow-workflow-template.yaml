@@ -713,6 +713,14 @@ spec:
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
           - name: SIZE_THRESHOLD
             value: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }}
+          # Pin the Go runtime to the container's CPU limit. Without this, the Go
+          # binaries here (docker CLI) size their thread pool from the node's core
+          # count and burn the whole CFS quota early in each 100ms period, which
+          # shows up as sustained CPU throttling.
+          - name: GOMAXPROCS
+            valueFrom:
+              resourceFieldRef:
+                resource: limits.cpu
         {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -722,7 +730,10 @@ spec:
             ephemeral-storage: 100Mi
             memory: 50Mi
           limits:
-            cpu: 50m
+            # Must stay >= 1 so GOMAXPROCS (rounded up from this value) cannot
+            # oversubscribe the quota. Requests stay low, so this only allows
+            # bursting and does not change scheduling cost.
+            cpu: 1
             ephemeral-storage: 100Mi
             memory: 50Mi
         volumeMounts:
@@ -804,6 +815,14 @@ spec:
             value: "{{`{{inputs.parameters.dockerRepo}}`}}"
           - name: DOCKER_TAG
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
+          # Pin the Go runtime to the container's CPU limit. containerd, nerdctl
+          # and soci all size their thread pool from the node's core count, so on
+          # a 4-core node a 1-core limit means 4 threads drain the CFS quota in a
+          # quarter of each period and then stall for the rest of it.
+          - name: GOMAXPROCS
+            valueFrom:
+              resourceFieldRef:
+                resource: limits.cpu
         {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
         {{- toYaml . | nindent 10 }}
         {{- end }}
