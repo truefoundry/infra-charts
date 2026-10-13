@@ -56,6 +56,23 @@ Expand the name of the chart.
 {{- end -}}
 
 {{/*
+  Compute the vector subchart's Service name from the parent chart context.
+  Mirrors the logic in vector.fullname but uses the subchart's scoped values.
+*/}}
+{{- define "tfy-llm-gateway.vector.fullname" -}}
+{{- if .Values.vector.fullnameOverride -}}
+{{- .Values.vector.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "vector" .Values.vector.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
   Create a default fully qualified app name.
   We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
   If release name contains chart name it will be used as a full name.
@@ -341,6 +358,42 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if and .Values.redis.enabled .Values.externalRedis.enabled -}}
 {{- fail "redis.enabled and externalRedis.enabled cannot both be true" -}}
 {{- end -}}
+{{- if and .Values.vector.enabled (not .Values.global.controlPlaneURL) -}}
+{{- fail "global.controlPlaneURL is required when vector.enabled is true" -}}
+{{- end -}}
+{{- if and .Values.vector.enabled .Values.global.namespaceOverride (ne (include "global.namespace" .) .Release.Namespace) -}}
+{{- fail "vector.enabled cannot be combined with global.namespaceOverride: the Vector chart installs into the release namespace, so the gateway and Vector would land in different namespaces" -}}
+{{- end -}}
+{{- if and .Values.vector.enabled .Values.vector.mtls.enabled (not ((.Values.global).mTLS).enabled) -}}
+{{- fail "vector.mtls.enabled requires global.mTLS.enabled: the gateway presents the global.mTLS client certificate when exporting traces to Vector" -}}
+{{- end -}}
+{{- if and .Values.vector.enabled .Values.vector.mtls.enabled -}}
+{{- /* The Vector subchart renders extraVolumes with toYaml, so the Secret name cannot be templated. */ -}}
+{{- $tls := (.Values.global).mTLS | default dict -}}
+{{- $want := $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" -}}
+{{- $got := "" -}}
+{{- range .Values.vector.extraVolumes -}}
+{{- if and (eq .name "truefoundry-mtls") .secret .secret.secretName -}}
+{{- $got = .secret.secretName -}}
+{{- end -}}
+{{- end -}}
+{{- if ne $got $want -}}
+{{- fail (printf "vector extraVolumes truefoundry-mtls secretName is %q, but the gateway mounts %q (global.mTLS.externalMtlsSecret, otherwise tlsSecretName). The Vector chart cannot template extraVolumes, so set that volume secretName to %q. Helm replaces the whole extraVolumes list, so keep the tfy-credentials volume in the override." $got $want $want) -}}
+{{- end -}}
+{{- end -}}
+{{- if and .Values.vector.enabled .Values.global.customCA.enabled -}}
+{{- /* Same constraint as mTLS: Vector extraVolumes are literal YAML, so the ConfigMap name must match. */ -}}
+{{- $want := include "tfy-llm-gateway.customCA.configMapName" . -}}
+{{- $got := "" -}}
+{{- range .Values.vector.extraVolumes -}}
+{{- if and (eq .name "custom-ca") .configMap .configMap.name -}}
+{{- $got = .configMap.name -}}
+{{- end -}}
+{{- end -}}
+{{- if ne $got $want -}}
+{{- fail (printf "vector extraVolumes custom-ca configMap.name is %q, but global.customCA resolves to %q. The Vector chart cannot template extraVolumes, so set that volume configMap.name to %q (and keep tfy-credentials, truefoundry-mtls, and ssl-certs when overriding the list). Without this mount Vector cannot trust the control plane CA when forwarding traces." $got $want $want) -}}
+{{- end -}}
+{{- end -}}
 {{- if or .Values.agentsLtsWriteJob.enabled .Values.sandbox.devMode.enabled -}}
 {{- if not (or .Values.redis.enabled .Values.externalRedis.enabled) -}}
 {{- fail "redis.enabled or externalRedis.enabled is required when agents features are true" -}}
@@ -457,6 +510,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_NATS_BRIDGE_URL) }}
 - name: TFY_SANDBOX_NATS_BRIDGE_URL
   value: {{ printf "ws://%s.%s.svc.cluster.local:4444" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
+{{- end }}
+{{- if and .Values.vector.enabled (not .Values.env.TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) }}
+- name: TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+  value: {{ printf "%s://%s.%s.svc.cluster.local:4318/v1/traces" (ternary "https" "http" .Values.vector.mtls.enabled) (include "tfy-llm-gateway.vector.fullname" .) (include "global.namespace" .) | quote }}
 {{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
@@ -675,7 +732,8 @@ false
 {{- if .Values.global.customCA.existingConfigMap.name -}}
 {{- .Values.global.customCA.existingConfigMap.name -}}
 {{- else -}}
-{{- include "tfy-llm-gateway.fullname" . }}-custom-ca
+{{- /* Fixed name so Vector (subchart extraVolumes are not templated) can mount the same bundle. */ -}}
+tfy-llm-gateway-custom-ca
 {{- end -}}
 {{- end -}}
 
@@ -962,6 +1020,31 @@ limits:
 {{- end }}
 {{- if .Values.global.customCA.enabled }}
 {{- include "tfy-llm-gateway.customCA.volumeMounts" . | nindent 0 }}
+{{- end }}
+{{- end -}}
+
+{{/*
+  NetworkPolicy resource name (max 63 chars).
+  Usage: include "tfy-llm-gateway.networkPolicyName" (dict "context" . "suffix" "egress")
+*/}}
+{{- define "tfy-llm-gateway.networkPolicyName" -}}
+{{- printf "%s-np-%s" (include "tfy-llm-gateway.fullname" .context) .suffix | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
+  NetworkPolicy labels
+*/}}
+{{- define "tfy-llm-gateway.networkPolicyLabels" -}}
+{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
+{{- toYaml (mergeOverwrite $commonLabels .Values.networkPolicy.labels) }}
+{{- end -}}
+
+{{/*
+  NetworkPolicy annotations
+*/}}
+{{- define "tfy-llm-gateway.networkPolicyAnnotations" -}}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
+{{- toYaml . }}
 {{- end }}
 {{- end -}}
 

@@ -201,6 +201,17 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 
 {{/*
+  Ask TFY inline agent config is mounted when tfyConfigs, TrueForge, and askTfyAgent are enabled.
+  */}}
+{{- define "servicefoundry-server.askTfyEnabled" -}}
+{{- $tc := .Values.tfyConfigs | default dict -}}
+{{- $askTfy := $tc.configs.askTfyAgent | default dict -}}
+{{- if and .Values.servicefoundryServer.enabled $tc.enabled .Values.trueforge.enabled (default true $askTfy.enabled) (tpl .Values.servicefoundryServer.configs.askTfyAgent .) -}}
+true
+{{- end -}}
+{{- end }}
+
+{{/*
   Parse env from template
   */}}
 {{- define "servicefoundry-server.parseEnv" -}}
@@ -261,6 +272,17 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
 - name: DEFAULT_POLICIES_CONFIG_PATH
   value: /opt/truefoundry/configs/default-policies/default-policies.yaml
+{{- end }}
+{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
+{{- $askTfy := (.Values.tfyConfigs.configs.askTfyAgent | default dict) }}
+- name: ASK_TFY_AGENT_CONFIG_PATH
+  value: /opt/truefoundry/configs/ask-tfy-agent/ask-tfy-agent.yaml
+- name: ASK_TFY_WEB_SEARCH_ENABLED
+  value: {{ ($askTfy.webSearchEnabled | default false) | quote }}
+{{- if $askTfy.skillsRef }}
+- name: ASK_TFY_SKILLS_REF
+  value: {{ $askTfy.skillsRef | quote }}
+{{- end }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
 - name: LLM_CODE_SNIPPET_TEMPLATE_DIRECTORY
@@ -332,6 +354,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
   {{- $volumes = append $volumes (dict "name" "configs-default-policies" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.defaultPolicies .))) }}
+{{- end }}
+{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
+  {{- $volumes = append $volumes (dict "name" "configs-ask-tfy-agent" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.askTfyAgent .))) }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
@@ -413,6 +438,9 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-default-policies" "mountPath" "/opt/truefoundry/configs/default-policies") }}
+{{- end }}
+{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
+  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-ask-tfy-agent" "mountPath" "/opt/truefoundry/configs/ask-tfy-agent") }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}

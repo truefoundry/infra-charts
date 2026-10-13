@@ -1,0 +1,36 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+rules:
+  # Watch namespaces (annotation is the operator's input). "patch" is required so
+  # Kopf can persist its bookkeeping (diffbase + handler progress) annotations on
+  # the namespace object for the on.create/on.resume/on.update handlers.
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "patch"]
+  # Manage the generated NetworkPolicies.
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Emit Kubernetes Events (parse/validation warnings, reconcile info).
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "tfy-netpol-operator.fullname" . }}
+  labels:
+    {{- include "tfy-netpol-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "tfy-netpol-operator.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tfy-netpol-operator.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}

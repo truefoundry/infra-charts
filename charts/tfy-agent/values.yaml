@@ -136,12 +136,12 @@ config:
   #   - default
   #   - namespace-1
 
-## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
-## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
-## provide tokenSecretKey matching a key in that existing Secret.
-## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
-## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
-##
+  ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
+  ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
+  ## provide tokenSecretKey matching a key in that existing Secret.
+  ## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
+  ## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
+  ##
 clustersConfig: []
 # Example:
 # clustersConfig:
@@ -153,8 +153,8 @@ clustersConfig: []
 #     namespaces: ["*"]
 #     # clusterSecretStoreName: custom-store
 
-  ## @param nameOverride String to override partial name passed in helm install command
-  ##
+## @param nameOverride String to override partial name passed in helm install command
+##
 nameOverride: ""
 
 ## @param fullnameOverride String to override full name passed in helm install command
@@ -257,7 +257,7 @@ tfyAgent:
     ##
     pullPolicy: IfNotPresent
     ## @param tfyAgent.image.tag Overrides the image tag whose default is the chart appVersion.
-    tag: "e0a8a4f61227fde70bde6e30c7204af90c6e91e5"
+    tag: "6dae922632f4b9ee2b794944b121087ff22fc38e"
 
   ## Define resources requests and limits for single Pods.
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -812,6 +812,13 @@ external-secrets-operator:
   ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent.
   ##
   enabled: true
+  ## Large ESO CRDs exceed the 256KiB kubectl last-applied-configuration annotation limit.
+  ## Force Argo CD server-side apply for CRDs to avoid sync failures.
+  ## @param external-secrets-operator.crds.annotations [object] Annotations to add to all External Secrets CRDs
+  ##
+  crds:
+    annotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=true
   ## @section external-secrets-operator.clusterSecretStore ClusterSecretStore configuration
   ##
   clusterSecretStore:

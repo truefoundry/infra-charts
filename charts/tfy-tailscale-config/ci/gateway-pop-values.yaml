@@ -9,6 +9,13 @@ proxyGroups:
 proxyClasses:
   default:
     enabled: false
+  # Exercises the operator-created ServiceMonitor, with the label a kube-prometheus-stack
+  # serviceMonitorSelector matches.
+  apiserver:
+    serviceMonitor:
+      enabled: true
+      labels:
+        release: prometheus
 recorder:
   enabled: false
 rbac:

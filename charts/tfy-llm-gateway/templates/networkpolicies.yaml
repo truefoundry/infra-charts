@@ -1,0 +1,111 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $ingress := .Values.networkPolicy.ingress }}
+{{- $egress := .Values.networkPolicy.egress }}
+{{- if $ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tfy-llm-gateway.networkPolicyName" (dict "context" . "suffix" "ingress") }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-llm-gateway.networkPolicyLabels" . | nindent 4 }}
+  {{- with (include "tfy-llm-gateway.networkPolicyAnnotations" . | trim) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    {{- range $ingress.allowedIngressFrom }}
+    - from:
+      {{- if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          {{- with .podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      {{- else }}
+        - podSelector:
+            matchLabels:
+              {{- toYaml (required "networkPolicy.ingress.allowedIngressFrom entry needs namespace or podSelector" .podSelector) | nindent 14 }}
+      {{- end }}
+    {{- end }}
+    {{- with $ingress.extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- if $egress.enabled }}
+{{- /*
+  Split deniedEgressCIDRs by address family. An ipBlock's `except` entries must fall
+  inside its `cidr`, so IPv4 ranges can only be subtracted from 0.0.0.0/0 and IPv6
+  ranges only from ::/0. Anything containing ":" is IPv6.
+*/}}
+{{- $deniedV4 := list }}
+{{- $deniedV6 := list }}
+{{- range $egress.deniedEgressCIDRs }}
+{{- if contains ":" . }}
+{{- $deniedV6 = append $deniedV6 . }}
+{{- else }}
+{{- $deniedV4 = append $deniedV4 . }}
+{{- end }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tfy-llm-gateway.networkPolicyName" (dict "context" . "suffix" "egress") }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-llm-gateway.networkPolicyLabels" . | nindent 4 }}
+  {{- with (include "tfy-llm-gateway.networkPolicyAnnotations" . | trim) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "tfy-llm-gateway.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS (UDP + TCP 53) to any resolver
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    # pods belonging to this release (gateway, redis, sandbox) share app.kubernetes.io/instance
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ .Release.Name }}
+    # all other IPv4 destinations (LLM providers, in-cluster, etc.); subtract ranges via deniedEgressCIDRs
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            {{- with $deniedV4 }}
+            except:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+    # same for IPv6. Emitted unconditionally: without it every IPv6 destination is denied,
+    # which silently breaks egress on dual-stack clusters when DNS returns a AAAA record.
+    - to:
+        - ipBlock:
+            cidr: ::/0
+            {{- with $deniedV6 }}
+            except:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+    {{- with $egress.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
+{{- end }}

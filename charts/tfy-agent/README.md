@@ -162,7 +162,7 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgent.service.type`                                | Type for tfyAgent Service                                                                                             | `ClusterIP`                                |
 | `tfyAgent.image.repository`                            | tfyAgent repository                                                                                                   | `tfy.jfrog.io/tfy-images/tfy-agent`        |
 | `tfyAgent.image.pullPolicy`                            | Pull policy for tfyAgent                                                                                              | `IfNotPresent`                             |
-| `tfyAgent.image.tag`                                   | Overrides the image tag whose default is the chart appVersion.                                                        | `e0a8a4f61227fde70bde6e30c7204af90c6e91e5` |
+| `tfyAgent.image.tag`                                   | Overrides the image tag whose default is the chart appVersion.                                                        | `6dae922632f4b9ee2b794944b121087ff22fc38e` |
 | `tfyAgent.resources.limits.cpu`                        | CPU resource limits for tfyAgent container. Advised to only increase the limits and not decrease it                   | `1.6`                                      |
 | `tfyAgent.resources.limits.memory`                     | Memory Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it                | `4000Mi`                                   |
 | `tfyAgent.resources.limits.ephemeral-storage`          | Ephemeral storage Resource limits for tfyAgent container. Advised to only increase the limits and not decrease it     | `256Mi`                                    |
@@ -295,9 +295,10 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### eso (external-secrets operator) configuration parameters
 
-| Name                                | Description                                                                                                                                                                        | Value  |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `external-secrets-operator.enabled` | Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent. | `true` |
+| Name                                         | Description                                                                                                                                                                        | Value  |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `external-secrets-operator.enabled`          | Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent. | `true` |
+| `external-secrets-operator.crds.annotations` | Annotations to add to all External Secrets CRDs                                                                                                                                    | `{}`   |
 
 ### external-secrets-operator.clusterSecretStore ClusterSecretStore configuration
 

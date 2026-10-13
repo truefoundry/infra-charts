@@ -886,6 +886,23 @@ tfyWorkflowPropeller:
       serviceAccount:
         annotations:
           {}
+      ## @param tfyWorkflowPropeller.flyteCore.flytepropeller.affinity [object] Affinity to pin flytepropeller to critical nodes
+      ##
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: class.truefoundry.com/component
+                    operator: In
+                    values:
+                      - critical
+      ## @param tfyWorkflowPropeller.flyteCore.flytepropeller.tolerations [array] Tolerations for flytepropeller to run on critical nodes
+      ##
+      tolerations:
+        - key: "class.truefoundry.com/component"
+          value: "critical"
+          effect: "NoSchedule"
 
 helm:
   ## @param helm.resourcePolicy Resource policy for the helm chart

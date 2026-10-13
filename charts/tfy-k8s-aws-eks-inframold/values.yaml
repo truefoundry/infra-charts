@@ -1070,6 +1070,23 @@ tfyWorkflowPropeller:
       serviceAccount:
         annotations:
           eks.amazonaws.com/role-arn: "<to_be_provided>"
+      ## @param tfyWorkflowPropeller.flyteCore.flytepropeller.affinity [object] Affinity to pin flytepropeller to critical nodes
+      ##
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: class.truefoundry.com/component
+                    operator: In
+                    values:
+                      - critical
+      ## @param tfyWorkflowPropeller.flyteCore.flytepropeller.tolerations [array] Tolerations for flytepropeller to run on critical nodes
+      ##
+      tolerations:
+        - key: "class.truefoundry.com/component"
+          value: "critical"
+          effect: "NoSchedule"
   ## @skip tfyWorkflowPropeller.tfySignedURLServer [object] TfySignedURLServer configuration for flyteCore
   ##
   tfySignedURLServer:
