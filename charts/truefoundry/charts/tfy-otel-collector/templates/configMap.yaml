@@ -273,19 +273,6 @@ data:
         logs:
           level: "${env:LOG_LEVEL:-INFO}"
           encoding: "${env:LOG_ENCODING:-json}"
-        # Collector-internal spans. Same OTLP headers secret as deltafusion-query-server.
-        traces:
-          level: ${env:OTEL_EXPORTER_OTLP_LOG_LEVEL:-none}
-          propagators: [tracecontext]
-          processors:
-            - batch:
-                schedule_delay: 2000
-                export_timeout: 10000
-                exporter:
-                  otlp:
-                    protocol: http/protobuf
-                    endpoint: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
-                    headers_list: "${env:OTEL_EXPORTER_OTLP_HEADERS:-}"
         metrics:
           # detailed un-drops otelhttp/otelgrpc histograms, including
           # http.server.request.duration (OTLP HTTP handler latency).
