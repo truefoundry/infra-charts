@@ -609,15 +609,15 @@ from the Bitnami chart so the master Service name stays in sync with it.
 {{- end -}}
 
 {{/*
-Shared control-plane Redis connection URL and host.
+Shared control-plane Redis host.
 
 `redis` (bundled) and `externalRedis` are mutually exclusive. TrueForge is the
 only consumer today; the bundled LLM gateway can be pointed at the same instance
 later so a CP+GP install does not run two Redises forever.
 
-External Redis is active only when `externalRedis.enabled` is true; url, host,
-sentinel, and existingSecret (user-managed trueforge-creds; credentials never
-pass through values or a rendered manifest) are modes under it.
+External Redis is active only when `externalRedis.enabled` is true. Host,
+Sentinel, and externalSecret (the user sets trueforge.env; this chart creates
+no Redis Secret) are the modes under it.
 */}}
 {{- define "truefoundry.redis.useExternal" -}}
 {{- if .Values.externalRedis.enabled -}}
@@ -625,17 +625,25 @@ true
 {{- end -}}
 {{- end -}}
 
-{{- define "truefoundry.redis.url" -}}
-{{- if and .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
-{{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
+{{- define "truefoundry.redis.externalSecret" -}}
+{{- if eq (toString (.Values.externalRedis.externalSecret | default false)) "true" -}}
+true
 {{- end -}}
-{{- if and .Values.externalRedis.url .Values.externalRedis.existingSecret -}}
-{{- fail "externalRedis.url and externalRedis.existingSecret are mutually exclusive" -}}
 {{- end -}}
-{{- if and (eq (include "truefoundry.redis.useExternal" .) "true") (not .Values.externalRedis.existingSecret) -}}
-{{- .Values.externalRedis.url -}}
-{{- else if .Values.redis.enabled -}}
-{{- printf "redis://%s-master.%s.svc.cluster.local:6379" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
+
+{{/*
+"true" when value is ${k8s-secret/<secret>/<key>} with a non-empty secret and key.
+The key must not contain "/".
+*/}}
+{{- define "truefoundry.redis.threePartRef" -}}
+{{- $value := .value -}}
+{{- if and (kindIs "string" $value) (hasPrefix "${k8s-secret/" $value) -}}
+{{- $parts := regexSplit "/" (trimSuffix "}" $value) -1 -}}
+{{- if eq (len $parts) 3 -}}
+{{- if and (index $parts 1) (index $parts 2) -}}
+true
+{{- end -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 
@@ -643,7 +651,7 @@ true
 {{- if and .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
 {{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
 {{- end -}}
-{{- if and (eq (include "truefoundry.redis.useExternal" .) "true") (not .Values.externalRedis.existingSecret) -}}
+{{- if eq (include "truefoundry.redis.useExternal" .) "true" -}}
 {{- .Values.externalRedis.host -}}
 {{- else if .Values.redis.enabled -}}
 {{- printf "%s-master.%s.svc.cluster.local" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
@@ -652,11 +660,10 @@ true
 
 {{/*
 Whether a control-plane Redis is configured at all: bundled, external by
-url/host/sentinel, or external via a user-managed trueforge-creds Secret.
-Renders "true" or "".
+host/sentinel, or externalSecret. Renders "true" or "".
 */}}
 {{- define "truefoundry.redis.available" -}}
-{{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
+{{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") (eq (include "truefoundry.redis.externalSecret" .) "true") -}}
 true
 {{- end -}}
 {{- end -}}
