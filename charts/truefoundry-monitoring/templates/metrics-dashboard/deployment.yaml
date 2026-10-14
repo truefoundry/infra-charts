@@ -19,6 +19,7 @@ spec:
         {{- include "truefoundry-monitoring.metrics-dashboard.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "truefoundry-monitoring.metrics-dashboard.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.tfyMetricsDashboard.serviceAccount.automountServiceAccountToken | default false }}
       {{- with .Values.tfyMetricsDashboard.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

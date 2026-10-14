@@ -9,9 +9,38 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 rules:
+  {{- if .Values.headlamp.rbac.readAllResources }}
   - apiGroups: ["*"]
     resources: ["*"]
     verbs: ["get", "list", "watch"]
+  {{- else }}
+  {{- /* Core resources are listed one by one so that Secrets stay out unless readSecrets is set. */}}
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - endpoints
+      - events
+      - limitranges
+      - persistentvolumeclaims
+      - pods
+      - pods/log
+      - podtemplates
+      - replicationcontrollers
+      - resourcequotas
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch"]
+  {{- if .Values.headlamp.rbac.readSecrets }}
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+  {{- end }}
+  {{- with .Values.headlamp.rbac.readApiGroups }}
+  - apiGroups: {{ toJson . }}
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  {{- end }}
+  {{- end }}
   {{- if .Values.headlamp.allowPodExec }}
   - apiGroups: [""]
     resources: ["pods/exec"]

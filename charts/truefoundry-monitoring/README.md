@@ -2,6 +2,16 @@
 
 This Helm chart package, provided by TrueFoundry, contains the components needed to monitor the control plane components           
 
+## Security defaults
+
+From 0.1.7:
+
+- **Headlamp** gets a read-only Role in the control plane namespace without Secrets: core resources other than Secrets, plus every resource in `headlamp.rbac.readApiGroups`. `headlamp.rbac.readSecrets: true` adds Secrets back; `headlamp.rbac.readAllResources: true` restores the old read-everything Role. Headlamp also runs with a read-only root (emptyDirs at `/tmp` and `/home/headlamp/.config`, which you must keep if you override `headlamp.volumes` / `headlamp.volumeMounts`) and has default resources.
+- **NATS UI and Metrics Dashboard** pods no longer mount a ServiceAccount token (`<component>.serviceAccount.automountServiceAccountToken`, default `false`), even when they fall back to the namespace's `default` ServiceAccount. NATS UI gets default resources when `tfyNatsUi.resources` is empty.
+- **Vector and VictoriaLogs** pods use the `RuntimeDefault` seccomp profile. The Grafana `helm test` pod runs non-root with seccomp, no privilege escalation and all capabilities dropped.
+
+Grafana keeps anonymous access with the `Admin` role (`grafana.grafana\.ini.auth.anonymous`), which TrueFoundry's `/admin/grafana` proxy relies on. Anything that can reach the Grafana Service inside the cluster is therefore a Grafana admin, so restrict it with NetworkPolicies.
+
 ## Parameters
 
 ### Global configuration
@@ -52,99 +62,102 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 
 ### logs.victoria-logs-single VictoriaLogs subchart configuration
 
-| Name                                                            | Description                                  | Value                                             |
-| --------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------- |
-| `logs.victoria-logs-single.global.image.registry`               | Image registry for VictoriaLogs              | `tfy.jfrog.io/tfy-mirror`                         |
-| `logs.victoria-logs-single.server.image.registry`               | Image registry                               | `tfy.jfrog.io/tfy-mirror`                         |
-| `logs.victoria-logs-single.server.retentionPeriod`              | Retention period for logs                    | `15d`                                             |
-| `logs.victoria-logs-single.server.retentionMaxDiskUsagePercent` | Maximum disk usage percentage for retention  | `85`                                              |
-| `logs.victoria-logs-single.server.persistentVolume.size`        | Persistent volume size                       | `50Gi`                                            |
-| `logs.victoria-logs-single.server.resources`                    | Resources for VictoriaLogs server            | `{}`                                              |
-| `logs.victoria-logs-single.server.affinity`                     | Affinity for VictoriaLogs server             | `{}`                                              |
-| `logs.victoria-logs-single.server.tolerations`                  | Tolerations for VictoriaLogs server          | `[]`                                              |
-| `logs.victoria-logs-single.vector.enabled`                      | Enable Vector for log collection             | `true`                                            |
-| `logs.victoria-logs-single.vector.podPriorityClassName`         | Pod priority class name                      | `system-node-critical`                            |
-| `logs.victoria-logs-single.vector.image.repository`             | Image repository                             | `public.ecr.aws/truefoundrycloud/timberio/vector` |
-| `logs.victoria-logs-single.vector.image.tag`                    | Image tag                                    | `v0.52.0`                                         |
-| `logs.victoria-logs-single.vector.resources`                    | Resources for Vector                         | `{}`                                              |
-| `logs.victoria-logs-single.vector.podSecurityContext`           | Pod-level security context for Vector        | `{}`                                              |
-| `logs.victoria-logs-single.vector.securityContext`              | Container-level security context for Vector  | `{}`                                              |
-| `logs.victoria-logs-single.vector.affinity`                     | Affinity for Vector pods                     | `{}`                                              |
-| `logs.victoria-logs-single.vector.tolerations`                  | Tolerations for Vector pods                  | `[]`                                              |
-| `logs.victoria-logs-single.vector.nodeSelector`                 | Node selector for Vector pods                | `{}`                                              |
-| `logs.victoria-logs-single.vector.customConfig`                 | Custom Vector config scoped to control plane | `{}`                                              |
+| Name                                                                      | Description                                                                                    | Value                                             |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `logs.victoria-logs-single.global.image.registry`                         | Image registry for VictoriaLogs                                                                | `tfy.jfrog.io/tfy-mirror`                         |
+| `logs.victoria-logs-single.server.image.registry`                         | Image registry                                                                                 | `tfy.jfrog.io/tfy-mirror`                         |
+| `logs.victoria-logs-single.server.retentionPeriod`                        | Retention period for logs                                                                      | `15d`                                             |
+| `logs.victoria-logs-single.server.retentionMaxDiskUsagePercent`           | Maximum disk usage percentage for retention                                                    | `85`                                              |
+| `logs.victoria-logs-single.server.persistentVolume.size`                  | Persistent volume size                                                                         | `50Gi`                                            |
+| `logs.victoria-logs-single.server.resources`                              | Resources for VictoriaLogs server                                                              | `{}`                                              |
+| `logs.victoria-logs-single.server.affinity`                               | Affinity for VictoriaLogs server                                                               | `{}`                                              |
+| `logs.victoria-logs-single.server.tolerations`                            | Tolerations for VictoriaLogs server                                                            | `[]`                                              |
+| `logs.victoria-logs-single.server.podSecurityContext.seccompProfile.type` | Seccomp profile for the VictoriaLogs server pod (merged with the subchart's non-root defaults) | `RuntimeDefault`                                  |
+| `logs.victoria-logs-single.vector.enabled`                                | Enable Vector for log collection                                                               | `true`                                            |
+| `logs.victoria-logs-single.vector.podPriorityClassName`                   | Pod priority class name                                                                        | `system-node-critical`                            |
+| `logs.victoria-logs-single.vector.image.repository`                       | Image repository                                                                               | `public.ecr.aws/truefoundrycloud/timberio/vector` |
+| `logs.victoria-logs-single.vector.image.tag`                              | Image tag                                                                                      | `v0.52.0`                                         |
+| `logs.victoria-logs-single.vector.resources`                              | Resources for Vector                                                                           | `{}`                                              |
+| `logs.victoria-logs-single.vector.podSecurityContext`                     | Pod-level security context for Vector                                                          | `{}`                                              |
+| `logs.victoria-logs-single.vector.securityContext`                        | Container-level security context for Vector                                                    | `{}`                                              |
+| `logs.victoria-logs-single.vector.affinity`                               | Affinity for Vector pods                                                                       | `{}`                                              |
+| `logs.victoria-logs-single.vector.tolerations`                            | Tolerations for Vector pods                                                                    | `[]`                                              |
+| `logs.victoria-logs-single.vector.nodeSelector`                           | Node selector for Vector pods                                                                  | `{}`                                              |
+| `logs.victoria-logs-single.vector.customConfig`                           | Custom Vector config scoped to control plane                                                   | `{}`                                              |
 
 ### Grafana configuration
 
-| Name                                                            | Description                                                      | Value                                     |
-| --------------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- |
-| `grafana.enabled`                                               | Enable Grafana for control plane dashboards                      | `true`                                    |
-| `grafana.plugins`                                               | Grafana plugins to install                                       | `[]`                                      |
-| `grafana.replicas`                                              | Number of Grafana replicas                                       | `1`                                       |
-| `grafana.useStatefulSet`                                        | Use StatefulSet for Grafana                                      | `true`                                    |
-| `grafana.resources`                                             | Resources for Grafana                                            | `{}`                                      |
-| `grafana.grafana\.ini`                                          | Grafana INI configuration overrides                              | `{}`                                      |
-| `grafana.grafana.ini.server.domain`                             | Domain for Grafana (e.g. mycluster.example.com)                  | `""`                                      |
-| `grafana.grafana.ini.server.root_url`                           | Root URL for Grafana (subpath /admin/grafana via tfy-proxy)      | `%(protocol)s://%(domain)s/admin/grafana` |
-| `grafana.grafana.ini.server.enforce_domain`                     | Enforce domain for Grafana                                       | `false`                                   |
-| `grafana.grafana.ini.server.serve_from_sub_path`                | Serve Grafana from a subpath                                     | `true`                                    |
-| `grafana.grafana.ini.auth.anonymous.enabled`                    | Enable anonymous auth for Grafana                                | `true`                                    |
-| `grafana.grafana.ini.auth.anonymous.enabled`                    | Enable anonymous auth for Grafana                                | `true`                                    |
-| `grafana.grafana.ini.auth.anonymous.org_role`                   | Org role for anonymous auth                                      | `Admin`                                   |
-| `grafana.adminUser`                                             | Admin user for Grafana                                           | `admin`                                   |
-| `grafana.adminPassword`                                         | Admin password for Grafana (generate a random password if empty) | `""`                                      |
-| `grafana.initChownData.resources`                               | Resources for init-chown-data container                          | `{}`                                      |
-| `grafana.sidecar.resources`                                     | Resources for Grafana sidecar                                    | `{}`                                      |
-| `grafana.sidecar.dashboards.enabled`                            | Enable dashboard sidecar                                         | `true`                                    |
-| `grafana.sidecar.dashboards.label`                              | Label key for dashboard ConfigMaps                               | `truefoundry_monitoring`                  |
-| `grafana.sidecar.dashboards.labelValue`                         | Label value for dashboard ConfigMaps                             | `1`                                       |
-| `grafana.sidecar.dashboards.folderAnnotation`                   | Annotation key used to determine dashboard folder                | `grafana_folder`                          |
-| `grafana.sidecar.dashboards.SCProvider`                         | Enable sidecar provider                                          | `true`                                    |
-| `grafana.sidecar.dashboards.provider.foldersFromFilesStructure` | Use folder structure from files                                  | `true`                                    |
-| `grafana.sidecar.datasources.enabled`                           | Enable datasource sidecar                                        | `true`                                    |
-| `grafana.sidecar.datasources.label`                             | Label key for datasource ConfigMaps                              | `truefoundry_monitoring_datasource`       |
-| `grafana.sidecar.datasources.labelValue`                        | Label value for datasource ConfigMaps                            | `1`                                       |
-| `grafana.persistence.enabled`                                   | Enable persistence for Grafana                                   | `true`                                    |
-| `grafana.persistence.type`                                      | Persistence type                                                 | `statefulset`                             |
-| `grafana.persistence.size`                                      | Persistence size                                                 | `5Gi`                                     |
-| `grafana.affinity`                                              | Affinity for Grafana pods                                        | `{}`                                      |
-| `grafana.tolerations`                                           | Tolerations for Grafana pods                                     | `[]`                                      |
-| `grafana.nodeSelector`                                          | Node selector for Grafana pods                                   | `{}`                                      |
+| Name                                                            | Description                                                                                                          | Value                                     |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `grafana.enabled`                                               | Enable Grafana for control plane dashboards                                                                          | `true`                                    |
+| `grafana.plugins`                                               | Grafana plugins to install                                                                                           | `[]`                                      |
+| `grafana.replicas`                                              | Number of Grafana replicas                                                                                           | `1`                                       |
+| `grafana.useStatefulSet`                                        | Use StatefulSet for Grafana                                                                                          | `true`                                    |
+| `grafana.resources`                                             | Resources for Grafana                                                                                                | `{}`                                      |
+| `grafana.grafana\.ini`                                          | Grafana INI configuration overrides                                                                                  | `{}`                                      |
+| `grafana.grafana.ini.server.domain`                             | Domain for Grafana (e.g. mycluster.example.com)                                                                      | `""`                                      |
+| `grafana.grafana.ini.server.root_url`                           | Root URL for Grafana (subpath /admin/grafana via tfy-proxy)                                                          | `%(protocol)s://%(domain)s/admin/grafana` |
+| `grafana.grafana.ini.server.enforce_domain`                     | Enforce domain for Grafana                                                                                           | `false`                                   |
+| `grafana.grafana.ini.server.serve_from_sub_path`                | Serve Grafana from a subpath                                                                                         | `true`                                    |
+| `grafana.grafana.ini.auth.anonymous.enabled`                    | Enable anonymous auth for Grafana                                                                                    | `true`                                    |
+| `grafana.grafana.ini.auth.anonymous.enabled`                    | Enable anonymous auth for Grafana                                                                                    | `true`                                    |
+| `grafana.grafana.ini.auth.anonymous.org_role`                   | Org role for anonymous auth                                                                                          | `Admin`                                   |
+| `grafana.testFramework.securityContext`                         | Pod security context for the Grafana test pod                                                                        | `{}`                                      |
+| `grafana.testFramework.containerSecurityContext`                | Container security context for the Grafana test pod. The root filesystem stays writable because bats writes to /tmp. | `{}`                                      |
+| `grafana.adminUser`                                             | Admin user for Grafana                                                                                               | `admin`                                   |
+| `grafana.adminPassword`                                         | Admin password for Grafana (generate a random password if empty)                                                     | `""`                                      |
+| `grafana.initChownData.resources`                               | Resources for init-chown-data container                                                                              | `{}`                                      |
+| `grafana.sidecar.resources`                                     | Resources for Grafana sidecar                                                                                        | `{}`                                      |
+| `grafana.sidecar.dashboards.enabled`                            | Enable dashboard sidecar                                                                                             | `true`                                    |
+| `grafana.sidecar.dashboards.label`                              | Label key for dashboard ConfigMaps                                                                                   | `truefoundry_monitoring`                  |
+| `grafana.sidecar.dashboards.labelValue`                         | Label value for dashboard ConfigMaps                                                                                 | `1`                                       |
+| `grafana.sidecar.dashboards.folderAnnotation`                   | Annotation key used to determine dashboard folder                                                                    | `grafana_folder`                          |
+| `grafana.sidecar.dashboards.SCProvider`                         | Enable sidecar provider                                                                                              | `true`                                    |
+| `grafana.sidecar.dashboards.provider.foldersFromFilesStructure` | Use folder structure from files                                                                                      | `true`                                    |
+| `grafana.sidecar.datasources.enabled`                           | Enable datasource sidecar                                                                                            | `true`                                    |
+| `grafana.sidecar.datasources.label`                             | Label key for datasource ConfigMaps                                                                                  | `truefoundry_monitoring_datasource`       |
+| `grafana.sidecar.datasources.labelValue`                        | Label value for datasource ConfigMaps                                                                                | `1`                                       |
+| `grafana.persistence.enabled`                                   | Enable persistence for Grafana                                                                                       | `true`                                    |
+| `grafana.persistence.type`                                      | Persistence type                                                                                                     | `statefulset`                             |
+| `grafana.persistence.size`                                      | Persistence size                                                                                                     | `5Gi`                                     |
+| `grafana.affinity`                                              | Affinity for Grafana pods                                                                                            | `{}`                                      |
+| `grafana.tolerations`                                           | Tolerations for Grafana pods                                                                                         | `[]`                                      |
+| `grafana.nodeSelector`                                          | Node selector for Grafana pods                                                                                       | `{}`                                      |
 
 ### NATS UI configuration
 
-| Name                                                    | Description                                                         | Value                                      |
-| ------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
-| `tfyNatsUi.enabled`                                     | Deploy NATS UI Deployment and Service                               | `false`                                    |
-| `tfyNatsUi.nameOverride`                                | Override the component name used in labels and the Deployment name  | `""`                                       |
-| `tfyNatsUi.fullnameOverride`                            | If set, overrides the Deployment full name                          | `""`                                       |
-| `tfyNatsUi.replicaCount`                                | Number of replicas                                                  | `1`                                        |
-| `tfyNatsUi.image.registry`                              | Image registry (optional)                                           | `tfy.jfrog.io`                             |
-| `tfyNatsUi.image.repository`                            | Container image repository (required when enabled)                  | `tfy-private-images/nats-ui-dashboard`     |
-| `tfyNatsUi.image.tag`                                   | Image tag                                                           | `78859f0304fc2081e835db5cfe7ba241f059fac6` |
-| `tfyNatsUi.imagePullPolicy`                             | Image pull policy                                                   | `IfNotPresent`                             |
-| `tfyNatsUi.imagePullSecrets`                            | Image pull secrets for this workload                                | `[]`                                       |
-| `tfyNatsUi.serviceAccount.create`                       | Create a dedicated ServiceAccount                                   | `false`                                    |
-| `tfyNatsUi.serviceAccount.name`                         | Override ServiceAccount name                                        | `""`                                       |
-| `tfyNatsUi.serviceAccount.annotations`                  | Service account annotations                                         | `{}`                                       |
-| `tfyNatsUi.serviceAccount.labels`                       | Extra labels for the ServiceAccount                                 | `{}`                                       |
-| `tfyNatsUi.serviceAccount.automountServiceAccountToken` | Automount service account token                                     | `false`                                    |
-| `tfyNatsUi.env`                                         | Environment variables (replaces natsUrl/accountSeedSecret when set) | `{}`                                       |
-| `tfyNatsUi.envSecretName`                               | Secret name for shorthand ${k8s-secret/<key>} entries in env        | `""`                                       |
-| `tfyNatsUi.natsUrl`                                     | NATS_URL env var when env is empty                                  | `http://{{ .Release.Name }}-tfy-nats:4222` |
-| `tfyNatsUi.accountSeedSecret.name`                      | Existing Secret name when env is empty                              | `truefoundry-tfy-nats-secret`              |
-| `tfyNatsUi.accountSeedSecret.key`                       | Key inside the Secret                                               | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
-| `tfyNatsUi.service.type`                                | Service type                                                        | `ClusterIP`                                |
-| `tfyNatsUi.service.port`                                | Service port                                                        | `8080`                                     |
-| `tfyNatsUi.service.targetPort`                          | Container port (defaults to service.port)                           | `""`                                       |
-| `tfyNatsUi.service.annotations`                         | Service annotations                                                 | `{}`                                       |
-| `tfyNatsUi.extraEnv`                                    | Extra environment variables for the container                       | `[]`                                       |
-| `tfyNatsUi.resources`                                   | Container resources                                                 | `{}`                                       |
-| `tfyNatsUi.podSecurityContext`                          | Pod security context                                                | `{}`                                       |
-| `tfyNatsUi.securityContext`                             | Container security context                                          | `{}`                                       |
-| `tfyNatsUi.nodeSelector`                                | Node selector                                                       | `{}`                                       |
-| `tfyNatsUi.tolerations`                                 | Tolerations                                                         | `[]`                                       |
-| `tfyNatsUi.affinity`                                    | Affinity                                                            | `{}`                                       |
+| Name                                                    | Description                                                                          | Value                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `tfyNatsUi.enabled`                                     | Deploy NATS UI Deployment and Service                                                | `false`                                    |
+| `tfyNatsUi.nameOverride`                                | Override the component name used in labels and the Deployment name                   | `""`                                       |
+| `tfyNatsUi.fullnameOverride`                            | If set, overrides the Deployment full name                                           | `""`                                       |
+| `tfyNatsUi.replicaCount`                                | Number of replicas                                                                   | `1`                                        |
+| `tfyNatsUi.image.registry`                              | Image registry (optional)                                                            | `tfy.jfrog.io`                             |
+| `tfyNatsUi.image.repository`                            | Container image repository (required when enabled)                                   | `tfy-private-images/nats-ui-dashboard`     |
+| `tfyNatsUi.image.tag`                                   | Image tag                                                                            | `78859f0304fc2081e835db5cfe7ba241f059fac6` |
+| `tfyNatsUi.imagePullPolicy`                             | Image pull policy                                                                    | `IfNotPresent`                             |
+| `tfyNatsUi.imagePullSecrets`                            | Image pull secrets for this workload                                                 | `[]`                                       |
+| `tfyNatsUi.serviceAccount.create`                       | Create a dedicated ServiceAccount                                                    | `false`                                    |
+| `tfyNatsUi.serviceAccount.name`                         | Override ServiceAccount name                                                         | `""`                                       |
+| `tfyNatsUi.serviceAccount.annotations`                  | Service account annotations                                                          | `{}`                                       |
+| `tfyNatsUi.serviceAccount.labels`                       | Extra labels for the ServiceAccount                                                  | `{}`                                       |
+| `tfyNatsUi.serviceAccount.automountServiceAccountToken` | Automount service account token                                                      | `false`                                    |
+| `tfyNatsUi.env`                                         | Environment variables (replaces natsUrl/accountSeedSecret when set)                  | `{}`                                       |
+| `tfyNatsUi.envSecretName`                               | Secret name for shorthand ${k8s-secret/<key>} entries in env                         | `""`                                       |
+| `tfyNatsUi.natsUrl`                                     | NATS_URL env var when env is empty                                                   | `http://{{ .Release.Name }}-tfy-nats:4222` |
+| `tfyNatsUi.accountSeedSecret.name`                      | Existing Secret name when env is empty                                               | `truefoundry-tfy-nats-secret`              |
+| `tfyNatsUi.accountSeedSecret.key`                       | Key inside the Secret                                                                | `NATS_CONTROLPLANE_ACCOUNT_SEED`           |
+| `tfyNatsUi.service.type`                                | Service type                                                                         | `ClusterIP`                                |
+| `tfyNatsUi.service.port`                                | Service port                                                                         | `8080`                                     |
+| `tfyNatsUi.service.targetPort`                          | Container port (defaults to service.port)                                            | `""`                                       |
+| `tfyNatsUi.service.annotations`                         | Service annotations                                                                  | `{}`                                       |
+| `tfyNatsUi.extraEnv`                                    | Extra environment variables for the container                                        | `[]`                                       |
+| `tfyNatsUi.resources`                                   | Container resources. Empty uses requests 10m CPU / 64Mi and limits 200m CPU / 256Mi. | `{}`                                       |
+| `tfyNatsUi.podSecurityContext`                          | Pod security context                                                                 | `{}`                                       |
+| `tfyNatsUi.securityContext`                             | Container security context                                                           | `{}`                                       |
+| `tfyNatsUi.nodeSelector`                                | Node selector                                                                        | `{}`                                       |
+| `tfyNatsUi.tolerations`                                 | Tolerations                                                                          | `[]`                                       |
+| `tfyNatsUi.affinity`                                    | Affinity                                                                             | `{}`                                       |
 
 ### Metrics Dashboard configuration
 
@@ -183,7 +196,11 @@ This Helm chart package, provided by TrueFoundry, contains the components needed
 | `headlamp.enabled`                       | Deploy Headlamp                                                                                                                                                      | `false`             |
 | `headlamp.clusterRoleBinding.create`     | Keep false - prevents headlamp subchart from creating a cluster-admin ClusterRoleBinding. Read-only RBAC is always created by this chart when headlamp.enabled=true. | `false`             |
 | `headlamp.allowPodExec`                  | Allow shell/exec into pods from headlamp.                                                                                                                            | `false`             |
+| `headlamp.rbac.readSecrets`              | Let headlamp read Secrets in the control plane namespace (database and API credentials live there)                                                                   | `false`             |
+| `headlamp.rbac.readApiGroups`            | Non-core API groups headlamp can read (all resources in each). Core resources other than Secrets are always readable.                                                | `[]`                |
+| `headlamp.rbac.readAllResources`         | Restore the pre-0.1.7 Role: read every resource in every API group, Secrets included. Overrides readSecrets and readApiGroups.                                       | `false`             |
 | `headlamp.podSecurityContext`            | Pod security context                                                                                                                                                 | `{}`                |
+| `headlamp.resources`                     | Headlamp container resources                                                                                                                                         | `{}`                |
 | `headlamp.securityContext`               | Container security context                                                                                                                                           | `{}`                |
 | `headlamp.config.inCluster`              | Use in-cluster auth mode. Must be false to enable the kubeconfig auto-auth bypass.                                                                                   | `false`             |
 | `headlamp.config.baseURL`                | Base URL path at which Headlamp is served. Must match the proxy path prefix.                                                                                         | `/admin/kubernetes` |
