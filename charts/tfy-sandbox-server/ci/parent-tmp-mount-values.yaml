@@ -1,0 +1,12 @@
+# What the truefoundry chart passes through trueforge today: its own /tmp volume and XDG_RUNTIME_DIR.
+# The chart must not add a second /tmp mount or a duplicate env var.
+extraEnv:
+  - name: XDG_RUNTIME_DIR
+    value: /tmp
+extraVolumes:
+  - name: tmp
+    emptyDir:
+      sizeLimit: 1Gi
+extraVolumeMounts:
+  - name: tmp
+    mountPath: /tmp

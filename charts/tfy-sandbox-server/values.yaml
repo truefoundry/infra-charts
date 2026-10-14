@@ -204,10 +204,20 @@ resources:
     cpu: "2"
     memory: 2Gi
     ephemeral-storage: 2Gi
-## @param podSecurityContext [object] Pod security context
-podSecurityContext: {}
-## @param securityContext [object] Container security context
-securityContext: {}
+## @param podSecurityContext [object] Pod security context. Set `enabled: false` to drop it. The pod runs as root: the image's supervisord needs it, so runAsNonRoot needs an image change. A parent chart's global.podSecurityContext is deliberately not inherited for that reason.
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+## @param securityContext [object] Container security context. Set `enabled: false` to drop it. With a read-only root, a /tmp emptyDir is mounted and sandbox commands can't install system packages (for example apt-get, or pip into /usr/local); set readOnlyRootFilesystem to false if they must.
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+## @param tmpVolume.sizeLimit Size limit of the /tmp emptyDir mounted while the root filesystem is read-only. Skipped when extraVolumeMounts already mounts /tmp.
+tmpVolume:
+  sizeLimit: 1Gi
 ## @param nodeSelector [object] Node selector
 nodeSelector: {}
 ## @param tolerations [array] Tolerations
