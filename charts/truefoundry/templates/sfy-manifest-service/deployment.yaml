@@ -74,6 +74,8 @@ spec:
               scheme: {{ .Values.sfyManifestService.readinessProbe.scheme }}
               {{- end }}
           volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
           {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumeMounts }}
           {{- include "truefoundry.mtlsVolumeMount" . | nindent 12 }}
           {{- with .Values.sfyManifestService.extraVolumeMounts }}
@@ -82,11 +84,13 @@ spec:
           {{- if .Values.global.customCA.enabled }}
           {{- include "truefoundry.customCA.volumeMounts" . | nindent 12 }}
           {{- end }}
-          {{- else }} []
           {{- end }}
       imagePullSecrets:
         {{- include "sfy-manifest-service.imagePullSecrets" . | nindent 8 }}
       volumes:
+      {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "sfy-manifest-service.resourceTier" "defaultResourcesPrefix" "sfy-manifest-service.defaultResources" "resourcesValues" .Values.sfyManifestService.resources) | fromYaml }}
+      {{- $tmpSizeLimit := dig "emptyDir" "tmpdir" "sizeLimit" "" .Values.sfyManifestService | default $tmpVolume.emptyDir.sizeLimit }}
+      {{- list (dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $tmpSizeLimit)) | toYaml | nindent 8 }}
       {{- if or .Values.global.customCA.enabled .Values.global.mTLS.enabled .Values.sfyManifestService.extraVolumes }}
       {{- include "truefoundry.mtlsVolume" . | nindent 8 }}
       {{- with .Values.sfyManifestService.extraVolumes }}
@@ -95,7 +99,6 @@ spec:
       {{- if .Values.global.customCA.enabled }}
       {{- include "truefoundry.customCA.volumes" . | nindent 8 }}
       {{- end }}
-      {{- else }} []
       {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.sfyManifestService.nodeSelector) }}
       {{- if $mergedNodeSelector }}
