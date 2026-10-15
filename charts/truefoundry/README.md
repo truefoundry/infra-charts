@@ -36,14 +36,12 @@ The TrueFoundry Helm chart components are installed in the following order:
 
 ## Network policies (optional)
 
-Network policies ship **inside this chart** and apply only to the control-plane namespace (`global.namespaceOverride` or release namespace). When enabled, the chart creates up to **four** NetworkPolicies. All of them select only the
-release's own pods (`app.kubernetes.io/instance: <release-name>`), so unrelated workloads
-sharing the namespace are left untouched — and, note, also left unrestricted:
+Network policies ship **inside this chart** and apply only to the control-plane namespace (`global.namespaceOverride` or release namespace). When enabled, the chart creates up to **four** NetworkPolicies:
 
 | Policy | Purpose |
 |--------|---------|
-| `default-deny-ingress` | Block all ingress to the release's pods by default |
-| `allow-all-egress` | Allow all egress from the release's pods (DNS, RDS, cloud APIs, internet) |
+| `default-deny-ingress` | Block all ingress by default |
+| `allow-all-egress` | Allow all egress (DNS, RDS, cloud APIs, internet) |
 | `intra-instance` | Allow ingress between pods with `app.kubernetes.io/instance: <release-name>` |
 | `ingress-external` | Single policy listing all cross-namespace sources (only when configured) |
 
@@ -61,45 +59,14 @@ networkPolicy:
 
 Set `networkPolicy.enabled: false` (default) to skip all NetworkPolicy objects.
 
-### Extra ingress rules
-
-`allowedIngressFrom` only expresses namespace-scoped sources. For anything else — an
-`ipBlock`, a port restriction, `matchExpressions`, or a same-namespace `podSelector` —
-use `extraIngress`, whose entries are appended verbatim as additional rules on the
-`ingress-external` policy:
-
-```yaml
-networkPolicy:
-  enabled: true
-  allowedIngressFrom:
-    - namespace: tfy-prometheus
-  extraIngress:
-    - from:
-        - ipBlock:
-            cidr: 10.0.0.0/8
-      ports:
-        - port: 8000
-          protocol: TCP
-```
-
-Each entry is a raw [NetworkPolicyIngressRule](https://kubernetes.io/docs/reference/kubernetes-api/policy-resources/network-policy-v1/#NetworkPolicySpec)
-and is not validated by the chart, so a malformed entry is rejected by the API server at
-install time. Rules are OR'd, and `ingress-external` selects the release's own pods
-(`app.kubernetes.io/instance: <release-name>`), so an added rule applies to those pods and
-not to unrelated workloads sharing the namespace.
-
-> `extraIngress` is additive only: the `ingress-external` policy renders only when
-> `allowedIngressFrom` is non-empty, so setting `extraIngress` on its own has no effect.
-
 ### What is allowed
 
 | Direction | Rule |
 |-----------|------|
-| **Ingress (baseline)** | Default-deny all ingress to pods labelled `app.kubernetes.io/instance: <release-name>` |
-| **Egress** | Allow all egress from pods labelled `app.kubernetes.io/instance: <release-name>` |
+| **Ingress (baseline)** | Default-deny all ingress into the control-plane namespace |
+| **Egress** | Allow all egress from every pod in the namespace |
 | **In-release mesh** | Ingress between pods with `app.kubernetes.io/instance: <release-name>` (any port) |
-| **Cross-namespace ingress** | Combined in one `ingress-external` policy from each `allowedIngressFrom` entry, scoped to the release's pods |
-| **Extra ingress** | Raw rules from `networkPolicy.extraIngress`, appended to the same `ingress-external` policy |
+| **Cross-namespace ingress** | Combined in one `ingress-external` policy from each `allowedIngressFrom` entry |
 
 Each `allowedIngressFrom` entry requires `namespace`. Omit `podSelector` to allow all pods in that namespace; set `podSelector` to restrict to specific source pods (e.g. Prometheus, ingress controller).
 
@@ -231,97 +198,6 @@ global:
         alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
 ```
 
-## External Redis
-
-TrueForge reads Redis from the chart-owned Secret `trueforge-redis-creds`, or from `trueforge.env` when `externalRedis.externalSecret` is true. Host, port, database, username, password, TLS, and Sentinel are the settings. Split a `redis://` or `rediss://` string into those fields. `rediss://` does not turn TLS on; set `externalRedis.tls.enabled`. A `${k8s-secret/<secret>/<key>}` password is not copied into `trueforge-redis-creds`, because a Secret cannot reference another Secret. The chart writes an empty password key. The pod reads your Secret through `trueforge.env`. The key must not contain `/`. Postgres uses `truefoundry-creds`. The API key uses `trueforge-api-key`.
-
-### Configuring external Redis (host)
-
-A literal password is copied into `trueforge-redis-creds`.
-
-```yaml
-redis:
-  enabled: false
-externalRedis:
-  enabled: true
-  externalSecret: false
-  host: redis.example.com
-  port: 6379
-  auth:
-    username: redis
-    password: "literal-password"
-trueforge:
-  enabled: true
-```
-
-A password that already lives in a Secret is set in both places. The chart Secret stores an empty `REDIS_PASSWORD`. The pod reads `my-secret`.
-
-```yaml
-redis:
-  enabled: false
-externalRedis:
-  enabled: true
-  externalSecret: false
-  host: redis.example.com
-  port: 6379
-  auth:
-    username: redis
-    password: "${k8s-secret/my-secret/password}"
-trueforge:
-  enabled: true
-  env:
-    REDIS_PASSWORD: "${k8s-secret/my-secret/password}"
-```
-
-### Configuring Sentinel
-
-Set both passwords when the data node and Sentinel use a password. A Sentinel-only env line leaves the data-node password empty.
-
-```yaml
-redis:
-  enabled: false
-externalRedis:
-  enabled: true
-  externalSecret: false
-  auth:
-    username: redis
-    password: "${k8s-secret/my-secret/password}"
-  sentinel:
-    enabled: true
-    nodes:
-      - redis-0.redis.ns.svc.cluster.local:26379
-      - redis-1.redis.ns.svc.cluster.local:26379
-      - redis-2.redis.ns.svc.cluster.local:26379
-    masterName: redis
-    auth:
-      username: redis
-      password: "${k8s-secret/my-secret/password}"
-trueforge:
-  enabled: true
-  env:
-    REDIS_PASSWORD: "${k8s-secret/my-secret/password}"
-    REDIS_SENTINEL_PASSWORD: "${k8s-secret/my-secret/password}"
-```
-
-### Bring your own env
-
-The chart creates no Redis Secret. Set the Redis env yourself. `REDIS_SENTINEL_NODES` is a comma-separated string. `REDIS_PORT` and `REDIS_DB` are strings. A key you leave at its default still names `trueforge-redis-creds`. Set that key to `null` when you do not want it.
-
-```yaml
-redis:
-  enabled: false
-externalRedis:
-  enabled: true
-  externalSecret: true
-trueforge:
-  enabled: true
-  env:
-    REDIS_HOST: redis.example.com
-    REDIS_PORT: "6379"
-    REDIS_PASSWORD: "${k8s-secret/my-secret/password}"
-    REDIS_SENTINEL_ENABLED: "false"
-```
-
 ## Parameters
 
 ### Global prameters for Truefoundry
@@ -333,7 +209,7 @@ trueforge:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `""`                                                                                                               |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `""`                                                                                                               |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `http://tfy-proxy:8080`                                                                                            |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `0.179.2`                                                                                                          |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `0.176.19`                                                                                                         |
 | `global.multitenant.enabled`                                                 | Enable multitenant env injection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `false`                                                                                                            |
 | `global.existingTruefoundryCredsSecret`                                      | Non-empty skips rendering the `truefoundry-creds` Secret; pre-create it (that exact name) with DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME and TFY_API_KEY                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `""`                                                                                                               |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `false`                                                                                                            |
@@ -449,30 +325,22 @@ trueforge:
 | `global.mTLS.tlsSecretName`                                                  | Secret (mounted into services) holding ca.crt + tls.key + tls.crt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `truefoundry-internal-tls`                                                                                         |
 | `global.mTLS.externalMtlsSecret`                                             | Use an existing secret with this name instead of creating one. When set, the bootstrap job does not create/renew the secret; services mount the named secret as-is.                                                                                                                                                                                                                                                                                                                                                                                                                                               | `""`                                                                                                               |
 | `global.mTLS.caDays`                                                         | Root CA validity in days (default ~10y)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `3650`                                                                                                             |
-| `global.mTLS.leafDays`                                                       | Leaf cert validity in days (default ~3y)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `1095`                                                                                                             |
-| `global.mTLS.renewBeforeDays`                                                | Reissue the leaf when it expires within this many days (default ~6mo)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `180`                                                                                                              |
-| `global.mTLS.forceRenew`                                                     | Reissue the leaf on every bootstrap run regardless of remaining validity. Must be the boolean true; any other value is ignored. Use to roll the cert after changing leafDays or the SAN list; set back to false once the new cert is in place, otherwise every helm upgrade rotates it.                                                                                                                                                                                                                                                                                                                           | `false`                                                                                                            |
+| `global.mTLS.leafDays`                                                       | Leaf cert validity in days (default ~1y)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `365`                                                                                                              |
+| `global.mTLS.renewBeforeDays`                                                | Reissue the leaf when it expires within this many days                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `60`                                                                                                               |
 | `global.mTLS.extraDnsNames`                                                  | Extra DNS SANs appended to the leaf cert (namespace service wildcards are added automatically)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `[]`                                                                                                               |
 | `tags.llmGateway`                                                            | Bool to enable llmGateway infra                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `false`                                                                                                            |
 | `tags.llmGatewayRequestLogging`                                              | Bool to enable observability (metrics and request logging) features in LLM gateway                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `false`                                                                                                            |
 | `tags.tracing`                                                               | Bool to enable OTEL tracing feature                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `false`                                                                                                            |
 | `devMode.enabled`                                                            | Bool to enable dev mode                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `false`                                                                                                            |
 
-### metricsV2 Metrics v2 frontend feature flag
-
-| Name                | Description                    | Value   |
-| ------------------- | ------------------------------ | ------- |
-| `metricsV2.enabled` | Enable the metrics v2 frontend | `false` |
-
 ### networkPolicy Optional NetworkPolicies scoped to the control-plane namespace only.
 
-| Name                               | Description                                                                                                                                                                                                                                                                  | Value   |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `networkPolicy.enabled`            | Create NetworkPolicies in the control-plane namespace                                                                                                                                                                                                                        | `false` |
-| `networkPolicy.labels`             | Extra labels on NetworkPolicy objects (merged with global.labels)                                                                                                                                                                                                            | `{}`    |
-| `networkPolicy.annotations`        | Extra annotations on NetworkPolicy objects (merged with global.annotations)                                                                                                                                                                                                  | `{}`    |
-| `networkPolicy.allowedIngressFrom` | Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace.                                                                                                                                                            | `[]`    |
-| `networkPolicy.extraIngress`       | Raw ingress rules appended verbatim to the ingress-external policy, which selects the release's own pods (app.kubernetes.io/instance). Use this for sources allowedIngressFrom cannot express: ipBlock, port restrictions, matchExpressions, or same-namespace podSelectors. | `[]`    |
+| Name                               | Description                                                                                                       | Value   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------- |
+| `networkPolicy.enabled`            | Create NetworkPolicies in the control-plane namespace                                                             | `false` |
+| `networkPolicy.labels`             | Extra labels on NetworkPolicy objects (merged with global.labels)                                                 | `{}`    |
+| `networkPolicy.annotations`        | Extra annotations on NetworkPolicy objects (merged with global.annotations)                                       | `{}`    |
+| `networkPolicy.allowedIngressFrom` | Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. | `[]`    |
 
 ### Monitoring Config values
 
@@ -542,7 +410,7 @@ trueforge:
 | `mlfoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the mlfoundry server                                                     | `{}`                                  |
 | `mlfoundryServer.image.registry`                              | Registry for the mlfoundry server image (overrides global.registry if specified)                             | `""`                                  |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server (without registry)                                                 | `tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                                                           | `v0.179.0`                            |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                                                           | `v0.176.0`                            |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                                                                    | `default`                             |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables                                                   | `mlfoundry-server-env-secret`         |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                                                                   | `IfNotPresent`                        |
@@ -659,7 +527,7 @@ trueforge:
 | `servicefoundryServer.deploymentAnnotations`                        | Deployment-specific annotations for the servicefoundry server                                                                                                                           | `{}`                                                    |
 | `servicefoundryServer.image.registry`                               | Registry for the servicefoundry server image (overrides global.registry if specified)                                                                                                   | `""`                                                    |
 | `servicefoundryServer.image.repository`                             | Image repository for the servicefoundry server (without registry)                                                                                                                       | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.179.1`                                              |
+| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.176.9`                                              |
 | `servicefoundryServer.environmentName`                              | Environment name for the servicefoundry server                                                                                                                                          | `default`                                               |
 | `servicefoundryServer.envSecretName`                                | Secret name for the servicefoundry server environment variables                                                                                                                         | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.tfyK8sSecretName`                             | Secret name for K8s secrets mounted at /opt/truefoundry/tfy-k8s-secrets. If set, the secret is mounted as a volume; if empty, no volume is attached.                                    | `""`                                                    |
@@ -725,7 +593,6 @@ trueforge:
 | `servicefoundryServer.configs.imageMutationPolicy`                  | Image Mutations policy for workloads                                                                                                                                                    | `{{ .Release.Name }}-image-mutation-policy-cm`          |
 | `servicefoundryServer.configs.k8sManifestValidationPolicy`          | K8s Manifest Validation policy for workloads                                                                                                                                            | `{{ .Release.Name }}-k8s-manifest-validation-policy-cm` |
 | `servicefoundryServer.configs.defaultPolicies`                      | Default policies ConfigMap name for servicefoundry server                                                                                                                               | `{{ .Release.Name }}-default-policies-cm`               |
-| `servicefoundryServer.configs.askTfyAgent`                          | Ask TFY inline agent ConfigMap name for servicefoundry server                                                                                                                           | `{{ .Release.Name }}-ask-tfy-agent-cm`                  |
 | `servicefoundryServer.configs.buildJobTemplate`                     | Build Job Template config map name for servicefoundry server. If empty, automatically uses the generated config map name from tfy-build chart when tfyBuild.jobTemplate.enabled is true | `""`                                                    |
 
 ### sparkHistoryServer Truefoundry spark history server values
@@ -737,7 +604,7 @@ trueforge:
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                                                              | `{}`                                      |
 | `sparkHistoryServer.image.registry`                     | Registry for the spark history server image (overrides global.registry if specified)                  | `""`                                      |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server (without registry)                                      | `tfy-private-images/spark-history-server` |
-| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                                                                | `v0.179.0`                                |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                                                                | `v0.176.0`                                |
 | `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                                                         | `default`                                 |
 | `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables                                        | `spark-history-server-env-secret`         |
 | `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                                                        | `IfNotPresent`                            |
@@ -791,7 +658,7 @@ trueforge:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                                                         | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified)                             | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                                                 | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                                                           | `v0.179.0`                              |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                                                           | `v0.176.0`                              |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                                                        | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                                                   | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                                                   | `IfNotPresent`                          |
@@ -849,7 +716,7 @@ trueforge:
 | `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service                                                             | `[]`                                      |
 | `sfyManifestService.image.registry`                              | Registry for the sfy manifest service image (overrides global.registry if specified)                         | `""`                                      |
 | `sfyManifestService.image.repository`                            | Image repository for the sfy manifest service (without registry)                                             | `tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                                                                       | `v0.179.0`                                |
+| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                                                                       | `v0.176.1`                                |
 | `sfyManifestService.environmentName`                             | Environment name for the sfy manifest service                                                                | `default`                                 |
 | `sfyManifestService.envSecretName`                               | Secret name for the sfy manifest service environment variables                                               | `sfy-manifest-service-env-secret`         |
 | `sfyManifestService.imagePullPolicy`                             | Image pull policy for the sfy manifest service                                                               | `IfNotPresent`                            |
@@ -902,12 +769,12 @@ trueforge:
 
 | Name                                                          | Description                                                                                                                  | Value                                  |
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `tfyInfraManager.enabled`                                     | Bool to enable the tfy infra manager                                                                                         | `true`                                 |
+| `tfyInfraManager.enabled`                                     | Bool to enable the tfy infra manager                                                                                         | `false`                                |
 | `tfyInfraManager.annotations`                                 | Annotations for the tfy infra manager                                                                                        | `{}`                                   |
 | `tfyInfraManager.tolerations`                                 | Tolerations specific to the tfy infra manager                                                                                | `[]`                                   |
 | `tfyInfraManager.image.registry`                              | Registry for the tfy infra manager image (overrides global.registry if specified)                                            | `""`                                   |
 | `tfyInfraManager.image.repository`                            | Image repository for the tfy infra manager image (without registry)                                                          | `tfy-private-images/tfy-infra-manager` |
-| `tfyInfraManager.image.tag`                                   | Image tag for the tfy infra manager image                                                                                    | `v0.179.0`                             |
+| `tfyInfraManager.image.tag`                                   | Image tag for the tfy infra manager image                                                                                    | `v0.176.0`                             |
 | `tfyInfraManager.environmentName`                             | Environment name for the tfy infra manager                                                                                   | `default`                              |
 | `tfyInfraManager.envSecretName`                               | Secret name for the tfy infra manager environment variables                                                                  | `tfy-infra-manager-env-secret`         |
 | `tfyInfraManager.imagePullPolicy`                             | Image pull policy for the tfy infra manager                                                                                  | `IfNotPresent`                         |
@@ -1118,10 +985,6 @@ fi
 | `tfyConfigs.configs.imageMutationPolicyOverride`             | Image mutation configuration. Default content is in files/tfy-configs/image-mutation-policy.yaml                                                                   | `{}`      |
 | `tfyConfigs.configs.k8sManifestValidationPolicyOverride`     | K8s manifest validation policy configuration. Default content is in files/tfy-configs/k8s-manifest-validation-policy.yaml                                          | `{}`      |
 | `tfyConfigs.configs.defaultPoliciesOverride`                 | Default policies configuration. Default content is in files/tfy-configs/default-policies.yaml                                                                      | `{}`      |
-| `tfyConfigs.configs.askTfyAgent.enabled`                     | Render ConfigMap and mount Ask TFY agent config when TrueForge is enabled                                                                                          | `true`    |
-| `tfyConfigs.configs.askTfyAgent.webSearchEnabled`            | Sets ASK_TFY_WEB_SEARCH_ENABLED on servicefoundry-server                                                                                                           | `false`   |
-| `tfyConfigs.configs.askTfyAgent.skillsRef`                   | Sets ASK_TFY_SKILLS_REF when non-empty (default git ref when omitted from agent YAML)                                                                              | `""`      |
-| `tfyConfigs.configs.askTfyAgentOverride`                     | When non-empty, replaces bundled files/tfy-configs/ask-tfy-agent.yaml                                                                                              | `""`      |
 | `tfyConfigs.configs.cicdTemplates`                           | CICD templates configuration. key of this map is yaml file name and value is the file contents. You must have a key named `cicd-providers.yaml` in this dictionary | `{}`      |
 | `tfyConfigs.configs.codeSnippet.integrationSets.enabled`     | Render ConfigMap with index.yaml for AI gateway code-snippet integration index                                                                                     | `true`    |
 | `tfyConfigs.configs.codeSnippet.integrationSets.override`    | When non-empty, replaces the entire bundled files/tfy-configs/llm-gateway-codesnippet/index.yaml (supports Helm tpl)                                               | `""`      |
@@ -1205,7 +1068,7 @@ fi
 | `tfyController.annotations`                                 | Annotations for the tfyController                                                                            | `{}`                                |
 | `tfyController.image.registry`                              | Registry for the tfyController image (overrides global.registry if specified)                                | `""`                                |
 | `tfyController.image.repository`                            | Image repository for the tfyController (without registry)                                                    | `tfy-private-images/tfy-controller` |
-| `tfyController.image.tag`                                   | Image tag for the tfyController                                                                              | `v0.179.0`                          |
+| `tfyController.image.tag`                                   | Image tag for the tfyController                                                                              | `v0.176.0`                          |
 | `tfyController.environmentName`                             | Environment name for the tfyController                                                                       | `default`                           |
 | `tfyController.envSecretName`                               | Secret name for the tfyController environment variables                                                      | `sfy-manifest-service-env-secret`   |
 | `tfyController.imagePullPolicy`                             | Image pull policy for the tfyController                                                                      | `IfNotPresent`                      |
@@ -1260,7 +1123,7 @@ fi
 | `tfyWorkflowAdmin.annotations`                        | Annotations for the tfyWorkflowAdmin                                                                         | `{}`                                    |
 | `tfyWorkflowAdmin.image.registry`                     | Registry for the tfyWorkflowAdmin image (overrides global.registry if specified)                             | `""`                                    |
 | `tfyWorkflowAdmin.image.repository`                   | Image repository for the tfyWorkflowAdmin (without registry)                                                 | `tfy-private-images/tfy-workflow-admin` |
-| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                                                           | `v0.179.0`                              |
+| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                                                           | `v0.176.0`                              |
 | `tfyWorkflowAdmin.environmentName`                    | Environment name for the tfyWorkflowAdmin                                                                    | `default`                               |
 | `tfyWorkflowAdmin.envSecretName`                      | Secret name for the tfyWorkflowAdmin environment variables                                                   | `tfy-workflow-admin-env-secret`         |
 | `tfyWorkflowAdmin.imagePullPolicy`                    | Image pull policy for the tfyWorkflowAdmin                                                                   | `IfNotPresent`                          |
@@ -1355,7 +1218,7 @@ fi
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                                          | `{}`                                     |
 | `tfy-llm-gateway.gatewayId`                      | Unique gateway identifier populated as GATEWAY_ID                            | `default`                                |
 | `tfy-llm-gateway.env`                            | Environment variables for tfy-llm-gateway                                    | `{}`                                     |
-| `tfy-llm-gateway.proxy.image.tag`                | Tag for the gateway TLS sidecar (tfy-proxy)                                  | `v0.179.0`                               |
+| `tfy-llm-gateway.proxy.image.tag`                | Tag for the gateway TLS sidecar (tfy-proxy)                                  | `v0.176.3`                               |
 | `tfy-llm-gateway.sandbox.devMode.enabled`        | Run tfy-sandbox-server with the bundled gateway                              | `false`                                  |
 | `tfy-llm-gateway.agentsLtsWriteJob.enabled`      | Agents LTS write CronJob (superseded by TrueForge)                           | `false`                                  |
 
@@ -1376,27 +1239,28 @@ fi
 
 ### externalRedis Existing Redis for the control plane
 
-| Name                                   | Description                                                                                                                                                                                                       | Value   |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `externalRedis.enabled`                | Use an existing Redis instead of the bundled one. Required for host, sentinel, and externalSecret to take effect.                                                                                                 | `false` |
-| `externalRedis.externalSecret`         | Do not create trueforge-redis-creds. Set Redis on trueforge.env.                                                                                                                                                  | `false` |
-| `externalRedis.host`                   | Standalone Redis host                                                                                                                                                                                             | `""`    |
-| `externalRedis.port`                   | Redis port                                                                                                                                                                                                        | `6379`  |
-| `externalRedis.db`                     | Redis database                                                                                                                                                                                                    | `0`     |
-| `externalRedis.auth.username`          | Redis username. A Secret reference belongs on trueforge.env.REDIS_USERNAME, with this field left empty.                                                                                                           | `""`    |
-| `externalRedis.auth.password`          | Redis password. A literal is copied into trueforge-redis-creds. A ${k8s-secret/<secret>/<key>} string is not copied; set the same string on trueforge.env.REDIS_PASSWORD. The key must not contain /.             | `""`    |
-| `externalRedis.tls.enabled`            | Enable TLS                                                                                                                                                                                                        | `false` |
-| `externalRedis.tls.caCert`             | CA certificate path or PEM                                                                                                                                                                                        | `""`    |
-| `externalRedis.tls.rejectUnauthorized` | Verify the server certificate. Set false only for self-signed certs without a CA                                                                                                                                  | `true`  |
-| `externalRedis.tls.serverName`         | TLS server name                                                                                                                                                                                                   | `""`    |
-| `externalRedis.tls.cert`               | Client certificate path or PEM                                                                                                                                                                                    | `""`    |
-| `externalRedis.tls.key`                | Client key path or PEM                                                                                                                                                                                            | `""`    |
-| `externalRedis.tls.keyPassphrase`      | Client key passphrase                                                                                                                                                                                             | `""`    |
-| `externalRedis.sentinel.enabled`       | Enable Redis Sentinel                                                                                                                                                                                             | `false` |
-| `externalRedis.sentinel.nodes`         | Sentinel nodes as host:port entries                                                                                                                                                                               | `[]`    |
-| `externalRedis.sentinel.masterName`    | Sentinel master name                                                                                                                                                                                              | `""`    |
-| `externalRedis.sentinel.auth.username` | Sentinel username                                                                                                                                                                                                 | `""`    |
-| `externalRedis.sentinel.auth.password` | Sentinel password. A literal is copied into trueforge-redis-creds. A ${k8s-secret/<secret>/<key>} string is not copied; set the same string on trueforge.env.REDIS_SENTINEL_PASSWORD. The key must not contain /. | `""`    |
+| Name                                   | Description                                                                                                                                                                                                                                                                                                                | Value   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `externalRedis.enabled`                | Use an existing Redis instead of the bundled one. Required for url, host, sentinel, and existingSecret to take effect.                                                                                                                                                                                                     | `false` |
+| `externalRedis.url`                    | Full connection URL, e.g. redis://:password@redis-master.databases.svc:6379. Rendered into the `trueforge-creds` Secret. Mutually exclusive with `existingSecret`.                                                                                                                                                         | `""`    |
+| `externalRedis.existingSecret`         | Set true to bring your own `trueforge-creds` Secret (that exact name) instead of putting credentials in values; the chart then renders no `trueforge-creds` Secret. The `REDIS_URL` key must exist (empty is fine when using host/sentinel keys); the other `REDIS_*` keys are optional and default in the app when absent | `false` |
+| `externalRedis.host`                   | Standalone Redis host                                                                                                                                                                                                                                                                                                      | `""`    |
+| `externalRedis.port`                   | Redis port                                                                                                                                                                                                                                                                                                                 | `6379`  |
+| `externalRedis.db`                     | Redis database                                                                                                                                                                                                                                                                                                             | `0`     |
+| `externalRedis.auth.username`          | Redis username                                                                                                                                                                                                                                                                                                             | `""`    |
+| `externalRedis.auth.password`          | Redis password                                                                                                                                                                                                                                                                                                             | `""`    |
+| `externalRedis.tls.enabled`            | Enable TLS                                                                                                                                                                                                                                                                                                                 | `false` |
+| `externalRedis.tls.caCert`             | CA certificate path or PEM                                                                                                                                                                                                                                                                                                 | `""`    |
+| `externalRedis.tls.rejectUnauthorized` | Verify the server certificate. Set false only for self-signed certs without a CA                                                                                                                                                                                                                                           | `true`  |
+| `externalRedis.tls.serverName`         | TLS server name                                                                                                                                                                                                                                                                                                            | `""`    |
+| `externalRedis.tls.cert`               | Client certificate path or PEM                                                                                                                                                                                                                                                                                             | `""`    |
+| `externalRedis.tls.key`                | Client key path or PEM                                                                                                                                                                                                                                                                                                     | `""`    |
+| `externalRedis.tls.keyPassphrase`      | Client key passphrase                                                                                                                                                                                                                                                                                                      | `""`    |
+| `externalRedis.sentinel.enabled`       | Enable Redis Sentinel                                                                                                                                                                                                                                                                                                      | `false` |
+| `externalRedis.sentinel.nodes`         | Sentinel nodes as host:port entries                                                                                                                                                                                                                                                                                        | `[]`    |
+| `externalRedis.sentinel.masterName`    | Sentinel master name                                                                                                                                                                                                                                                                                                       | `""`    |
+| `externalRedis.sentinel.auth.username` | Sentinel username                                                                                                                                                                                                                                                                                                          | `""`    |
+| `externalRedis.sentinel.auth.password` | Sentinel password                                                                                                                                                                                                                                                                                                          | `""`    |
 
 ### trueforge TrueForge server and schedule controller
 
@@ -1405,7 +1269,7 @@ fi
 | `trueforge.enabled`                             | Deploy TrueForge on the control plane (turn off on dedicated gateway planes)                                                                                                                                                                                                                                                                                                                            | `false` |
 | `trueforge.truefoundry.devSandboxServerEnabled` | Deploy a dedicated tfy-sandbox-server for TrueForge (Service `<release>-trueforge-tfy-sandbox-server`) and wire TRUEFOUNDRY_SANDBOX_* env to it                                                                                                                                                                                                                                                         | `false` |
 | `trueforge.externalPostgres`                    | Postgres for TrueForge (schema `trueforge`, hardcoded in the app). Defaults to the control-plane database via truefoundry-creds (global.database / devMode / existingTruefoundryCredsSecret). Override this object to point TrueForge at a different Postgres. Do not also set POSTGRES_* under trueforge.env - the dependency chart replaces those keys in place and they would win over this section. | `{}`    |
-| `trueforge.externalRedis`                       | Enables external Redis on TrueForge. Connection settings come from trueforge.env, which defaults to trueforge-redis-creds.                                                                                                                                                                                                                                                                              | `{}`    |
+| `trueforge.externalRedis`                       | Points TrueForge at the shared control-plane Redis via the `trueforge-creds` Secret, which is chart-rendered from top-level `redis`/`externalRedis`, or user-managed when `externalRedis.existingSecret` is set.                                                                                                                                                                                        | `{}`    |
 | `trueforge.apiKey`                              | Controller to server key, generated and preserved by the bootstrap job (or rendered from global.trueforgeApiKey)                                                                                                                                                                                                                                                                                        | `{}`    |
 | `trueforge.env`                                 | Control-plane integration, passed through the dependency chart's generic env map.                                                                                                                                                                                                                                                                                                                       | `{}`    |
 | `trueforge.server.deploymentAnnotations`        | Annotations for the TrueForge server Deployment (rolls out after servicefoundry-server wave 2, services wave 3, gateway and sandbox wave 5)                                                                                                                                                                                                                                                             | `{}`    |
@@ -1450,7 +1314,7 @@ fi
 | `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                                    | `true`                                    |
 | `deltaFusionIngestor.image.registry`                              | Registry for the DeltaFusion Ingestor image (overrides global.image.registry if specified) | `""`                                      |
 | `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor (without registry)                           | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.179.0`                                |
+| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.176.0`                                |
 | `deltaFusionIngestor.image.optimized`                             | Use optimized image tag for the DeltaFusion Ingestor                                       | `false`                                   |
 | `deltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                             | `IfNotPresent`                            |
 | `deltaFusionIngestor.statefulsetLabels`                           | Labels to apply to the DeltaFusion Ingestor statefulset                                    | `{}`                                      |
@@ -1520,7 +1384,7 @@ fi
 | `deltaFusionCompaction.enabled`                                     | Bool to enable the compaction cron job. Only applies if deltaFusionIngestor.enabled is true                                                                                                     | `true`                                    |
 | `deltaFusionCompaction.image.registry`                              | Registry for the deltaFusionCompaction image (overrides global.image.registry if specified)                                                                                                     | `""`                                      |
 | `deltaFusionCompaction.image.repository`                            | Image repository for the deltaFusionCompaction image (without registry)                                                                                                                         | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                                                         | `v0.179.0`                                |
+| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                                                         | `v0.176.0`                                |
 | `deltaFusionCompaction.image.pullPolicy`                            | Image pull policy for the deltaFusionCompaction                                                                                                                                                 | `IfNotPresent`                            |
 | `deltaFusionCompaction.image.optimized`                             | Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)                                 | `auto`                                    |
 | `deltaFusionCompaction.schedule`                                    | Schedule for the deltaFusionCompaction cron job                                                                                                                                                 | `*/30 * * * *`                            |
@@ -1572,7 +1436,7 @@ fi
 | `deltaFusionQueryServer.optimized`                                   | AVX-512 scheduling and image mode. One of "auto" (default), "true" (force required affinity plus optimized image), "false" (disable). | `auto`                                        |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified)                                                | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                                                                    | `tfy-private-images/deltafusion-query-server` |
-| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                              | `v0.179.0`                                    |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                              | `v0.176.2`                                    |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                                                                       | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                                                                      | `deltafusion-query-env-secret`                |
 | `deltaFusionQueryServer.imagePullPolicy`                             | Image pull policy for the deltaFusionQueryServer                                                                                      | `IfNotPresent`                                |
@@ -1636,7 +1500,7 @@ fi
 | `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                                                                                                                                                                                                       | `{}`                               |
 | `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)                                                                                                                                                                                           | `""`                               |
 | `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                                                                                                                                                                                               | `tfy-private-images/tfy-proxy`     |
-| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                                                                                                                                                                                                         | `v0.179.0`                         |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                                                                                                                                                                                                         | `v0.176.3`                         |
 | `tfyProxy.logLevel`                                      | Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)                                                                                                                                                                               | `info`                             |
 | `tfyProxy.clientIp.enabled`                              | Trust upstream proxies and preserve the real client IP in outbound X-Forwarded-For.                                                                                                                                                                                | `false`                            |
 | `tfyProxy.clientIp.trustedProxies`                       | CIDR ranges (or a Caddy shortcut like `private_ranges`) whose forwarding headers Caddy trusts.                                                                                                                                                                     | `private_ranges`                   |
