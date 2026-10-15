@@ -109,6 +109,85 @@
 {{- end -}}
 
 {{/*
+  Service account for components that need neither Kubernetes API access nor cloud identity.
+  Falls back to global.serviceAccount.name when global.restrictedServiceAccount.enabled is false.
+  */}}
+{{- define "truefoundry.restrictedServiceAccountName" -}}
+{{- if (.Values.global.restrictedServiceAccount | default dict).enabled -}}
+{{- include "truefoundry.restrictedServiceAccountConfiguredName" . -}}
+{{- else -}}
+{{- .Values.global.serviceAccount.name -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+  global.restrictedServiceAccount.name, whether or not the account is enabled. The only place its
+  default is set in templates.
+  */}}
+{{- define "truefoundry.restrictedServiceAccountConfiguredName" -}}
+{{- (.Values.global.restrictedServiceAccount | default dict).name | default "truefoundry-restricted" -}}
+{{- end }}
+
+{{/*
+  "true" when Helm deploys the tfy-otel-collector subchart. As in Helm's dependency resolution, a
+  boolean tfy-otel-collector.enabled (the condition) overrides the tags; otherwise any true tag
+  enables it, all-false tags disable it, and no tags at all enable it.
+  */}}
+{{- define "truefoundry.otelCollectorEnabled" -}}
+{{- $otel := index .Values "tfy-otel-collector" | default dict -}}
+{{- if kindIs "bool" $otel.enabled -}}
+{{- if $otel.enabled }}true{{ end -}}
+{{- else -}}
+{{- $tags := .Values.tags | default dict -}}
+{{- $set := list -}}
+{{- range $t := list "tracing" "llmGatewayRequestLogging" -}}
+{{- if kindIs "bool" (index $tags $t) }}{{ $set = append $set (index $tags $t) }}{{ end -}}
+{{- end -}}
+{{- if or (has true $set) (empty $set) }}true{{ end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+  Fail when serviceAccount.annotations is set on a component that has no account of its own: the
+  annotations (for example IRSA or workload identity) would be dropped without an error.
+  */}}
+{{- define "truefoundry.validateComponentServiceAccountAnnotations" -}}
+{{- $components := list
+  (dict "key" "tfyController" "own" (and .Values.tfyController.serviceAccount.create .Values.tfyController.serviceAccount.name) "account" (include "tfy-controller.serviceAccountName" .) "enabled" .Values.tfyController.enabled)
+  (dict "key" "tfyK8sController" "own" (and .Values.tfyK8sController.serviceAccount.create .Values.tfyK8sController.serviceAccount.name) "account" (include "tfy-k8s-controller.serviceAccountName" .) "enabled" .Values.tfyK8sController.enabled)
+  (dict "key" "sfyManifestService" "own" (and .Values.sfyManifestService.serviceAccount.create .Values.sfyManifestService.serviceAccount.name) "account" (include "sfy-manifest-service.serviceAccountName" .) "enabled" .Values.sfyManifestService.enabled)
+  (dict "key" "tfyInfraManager" "own" (and .Values.tfyInfraManager.serviceAccount.create .Values.tfyInfraManager.serviceAccount.name) "account" (include "tfy-infra-manager.serviceAccountName" .) "enabled" .Values.tfyInfraManager.enabled)
+  (dict "key" "tfyProxy" "own" .Values.tfyProxy.serviceAccount.create "account" (include "tfy-proxy.serviceAccountName" .) "enabled" .Values.tfyProxy.enabled) -}}
+{{- $otel := index .Values "tfy-otel-collector" | default dict -}}
+{{- $otelSA := $otel.serviceAccount | default dict -}}
+{{- $components = append $components (dict "key" "tfy-otel-collector" "own" (and $otelSA.create $otelSA.name) "account" ($otelSA.name | default (include "truefoundry.restrictedServiceAccountName" .)) "enabled" (eq (include "truefoundry.otelCollectorEnabled" .) "true")) -}}
+{{- range $c := $components -}}
+{{- $sa := (index $.Values $c.key).serviceAccount | default dict -}}
+{{- if and $c.enabled $sa.annotations (not $c.own) -}}
+{{- fail (printf "%s.serviceAccount.annotations is set, but %s has no account of its own and runs on %q, so the annotations would not be applied. To give it its own account, set %s.serviceAccount.create: true and %s.serviceAccount.name. Otherwise remove the annotations." $c.key $c.key $c.account $c.key $c.key) -}}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
+  Fail when the TrueForge sandbox server would run on a ServiceAccount that does not exist: a name that
+  differs from global.restrictedServiceAccount.name, or the restricted account while it is disabled.
+  */}}
+{{- define "truefoundry.validateSandboxServiceAccount" -}}
+{{- $tf := .Values.trueforge | default dict -}}
+{{- $sa := dig "tfy-sandbox-server" "serviceAccount" dict $tf -}}
+{{- if and $tf.enabled (dig "truefoundry" "devSandboxServerEnabled" false $tf) (not $sa.create) $sa.name -}}
+{{- $restricted := .Values.global.restrictedServiceAccount | default dict -}}
+{{- $restrictedName := include "truefoundry.restrictedServiceAccountConfiguredName" . -}}
+{{- if and $restricted.enabled (ne $sa.name $restrictedName) -}}
+{{- fail (printf "trueforge.tfy-sandbox-server.serviceAccount.name is %q but global.restrictedServiceAccount.name is %q, so the TrueForge sandbox server would run on an account that does not exist. Set it to %q, or to null to use global.serviceAccount.name." $sa.name $restrictedName $restrictedName) -}}
+{{- else if and (not $restricted.enabled) (eq $sa.name $restrictedName) -}}
+{{- fail (printf "trueforge.tfy-sandbox-server.serviceAccount.name is %q, but global.restrictedServiceAccount.enabled is false, so that account is not created. Set trueforge.tfy-sandbox-server.serviceAccount.name to null to use global.serviceAccount.name." $sa.name) -}}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{/*
   Service Account Annotations
   */}}
 {{- define "global.serviceAccountAnnotations" -}}
@@ -569,13 +648,96 @@ Usage without a resourceTier helper (pass tier value directly):
 {{- end -}}
 
 {{/*
+  Effective networkPolicy.mode: "legacy" or "perComponent". Empty (default) means legacy. Fails on
+  any other value.
+*/}}
+{{- define "truefoundry.networkPolicyMode" -}}
+{{- $mode := .Values.networkPolicy.mode | default "" -}}
+{{- if eq $mode "" -}}
+{{- $mode = "legacy" -}}
+{{- else if not (has $mode (list "legacy" "perComponent")) -}}
+{{- fail (printf "networkPolicy.mode must be empty, \"legacy\" or \"perComponent\", got %q" $mode) -}}
+{{- end -}}
+{{- $mode -}}
+{{- end -}}
+
+{{/*
+  NetworkPolicy name for networkPolicy.mode: legacy, truncated to 63 characters as earlier chart versions did.
+*/}}
+{{- define "truefoundry.legacyNetworkPolicyName" -}}
+{{- printf "%s-np-%s" (include "truefoundry.fullname" .context) .suffix | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/*
 NetworkPolicy resource name (max 63 chars).
-Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra-instance")
+Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "ing-tfy-proxy")
 */}}
 {{- define "truefoundry.networkPolicyName" -}}
 {{- $ctx := .context -}}
 {{- $suffix := .suffix -}}
-{{- printf "%s-np-%s" (include "truefoundry.fullname" $ctx) $suffix | trunc 63 | trimSuffix "-" -}}
+{{- $full := printf "%s-np-%s" (include "truefoundry.fullname" $ctx) $suffix -}}
+{{- if le (len $full) 63 -}}
+{{- $full -}}
+{{- else -}}
+{{- /* Plain truncation can collide (ing-<name> vs ing-<name>-<suffix>); keep a readable prefix plus a hash of the full name. */ -}}
+{{- printf "%s-%s" ($full | trunc 54 | trimSuffix "-") ($full | sha256sum | trunc 8) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Render one NetworkPolicy ingress rule from a values entry.
+Usage: include "truefoundry.networkPolicyIngressRule" (dict "rule" . "instance" $instance)
+
+- ports: list of TCP ports (optional)
+- from: list of same-release app.kubernetes.io/name values (optional)
+- fromNamespaces: list of {namespace, podSelector?} cross-namespace sources (optional)
+
+If neither `from` nor `fromNamespaces` is set, the rule allows all sources (any pod /
+namespace / IP). If either key is present, only the listed sources are allowed.
+When either key is present but both lists are empty (after dropping fromNamespaces
+entries without `namespace`), the define returns empty so the caller can skip the rule.
+*/}}
+{{- define "truefoundry.networkPolicyIngressRule" -}}
+{{- $rule := .rule -}}
+{{- $instance := .instance -}}
+{{- $ports := $rule.ports | default list -}}
+{{- $fromPods := $rule.from | default list -}}
+{{- $fromNS := list -}}
+{{- range ($rule.fromNamespaces | default list) }}
+{{- if .namespace }}
+{{- $fromNS = append $fromNS . }}
+{{- end }}
+{{- end -}}
+{{- $restrict := or (hasKey $rule "from") (hasKey $rule "fromNamespaces") -}}
+{{- if and $restrict (not $fromPods) (not $fromNS) }}
+{{- else }}
+{{- if $ports }}
+ports:
+{{- range $ports }}
+  - port: {{ int . }}
+    protocol: TCP
+{{- end }}
+{{- end }}
+{{- if $restrict }}
+from:
+{{- range $fromPods }}
+  - podSelector:
+      matchLabels:
+        app.kubernetes.io/instance: {{ $instance | quote }}
+        app.kubernetes.io/name: {{ . | quote }}
+{{- end }}
+{{- range $fromNS }}
+  - namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: {{ .namespace | quote }}
+{{- with .podSelector }}
+    podSelector:
+      matchLabels:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end -}}
 
 {{- define "networkPolicy.labels" -}}
@@ -585,9 +747,17 @@ Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra
 {{- end -}}
 
 {{- define "networkPolicy.annotations" -}}
-{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
+{{- with (include "networkPolicy.annotationsDict" . | fromJson) }}
 {{- toYaml . }}
 {{- end }}
+{{- end -}}
+
+{{/*
+global.annotations merged with networkPolicy.annotations, as JSON (always an object, "{}" when
+both are empty or null) so callers can merge more keys without a YAML round-trip.
+*/}}
+{{- define "networkPolicy.annotationsDict" -}}
+{{- mergeOverwrite (deepCopy (.Values.global.annotations | default dict)) (deepCopy (.Values.networkPolicy.annotations | default dict)) | toJson -}}
 {{- end -}}
 
 {{/*
@@ -665,5 +835,60 @@ host/sentinel, or externalSecret. Renders "true" or "".
 {{- define "truefoundry.redis.available" -}}
 {{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") (eq (include "truefoundry.redis.externalSecret" .) "true") -}}
 true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Whether the tfy-llm-gateway subchart is rendered: its `tfy-llm-gateway.enabled` condition when
+set, else the `llmGateway` tag (Helm's precedence for dependency conditions over tags).
+Renders "true" or "".
+*/}}
+{{- define "truefoundry.llmGateway.enabled" -}}
+{{- $gw := index .Values "tfy-llm-gateway" | default dict -}}
+{{- if hasKey $gw "enabled" -}}
+{{- if $gw.enabled }}true{{ end -}}
+{{- else if (.Values.tags | default dict).llmGateway -}}
+true
+{{- end -}}
+{{- end -}}
+
+{{/*
+Name the upstream Vector chart gives its objects (mirrors vector.fullname).
+Usage: include "truefoundry.vectorFullname" (dict "values" $vectorValues "release" .Release.Name)
+*/}}
+{{- define "truefoundry.vectorFullname" -}}
+{{- $v := .values | default dict -}}
+{{- if $v.fullnameOverride -}}
+{{- $v.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "vector" $v.nameOverride -}}
+{{- if contains $name .release -}}
+{{- .release | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .release $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Fail when the gateway's Vector aggregator (tfy-llm-gateway.vector, StatefulSet) and the
+truefoundryMonitoring log collector (truefoundryMonitoring.logs.victoria-logs-single.vector,
+DaemonSet) get the same name. Both render a ServiceAccount <name> and a Service <name>-headless
+in the release namespace, so one silently replaces the other: the log collector can lose its
+API token (the gateway's account has automountToken: false), or the aggregator its headless Service.
+*/}}
+{{- define "truefoundry.validateVectorNames" -}}
+{{- $gw := index .Values "tfy-llm-gateway" | default dict -}}
+{{- $mon := .Values.truefoundryMonitoring | default dict -}}
+{{- $logs := $mon.logs | default dict -}}
+{{- $monVector := dig "victoria-logs-single" "vector" dict $logs -}}
+{{- $gwOn := and (include "truefoundry.llmGateway.enabled" .) (dig "vector" "enabled" false $gw) -}}
+{{- $monOn := and $mon.enabled (ne (toString $logs.enabled) "false") (ne (toString $monVector.enabled) "false") -}}
+{{- if and $gwOn $monOn -}}
+{{- $gwName := include "truefoundry.vectorFullname" (dict "values" ($gw.vector | default dict) "release" .Release.Name) -}}
+{{- $monName := include "truefoundry.vectorFullname" (dict "values" $monVector "release" .Release.Name) -}}
+{{- if eq $gwName $monName -}}
+{{- fail (printf "tfy-llm-gateway.vector and the truefoundryMonitoring log collector both render as %q in namespace %q, so their ServiceAccount and Service collide. Rename one: set truefoundryMonitoring.logs.victoria-logs-single.vector.fullnameOverride (no data loss), or tfy-llm-gateway.vector.fullnameOverride (starts with empty buffer volumes; see README \"Vector name collision\")." $gwName (include "global.namespace" .)) -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}
