@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.179.0"
+  gatewayChartVersion: "0.179.2"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -53,18 +53,31 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
+  ## global.podSecurityContext Pod security context defaults for every component. A component's own
+  ## podSecurityContext overrides single fields. Under the truefoundry chart, its global.podSecurityContext applies.
   podSecurityContext:
-    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
+    ## @param global.podSecurityContext.enabled Apply pod security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for component pods
     runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
+    ## @param global.podSecurityContext.runAsUser Default user ID for component pods
     runAsUser: 1001
-  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
+    seccompProfile:
+      ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
+      type: RuntimeDefault
+  ## global.containerSecurityContext Container security context defaults for every component. A component's own
+  ## securityContext overrides single fields. Under the truefoundry chart, its global.containerSecurityContext applies.
   containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
+    ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
     enabled: true
+    ## @param global.containerSecurityContext.readOnlyRootFilesystem Default readOnlyRootFilesystem for component containers
+    readOnlyRootFilesystem: true
+    ## @param global.containerSecurityContext.allowPrivilegeEscalation Default allowPrivilegeEscalation for component containers
+    allowPrivilegeEscalation: false
+    capabilities:
+      ## @param global.containerSecurityContext.capabilities.drop [array] Linux capabilities dropped from component containers
+      drop:
+        - ALL
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -128,7 +141,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.179.0
+  tag: v0.179.2
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -346,7 +359,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.179.0"
+    tag: "v0.179.3"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -829,6 +842,25 @@ vector:
   rollWorkload: false
   ## @param vector.role Vector role (StatefulSet for the disk buffer)
   role: Aggregator
+  ## @param vector.podSecurityContext [object] Pod security context for Vector. fsGroup lets it write the disk buffer as non-root.
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+    seccompProfile:
+      type: RuntimeDefault
+  ## @param vector.securityContext [object] Container security context for Vector. It writes only to its data volume.
+  securityContext:
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  ## vector.serviceAccount Service account for Vector. It needs no Kubernetes API access, so no token is mounted.
+  serviceAccount:
+    ## @param vector.serviceAccount.automountToken Automount the service account token for Vector pods
+    automountToken: false
   ## @param vector.replicas Number of Vector replicas
   replicas: 3
   ## Scheduling: the upstream Vector chart only reads these keys (not global.*).
