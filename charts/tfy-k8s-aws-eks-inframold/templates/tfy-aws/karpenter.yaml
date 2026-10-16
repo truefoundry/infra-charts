@@ -16,7 +16,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     repoURL: {{ (.Values.global | default dict).repoURL | default "https://truefoundry.github.io/infra-charts/" }}
-    targetRevision: 0.5.9
+    targetRevision: 0.5.12
     chart: tfy-karpenter
     helm:
       values: |-
@@ -37,7 +37,7 @@ spec:
           {{- if .Values.registry }}
           nodeAgent:
             image:
-              override: {{ .Values.registry }}/truefoundrycloud/eks/eks-node-monitoring-agent:v1.2.0-eksbuild.1
+              override: {{ .Values.registry }}/truefoundrycloud/eks/eks-node-monitoring-agent:v1.7.1-eksbuild.1
           dcgmAgent:
             image:
               override: {{ .Values.registry }}/tfy-images/eks/observability/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04
