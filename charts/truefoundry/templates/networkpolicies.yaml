@@ -1,7 +1,6 @@
 {{- if .Values.networkPolicy.enabled }}
 {{- $instance := .Release.Name }}
 {{- $ingressFrom := .Values.networkPolicy.allowedIngressFrom | default list }}
-{{- $extraIngress := .Values.networkPolicy.extraIngress | default list }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -13,9 +12,7 @@ metadata:
   labels:
     {{- include "networkPolicy.labels" . | nindent 4 }}
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: {{ $instance | quote }}
+  podSelector: {}
   policyTypes:
     - Ingress
 ---
@@ -29,9 +26,7 @@ metadata:
   labels:
     {{- include "networkPolicy.labels" . | nindent 4 }}
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: {{ $instance | quote }}
+  podSelector: {}
   policyTypes:
     - Egress
   egress:
@@ -69,9 +64,7 @@ metadata:
   labels:
     {{- include "networkPolicy.labels" . | nindent 4 }}
 spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: {{ $instance | quote }}
+  podSelector: {}
   policyTypes:
     - Ingress
   ingress:
@@ -88,8 +81,5 @@ spec:
           {{- end }}
 {{- end }}
 {{- end }}
-    {{- with $extraIngress }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
 {{- end }}
 {{- end }}
