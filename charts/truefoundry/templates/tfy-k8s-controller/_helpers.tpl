@@ -155,7 +155,7 @@ Expand the name of the chart.
 {{- if .Values.tfyK8sController.serviceAccount.name -}}
 {{- .Values.tfyK8sController.serviceAccount.name -}}
 {{- else -}}
-{{- .Values.global.serviceAccount.name -}}
+{{- include "truefoundry.restrictedServiceAccountName" . -}}
 {{- end -}}
 {{- end }}
 

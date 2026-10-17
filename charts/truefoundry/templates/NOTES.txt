@@ -1,0 +1,7 @@
+{{- if (.Values.global.restrictedServiceAccount | default dict).enabled }}
+
+Service accounts: tfy-proxy, tfy-controller, tfy-k8s-controller, sfy-manifest-service, tfy-infra-manager
+and tfy-otel-collector run on {{ include "truefoundry.restrictedServiceAccountConfiguredName" . }} (no RBAC, no token) unless they set their own.
+To give one its own account again, for example for cloud identity, set both
+<component>.serviceAccount.create: true and <component>.serviceAccount.name.
+{{- end }}
