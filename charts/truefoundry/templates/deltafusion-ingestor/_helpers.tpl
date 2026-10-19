@@ -216,33 +216,33 @@ Resource Tier
 requests:
   cpu: 500m
   memory: 1000M
-  ephemeral-storage: 1000M
+  ephemeral-storage: 100M
 limits:
   cpu: 1000m
   memory: 1200M
-  ephemeral-storage: 1000M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.medium" }}
 requests:
-  cpu: 2000m
-  memory: 4000M
-  ephemeral-storage: 1000M
+  cpu: 1000m
+  memory: 2000M
+  ephemeral-storage: 100M
 limits:
-  cpu: 4000m
-  memory: 4800M
-  ephemeral-storage: 1000M
+  cpu: 2000m
+  memory: 2400M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.defaultResources.large" }}
 requests:
-  cpu: 4000m
-  memory: 8000M
-  ephemeral-storage: 1000M
+  cpu: 2000m
+  memory: 4000M
+  ephemeral-storage: 100M
 limits:
-  cpu: 8000m
-  memory: 9600M
-  ephemeral-storage: 1000M
+  cpu: 4000m
+  memory: 4800M
+  ephemeral-storage: 100M
 {{- end }}
 
 {{- define "deltafusion-ingestor.replicas" }}
@@ -293,9 +293,9 @@ tokio worker threads is cpu limits
 {{- if eq $tier "small" }}
 TOKIO_WORKER_THREADS: "2"
 {{- else if eq $tier "medium" }}
-TOKIO_WORKER_THREADS: "4"
+TOKIO_WORKER_THREADS: "2"
 {{- else if eq $tier "large" }}
-TOKIO_WORKER_THREADS: "8"
+TOKIO_WORKER_THREADS: "4"
 {{- end }}
 {{- end }}
 
@@ -329,14 +329,12 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
     secretKeyRef:
       name: {{ $.Values.deltaFusionIngestor.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -358,10 +356,6 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-ingestor.resourceTier" "defaultResourcesPrefix" "deltafusion-ingestor.defaultResources" "resourcesValues" .Values.deltaFusionIngestor.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
@@ -376,7 +370,6 @@ PORT: "{{ .Values.deltaFusionIngestor.service.port }}"
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "truefoundry.customCA.volumeMounts" . -}}
-{{- include "truefoundry.mtlsVolumeMount" . -}}
 {{- end -}}
 
 {{- define "deltafusion-ingestor.imagePullSecrets" -}}
@@ -410,14 +403,6 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
-{{- end }}
-
-{{/*
-CronJob metadata.name must be <= 52 characters so spawned Job names (name + "-" + 11-char
-timestamp suffix) stay within the 63-character DNS label limit.
-*/}}
-{{- define "deltafusion-compaction.cronJobName" -}}
-{{- include "deltafusion-compaction.fullname" . | trunc 52 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -539,6 +524,17 @@ limits:
 
 {{- define "deltafusion-compaction.defaultResources.medium" }}
 requests:
+  cpu: 2000m
+  memory: 4000M
+  ephemeral-storage: 20000M
+limits:
+  cpu: 4000m
+  memory: 4800M
+  ephemeral-storage: 20000M
+{{- end }}
+
+{{- define "deltafusion-compaction.defaultResources.large" }}
+requests:
   cpu: 4000m
   memory: 8000M
   ephemeral-storage: 40000M
@@ -546,17 +542,6 @@ limits:
   cpu: 8000m
   memory: 9600M
   ephemeral-storage: 40000M
-{{- end }}
-
-{{- define "deltafusion-compaction.defaultResources.large" }}
-requests:
-  cpu: 8000m
-  memory: 16000M
-  ephemeral-storage: 80000M
-limits:
-  cpu: 16000m
-  memory: 19200M
-  ephemeral-storage: 80000M
 {{- end }}
 
 {{/*
@@ -571,13 +556,13 @@ COMPACTION_MAX_SPILL_SIZE_MB: "650"
 DATAFUSION_EXECUTION_BATCH_SIZE: "512"
 TOKIO_WORKER_THREADS: "2"
 {{- else if eq $tier "medium" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "2600"
-DATAFUSION_EXECUTION_BATCH_SIZE: "512"
-TOKIO_WORKER_THREADS: "8"
+COMPACTION_MAX_SPILL_SIZE_MB: "1300"
+DATAFUSION_EXECUTION_BATCH_SIZE: "1024"
+TOKIO_WORKER_THREADS: "4"
 {{- else if eq $tier "large" }}
-COMPACTION_MAX_SPILL_SIZE_MB: "5200"
-DATAFUSION_EXECUTION_BATCH_SIZE: "512"
-TOKIO_WORKER_THREADS: "16"
+COMPACTION_MAX_SPILL_SIZE_MB: "2600"
+DATAFUSION_EXECUTION_BATCH_SIZE: "2048"
+TOKIO_WORKER_THREADS: "8"
 {{- end }}
 {{- end }}
 
@@ -637,14 +622,12 @@ IMAGE_TAG: "{{ .Values.deltaFusionCompaction.image.tag }}"
     secretKeyRef:
       name: {{ $.Values.deltaFusionCompaction.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -679,10 +662,6 @@ Tolerations for the deltafusion-compaction service
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "deltafusion-compaction.resourceTier" "defaultResourcesPrefix" "deltafusion-compaction.defaultResources" "resourcesValues" .Values.deltaFusionCompaction.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
@@ -698,10 +677,6 @@ Tolerations for the deltafusion-compaction service
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
 {{- $volumeMounts = append $volumeMounts $tmpMount -}}

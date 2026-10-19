@@ -8,69 +8,10 @@ Expand the name of the chart.
 {{- default .Release.Namespace .Values.global.namespaceOverride }}
 {{- end }}
 
-{{/*
-  mTLS volume/volumeMount, mounting the cert issued by the parent chart's bootstrap job.
-  Gated on global.mTLS.enabled (set from the umbrella chart; absent when this subchart is
-  installed standalone, in which case these emit nothing). Mounts the external secret when
-  global.mTLS.externalMtlsSecret is set, else the bootstrap-created secret.
-*/}}
-{{- define "tfy-llm-gateway.mtls.volume" -}}
-{{- $tls := (.Values.global).mTLS | default dict -}}
-{{- if $tls.enabled }}
-- name: truefoundry-mtls
-  secret:
-    secretName: {{ $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" }}
-    optional: true
-{{- end }}
-{{- end -}}
-{{- define "tfy-llm-gateway.mtls.volumeMount" -}}
-{{- $tls := (.Values.global).mTLS | default dict -}}
-{{- if $tls.enabled }}
-- name: truefoundry-mtls
-  mountPath: /etc/tls/truefoundry
-  readOnly: true
-{{- end }}
-{{- end -}}
-
 
 {{- define "tfy-llm-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
-
-{{/*
-  Compute the tfy-sandbox-server subchart's Service name from the parent chart context.
-  Mirrors the logic in tfy-sandbox-server.fullname but uses the subchart's scoped values.
-*/}}
-{{- define "tfy-llm-gateway.sandbox.fullname" -}}
-{{- $sandboxValues := index .Values "tfy-sandbox-server" -}}
-{{- if $sandboxValues.fullnameOverride -}}
-{{- $sandboxValues.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default "tfy-sandbox-server" $sandboxValues.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-  Compute the vector subchart's Service name from the parent chart context.
-  Mirrors the logic in vector.fullname but uses the subchart's scoped values.
-*/}}
-{{- define "tfy-llm-gateway.vector.fullname" -}}
-{{- if .Values.vector.fullnameOverride -}}
-{{- .Values.vector.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default "vector" .Values.vector.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
   Create a default fully qualified app name.
@@ -287,9 +228,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 */}}
 {{- define "tfy-llm-gateway.proxy.validate" -}}
 {{- if .Values.proxy.tls.enabled }}
-{{- if ((.Values.global).mTLS).enabled }}
-{{- fail "proxy.tls.enabled and global.mTLS.enabled are mutually exclusive: the Caddy proxy terminates TLS and forwards plain HTTP to the gateway, but mTLS makes the gateway serve HTTPS itself. Enable only one." }}
-{{- end }}
 {{- if not .Values.proxy.tls.secretName }}
 {{- fail "proxy.tls.enabled is true but proxy.tls.secretName is empty. Set proxy.tls.secretName to a Secret containing tls.crt and tls.key." }}
 {{- end }}
@@ -350,117 +288,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
-  Validate managed agents and Redis configuration. A missing gatewayId is not fatal:
-  the umbrella chart supplies it and a standalone install still has to render, so it is
-  emitted as a warning comment in the rendered output instead.
-*/}}
-{{- define "tfy-llm-gateway.validate" -}}
-{{- if and .Values.redis.enabled .Values.externalRedis.enabled -}}
-{{- fail "redis.enabled and externalRedis.enabled cannot both be true" -}}
-{{- end -}}
-{{- if and .Values.vector.enabled (not .Values.global.controlPlaneURL) -}}
-{{- fail "global.controlPlaneURL is required when vector.enabled is true" -}}
-{{- end -}}
-{{- if and .Values.vector.enabled .Values.global.namespaceOverride (ne (include "global.namespace" .) .Release.Namespace) -}}
-{{- fail "vector.enabled cannot be combined with global.namespaceOverride: the Vector chart installs into the release namespace, so the gateway and Vector would land in different namespaces" -}}
-{{- end -}}
-{{- if and .Values.vector.enabled .Values.vector.mtls.enabled (not ((.Values.global).mTLS).enabled) -}}
-{{- fail "vector.mtls.enabled requires global.mTLS.enabled: the gateway presents the global.mTLS client certificate when exporting traces to Vector" -}}
-{{- end -}}
-{{- if and .Values.vector.enabled .Values.vector.mtls.enabled -}}
-{{- /* The Vector subchart renders extraVolumes with toYaml, so the Secret name cannot be templated. */ -}}
-{{- $tls := (.Values.global).mTLS | default dict -}}
-{{- $want := $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" -}}
-{{- $got := "" -}}
-{{- range .Values.vector.extraVolumes -}}
-{{- if and (eq .name "truefoundry-mtls") .secret .secret.secretName -}}
-{{- $got = .secret.secretName -}}
-{{- end -}}
-{{- end -}}
-{{- if ne $got $want -}}
-{{- fail (printf "vector extraVolumes truefoundry-mtls secretName is %q, but the gateway mounts %q (global.mTLS.externalMtlsSecret, otherwise tlsSecretName). The Vector chart cannot template extraVolumes, so set that volume secretName to %q. Helm replaces the whole extraVolumes list, so keep the tfy-credentials volume in the override." $got $want $want) -}}
-{{- end -}}
-{{- end -}}
-{{- if and .Values.vector.enabled .Values.global.customCA.enabled -}}
-{{- /* Same constraint as mTLS: Vector extraVolumes are literal YAML, so the ConfigMap name must match. */ -}}
-{{- $want := include "tfy-llm-gateway.customCA.configMapName" . -}}
-{{- $got := "" -}}
-{{- range .Values.vector.extraVolumes -}}
-{{- if and (eq .name "custom-ca") .configMap .configMap.name -}}
-{{- $got = .configMap.name -}}
-{{- end -}}
-{{- end -}}
-{{- if ne $got $want -}}
-{{- fail (printf "vector extraVolumes custom-ca configMap.name is %q, but global.customCA resolves to %q. The Vector chart cannot template extraVolumes, so set that volume configMap.name to %q (and keep tfy-credentials, truefoundry-mtls, and ssl-certs when overriding the list). Without this mount Vector cannot trust the control plane CA when forwarding traces." $got $want $want) -}}
-{{- end -}}
-{{- end -}}
-{{- if or .Values.agentsLtsWriteJob.enabled .Values.sandbox.devMode.enabled -}}
-{{- if not (or .Values.redis.enabled .Values.externalRedis.enabled) -}}
-{{- fail "redis.enabled or externalRedis.enabled is required when agents features are true" -}}
-{{- end -}}
-{{- if not .Values.gatewayId }}
-# WARNING: agent feature components are enabled but gatewayId is empty; managed agent features stay off until gatewayId is set.
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-  Redis environment shared by the gateway and LTS write job.
-*/}}
-{{- define "tfy-llm-gateway.redis.env" -}}
-{{- $env := dict -}}
-{{- if .Values.redis.enabled -}}
-  {{- $_ := set $env "REDIS_HOST" (printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .)) -}}
-{{- else if .Values.externalRedis.enabled -}}
-  {{- with .Values.externalRedis.host }}
-    {{- $_ := set $env "REDIS_HOST" . -}}
-  {{- end -}}
-  {{- $_ := set $env "REDIS_PORT" .Values.externalRedis.port -}}
-  {{- $_ := set $env "REDIS_DB" .Values.externalRedis.db -}}
-  {{- with .Values.externalRedis.auth.username }}
-    {{- $_ := set $env "REDIS_USERNAME" . -}}
-  {{- end -}}
-  {{- with .Values.externalRedis.auth.password }}
-    {{- $_ := set $env "REDIS_PASSWORD" . -}}
-  {{- end -}}
-  {{- $_ := set $env "REDIS_TLS_ENABLED" .Values.externalRedis.tls.enabled -}}
-  {{- if .Values.externalRedis.tls.enabled -}}
-    {{- with .Values.externalRedis.tls.caCert }}
-      {{- $_ := set $env "REDIS_TLS_CA_CERT" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.tls.serverName }}
-      {{- $_ := set $env "REDIS_TLS_SERVERNAME" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.tls.cert }}
-      {{- $_ := set $env "REDIS_TLS_CERT" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.tls.key }}
-      {{- $_ := set $env "REDIS_TLS_KEY" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.tls.keyPassphrase }}
-      {{- $_ := set $env "REDIS_TLS_KEY_PASSPHRASE" . -}}
-    {{- end -}}
-  {{- end -}}
-  {{- $_ := set $env "REDIS_SENTINEL_ENABLED" .Values.externalRedis.sentinel.enabled -}}
-  {{- if .Values.externalRedis.sentinel.enabled -}}
-    {{- with .Values.externalRedis.sentinel.nodes }}
-      {{- $_ := set $env "REDIS_SENTINEL_NODES" (join "," .) -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.sentinel.masterName }}
-      {{- $_ := set $env "REDIS_SENTINEL_MASTER_NAME" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.sentinel.auth.username }}
-      {{- $_ := set $env "REDIS_SENTINEL_USERNAME" . -}}
-    {{- end -}}
-    {{- with .Values.externalRedis.sentinel.auth.password }}
-      {{- $_ := set $env "REDIS_SENTINEL_PASSWORD" . -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- toYaml $env -}}
-{{- end -}}
-
-{{/*
   Parse env from template
   */}}
 {{- define "tfy-llm-gateway.parseEnv" -}}
@@ -471,11 +298,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the env file
   */}}
 {{- define "tfy-llm-gateway.env" }}
-{{- include "tfy-llm-gateway.validate" . }}
-{{- $env := include "tfy-llm-gateway.redis.env" . | fromYaml | default dict }}
-{{- $explicitEnv := (include "tfy-llm-gateway.parseEnv" .) | fromYaml | default dict }}
-{{- $env = mergeOverwrite $env $explicitEnv }}
-{{- range $key, $val := $env }}
+{{- range $key, $val := (include "tfy-llm-gateway.parseEnv" .) | fromYaml }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -483,14 +306,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
     secretKeyRef:
       name: {{ $.Values.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -499,33 +320,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   value: {{ $val | quote }}
 {{- end }}
 {{- end }}
-{{- if and .Values.sandbox.devMode.enabled (not (hasKey .Values.env "SANDBOX_ENABLED")) }}
-- name: SANDBOX_ENABLED
-  value: "true"
-{{- end }}
-{{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_SERVER_URL) }}
-- name: TFY_SANDBOX_SERVER_URL
-  value: {{ printf "http://%s.%s.svc.cluster.local:8080" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
-{{- end }}
-{{- if and .Values.sandbox.devMode.enabled (not .Values.env.TFY_SANDBOX_NATS_BRIDGE_URL) }}
-- name: TFY_SANDBOX_NATS_BRIDGE_URL
-  value: {{ printf "ws://%s.%s.svc.cluster.local:4444" (include "tfy-llm-gateway.sandbox.fullname" .) (include "global.namespace" .) | quote }}
-{{- end }}
-{{- if and .Values.vector.enabled (not .Values.env.TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT) }}
-- name: TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-  value: {{ printf "%s://%s.%s.svc.cluster.local:4318/v1/traces" (ternary "https" "http" .Values.vector.mtls.enabled) (include "tfy-llm-gateway.vector.fullname" .) (include "global.namespace" .) | quote }}
+{{- if and .Values.redis.enabled (not .Values.env.REDIS_HOST) }}
+- name: REDIS_HOST
+  value: {{ printf "%s-redis-master.%s.svc.cluster.local" .Release.Name (include "global.namespace" .) | quote }}
 {{- end }}
 {{- if and .Values.global.multitenant.enabled (not (hasKey .Values.env "MULTITENANT")) }}
 - name: MULTITENANT
   value: "true"
-{{- end }}
-{{- if not (hasKey .Values.env "AGENT_SESSION_RESTORE_FROM_LTS_ENABLED") }}
-- name: AGENT_SESSION_RESTORE_FROM_LTS_ENABLED
-  value: {{ .Values.agentsLtsWriteJob.enabled | quote }}
-{{- end }}
-{{- if not (hasKey .Values.env "GATEWAY_ID") }}
-- name: GATEWAY_ID
-  value: {{ .Values.gatewayId | quote }}
 {{- end }}
 {{- end }}
 
@@ -732,24 +533,7 @@ false
 {{- if .Values.global.customCA.existingConfigMap.name -}}
 {{- .Values.global.customCA.existingConfigMap.name -}}
 {{- else -}}
-{{- /* Fixed name so Vector (subchart extraVolumes are not templated) can mount the same bundle. */ -}}
-tfy-llm-gateway-custom-ca
-{{- end -}}
-{{- end -}}
-
-{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
-{{- define "tfy-llm-gateway.podSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
-{{- end -}}
-{{- end -}}
-
-{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
-{{- define "tfy-llm-gateway.containerSecurityContext" -}}
-{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
-{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
-{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- include "tfy-llm-gateway.fullname" . }}-custom-ca
 {{- end -}}
 {{- end -}}
 
@@ -761,9 +545,11 @@ tfy-llm-gateway-custom-ca
 {{- if eq (include "tfy-llm-gateway.customCA.useDirectMount" .) "false" }}
 - name: configure-custom-ca
   image: "{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}"
-  {{- with (include "tfy-llm-gateway.containerSecurityContext" (dict "local" .Values.global.customCA.securityContext "global" .Values.global.containerSecurityContext)) }}
+  {{- if .Values.global.customCA.securityContext.enabled }}
+  {{- with .Values.global.customCA.securityContext }}
   securityContext:
-    {{- . | nindent 4 }}
+    {{- toYaml (omit . "enabled") | nindent 4 }}
+  {{- end }}
   {{- end }}
   command: ["sh", "-c"]
   args:
@@ -827,248 +613,3 @@ tfy-llm-gateway-custom-ca
 {{- end }}
 {{- end }}
 {{- end -}}
-
-{{/*
-  Agents LTS write CronJob helpers
-*/}}
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.name" -}}
-{{- default "agents-lts-write-job" .Values.agentsLtsWriteJob.nameOverride | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.fullname" -}}
-{{- if .Values.agentsLtsWriteJob.fullnameOverride }}
-{{- .Values.agentsLtsWriteJob.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default "agents-lts-write-job" .Values.agentsLtsWriteJob.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.labels" -}}
-helm.sh/chart: {{ include "tfy-llm-gateway.chart" . }}
-{{ include "tfy-llm-gateway.agentsLtsWriteJob.selectorLabels" . }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/version: {{ .Values.image.tag | quote }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "tfy-llm-gateway.agentsLtsWriteJob.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.commonLabels" -}}
-{{- $baseLabels := include "tfy-llm-gateway.agentsLtsWriteJob.labels" . | fromYaml }}
-{{- $commonLabels := mergeOverwrite $baseLabels (deepCopy .Values.global.labels) (.Values.agentsLtsWriteJob.commonLabels | default dict) }}
-{{- toYaml $commonLabels }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.commonAnnotations" -}}
-{{- $commonAnnotations := mergeOverwrite (deepCopy .Values.global.annotations) (.Values.agentsLtsWriteJob.commonAnnotations | default dict) }}
-{{- toYaml $commonAnnotations }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.podLabels" -}}
-{{- $selectorLabels := include "tfy-llm-gateway.agentsLtsWriteJob.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) (.Values.agentsLtsWriteJob.podLabels | default dict) $selectorLabels }}
-{{- toYaml $podLabels }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.podAnnotations" -}}
-{{- $commonAnnotations := include "tfy-llm-gateway.agentsLtsWriteJob.commonAnnotations" . | fromYaml }}
-{{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations (.Values.agentsLtsWriteJob.podAnnotations | default dict) }}
-{{- toYaml $podAnnotations }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.cronJobLabels" -}}
-{{- $commonLabels := include "tfy-llm-gateway.agentsLtsWriteJob.commonLabels" . | fromYaml }}
-{{- $cronJobLabels := mergeOverwrite $commonLabels (.Values.agentsLtsWriteJob.cronJobLabels | default dict) }}
-{{- toYaml $cronJobLabels }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.cronJobAnnotations" -}}
-{{- $commonAnnotations := include "tfy-llm-gateway.agentsLtsWriteJob.commonAnnotations" . | fromYaml }}
-{{- $cronJobAnnotations := mergeOverwrite $commonAnnotations (.Values.agentsLtsWriteJob.cronJobAnnotations | default dict) }}
-{{- toYaml $cronJobAnnotations }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.serviceAccountName" -}}
-{{- if and .Values.agentsLtsWriteJob.serviceAccount .Values.agentsLtsWriteJob.serviceAccount.name -}}
-{{- .Values.agentsLtsWriteJob.serviceAccount.name -}}
-{{- else -}}
-{{- include "tfy-llm-gateway.serviceAccountName" . -}}
-{{- end -}}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.resourceTier" -}}
-{{- .Values.agentsLtsWriteJob.resourceTier | default .Values.global.resourceTier | default "medium" }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.small" }}
-requests:
-  cpu: 250m
-  memory: 500M
-  ephemeral-storage: 500Mi
-limits:
-  cpu: 500m
-  memory: 625M
-  ephemeral-storage: 1000Mi
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.medium" }}
-requests:
-  cpu: 500m
-  memory: 1000M
-  ephemeral-storage: 1000Mi
-limits:
-  cpu: 1000m
-  memory: 1250M
-  ephemeral-storage: 2000Mi
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.large" }}
-requests:
-  cpu: 1000m
-  memory: 2000M
-  ephemeral-storage: 2000Mi
-limits:
-  cpu: 2000m
-  memory: 2500M
-  ephemeral-storage: 4000Mi
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.resources" }}
-{{- $tier := include "tfy-llm-gateway.agentsLtsWriteJob.resourceTier" . | trim }}
-{{- $defaultsYaml := "" }}
-{{- if eq $tier "small" }}
-  {{- $defaultsYaml = include "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.small" . }}
-{{- else if eq $tier "large" }}
-  {{- $defaultsYaml = include "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.large" . }}
-{{- else }}
-  {{- $defaultsYaml = include "tfy-llm-gateway.agentsLtsWriteJob.defaultResources.medium" . }}
-{{- end }}
-{{- $defaults := fromYaml $defaultsYaml | default dict }}
-{{- $defaultsRequests := $defaults.requests | default dict }}
-{{- $defaultsLimits := $defaults.limits | default dict }}
-{{- $overrides := .Values.agentsLtsWriteJob.resources | default dict }}
-{{- $overridesRequests := $overrides.requests | default dict }}
-{{- $overridesLimits := $overrides.limits | default dict }}
-{{- $requests := merge $overridesRequests $defaultsRequests }}
-{{- $limits := merge $overridesLimits $defaultsLimits }}
-{{- $merged := dict "requests" $requests "limits" $limits }}
-{{ toYaml $merged }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.ephemeralStorage.limit" }}
-{{- $resources := include "tfy-llm-gateway.agentsLtsWriteJob.resources" . | fromYaml }}
-{{- index $resources.limits "ephemeral-storage" }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.parseEnv" -}}
-{{ tpl ((.Values.agentsLtsWriteJob.env | default dict) | toYaml) . }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.env" }}
-{{- include "tfy-llm-gateway.validate" . }}
-{{- $env := include "tfy-llm-gateway.redis.env" . | fromYaml | default dict }}
-{{- $explicitEnv := (include "tfy-llm-gateway.agentsLtsWriteJob.parseEnv" .) | fromYaml | default dict }}
-{{- $env = mergeOverwrite $env $explicitEnv }}
-{{- range $key, $val := $env }}
-{{- if and $val (contains "${k8s-secret" ($val | toString)) }}
-{{- if eq (regexSplit "/" $val -1 | len) 2 }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ $.Values.agentsLtsWriteJob.envSecretName }}
-      key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-{{- else if eq (regexSplit "/" $val -1 | len) 3 }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ index (regexSplit "/" $val -1) 1 }}
-      key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-{{- else }}
-{{- fail "Invalid secret supplied" }}
-{{- end }}
-{{- else }}
-- name: {{ $key }}
-  value: {{ $val | quote }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.volumes" -}}
-- name: tmp-dir
-  emptyDir:
-    sizeLimit: {{ include "tfy-llm-gateway.agentsLtsWriteJob.ephemeralStorage.limit" . }}
-{{- with .Values.agentsLtsWriteJob.extraVolumes }}
-{{- toYaml . | nindent 0 }}
-{{- end }}
-{{- if .Values.global.customCA.enabled }}
-{{- include "tfy-llm-gateway.customCA.volumes" . | nindent 0 }}
-{{- end }}
-{{- end -}}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.volumeMounts" -}}
-- name: tmp-dir
-  mountPath: /tmp
-{{- with .Values.agentsLtsWriteJob.extraVolumeMounts }}
-{{- toYaml . | nindent 0 }}
-{{- end }}
-{{- if .Values.global.customCA.enabled }}
-{{- include "tfy-llm-gateway.customCA.volumeMounts" . | nindent 0 }}
-{{- end }}
-{{- end -}}
-
-{{/*
-  NetworkPolicy resource name (max 63 chars).
-  Usage: include "tfy-llm-gateway.networkPolicyName" (dict "context" . "suffix" "egress")
-*/}}
-{{- define "tfy-llm-gateway.networkPolicyName" -}}
-{{- printf "%s-np-%s" (include "tfy-llm-gateway.fullname" .context) .suffix | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
-  NetworkPolicy labels
-*/}}
-{{- define "tfy-llm-gateway.networkPolicyLabels" -}}
-{{- $commonLabels := include "tfy-llm-gateway.commonLabels" . | fromYaml }}
-{{- toYaml (mergeOverwrite $commonLabels .Values.networkPolicy.labels) }}
-{{- end -}}
-
-{{/*
-  NetworkPolicy annotations
-*/}}
-{{- define "tfy-llm-gateway.networkPolicyAnnotations" -}}
-{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
-{{- toYaml . }}
-{{- end }}
-{{- end -}}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.nodeSelector" -}}
-{{- $nodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (.Values.agentsLtsWriteJob.nodeSelector | default dict) }}
-{{- toYaml $nodeSelector }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.affinity" -}}
-{{- if .Values.agentsLtsWriteJob.affinity -}}
-{{- toYaml .Values.agentsLtsWriteJob.affinity }}
-{{- else if .Values.global.affinity -}}
-{{- toYaml .Values.global.affinity }}
-{{- else -}}
-{}
-{{- end }}
-{{- end }}
-
-{{- define "tfy-llm-gateway.agentsLtsWriteJob.tolerations" -}}
-{{- if .Values.agentsLtsWriteJob.tolerations -}}
-{{- toYaml .Values.agentsLtsWriteJob.tolerations }}
-{{- else if .Values.global.tolerations -}}
-{{- toYaml .Values.global.tolerations }}
-{{- else -}}
-[]
-{{- end }}
-{{- end }}
