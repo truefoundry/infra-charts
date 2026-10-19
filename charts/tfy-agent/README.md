@@ -64,7 +64,7 @@ The external-secrets and reloader subchart pods are not selected and keep their 
 
 ## Security contexts
 
-From 0.2.110, tfy-agent, tfy-agent-proxy and sds-server run non-root with a read-only root filesystem, no privilege escalation, all capabilities dropped and the `RuntimeDefault` seccomp profile. Defaults live in `global.podSecurityContext` and `global.containerSecurityContext`; each component's `podSecurityContext` / `securityContext` overrides single fields.
+From 0.2.109, tfy-agent, tfy-agent-proxy and sds-server run non-root with a read-only root filesystem, no privilege escalation, all capabilities dropped and the `RuntimeDefault` seccomp profile. Defaults live in `global.podSecurityContext` and `global.containerSecurityContext`; each component's `podSecurityContext` / `securityContext` overrides single fields.
 
 | Component | User | Writable paths (emptyDir) |
 |-----------|------|---------------------------|
@@ -79,7 +79,7 @@ The emptyDir size limits are `tfyAgent.emptyDir.{tmp,kube,yamls}.sizeLimit` (`""
 Opt-outs:
 
 ```yaml
-# Everything off (the pre-0.2.110 output)
+# Everything off (the pre-0.2.109 output)
 global:
   podSecurityContext:
     enabled: false
