@@ -1,4 +1,9 @@
 {{- if .Values.tfyAgent.enabled -}}
+{{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.tfyAgent.securityContext "global" .Values.global.containerSecurityContext) }}
+{{- $writableDirs := list }}
+{{- if (fromYaml $containerSC).readOnlyRootFilesystem }}
+{{- $writableDirs = list (dict "name" "writable-tmp" "path" "/tmp") (dict "name" "writable-kube" "path" "/app/.kube") (dict "name" "writable-yamls" "path" "/app/yamls") }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,15 +29,25 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      {{- with (include "tfy-agent.podSecurityContext" (dict "local" .Values.tfyAgent.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "tfy-agent.customCA.useDirectMount" .) "false") }}
       initContainers:
         {{- include "tfy-agent.customCA.initContainer" . | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- with $containerSC }}
           securityContext:
-            {{- toYaml .Values.tfyAgent.securityContext | nindent 12 }}
+            {{- . | nindent 12 }}
+          {{- end }}
           env:
+            {{- if $writableDirs }}
+            - name: KUBECACHEDIR
+              value: /tmp/kube-cache
+            {{- end }}
             {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL
               value: {{ .Values.config.controlPlaneURL | quote }}
@@ -101,6 +116,9 @@ spec:
           resources:
             {{- toYaml .Values.tfyAgent.resources | nindent 12 }}
           volumeMounts:
+            {{- with $writableDirs }}
+            {{- include "tfy-agent.writableDirs.volumeMounts" . | trim | nindent 12 }}
+            {{- end }}
             {{- with .Values.tfyAgent.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -120,6 +138,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        {{- with $writableDirs }}
+        {{- include "tfy-agent.writableDirs.volumes" . | trim | nindent 8 }}
+        {{- end }}
         {{- with .Values.tfyAgent.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

@@ -677,3 +677,37 @@ false
   value: /etc/ssl/certs/ca-certificates.crt
 {{- end }}
 {{- end -}}
+
+{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-agent.podSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-agent.containerSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+emptyDir volumes and mounts for the paths a component writes. Callers pass an empty list
+unless the container's root filesystem is read-only, so nothing changes when it is writable.
+*/}}
+{{- define "tfy-agent.writableDirs.volumes" -}}
+{{- range . }}
+- name: {{ .name }}
+  emptyDir: {}
+{{- end }}
+{{- end -}}
+
+{{- define "tfy-agent.writableDirs.volumeMounts" -}}
+{{- range . }}
+- name: {{ .name }}
+  mountPath: {{ .path }}
+{{- end }}
+{{- end -}}
