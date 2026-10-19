@@ -281,11 +281,11 @@ Deployment Volumes
 */}}
 {{- define "tfy-otel-collector.volumes" -}}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- $ephemeralLimit := "1024Mi" }}
+{{- $ephemeralLimit := "2Gi" }}
 {{- if eq $tier "small" }}
   {{- $ephemeralLimit = "512Mi" }}
 {{- else if eq $tier "large" }}
-  {{- $ephemeralLimit = "2048Mi" }}
+  {{- $ephemeralLimit = "4Gi" }}
 {{- end }}
 {{- if and .Values.resources .Values.resources.limits (index .Values.resources.limits "ephemeral-storage") }}
   {{- $ephemeralLimit = index .Values.resources.limits "ephemeral-storage" }}
@@ -360,23 +360,23 @@ limits:
 {{- define "tfy-otel-collector.defaultResources.medium" }}
 requests:
   cpu: 200m
-  memory: 512Mi
-  ephemeral-storage: 512Mi
+  memory: 1Gi
+  ephemeral-storage: 1Gi
 limits:
   cpu: 400m
-  memory: 1024Mi
-  ephemeral-storage: 1024Mi
+  memory: 2Gi
+  ephemeral-storage: 2Gi
 {{- end }}
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 1024Mi
-  ephemeral-storage: 1024Mi
+  memory: 2Gi
+  ephemeral-storage: 2Gi
 limits:
   cpu: 1000m
-  memory: 2048Mi
-  ephemeral-storage: 2048Mi
+  memory: 4Gi
+  ephemeral-storage: 4Gi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}
