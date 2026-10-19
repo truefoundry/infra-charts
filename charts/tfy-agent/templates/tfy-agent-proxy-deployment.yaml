@@ -1,9 +1,5 @@
 {{- if .Values.tfyAgentProxy.enabled }}
 {{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.tfyAgentProxy.securityContext "global" .Values.global.containerSecurityContext) }}
-{{- $writableDirs := list }}
-{{- if (fromYaml $containerSC).readOnlyRootFilesystem }}
-{{- $writableDirs = list (dict "name" "writable-tmp" "path" "/tmp") }}
-{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -44,10 +40,6 @@ spec:
             {{- . | nindent 12 }}
           {{- end }}
           env:
-            {{- if $writableDirs }}
-            - name: KUBECACHEDIR
-              value: /tmp/kube-cache
-            {{- end }}
             {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL
               value: {{ .Values.config.controlPlaneURL | quote }}
@@ -84,9 +76,6 @@ spec:
           resources:
             {{- toYaml .Values.tfyAgentProxy.resources | nindent 12 }}
           volumeMounts:
-            {{- with $writableDirs }}
-            {{- include "tfy-agent.writableDirs.volumeMounts" . | trim | nindent 12 }}
-            {{- end }}
             {{- with .Values.tfyAgentProxy.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -106,9 +95,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- with $writableDirs }}
-        {{- include "tfy-agent.writableDirs.volumes" . | trim | nindent 8 }}
-        {{- end }}
         {{- with .Values.tfyAgentProxy.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

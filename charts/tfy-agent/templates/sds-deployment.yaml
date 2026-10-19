@@ -1,9 +1,5 @@
 {{- if .Values.sdsServer.enabled -}}
 {{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.sdsServer.securityContext "global" .Values.global.containerSecurityContext) }}
-{{- $writableDirs := list }}
-{{- if (fromYaml $containerSC).readOnlyRootFilesystem }}
-{{- $writableDirs = list (dict "name" "writable-tmp" "path" "/tmp") }}
-{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,9 +39,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- with $writableDirs }}
-        {{- include "tfy-agent.writableDirs.volumes" . | trim | nindent 8 }}
-        {{- end }}
         {{- with .Values.sdsServer.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -110,11 +103,8 @@ spec:
             {{- with .Values.sdsServer.resources }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if or $writableDirs .Values.global.customCA.enabled (gt (len .Values.clustersConfig) 1) }}
+          {{- if or .Values.global.customCA.enabled (gt (len .Values.clustersConfig) 1) }}
           volumeMounts:
-            {{- with $writableDirs }}
-            {{- include "tfy-agent.writableDirs.volumeMounts" . | trim | nindent 12 }}
-            {{- end }}
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
             {{- end }}

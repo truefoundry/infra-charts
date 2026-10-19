@@ -33,8 +33,8 @@ global:
       ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
       type: RuntimeDefault
   ## global.containerSecurityContext Container security context defaults for tfyAgent, tfyAgentProxy and sdsServer.
-  ## A component's own securityContext overrides single fields. With readOnlyRootFilesystem, each component
-  ## gets emptyDir volumes for the paths it writes (/tmp, plus /app/.kube and /app/yamls for tfyAgent).
+  ## A component's own securityContext overrides single fields. With readOnlyRootFilesystem, tfyAgent gets
+  ## emptyDir volumes for the paths it writes (/tmp, /app/.kube, /app/yamls); tfyAgentProxy and sdsServer write nothing.
   containerSecurityContext:
     ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
     enabled: true

@@ -69,10 +69,10 @@ From 0.2.110, tfy-agent, tfy-agent-proxy and sds-server run non-root with a read
 | Component | User | Writable paths (emptyDir) |
 |-----------|------|---------------------------|
 | tfy-agent | 1001 (`appuser` in the image) | `/tmp`, `/app/.kube` (generated kubeconfig), `/app/yamls` (manifests for `kubectl apply`) |
-| tfy-agent-proxy | 65532 (`nonroot`; the image itself defaults to root) | `/tmp` |
-| sds-server | 65532 (image default) | `/tmp` |
+| tfy-agent-proxy | 65532 (`nonroot`; the image itself defaults to root) | none |
+| sds-server | 65532 (image default) | none |
 
-The emptyDirs, and `KUBECACHEDIR=/tmp/kube-cache` for tfy-agent and tfy-agent-proxy, are only added while the container's root filesystem is read-only. If you already mount `/tmp` through `extraVolumeMounts`, remove that mount or set `readOnlyRootFilesystem: false` for the component.
+tfy-agent's emptyDirs, and `KUBECACHEDIR=/tmp/kube-cache` (kubectl's discovery cache, otherwise under the read-only `$HOME`), are only added while its root filesystem is read-only. If you already mount `/tmp`, `/app/.kube` or `/app/yamls` through `tfyAgent.extraVolumeMounts`, remove that mount or set `tfyAgent.securityContext.readOnlyRootFilesystem: false`.
 
 Opt-outs:
 
