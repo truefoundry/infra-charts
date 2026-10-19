@@ -806,19 +806,77 @@ sdsServer:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
 
-## @section networkPolicy Ingress NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
-## One ingress policy per component. Egress is not restricted. Subchart pods (external-secrets, reloader) are not selected.
+## @section networkPolicy NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+## One policy per component (Ingress + Egress). Subchart pods (external-secrets, reloader) are not selected.
 ## Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
 ##
 networkPolicy:
-  ## @param networkPolicy.enabled Create ingress NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+  ## @param networkPolicy.enabled Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
   enabled: false
+  ## @param networkPolicy.kubeAPIServiceIP ClusterIP of the `default/kubernetes` Service, as a bare IP (172.20.0.1, gets /32 or /128) or a CIDR (172.20.0.1/32), added to the Kubernetes API rule (`kubectl -n default get svc kubernetes -o jsonpath='{.spec.clusterIP}'`).
+  kubeAPIServiceIP: ""
+  ## @param networkPolicy.kubeAPIServiceIPLookup When kubeAPIServiceIP is empty, look up default/kubernetes at install time. Off by default: Helm aborts the release on any lookup error other than not-found (e.g. RBAC forbidden), and `helm template` / Argo CD always get an empty result.
+  kubeAPIServiceIPLookup: false
+  ## @param networkPolicy.kubeAPICIDRs [array] Kubernetes API endpoint CIDRs (TCP kubeAPIPort). Required when enabled. Pods dial the API through the `kubernetes` Service ClusterIP: AWS VPC CNI matches that ClusterIP before DNAT (set kubeAPIServiceIP or add a /32 here), while Calico / Cilium match the endpoint IPs after DNAT, so allow both. For the endpoints use the control-plane / API endpoint subnet CIDRs (EKS: subnets from `aws eks describe-cluster --name <cluster> --region <region>`).
+  kubeAPICIDRs: []
+  ## @param networkPolicy.kubeAPIPort TCP port of the Kubernetes API endpoints
+  kubeAPIPort: 443
+  ## networkPolicy.controlPlane Where the agent, proxy and sds-server reach the TrueFoundry control plane
+  controlPlane:
+    ## @param networkPolicy.controlPlane.internet Allow TCP internetPorts to public IPs (control plane reached through config.controlPlaneURL, plus ALERT_URL)
+    internet: true
+    ## @param networkPolicy.controlPlane.namespaces [array] In-cluster control plane namespaces (`namespace`, optional `podSelector`) when the agent uses the controlPlane*ClusterIP URLs
+    namespaces: []
+    # - namespace: truefoundry
+    ## @param networkPolicy.controlPlane.ports [array] TCP ports opened to controlPlane.namespaces (tfy-proxy and NATS websocket 8080, tfy-controller 8123)
+    ports: [8080, 8123]
+  ## @param networkPolicy.internetPorts [array] TCP ports allowed to public IPs when controlPlane.internet is true
+  internetPorts: [443]
+  ## @param networkPolicy.deniedInternetCIDRs [array] Ranges excluded from the public-IP rule. Non-/32 IPv4 entries are also allowed as DNS destinations.
+  deniedInternetCIDRs:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 100.64.0.0/10
+    - 169.254.169.254/32
+    - fc00::/7
+    - fe80::/10
+  ## @param networkPolicy.dnsCIDRs [array] Extra DNS destinations (e.g. node-local-dns 169.254.20.10/32)
+  dnsCIDRs: []
+  ## networkPolicy.prometheus Prometheus queried by tfy-agent (config.prometheus.endpoint)
+  prometheus:
+    ## @param networkPolicy.prometheus.enabled Allow tfy-agent egress to Prometheus
+    enabled: true
+    ## @param networkPolicy.prometheus.namespace Prometheus namespace
+    namespace: prometheus
+    ## @param networkPolicy.prometheus.podSelector [object] Prometheus pod labels (empty matches every pod in the namespace)
+    podSelector:
+      app.kubernetes.io/name: prometheus
+    ## @param networkPolicy.prometheus.port Prometheus port
+    port: 9090
+  ## networkPolicy.opencost OpenCost queried by tfy-agent (config.opencost.endpoint)
+  opencost:
+    ## @param networkPolicy.opencost.enabled Allow tfy-agent egress to OpenCost
+    enabled: true
+    ## @param networkPolicy.opencost.namespace OpenCost namespace
+    namespace: opencost
+    ## @param networkPolicy.opencost.podSelector [object] OpenCost pod labels (empty matches every pod in the namespace)
+    podSelector: {}
+    ## @param networkPolicy.opencost.port OpenCost port
+    port: 9003
   tfyAgent:
     ## @param networkPolicy.tfyAgent.ingressFrom [array] NetworkPolicyPeer entries allowed to reach the tfy-agent service port. Empty allows any source on that port only.
     ingressFrom: []
+    ## @param networkPolicy.tfyAgent.extraEgress [array] Raw NetworkPolicyEgressRule entries appended to the tfy-agent policy
+    extraEgress: []
+  tfyAgentProxy:
+    ## @param networkPolicy.tfyAgentProxy.extraEgress [array] Raw NetworkPolicyEgressRule entries appended to the tfy-agent-proxy policy
+    extraEgress: []
   sdsServer:
     ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server in addition to tfy-agent
     ingressFrom: []
+    ## @param networkPolicy.sdsServer.extraEgress [array] Raw NetworkPolicyEgressRule entries appended to the sds-server policy
+    extraEgress: []
 
 ## @section eso (external-secrets operator) configuration parameters
 ##

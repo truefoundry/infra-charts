@@ -1,5 +1,9 @@
 {{- if .Values.networkPolicy.enabled }}
 {{- $np := .Values.networkPolicy }}
+{{- $needsAPI := or .Values.tfyAgent.enabled .Values.tfyAgentProxy.enabled }}
+{{- if and $needsAPI (not $np.kubeAPICIDRs) }}
+{{- fail "networkPolicy.kubeAPICIDRs is required when networkPolicy.enabled is true (tfy-agent and tfy-agent-proxy talk to the Kubernetes API). Allow both addresses pods use for the API: (1) the `kubernetes` Service ClusterIP — AWS VPC CNI matches it before DNAT — via networkPolicy.kubeAPIServiceIP or a /32 in kubeAPICIDRs (kubectl -n default get svc kubernetes -o jsonpath='{.spec.clusterIP}'); (2) the API endpoint subnet CIDRs — Calico/Cilium match after DNAT (EKS: aws eks describe-cluster --name <cluster> --region <region> --query cluster.resourcesVpcConfig.subnetIds, then aws ec2 describe-subnets for CidrBlock). Example: kubeAPIServiceIP: 172.20.0.1, kubeAPICIDRs: [10.0.0.0/19, 10.0.32.0/19]." }}
+{{- end }}
 {{- if .Values.tfyAgent.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -16,6 +20,7 @@ spec:
       {{- include "tfy-agent.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - ports:
         - protocol: TCP
@@ -24,6 +29,36 @@ spec:
       from:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  egress:
+    {{- include "tfy-agent.networkPolicy.commonEgress" (dict "root" . "kubeAPI" true) | nindent 4 }}
+    {{- if .Values.sdsServer.enabled }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "sds-server.selectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.sdsServer.service.port }}
+    {{- end }}
+    {{- range (list $np.prometheus $np.opencost) }}
+    {{- if .enabled }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          {{- with .podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .port }}
+    {{- end }}
+    {{- end }}
+    {{- with $np.tfyAgent.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}
 {{- if .Values.tfyAgentProxy.enabled }}
 ---
@@ -42,6 +77,12 @@ spec:
   # The proxy dials out to the control plane and has no Service, so nothing may connect in.
   policyTypes:
     - Ingress
+    - Egress
+  egress:
+    {{- include "tfy-agent.networkPolicy.commonEgress" (dict "root" . "kubeAPI" true) | nindent 4 }}
+    {{- with $np.tfyAgentProxy.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}
 {{- if .Values.sdsServer.enabled }}
 ---
@@ -59,6 +100,7 @@ spec:
       {{- include "sds-server.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
+    - Egress
   {{- if or .Values.tfyAgent.enabled $np.sdsServer.ingressFrom }}
   ingress:
     - ports:
@@ -74,5 +116,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
   {{- end }}
+  egress:
+    {{- include "tfy-agent.networkPolicy.commonEgress" (dict "root" . "kubeAPI" false) | nindent 4 }}
+    {{- with $np.sdsServer.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}
 {{- end }}
