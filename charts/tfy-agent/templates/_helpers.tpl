@@ -701,7 +701,12 @@ unless the container's root filesystem is read-only, so nothing changes when it 
 {{- define "tfy-agent.writableDirs.volumes" -}}
 {{- range . }}
 - name: {{ .name }}
+  {{- with .sizeLimit }}
+  emptyDir:
+    sizeLimit: {{ . }}
+  {{- else }}
   emptyDir: {}
+  {{- end }}
 {{- end }}
 {{- end -}}
 

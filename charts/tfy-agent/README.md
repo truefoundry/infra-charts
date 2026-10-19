@@ -68,11 +68,13 @@ From 0.2.110, tfy-agent, tfy-agent-proxy and sds-server run non-root with a read
 
 | Component | User | Writable paths (emptyDir) |
 |-----------|------|---------------------------|
-| tfy-agent | 1001 (`appuser` in the image) | `/tmp`, `/app/.kube` (generated kubeconfig), `/app/yamls` (manifests for `kubectl apply`) |
+| tfy-agent | 1001 (`appuser` in the image) | `/tmp` (160Mi, kubectl cache), `/app/.kube` (2Mi, generated kubeconfig), `/app/yamls` (8Mi, manifests for `kubectl apply`) |
 | tfy-agent-proxy | 65532 (`nonroot`; the image itself defaults to root) | none |
 | sds-server | 65532 (image default) | none |
 
 tfy-agent's emptyDirs, and `KUBECACHEDIR=/tmp/kube-cache` (kubectl's discovery cache, otherwise under the read-only `$HOME`), are only added while its root filesystem is read-only. If you already mount `/tmp`, `/app/.kube` or `/app/yamls` through `tfyAgent.extraVolumeMounts`, remove that mount or set `tfyAgent.securityContext.readOnlyRootFilesystem: false`.
+
+The emptyDir size limits are `tfyAgent.emptyDir.{tmp,kube,yamls}.sizeLimit` (`""` for no limit). Together they stay inside tfy-agent's 256Mi `ephemeral-storage` limit with room for container logs and the custom CA emptyDir; if you raise one, raise `tfyAgent.resources.limits.ephemeral-storage` with it, or the kubelet evicts the pod.
 
 Opt-outs:
 
@@ -249,6 +251,9 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgent.readinessProbe.initialDelaySeconds`          | Initial delay seconds value for liveness probe of tfyAgent container                                                                                  | `30`                                       |
 | `tfyAgent.podSecurityContext`                          | Pod security context for tfyAgent, merged over global.podSecurityContext. The image's user (appuser) is not numeric, so runAsNonRoot needs runAsUser. | `{}`                                       |
 | `tfyAgent.securityContext`                             | Container security context for tfyAgent, merged over global.containerSecurityContext. Set `enabled: false` to drop it.                                | `{}`                                       |
+| `tfyAgent.emptyDir.tmp.sizeLimit`                      | Size limit for the /tmp emptyDir, which holds kubectl's discovery and HTTP cache (KUBECACHEDIR)                                                       | `160Mi`                                    |
+| `tfyAgent.emptyDir.kube.sizeLimit`                     | Size limit for the /app/.kube emptyDir (the generated kubeconfig)                                                                                     | `2Mi`                                      |
+| `tfyAgent.emptyDir.yamls.sizeLimit`                    | Size limit for the /app/yamls emptyDir (manifests written for each kubectl apply and deleted after it)                                                | `8Mi`                                      |
 | `tfyAgent.tolerations`                                 | Taints that pod can tolerate                                                                                                                          | `[]`                                       |
 | `tfyAgent.nodeSelector`                                | Parameters to select for scheduling of pod on a node                                                                                                  | `{}`                                       |
 | `tfyAgent.extraVolumes`                                | Extra volume for tfyAgent container                                                                                                                   | `[]`                                       |

@@ -2,7 +2,11 @@
 {{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.tfyAgent.securityContext "global" .Values.global.containerSecurityContext) }}
 {{- $writableDirs := list }}
 {{- if (fromYaml $containerSC).readOnlyRootFilesystem }}
-{{- $writableDirs = list (dict "name" "writable-tmp" "path" "/tmp") (dict "name" "writable-kube" "path" "/app/.kube") (dict "name" "writable-yamls" "path" "/app/yamls") }}
+{{- $emptyDir := .Values.tfyAgent.emptyDir | default dict }}
+{{- $writableDirs = list
+  (dict "name" "writable-tmp" "path" "/tmp" "sizeLimit" (dig "tmp" "sizeLimit" "" $emptyDir))
+  (dict "name" "writable-kube" "path" "/app/.kube" "sizeLimit" (dig "kube" "sizeLimit" "" $emptyDir))
+  (dict "name" "writable-yamls" "path" "/app/yamls" "sizeLimit" (dig "yamls" "sizeLimit" "" $emptyDir)) }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment

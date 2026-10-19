@@ -356,6 +356,21 @@ tfyAgent:
   ##
   securityContext: {}
 
+  ## tfyAgent.emptyDir Size limits for the emptyDirs tfyAgent gets while its root filesystem is read-only.
+  ## They count against resources.limits.ephemeral-storage (256Mi), as do container logs (up to 50Mi with the
+  ## kubelet's default rotation) and, with global.customCA, the ssl-certs emptyDir (10Mi). Raise them together.
+  ## Set a sizeLimit to "" to leave that emptyDir unbounded.
+  emptyDir:
+    tmp:
+      ## @param tfyAgent.emptyDir.tmp.sizeLimit Size limit for the /tmp emptyDir, which holds kubectl's discovery and HTTP cache (KUBECACHEDIR)
+      sizeLimit: 160Mi
+    kube:
+      ## @param tfyAgent.emptyDir.kube.sizeLimit Size limit for the /app/.kube emptyDir (the generated kubeconfig)
+      sizeLimit: 2Mi
+    yamls:
+      ## @param tfyAgent.emptyDir.yamls.sizeLimit Size limit for the /app/yamls emptyDir (manifests written for each kubectl apply and deleted after it)
+      sizeLimit: 8Mi
+
   ## If specified, the pod's tolerations.
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
