@@ -163,14 +163,12 @@ Expand the name of the chart.
     secretKeyRef:
       name: {{ $.Values.s3proxy.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -196,16 +194,9 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumes = append $volumes (dict "name" "config-vol" "configMap" (dict "name" (include "s3proxy.configmapName" .))) }}
-{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "s3proxy.resourceTier" "defaultResourcesPrefix" "s3proxy.defaultResources" "resourcesValues" .Values.s3proxy.resources) | fromYaml }}
-{{- $tmpSizeLimit := .Values.s3proxy.emptyDir.tmpdir.sizeLimit | default $tmpVolume.emptyDir.sizeLimit -}}
-{{- $volumes = append $volumes (dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $tmpSizeLimit)) -}}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
 {{- end -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
@@ -219,14 +210,9 @@ Expand the name of the chart.
   {{- end }}
 {{- end }}
 {{- $volumeMounts = append $volumeMounts (dict "name" "config-vol" "mountPath" "/opt/s3proxy/config.properties" "subPath" "config.properties") }}
-{{- $volumeMounts = append $volumeMounts (dict "name" "tmp-dir" "mountPath" "/tmp") -}}
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}

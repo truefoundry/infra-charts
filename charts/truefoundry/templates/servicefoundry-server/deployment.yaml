@@ -21,9 +21,11 @@ spec:
         {{- include "servicefoundry-server.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "servicefoundry-server.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.servicefoundryServer.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.servicefoundryServer.podSecurityContext.enabled }}
+      {{- with .Values.servicefoundryServer.podSecurityContext }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -31,9 +33,11 @@ spec:
       {{- end }}
       containers:
         - name: "servicefoundry-server"
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.servicefoundryServer.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.servicefoundryServer.securityContext.enabled }}
+          {{- with .Values.servicefoundryServer.securityContext }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "servicefoundry-server.env" . | trim | nindent 12 }}
@@ -55,11 +59,7 @@ spec:
             httpGet:
               path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.servicefoundryServer.livenessProbe.scheme }}
-              {{- end }}
+              scheme: HTTP
           readinessProbe:
             failureThreshold: {{ .Values.servicefoundryServer.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.servicefoundryServer.readinessProbe.initialDelaySeconds }}
@@ -69,11 +69,7 @@ spec:
             httpGet:
               path: /v1/health
               port: {{ .Values.servicefoundryServer.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.servicefoundryServer.readinessProbe.scheme }}
-              {{- end }}
+              scheme: HTTP
           volumeMounts:
             {{- include "servicefoundry-server.volumeMounts" . | nindent 12 }}
       imagePullSecrets:

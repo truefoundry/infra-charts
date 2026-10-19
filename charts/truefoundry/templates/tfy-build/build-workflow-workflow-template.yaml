@@ -12,17 +12,12 @@ spec:
   serviceAccountName: {{ include "tfy-build.serviceAccountName" . }}
   imagePullSecrets:
     {{- include "tfy-build.imagePullSecrets" . | nindent 4 }}
-  # Applied to every pod Argo creates for this workflow so that they are selected by the
-  # in-release NetworkPolicies, which match on app.kubernetes.io/instance.
-  podMetadata:
-    labels:
-      {{- include "tfy-build.podLabels" . | nindent 6 }}
   workflowMetadata:
     labelsFrom:
       "truefoundry.com/buildName":
         expression: workflow.name
   entrypoint: build
-  activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+  activeDeadlineSeconds: 14400
   onExit: exit-handler
   arguments:
     parameters:
@@ -250,13 +245,15 @@ spec:
           - name: scripts
             mountPath: /scripts
     - name: build-and-push-with-buildkit-sidecar
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       metadata:
         annotations:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
           karpenter.sh/do-not-disrupt: 'true'
           karpenter.sh/do-not-evict: 'true'
-      {{- include "tfy-build.buildRetryStrategy" . | nindent 6 }}
+      retryStrategy:
+        limit: 2
+        retryPolicy: "Always"
       inputs:
         parameters:
           - name: buildSource
@@ -288,7 +285,6 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
-      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
       {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
@@ -322,7 +318,7 @@ spec:
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
         command: [bash]
-        env:
+        env: 
           - name: BUILD_SOURCE
             value: "{{`{{inputs.parameters.buildSource}}`}}"
           - name: BUILD_CONFIG
@@ -360,7 +356,6 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
-          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
           {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
@@ -372,7 +367,7 @@ spec:
         {{- with .Values.tfyBuild.truefoundryWorkflows.extraVolumeMounts }}
         {{- toYaml . | nindent 10 }}
         {{- end }}
-        resources:
+        resources: 
           {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.resources | nindent 10 }}
         source: |
           #!/bin/bash
@@ -416,13 +411,15 @@ spec:
               - debug
               - workers
     - name: build-and-push-with-external-buildkit
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       metadata:
         annotations:
           cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
           karpenter.sh/do-not-disrupt: 'true'
           karpenter.sh/do-not-evict: 'true'
-      {{- include "tfy-build.buildRetryStrategy" . | nindent 6 }}
+      retryStrategy:
+        limit: 2
+        retryPolicy: "Always"
       inputs:
         parameters:
           - name: buildSource
@@ -454,7 +451,6 @@ spec:
             path: /opt/truefoundry/output/tfyTimeTakenToDownloadSourceCodeSeconds
           globalName: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
-      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
       {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
         - name: truefoundry-docker-config
           secret:
@@ -531,7 +527,6 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
-          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
           {{ if ne .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.baseImagePullSecret "" }}
           - name: truefoundry-docker-config
             mountPath: /root/.truefoundry/.docker/
@@ -559,7 +554,7 @@ spec:
           {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.script | nindent 10 }}
           )
     - name: update-status
-      activeDeadlineSeconds: {{ .Values.tfyBuild.truefoundryWorkflows.activeDeadlineSeconds }}
+      activeDeadlineSeconds: 5400
       retryStrategy:
         limit: 4
         retryPolicy: "Always"
@@ -578,7 +573,6 @@ spec:
           - name: tfyIsGlobalBuilderUsed
           - name: tfyTimeTakenToDownloadSourceCodeSeconds
       volumes:
-      {{- include "truefoundry.mtlsVolumeForBuildJobs" . | nindent 8 }}
         - name: scripts
           projected:
             defaultMode: 0755
@@ -618,7 +612,6 @@ spec:
         volumeMounts:
           - name: scripts
             mountPath: /scripts
-          {{- include "truefoundry.mtlsVolumeMount" . | nindent 10 }}
         source: |
           #!/bin/bash
           set -eu
@@ -713,14 +706,6 @@ spec:
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
           - name: SIZE_THRESHOLD
             value: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes | int | quote }}
-          # Pin the Go runtime to the container's CPU limit. Without this, the Go
-          # binaries here (docker CLI) size their thread pool from the node's core
-          # count and burn the whole CFS quota early in each 100ms period, which
-          # shows up as sustained CPU throttling.
-          - name: GOMAXPROCS
-            valueFrom:
-              resourceFieldRef:
-                resource: limits.cpu
         {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
           {{- toYaml . | nindent 10 }}
         {{- end }}
@@ -730,10 +715,7 @@ spec:
             ephemeral-storage: 100Mi
             memory: 50Mi
           limits:
-            # Must stay >= 1 so GOMAXPROCS (rounded up from this value) cannot
-            # oversubscribe the quota. Requests stay low, so this only allows
-            # bursting and does not change scheduling cost.
-            cpu: 1
+            cpu: 50m
             ephemeral-storage: 100Mi
             memory: 50Mi
         volumeMounts:
@@ -815,19 +797,18 @@ spec:
             value: "{{`{{inputs.parameters.dockerRepo}}`}}"
           - name: DOCKER_TAG
             value: "{{`{{inputs.parameters.dockerTag}}`}}"
-          # Pin the Go runtime to the container's CPU limit. containerd, nerdctl
-          # and soci all size their thread pool from the node's core count, so on
-          # a 4-core node a 1-core limit means 4 threads drain the CFS quota in a
-          # quarter of each period and then stall for the rest of it.
-          - name: GOMAXPROCS
-            valueFrom:
-              resourceFieldRef:
-                resource: limits.cpu
         {{- with .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs }}
         {{- toYaml . | nindent 10 }}
         {{- end }}
         resources:
-          {{- toYaml .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources | nindent 10 }}
+          requests:
+            cpu: 500m
+            ephemeral-storage: 10Gi
+            memory: 700Mi
+          limits:
+            cpu: 1000m
+            ephemeral-storage: 30Gi
+            memory: 1024Mi
         securityContext:
           privileged: true
         volumeMounts:

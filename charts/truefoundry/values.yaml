@@ -24,18 +24,14 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.179.2
+  controlPlaneChartVersion: 0.148.14
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
     enabled: false
-  # Set any non-empty value to skip rendering the `truefoundry-creds` Secret and
-  # bring your own instead. The pre-created Secret must be named exactly
-  # `truefoundry-creds` (services reference that name directly, not this value)
-  # and live in the release namespace with keys DB_HOST, DB_USERNAME,
-  # DB_PASSWORD, DB_NAME and TFY_API_KEY. `.global.database` and
-  # `.global.tfyApiKey` are ignored when this is set.
-  ## @param global.existingTruefoundryCredsSecret Non-empty skips rendering the `truefoundry-creds` Secret; pre-create it (that exact name) with DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME and TFY_API_KEY
+  # If you have an existing truefoundry-creds secret, provide the name here.
+  # This will ignore `.global.database` and `.global.tfyApiKey` values.
+  ## @param global.existingTruefoundryCredsSecret Name of the existing truefoundry creds secret
   existingTruefoundryCredsSecret: ""
   ## global.ingress Ingress configuration for the control plane
   ingress:
@@ -73,12 +69,6 @@ global:
     ## @param global.httpRoute.hostnames [array] Hostnames for the HTTPRoute
     hostnames: []
     #  - "app.example.com"
-    ## global.httpRoute.timeouts Timeouts applied to each HTTPRoute rule (Gateway API HTTPRouteTimeouts). Enforcement depends on the Gateway implementation.
-    timeouts:
-      ## @param global.httpRoute.timeouts.request Timeout for the gateway to respond to a request, including the full (streaming) response (e.g. 300s). Set to "" to omit the field and use the gateway implementation default.
-      request: 1800s
-      ## @param global.httpRoute.timeouts.backendRequest Timeout for a single request from the gateway to the backend, must be <= the request timeout (e.g. 60s). Set to "" to omit the field.
-      backendRequest: 600s
     ## global.virtualservice Istio configuration for the control plane
   virtualservice:
     ## @param global.virtualservice.enabled Bool to enable virtual service for the control plane
@@ -96,7 +86,7 @@ global:
     ## @param global.proxy.enabled Bool to enable proxy for the control plane
     enabled: true
     ## @param global.proxy.enforceSecurityHeaders Bool to enforce security headers for the proxy
-    enforceSecurityHeaders: true
+    enforceSecurityHeaders: false
     ## @param global.proxy.contentSecurityPolicy Content-Security-Policy header value used when enforceSecurityHeaders is true
     contentSecurityPolicy: "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://widget.usepylon.com; worker-src 'self' blob:;"
     ## @param global.proxy.servicefoundryServerHost Servicefoundry server host for service routing
@@ -105,10 +95,6 @@ global:
     ## @param global.proxy.mlfoundryHost mlfoundry server host for service routing
     mlfoundryHost: >-
       {{ .Release.Name }}-mlfoundry-server
-    ## @param global.proxy.mlfToSvcEnabled Kill switch for /api/ml edge routing. When true, whitelisted /api/ml paths are routed to servicefoundry and all others stay on mlfoundry. When false, all /api/ml traffic goes to mlfoundry (legacy behavior).
-    mlfToSvcEnabled: true
-    ## @param global.proxy.rewriteUpstreamHost Bool to rewrite the upstream Host header to the dialed service's host:port on every internal reverse_proxy, and pass the original external host as X-Forwarded-Host. Needed when an Istio AuthorizationPolicy matches on the destination host (:authority): without it Caddy forwards the external browser Host and Istio denies the request. X-Forwarded-Host lets backends still recover the original host (redirects, cookie domains, OAuth/MCP callbacks). Only affects internal in-cluster routes; external-URL routes (auth, agent, external llm-gateway, trt-engine-builder) keep their own explicit Host.
-    rewriteUpstreamHost: false
     ## @param global.proxy.tfyWorkflowAdminHost tfy workflow admin host for service routing
     tfyWorkflowAdminHost: >-
       {{ .Release.Name }}-tfy-workflow-admin-server
@@ -118,9 +104,9 @@ global:
     ## @param global.proxy.tfyOtelCollectorHost otel collector host for service routing
     tfyOtelCollectorHost: >-
       {{ .Release.Name }}-tfy-otel-collector
-    ## @param global.proxy.tfyInfraManagerHost tfy infra manager host for service routing
-    tfyInfraManagerHost: >-
-      {{ .Release.Name }}-tfy-infra-manager
+    ## @param global.proxy.stdioMcpProxyHost stdio MCP proxy host for service routing
+    stdioMcpProxyHost: >-
+      {{ .Release.Name }}-stdio-mcp-proxy
     ## @param global.proxy.managedClusterOnboardingServiceURL managed cluster onboarding service host for service routing
     managedClusterOnboardingServiceURL: ""
     ## @param global.proxy.liveDemoTokenVendorURL LIVE DEMO TOKEN VENDOR URL
@@ -138,6 +124,8 @@ global:
       port: 8080
     ## @param global.proxy.authServerURL AUTH SERVER URL
     authServerURL: "https://auth.truefoundry.com"
+    ## @param global.proxy.tfyLLMAgentURL LLM agent URL for service routing
+    tfyLLMAgentURL: ""
     ## global.proxy.tfyNats NATS settings for service routing
     tfyNats:
       ## @param global.proxy.tfyNats.host nats host for nats service
@@ -156,13 +144,6 @@ global:
       backendURL: ""
       ## @param global.proxy.llmGateway.backendPort Backend Port for the LLM gateway
       backendPort: 8787
-    ## global.proxy.trueforge TrueForge settings for service routing
-    trueforge:
-      ## @param global.proxy.trueforge.host TrueForge host for service routing
-      host: >-
-        {{ .Release.Name }}-trueforge-server
-      ## @param global.proxy.trueforge.port TrueForge port for service routing
-      port: 8790
     ## global.proxy.tfyOtelCollector OTEL collector settings for service routing
     tfyOtelCollector:
       ## @param global.proxy.tfyOtelCollector.host OTEL collector host for OTEL collector service
@@ -170,10 +151,6 @@ global:
         {{ .Release.Name }}-tfy-otel-collector
       ## @param global.proxy.tfyOtelCollector.port OTEL collector port for OTEL collector service
       port: 4318
-      ## @param global.proxy.tfyOtelCollector.ingestorProxyPort Agent session ingest proxy port
-      ingestorProxyPort: 4319
-    ## @skip global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled
-    proxyServerControlPlaneToComputePlaneRoutesEnabled: true
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
     proxyServerHost: >-
       {{ .Release.Name }}-tfy-controller
@@ -182,10 +159,10 @@ global:
       {{ .Release.Name }}-tfy-proxy
     ## global.proxy.cors CORS configuration for the proxy
     cors:
-      ## @param global.proxy.cors.enabled Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list (or ["*"]), all origins are allowed. When specific origins are listed, only those are allowed.
+      ## @param global.proxy.cors.enabled Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list, all origins are allowed. When specific origins are listed, only those are allowed.
       enabled: true
-      ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS. Supports Helm templating (resolved via tpl). Defaults to controlPlaneURL. Set to [] or ["*"] to allow all origins when CORS is enabled.
-      allowedOrigins: ["{{ .Values.global.controlPlaneURL }}"]
+      ## @param global.proxy.cors.allowedOrigins List of allowed origins for CORS (e.g. ["https://example.com"]). Leave empty to allow all origins when CORS is enabled.
+      allowedOrigins: []
     ## global.proxy.tls TLS configuration for the proxy
     ## When enabled, the Secret named by `secretName` is projected into
     ## /etc/caddy/tls inside the tfy-proxy container, and Caddy is configured with:
@@ -219,8 +196,6 @@ global:
     password: ""
   ## @param global.tfyApiKey API key for truefoundry
   tfyApiKey: ""
-  ## @param global.trueforgeApiKey API key used by the TrueForge controller to call the TrueForge server. Empty means the bootstrap job generates one into the `trueforge-api-key` Secret on first install and preserves it across upgrades. To bring your own key without putting it in values, pre-create that Secret with a `TRUEFORGE_API_KEY` key before installing.
-  trueforgeApiKey: ""
   ## global.image [object] Global image configuration
   image:
     ## @param global.image.registry Default registry for all images
@@ -313,28 +288,12 @@ global:
   namespaceOverride: ""
   ## @param global.clusterDomain Kubernetes cluster domain used for constructing FQDNs
   clusterDomain: "cluster.local"
-  ## global.airgapped Airgapped installation configuration. When enabled, disables features that require
-  ## outbound internet access (e.g. Sentry telemetry, asset proxy calls to huggingface.co /
-  ## catalogue.truefoundry.com / assets.production.truefoundry.com).
-  airgapped:
-    ## @param global.airgapped.enabled Bool to enable airgapped mode for the control plane
-    enabled: false
+  ## @param global.enableSentry Bool to enable Sentry integration for the control plane
+  enableSentry: true
   ## global.wif Workload Identity Federation (WIF) RBAC settings.
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting control-plane service accounts permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere).
-  podSecurityContext:
-    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
-    runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
-    runAsUser: 1001
-  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere).
-  containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
-    enabled: true
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection via initContainers
@@ -349,8 +308,8 @@ global:
       overrideCAList: false
     ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer.
     securityContext:
-      ## Enable/disable this to override the global.containerSecurityContext
-      # enabled: true
+      enabled: true
+      runAsUser: 1001
       runAsGroup: 1001
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
@@ -366,43 +325,13 @@ global:
     ## global.customCA.image Image configuration for the initContainer that processes CA certificates (not used when overrideCAList is true)
     image:
       ## @param global.customCA.image.repository Repository for the CA certificates initContainer image
-      ## Chainguard bash (not Alpine): Alpine BusyBox is flagged for CVE-2025-60876 with no fixed tag.
-      ## Init only needs sh+cat to merge CA bundles.
-      repository: "tfy-images/bash"
+      repository: "tfy-mirror/alpine"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
-      tag: "5"
+      tag: "3.21"
     ## @param global.customCA.emptyDir [object] emptyDir size limits (default: sslCerts.sizeLimit=10Mi)
     emptyDir:
       sslCerts:
         sizeLimit: ""
-  ## mTLS certificates issued by the bootstrap job and mounted into services.
-  ## The bootstrap job maintains two secrets:
-  ##  - the CA secret "truefoundry-internal-ca": ca.crt + ca.key (the CA private key; read only
-  ##    by the bootstrap job for signing/renewal, never mounted into application pods).
-  ##  - tlsSecretName: ca.crt + tls.key + tls.crt (the leaf, mounted into every service).
-  ## Renewal reuses the CA from the CA secret.
-  mTLS:
-    ## @param global.mTLS.enabled Bool to create/renew the mTLS certificate and mount it into services
-    enabled: false
-    ## @param global.mTLS.tlsSecretName Secret (mounted into services) holding ca.crt + tls.key + tls.crt
-    tlsSecretName: "truefoundry-internal-tls"
-    ## @param global.mTLS.externalMtlsSecret Use an existing secret with this name instead of creating one. When set, the bootstrap job does not create/renew the secret; services mount the named secret as-is.
-    ## The mTLS secret (whether bootstrap-created or externally provided) is expected to
-    ## contain the following keys, mounted at /etc/tls/truefoundry:
-    ##   tls.crt  - the leaf certificate (PEM)
-    ##   tls.key  - the leaf private key (PEM)
-    ##   ca.crt   - the CA certificate used to verify peers (PEM)
-    externalMtlsSecret: ""
-    ## @param global.mTLS.caDays Root CA validity in days (default ~10y)
-    caDays: 3650
-    ## @param global.mTLS.leafDays Leaf cert validity in days (default ~3y)
-    leafDays: 1095
-    ## @param global.mTLS.renewBeforeDays Reissue the leaf when it expires within this many days (default ~6mo)
-    renewBeforeDays: 180
-    ## @param global.mTLS.forceRenew Reissue the leaf on every bootstrap run regardless of remaining validity. Must be the boolean true; any other value is ignored. Use to roll the cert after changing leafDays or the SAN list; set back to false once the new cert is in place, otherwise every helm upgrade rotates it.
-    forceRenew: false
-    ## @param global.mTLS.extraDnsNames Extra DNS SANs appended to the leaf cert (namespace service wildcards are added automatically)
-    extraDnsNames: []
 # tags These are used to enabled and disable certain infra components based on its purpose - https://helm.sh/docs/topics/charts/#tags-and-condition-fields-in-dependencies
 tags:
   ## @param tags.llmGateway Bool to enable llmGateway infra
@@ -415,42 +344,10 @@ tags:
 devMode:
   ## @param devMode.enabled Bool to enable dev mode
   enabled: false
-## @section metricsV2 Metrics v2 frontend feature flag
-metricsV2:
-  ## @param metricsV2.enabled Enable the metrics v2 frontend
-  enabled: false
 ###################################################################################################################
-#################### Network policy for Truefoundry Control Plane(truefoundry namespace) ##########################
+####################################### Monitoring Config ##########################################################
 ###################################################################################################################
-## @section networkPolicy Optional NetworkPolicies scoped to the control-plane namespace only.
-## Four policies when enabled: default-deny ingress, allow-all egress, in-release ingress mesh,
-## and a single consolidated cross-namespace ingress policy (when sources are configured).
-networkPolicy:
-  ## @param networkPolicy.enabled Create NetworkPolicies in the control-plane namespace
-  enabled: false
-  ## @param networkPolicy.labels Extra labels on NetworkPolicy objects (merged with global.labels)
-  labels: {}
-  ## @param networkPolicy.annotations Extra annotations on NetworkPolicy objects (merged with global.annotations)
-  annotations: {}
-  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace.
-  allowedIngressFrom: []
-  ## - namespace: tfy-prometheus
-  ## - namespace: ingress-nginx
-  ##   podSelector:
-  ##     app.kubernetes.io/name: ingress-nginx
-  ## @param networkPolicy.extraIngress Raw ingress rules appended verbatim to the ingress-external policy, which selects the release's own pods (app.kubernetes.io/instance). Use this for sources allowedIngressFrom cannot express: ipBlock, port restrictions, matchExpressions, or same-namespace podSelectors.
-  ## NOTE: additive only. The policy renders only when allowedIngressFrom is non-empty, so extraIngress on its own is a no-op.
-  extraIngress: []
-  ## - from:
-  ##     - ipBlock:
-  ##         cidr: 10.0.0.0/8
-  ##   ports:
-  ##     - port: 8000
-  ##       protocol: TCP
-  ###################################################################################################################
-  ####################################### Monitoring Config ##########################################################
-  ###################################################################################################################
-  ## @section Monitoring Config values
+## @section Monitoring Config values
 monitoring:
   ## @param monitoring.enabled Bool to enable monitoring for the control plane
   enabled: false
@@ -521,13 +418,14 @@ truefoundryBootstrap:
     labels: {}
     ## @param truefoundryBootstrap.serviceAccount.annotations [object] Annotations for the bootstrap service account
     annotations: {}
-  ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param truefoundryBootstrap.podSecurityContext [object] Pod security context for the bootstrap container
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param truefoundryBootstrap.securityContext [object] Security context for the bootstrap container
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -540,7 +438,7 @@ truefoundryBootstrap:
     ## @param truefoundryBootstrap.image.repository Truefoundry bootstrap image repository (without registry)
     repository: "tfy-images/truefoundry-bootstrap"
     ## @param truefoundryBootstrap.image.tag Truefoundry bootstrap image tag
-    tag: "0.1.8"
+    tag: "0.1.6"
   ## @param truefoundryBootstrap.natsConfigmapName Truefoundry nats configmap name
   natsConfigmapName: "tfy-nats-accounts"
   ## @param truefoundryBootstrap.commonAnnotations [object] Common Annotations for the bootstrap job components
@@ -597,7 +495,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.179.0"
+    tag: "v0.148.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -614,13 +512,14 @@ mlfoundryServer:
   podAnnotations: {}
   ## @param mlfoundryServer.podLabels [object] Labels for the mlfoundry server pods
   podLabels: {}
-  ## @param mlfoundryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param mlfoundryServer.podSecurityContext [object] Security context for the mlfoundry server pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param mlfoundryServer.securityContext [object] Security context for the mlfoundry server
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -651,8 +550,6 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for mlfoundry server
     timeoutSeconds: 1
-    ## @param mlfoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## mlfoundryServer.readinessProbe Readiness probe settings for the mlfoundry server
   readinessProbe:
     ## @param mlfoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for mlfoundry server
@@ -665,8 +562,6 @@ mlfoundryServer:
     successThreshold: 1
     ## @param mlfoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for mlfoundry server
     timeoutSeconds: 1
-    ## @param mlfoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param mlfoundryServer.nodeSelector Node selector for the mlfoundry server
   nodeSelector: {}
   ## @param mlfoundryServer.affinity Affinity settings for the mlfoundry server
@@ -711,8 +606,6 @@ mlfoundryServer:
   serviceMonitor:
     ## @param mlfoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the mlfoundry server
     enabled: false
-    ## @param mlfoundryServer.serviceMonitor.interval Interval for the ServiceMonitor
-    interval: 10s
     ## @param mlfoundryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param mlfoundryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -745,15 +638,8 @@ mlfoundryServer:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
-    LLM_GATEWAY_URL: 'LM_GATEWAY_URL="{{ .Values.global.controlPlaneURL }}/api/llm"'
+    LLM_GATEWAY_URL: LM_GATEWAY_URL="{{ .Values.global.controlPlaneURL }}/api/llm"
     ENVIRONMENT: production
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    SENTRY_ENABLED: "true"
-    TFY_SERVICE_ROOT_PATH: /api/ml
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
 ###################################################################################################################
 ####################################### Spark History Server #######################################################
 ###################################################################################################################
@@ -774,7 +660,7 @@ s3proxy:
     ## @param s3proxy.image.repository Image repository for the s3 proxy (without registry)
     repository: "tfy-private-images/s3proxy"
     ## @param s3proxy.image.tag Image tag for the s3 proxy
-    tag: "v0.149.0"
+    tag: "v0.57.0"
   ## @param s3proxy.environmentName Environment name for the s3 proxy
   environmentName: default
   ## @param s3proxy.envSecretName Secret name for the s3 proxy environment variables
@@ -787,12 +673,9 @@ s3proxy:
   fullnameOverride: ""
   ## @param s3proxy.podAnnotations Annotations for the s3 proxy pods
   podAnnotations: {}
-  ## @param s3proxy.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; overrides runAsUser below.
+  ## @param s3proxy.podSecurityContext [object] Security context for the s3 proxy pods
   podSecurityContext:
-    ## Enable/disable this to override the global.podSecurityContext
-    # enabled: true
-    ## runAsNonRoot inherited from global.podSecurityContext
-    runAsUser: 65532
+    enabled: false
   ## @param s3proxy.commonLabels Common labels for the s3 proxy pods
   commonLabels: {}
   ## @param s3proxy.commonAnnotations [object] Common annotations for the s3 proxy pods
@@ -805,14 +688,7 @@ s3proxy:
   deploymentAnnotations: {}
   ## @param s3proxy.securityContext [object] Security context for the s3 proxy
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
+    enabled: false
   ## @param s3proxy.resourceTierOverride Resource tier override for the s3proxy
   resourceTierOverride: ""
   ## @skip s3proxy.resources [object] Resource requests and limits for the s3 proxy
@@ -845,8 +721,6 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.livenessProbe.timeoutSeconds Liveness probe timeout for s3 proxy
     timeoutSeconds: 1
-    ## @param s3proxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## s3proxy.readinessProbe Readiness probe settings for the s3 proxy
   readinessProbe:
     ## @param s3proxy.readinessProbe.failureThreshold Readiness probe failure threshold for s3 proxy
@@ -859,8 +733,6 @@ s3proxy:
     successThreshold: 1
     ## @param s3proxy.readinessProbe.timeoutSeconds Readiness probe timeout for s3 proxy
     timeoutSeconds: 1
-    ## @param s3proxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param s3proxy.nodeSelector Node selector for the s3 proxy
   nodeSelector: {}
   ## @param s3proxy.affinity Affinity settings for the s3 proxy
@@ -887,10 +759,6 @@ s3proxy:
     annotations: {}
     ## @param s3proxy.serviceAccount.labels [object] Labels for the s3 proxy service account
     labels: {}
-  ## @param s3proxy.emptyDir [object] emptyDir size limits (default: tmpdir.sizeLimit derived from resource tier)
-  emptyDir:
-    tmpdir:
-      sizeLimit: ""
   ## @param s3proxy.extraVolumes Extra volumes for the s3 proxy
   extraVolumes: []
   ## @param s3proxy.extraVolumeMounts Extra volume mounts for the s3 proxy
@@ -904,7 +772,7 @@ s3proxy:
     jcloudsProvider: aws-s3
   ## @param s3proxy.env [object] Environment variables for the s3 proxy
   env:
-    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server.{{ include "global.namespace" . }}.svc.cluster.local:3000
+    SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
 ###################################################################################################################
 ####################################### Servicefoundry Server #######################################################
 ###################################################################################################################
@@ -931,7 +799,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.179.1"
+    tag: "v0.148.6"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -944,17 +812,18 @@ servicefoundryServer:
   nameOverride: ""
   ## @param servicefoundryServer.fullnameOverride Full name override for the servicefoundry server
   fullnameOverride: ""
-  ## @param servicefoundryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param servicefoundryServer.podSecurityContext [object] Security context for the servicefoundry server pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param servicefoundryServer.podLabels [object] Pod-specific labels for the servicefoundry server
   podLabels: {}
   ## @param servicefoundryServer.podAnnotations [object] Pod-specific annotations for the servicefoundry server
   podAnnotations: {}
   ## @param servicefoundryServer.securityContext [object] Security context for the servicefoundry server
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -985,8 +854,6 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.livenessProbe.timeoutSeconds Liveness probe timeout for servicefoundry server
     timeoutSeconds: 1
-    ## @param servicefoundryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## servicefoundryServer.readinessProbe Readiness probe settings for the servicefoundry server
   readinessProbe:
     ## @param servicefoundryServer.readinessProbe.failureThreshold Readiness probe failure threshold for servicefoundry server
@@ -999,8 +866,6 @@ servicefoundryServer:
     successThreshold: 1
     ## @param servicefoundryServer.readinessProbe.timeoutSeconds Readiness probe timeout for servicefoundry server
     timeoutSeconds: 1
-    ## @param servicefoundryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param servicefoundryServer.nodeSelector Node selector for the servicefoundry server
   nodeSelector: {}
   ## @param servicefoundryServer.affinity Affinity settings for the servicefoundry server
@@ -1059,8 +924,6 @@ servicefoundryServer:
   serviceMonitor:
     ## @param servicefoundryServer.serviceMonitor.enabled Enable ServiceMonitor for the servicefoundry server
     enabled: true
-    ## @param servicefoundryServer.serviceMonitor.interval Interval for the ServiceMonitor
-    interval: 10s
     ## @param servicefoundryServer.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param servicefoundryServer.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -1093,7 +956,7 @@ servicefoundryServer:
     NATS_QGROUP_NAME: ""
     FLYTE_ADMIN_URL: http://{{ .Release.Name }}-tfy-workflow-admin-server:8089
     CLUSTER_PROXY_URL: http://{{ .Release.Name }}-tfy-controller:8123
-    BUILD_CALLBACK_URL: "http://{{ .Release.Name }}-servicefoundry-server:3000"
+    BUILD_CALLBACK_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     LLM_GATEWAY_URL: "{{ .Values.global.controlPlaneURL }}/api/llm"
     LLM_GATEWAY_ENABLED: "{{ .Values.tags.llmGateway }}"
     VCS_INTEGRATION_STATE_OBJECT_HASH_SECRET: ""
@@ -1121,23 +984,15 @@ servicefoundryServer:
     TFY_BUILD_LOGS_INFRA_COMPONENT: tfy-logs
     FE_CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
     FE_TENANT_NAME: "{{ .Values.global.tenantName }}"
+    FE_ENABLE_LLM_GATEWAY_TRACING: "{{ .Values.tags.tracing }}"
+    FE_ENABLE_LLM_GATEWAY: "{{ .Values.tags.llmGateway }}"
     DELTAFUSION_QUERY_URL: http://{{ .Release.Name }}-deltafusion-query-server:8080
     SPARK_HISTORY_SERVER_URL: http://{{ .Release.Name }}-spark-history-server:18080
     TFY_AI_GATEWAY_BASE_URL: https://gateway.truefoundry.ai
     NATS_UI_URL: http://{{ .Release.Name }}-tfy-nats-ui:8080/admin/nats/
     METRICS_DASHBOARD_URL: http://{{ .Release.Name }}-tfy-metrics-dashboard:8080/admin/metrics-dashboard/
     HEADLAMP_URL: http://{{ .Release.Name }}-headlamp:4466/admin/kubernetes/
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    FE_ENABLE_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
-    FE_ENABLE_METRICS_V2: "{{ .Values.metricsV2.enabled }}"
-    ENABLE_VEND_TOKEN_FOR_TRUEFORGE: "{{ .Values.trueforge.enabled }}"
-    ENABLE_TRUEFOUNDRY_MANAGED_AGENT_WRITES: "{{ not .Values.trueforge.enabled }}"
-    TRUEFORGE_BASE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
-    TFY_OTEL_EXPORTER_OTLP_ENDPOINT: '{{ if or .Values.tags.tracing .Values.tags.llmGatewayRequestLogging }}http://{{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}/v1/traces{{ end }}'
+    FE_ENABLE_STDIO_MCP_SERVER: "{{ .Values.stdioMcpProxy.enabled }}"
   configs:
     ## @param servicefoundryServer.configs.cicdTemplates CICD Template for servicefoundry server
     cicdTemplates: "{{ .Release.Name }}-cicd-templates-cm"
@@ -1168,10 +1023,6 @@ servicefoundryServer:
     imageMutationPolicy: "{{ .Release.Name }}-image-mutation-policy-cm"
     ## @param servicefoundryServer.configs.k8sManifestValidationPolicy K8s Manifest Validation policy for workloads
     k8sManifestValidationPolicy: "{{ .Release.Name }}-k8s-manifest-validation-policy-cm"
-    ## @param servicefoundryServer.configs.defaultPolicies Default policies ConfigMap name for servicefoundry server
-    defaultPolicies: "{{ .Release.Name }}-default-policies-cm"
-    ## @param servicefoundryServer.configs.askTfyAgent Ask TFY inline agent ConfigMap name for servicefoundry server
-    askTfyAgent: "{{ .Release.Name }}-ask-tfy-agent-cm"
     ## @param servicefoundryServer.configs.buildJobTemplate Build Job Template config map name for servicefoundry server. If empty, automatically uses the generated config map name from tfy-build chart when tfyBuild.jobTemplate.enabled is true
     buildJobTemplate: ""
 ###################################################################################################################
@@ -1194,7 +1045,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.179.0"
+    tag: "v0.148.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1207,13 +1058,9 @@ sparkHistoryServer:
   fullnameOverride: ""
   ## @param sparkHistoryServer.podAnnotations Annotations for the spark history server pods
   podAnnotations: {}
-  ## @param sparkHistoryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; overrides runAsUser and adds fsGroup below.
+  ## @param sparkHistoryServer.podSecurityContext [object] Security context for the spark history server pods
   podSecurityContext:
-    ## Enable/disable this to override the global.podSecurityContext
-    # enabled: true
-    ## runAsNonRoot inherited from global.podSecurityContext
-    fsGroup: 1000
-    runAsUser: 65534
+    enabled: false
   ## @param sparkHistoryServer.commonLabels Common labels for the spark history server pods
   commonLabels: {}
   ## @param sparkHistoryServer.commonAnnotations [object] Common annotations for the spark history server pods
@@ -1226,22 +1073,9 @@ sparkHistoryServer:
   deploymentAnnotations: {}
   ## @param sparkHistoryServer.securityContext [object] Security context for the spark history server
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
-    capabilities:
-      drop:
-        - ALL
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
+    enabled: false
   ## @param sparkHistoryServer.resourceTierOverride Resource tier override for the sparkHistoryServer
   resourceTierOverride: ""
-  ## @param sparkHistoryServer.emptyDir [object] emptyDir size limits (sparkLogs.sizeLimit for /usr/lib/spark/logs, tmpdir.sizeLimit for /tmp)
-  emptyDir:
-    sparkLogs:
-      sizeLimit: ""
-    tmpdir:
-      sizeLimit: ""
   ## @skip sparkHistoryServer.resources [object] Resource requests and limits for the spark history server
   # resources:
   #  ## sparkHistoryServer.resources.limits Resource limits for the spark history server
@@ -1272,8 +1106,6 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.livenessProbe.timeoutSeconds Liveness probe timeout for spark history server
     timeoutSeconds: 1
-    ## @param sparkHistoryServer.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## sparkHistoryServer.readinessProbe Readiness probe settings for the spark history server
   readinessProbe:
     ## @param sparkHistoryServer.readinessProbe.failureThreshold Readiness probe failure threshold for spark history server
@@ -1286,8 +1118,6 @@ sparkHistoryServer:
     successThreshold: 1
     ## @param sparkHistoryServer.readinessProbe.timeoutSeconds Readiness probe timeout for spark history server
     timeoutSeconds: 1
-    ## @param sparkHistoryServer.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param sparkHistoryServer.nodeSelector Node selector for the spark history server
   nodeSelector: {}
   ## @param sparkHistoryServer.affinity Affinity settings for the spark history server
@@ -1347,7 +1177,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.179.0"
+    tag: "v0.148.0"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1362,8 +1192,11 @@ tfyK8sController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyK8sController.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyK8sController.podSecurityContext [object] Security context for the tfyK8sController pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyK8sController.commonLabels Common labels for the tfyK8sController pods
   commonLabels: {}
   ## @param tfyK8sController.commonAnnotations [object] Common annotations for the tfyK8sController pods
@@ -1376,9 +1209,7 @@ tfyK8sController:
   deploymentAnnotations: {}
   ## @param tfyK8sController.securityContext [object] Security context for the tfyK8sController
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -1409,8 +1240,6 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyK8sController
     timeoutSeconds: 1
-    ## @param tfyK8sController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyK8sController.readinessProbe Readiness probe settings for the tfyK8sController
   readinessProbe:
     ## @param tfyK8sController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyK8sController
@@ -1423,8 +1252,6 @@ tfyK8sController:
     successThreshold: 1
     ## @param tfyK8sController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyK8sController
     timeoutSeconds: 1
-    ## @param tfyK8sController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyK8sController.nodeSelector Node selector for the tfyK8sController
   nodeSelector: {}
   ## @param tfyK8sController.affinity Affinity settings for the tfyK8sController
@@ -1461,8 +1288,6 @@ tfyK8sController:
   serviceMonitor:
     ## @param tfyK8sController.serviceMonitor.enabled Enable ServiceMonitor for the tfyK8sController
     enabled: true
-    ## @param tfyK8sController.serviceMonitor.interval Interval for the ServiceMonitor
-    interval: 10s
     ## @param tfyK8sController.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param tfyK8sController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -1473,6 +1298,7 @@ tfyK8sController:
   ## @param tfyK8sController.env [object] Environment variables for the tfyK8sController
   env:
     SFY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
+    MLFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-mlfoundry-server:5000
     CONTROL_PLANE_NATS_URL: http://{{ .Release.Name }}-tfy-nats:4222
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
     SFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
@@ -1483,25 +1309,20 @@ tfyK8sController:
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     ENABLE_GATEWAY_CONSUMER: "{{ .Values.tags.llmGatewayRequestLogging }}"
     NODE_ENV: production
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
+    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
     RUN_CLUSTER_STATUS_CRON: "true"
     MODEL_JSON_BASE_URL: https://assets.production.truefoundry.com/llm-gateway/prod/
     RUN_MODEL_CONFIG_SYNC_CRON: "true"
     DELTAFUSION_INGESTOR_URL: http://{{ .Release.Name }}-deltafusion-ingestor:8000
     DELTAFUSION_QUERY_SERVER_URL: http://{{ .Release.Name }}-deltafusion-query-server:8080
     MULTITENANT: "{{ .Values.global.multitenant.enabled }}"
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL_EXEMPT_PATHS: /health,/metrics
-    MODEL_CONFIG_SYNC_CRON_INTERVAL: '*/2 * * * *'
 ###################################################################################################################
 ####################################### Sfy Manifest Service ######################################################
 ###################################################################################################################
 ## @section sfyManifestService Truefoundry sfy manifest service values
 sfyManifestService:
   ## @param sfyManifestService.enabled Bool to force-deploy the sfy manifest service when true; otherwise follows tfyWorkflowAdmin.enabled
-  enabled: true
+  enabled: false
   # SFY_API_KEY: <api_key>
   ## @param sfyManifestService.annotations [object] Annotations for the sfy manifest service
   annotations: {}
@@ -1514,7 +1335,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.179.0"
+    tag: "v0.148.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -1529,8 +1350,11 @@ sfyManifestService:
   fullnameOverride: ""
   ## @param sfyManifestService.podAnnotations Annotations for the sfy manifest service pods
   podAnnotations: {}
-  ## @param sfyManifestService.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param sfyManifestService.podSecurityContext [object] Security context for the sfy manifest service pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param sfyManifestService.commonLabels Common labels for the sfy manifest service pods
   commonLabels: {}
   ## @param sfyManifestService.commonAnnotations [object] Common annotations for the sfy manifest service pods
@@ -1543,9 +1367,7 @@ sfyManifestService:
   deploymentAnnotations: {}
   ## @param sfyManifestService.securityContext [object] Security context for the sfy manifest service
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: false
     allowPrivilegeEscalation: false
     capabilities:
@@ -1576,8 +1398,6 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.livenessProbe.timeoutSeconds Liveness probe timeout for sfy manifest service
     timeoutSeconds: 1
-    ## @param sfyManifestService.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## sfyManifestService.readinessProbe Readiness probe settings for the sfy manifest service
   readinessProbe:
     ## @param sfyManifestService.readinessProbe.failureThreshold Readiness probe failure threshold for sfy manifest service
@@ -1590,8 +1410,6 @@ sfyManifestService:
     successThreshold: 1
     ## @param sfyManifestService.readinessProbe.timeoutSeconds Readiness probe timeout for sfy manifest service
     timeoutSeconds: 1
-    ## @param sfyManifestService.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param sfyManifestService.nodeSelector Node selector for the sfy manifest service
   nodeSelector: {}
   ## @param sfyManifestService.affinity Affinity settings for the sfy manifest service
@@ -1602,8 +1420,6 @@ sfyManifestService:
   serviceMonitor:
     ## @param sfyManifestService.serviceMonitor.enabled Enable ServiceMonitor for the sfy manifest service
     enabled: true
-    ## @param sfyManifestService.serviceMonitor.interval Interval for the ServiceMonitor
-    interval: 10s
     ## @param sfyManifestService.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param sfyManifestService.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -1660,156 +1476,129 @@ sfyManifestService:
     TFY_MANIFESTS_TEMPLATE_CHART_CONFIG: '{"repoType": "helm", "repoURL": "https://truefoundry.github.io/infra-charts/", "chart": "tfy-manifests-template", "targetRevision": "0.2.0" }'
     ADDITIONAL_KUSTOMIZE_PATCHES: ""
     POD_CUSTOMIZATIONS: '{"affinity": {},"nodeSelector": {},"tolerations": []}'
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
-    HELM_PULL_TIMEOUT_SECONDS: "120"
-    HELM_MAX_DECOMPRESSED_BYTES: "104857600"
-    HELM_MAX_PACKAGE_DEPENDENCIES: "50"
-    HELM_MAX_PACKAGE_UNPACKED_BYTES: "524288000"
-    HOME: /tmp
-    HELM_CACHE_HOME: /tmp/helm-cache
-    HELM_CONFIG_HOME: /tmp/helm-config
-    XDG_CACHE_HOME: /tmp/.cache
 ###################################################################################################################
-######################################### Tfy Infra Manager ######################################################
+####################################### stdio-mcp-proxy ###########################################################
 ###################################################################################################################
-## @section tfyInfraManager tfy infra manager values
-tfyInfraManager:
-  ## @param tfyInfraManager.enabled Bool to enable the tfy infra manager
-  enabled: true
-  ## @param tfyInfraManager.annotations [object] Annotations for the tfy infra manager
+## @section stdioMcpProxy stdio MCP proxy values
+stdioMcpProxy:
+  ## @param stdioMcpProxy.enabled Bool to enable the stdio MCP proxy
+  enabled: false
+  ## @param stdioMcpProxy.annotations [object] Annotations for the stdio MCP proxy
   annotations: {}
-  ## @param tfyInfraManager.tolerations Tolerations specific to the tfy infra manager
+  ## @param stdioMcpProxy.tolerations Tolerations specific to the stdio MCP proxy
   tolerations: []
-  ## tfyInfraManager.image Image for the tfy infra manager
+  ## stdioMcpProxy.image Image for the stdio MCP proxy
   image:
-    ## @param tfyInfraManager.image.registry Registry for the tfy infra manager image (overrides global.registry if specified)
+    ## @param stdioMcpProxy.image.registry Registry for the stdio MCP proxy image (overrides global.registry if specified)
     registry: ""
-    ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
-    repository: "tfy-private-images/tfy-infra-manager"
-    ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.179.0"
-  ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
+    ## @param stdioMcpProxy.image.repository Image repository for the stdio MCP proxy image (without registry)
+    repository: "tfy-private-images/stdio-mcp-proxy"
+    ## @param stdioMcpProxy.image.tag Image tag for the stdio MCP proxy image
+    tag: "v0.135.0"
+  ## @skip stdioMcpProxy.replicaCount Number of replicas for the stdio MCP proxy
   # replicaCount: 1
-  ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
+  ## @param stdioMcpProxy.environmentName Environment name for the stdio MCP proxy
   environmentName: default
-  ## @param tfyInfraManager.envSecretName Secret name for the tfy infra manager environment variables
-  envSecretName: tfy-infra-manager-env-secret
-  ## @param tfyInfraManager.imagePullPolicy Image pull policy for the tfy infra manager
+  ## @param stdioMcpProxy.envSecretName Secret name for the stdio MCP proxy environment variables
+  envSecretName: stdio-mcp-proxy-env-secret
+  ## @param stdioMcpProxy.imagePullPolicy Image pull policy for the stdio MCP proxy
   imagePullPolicy: IfNotPresent
-  ## @param tfyInfraManager.nameOverride Override name for the tfy infra manager
+  ## @param stdioMcpProxy.nameOverride Override name for the stdio MCP proxy
   nameOverride: ""
-  ## @param tfyInfraManager.fullnameOverride Full name override for the tfy infra manager
+  ## @param stdioMcpProxy.fullnameOverride Full name override for the stdio MCP proxy
   fullnameOverride: ""
-  ## @param tfyInfraManager.podAnnotations Annotations for the tfy infra manager pods
+  ## @param stdioMcpProxy.podAnnotations Annotations for the stdio MCP proxy pods
   podAnnotations: {}
-  ## @param tfyInfraManager.podSecurityContext [object] Security context for the tfy infra manager pods
+  ## @param stdioMcpProxy.podSecurityContext [object] Security context for the stdio MCP proxy pods
   podSecurityContext:
     enabled: false
-  ## @param tfyInfraManager.commonLabels Common labels for the tfy infra manager pods
+  ## @param stdioMcpProxy.commonLabels Common labels for the stdio MCP proxy pods
   commonLabels: {}
-  ## @param tfyInfraManager.commonAnnotations [object] Common annotations for the tfy infra manager pods
+  ## @param stdioMcpProxy.commonAnnotations [object] Common annotations for the stdio MCP proxy pods
   commonAnnotations: {}
-  ## @param tfyInfraManager.podLabels [object] Labels for the tfy infra manager pods
+  ## @param stdioMcpProxy.podLabels [object] Labels for the stdio MCP proxy pods
   podLabels: {}
-  ## @param tfyInfraManager.deploymentLabels [object] Deployment-specific labels for the tfy infra manager
+  ## @param stdioMcpProxy.deploymentLabels [object] Deployment-specific labels for the stdio MCP proxy
   deploymentLabels: {}
-  ## @param tfyInfraManager.deploymentAnnotations [object] Deployment-specific annotations for the tfy infra manager
+  ## @param stdioMcpProxy.deploymentAnnotations [object] Deployment-specific annotations for the stdio MCP proxy
   deploymentAnnotations: {}
-  ## @param tfyInfraManager.securityContext [object] Security context for the tfy infra manager
+  ## @param stdioMcpProxy.securityContext [object] Security context for the stdio MCP proxy
   securityContext:
     enabled: true
     readOnlyRootFilesystem: false
-  ## @param tfyInfraManager.resources [object] Resource requests and limits for the tfy infra manager (defaults: 100m/500m CPU, 64Mi/128Mi memory, 256Mi ephemeral-storage)
+  ## @param stdioMcpProxy.resourceTierOverride Resource tier override for the stdio MCP proxy
+  resourceTierOverride: ""
+  ## @param stdioMcpProxy.resources [object] Resource requests and limits for the stdio MCP proxy
   resources: {}
-  ## tfyInfraManager.livenessProbe Liveness probe settings for the tfy infra manager
+  ## stdioMcpProxy.livenessProbe Liveness probe settings for the stdio MCP proxy
   livenessProbe:
-    ## @param tfyInfraManager.livenessProbe.failureThreshold Liveness probe failure threshold for tfy infra manager
+    ## @param stdioMcpProxy.livenessProbe.failureThreshold Liveness probe failure threshold for stdio MCP proxy
     failureThreshold: 3
-    ## @param tfyInfraManager.livenessProbe.initialDelaySeconds Liveness probe initial delay for tfy infra manager
+    ## @param stdioMcpProxy.livenessProbe.initialDelaySeconds Liveness probe initial delay for stdio MCP proxy
     initialDelaySeconds: 15
-    ## @param tfyInfraManager.livenessProbe.periodSeconds Liveness probe period for tfy infra manager
+    ## @param stdioMcpProxy.livenessProbe.periodSeconds Liveness probe period for stdio MCP proxy
     periodSeconds: 10
-    ## @param tfyInfraManager.livenessProbe.successThreshold Liveness probe success threshold for tfy infra manager
+    ## @param stdioMcpProxy.livenessProbe.successThreshold Liveness probe success threshold for stdio MCP proxy
     successThreshold: 1
-    ## @param tfyInfraManager.livenessProbe.timeoutSeconds Liveness probe timeout for tfy infra manager
+    ## @param stdioMcpProxy.livenessProbe.timeoutSeconds Liveness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
-    ## @param tfyInfraManager.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
-  ## tfyInfraManager.readinessProbe Readiness probe settings for the tfy infra manager
+  ## stdioMcpProxy.readinessProbe Readiness probe settings for the stdio MCP proxy
   readinessProbe:
-    ## @param tfyInfraManager.readinessProbe.failureThreshold Readiness probe failure threshold for tfy infra manager
+    ## @param stdioMcpProxy.readinessProbe.failureThreshold Readiness probe failure threshold for stdio MCP proxy
     failureThreshold: 3
-    ## @param tfyInfraManager.readinessProbe.initialDelaySeconds Readiness probe initial delay for tfy infra manager
+    ## @param stdioMcpProxy.readinessProbe.initialDelaySeconds Readiness probe initial delay for stdio MCP proxy
     initialDelaySeconds: 5
-    ## @param tfyInfraManager.readinessProbe.periodSeconds Readiness probe period for tfy infra manager
+    ## @param stdioMcpProxy.readinessProbe.periodSeconds Readiness probe period for stdio MCP proxy
     periodSeconds: 10
-    ## @param tfyInfraManager.readinessProbe.successThreshold Readiness probe success threshold for tfy infra manager
+    ## @param stdioMcpProxy.readinessProbe.successThreshold Readiness probe success threshold for stdio MCP proxy
     successThreshold: 1
-    ## @param tfyInfraManager.readinessProbe.timeoutSeconds Readiness probe timeout for tfy infra manager
+    ## @param stdioMcpProxy.readinessProbe.timeoutSeconds Readiness probe timeout for stdio MCP proxy
     timeoutSeconds: 1
-    ## @param tfyInfraManager.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
-  ## @param tfyInfraManager.nodeSelector Node selector for the tfy infra manager
+  ## @param stdioMcpProxy.nodeSelector Node selector for the stdio MCP proxy
   nodeSelector: {}
-  ## @param tfyInfraManager.affinity Affinity settings for the tfy infra manager
+  ## @param stdioMcpProxy.affinity Affinity settings for the stdio MCP proxy
   affinity: {}
-  ## @param tfyInfraManager.topologySpreadConstraints Topology spread constraints for the tfy infra manager
+  ## @param stdioMcpProxy.topologySpreadConstraints Topology spread constraints for the stdio MCP proxy
   topologySpreadConstraints: []
-  ## tfyInfraManager.service Service settings for the tfy infra manager
+  ## stdioMcpProxy.serviceMonitor ServiceMonitor settings for the stdio MCP proxy
+  serviceMonitor:
+    ## @param stdioMcpProxy.serviceMonitor.enabled Enable ServiceMonitor for the stdio MCP proxy
+    enabled: false
+    ## @param stdioMcpProxy.serviceMonitor.labels [object] Labels for the ServiceMonitor
+    labels: {}
+    ## @param stdioMcpProxy.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
+    annotations: {}
+  ## stdioMcpProxy.service Service settings for the stdio MCP proxy
   service:
-    ## @param tfyInfraManager.service.type Service type for the tfy infra manager
+    ## @param stdioMcpProxy.service.type Service type for the stdio MCP proxy
     type: ClusterIP
-    ## @param tfyInfraManager.service.port Service port for the tfy infra manager
-    port: 8080
-    ## @param tfyInfraManager.service.annotations Annotations for the tfy infra manager service
+    ## @param stdioMcpProxy.service.port Service port for the stdio MCP proxy
+    port: 8000
+    ## @param stdioMcpProxy.service.annotations Annotations for the stdio MCP proxy service
     annotations: {}
-    ## @param tfyInfraManager.service.labels [object] Labels for the tfy infra manager service
+    ## @param stdioMcpProxy.service.labels [object] Labels for the stdio MCP proxy service
     labels: {}
-  ## tfyInfraManager.serviceAccount Service account settings for the tfy infra manager
+  ## stdioMcpProxy.serviceAccount Service account settings for the stdio MCP proxy
   serviceAccount:
-    ## @param tfyInfraManager.serviceAccount.create Bool to create a service account for the tfy infra manager
+    ## @param stdioMcpProxy.serviceAccount.create Bool to create a service account for the stdio MCP proxy
     create: true
-    ## @param tfyInfraManager.serviceAccount.name Name of the tfy infra manager service account
-    name: "tfy-infra-manager"
-    ## @param tfyInfraManager.serviceAccount.annotations [object] Annotations for the tfy infra manager service account
+    ## @param stdioMcpProxy.serviceAccount.name Name of the stdio MCP proxy service account
+    name: "stdio-mcp-proxy"
+    ## @param stdioMcpProxy.serviceAccount.annotations [object] Annotations for the stdio MCP proxy service account
     annotations: {}
-    ## @param tfyInfraManager.serviceAccount.labels [object] Labels for the tfy infra manager service account
+    ## @param stdioMcpProxy.serviceAccount.labels [object] Labels for the stdio MCP proxy service account
     labels: {}
-    ## @param tfyInfraManager.serviceAccount.automountServiceAccountToken Automount service account token for the tfy infra manager service account
+    ## @param stdioMcpProxy.serviceAccount.automountServiceAccountToken Automount service account token for the stdio MCP proxy service account
     automountServiceAccountToken: true
-  ## @param tfyInfraManager.extraVolumes Extra volumes for the tfy infra manager
+  ## @param stdioMcpProxy.extraVolumes Extra volumes for the stdio MCP proxy
   extraVolumes: []
-  ## @param tfyInfraManager.extraVolumeMounts Extra volume mounts for the tfy infra manager
+  ## @param stdioMcpProxy.extraVolumeMounts Extra volume mounts for the stdio MCP proxy
   extraVolumeMounts: []
-  ## @param tfyInfraManager.imagePullSecrets Image pull credentials for the tfy infra manager
+  ## @param stdioMcpProxy.imagePullSecrets Image pull credentials for the stdio MCP proxy
   imagePullSecrets: []
-  ## @param tfyInfraManager.env [object] Environment variables for the tfy infra manager
-  ## MANAGED_DELIVERY_ENABLED=true requires additional managed-delivery env vars; see the
-  ## tfy-infra-manager repo's .env.default for the full contract.
+  ## @param stdioMcpProxy.env [object] Environment variables for the stdio MCP proxy
   env:
-    SERVER_PORT: "8080"
-    APP_BASE_PATH: /admin/infra-manager
-    SFY_BASE_URL: http://{{ .Release.Name }}-servicefoundry-server:3000/v1
-    BUNDLE_SOURCE: artifactory
-    TEMPLATE_CHANNEL: general
-    LOG_LEVEL: info
-    MANAGED_DELIVERY_ENABLED: "false"
-    SCALR_HOSTNAME: truefoundry.scalr.io
-    SCALR_TOKEN: ${k8s-secret/tfy-infra-manager-env-secret/SCALR_TOKEN}
-    SCALR_ACCOUNT_ID: ""
-    SCALR_TENANT_PREFIX: ""
-    SCALR_STORAGE_PROFILE_ID: ""
-    SCALR_DEFAULT_AGENT_POOL_ID: ""
-    SENTRY_ENABLED: "true"
-    AUTH_SERVER_URL: 'https://auth.truefoundry.com'
-    TENANT_NAME: "{{ .Values.global.tenantName }}"
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: ''
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -1867,21 +1656,6 @@ tfyBuild:
   truefoundryWorkflows:
     ## @param tfyBuild.truefoundryWorkflows.enabled Bool to enable truefoundry workflows
     enabled: true
-    ## @param tfyBuild.truefoundryWorkflows.activeDeadlineSeconds Active deadline seconds for the build workflow and build-and-push steps
-    activeDeadlineSeconds: 14400
-    ## tfyBuild.truefoundryWorkflows.buildRetryStrategy Argo retryStrategy applied to the build-and-push steps (buildkit sidecar and external buildkit).
-    ## Lets you differentiate transient build/infrastructure failures (which should retry) from intentional security-gate
-    ## decisions such as a Checkmarx policy failure (which should not retry). Use `expression` to skip retries on specific
-    ## exit codes, e.g. map a Checkmarx policy failure to an exit code like 101 and stop retrying on it.
-    buildRetryStrategy:
-      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.limit Maximum number of retries for the build-and-push steps
-      limit: 2
-      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.retryPolicy Argo retry policy (Always, OnFailure, OnError, OnTransientError)
-      retryPolicy: "Always"
-      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.expression Optional Argo expression gating whether a retry happens. Empty string means no expression (always retry per retryPolicy). E.g. 'lastRetry.exitCode != 101' to stop retrying when the build gate fails with exit code 101.
-      expression: ""
-      ## @param tfyBuild.truefoundryWorkflows.buildRetryStrategy.backoff [object] Optional Argo backoff config for retries. Empty object means no backoff. E.g. {duration: 1s, factor: 2, maxDuration: 30m}
-      backoff: {}
     ## tfyBuild.truefoundryWorkflows.sfyBuilder SfyBuilder settings for the tfyBuild server
     sfyBuilder:
       ## @param tfyBuild.truefoundryWorkflows.sfyBuilder.extraEnvs Extra environment variables for sfyBuilder
@@ -2008,21 +1782,6 @@ tfyBuild:
       imagePullSecrets: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.imageSizeThresholdBytes Image size threshold for the SOCI index build and push
       imageSizeThresholdBytes: 419430400
-      resources:
-        requests:
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.cpu CPU request for the SOCI index build and push
-          cpu: 500m
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.ephemeral-storage Ephemeral storage request for the SOCI index build and push
-          ephemeral-storage: 10Gi
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.requests.memory Memory request for the SOCI index build and push
-          memory: 1Gi
-        limits:
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.cpu CPU limit for the SOCI index build and push
-          cpu: 1000m
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.ephemeral-storage Ephemeral storage limit for the SOCI index build and push
-          ephemeral-storage: 30Gi
-          ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.resources.limits.memory Memory limit for the SOCI index build and push
-          memory: 2Gi
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraEnvs Extra environment variables for the SOCI index build and push
       extraEnvs: []
       ## @param tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.extraVolumeMounts Extra volume mounts for the SOCI index build and push
@@ -2152,17 +1911,6 @@ tfyConfigs:
     imageMutationPolicyOverride: {}
     ## @param tfyConfigs.configs.k8sManifestValidationPolicyOverride K8s manifest validation policy configuration. Default content is in files/tfy-configs/k8s-manifest-validation-policy.yaml
     k8sManifestValidationPolicyOverride: {}
-    ## @param tfyConfigs.configs.defaultPoliciesOverride Default policies configuration. Default content is in files/tfy-configs/default-policies.yaml
-    defaultPoliciesOverride: {}
-    askTfyAgent:
-      ## @param tfyConfigs.configs.askTfyAgent.enabled Render ConfigMap and mount Ask TFY agent config when TrueForge is enabled
-      enabled: true
-      ## @param tfyConfigs.configs.askTfyAgent.webSearchEnabled Sets ASK_TFY_WEB_SEARCH_ENABLED on servicefoundry-server
-      webSearchEnabled: false
-      ## @param tfyConfigs.configs.askTfyAgent.skillsRef Sets ASK_TFY_SKILLS_REF when non-empty (default git ref when omitted from agent YAML)
-      skillsRef: ""
-    ## @param tfyConfigs.configs.askTfyAgentOverride When non-empty, replaces bundled files/tfy-configs/ask-tfy-agent.yaml
-    askTfyAgentOverride: ""
     ## @param tfyConfigs.configs.cicdTemplates CICD templates configuration. key of this map is yaml file name and value is the file contents. You must have a key named `cicd-providers.yaml` in this dictionary
     cicdTemplates: {}
     codeSnippet:
@@ -2234,8 +1982,6 @@ tfyConfigs:
 tfyBuildkitdService:
   ## @param tfyBuildkitdService.enabled Bool to enable the buildkitd service
   enabled: true
-  ## @param tfyBuildkitdService.useTcpSocketProbe Use a tcpSocket liveness/readiness probe instead of the default `buildctl debug workers` exec probe. Enable for OpenShift/ROSA where the exec probe fails.
-  useTcpSocketProbe: false
   ## @param tfyBuildkitdService.nameOverride Override the buildkitd service name
   nameOverride: ""
   ## @param tfyBuildkitdService.fullnameOverride Override the buildkitd service full name
@@ -2287,7 +2033,6 @@ tfyBuildkitdService:
     enabled: false
   ## @param tfyBuildkitdService.securityContext [object] Container security context
   securityContext:
-    # privileged required; pinned on (ignores global toggle)
     enabled: true
     privileged: true
   ## @skip tfyBuildkitdService.resources
@@ -2348,8 +2093,6 @@ tfyBuildkitdService:
 ###################################################################################################################
 ## postgresql Settings corresponding to the postgresql database. During cleanup, make sure to remove any stray pvc that might be created.
 postgresql:
-  ## @param postgresql.fullnameOverride Fixed name matching the devMode DB_HOST in truefoundry-creds, which does not depend on the release name
-  fullnameOverride: truefoundry-postgresql
   ## @skip postgresql.global Global settings for the postgresql database
   global:
     security:
@@ -2409,7 +2152,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.179.0
+    tag: v0.148.1
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2424,8 +2167,11 @@ tfyController:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param tfyController.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyController.podSecurityContext [object] Security context for the tfyController pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyController.commonLabels Common labels for the tfyController pods
   commonLabels: {}
   ## @param tfyController.commonAnnotations [object] Common annotations for the tfyController pods
@@ -2438,9 +2184,7 @@ tfyController:
   deploymentAnnotations: {}
   ## @param tfyController.securityContext [object] Security context for the tfyController
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -2453,8 +2197,6 @@ tfyController:
   serviceMonitor:
     ## @param tfyController.serviceMonitor.enabled Enable ServiceMonitor for the tfyController
     enabled: true
-    ## @param tfyController.serviceMonitor.interval Interval for the ServiceMonitor
-    interval: 10s
     ## @param tfyController.serviceMonitor.labels [object] Labels for the ServiceMonitor
     labels: {}
     ## @param tfyController.serviceMonitor.annotations [object] Annotations for the ServiceMonitor
@@ -2484,8 +2226,6 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.livenessProbe.timeoutSeconds Liveness probe timeout for tfyController
     timeoutSeconds: 1
-    ## @param tfyController.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## tfyController.readinessProbe Readiness probe settings for the tfyController
   readinessProbe:
     ## @param tfyController.readinessProbe.failureThreshold Readiness probe failure threshold for tfyController
@@ -2498,8 +2238,6 @@ tfyController:
     successThreshold: 1
     ## @param tfyController.readinessProbe.timeoutSeconds Readiness probe timeout for tfyController
     timeoutSeconds: 1
-    ## @param tfyController.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS)
-    scheme: HTTP
   ## @param tfyController.nodeSelector Node selector for the tfyController
   nodeSelector: {}
   ## @param tfyController.affinity Affinity settings for the tfyController
@@ -2538,7 +2276,7 @@ tfyController:
     PROXY_SERVER_ENABLED: "true"
     DEPLOYMENT_CONTROLLER_ENABLED: "true"
     JOB_RUNS_CONTROLLER_ENABLED: "true"
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
+    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
     MIGRATION_CONTROLLER_ENABLED: "false"
     MIGRATION_CONTROLLER_INTERVAL_MINUTES: "60"
     MIGRATION_CONTROLLER_APPLICATION_HEALTH_CHECK_TIMEOUT_MINUTES: "5"
@@ -2549,11 +2287,6 @@ tfyController:
     TFY_AGENT_STATE_BUFFER_PROCESSOR_NATS_URL: nats://{{ .Release.Name }}-tfy-nats:4222
     DELETE_APPLICATIONS_CONTROLLER_ENABLED: "true"
     DEPLOYMENT_PROCESSING_CONCURRENCY_LIMIT: "5"
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: "/etc/tls/truefoundry"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    CLIENT_IP_HEADER: CF-Connecting-IP
 ###################################################################################################################
 ######################################## Tfy Workflow Admin #######################################################
 ###################################################################################################################
@@ -2572,7 +2305,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.179.0
+    tag: v0.148.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -2587,8 +2320,11 @@ tfyWorkflowAdmin:
   fullnameOverride: ""
   ## @param tfyWorkflowAdmin.podAnnotations Annotations for the tfyWorkflowAdmin pods
   podAnnotations: {}
-  ## @param tfyWorkflowAdmin.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyWorkflowAdmin.podSecurityContext [object] Security context for the tfyWorkflowAdmin pods
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
   ## @param tfyWorkflowAdmin.commonLabels Common labels for the tfyWorkflowAdmin pods
   commonLabels: {}
   ## @param tfyWorkflowAdmin.commonAnnotations [object] Common annotations for the tfyWorkflowAdmin pods
@@ -2601,9 +2337,7 @@ tfyWorkflowAdmin:
   deploymentAnnotations: {}
   ## @param tfyWorkflowAdmin.securityContext [object] Security context for the tfyWorkflowAdmin
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     capabilities:
       drop:
         - ALL
@@ -2737,9 +2471,6 @@ tfyWorkflowAdmin:
     ADMIN_CONFIG_FILE_PATH: /etc/config/flyteadmin-config.yaml
     SCHEDULER_CONFIG_FILE_PATH: /etc/config/flytescheduler-config.yaml
     CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-    SVC_FOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
-    TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
-    TLS_DIR: /etc/tls/truefoundry
 ###################################################################################################################
 ################################################# Tfy Nats  #######################################################
 ###################################################################################################################
@@ -2754,7 +2485,7 @@ tfyNats:
     ## @skip tfyNats.config.merge Configuration to merge
     merge:
       00$include: accounts/resolver.conf
-      max_payload: 5242880
+      max_payload: 2097152
       max_control_line: 10240
     ## tfyNats.config.cluster Cluster configuration
     cluster:
@@ -2805,7 +2536,7 @@ tfyNats:
       ## @param tfyNats.reloader.image.registry Registry for the reloader image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.reloader.image.repository Reloader image repository (without registry)
-      repository: "tfy-images/nats-server-config-reloader"
+      repository: "tfy-mirror/natsio/nats-server-config-reloader"
       ## @param tfyNats.reloader.image.tag Reloader image tag
       tag: "0.23.0"
     ## @param tfyNats.reloader.enabled Bool to enable config reloader
@@ -2836,9 +2567,9 @@ tfyNats:
       ## @param tfyNats.promExporter.image.registry Registry for the promExporter image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.promExporter.image.repository Exporter image repository (without registry)
-      repository: "tfy-images/prometheus-nats-exporter"
+      repository: "tfy-mirror/natsio/prometheus-nats-exporter"
       ## @param tfyNats.promExporter.image.tag Exporter image tag
-      tag: "0.20.1"
+      tag: "0.18.0"
     ## @param tfyNats.promExporter.enabled Bool to enable Prometheus exporter
     enabled: true
     ## @param tfyNats.promExporter.merge [object] Nats prom exporter container merge
@@ -2875,9 +2606,9 @@ tfyNats:
       ## @param tfyNats.container.image.registry Registry for the container image (overrides global.registry if specified)
       registry: ""
       ## @param tfyNats.container.image.tag Container image tag
-      tag: 2.14.2
+      tag: 2.12.6-alpine
       ## @param tfyNats.container.image.repository Container image repository (without registry)
-      repository: "tfy-images/nats"
+      repository: "tfy-mirror/nats"
     ## @skip tfyNats.container.patch Container patches
     patch:
       - op: add
@@ -2906,16 +2637,12 @@ tfyNats:
     #   allowPrivilegeEscalation: false
   podTemplate:
     ## @param tfyNats.podTemplate.merge [object] Pod template merges
-    merge:
-      spec:
-        securityContext:
-          $tplYaml: |-
-            {{- if .Values.global.podSecurityContext.enabled }}
-            fsGroup: 1001
-            runAsUser: 1001
-            runAsGroup: 1001
-            runAsNonRoot: true
-            {{- end }}
+    merge: {}
+    # spec:
+    #   securityContext:
+    #     fsGroup: 1000
+    #     runAsUser: 1000
+    #     runAsNonRoot: true
     ## @param tfyNats.podTemplate.patch [array] Pod template patches
     patch:
       - op: add
@@ -2969,322 +2696,15 @@ tfy-llm-gateway:
   ## @param tfy-llm-gateway.commonAnnotations [object] Annotations for the tfy-llm-gateway
   commonAnnotations:
     argocd.argoproj.io/sync-wave: "5"
-  ## @param tfy-llm-gateway.gatewayId Unique gateway identifier populated as GATEWAY_ID
-  gatewayId: default
   ## @param tfy-llm-gateway.env [object] Environment variables for tfy-llm-gateway
   env:
     CONTROL_PLANE_URL: http://{{ .Release.Name }}-tfy-proxy:8080
     PUBLIC_CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
-  ## tfy-llm-gateway.proxy TLS sidecar (tfy-proxy) overrides.
-  ## The sidecar image is built from truefoundry-frontend-app, not the gateway
-  ## repo. Pinning the tag here (parent-chart override) lets a frontend-app-only
-  ## release update deployed sidecars without republishing the gateway OCI
-  ## chart. Gateway Chart.yaml versions must stay on the gateway image-tag line;
-  ## inventing a parallel version from the umbrella chart_version would collide
-  ## when a later gateway release reuses that number (OCI publish skips).
-  proxy:
-    ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
-    image:
-      ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.179.0"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
     networkPolicy:
       enabled: false
-  ## tfy-llm-gateway.sandbox Keep the gateway-bundled sandbox off on the control
-  ## plane (dedicated unprivileged identity / ingress not wired yet).
-  sandbox:
-    devMode:
-      ## @param tfy-llm-gateway.sandbox.devMode.enabled Run tfy-sandbox-server with the bundled gateway
-      enabled: false
-  ## Schedule dispatch is owned by the TrueForge controller; keep legacy LTS off.
-  agentsLtsWriteJob:
-    ## @param tfy-llm-gateway.agentsLtsWriteJob.enabled Agents LTS write CronJob (superseded by TrueForge)
-    enabled: false
-###################################################################################################################
-####################################### Shared control-plane Redis ################################################
-###################################################################################################################
-## @section redis Shared control-plane Redis (bundled)
-## `redis` and `externalRedis` are mutually exclusive. TrueForge is the only consumer today
-## (via trueforge.externalRedis); the bundled LLM gateway can be pointed at the same instance
-## later so a CP+GP install does not run two Redises forever.
-## Turn both off on dedicated gateway planes and on SaaS, where TrueForge uses its own ElastiCache.
-redis:
-  ## @param redis.enabled Deploy a Redis for the control plane
-  enabled: false
-  ## @param redis.nameOverride Name for this Redis, which keeps it distinct from the gateway's bundled Redis; the Service name is release-prefixed
-  nameOverride: truefoundry-redis
-  ## @skip redis.global Global settings for the bundled Redis
-  global:
-    security:
-      allowInsecureImages: true
-  ## @param redis.architecture Redis architecture
-  architecture: standalone
-  ## redis.auth Authentication configuration
-  auth:
-    ## @param redis.auth.enabled Enable Redis authentication (off: the instance stays inside the cluster trust boundary)
-    enabled: false
-  ## redis.image Image for Redis
-  image:
-    ## @param redis.image.registry Registry for the Redis image
-    registry: tfy.jfrog.io
-    ## @param redis.image.repository Repository for the Redis image (without registry)
-    repository: tfy-mirror/bitnamilegacy/redis
-    ## @param redis.image.tag Tag for the Redis image
-    tag: 8.2.1-debian-12-r0
-  ## @skip redis.networkPolicy NetworkPolicy for the bundled Redis (the chart-level networkPolicy section covers it)
-  networkPolicy:
-    enabled: false
-  ## redis.master Master configuration
-  master:
-    ## redis.master.persistence Persistence configuration
-    persistence:
-      ## @param redis.master.persistence.enabled Enable persistence
-      enabled: true
-      ## @param redis.master.persistence.size Persistence volume size
-      size: 8Gi
-    ## @param redis.master.nodeSelector [object] Node selector for the Redis master pod
-    nodeSelector: {}
-    ## @skip redis.master.tolerations Tolerations for the Redis master pod
-    tolerations:
-      - key: class.truefoundry.io/control-plane
-        effect: NoSchedule
-        operator: Exists
-      - key: "cloud.google.com/gke-spot"
-        value: "true"
-        effect: NoSchedule
-        operator: Equal
-      - key: kubernetes.azure.com/scalesetpriority
-        value: spot
-        effect: NoSchedule
-        operator: Equal
-## @section externalRedis Existing Redis for the control plane
-## Mutually exclusive with `redis`. Host or Sentinel. There is no URL field.
-## When externalSecret is false and trueforge is enabled, host/port/db/auth/tls/sentinel
-## are copied into the trueforge-redis-creds Secret. TrueForge reads that Secret.
-## Fields other than the two passwords must be string literals. A ${k8s-secret/...}
-## string is not copied into the Secret, because a Secret cannot reference another Secret.
-## For a password that already lives in a Secret, set the same string on the password
-## field and on trueforge.env.REDIS_PASSWORD or trueforge.env.REDIS_SENTINEL_PASSWORD:
-##   externalRedis:
-##     auth:
-##       password: "${k8s-secret/my-secret/password}"
-##   trueforge:
-##     env:
-##       REDIS_PASSWORD: "${k8s-secret/my-secret/password}"
-## The chart stores an empty password key. The pod reads my-secret.
-## Set externalSecret: true to skip trueforge-redis-creds and set trueforge.env yourself.
-externalRedis:
-  ## @param externalRedis.enabled Use an existing Redis instead of the bundled one. Required for host, sentinel, and externalSecret to take effect.
-  enabled: false
-  ## @param externalRedis.externalSecret Do not create trueforge-redis-creds. Set Redis on trueforge.env.
-  externalSecret: false
-  ## @param externalRedis.host Standalone Redis host
-  host: ""
-  ## @param externalRedis.port Redis port
-  port: 6379
-  ## @param externalRedis.db Redis database
-  db: 0
-  auth:
-    ## @param externalRedis.auth.username Redis username. A Secret reference belongs on trueforge.env.REDIS_USERNAME, with this field left empty.
-    username: ""
-    ## @param externalRedis.auth.password Redis password. A literal is copied into trueforge-redis-creds. A ${k8s-secret/<secret>/<key>} string is not copied; set the same string on trueforge.env.REDIS_PASSWORD. The key must not contain /.
-    password: ""
-  tls:
-    ## @param externalRedis.tls.enabled Enable TLS
-    enabled: false
-    ## @param externalRedis.tls.caCert CA certificate path or PEM
-    caCert: ""
-    ## @param externalRedis.tls.rejectUnauthorized Verify the server certificate. Set false only for self-signed certs without a CA
-    rejectUnauthorized: true
-    ## @param externalRedis.tls.serverName TLS server name
-    serverName: ""
-    ## @param externalRedis.tls.cert Client certificate path or PEM
-    cert: ""
-    ## @param externalRedis.tls.key Client key path or PEM
-    key: ""
-    ## @param externalRedis.tls.keyPassphrase Client key passphrase
-    keyPassphrase: ""
-  sentinel:
-    ## @param externalRedis.sentinel.enabled Enable Redis Sentinel
-    enabled: false
-    ## @param externalRedis.sentinel.nodes [array] Sentinel nodes as host:port entries
-    nodes: []
-    ## @param externalRedis.sentinel.masterName Sentinel master name
-    masterName: ""
-    auth:
-      ## @param externalRedis.sentinel.auth.username Sentinel username
-      username: ""
-      ## @param externalRedis.sentinel.auth.password Sentinel password. A literal is copied into trueforge-redis-creds. A ${k8s-secret/<secret>/<key>} string is not copied; set the same string on trueforge.env.REDIS_SENTINEL_PASSWORD. The key must not contain /.
-      password: ""
-###################################################################################################################
-####################################### TrueForge #################################################################
-###################################################################################################################
-## @section trueforge TrueForge server and schedule controller
-trueforge:
-  ## @param trueforge.enabled Deploy TrueForge on the control plane (turn off on dedicated gateway planes)
-  enabled: false
-  ## @param trueforge.truefoundry.devSandboxServerEnabled Deploy a dedicated tfy-sandbox-server for TrueForge (Service `<release>-trueforge-tfy-sandbox-server`) and wire TRUEFOUNDRY_SANDBOX_* env to it
-  truefoundry:
-    devSandboxServerEnabled: false
-  ## TrueForge uses the control-plane database rather than its bundled PostgreSQL.
-  ## @skip trueforge.postgresql Bundled PostgreSQL (disabled)
-  postgresql:
-    enabled: false
-  ## @param trueforge.externalPostgres [object] Postgres for TrueForge (schema `trueforge`, hardcoded in the app). Defaults to the control-plane database via truefoundry-creds (global.database / devMode / existingTruefoundryCredsSecret). Override this object to point TrueForge at a different Postgres. Do not also set POSTGRES_* under trueforge.env - the dependency chart replaces those keys in place and they would win over this section.
-  externalPostgres:
-    enabled: true
-    host:
-      valueFrom:
-        secretKeyRef:
-          name: truefoundry-creds
-          key: DB_HOST
-    port: 5432
-    database:
-      valueFrom:
-        secretKeyRef:
-          name: truefoundry-creds
-          key: DB_NAME
-    user:
-      valueFrom:
-        secretKeyRef:
-          name: truefoundry-creds
-          key: DB_USERNAME
-    password:
-      valueFrom:
-        secretKeyRef:
-          name: truefoundry-creds
-          key: DB_PASSWORD
-    # Matches the other control-plane services: TLS off by default. Set
-    # require/verify-* per install; verify-* trusts the CA bundle from
-    # global.customCA. prefer/require/verify-ca/verify-full all enable TLS with
-    # Node default verification (≈ verify-full). Use no-verify to encrypt
-    # without verifying the server cert.
-    sslMode: disable
-    # Optional client / CA TLS. Mount PEMs via trueforge.extraVolumes /
-    # extraVolumeMounts, then set these to the in-pod paths.
-    sslCertPath: ""
-    sslKeyPath: ""
-    sslCaPath: ""
-  ## TrueForge always uses an external Redis in control-plane installations.
-  ## @skip trueforge.redis Bundled Redis (disabled)
-  redis:
-    enabled: false
-  ## @param trueforge.externalRedis [object] Enables external Redis on TrueForge. Connection settings come from trueforge.env, which defaults to trueforge-redis-creds.
-  externalRedis:
-    enabled: true
-  ## @param trueforge.apiKey [object] Controller to server key, generated and preserved by the bootstrap job (or rendered from global.trueforgeApiKey)
-  apiKey:
-    valueFrom:
-      secretKeyRef:
-        name: trueforge-api-key
-        key: TRUEFORGE_API_KEY
-  ## @param trueforge.env [object] Control-plane integration, passed through the dependency chart's generic env map.
-  ## The TrueForge chart is platform-neutral, so everything TrueFoundry-specific is set from here.
-  ## Keys that the dependency chart already computes are replaced in place, not duplicated.
-  ## Redis host/port/db/auth/tls/sentinel default to trueforge-redis-creds.
-  ## Override one key here to point it at a Secret you already run. The reference
-  ## must name that Secret, and the key must not contain /:
-  ##   trueforge:
-  ##     env:
-  ##       REDIS_PASSWORD: "${k8s-secret/redis-passwords/application_password}"
-  ##       REDIS_SENTINEL_PASSWORD: "${k8s-secret/redis-passwords/application_password}"
-  ## Set a key to null to drop the override and let the dependency chart compute the value itself.
-  ## Sandbox integration: trueforge.truefoundry.devSandboxServerEnabled deploys a dedicated
-  ## sandbox server and computes TRUEFOUNDRY_SANDBOX_* in the dependency chart; set those
-  ## keys here only to override it (e.g. an external provider needing _API_KEY).
-  env:
-    REDIS_HOST: "${k8s-secret/trueforge-redis-creds/REDIS_HOST}"
-    REDIS_PORT: "${k8s-secret/trueforge-redis-creds/REDIS_PORT}"
-    REDIS_DB: "${k8s-secret/trueforge-redis-creds/REDIS_DB}"
-    REDIS_USERNAME: "${k8s-secret/trueforge-redis-creds/REDIS_USERNAME}"
-    REDIS_PASSWORD: "${k8s-secret/trueforge-redis-creds/REDIS_PASSWORD}"
-    REDIS_TLS_ENABLED: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_ENABLED}"
-    REDIS_TLS_CA_CERT: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_CA_CERT}"
-    REDIS_TLS_REJECT_UNAUTHORIZED: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_REJECT_UNAUTHORIZED}"
-    REDIS_TLS_SERVERNAME: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_SERVERNAME}"
-    REDIS_TLS_CERT: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_CERT}"
-    REDIS_TLS_KEY: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_KEY}"
-    REDIS_TLS_KEY_PASSPHRASE: "${k8s-secret/trueforge-redis-creds/REDIS_TLS_KEY_PASSPHRASE}"
-    REDIS_SENTINEL_ENABLED: "${k8s-secret/trueforge-redis-creds/REDIS_SENTINEL_ENABLED}"
-    REDIS_SENTINEL_NODES: "${k8s-secret/trueforge-redis-creds/REDIS_SENTINEL_NODES}"
-    REDIS_SENTINEL_MASTER_NAME: "${k8s-secret/trueforge-redis-creds/REDIS_SENTINEL_MASTER_NAME}"
-    REDIS_SENTINEL_USERNAME: "${k8s-secret/trueforge-redis-creds/REDIS_SENTINEL_USERNAME}"
-    REDIS_SENTINEL_PASSWORD: "${k8s-secret/trueforge-redis-creds/REDIS_SENTINEL_PASSWORD}"
-    SENTRY_ENABLED:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: SENTRY_ENABLED
-    TRUEFOUNDRY_AUTH_SERVER_URL:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: TRUEFOUNDRY_AUTH_SERVER_URL
-    TRUEFOUNDRY_TENANT_NAME:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: TRUEFOUNDRY_TENANT_NAME
-    SENTRY_ADDITIONAL_TAGS: '{"priority":"p1","team":"trueforge-team"}'
-    TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: TRUEFOUNDRY_SERVICEFOUNDRY_SERVER_URL
-    TRUEFOUNDRY_API_KEY:
-      valueFrom:
-        secretKeyRef:
-          name: truefoundry-creds
-          key: TFY_API_KEY
-    TRUEFOUNDRY_MTLS_ENABLED:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: TRUEFOUNDRY_MTLS_ENABLED
-    # Both mTLS hops share truefoundry-internal-tls, so this points at the
-    # directory the dependency chart already mounts for its inbound listener.
-    TRUEFOUNDRY_MTLS_CERTS_DIR: /etc/tls/truefoundry
-    # Overrides of values the dependency chart computes from its own fields.
-    PUBLIC_BASE_URL:
-      valueFrom:
-        configMapKeyRef:
-          name: trueforge-config
-          key: PUBLIC_BASE_URL
-  ## trueforge.server TrueForge server (API and UI)
-  server:
-    ## @param trueforge.server.deploymentAnnotations [object] Annotations for the TrueForge server Deployment (rolls out after servicefoundry-server wave 2, services wave 3, gateway and sandbox wave 5)
-    deploymentAnnotations:
-      argocd.argoproj.io/sync-wave: "6"
-    ## @param trueforge.server.publicBaseUrl Public base URL, injected from the trueforge-config ConfigMap instead
-    publicBaseUrl: ""
-    ## @param trueforge.server.extraEnv [array] Extra environment variables for TrueForge server
-    extraEnv:
-      - name: SWAGGER_ENABLED
-        value: "false"
-  ## trueforge.controller TrueForge schedule controller
-  controller:
-    ## @param trueforge.controller.enabled Deploy the TrueForge schedule controller
-    enabled: true
-    ## @param trueforge.controller.deploymentAnnotations [object] Annotations for the TrueForge controller Deployment (must roll out after the server, never in the same wave)
-    deploymentAnnotations:
-      argocd.argoproj.io/sync-wave: "7"
-    # controller.serverUrl stays empty: the chart computes the in-cluster
-    # Service URL (https when mTLS is on).
-  ## @param trueforge.mtls [object] Inbound mTLS, kept in sync with global.mTLS.enabled
-  mtls:
-    enabled: false
-    secretName: truefoundry-internal-tls
-    certsDir: /etc/tls/truefoundry
-  ## @param trueforge.imagePullSecrets [array] Image pull secrets for TrueForge (empty inherits global.imagePullSecrets)
-  imagePullSecrets: []
-  ## @param trueforge.nodeSelector [object] Node selector for TrueForge (merged over global.nodeSelector)
-  nodeSelector: {}
-  ## @param trueforge.affinity [object] Affinity for TrueForge (merged over global.affinity)
-  affinity: {}
-  ## @param trueforge.tolerations [array] Tolerations for TrueForge (appended to global.tolerations)
-  tolerations: []
 ###################################################################################################################
 ####################################### TrueFoundry OTel Collector ################################################
 ###################################################################################################################
@@ -3365,7 +2785,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.179.0"
+    tag: "v0.148.1"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -3392,8 +2812,6 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
-      ## @param deltaFusionIngestor.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
     ## deltaFusionIngestor.healthcheck.liveness Liveness probe settings
     liveness:
       ## @param deltaFusionIngestor.healthcheck.liveness.path Liveness probe path
@@ -3408,8 +2826,6 @@ deltaFusionIngestor:
       successThreshold: 1
       ## @param deltaFusionIngestor.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
-      ## @param deltaFusionIngestor.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
   ## deltaFusionIngestor.storage Persistent volume claim settings
   storage:
     ## @param deltaFusionIngestor.storage.enabled Bool to enable storage
@@ -3427,9 +2843,9 @@ deltaFusionIngestor:
   imagePullSecrets: []
   ## @param deltaFusionIngestor.imagePullPolicy Image pull policy override
   imagePullPolicy: IfNotPresent
-  ## @skip deltaFusionIngestor.command Container command. Defaults to the jemalloc build of the ingestor; set to /usr/local/bin/ingestor to use the snmalloc build
+  ## @skip deltaFusionIngestor.command
   command:
-    - "/usr/local/bin/ingestor-jemalloc"
+    - "/usr/local/bin/ingestor"
   ## @skip deltaFusionIngestor.args
   args: []
   ## @param deltaFusionIngestor.nameOverride Name override
@@ -3444,18 +2860,16 @@ deltaFusionIngestor:
   podLabels: {}
   ## @param deltaFusionIngestor.podAnnotations Pod-level annotations
   podAnnotations: {}
-  ## @param deltaFusionIngestor.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; adds fsGroup below.
+  ## @param deltaFusionIngestor.podSecurityContext [object] Pod security context for the container
   podSecurityContext:
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
-    ## Enable/disable this to override the global.podSecurityContext
-    # enabled: true
-    ## runAsNonRoot and runAsUser inherited from global.podSecurityContext
+    enabled: true
     fsGroup: 100
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionIngestor.securityContext [object] Security context for the container
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -3528,24 +2942,18 @@ deltaFusionIngestor:
     labels: {}
   ## @param deltaFusionIngestor.env [object] Additional environment variables
   env:
-    RUST_LOG: info,deltafusion_ingestor::routers::flight_server=warn
+    RUST_LOG: info
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     PAYLOAD_SIZE_LIMIT: "1073741824"
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
+    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "false"
     GRPC_PORT: "8001"
     ENABLE_ARROW_FLIGHT_SERVER: "{{ .Values.deltaFusionQueryServer.enableLiveLogs }}"
     FLIGHT_DO_GET_MAX_ENCODED_MESSAGE_BYTES: "3500000"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    DELTA_KERNEL_IGNORE_COLUMNS: EventsAttributestring,EventsAttributesstring
-    COMPRESSION_CODEC: snappy
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Compaction ###############################################
 ###################################################################################################################
@@ -3560,7 +2968,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.179.0"
+    tag: "v0.148.1"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -3621,18 +3029,16 @@ deltaFusionCompaction:
   podLabels: {}
   ## @param deltaFusionCompaction.podAnnotations Annotations for the deltaFusionCompaction cron job
   podAnnotations: {}
-  ## @param deltaFusionCompaction.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; adds fsGroup below.
+  ## @param deltaFusionCompaction.podSecurityContext [object] Security context for the deltaFusionCompaction cron job
   podSecurityContext:
     # In openshift clusters, to let controller overwrite the security context, we need to remove this default value
-    ## Enable/disable this to override the global.podSecurityContext
-    # enabled: true
-    ## runAsNonRoot and runAsUser inherited from global.podSecurityContext
+    enabled: true
     fsGroup: 100
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionCompaction.securityContext [object] Security context for the deltaFusionCompaction cron job
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     privileged: false
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
@@ -3653,17 +3059,7 @@ deltaFusionCompaction:
   ## @param deltaFusionCompaction.resourceTierOverride Resource tier override for the deltaFusionCompaction cron job
   resourceTierOverride: ""
   ## @param deltaFusionCompaction.resources Resource requests and limits for the deltaFusionCompaction cron job
-  ## When empty, CPU/memory/ephemeral-storage come from the resource tier (global.resourceTier, default medium).
-  ## Partial overrides merge on top of the tier defaults (missing keys are filled from the tier).
   resources: {}
-  ## @param deltaFusionCompaction.additionalJobs [object] Extra compaction CronJobs. Each entry is deep-merged onto deltaFusionCompaction (nameOverride/fullnameOverride/additionalJobs are not inherited). Set enabled: false on an entry to disable it.
-  additionalJobs:
-    metrics:
-      env:
-        COMPACTION_TABLES: "gateway_request_metrics,gateway_model_metrics,gateway_real_model_metrics,gateway_virtual_model_metrics,gateway_mcp_metrics,gateway_guardrail_metrics,gateway_config_metrics"
-    agents:
-      env:
-        COMPACTION_TABLES: "gateway_feedbacks,gateway_agent_metrics,agent_session_turns,agent_session_events"
   ## @param deltaFusionCompaction.extraVolumes Extra volumes for the deltaFusionCompaction cron job
   extraVolumes: []
   ## @param deltaFusionCompaction.extraVolumeMounts Extra volume mounts for the deltaFusionCompaction cron job
@@ -3710,7 +3106,7 @@ deltaFusionCompaction:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     AWS_EC2_METADATA_DISABLED: "true"
     AUTH_SERVER_URL: https://auth.truefoundry.com
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
+    SENTRY_ENABLED: "{{ .Values.global.enableSentry }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
     CLEANUP_EXPIRED_LOGS: "true"
     COMPACTION_ENABLED: "true"
@@ -3721,16 +3117,6 @@ deltaFusionCompaction:
     DELTA_LOG_BUFFER_SIZE: "64"
     SERVICEFOUNDRY_CONCURRENCY: "5"
     VACUUM_PARALLELISM: "64"
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    OBJECT_STORE_PARALLELISM: "64"
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    DELTA_KERNEL_IGNORE_COLUMNS: EventsAttributestring,EventsAttributesstring
-    DELTA_KERNEL_PREFER_LARGE_VARLEN: "false"
-    COMPRESSION_CODEC: snappy
-    COMPACTION_TABLES: traces,traces_v2
-    COMPACTION_TARGET_FILE_SIZE_BYTES: '1073741824'
-    DELTA_TABLE_CACHE_TTL_SECONDS: '10800'
 ###################################################################################################################
 ######################################## Tfy DeltaFusion Query Server #############################################
 ###################################################################################################################
@@ -3763,7 +3149,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.179.0
+    tag: v0.148.1
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -3783,17 +3169,18 @@ deltaFusionQueryServer:
   podAnnotations:
     karpenter.sh/do-not-disrupt: "true"
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
-  ## @param deltaFusionQueryServer.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param deltaFusionQueryServer.podSecurityContext [object] Security context for the deltaFusionQueryServer pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param deltaFusionQueryServer.commonLabels Common labels for the deltaFusionQueryServer pods
   commonLabels: {}
   ## @param deltaFusionQueryServer.commonAnnotations Common annotations for the deltaFusionQueryServer pods
   commonAnnotations: {}
   ## @param deltaFusionQueryServer.securityContext [object] Security context for the deltaFusionQueryServer
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -3821,8 +3208,6 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.liveness.failureThreshold Failure threshold
       failureThreshold: 3
-      ## @param deltaFusionQueryServer.healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
     ## deltaFusionQueryServer.healthcheck.readiness Readiness probe settings
     readiness:
       ## @param deltaFusionQueryServer.healthcheck.readiness.path Readiness probe path
@@ -3837,8 +3222,6 @@ deltaFusionQueryServer:
       successThreshold: 1
       ## @param deltaFusionQueryServer.healthcheck.readiness.failureThreshold Failure threshold
       failureThreshold: 2
-      ## @param deltaFusionQueryServer.healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS)
-      scheme: HTTP
   ## @param deltaFusionQueryServer.nodeSelector Node selector for the deltaFusionQueryServer
   nodeSelector: {}
   ## @param deltaFusionQueryServer.affinity Affinity settings for the deltaFusionQueryServer
@@ -3958,15 +3341,10 @@ deltaFusionQueryServer:
     SERVICEFOUNDRY_SERVER_URL: http://{{ .Release.Name }}-servicefoundry-server:3000
     TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
     AZURE_BLOB_USE_START_FROM: "true"
-    SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
-    AUTH_SERVER_URL: "https://auth.truefoundry.com"
+    SENTRY_ENABLED: '{{ .Values.global.enableSentry | default "false" }}'
+    AUTH_SERVER_URL: "{{ .Values.global.authServerUrl }}"
     TENANT_NAME: "{{ .Values.global.tenantName }}"
-    ALLOCATOR: jemalloc
-    TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
-    TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
-    TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
-    TLS_DIR: /etc/tls/truefoundry
-    DELTA_KERNEL_IGNORE_COLUMNS: EventsAttributestring,EventsAttributesstring
+    ALLOCATOR: snmalloc
   ## @param deltaFusionQueryServer.enableLiveLogs Bool to enable live logs feature for the deltaFusionQueryServer
   enableLiveLogs: true
 ## @section tfyProxy Truefoundry tfy proxy values
@@ -3986,21 +3364,11 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.179.0"
+    tag: "v0.148.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
-  ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.
-  clientIp:
-    ## @param tfyProxy.clientIp.enabled Trust upstream proxies and preserve the real client IP in outbound X-Forwarded-For.
-    enabled: false
-    ## @param tfyProxy.clientIp.trustedProxies CIDR ranges (or a Caddy shortcut like `private_ranges`) whose forwarding headers Caddy trusts.
-    trustedProxies: "private_ranges"
-    ## @param tfyProxy.clientIp.headers Space-separated headers Caddy reads to derive the real client IP, in priority order. Cf-Connecting-Ip (single value) is preferred, then X-Forwarded-For.
-    headers: "Cf-Connecting-Ip X-Forwarded-For"
   ## @param tfyProxy.useMcpV2 Enable MCP v2 OAuth callback reroutes (maps legacy MCP OAuth callback paths to the new /mcp/oauth2/callback endpoints in the tfy-proxy Caddyfile).
   useMcpV2: true
-  ## @param tfyProxy.restrictInternalApis Restrict access to internal-only servicefoundry APIs (/api/svc/internal/*) from external users. When enabled, the tfy-proxy Caddyfile returns 403 for these paths; in-cluster callers reach them by hitting servicefoundry-server directly (bypassing this proxy).
-  restrictInternalApis: false
   ## @param tfyProxy.existingProxyConfigMapName Name of an existing ConfigMap containing Caddy configuration for tfyProxy. The ConfigMap must include `Caddyfile` as the key.
   existingProxyConfigMapName: ""
   ## @param tfyProxy.proxyConfigOverride Nginx proxy configuration override for tfyProxy
@@ -4017,8 +3385,11 @@ tfyProxy:
   podAnnotations: {}
   ## @param tfyProxy.podLabels [object] Labels for the tfyProxy pods
   podLabels: {}
-  ## @param tfyProxy.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
-  podSecurityContext: {}
+  ## @param tfyProxy.podSecurityContext [object] Security context for the tfyProxy pods
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
   ## @param tfyProxy.commonAnnotations Common annotations for the tfyProxy pods
   commonAnnotations: {}
   ## @param tfyProxy.deploymentLabels [object] Deployment-specific labels for the tfyProxy pods
@@ -4029,9 +3400,7 @@ tfyProxy:
   commonLabels: {}
   ## @param tfyProxy.securityContext [object] Security context for the tfyProxy
   securityContext:
-    ## Enable/disable this to override the global.containerSecurityContext
-    # enabled: true
-    runAsNonRoot: true
+    enabled: true
     readOnlyRootFilesystem: true
     allowPrivilegeEscalation: false
     capabilities:
@@ -4079,8 +3448,6 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.livenessProbe.timeoutSeconds Liveness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.livenessProbe.scheme HTTP probe scheme (HTTP or HTTPS). Ignored when global.proxy.tls.enabled is true.
-    scheme: HTTP
   ## tfyProxy.readinessProbe Readiness probe settings for the tfyProxy
   readinessProbe:
     ## @param tfyProxy.readinessProbe.failureThreshold Readiness probe failure threshold for tfyProxy
@@ -4093,8 +3460,6 @@ tfyProxy:
     successThreshold: 1
     ## @param tfyProxy.readinessProbe.timeoutSeconds Readiness probe timeout for tfyProxy
     timeoutSeconds: 1
-    ## @param tfyProxy.readinessProbe.scheme HTTP probe scheme (HTTP or HTTPS). Ignored when global.proxy.tls.enabled is true.
-    scheme: HTTP
   ## @param tfyProxy.nodeSelector Node selector for the tfyProxy
   nodeSelector: {}
   ## @param tfyProxy.affinity Affinity settings for the tfyProxy
