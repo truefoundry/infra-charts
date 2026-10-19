@@ -1,9 +1,12 @@
 networkPolicy:
   enabled: true
-  kubeAPIServiceIP: 172.20.0.1
-  kubeAPICIDRs:
-    - 10.0.0.0/20
-  controlPlane:
-    internet: true
-    namespaces:
-      - namespace: truefoundry
+  tfyAgent:
+    ingressFrom:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: prometheus
+  sdsServer:
+    ingressFrom:
+      - podSelector:
+          matchLabels:
+            app: sds-client
