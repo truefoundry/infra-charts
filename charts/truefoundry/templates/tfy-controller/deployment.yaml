@@ -21,9 +21,11 @@ spec:
         {{- include "tfy-controller.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-controller.serviceAccountName" . }}
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyController.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      {{- if .Values.tfyController.podSecurityContext.enabled }}
+      {{- with .Values.tfyController.podSecurityContext }}
       securityContext:
-        {{- . | nindent 8 }}
+        {{- toYaml (omit . "enabled") | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -31,9 +33,11 @@ spec:
       {{- end }}
       containers:
         - name: "tfy-controller"
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyController.securityContext "global" .Values.global.containerSecurityContext)) }}
+          {{- if .Values.tfyController.securityContext.enabled }}
+          {{- with .Values.tfyController.securityContext }}
           securityContext:
-            {{- . | nindent 12 }}
+            {{- toYaml (omit . "enabled") | nindent 12 }}
+          {{- end }}
           {{- end }}
           env:
             {{- include "tfy-controller.env" . | trim | nindent 12 }}
@@ -49,11 +53,7 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.tfyController.livenessProbe.scheme }}
-              {{- end }}
+              scheme: HTTP
             failureThreshold: {{ .Values.tfyController.livenessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.tfyController.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.tfyController.livenessProbe.periodSeconds }}
@@ -68,11 +68,7 @@ spec:
             httpGet:
               path: /healthy
               port: {{ .Values.tfyController.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.tfyController.readinessProbe.scheme }}
-              {{- end }}
+              scheme: HTTP
           volumeMounts:
             {{- include "tfy-controller.volumeMounts" . | nindent 12 }}
       imagePullSecrets:

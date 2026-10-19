@@ -163,14 +163,12 @@ Expand the name of the chart.
     secretKeyRef:
       name: {{ $.Values.sparkHistoryServer.envSecretName }}
       key: {{ index (regexSplit "/" $val -1) 1 | trimSuffix "}" }}
-      optional: true
 {{- else if eq (regexSplit "/" $val -1 | len) 3 }}
 - name: {{ $key }}
   valueFrom:
     secretKeyRef:
       name: {{ index (regexSplit "/" $val -1) 1 }}
       key: {{ index (regexSplit "/" $val -1) 2 | trimSuffix "}" }}
-      optional: true
 {{- else }}
 {{- fail "Invalid secret supplied" }}
 {{- end }}
@@ -183,9 +181,6 @@ Expand the name of the chart.
 
 {{- define "spark-history-server.volumes" -}}
 {{- $volumes := list -}}
-{{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "spark-history-server.resourceTier" "defaultResourcesPrefix" "spark-history-server.defaultResources" "resourcesValues" .Values.sparkHistoryServer.resources) | fromYaml }}
-{{- $sparkLogsSizeLimit := .Values.sparkHistoryServer.emptyDir.sparkLogs.sizeLimit | default $tmpVolume.emptyDir.sizeLimit -}}
-{{- $volumes = append $volumes (dict "name" "spark-logs" "emptyDir" (dict "sizeLimit" $sparkLogsSizeLimit)) -}}
 {{- if .Values.sparkHistoryServer.extraVolumes }}
   {{- range .Values.sparkHistoryServer.extraVolumes }}
     {{- $volumes = append $volumes . }}
@@ -195,19 +190,12 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
-{{- $tmpSizeLimit := .Values.sparkHistoryServer.emptyDir.tmpdir.sizeLimit | default $tmpVolume.emptyDir.sizeLimit -}}
-{{- $volumes = append $volumes (dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $tmpSizeLimit)) -}}
 {{- $volumes | toYaml -}}
 {{- end -}}
 
 
 {{- define "spark-history-server.volumeMounts" -}}
 {{- $volumeMounts := list -}}
-{{- $volumeMounts = append $volumeMounts (dict "name" "spark-logs" "mountPath" "/usr/lib/spark/logs") -}}
 {{- if .Values.sparkHistoryServer.extraVolumeMounts }}
   {{- range .Values.sparkHistoryServer.extraVolumeMounts }}
     {{- $volumeMounts = append $volumeMounts . }}
@@ -217,12 +205,6 @@ Expand the name of the chart.
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
-{{- end -}}
-{{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
-{{- $volumeMounts = append $volumeMounts $tmpMount -}}
 {{- $volumeMounts | toYaml -}}
 {{- end -}}
 
