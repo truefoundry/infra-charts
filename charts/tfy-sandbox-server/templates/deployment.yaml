@@ -44,10 +44,16 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
-      {{- $initContainers := include "tfy-sandbox-server.customCA.initContainer" . | trim }}
-      {{- if $initContainers }}
+      {{- $volPermInit := include "tfy-sandbox-server.volumePermissions.initContainer" . | trim }}
+      {{- $caInit := include "tfy-sandbox-server.customCA.initContainer" . | trim }}
+      {{- if or $volPermInit $caInit }}
       initContainers:
-        {{- $initContainers | nindent 8 }}
+        {{- if $volPermInit }}
+        {{- $volPermInit | nindent 8 }}
+        {{- end }}
+        {{- if $caInit }}
+        {{- $caInit | nindent 8 }}
+        {{- end }}
       {{- end }}
       containers:
         - name: sandbox-server
@@ -135,12 +141,13 @@ spec:
           {{- end }}
         {{- if and $readOnlyRoot (not $userMountsTmp) }}
         - name: writable-tmp
-          {{- with .Values.tmpVolume.sizeLimit }}
           emptyDir:
+            {{- with .Values.tmpVolume.medium }}
+            medium: {{ . }}
+            {{- end }}
+            {{- with .Values.tmpVolume.sizeLimit }}
             sizeLimit: {{ . }}
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
+            {{- end }}
         {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}

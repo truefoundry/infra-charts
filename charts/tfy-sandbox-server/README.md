@@ -18,18 +18,21 @@ http://<release-name>-tfy-sandbox-server:8080
 
 ## Security context
 
-From 0.3.5 the container has a read-only root filesystem, no privilege escalation, all capabilities dropped and the `RuntimeDefault` seccomp profile.
+From 0.3.5 the container runs as non-root (UID/GID **1000**), with a read-only root filesystem, no privilege escalation, all capabilities dropped and the `RuntimeDefault` seccomp profile. Requires the non-root image from [INFRA-1268](https://linear.app/truefoundry/issue/INFRA-1268/get-tfy-sandbox-server-to-run-as-nonroot) / [tfy-sandbox-server#29](https://github.com/truefoundry/tfy-sandbox-server/pull/29).
 
-- **Runs as root.** The image's supervisord (which starts gunicorn and the NATS bridge) needs root, so the pod sets no `runAsNonRoot`, and a parent chart's `global.podSecurityContext` is not inherited. Running non-root needs an image change.
-- **Writable paths.** Sandbox commands run with `HOME` set to their own directory on the sandbox volume (`persistence.mountPath`), and the chart mounts an emptyDir at `/tmp` (`tmpVolume.sizeLimit`) with `XDG_RUNTIME_DIR=/tmp`. Both are skipped if `extraVolumeMounts` / `extraEnv` already provide them.
+- **Non-root.** `runAsNonRoot` / `runAsUser` / `runAsGroup` 1000 match the image's `sandbox` user. A parent chart's `global.podSecurityContext` is not inherited (this chart sets its own).
+- **Sandbox PVC ownership.** Prefer `fsGroup: 1000` with `fsGroupChangePolicy: OnRootMismatch` so the kubelet (when the CSI driver supports it) makes the volume group-writable. For upgrades from root-owned sandbox files, or StorageClasses that ignore `fsGroup`, `volumePermissions.enabled` (default `true`) runs a root initContainer that `chown -R`s `persistence.mountPath`. Turn it off once ownership is fixed if you want to skip the init on every start.
+- **Writable `/tmp`.** With a read-only root, the chart mounts a **memory-backed** emptyDir at `/tmp` (`tmpVolume.medium: Memory`, `tmpVolume.sizeLimit`) and sets `XDG_RUNTIME_DIR=/tmp` for supervisord. Both are skipped if `extraVolumeMounts` / `extraEnv` already provide them — keep `medium: Memory` on any parent-supplied `/tmp` volume.
 - **Limitation.** Commands can't install system packages (for example `apt-get install`, or `pip install` into `/usr/local`); `pip install --user` and virtual environments under `HOME` still work. Set `securityContext.readOnlyRootFilesystem: false` if sandboxes need system installs.
 
-Opt-out (the pre-0.3.5 output):
+Opt-out (pre-hardening output):
 
 ```yaml
 podSecurityContext:
   enabled: false
 securityContext:
+  enabled: false
+volumePermissions:
   enabled: false
 ```
 
@@ -116,9 +119,13 @@ securityContext:
 | `probes.readiness.periodSeconds`                   | Readiness probe period in seconds                                                                                                                                                                                                                                  | `10`                            |
 | `probes.readiness.timeoutSeconds`                  | Readiness probe timeout in seconds                                                                                                                                                                                                                                 | `3`                             |
 | `probes.readiness.failureThreshold`                | Readiness probe failure threshold                                                                                                                                                                                                                                  | `3`                             |
-| `podSecurityContext`                               | Pod security context. Set `enabled: false` to drop it. The pod runs as root: the image's supervisord needs it, so runAsNonRoot needs an image change. A parent chart's global.podSecurityContext is deliberately not inherited for that reason.                    | `{}`                            |
-| `securityContext`                                  | Container security context. Set `enabled: false` to drop it. With a read-only root, a /tmp emptyDir is mounted and sandbox commands can't install system packages (for example apt-get, or pip into /usr/local); set readOnlyRootFilesystem to false if they must. | `{}`                            |
-| `tmpVolume.sizeLimit`                              | Size limit of the /tmp emptyDir mounted while the root filesystem is read-only. Skipped when extraVolumeMounts already mounts /tmp.                                                                                                                                | `1Gi`                           |
+| `podSecurityContext`                               | Pod security context. Set `enabled: false` to drop it. Defaults: non-root UID/GID 1000, `fsGroup` 1000, `OnRootMismatch`, RuntimeDefault seccomp. Parent `global.podSecurityContext` is not inherited.                                                              | `{}`                            |
+| `securityContext`                                  | Container security context. Set `enabled: false` to drop it. Non-root, read-only root, drop ALL. Memory-backed `/tmp` is mounted while the root is read-only; sandbox commands can't install system packages unless `readOnlyRootFilesystem` is false.             | `{}`                            |
+| `tmpVolume.medium`                                 | emptyDir medium for `/tmp` (`Memory` = tmpfs). Skipped when `extraVolumeMounts` already mounts `/tmp`.                                                                                                                                                              | `Memory`                        |
+| `tmpVolume.sizeLimit`                              | Size limit of the `/tmp` emptyDir mounted while the root filesystem is read-only. Skipped when `extraVolumeMounts` already mounts `/tmp`.                                                                                                                          | `1Gi`                           |
+| `volumePermissions.enabled`                        | Root initContainer that `chown -R`s the sandbox PVC to `runAsUser`:`fsGroup`. Prefer `fsGroup` when the StorageClass supports it; keep this on for upgrades from root-owned files.                                                                                 | `true`                          |
+| `volumePermissions.image.repository`               | Image repository for the volume-permissions init                                                                                                                                                                                                                   | `tfy-mirror/alpine`             |
+| `volumePermissions.image.tag`                      | Image tag for the volume-permissions init                                                                                                                                                                                                                          | `3.21`                          |
 | `nodeSelector`                                     | Node selector                                                                                                                                                                                                                                                      | `{}`                            |
 | `tolerations`                                      | Tolerations                                                                                                                                                                                                                                                        | `[]`                            |
 | `topologySpreadConstraints`                        | Topology spread constraints                                                                                                                                                                                                                                        | `[]`                            |
