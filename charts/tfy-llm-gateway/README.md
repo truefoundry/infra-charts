@@ -249,6 +249,6 @@ LLM-Gateway Helm Chart
 
 ### OTEL buffer
 
-| Name               | Description                                                    | Value   |
-| ------------------ | -------------------------------------------------------------- | ------- |
+| Name               | Description                                                    | Value  |
+| ------------------ | -------------------------------------------------------------- | ------ |
 | `enableOtelBuffer` | Bool to deploy tfy-otel-buffer and export gateway traces to it | `true` |
