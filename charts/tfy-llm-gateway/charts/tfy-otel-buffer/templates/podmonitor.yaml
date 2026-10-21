@@ -1,0 +1,32 @@
+{{- if and .Values.podMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "tfy-otel-buffer.fullname" . }}
+  namespace: {{ include "tfy-otel-buffer.namespace" . }}
+  labels:
+    {{- include "tfy-otel-buffer.labels" . | nindent 4 }}
+    {{- with .Values.podMonitor.additionalLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.global.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-buffer.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ include "tfy-otel-buffer.namespace" . }}
+  podMetricsEndpoints:
+    - port: prom-exporter
+      path: /metrics
+      {{- with .Values.podMonitor.interval }}
+      interval: {{ . }}
+      {{- end }}
+      honorLabels: false
+      honorTimestamps: true
+{{- end }}
