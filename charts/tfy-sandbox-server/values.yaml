@@ -242,8 +242,9 @@ volumePermissions:
     tag: "3.21"
   ## @param volumePermissions.resources [object] Resources for the volume-permissions init container
   resources: {}
-  ## @param volumePermissions.securityContext [object] Security context for the volume-permissions init (must run as root to chown the PVC)
+  ## @param volumePermissions.securityContext [object] Security context for the volume-permissions init (must run as root to chown the PVC). runAsNonRoot must be false so this init can override podSecurityContext.runAsNonRoot.
   securityContext:
+    runAsNonRoot: false
     runAsUser: 0
     runAsGroup: 0
     seccompProfile:

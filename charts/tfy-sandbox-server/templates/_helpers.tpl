@@ -248,13 +248,13 @@ false
 {{- $gid := $podSC.fsGroup | default ($podSC.runAsGroup | default 1000) }}
 {{- $img := .Values.volumePermissions.image | default dict }}
 {{- $registry := $img.registry | default .Values.global.image.registry }}
+{{/* Always force runAsNonRoot: false — pod-level runAsNonRoot: true would otherwise reject this UID 0 init. */}}
+{{- $initSC := mergeOverwrite (.Values.volumePermissions.securityContext | default dict) (dict "runAsNonRoot" false) }}
 - name: volume-permissions
   image: "{{ $registry }}/{{ $img.repository }}:{{ $img.tag }}"
   imagePullPolicy: {{ .Values.imagePullPolicy }}
-  {{- with .Values.volumePermissions.securityContext }}
   securityContext:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- toYaml $initSC | nindent 4 }}
   {{- with .Values.volumePermissions.resources }}
   resources:
     {{- toYaml . | nindent 4 }}
