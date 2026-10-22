@@ -849,19 +849,36 @@ sdsServer:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
 
-## @section networkPolicy Ingress NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
-## One ingress policy per component. Egress is not restricted. Subchart pods (external-secrets, reloader) are not selected.
+## @section networkPolicy NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+## Same model as the truefoundry chart: default-deny ingress, allow-all egress, an in-release mesh, and one
+## policy for cross-namespace sources. Policies select this release's tfy-agent, tfy-agent-proxy and sds-server
+## pods only; the external-secrets and reloader subchart pods are not selected.
 ## Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
 ##
 networkPolicy:
-  ## @param networkPolicy.enabled Create ingress NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+  ## @param networkPolicy.enabled Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
   enabled: false
-  tfyAgent:
-    ## @param networkPolicy.tfyAgent.ingressFrom [array] NetworkPolicyPeer entries allowed to reach the tfy-agent service port. Empty allows any source on that port only.
-    ingressFrom: []
+  ## @param networkPolicy.labels Extra labels on NetworkPolicy objects (merged with global.labels)
+  labels: {}
+  ## @param networkPolicy.annotations Extra annotations on NetworkPolicy objects (merged with global.annotations)
+  annotations: {}
+  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts).
+  allowedIngressFrom: []
+  ## - namespace: prometheus
+  ##   podSelector:
+  ##     app.kubernetes.io/name: alertmanager
+  ## @param networkPolicy.extraIngress Raw ingress rules appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors)
+  extraIngress: []
+  ## - from:
+  ##     - ipBlock:
+  ##         cidr: 10.0.0.0/8
+  ##   ports:
+  ##     - port: 3000
+  ##       protocol: TCP
   sdsServer:
-    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server in addition to tfy-agent
-    ingressFrom: []
+    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Its clients are Envoy sidecars and gateways in workload namespaces, so the default allows every namespace. Set to [] to leave only the in-release mesh.
+    ingressFrom:
+      - namespaceSelector: {}
 
 ## @section eso (external-secrets operator) configuration parameters
 ##

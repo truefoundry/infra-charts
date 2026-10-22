@@ -1,78 +1,122 @@
 {{- if .Values.networkPolicy.enabled }}
 {{- $np := .Values.networkPolicy }}
-{{- if .Values.tfyAgent.enabled }}
+{{- $fullname := include "tfy-agent.fullname" . }}
+{{- $ingressFrom := $np.allowedIngressFrom | default list }}
+{{- $extraIngress := $np.extraIngress | default list }}
+{{- $sdsIngressFrom := dig "sdsServer" "ingressFrom" list $np }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "tfy-agent.fullname" . }}
+  name: {{ $fullname }}-default-deny-ingress
   labels:
-    {{- include "tfy-agent.commonLabels" . | nindent 4 }}
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
   annotations:
-    {{- include "tfy-agent.commonAnnotations" . | nindent 4 }}
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   podSelector:
-    matchLabels:
-      {{- include "tfy-agent.selectorLabels" . | nindent 6 }}
+    {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 4 }}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $fullname }}-allow-all-egress
+  labels:
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 4 }}
+  policyTypes:
+    - Egress
+  egress:
+    - {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $fullname }}-intra-instance
+  labels:
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 4 }}
   policyTypes:
     - Ingress
   ingress:
-    - ports:
-        - protocol: TCP
-          port: {{ .Values.tfyAgent.service.port }}
-      {{- with $np.tfyAgent.ingressFrom }}
-      from:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-{{- end }}
-{{- if .Values.tfyAgentProxy.enabled }}
+    - from:
+        - podSelector:
+            {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 12 }}
+{{- if and .Values.sdsServer.enabled $sdsIngressFrom }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "tfy-agent-proxy.fullname" . }}
+  name: {{ $fullname }}-sds-server-clients
   labels:
-    {{- include "tfy-agent-proxy.commonLabels" . | nindent 4 }}
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
   annotations:
-    {{- include "tfy-agent-proxy.commonAnnotations" . | nindent 4 }}
-spec:
-  podSelector:
-    matchLabels:
-      {{- include "tfy-agent-proxy.selectorLabels" . | nindent 6 }}
-  # The proxy dials out to the control plane and has no Service, so nothing may connect in.
-  policyTypes:
-    - Ingress
-{{- end }}
-{{- if .Values.sdsServer.enabled }}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: {{ include "sds-server.fullname" . }}
-  labels:
-    {{- include "sds-server.commonLabels" . | nindent 4 }}
-  annotations:
-    {{- include "sds-server.commonAnnotations" . | nindent 4 }}
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   podSelector:
     matchLabels:
       {{- include "sds-server.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
-  {{- if or .Values.tfyAgent.enabled $np.sdsServer.ingressFrom }}
+  # SDS clients are Envoy sidecars and gateways in workload namespaces (the tfy-oauth2 EnvoyFilters).
   ingress:
     - ports:
         - protocol: TCP
           port: {{ .Values.sdsServer.service.port }}
       from:
-        {{- if .Values.tfyAgent.enabled }}
-        - podSelector:
-            matchLabels:
-              {{- include "tfy-agent.selectorLabels" . | nindent 14 }}
-        {{- end }}
-        {{- with $np.sdsServer.ingressFrom }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+        {{- toYaml $sdsIngressFrom | nindent 8 }}
+{{- end }}
+{{- if or $ingressFrom $extraIngress }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $fullname }}-ingress-external
+  labels:
+    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
+  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
   {{- end }}
+spec:
+  podSelector:
+    {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 4 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    {{- if $ingressFrom }}
+    - from:
+        {{- range $ingressFrom }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ required "networkPolicy.allowedIngressFrom[].namespace is required" .namespace | quote }}
+          {{- with .podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+        {{- end }}
+    {{- end }}
+    {{- with $extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 {{- end }}
 {{- end }}

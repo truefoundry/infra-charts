@@ -1,12 +1,14 @@
 networkPolicy:
   enabled: true
-  tfyAgent:
-    ingressFrom:
-      - namespaceSelector:
-          matchLabels:
-            kubernetes.io/metadata.name: prometheus
-  sdsServer:
-    ingressFrom:
-      - podSelector:
-          matchLabels:
-            app: sds-client
+  allowedIngressFrom:
+    - namespace: prometheus
+    - namespace: ingress-nginx
+      podSelector:
+        app.kubernetes.io/name: ingress-nginx
+  extraIngress:
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - port: 3000
+          protocol: TCP
