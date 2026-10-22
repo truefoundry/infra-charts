@@ -117,6 +117,8 @@ requests:
     per-service enable guards.
   - localhost is included so in-pod HTTPS probes / local loops (e.g. servicefoundry-server)
     can verify the leaf when dialing 127.0.0.1/localhost.
+  - Pod names under the NATS headless Service (TLS cluster routes) and the deltafusion-ingestor
+    Service (query-server gRPC endpoints).
   - global.mTLS.extraDnsNames are appended.
 */}}
 {{- define "bootstrap.mtlsDnsNames" -}}
@@ -147,12 +149,24 @@ requests:
 {{- $svcs = append $svcs (printf "%s-tfy-otel-collector" .Release.Name) -}}
 {{- $svcs = append $svcs (printf "%s-tfy-sandbox-server" .Release.Name) -}}
 {{- $svcs = append $svcs (printf "%s-trueforge" .Release.Name) -}}
+{{- $svcs = append $svcs (printf "%s-trueforge-server" .Release.Name) -}}
+{{- /* TrueForge dedicated sandbox (trueforge.truefoundry.devSandboxServerEnabled). */}}
 {{- $svcs = append $svcs (printf "%s-trueforge-tfy-sandbox-server" .Release.Name) -}}
 {{- $svcs = append $svcs (printf "%s-tfy-nats" .Release.Name) -}}
+{{- /* tfy-otel-buffer (gateway subchart) has a fixed default name; mirrors tfy-otel-buffer.fullname. */}}
+{{- $otelBuffer := (index (index .Values "tfy-llm-gateway" | default dict) "tfy-otel-buffer") | default dict -}}
+{{- $svcs = append $svcs (default "tfy-otel-buffer" $otelBuffer.fullnameOverride | trunc 63 | trimSuffix "-") -}}
 {{- /* Each service -> bare name and <name>.<ns>. */}}
 {{- range $svc := $svcs -}}
 {{- $names = append $names $svc -}}
 {{- $names = append $names (printf "%s.%s" $svc $ns) -}}
+{{- end -}}
+{{- /* StatefulSet pods dialed by name: NATS cluster routes (<pod>.<release>-tfy-nats-headless:6222)
+  and the deltafusion-query-server's INGESTOR_ENDPOINTS (<pod>.<ingestor>.<ns>:<GRPC_PORT>). */}}
+{{- range $sub := list (printf "%s-tfy-nats-headless" .Release.Name) (include "deltafusion-ingestor.fullname" .) -}}
+{{- range $suffix := list "" (printf ".%s" $ns) (printf ".%s.svc" $ns) (printf ".%s.svc.cluster.local" $ns) -}}
+{{- $names = append $names (printf "*.%s%s" $sub $suffix) -}}
+{{- end -}}
 {{- end -}}
 {{- range $d := .Values.global.mTLS.extraDnsNames -}}
 {{- $names = append $names $d -}}
