@@ -56,20 +56,6 @@
 {{- end -}}
 {{- dict "items" $items | toJson -}}
 {{- end -}}
-
-{{/*
-  mTLS volume for build job / workflow pods. Uses global.mTLS as the source of truth.
-  defaultMode 0444 because build containers may run as an arbitrary UID with no guaranteed
-  fsGroup, so the key must be world-readable inside the pod.
-*/}}
-{{- define "truefoundry.mtlsVolumeForBuildJobs" -}}
-{{- if .Values.global.mTLS.enabled }}
-- name: truefoundry-mtls
-  secret:
-    secretName: {{ .Values.global.mTLS.externalMtlsSecret | default .Values.global.mTLS.tlsSecretName }}
-    defaultMode: 0444
-{{- end }}
-{{- end -}}
 {{/*
   Global Labels
 */}}
@@ -588,82 +574,4 @@ Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra
 {{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
 {{- toYaml . }}
 {{- end }}
-{{- end -}}
-
-{{/*
-Name the bundled Redis subchart gives its objects, mirroring common.names.fullname
-from the Bitnami chart so the master Service name stays in sync with it.
-*/}}
-{{- define "truefoundry.redis.fullname" -}}
-{{- if .Values.redis.fullnameOverride -}}
-{{- .Values.redis.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default "redis" .Values.redis.nameOverride -}}
-{{- $releaseName := regexReplaceAll "(-?[^a-z\\d\\-])+-?" (lower .Release.Name) "-" -}}
-{{- if contains $name $releaseName -}}
-{{- $releaseName | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" $releaseName $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Shared control-plane Redis host.
-
-`redis` (bundled) and `externalRedis` are mutually exclusive. TrueForge is the
-only consumer today; the bundled LLM gateway can be pointed at the same instance
-later so a CP+GP install does not run two Redises forever.
-
-External Redis is active only when `externalRedis.enabled` is true. Host,
-Sentinel, and externalSecret (the user sets trueforge.env; this chart creates
-no Redis Secret) are the modes under it.
-*/}}
-{{- define "truefoundry.redis.useExternal" -}}
-{{- if .Values.externalRedis.enabled -}}
-true
-{{- end -}}
-{{- end -}}
-
-{{- define "truefoundry.redis.externalSecret" -}}
-{{- if eq (toString (.Values.externalRedis.externalSecret | default false)) "true" -}}
-true
-{{- end -}}
-{{- end -}}
-
-{{/*
-"true" when value is ${k8s-secret/<secret>/<key>} with a non-empty secret and key.
-The key must not contain "/".
-*/}}
-{{- define "truefoundry.redis.threePartRef" -}}
-{{- $value := .value -}}
-{{- if and (kindIs "string" $value) (hasPrefix "${k8s-secret/" $value) -}}
-{{- $parts := regexSplit "/" (trimSuffix "}" $value) -1 -}}
-{{- if eq (len $parts) 3 -}}
-{{- if and (index $parts 1) (index $parts 2) -}}
-true
-{{- end -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{- define "truefoundry.redis.host" -}}
-{{- if and .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
-{{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
-{{- end -}}
-{{- if eq (include "truefoundry.redis.useExternal" .) "true" -}}
-{{- .Values.externalRedis.host -}}
-{{- else if .Values.redis.enabled -}}
-{{- printf "%s-master.%s.svc.cluster.local" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Whether a control-plane Redis is configured at all: bundled, external by
-host/sentinel, or externalSecret. Renders "true" or "".
-*/}}
-{{- define "truefoundry.redis.available" -}}
-{{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") (eq (include "truefoundry.redis.externalSecret" .) "true") -}}
-true
-{{- end -}}
 {{- end -}}

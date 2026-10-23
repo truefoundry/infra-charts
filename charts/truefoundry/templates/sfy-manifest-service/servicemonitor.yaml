@@ -19,10 +19,5 @@ spec:
     - targetPort: 8080
       path: /metrics
       honorLabels: true
-      interval: {{ .Values.sfyManifestService.serviceMonitor.interval }}
-      {{- if .Values.global.mTLS.enabled }}
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: true
-      {{- end }}
+      interval: 10s
 {{- end -}}
