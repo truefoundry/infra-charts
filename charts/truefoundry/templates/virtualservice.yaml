@@ -14,8 +14,8 @@ spec:
     - {{ . }}
   {{- end }}
   hosts:
-  {{- range $host := .Values.global.virtualservice.hosts }}
-    - {{ tpl $host $ | quote }}
+  {{- range .Values.global.virtualservice.hosts }}
+    - {{ . }}
   {{- end }}
   http:
     - match:
