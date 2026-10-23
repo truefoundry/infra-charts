@@ -19,10 +19,5 @@ spec:
     - targetPort: http
       path: /metrics
       honorLabels: true
-      interval: {{ .Values.serviceMonitor.interval }}
-      {{- if .Values.global.mTLS.enabled }}
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: true
-      {{- end }}
+      interval: 10s
 {{- end -}}

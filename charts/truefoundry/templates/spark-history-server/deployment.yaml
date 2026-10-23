@@ -54,7 +54,7 @@ spec:
             httpGet:
               path: /api/v1/version
               port: {{ .Values.sparkHistoryServer.service.port }}
-              scheme: {{ .Values.sparkHistoryServer.livenessProbe.scheme }}
+              scheme: HTTP
           readinessProbe:
             failureThreshold: {{ .Values.sparkHistoryServer.readinessProbe.failureThreshold }}
             initialDelaySeconds: {{ .Values.sparkHistoryServer.readinessProbe.initialDelaySeconds }}
@@ -64,7 +64,7 @@ spec:
             httpGet:
               path: /api/v1/version
               port: {{ .Values.sparkHistoryServer.service.port }}
-              scheme: {{ .Values.sparkHistoryServer.readinessProbe.scheme }}
+              scheme: HTTP
           volumeMounts:
             {{- include "spark-history-server.volumeMounts" . | nindent 12 }}
       imagePullSecrets:

@@ -39,12 +39,9 @@ spec:
           {{- end }}
           env:
             {{- include "deltafusion-query-server.env" . | trim | nindent 12 }}
-            {{- $userEnv := .Values.deltaFusionQueryServer.env | default dict }}
-            {{- if not (hasKey $userEnv "OPTIMIZED") }}
             {{- $optimizedEnv := include "deltafusion-query-server.optimizedEnv" . | trim }}
             {{- if $optimizedEnv }}
             {{- $optimizedEnv | nindent 12 }}
-            {{- end }}
             {{- end }}
             {{- if .Values.deltaFusionQueryServer.enableLiveLogs }}
             {{- $replicas := include "deltafusion-ingestor.replicas" . | trim | int }}
@@ -74,11 +71,7 @@ spec:
             httpGet:
               path: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.path }}
               port: {{ .Values.deltaFusionQueryServer.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.scheme }}
-              {{- end }}
+              scheme: HTTP
             initialDelaySeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.readiness.timeoutSeconds }}
@@ -88,11 +81,7 @@ spec:
             httpGet:
               path: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.path }}
               port: {{ .Values.deltaFusionQueryServer.service.port }}
-              {{- if .Values.global.mTLS.enabled }}
-              scheme: HTTPS
-              {{- else }}
-              scheme: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.scheme }}
-              {{- end }}
+              scheme: HTTP
             initialDelaySeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.initialDelaySeconds }}
             periodSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.periodSeconds }}
             timeoutSeconds: {{ .Values.deltaFusionQueryServer.healthcheck.liveness.timeoutSeconds }}
@@ -101,7 +90,7 @@ spec:
           volumeMounts:
             - name: tmp-dir
               mountPath: /tmp
-            {{- if or .Values.deltaFusionQueryServer.extraVolumeMounts .Values.global.customCA.enabled .Values.global.mTLS.enabled }}
+            {{- if or .Values.deltaFusionQueryServer.extraVolumeMounts .Values.global.customCA.enabled }}
             {{- include "deltafusion-query-server.volumeMounts" . | nindent 12 }}
             {{- end }}
       imagePullSecrets:
@@ -110,7 +99,7 @@ spec:
         - name: tmp-dir
           emptyDir:
             sizeLimit: {{ include "deltafusion-query-server.ephemeralStorage.limit" . }}
-        {{- if or .Values.deltaFusionQueryServer.extraVolumes .Values.global.customCA.enabled .Values.global.mTLS.enabled }}
+        {{- if or .Values.deltaFusionQueryServer.extraVolumes .Values.global.customCA.enabled }}
         {{- include "deltafusion-query-server.volumes" . | nindent 8 }}
         {{- end }}
       {{- $mergedNodeSelector := mergeOverwrite (deepCopy .Values.global.nodeSelector) (deepCopy .Values.deltaFusionQueryServer.nodeSelector) }}
