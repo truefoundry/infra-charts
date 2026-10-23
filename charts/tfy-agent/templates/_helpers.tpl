@@ -184,7 +184,8 @@ Priority: global.podLabels < component.podLabels < selectorLabels (highest)
 */}}
 {{- define "tfy-agent-proxy.podLabels" -}}
 {{- $selectorLabels := include "tfy-agent-proxy.selectorLabels" . | fromYaml }}
-{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgentProxy.podLabels $selectorLabels }}
+{{- /* instance is on the pods only, not the immutable Deployment selector, so NetworkPolicies can select the release */ -}}
+{{- $podLabels := mergeOverwrite (deepCopy .Values.global.podLabels) .Values.tfyAgentProxy.podLabels $selectorLabels (dict "app.kubernetes.io/instance" .Release.Name) }}
 {{- toYaml $podLabels }}
 {{- end }}
 
@@ -675,5 +676,72 @@ false
 {{- if .Values.global.customCA.enabled }}
 - name: NODE_EXTRA_CA_CERTS
   value: /etc/ssl/certs/ca-certificates.crt
+{{- end }}
+{{- end -}}
+
+{{/* Merged pod securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-agent.podSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Merged container securityContext, local-over-global; "" when disabled. */}}
+{{- define "tfy-agent.containerSecurityContext" -}}
+{{- $l := .local | default dict -}}{{- $g := .global | default dict -}}
+{{- if ternary $l.enabled $g.enabled (hasKey $l "enabled") -}}
+{{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+emptyDir volumes and mounts for the paths a component writes. Callers pass an empty list
+unless the container's root filesystem is read-only, so nothing changes when it is writable.
+*/}}
+{{- define "tfy-agent.writableDirs.volumes" -}}
+{{- range . }}
+- name: {{ .name }}
+  {{- with .sizeLimit }}
+  emptyDir:
+    sizeLimit: {{ . }}
+  {{- else }}
+  emptyDir: {}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{- define "tfy-agent.writableDirs.volumeMounts" -}}
+{{- range . }}
+- name: {{ .name }}
+  mountPath: {{ .path }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Selects this release's tfy-agent, tfy-agent-proxy and sds-server pods. The external-secrets and
+reloader subchart pods share the instance label but are excluded: the external-secrets webhook
+must stay reachable from the API server.
+*/}}
+{{- define "tfy-agent.networkPolicy.podSelector" -}}
+matchLabels:
+  app.kubernetes.io/instance: {{ .Release.Name }}
+matchExpressions:
+  - key: app.kubernetes.io/name
+    operator: In
+    values:
+      - {{ include "chart.name" . }}
+      - {{ include "tfy-agent-proxy.fullname" . }}
+      - sds-server
+{{- end -}}
+
+{{- define "tfy-agent.networkPolicy.labels" -}}
+{{- $base := include "chart.labels" (dict "context" .) | fromYaml }}
+{{- toYaml (mergeOverwrite $base (deepCopy (.Values.networkPolicy.labels | default dict))) }}
+{{- end -}}
+
+{{- define "tfy-agent.networkPolicy.annotations" -}}
+{{- with (mergeOverwrite (deepCopy (.Values.global.annotations | default dict)) (.Values.networkPolicy.annotations | default dict)) }}
+{{- toYaml . }}
 {{- end }}
 {{- end -}}
