@@ -284,10 +284,6 @@ limits:
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
 {{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumes = concat $volumes $mtlsData.items -}}
-{{- end -}}
 {{- $tmpVolume := include "truefoundry.tmpDirVolume" (dict "context" . "resourceTierHelper" "tfy-controller.resourceTier" "defaultResourcesPrefix" "tfy-controller.defaultResources" "resourcesValues" .Values.tfyController.resources) | fromYaml }}
 {{- $volumes = append $volumes $tmpVolume -}}
 {{- $volumes | toYaml -}}
@@ -298,10 +294,6 @@ limits:
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumeMounts = concat $volumeMounts $caData.items -}}
-{{- end -}}
-{{- $mtlsData := include "truefoundry.mtlsVolumeMountItems" . | fromJson -}}
-{{- if $mtlsData.items -}}
-{{- $volumeMounts = concat $volumeMounts $mtlsData.items -}}
 {{- end -}}
 {{- $tmpMount := dict "name" "tmp-dir" "mountPath" "/tmp" }}
 {{- $volumeMounts = append $volumeMounts $tmpMount -}}
