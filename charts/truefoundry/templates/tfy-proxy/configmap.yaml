@@ -29,11 +29,6 @@ data:
       servers {
         protocols h1 h2 h2c
 
-        {{- if .Values.tfyProxy.clientIp.enabled }}
-        trusted_proxies static {{ .Values.tfyProxy.clientIp.trustedProxies }}
-        client_ip_headers {{ .Values.tfyProxy.clientIp.headers }}
-        {{- end }}
-
         timeouts {
           write 0
           idle 0
@@ -51,16 +46,29 @@ data:
     }
 
     {{- if .Values.global.proxy.cors.enabled }}
-    {{- $corsOriginRegex := include "tfy-proxy.cors.allowedOriginsRegex" . }}
     (cors) {
       @cors_preflight method OPTIONS
       handle @cors_preflight {
-        {{- if $corsOriginRegex }}
+        {{- if .Values.global.proxy.cors.allowedOrigins }}
+        {{- $regexParts := list }}
+        {{- range .Values.global.proxy.cors.allowedOrigins }}
+        {{- $origin := . }}
+        {{- if eq $origin "*" }}
+          {{- $regexParts = append $regexParts ".*" }}
+        {{- else if contains "://" $origin }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts $escaped }}
+        {{- else }}
+          {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+          {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+        {{- end }}
+        {{- end }}
+        {{- $regex := $regexParts | join "|" }}
         @origin_allowed {
-          expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         }
         @origin_pna_cors {
-          expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+          expression {http.request.header.Origin}.matches("^({{ $regex }})$")
           header Access-Control-Request-Private-Network true
         }
         header @origin_allowed Access-Control-Allow-Origin "{http.request.header.Origin}"
@@ -78,12 +86,26 @@ data:
         respond "" 204
       }
 
-      {{- if $corsOriginRegex }}
+      {{- if .Values.global.proxy.cors.allowedOrigins }}
+      {{- $regexParts := list }}
+      {{- range .Values.global.proxy.cors.allowedOrigins }}
+      {{- $origin := . }}
+      {{- if eq $origin "*" }}
+        {{- $regexParts = append $regexParts ".*" }}
+      {{- else if contains "://" $origin }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts $escaped }}
+      {{- else }}
+        {{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." }}
+        {{- $regexParts = append $regexParts (printf "https?://%s" $escaped) }}
+      {{- end }}
+      {{- end }}
+      {{- $regex := $regexParts | join "|" }}
       @origin {
-        expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
       }
       @origin_pna {
-        expression {http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin}.matches("^({{ $regex }})$")
         header Access-Control-Request-Private-Network true
       }
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
@@ -92,7 +114,7 @@ data:
       header @origin >Vary "Origin"
 
       @not_origin {
-        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
+        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $regex }})$")
       }
       header @not_origin -Access-Control-Allow-Origin
       header @not_origin -Access-Control-Allow-Credentials
@@ -141,8 +163,9 @@ data:
 
     {{- if .Values.global.mTLS.enabled }}
     # Mutual TLS to internal TrueFoundry services that serve HTTPS and require a
-    # client certificate (servicefoundry-server, mlfoundry-server, tfy-otel-collector
-    # OTLP HTTP :4318 and ingestor-proxy :4319, etc.). Imported by every
+    # client certificate (servicefoundry-server, mlfoundry-server, and the
+    # tfy-otel-collector OTLP HTTP receiver on :4318 — note the ingestor-proxy
+    # port is plain HTTP and must NOT import this). Imported by every
     # reverse_proxy and forward_auth targeting them — without this, those calls
     # get a 403.
     #
@@ -194,7 +217,7 @@ data:
       handle /api/svc/socket.io* {
         uri strip_prefix /api/svc
         rewrite * /socket.io{path}
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
 
       {{- if .Values.tfyProxy.useMcpV2 }}
@@ -202,15 +225,21 @@ data:
       # /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback → /mcp/oauth2/callback/outbound (outbound OAuth)
       handle /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback {
         uri replace /api/svc/v1/llm-gateway/mcp-servers/oauth2/callback /mcp/oauth2/callback/outbound
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
 
       # /api/svc/oauth2-mcp/callback → /mcp/oauth2/callback/inbound (inbound OAuth)
       handle /api/svc/oauth2-mcp/callback {
         uri replace /api/svc/oauth2-mcp/callback /mcp/oauth2/callback/inbound
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
       {{- end }}
+
+      # /mcp → /v1/tfy-mcp on upstream:3000
+      handle /mcp {
+        rewrite * /v1/tfy-mcp
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
+      }
 
       {{- if .Values.tfyProxy.restrictInternalApis }}
       # Block internal-only APIs from external users.
@@ -236,13 +265,21 @@ data:
       # /api/svc → / on upstream:3000
       handle /api/svc/* {
         uri strip_prefix /api/svc
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
+
+      {{- if .Values.stdioMcpProxy.enabled }}
+      # /api/stdio-mcp-proxy → / on upstream:8000
+      handle /api/stdio-mcp-proxy/* {
+        uri strip_prefix /api/stdio-mcp-proxy
+        reverse_proxy {{ tpl .Values.global.proxy.stdioMcpProxyHost . }}:{{ .Values.stdioMcpProxy.service.port }}
+      }
+      {{- end }}
 
       handle /api/env {
         uri strip_prefix /api/env
         rewrite * /v1/fe-env
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
 
       {{- if .Values.global.proxy.llmGateway.external }}
@@ -256,49 +293,28 @@ data:
       {{- else }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          {{- if .Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
+        }
       }
       {{- end }}
 
-      # Legacy /api/svc forms -> the server's tenant-appended path. These keep their rewrite, because
-      # the server's :tenantName is one segment and can never match api/svc/<tenant> itself.
+      # RFC 8414 well-known discovery (prepended form) -> server's path-appended form on upstream:3000
+      # /.well-known/openid-configuration/api/svc/<rest> -> /<rest>/.well-known/openid-configuration
       handle /.well-known/openid-configuration/api/svc/* {
         uri replace /.well-known/openid-configuration/api/svc ""
         rewrite {path}/.well-known/openid-configuration
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
 
+      # /.well-known/oauth-authorization-server/api/svc/<rest> -> /<rest>/.well-known/oauth-authorization-server
       handle /.well-known/oauth-authorization-server/api/svc/* {
         uri replace /.well-known/oauth-authorization-server/api/svc ""
         rewrite {path}/.well-known/oauth-authorization-server
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # The RFC 8414 document name and both inserted forms, passed through untouched. Requires a
-      # server carrying the MCP-1725 aliases. Before those, only openid-configuration was served and
-      # these three rewrote onto it. Each still needs a rule of its own, because without one the SPA
-      # catch-all answers a JSON probe with index.html and a 200.
-      handle /*/.well-known/oauth-authorization-server {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # The `not path` guards keep these two mutually exclusive with the /api/svc handles above. A
-      # multi-path named matcher is not comparable to a single path and acts as a barrier in Caddy's
-      # sort, so without the guard the broader handle can land above /api/svc/* and swallow it.
-      @oidcAuthServerInserted {
-        path /.well-known/oauth-authorization-server/*
-        not path /.well-known/oauth-authorization-server/api/svc/*
-      }
-      handle @oidcAuthServerInserted {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      @oidcDiscoveryInserted {
-        path /.well-known/openid-configuration/*
-        not path /.well-known/openid-configuration/api/svc/*
-      }
-      handle @oidcDiscoveryInserted {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
 
       handle /api/auth/* {
@@ -355,7 +371,7 @@ data:
           }
           handle @ml_on_mlf {
             uri strip_prefix /api/ml
-            reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+            reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
           }
 
           @ml_to_svc {
@@ -425,13 +441,13 @@ data:
           }
           handle @ml_to_svc {
             uri strip_prefix /api/ml
-            reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+            reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
           }
 
           # default → mlfoundry
           handle {
             uri strip_prefix /api/ml
-            reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+            reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
           }
         }
       }
@@ -439,7 +455,17 @@ data:
       # /api/ml -> / on upstream:5000 (kill switch off: global.proxy.mlfToSvcEnabled=false)
       handle /api/ml/* {
         uri strip_prefix /api/ml
-        reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.mlfoundryHost . }}:{{ .Values.mlfoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
+      }
+      {{- end }}
+
+      {{- if .Values.global.proxy.tfyLLMAgentURL }}
+      # /api/agent → / on upstream:8080
+      handle /api/agent/* {
+        uri strip_prefix /api/agent
+        reverse_proxy {{ tpl .Values.global.proxy.tfyLLMAgentURL . }} {
+          header_up Host {{ (tpl .Values.global.proxy.tfyLLMAgentURL .) | trimPrefix "https://" | trimPrefix "http://" }}
+        }
       }
       {{- end }}
 
@@ -456,7 +482,12 @@ data:
       # /api/llm/ → / on upstream:8787
       handle /api/llm/* {
         uri strip_prefix /api/llm
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }} {
+          {{- if .Values.global.mTLS.enabled }}
+          import internal_mtls
+          {{- end }}
+          header_up x-tfy-llm-gateway-uri "{http.request.host}/api/llm"
+        }
       }
       {{- end }}
 
@@ -465,20 +496,20 @@ data:
       handle /api/proxy-server/socket.io* {
         uri strip_prefix /api/proxy-server
         rewrite * /socket.io{path}
-        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
 
       # /api/proxy-server/proxy/cluster/connect → /proxy/cluster/connect on upstream:8123
       handle /api/proxy-server/proxy/cluster/connect {
         uri strip_prefix /api/proxy-server
-        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
 
       {{- if .Values.global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled }}
       # /api/proxy-server/ → / on upstream:8123
       handle /api/proxy-server/* {
         uri strip_prefix /api/proxy-server
-        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.proxyServerHost . }}:{{ .Values.tfyController.service.port }}
       }
       {{- end }}
       {{- end }}
@@ -487,7 +518,7 @@ data:
       # /api/s3proxy/ → / on upstream:8080
       handle /api/s3proxy/* {
         uri strip_prefix /api/s3proxy
-        reverse_proxy {{ tpl .Values.global.proxy.s3proxyHost . }}:{{ .Values.s3proxy.service.port }}{{- include "tfy-proxy.rewriteUpstreamHostOnly" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.s3proxyHost . }}:{{ .Values.s3proxy.service.port }}
       }
       {{- end }}
 
@@ -498,16 +529,16 @@ data:
       # Strip /api/otel/ingestor-proxy so upstream sees /agent-session-turns|events/...
       handle /api/otel/ingestor-proxy/agent-session-turns/* {
         uri strip_prefix /api/otel/ingestor-proxy
-        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}
       }
       handle /api/otel/ingestor-proxy/agent-session-events/* {
         uri strip_prefix /api/otel/ingestor-proxy
-        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.ingestorProxyPort }}
       }
       # /api/otel/ → / on upstream:4318 (OTLP HTTP receiver — enforces mutual TLS)
       handle /api/otel/* {
         uri strip_prefix /api/otel
-        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.tfyOtelCollector.host . }}:{{ .Values.global.proxy.tfyOtelCollector.port }}
       }
       {{- end }}
 
@@ -515,7 +546,7 @@ data:
       # /admin/grafana/* → /api/grafana/proxy/* on upstream:3000
       handle /admin/grafana/* {
         uri replace /admin/grafana /api/grafana/proxy
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
       {{- end }}
 
@@ -523,7 +554,7 @@ data:
       # /admin/nats/* → /api/nats/proxy/* on upstream:3000
       handle /admin/nats/* {
         uri replace /admin/nats /api/nats/proxy
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
       {{- end }}
 
@@ -531,7 +562,7 @@ data:
       # /admin/metrics-dashboard/* → /api/metrics-dashboard/proxy/* on upstream:3000
       handle /admin/metrics-dashboard/* {
         uri replace /admin/metrics-dashboard /api/metrics-dashboard/proxy
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
       {{- end }}
 
@@ -539,7 +570,7 @@ data:
       # /admin/kubernetes/* → /api/kubernetes/proxy/* on upstream:3000
       handle /admin/kubernetes/* {
         uri replace /admin/kubernetes /api/kubernetes/proxy
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.withInternalMtls" . }}
       }
       {{- end }}
 
@@ -555,64 +586,14 @@ data:
           copy_headers X-Forwarded-User X-Forwarded-Email X-Tenant-Name
         }
         uri strip_prefix /admin/infra-manager
-        reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
+        reverse_proxy {{ tpl .Values.global.proxy.tfyInfraManagerHost . }}:{{ .Values.tfyInfraManager.service.port }}
       }
       {{- end }}
 
-      {{- if (index .Values "trueforge" "enabled") }}
-      # /trueforge and /trueforge/* → / on the TrueForge server (UI is built with
-      # the /trueforge/ base path; the server itself listens on / and /api/...).
-      @trueforge path /trueforge /trueforge/*
-      handle @trueforge {
-        uri strip_prefix /trueforge
-        reverse_proxy {{ tpl .Values.global.proxy.trueforge.host . }}:{{ .Values.global.proxy.trueforge.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-      {{- end }}
-
-      # Host-root OIDC routes - path-preserving -> upstream:3000
-      # The issuer is {origin}/{tenant}, so every document hangs off the tenant segment.
-      # Use path matchers, never path_regexp: Caddy sorts handle blocks by path specificity and
-      # does not rank a path_regexp against a path, so a regexp form can lose to handle /*.
-      @tfyProtocolRoutes {
-        path /*/oauth2/v1/*
-        path /*/.well-known/openid-configuration
-        path /*/.well-known/jwks.json
-        path /oauth2/v1/callback
-      }
-      handle @tfyProtocolRoutes {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # --- TrueFoundry MCP server (servicefoundry-server's openapi-mcp module) ---
-      # Not the MCP gateway, which is tfy-llm-gateway under /api/llm/* with its own rule further up.
-      # A * between slashes matches one segment, so none of these can take /api/llm/... or an
-      # account-scoped SPA URL, and each outranks the SPA catch-all as its own handle.
-      handle /*/mcp {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # Its metadata document, at the two paths the server registers. The RFC 9728 §3.1 URL is the
-      # inserted one, which the 401 challenge advertises. Appending to the resource would give
-      # /<tenant>/mcp/.well-known/oauth-protected-resource, which nothing serves.
-      handle /*/.well-known/oauth-protected-resource {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      handle /.well-known/oauth-protected-resource/*/mcp {
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # TODO(MCP-1725): drop this route once no client calls /mcp. /<tenant>/mcp supersedes it.
-      # Target stays /v1/tfy-mcp, the only shape every supported server version answers on.
-      handle /mcp {
-        rewrite * /v1/tfy-mcp
-        reverse_proxy {{ tpl .Values.global.proxy.servicefoundryServerHost . }}:{{ .Values.servicefoundryServer.service.port }}{{- include "tfy-proxy.upstreamOpts" . }}
-      }
-
-      # NATS WS direct path (Host rewrite matters here too — see tfy-proxy.natsUpstreamOpts)
+      # NATS WS direct path
       handle /nats-websocket/* {
         reverse_proxy {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.natsUpstreamOpts" . }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
       }
 
       # Catch-all: WS first, then assets, then SPA
@@ -623,7 +604,7 @@ data:
         }
 
         reverse_proxy @websocket {{ tpl .Values.global.proxy.tfyNats.host . }}:{{ .Values.global.proxy.tfyNats.port }}
-        {{- include "tfy-proxy.natsUpstreamOpts" . }}
+        {{- include "tfy-proxy.withNatsWebsocketTls" . }}
 
         @assets {
           path /assets/*
