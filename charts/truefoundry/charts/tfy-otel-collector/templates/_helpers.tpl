@@ -6,30 +6,6 @@
 {{- end }}
 
 {{/*
-  mTLS volume/volumeMount, mounting the cert issued by the parent chart's bootstrap job.
-  Gated on global.mTLS.enabled (set from the umbrella chart; absent when this subchart is
-  installed standalone, in which case these emit nothing). Mounts the external secret when
-  global.mTLS.externalMtlsSecret is set, else the bootstrap-created secret.
-*/}}
-{{- define "tfy-otel-collector.mtls.volume" -}}
-{{- $tls := (.Values.global).mTLS | default dict -}}
-{{- if $tls.enabled }}
-- name: truefoundry-mtls
-  secret:
-    secretName: {{ $tls.externalMtlsSecret | default $tls.tlsSecretName | default "truefoundry-internal-tls" }}
-    optional: true
-{{- end }}
-{{- end -}}
-{{- define "tfy-otel-collector.mtls.volumeMount" -}}
-{{- $tls := (.Values.global).mTLS | default dict -}}
-{{- if $tls.enabled }}
-- name: truefoundry-mtls
-  mountPath: /etc/tls/truefoundry
-  readOnly: true
-{{- end }}
-{{- end -}}
-
-{{/*
 Expand the name of the chart.
 */}}
 
@@ -281,11 +257,11 @@ Deployment Volumes
 */}}
 {{- define "tfy-otel-collector.volumes" -}}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- $ephemeralLimit := "2Gi" }}
+{{- $ephemeralLimit := "1024Mi" }}
 {{- if eq $tier "small" }}
   {{- $ephemeralLimit = "512Mi" }}
 {{- else if eq $tier "large" }}
-  {{- $ephemeralLimit = "4Gi" }}
+  {{- $ephemeralLimit = "2048Mi" }}
 {{- end }}
 {{- if and .Values.resources .Values.resources.limits (index .Values.resources.limits "ephemeral-storage") }}
   {{- $ephemeralLimit = index .Values.resources.limits "ephemeral-storage" }}
@@ -300,7 +276,6 @@ Deployment Volumes
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "tfy-otel-collector.customCA.volumes" . }}
-{{- include "tfy-otel-collector.mtls.volume" . }}
 {{- end }}
 
 {{/*
@@ -317,7 +292,6 @@ Deployment VolumeMounts
 {{- toYaml . | nindent 0 }}
 {{- end }}
 {{- include "tfy-otel-collector.customCA.volumeMounts" . }}
-{{- include "tfy-otel-collector.mtls.volumeMount" . }}
 {{- end }}
 
 {{- define "tfy-otel-collector.resources" }}
@@ -360,23 +334,23 @@ limits:
 {{- define "tfy-otel-collector.defaultResources.medium" }}
 requests:
   cpu: 200m
-  memory: 1Gi
-  ephemeral-storage: 1Gi
+  memory: 512Mi
+  ephemeral-storage: 512Mi
 limits:
   cpu: 400m
-  memory: 2Gi
-  ephemeral-storage: 2Gi
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 2Gi
-  ephemeral-storage: 2Gi
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 limits:
   cpu: 1000m
-  memory: 4Gi
-  ephemeral-storage: 4Gi
+  memory: 2048Mi
+  ephemeral-storage: 2048Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}
