@@ -204,10 +204,51 @@ resources:
     cpu: "2"
     memory: 2Gi
     ephemeral-storage: 2Gi
-## @param podSecurityContext [object] Pod security context
-podSecurityContext: {}
-## @param securityContext [object] Container security context
-securityContext: {}
+## @param podSecurityContext [object] Pod security context. Set `enabled: false` to drop it. Defaults match the image's sandbox user (UID/GID 1000). fsGroup lets the non-root process write the sandbox PVC; OnRootMismatch avoids a full chown when ownership is already correct. A parent chart's global.podSecurityContext is not inherited.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+## @param securityContext [object] Container security context. Set `enabled: false` to drop it. With a read-only root, a memory-backed /tmp emptyDir is mounted and sandbox commands can't install system packages (for example apt-get, or pip into /usr/local); set readOnlyRootFilesystem to false if they must. Requires the non-root image (INFRA-1268).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+## @param tmpVolume.medium emptyDir medium for /tmp (`Memory` = tmpfs). Skipped when extraVolumeMounts already mounts /tmp.
+## @param tmpVolume.sizeLimit Size limit of the /tmp emptyDir mounted while the root filesystem is read-only. Skipped when extraVolumeMounts already mounts /tmp.
+tmpVolume:
+  medium: Memory
+  sizeLimit: 1Gi
+## volumePermissions Init container that chowns the sandbox PVC to runAsUser:fsGroup.
+## Prefer fsGroup when the StorageClass supports it; enable this for upgrades from
+## root-owned sandbox files, or when the CSI driver ignores fsGroup.
+volumePermissions:
+  ## @param volumePermissions.enabled Run a root initContainer that chowns persistence.mountPath before the app starts
+  enabled: true
+  ## @param volumePermissions.image.registry Registry for the volume-permissions init image (defaults to global.image.registry)
+  ## @param volumePermissions.image.repository Repository for the volume-permissions init image
+  ## @param volumePermissions.image.tag Tag for the volume-permissions init image
+  image:
+    registry: ""
+    repository: tfy-mirror/alpine
+    tag: "3.21"
+  ## @param volumePermissions.resources [object] Resources for the volume-permissions init container
+  resources: {}
+  ## @param volumePermissions.securityContext [object] Security context for the volume-permissions init (must run as root to chown the PVC). runAsNonRoot must be false so this init can override podSecurityContext.runAsNonRoot.
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+    seccompProfile:
+      type: RuntimeDefault
 ## @param nodeSelector [object] Node selector
 nodeSelector: {}
 ## @param tolerations [array] Tolerations
