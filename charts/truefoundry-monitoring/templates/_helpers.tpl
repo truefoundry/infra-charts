@@ -301,3 +301,16 @@ limits:
 {{- end }}
 {{- end }}
 
+
+{{- define "truefoundry-monitoring.nats-ui.resources" -}}
+{{- if .Values.tfyNatsUi.resources -}}
+{{- toYaml .Values.tfyNatsUi.resources -}}
+{{- else -}}
+requests:
+  cpu: 10m
+  memory: 64Mi
+limits:
+  cpu: 200m
+  memory: 256Mi
+{{- end }}
+{{- end }}

@@ -187,6 +187,10 @@ logs:
       affinity: {}
       ## @param logs.victoria-logs-single.server.tolerations [array] Tolerations for VictoriaLogs server
       tolerations: []
+      ## @param logs.victoria-logs-single.server.podSecurityContext.seccompProfile.type Seccomp profile for the VictoriaLogs server pod (merged with the subchart's non-root defaults)
+      podSecurityContext:
+        seccompProfile:
+          type: RuntimeDefault
     vector:
       ## @param logs.victoria-logs-single.vector.enabled Enable Vector for log collection
       enabled: true
@@ -206,7 +210,9 @@ logs:
           cpu: 200m
           memory: 200Mi
       ## @param logs.victoria-logs-single.vector.podSecurityContext [object] Pod-level security context for Vector
-      podSecurityContext: {}
+      podSecurityContext:
+        seccompProfile:
+          type: RuntimeDefault
       ## @param logs.victoria-logs-single.vector.securityContext [object] Container-level security context for Vector
       securityContext:
         privileged: false
@@ -345,6 +351,21 @@ grafana:
       ## @param grafana.grafana.ini.auth.anonymous.org_role Org role for anonymous auth
       ##
       org_role: Admin
+  ## `helm test` pod (bats). Set testFramework.enabled to false to skip it.
+  testFramework:
+    ## @param grafana.testFramework.securityContext [object] Pod security context for the Grafana test pod
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 65534
+      runAsGroup: 65534
+      seccompProfile:
+        type: RuntimeDefault
+    ## @param grafana.testFramework.containerSecurityContext [object] Container security context for the Grafana test pod. The root filesystem stays writable because bats writes to /tmp.
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
   ## @param grafana.adminUser Admin user for Grafana
   adminUser: admin
   ## @param grafana.adminPassword Admin password for Grafana (generate a random password if empty)
@@ -462,7 +483,7 @@ tfyNatsUi:
     annotations: {}
   ## @param tfyNatsUi.extraEnv [array] Extra environment variables for the container
   extraEnv: []
-  ## @param tfyNatsUi.resources [object] Container resources
+  ## @param tfyNatsUi.resources [object] Container resources. Empty uses requests 10m CPU / 64Mi and limits 200m CPU / 256Mi.
   resources: {}
   ## @param tfyNatsUi.podSecurityContext [object] Pod security context
   podSecurityContext:
@@ -568,10 +589,45 @@ headlamp:
     create: false
   ## @param headlamp.allowPodExec Allow shell/exec into pods from headlamp.
   allowPodExec: false
+  ## Read-only Role headlamp gets in the control plane namespace
+  rbac:
+    ## @param headlamp.rbac.readSecrets Let headlamp read Secrets in the control plane namespace (database and API credentials live there)
+    readSecrets: false
+    ## @param headlamp.rbac.readApiGroups [array] Non-core API groups headlamp can read (all resources in each). Core resources other than Secrets are always readable.
+    readApiGroups:
+      - apps
+      - batch
+      - autoscaling
+      - policy
+      - networking.k8s.io
+      - discovery.k8s.io
+      - events.k8s.io
+      - coordination.k8s.io
+      - rbac.authorization.k8s.io
+      - metrics.k8s.io
+      - monitoring.coreos.com
+      - argoproj.io
+      - networking.istio.io
+      - security.istio.io
+      - gateway.networking.k8s.io
+      - keda.sh
+      - external-secrets.io
+      - operator.victoriametrics.com
+      - cert-manager.io
+    ## @param headlamp.rbac.readAllResources Restore the pre-0.1.7 Role: read every resource in every API group, Secrets included. Overrides readSecrets and readApiGroups.
+    readAllResources: false
   ## @param headlamp.podSecurityContext [object] Pod security context
   podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
+  ## @param headlamp.resources [object] Headlamp container resources
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   ## @param headlamp.securityContext [object] Container security context
   securityContext:
     runAsUser: 100
@@ -582,6 +638,7 @@ headlamp:
         - ALL
     runAsNonRoot: true
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
   config:
     ## @param headlamp.config.inCluster Use in-cluster auth mode. Must be false to enable the kubeconfig auto-auth bypass.
     inCluster: false
@@ -599,14 +656,23 @@ headlamp:
   service:
     port: 4466
   ## Mount a pre-configured kubeconfig so Headlamp auto-authenticates using the pod's SA token without showing a login screen.
+  ## `tmp` and `config` are the writable paths the read-only root needs; keep them if you override these lists.
   ## @skip headlamp.volumeMounts
   volumeMounts:
     - name: kubeconfig
       mountPath: /etc/headlamp/kubeconfig
       subPath: kubeconfig
       readOnly: true
+    - name: tmp
+      mountPath: /tmp
+    - name: config
+      mountPath: /home/headlamp/.config
   ## @skip headlamp.volumes
   volumes:
     - name: kubeconfig
       configMap:
         name: headlamp-kubeconfig
+    - name: tmp
+      emptyDir: {}
+    - name: config
+      emptyDir: {}

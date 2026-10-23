@@ -16,6 +16,7 @@ spec:
         {{- include "truefoundry-monitoring.nats-ui.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "truefoundry-monitoring.nats-ui.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.tfyNatsUi.serviceAccount.automountServiceAccountToken | default false }}
       imagePullSecrets:
         {{- include "truefoundry-monitoring.imagePullSecrets" (list .Values.tfyNatsUi.imagePullSecrets .) | nindent 8 }}
       {{- with .Values.tfyNatsUi.podSecurityContext }}
@@ -50,10 +51,8 @@ spec:
           {{- with .Values.tfyNatsUi.extraEnv }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.tfyNatsUi.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- include "truefoundry-monitoring.nats-ui.resources" . | nindent 12 }}
       {{- with .Values.tfyNatsUi.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
