@@ -26,6 +26,7 @@ The TrueFoundry Helm chart components are installed in the following order:
 3. **Sync-wave: 1**
    - Deployment of servicefoundry-server
 
+
 4. **Sync-wave: 2**
    - Deployment of other components including:
      - mlfoundry-server
