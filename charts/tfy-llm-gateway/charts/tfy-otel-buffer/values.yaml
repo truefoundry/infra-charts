@@ -1,0 +1,306 @@
+## @section Global parameters
+global:
+  ## @param global.controlPlaneURL Control plane URL. Traces are forwarded to <controlPlaneURL>/api/otel/v1/traces (tfy-otel-collector).
+  controlPlaneURL: ""
+  ## @param global.namespaceOverride Namespace override (defaults to the release namespace)
+  namespaceOverride: ""
+  ## @param global.imagePullSecrets [array] Image pull secrets, used when imagePullSecrets is empty
+  imagePullSecrets: []
+  ## @param global.truefoundryImagePullConfigJSON When set (truefoundry chart creates truefoundry-image-pull-secret from it), that secret is used if no other pull secrets are set
+  truefoundryImagePullConfigJSON: ""
+  ## @param global.labels [object] Labels added to every resource
+  labels: {}
+  ## @param global.annotations [object] Annotations added to every resource
+  annotations: {}
+  ## @param global.podLabels [object] Labels added to every pod
+  podLabels: {}
+  ## @param global.podAnnotations [object] Annotations added to every pod
+  podAnnotations: {}
+  ## @param global.tolerations [array] Tolerations, used when tolerations is empty
+  tolerations: []
+  ## @param global.nodeSelector [object] Node selector, merged under nodeSelector
+  nodeSelector: {}
+  ## @param global.affinity [object] Affinity, used when affinity is empty
+  affinity: {}
+  ## global.image Global image settings
+  image:
+    ## @param global.image.registry Registry for images that do not set their own
+    registry: "tfy.jfrog.io"
+  ## global.customCA Custom CA trusted when forwarding to the control plane and additional sinks
+  customCA:
+    ## @param global.customCA.enabled Bool to trust a custom CA
+    enabled: false
+    ## @param global.customCA.certificate PEM-encoded CA certificate. The chart creates a ConfigMap with it.
+    certificate: ""
+    ## global.customCA.existingConfigMap Existing ConfigMap with the CA under key "ca-certificates.crt"
+    existingConfigMap:
+      ## @param global.customCA.existingConfigMap.name Name of the existing ConfigMap
+      name: ""
+      ## @param global.customCA.existingConfigMap.overrideCAList When true, the ConfigMap replaces the system CA bundle instead of being merged into it
+      overrideCAList: false
+    ## global.customCA.image Image for the initContainer that merges the custom CA into the system bundle
+    image:
+      ## @param global.customCA.image.registry Registry for the initContainer image (defaults to global.image.registry)
+      registry: ""
+      ## @param global.customCA.image.repository Repository for the initContainer image
+      repository: "tfy-mirror/alpine"
+      ## @param global.customCA.image.tag Tag for the initContainer image
+      tag: "3.21"
+    ## @param global.customCA.securityContext [object] Security context for the custom CA initContainer
+    securityContext:
+      runAsGroup: 1001
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+  ## global.mTLS Certificate served on the OTLP ports when mtls.enabled is true
+  mTLS:
+    ## @param global.mTLS.tlsSecretName Secret holding ca.crt, tls.crt, and tls.key
+    tlsSecretName: "truefoundry-internal-tls"
+    ## @param global.mTLS.externalMtlsSecret Use this Secret instead of tlsSecretName
+    externalMtlsSecret: ""
+
+## @section OTEL buffer
+## Receives AI Gateway traces over OTLP, writes them to a disk buffer on a PersistentVolume, and
+## forwards them to the control plane tfy-otel-collector to improve reliability of traces.
+## Deployed by tfy-llm-gateway when enableOtelBuffer is true. Override these values under the
+## tfy-otel-buffer key of the gateway values (tfy-llm-gateway.tfy-otel-buffer in the truefoundry chart).
+
+## @param nameOverride Override the chart name in labels
+nameOverride: ""
+## @param fullnameOverride Name of the StatefulSet and Service (defaults to tfy-otel-buffer)
+fullnameOverride: ""
+## @param replicaCount Number of replicas. Each replica has its own disk buffer.
+replicaCount: 3
+
+## image Image for the buffer pods
+image:
+  ## @param image.registry Image registry (defaults to global.image.registry)
+  registry: ""
+  ## @param image.repository Image repository
+  repository: tfy-mirror/timberio/vector
+  ## @param image.tag Image tag
+  tag: 0.58.0-distroless-libc
+  ## @param image.pullPolicy Image pull policy
+  pullPolicy: IfNotPresent
+## The default image on tfy.jfrog.io/tfy-mirror is pullable anonymously, so no secret is needed.
+## The gateway's own imagePullSecrets are not inherited (only global.* reaches this subchart). 
+## TODO: If global.image.registry points to a private mirror (for example in air-gapped installs), set
+## global.imagePullSecrets or tfy-otel-buffer.imagePullSecrets, otherwise the pods fail with ImagePullBackOff.
+## @param imagePullSecrets [array] Image pull secrets. Falls back to global.imagePullSecrets, then truefoundry-image-pull-secret when global.truefoundryImagePullConfigJSON is set.
+imagePullSecrets: []
+
+## The disk is shared by every disk buffer on a replica. The disk buffers of all additionalSinks
+## together get persistence.size - buffer.maxSizeBytes - buffer.headroomBytes (5 GiB with the
+## defaults), so growing persistence.size gives the extra space to additionalSinks.
+buffer:
+  ## @param buffer.maxSizeBytes Disk buffer for the control plane sink (tfy_otel_traces), per replica. Default 15 GiB.
+  maxSizeBytes: 16106127360
+  ## Spans already on disk are still delivered after the control plane recovers. Once the buffer
+  ## is full, drop_newest discards new spans instead of blocking the OTLP source, which would
+  ## stall gateway trace export for the rest of the outage. Set block only when losing spans is
+  ## unacceptable and a stalled exporter is the preferred failure mode.
+  ## Overflow drops are counted on buffer_discarded_events_total{component_id="tfy_otel_traces",intentional="true"}.
+  ## @param buffer.whenFull Behavior when the control plane buffer is full: drop_newest or block
+  whenFull: drop_newest
+  ## @param buffer.headroomBytes Disk kept free on each volume for buffer overhead. Default 2 GiB.
+  headroomBytes: 2147483648
+
+## forward Delivery settings for the control plane sink (tfy_otel_traces). The destination,
+## encoding, and credentials are fixed by the chart.
+forward:
+  ## Vector's opentelemetry sink only speaks HTTP, so this applies to the OTLP HTTP body.
+  ## @param forward.compression Compression for the control plane export: gzip, none, snappy, zlib, or zstd
+  compression: gzip
+  ## @param forward.timeoutSecs Request timeout in seconds
+  timeoutSecs: 60
+  ## @param forward.retryInitialBackoffSecs Initial retry backoff in seconds
+  retryInitialBackoffSecs: 1
+  ## @param forward.retryMaxDurationSecs Max retry backoff in seconds (retries are unlimited)
+  retryMaxDurationSecs: 120
+  ## Retries are unlimited, so a status that keeps failing holds spans in the disk buffer until
+  ## it fills and new spans are dropped. 401 (missing or invalid TFY_API_KEY) is not retried.
+  ## 403 is retried: the control plane can return it transiently (for example during authz
+  ## propagation), unlike a permanent bad key. Statuses outside this list are dropped. Vector
+  ## counts those drops on
+  ## component_discarded_events_total{component_id="tfy_otel_traces",intentional="false"}.
+  ## @param forward.retryStatusCodes [array] HTTP status codes that are retried
+  retryStatusCodes: [403, 408, 429, 500, 502, 503, 504]
+  ## forward.batch Batching for the control plane export. A batch is sent when any limit is reached.
+  batch:
+    ## @param forward.batch.maxBytes Max uncompressed batch size in bytes
+    maxBytes: 10000000
+    ## @param forward.batch.maxEvents Max spans per batch (null for no limit)
+    maxEvents: null
+    ## @param forward.batch.timeoutSecs Max age of a batch in seconds before it is sent
+    timeoutSecs: 1
+  ## forward.apiKeySecret Secret holding the gateway API key used to authenticate to the control plane
+  apiKeySecret:
+    ## @param forward.apiKeySecret.name Secret name
+    name: truefoundry-creds
+    ## @param forward.apiKeySecret.key Key in the Secret
+    key: TFY_API_KEY
+
+## Additional OTLP destinations that receive the same traces as the control plane, keyed by sink ID.
+## See the OTEL buffer docs for details. Example:
+##   additionalSinks:
+##     logfire:
+##       type: opentelemetry
+##       protocol:
+##         type: http
+##         uri: https://logfire-us.pydantic.dev/v1/traces
+##         method: post
+##         compression: gzip
+##         encoding:
+##           codec: otlp
+##         request:
+##           headers:
+##             Authorization: "SECRET[additional_sink_credentials.LOGFIRE_TOKEN]"
+## @param additionalSinks [object] Additional sinks keyed by sink ID
+additionalSinks: {}
+## additionalSinkDefaults Keys filled into an additional sink that does not set them
+additionalSinkDefaults:
+  ## @param additionalSinkDefaults.inputs [array] Default inputs (the gateway traces)
+  inputs: ["otel_in.traces"]
+  ## @param additionalSinkDefaults.buffer [object] Default buffer
+  buffer:
+    type: memory
+    max_events: 10000
+    when_full: drop_newest
+## additionalSinksCredentials Secret with credentials for additional sinks. Mounted when present.
+additionalSinksCredentials:
+  ## @param additionalSinksCredentials.secretName Secret name. Each key is available as SECRET[additional_sink_credentials.<KEY>].
+  secretName: tfy-otel-buffer-sink-credentials
+
+## mtls mTLS on the OTLP ports (gateway -> buffer, in-cluster). When on, the buffer serves the
+## global.mTLS certificate, and the gateway must export over https with its own client certificate.
+## Always on when global.mTLS.enabled is true, because the gateway then dials in-cluster peers over TLS.
+mtls:
+  ## @param mtls.enabled Require mTLS on the OTLP receivers (forced on by global.mTLS.enabled)
+  enabled: false
+
+## Sink request and response lines exist only at debug:
+## vector::internal_events::http_client logs "Sending HTTP request" / "HTTP response. status=..."
+## vector::sinks::util::http logs the response body on non-2xx.
+## @param logLevel Log filter
+logLevel: "info,vector::internal_events::http_client=debug,vector::sinks::util::http=debug"
+## Quoted so Helm keeps it as a string (bare YAML numbers become float64 and can render as
+## 2.56e+08, which is rejected).
+## @param maxDecompressedSizeBytes Max decompressed OTLP request body size in bytes (HTTP and gRPC)
+maxDecompressedSizeBytes: "256000000"
+## Repeats of the same internal log line are collapsed within this window (default 10s).
+## @param env [array] Extra environment variables
+env:
+  - name: VECTOR_INTERNAL_LOG_RATE_LIMIT
+    value: "1"
+
+## persistence PersistentVolumeClaim per replica for the disk buffers
+persistence:
+  ## @param persistence.enabled Create a PVC per replica. When false, buffers live in an emptyDir and are lost on reschedule.
+  enabled: true
+  ## The size cannot be changed on an existing install with helm upgrade alone, because
+  ## StatefulSet volumeClaimTemplates are immutable.
+  ## @param persistence.size PVC size per replica
+  size: 22Gi
+  ## @param persistence.storageClassName Storage class for the PVC (empty uses the cluster default)
+  storageClassName: ""
+
+## @param resources [object] Resource requests and limits
+## Steady state is well under 100m per replica. The limit leaves room for draining a backlog
+## after a control plane outage, which is CPU-bound (disk reads and gzip).
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+    ephemeral-storage: 256Mi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+    ephemeral-storage: 512Mi
+
+## @param nodeSelector [object] Node selector (merged onto global.nodeSelector)
+nodeSelector: {}
+## @param tolerations [array] Tolerations (falls back to global.tolerations)
+tolerations: []
+## @param affinity [object] Affinity (falls back to global.affinity)
+affinity: {}
+## Empty uses the chart default: soft hostname spread (maxSkew 1, ScheduleAnyway) so
+## replicas prefer different nodes. Set a non-empty list to replace the default.
+## @param topologySpreadConstraints [object] Topology spread constraints
+topologySpreadConstraints: {}
+## podDisruptionBudget Limits voluntary disruptions (node drains, Karpenter consolidation)
+## so not every replica can be evicted at once. Disabled automatically when replicaCount is 1.
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations [object] PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels [object] PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum unavailable replicas during voluntary disruption
+  maxUnavailable: 30%
+  ## @param podDisruptionBudget.minAvailable [nullable] Minimum available replicas (set instead of maxUnavailable)
+  minAvailable: null
+## @param podLabels [object] Extra pod labels
+podLabels: {}
+## @param podAnnotations [object] Extra pod annotations
+podAnnotations: {}
+## fsGroup lets the non-root user write the disk-buffer PVC.
+## @param podSecurityContext [object] Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+## @param securityContext [object] Container security context
+securityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+## @param terminationGracePeriodSeconds Time to flush in-flight batches on shutdown
+terminationGracePeriodSeconds: 60
+
+## serviceAccount Service account for the buffer pods
+serviceAccount:
+  ## @param serviceAccount.create Create the service account
+  create: true
+  ## @param serviceAccount.name Service account name (defaults to the fullname)
+  name: ""
+  ## @param serviceAccount.annotations [object] Service account annotations
+  annotations: {}
+  ## @param serviceAccount.automountServiceAccountToken Mount the service account token (the buffer has no RBAC)
+  automountServiceAccountToken: false
+
+## @param readinessProbe [object] Readiness probe
+readinessProbe:
+  httpGet:
+    path: /health
+    port: api
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+## @param livenessProbe [object] Liveness probe
+livenessProbe:
+  httpGet:
+    path: /health
+    port: api
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+## podMonitor PodMonitor for internal metrics (rendered only when the monitoring.coreos.com/v1 API exists)
+podMonitor:
+  ## @param podMonitor.enabled Enable PodMonitor
+  enabled: true
+  ## @param podMonitor.interval Scrape interval
+  interval: 30s
+  ## kube-prometheus-stack only selects PodMonitors carrying its release label.
+  ## @param podMonitor.additionalLabels [object] Additional PodMonitor labels
+  additionalLabels:
+    release: prometheus
