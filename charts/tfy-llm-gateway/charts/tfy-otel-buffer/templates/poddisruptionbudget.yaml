@@ -1,0 +1,25 @@
+{{- if and .Values.podDisruptionBudget.enabled (gt (int .Values.replicaCount) 1) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tfy-otel-buffer.fullname" . }}
+  namespace: {{ include "tfy-otel-buffer.namespace" . }}
+  labels:
+    {{- include "tfy-otel-buffer.labels" . | nindent 4 }}
+    {{- with .Values.podDisruptionBudget.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.podDisruptionBudget.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  {{- else if .Values.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tfy-otel-buffer.selectorLabels" . | nindent 6 }}
+{{- end }}
