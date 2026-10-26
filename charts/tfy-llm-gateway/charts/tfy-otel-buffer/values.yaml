@@ -225,6 +225,23 @@ nodeSelector: {}
 tolerations: []
 ## @param affinity [object] Affinity (falls back to global.affinity)
 affinity: {}
+## Empty uses the chart default: soft hostname spread (maxSkew 1, ScheduleAnyway) so
+## replicas prefer different nodes. Set a non-empty list to replace the default.
+## @param topologySpreadConstraints [object] Topology spread constraints
+topologySpreadConstraints: {}
+## podDisruptionBudget Limits voluntary disruptions (node drains, Karpenter consolidation)
+## so not every replica can be evicted at once. Disabled automatically when replicaCount is 1.
+podDisruptionBudget:
+  ## @param podDisruptionBudget.enabled Enable PodDisruptionBudget
+  enabled: true
+  ## @param podDisruptionBudget.annotations [object] PDB annotations
+  annotations: {}
+  ## @param podDisruptionBudget.labels [object] PDB labels
+  labels: {}
+  ## @param podDisruptionBudget.maxUnavailable Maximum unavailable replicas during voluntary disruption
+  maxUnavailable: 30%
+  ## @param podDisruptionBudget.minAvailable [nullable] Minimum available replicas (set instead of maxUnavailable)
+  minAvailable: null
 ## @param podLabels [object] Extra pod labels
 podLabels: {}
 ## @param podAnnotations [object] Extra pod annotations

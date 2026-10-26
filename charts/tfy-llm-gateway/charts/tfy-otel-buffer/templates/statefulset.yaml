@@ -143,6 +143,18 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      topologySpreadConstraints:
+        {{- if .Values.topologySpreadConstraints }}
+        {{- toYaml .Values.topologySpreadConstraints | nindent 8 }}
+        {{- else }}
+        {{- /* Soft hostname spread so a single Karpenter/node drain cannot take every replica. */}}
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              {{- include "tfy-otel-buffer.selectorLabels" . | nindent 14 }}
+        {{- end }}
       {{- with $tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
