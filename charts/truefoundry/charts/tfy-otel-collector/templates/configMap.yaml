@@ -20,8 +20,6 @@ data:
         client_ip_header: ${env:CLIENT_IP_HEADER:-CF-Connecting-IP}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-        stage_log_enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        stage_metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -44,9 +42,7 @@ data:
             cert_file: /etc/tls/truefoundry/tls.crt
             key_file: /etc/tls/truefoundry/tls.key
           {{- end }}
-      # Tags otelhttp http.server.request.duration with low-cardinality `endpoint`.
-      tfyhttpendpoint:
-        request_body_size_enabled: ${env:TFY_REQUEST_BODY_SIZE_ENABLED:-false}
+      pprof:
       # Agent-session ingest proxy (:4319). Mesh TLS is enforced in-process by the
       # extension when TLS_ENABLED/TLS_MUTUAL are set (PEM under TLS_DIR) — custom
       # extensions have no collector-config `tls:` block like OTLP receivers.
@@ -84,8 +80,6 @@ data:
             max_request_body_size: ${env:OTEL_RECEIVER_HTTP_MAX_REQUEST_BODY_SIZE_BYTES:-67108864}
             auth:
               authenticator: tfyauth
-            middleware:
-              - id: tfyhttpendpoint
             {{- if .Values.global.mTLS.enabled }}
             tls:
               cert_file: /etc/tls/truefoundry/tls.crt
@@ -125,7 +119,6 @@ data:
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-200ms}
         sfy_error_log_enabled: ${env:SFY_ERROR_LOG_ENABLED:-false}
         sfy_error_log_min_interval: ${env:SFY_ERROR_LOG_MIN_INTERVAL:-60s}
-        otel_export_latency_metrics_enabled: ${env:TFY_OTEL_EXPORT_LATENCY_METRICS_ENABLED:-false}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_soft_ttl: 5m
         cache_hard_ttl: 1h
@@ -154,36 +147,6 @@ data:
       forward:
     processors:
       tfytelemetryprocessor: {}
-      # downstream_ms(earlier) - downstream_ms(later), same request_id, is time in the processor between them.
-      # offset_ms is time since the HTTP handler started. TFY_STAGE_LOG_ENABLED=false skips the logs.
-      tfystage/before_tfytelemetry:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: tfytelemetryprocessor
-      tfystage/before_resource:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: resource
-      tfystage/before_filter:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: filter
-      tfystage/before_groupbyattrs:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: groupbyattrs
-      tfystage/before_transform:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: transform
-      tfystage/before_batch:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: batch
-      tfystage/before_drop_gen_ai:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: transform/drop_gen_ai
       batch:
         timeout: 2s
         send_batch_size: 200
@@ -276,38 +239,7 @@ data:
         metrics:
           # detailed un-drops otelhttp/otelgrpc histograms, including
           # http.server.request.duration (OTLP HTTP handler latency).
-          # views require level: detailed.
           level: detailed
-          # Wider buckets than otelhttp's default 10s ceiling (seconds).
-          views:
-            - selector:
-                instrument_name: http.server.request.duration
-                meter_name: go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 20, 30, 45, 60]
-            - selector:
-                instrument_name: tfy_otel_collector_handler_stage_duration
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 20, 30, 45, 60]
-            - selector:
-                instrument_name: tfy_otel_collector_traces_export_duration_ms
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 15000, 30000, 60000]
-            - selector:
-                instrument_name: tfy_otel_collector_request_body_size
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [1024, 8192, 65536, 262144, 1048576, 4194304, 16777216, 67108864]
           readers:
             - pull:
                 exporter:
@@ -317,17 +249,16 @@ data:
       extensions:
         - tfyauth
         - tfyingestorproxy
-        - tfyhttpendpoint
         - healthcheckv2
       pipelines:
         # Shared ingest path — processors (incl. batch) run once, then forward fans out.
         traces:
           receivers: [otlp]
-          processors: [tfystage/before_tfytelemetry, tfytelemetryprocessor, tfystage/before_resource, resource, tfystage/before_filter, filter, tfystage/before_groupbyattrs, groupbyattrs, tfystage/before_transform, transform, tfystage/before_batch, batch]
+          processors: [tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # tfytelemetryprocessor (per-tenant metrics, reads auth ctx before batch) → resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [forward]
         traces/deltafusion:
           receivers: [forward]
-          processors: [tfystage/before_drop_gen_ai, transform/drop_gen_ai]
+          processors: [transform/drop_gen_ai]
           exporters: [tfydeltafusionexporter]
         traces/otel:
           receivers: [forward]
