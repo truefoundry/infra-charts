@@ -47,44 +47,6 @@
 {{- end -}}
 
 {{/*
-  Non-empty when a list of dicts already has an entry with the given name.
-  Usage: include "truefoundry.listHasName" (dict "list" .Values.x.extraVolumes "name" "foo")
-*/}}
-{{- define "truefoundry.listHasName" -}}
-{{- $name := .name -}}
-{{- range (.list | default list) -}}
-{{- if eq (.name | toString) $name -}}true{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/* global.encryptionMode, validated: a typo must fail the render, not silently disable encryption. */}}
-{{- define "truefoundry.encryptionMode" -}}
-{{- $mode := .Values.global.encryptionMode | default "off" -}}
-{{- if not (has $mode (list "default" "aws-backed" "off")) -}}
-{{- fail (printf "global.encryptionMode must be one of default, aws-backed, off (got %q)" (toString $mode)) -}}
-{{- end -}}
-{{- $mode -}}
-{{- end -}}
-
-{{/*
-  Non-empty when the chart provisions the KEK itself: mode `default`, and no KEK already named in
-  servicefoundryServer.env. The server refuses to start with a file and a Parameter Store path both
-  set, so an install already reading its KEK from AWS must not have ours added on upgrade.
-  CREDENTIAL_ENCRYPTION_KEK_PATH is the former spelling and still resolves, so it counts too.
-*/}}
-{{- define "truefoundry.providesKek" -}}
-{{- /* The env the container will actually get, not the raw value: it is the union of every source
-       and its values have been through tpl, so a path built by a template is seen as what it
-       resolves to. Safe from recursion, since the KEK file path is added outside parseEnv. */ -}}
-{{- $env := (include "servicefoundry-server.parseEnv" .) | fromYaml -}}
-{{- $alreadyHasKek := hasKey $env "CREDENTIAL_ENCRYPTION_KEK_FILE_PATH" -}}
-{{- range $key := (list "CREDENTIAL_ENCRYPTION_KEK_AWS_PARAMETER_STORE_PATH" "CREDENTIAL_ENCRYPTION_KEK_PATH") -}}
-{{- if index $env $key -}}{{- $alreadyHasKek = true -}}{{- end -}}
-{{- end -}}
-{{- if and (eq (include "truefoundry.encryptionMode" $) "default") (not $alreadyHasKek) -}}true{{- end -}}
-{{- end -}}
-
-{{/*
   mTLS volumeMount as a JSON {items: [...]}, paired with truefoundry.mtlsVolumeItems.
 */}}
 {{- define "truefoundry.mtlsVolumeMountItems" -}}
@@ -145,85 +107,6 @@
 {{- toYaml (mergeOverwrite (deepCopy (omit $g "enabled")) (omit $l "enabled")) -}}
 {{- end -}}
 {{- end -}}
-
-{{/*
-  Service account for components that need neither Kubernetes API access nor cloud identity.
-  Falls back to global.serviceAccount.name when global.restrictedServiceAccount.enabled is false.
-  */}}
-{{- define "truefoundry.restrictedServiceAccountName" -}}
-{{- if (.Values.global.restrictedServiceAccount | default dict).enabled -}}
-{{- include "truefoundry.restrictedServiceAccountConfiguredName" . -}}
-{{- else -}}
-{{- .Values.global.serviceAccount.name -}}
-{{- end -}}
-{{- end }}
-
-{{/*
-  global.restrictedServiceAccount.name, whether or not the account is enabled. The only place its
-  default is set in templates.
-  */}}
-{{- define "truefoundry.restrictedServiceAccountConfiguredName" -}}
-{{- (.Values.global.restrictedServiceAccount | default dict).name | default "truefoundry-restricted" -}}
-{{- end }}
-
-{{/*
-  "true" when Helm deploys the tfy-otel-collector subchart. As in Helm's dependency resolution, a
-  boolean tfy-otel-collector.enabled (the condition) overrides the tags; otherwise any true tag
-  enables it, all-false tags disable it, and no tags at all enable it.
-  */}}
-{{- define "truefoundry.otelCollectorEnabled" -}}
-{{- $otel := index .Values "tfy-otel-collector" | default dict -}}
-{{- if kindIs "bool" $otel.enabled -}}
-{{- if $otel.enabled }}true{{ end -}}
-{{- else -}}
-{{- $tags := .Values.tags | default dict -}}
-{{- $set := list -}}
-{{- range $t := list "tracing" "llmGatewayRequestLogging" -}}
-{{- if kindIs "bool" (index $tags $t) }}{{ $set = append $set (index $tags $t) }}{{ end -}}
-{{- end -}}
-{{- if or (has true $set) (empty $set) }}true{{ end -}}
-{{- end -}}
-{{- end }}
-
-{{/*
-  Fail when serviceAccount.annotations is set on a component that has no account of its own: the
-  annotations (for example IRSA or workload identity) would be dropped without an error.
-  */}}
-{{- define "truefoundry.validateComponentServiceAccountAnnotations" -}}
-{{- $components := list
-  (dict "key" "tfyController" "own" (and .Values.tfyController.serviceAccount.create .Values.tfyController.serviceAccount.name) "account" (include "tfy-controller.serviceAccountName" .) "enabled" .Values.tfyController.enabled)
-  (dict "key" "tfyK8sController" "own" (and .Values.tfyK8sController.serviceAccount.create .Values.tfyK8sController.serviceAccount.name) "account" (include "tfy-k8s-controller.serviceAccountName" .) "enabled" .Values.tfyK8sController.enabled)
-  (dict "key" "sfyManifestService" "own" (and .Values.sfyManifestService.serviceAccount.create .Values.sfyManifestService.serviceAccount.name) "account" (include "sfy-manifest-service.serviceAccountName" .) "enabled" .Values.sfyManifestService.enabled)
-  (dict "key" "tfyInfraManager" "own" (and .Values.tfyInfraManager.serviceAccount.create .Values.tfyInfraManager.serviceAccount.name) "account" (include "tfy-infra-manager.serviceAccountName" .) "enabled" .Values.tfyInfraManager.enabled)
-  (dict "key" "tfyProxy" "own" .Values.tfyProxy.serviceAccount.create "account" (include "tfy-proxy.serviceAccountName" .) "enabled" .Values.tfyProxy.enabled) -}}
-{{- $otel := index .Values "tfy-otel-collector" | default dict -}}
-{{- $otelSA := $otel.serviceAccount | default dict -}}
-{{- $components = append $components (dict "key" "tfy-otel-collector" "own" (and $otelSA.create $otelSA.name) "account" ($otelSA.name | default (include "truefoundry.restrictedServiceAccountName" .)) "enabled" (eq (include "truefoundry.otelCollectorEnabled" .) "true")) -}}
-{{- range $c := $components -}}
-{{- $sa := (index $.Values $c.key).serviceAccount | default dict -}}
-{{- if and $c.enabled $sa.annotations (not $c.own) -}}
-{{- fail (printf "%s.serviceAccount.annotations is set, but %s has no account of its own and runs on %q, so the annotations would not be applied. To give it its own account, set %s.serviceAccount.create: true and %s.serviceAccount.name. Otherwise remove the annotations." $c.key $c.key $c.account $c.key $c.key) -}}
-{{- end -}}
-{{- end -}}
-{{- end }}
-
-{{/*
-  Fail when the TrueForge sandbox server would run on a ServiceAccount that does not exist: a name that
-  differs from global.restrictedServiceAccount.name, or the restricted account while it is disabled.
-  */}}
-{{- define "truefoundry.validateSandboxServiceAccount" -}}
-{{- $tf := .Values.trueforge | default dict -}}
-{{- $sa := dig "tfy-sandbox-server" "serviceAccount" dict $tf -}}
-{{- if and $tf.enabled (dig "truefoundry" "devSandboxServerEnabled" false $tf) (not $sa.create) $sa.name -}}
-{{- $restricted := .Values.global.restrictedServiceAccount | default dict -}}
-{{- $restrictedName := include "truefoundry.restrictedServiceAccountConfiguredName" . -}}
-{{- if and $restricted.enabled (ne $sa.name $restrictedName) -}}
-{{- fail (printf "trueforge.tfy-sandbox-server.serviceAccount.name is %q but global.restrictedServiceAccount.name is %q, so the TrueForge sandbox server would run on an account that does not exist. Set it to %q, or to null to use global.serviceAccount.name." $sa.name $restrictedName $restrictedName) -}}
-{{- else if and (not $restricted.enabled) (eq $sa.name $restrictedName) -}}
-{{- fail (printf "trueforge.tfy-sandbox-server.serviceAccount.name is %q, but global.restrictedServiceAccount.enabled is false, so that account is not created. Set trueforge.tfy-sandbox-server.serviceAccount.name to null to use global.serviceAccount.name." $sa.name) -}}
-{{- end -}}
-{{- end -}}
-{{- end }}
 
 {{/*
   Service Account Annotations
@@ -686,96 +569,13 @@ Usage without a resourceTier helper (pass tier value directly):
 {{- end -}}
 
 {{/*
-  Effective networkPolicy.mode: "legacy" or "perComponent". Empty (default) means legacy. Fails on
-  any other value.
-*/}}
-{{- define "truefoundry.networkPolicyMode" -}}
-{{- $mode := .Values.networkPolicy.mode | default "" -}}
-{{- if eq $mode "" -}}
-{{- $mode = "legacy" -}}
-{{- else if not (has $mode (list "legacy" "perComponent")) -}}
-{{- fail (printf "networkPolicy.mode must be empty, \"legacy\" or \"perComponent\", got %q" $mode) -}}
-{{- end -}}
-{{- $mode -}}
-{{- end -}}
-
-{{/*
-  NetworkPolicy name for networkPolicy.mode: legacy, truncated to 63 characters as earlier chart versions did.
-*/}}
-{{- define "truefoundry.legacyNetworkPolicyName" -}}
-{{- printf "%s-np-%s" (include "truefoundry.fullname" .context) .suffix | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{/*
 NetworkPolicy resource name (max 63 chars).
-Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "ing-tfy-proxy")
+Usage: include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra-instance")
 */}}
 {{- define "truefoundry.networkPolicyName" -}}
 {{- $ctx := .context -}}
 {{- $suffix := .suffix -}}
-{{- $full := printf "%s-np-%s" (include "truefoundry.fullname" $ctx) $suffix -}}
-{{- if le (len $full) 63 -}}
-{{- $full -}}
-{{- else -}}
-{{- /* Plain truncation can collide (ing-<name> vs ing-<name>-<suffix>); keep a readable prefix plus a hash of the full name. */ -}}
-{{- printf "%s-%s" ($full | trunc 54 | trimSuffix "-") ($full | sha256sum | trunc 8) -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Render one NetworkPolicy ingress rule from a values entry.
-Usage: include "truefoundry.networkPolicyIngressRule" (dict "rule" . "instance" $instance)
-
-- ports: list of TCP ports (optional)
-- from: list of same-release app.kubernetes.io/name values (optional)
-- fromNamespaces: list of {namespace, podSelector?} cross-namespace sources (optional)
-
-If neither `from` nor `fromNamespaces` is set, the rule allows all sources (any pod /
-namespace / IP). If either key is present, only the listed sources are allowed.
-When either key is present but both lists are empty (after dropping fromNamespaces
-entries without `namespace`), the define returns empty so the caller can skip the rule.
-*/}}
-{{- define "truefoundry.networkPolicyIngressRule" -}}
-{{- $rule := .rule -}}
-{{- $instance := .instance -}}
-{{- $ports := $rule.ports | default list -}}
-{{- $fromPods := $rule.from | default list -}}
-{{- $fromNS := list -}}
-{{- range ($rule.fromNamespaces | default list) }}
-{{- if .namespace }}
-{{- $fromNS = append $fromNS . }}
-{{- end }}
-{{- end -}}
-{{- $restrict := or (hasKey $rule "from") (hasKey $rule "fromNamespaces") -}}
-{{- if and $restrict (not $fromPods) (not $fromNS) }}
-{{- else }}
-{{- if $ports }}
-ports:
-{{- range $ports }}
-  - port: {{ int . }}
-    protocol: TCP
-{{- end }}
-{{- end }}
-{{- if $restrict }}
-from:
-{{- range $fromPods }}
-  - podSelector:
-      matchLabels:
-        app.kubernetes.io/instance: {{ $instance | quote }}
-        app.kubernetes.io/name: {{ . | quote }}
-{{- end }}
-{{- range $fromNS }}
-  - namespaceSelector:
-      matchLabels:
-        kubernetes.io/metadata.name: {{ .namespace | quote }}
-{{- with .podSelector }}
-    podSelector:
-      matchLabels:
-        {{- toYaml . | nindent 8 }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- printf "%s-np-%s" (include "truefoundry.fullname" $ctx) $suffix | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "networkPolicy.labels" -}}
@@ -785,17 +585,9 @@ from:
 {{- end -}}
 
 {{- define "networkPolicy.annotations" -}}
-{{- with (include "networkPolicy.annotationsDict" . | fromJson) }}
+{{- with (mergeOverwrite (deepCopy .Values.global.annotations) .Values.networkPolicy.annotations) }}
 {{- toYaml . }}
 {{- end }}
-{{- end -}}
-
-{{/*
-global.annotations merged with networkPolicy.annotations, as JSON (always an object, "{}" when
-both are empty or null) so callers can merge more keys without a YAML round-trip.
-*/}}
-{{- define "networkPolicy.annotationsDict" -}}
-{{- mergeOverwrite (deepCopy (.Values.global.annotations | default dict)) (deepCopy (.Values.networkPolicy.annotations | default dict)) | toJson -}}
 {{- end -}}
 
 {{/*
@@ -817,15 +609,15 @@ from the Bitnami chart so the master Service name stays in sync with it.
 {{- end -}}
 
 {{/*
-Shared control-plane Redis host.
+Shared control-plane Redis connection URL and host.
 
 `redis` (bundled) and `externalRedis` are mutually exclusive. TrueForge is the
 only consumer today; the bundled LLM gateway can be pointed at the same instance
 later so a CP+GP install does not run two Redises forever.
 
-External Redis is active only when `externalRedis.enabled` is true. Host,
-Sentinel, and externalSecret (the user sets trueforge.env; this chart creates
-no Redis Secret) are the modes under it.
+External Redis is active only when `externalRedis.enabled` is true; url, host,
+sentinel, and existingSecret (user-managed trueforge-creds; credentials never
+pass through values or a rendered manifest) are modes under it.
 */}}
 {{- define "truefoundry.redis.useExternal" -}}
 {{- if .Values.externalRedis.enabled -}}
@@ -833,25 +625,17 @@ true
 {{- end -}}
 {{- end -}}
 
-{{- define "truefoundry.redis.externalSecret" -}}
-{{- if eq (toString (.Values.externalRedis.externalSecret | default false)) "true" -}}
-true
+{{- define "truefoundry.redis.url" -}}
+{{- if and .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
+{{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
 {{- end -}}
+{{- if and .Values.externalRedis.url .Values.externalRedis.existingSecret -}}
+{{- fail "externalRedis.url and externalRedis.existingSecret are mutually exclusive" -}}
 {{- end -}}
-
-{{/*
-"true" when value is ${k8s-secret/<secret>/<key>} with a non-empty secret and key.
-The key must not contain "/".
-*/}}
-{{- define "truefoundry.redis.threePartRef" -}}
-{{- $value := .value -}}
-{{- if and (kindIs "string" $value) (hasPrefix "${k8s-secret/" $value) -}}
-{{- $parts := regexSplit "/" (trimSuffix "}" $value) -1 -}}
-{{- if eq (len $parts) 3 -}}
-{{- if and (index $parts 1) (index $parts 2) -}}
-true
-{{- end -}}
-{{- end -}}
+{{- if and (eq (include "truefoundry.redis.useExternal" .) "true") (not .Values.externalRedis.existingSecret) -}}
+{{- .Values.externalRedis.url -}}
+{{- else if .Values.redis.enabled -}}
+{{- printf "redis://%s-master.%s.svc.cluster.local:6379" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
 {{- end -}}
 {{- end -}}
 
@@ -859,7 +643,7 @@ true
 {{- if and .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
 {{- fail "redis.enabled and externalRedis.enabled are mutually exclusive" -}}
 {{- end -}}
-{{- if eq (include "truefoundry.redis.useExternal" .) "true" -}}
+{{- if and (eq (include "truefoundry.redis.useExternal" .) "true") (not .Values.externalRedis.existingSecret) -}}
 {{- .Values.externalRedis.host -}}
 {{- else if .Values.redis.enabled -}}
 {{- printf "%s-master.%s.svc.cluster.local" (include "truefoundry.redis.fullname" .) (include "global.namespace" .) -}}
@@ -868,24 +652,11 @@ true
 
 {{/*
 Whether a control-plane Redis is configured at all: bundled, external by
-host/sentinel, or externalSecret. Renders "true" or "".
-*/}}
-{{- define "truefoundry.redis.available" -}}
-{{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") (eq (include "truefoundry.redis.externalSecret" .) "true") -}}
-true
-{{- end -}}
-{{- end -}}
-
-{{/*
-Whether the tfy-llm-gateway subchart is rendered: its `tfy-llm-gateway.enabled` condition when
-set, else the `llmGateway` tag (Helm's precedence for dependency conditions over tags).
+url/host/sentinel, or external via a user-managed trueforge-creds Secret.
 Renders "true" or "".
 */}}
-{{- define "truefoundry.llmGateway.enabled" -}}
-{{- $gw := index .Values "tfy-llm-gateway" | default dict -}}
-{{- if hasKey $gw "enabled" -}}
-{{- if $gw.enabled }}true{{ end -}}
-{{- else if (.Values.tags | default dict).llmGateway -}}
+{{- define "truefoundry.redis.available" -}}
+{{- if or .Values.redis.enabled (eq (include "truefoundry.redis.useExternal" .) "true") -}}
 true
 {{- end -}}
 {{- end -}}
