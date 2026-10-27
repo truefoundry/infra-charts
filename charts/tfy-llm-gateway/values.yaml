@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.180.4"
+  gatewayChartVersion: "0.178.8"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -53,31 +53,18 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for every component. A component's own
-  ## podSecurityContext overrides single fields. Under the truefoundry chart, its global.podSecurityContext applies.
+  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
   podSecurityContext:
-    ## @param global.podSecurityContext.enabled Apply pod security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for component pods
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
     runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default user ID for component pods
+    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
     runAsUser: 1001
-    seccompProfile:
-      ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
-      type: RuntimeDefault
-  ## global.containerSecurityContext Container security context defaults for every component. A component's own
-  ## securityContext overrides single fields. Under the truefoundry chart, its global.containerSecurityContext applies.
+  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
   containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.containerSecurityContext.readOnlyRootFilesystem Default readOnlyRootFilesystem for component containers
-    readOnlyRootFilesystem: true
-    ## @param global.containerSecurityContext.allowPrivilegeEscalation Default allowPrivilegeEscalation for component containers
-    allowPrivilegeEscalation: false
-    capabilities:
-      ## @param global.containerSecurityContext.capabilities.drop [array] Linux capabilities dropped from component containers
-      drop:
-        - ALL
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -141,7 +128,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.180.4
+  tag: v0.178.8
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -359,7 +346,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.180.0"
+    tag: "v0.178.1"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -491,6 +478,7 @@ env:
   TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
+  TRUEFORGE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
   CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
@@ -508,6 +496,75 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Sandbox configuration
+sandbox:
+  ## sandbox.devMode devMode sandbox configuration
+  devMode:
+    ## @param sandbox.devMode.enabled Bool to enable the tfy-sandbox-server subchart.
+    enabled: false
+## @section agentsLtsWriteJob Agents LTS write CronJob
+agentsLtsWriteJob:
+  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job.
+  enabled: false
+  ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
+  resourceTier: ""
+  ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
+  schedule: "*/30 * * * *"
+  ## @param agentsLtsWriteJob.timeZone Time zone for the agents LTS write cron job
+  timeZone: UTC
+  ## @param agentsLtsWriteJob.concurrencyPolicy Concurrency policy for the agents LTS write cron job
+  concurrencyPolicy: Forbid
+  ## @param agentsLtsWriteJob.startingDeadlineSeconds Starting deadline seconds for the agents LTS write cron job
+  startingDeadlineSeconds: 300
+  ## @param agentsLtsWriteJob.restartPolicy Restart policy for the agents LTS write cron job
+  restartPolicy: Never
+  ## @param agentsLtsWriteJob.backoffLimit Backoff limit for the agents LTS write cron job
+  backoffLimit: 2
+  ## @param agentsLtsWriteJob.activeDeadlineSeconds Max TTL in seconds for the agents LTS write job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
+  ## @param agentsLtsWriteJob.ttlSecondsAfterFinished TTL seconds after finished for the agents LTS write cron job
+  ttlSecondsAfterFinished: 604800
+  ## @param agentsLtsWriteJob.successfulJobsHistoryLimit Successful jobs history limit for the agents LTS write cron job
+  successfulJobsHistoryLimit: 1
+  ## @param agentsLtsWriteJob.failedJobsHistoryLimit Failed jobs history limit for the agents LTS write cron job
+  failedJobsHistoryLimit: 5
+  ## @skip agentsLtsWriteJob.command
+  command:
+    - "npm"
+    - "run"
+    - "agents-jobs:write-to-lts"
+  ## @param agentsLtsWriteJob.envSecretName Environment secret name for 2-part ${k8s-secret/...} refs
+  envSecretName: tfy-llm-gateway-env-secret
+  ## @param agentsLtsWriteJob.imagePullPolicy Image pull policy for the agents LTS write cron job
+  imagePullPolicy: IfNotPresent
+  ## @param agentsLtsWriteJob.podSecurityContext [object] Security context for the agents LTS write cron job pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param agentsLtsWriteJob.securityContext [object] Security context for the agents LTS write cron job container
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+  ## @param agentsLtsWriteJob.serviceAccount.name Optional service account override (defaults to the gateway service account)
+  serviceAccount:
+    name: ""
+  ## @param agentsLtsWriteJob.resources Resource requests/limits override (merged over resourceTier defaults)
+  resources: {}
+  ## @param agentsLtsWriteJob.env [object] Environment variables for the agents LTS write cron job (job code supplies defaults for LTS_*/LOG_LEVEL/SENTRY/etc.)
+  env:
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
 
 ## Redis dependency configuration
 redis:
@@ -647,7 +704,7 @@ externalRedis:
 ## @section networkPolicy Optional NetworkPolicies scoped to the LLM gateway pods.
 ## Two policies when enabled: a deny-by-default ingress policy allowing only the configured sources
 ## (e.g. the istio ingress gateway), and an egress policy that allows DNS (UDP + TCP 53), pods of this release
-## (gateway, redis — matched by app.kubernetes.io/instance), and external destinations
+## (gateway, redis, sandbox — matched by app.kubernetes.io/instance), and external destinations
 ## such as LLM providers over both IPv4 (0.0.0.0/0) and IPv6 (::/0) — minus any ranges listed in
 ## deniedEgressCIDRs (empty by default).
 ## Extra destinations (other namespaces, specific CIDRs) can be added via extraEgress. Each policy can be toggled
@@ -687,16 +744,272 @@ networkPolicy:
     ## @param networkPolicy.egress.extraEgress [array] Raw egress rules appended verbatim to the egress policy. Use this to allow extra destinations (other namespaces, specific CIDRs such as the Kubernetes API server for global.wif.enabled, etc.).
     extraEgress: []
 
-## @section OTEL buffer
-## tfy-otel-buffer buffers gateway traces on disk and forwards them to the control plane
-## tfy-otel-collector to improve reliability of traces. On by default; set to false to export
-## traces to the control plane directly. Requires global.controlPlaneURL when enabled.
-## The gateway exports to http://tfy-otel-buffer.<namespace>.svc.cluster.local:4318/v1/traces, or
-## https:// with mTLS when global.mTLS.enabled is true.
-## @param enableOtelBuffer Bool to deploy tfy-otel-buffer and export gateway traces to it
-enableOtelBuffer: true
-## Overrides for the tfy-otel-buffer subchart (charts/tfy-otel-buffer/values.yaml), for example
-## additionalSinks, buffer, forward, persistence, and resources. global.* is shared with the gateway.
-## @skip tfy-otel-buffer
-tfy-otel-buffer:
-  additionalSinks: {}
+## @section Vector trace buffer
+## Vector aggregator that buffers gateway traces on disk and forwards them to the control plane
+## OTEL collector (<global.controlPlaneURL>/api/otel/v1/traces), so spans survive control plane
+## outages. When enabled, the gateway exports traces to Vector instead of the control plane.
+## The Vector config is rendered by this chart into the ConfigMap named in vector.existingConfigMaps.
+## The API key is read from the truefoundry-creds secret (key TFY_API_KEY), mounted via vector.extraVolumes.
+vector:
+  ## @param vector.enabled Bool to deploy Vector and route gateway traces through it
+  enabled: false
+  ## vector.buffer On-disk buffer for the control plane sink
+  buffer:
+    ## @param vector.buffer.maxSizeBytes Max size of the disk buffer per replica; must fit in vector.persistence.size
+    maxSizeBytes: 21474836480
+    ## Spans already on disk are still delivered after the control plane recovers. Once the buffer
+    ## is full, drop_newest discards new spans instead of blocking the OTLP source, which would
+    ## stall gateway trace export for the rest of the outage. Set block only when losing spans is
+    ## unacceptable and a stalled exporter is the preferred failure mode.
+    ## Overflow drops are counted on buffer_discarded_events_total{component_id="tfy_otel_traces",intentional="true"}.
+    ## @param vector.buffer.whenFull Behavior when the disk buffer is full: drop_newest or block
+    whenFull: drop_newest
+  ## vector.forward Delivery settings for the control plane sink
+  forward:
+    ## Gzip the OTLP HTTP body (Content-Encoding: gzip) on the way to the control plane.
+    ## Vector's opentelemetry sink only speaks HTTP, so this does not apply to gRPC.
+    ## @param vector.forward.compression Compression for the control plane export: gzip, none, snappy, zlib, or zstd
+    compression: gzip
+    ## @param vector.forward.timeoutSecs Request timeout in seconds
+    timeoutSecs: 60
+    ## @param vector.forward.retryInitialBackoffSecs Initial retry backoff in seconds
+    retryInitialBackoffSecs: 1
+    ## @param vector.forward.retryMaxDurationSecs Max retry backoff in seconds (retries are unlimited)
+    retryMaxDurationSecs: 120
+    ## Auth failures are not retried. 401 and 403 mean TFY_API_KEY is missing, wrong, or expired,
+    ## and another attempt cannot fix that. This field only caps backoff, so retrying them runs
+    ## forever and fills the disk buffer until new spans are dropped.
+    ## Statuses outside this list are dropped. Vector counts those drops on
+    ## component_discarded_events_total{component_id="tfy_otel_traces",intentional="false"}
+    ## and component_errors_total, scraped from the prometheus exporter by vector.podMonitor.
+    ## @param vector.forward.retryStatusCodes [array] HTTP status codes that are retried. 401 and 403 are omitted on purpose.
+    retryStatusCodes: [408, 429, 500, 502, 503, 504]
+  ## vector.mtls mTLS on the OTLP ports Vector listens on (gateway -> Vector, in-cluster).
+  ## Off by default so environments without mTLS send plain OTLP. When on, Vector serves the
+  ## global.mTLS certificate and the gateway exports over https, so global.mTLS.enabled must
+  ## also be true (that is what mounts the client certificate into the gateway pod).
+  mtls:
+    ## @param vector.mtls.enabled Require mTLS on Vector's OTLP receivers; requires global.mTLS.enabled
+    enabled: false
+  ## @param vector.fullnameOverride Vector Service and StatefulSet name. A fixed name avoids the Vector
+  ## chart collapsing to the release name when that name contains "vector" (release
+  ## "vector-tfy-llm-gateway" produced a Service that collided with the gateway).
+  fullnameOverride: tfy-vector
+  ## @param vector.logLevel Vector log filter. The chart writes this to VECTOR_LOG; do not also set VECTOR_LOG under vector.env.
+  ## Sink request and response lines exist only at debug:
+  ## vector::internal_events::http_client logs "Sending HTTP request" / "HTTP response. status=..."
+  ## vector::sinks::util::http logs the response body on non-2xx.
+  logLevel: "info,vector::internal_events::http_client=debug,vector::sinks::util::http=debug"
+  ## Max decompressed OTLP request body size (HTTP and gRPC). The chart writes this to
+  ## VECTOR_MAX_DECOMPRESSED_SIZE_BYTES; do not also set that under vector.env.
+  ## Quoted so Helm keeps it as a string (bare YAML numbers become float64 and can render
+  ## as 2.56e+08, which Vector rejects). Default is 256000000 bytes (~244 MiB).
+  ## @param vector.maxDecompressedSizeBytes Max decompressed input payload size in bytes (default "256000000")
+  maxDecompressedSizeBytes: "256000000"
+  ## @param vector.env [array] Extra environment variables for Vector
+  ## Vector collapses repeats of the same internal log line within this window (default 10s).
+  ## 1 is the minimum; bursts inside one second still show as "suppressed N times".
+  env:
+    - name: VECTOR_INTERNAL_LOG_RATE_LIMIT
+      value: "1"
+  ## ConfigMap updates swap the ..data symlink. Vector's default inotify watch follows the
+  ## file inode, so that swap never fires. poll re-stats the path and follows the symlink.
+  ## The upstream checksum annotation uses lookup, which sees the previous ConfigMap and
+  ## would roll this StatefulSet on the next upgrade instead. Reload stays in-process.
+  ## @param vector.args [array] Vector process arguments. Includes --config-dir and a poll-based --watch-config.
+  args:
+    - --config-dir
+    - /etc/vector/
+    - --watch-config
+    - --watch-config-method
+    - poll
+    - --watch-config-poll-interval-seconds
+    - "30"
+  ## @param vector.rollWorkload Roll the workload when the Vector chart's own ConfigMap changes. Off because this chart supplies the config and reloads it via vector.args.
+  rollWorkload: false
+  ## @param vector.role Vector role (StatefulSet for the disk buffer)
+  role: Aggregator
+  ## @param vector.replicas Number of Vector replicas
+  replicas: 3
+  ## Scheduling: the upstream Vector chart only reads these keys (not global.*).
+  ## templates/_vector-pod.tpl overrides vector.pod so empty values fall back to
+  ## global.tolerations / nodeSelector / affinity (same idea as the gateway Redis
+  ## subchart). Set them here to override global for Vector only.
+  ## @param vector.nodeSelector [object] Node selector for Vector pods (merged onto global.nodeSelector)
+  nodeSelector: {}
+  ## @param vector.tolerations [array] Tolerations for Vector pods (falls back to global.tolerations)
+  tolerations: []
+  ## @param vector.affinity [object] Affinity for Vector pods (falls back to global.affinity)
+  affinity: {}
+  ## Upstream Vector defaults podLabels to vector.dev/exclude: "true",
+  ## see https://vector.dev/docs/reference/configuration/sources/kubernetes_logs/#pod-exclusion which makes
+  ## kubernetes_logs Agents skip these pods. Null clears that key so Agents can collect them
+  ## (an empty map would deep-merge and leave the exclude label in place).
+  ## @param vector.podLabels [object] Labels on Vector pods (null out exclude to allow Agent collection)
+  podLabels:
+    vector.dev/exclude:
+  ## vector.image Vector image
+  image:
+    ## @param vector.image.repository Vector image repository
+    repository: tfy.jfrog.io/tfy-mirror/timberio/vector
+    ## @param vector.image.tag Vector image tag
+    tag: 0.58.0-distroless-libc
+    ## The upstream Vector chart only honors image.pullSecrets (not global.imagePullSecrets).
+    ## Default matches the gateway / truefoundry fallback (truefoundry-image-pull-secret from
+    ## global.truefoundryImagePullConfigJSON). If you set imagePullSecrets or
+    ## global.imagePullSecrets, set this to the same list.
+    ## @param vector.image.pullSecrets [array] Image pull secrets for Vector pods
+    pullSecrets:
+      - name: truefoundry-image-pull-secret
+  ## @param vector.existingConfigMaps [array] ConfigMap holding the Vector config, rendered by this chart
+  existingConfigMaps:
+    - tfy-llm-gateway-vector-config
+  ## @param vector.dataDir Vector data dir (holds the disk buffer)
+  dataDir: /vector-data-dir
+  ## vector.persistence PersistentVolumeClaim per replica for the disk buffer
+  persistence:
+    ## @param vector.persistence.enabled Enable a PVC per replica
+    enabled: true
+    ## @param vector.persistence.size PVC size
+    size: 22Gi
+    ## @param vector.persistence.storageClassName Storage class for the PVC (empty uses the cluster default)
+    storageClassName: ""
+  ## @param vector.resources [object] Resource requests/limits for Vector
+  resources:
+    requests:
+      cpu: "2"
+      memory: 1Gi
+      ephemeral-storage: 256Mi
+    limits:
+      cpu: "3"
+      memory: 2Gi
+      ephemeral-storage: 512Mi
+  ## @skip vector.containerPorts
+  containerPorts:
+    - name: otlp-grpc
+      containerPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      containerPort: 4318
+      protocol: TCP
+    - name: api
+      containerPort: 8686
+      protocol: TCP
+    - name: prom-exporter
+      containerPort: 9598
+      protocol: TCP
+  ## @skip vector.service
+  service:
+    type: ClusterIP
+    ports:
+      - name: otlp-grpc
+        port: 4317
+        protocol: TCP
+        targetPort: 4317
+      - name: otlp-http
+        port: 4318
+        protocol: TCP
+        targetPort: 4318
+      # Vector API. GET /health is what the readiness and liveness probes call.
+      - name: api
+        port: 8686
+        protocol: TCP
+        targetPort: 8686
+  ## @skip vector.initContainers Merge global.customCA into /etc/ssl/certs for the control-plane
+  ## sink. The Vector chart tpl-renders this list, so image/registry and overrideCAList follow
+  ## global.customCA. When the optional custom-ca ConfigMap is absent (customCA disabled), the
+  ## script copies the image system bundle so the ssl-certs mount stays valid.
+  initContainers:
+    - name: configure-custom-ca
+      image: '{{ .Values.global.customCA.image.registry | default .Values.global.image.registry }}/{{ .Values.global.customCA.image.repository }}:{{ .Values.global.customCA.image.tag }}'
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          if [ ! -f /custom-ca/ca-certificates.crt ]; then
+            cp /etc/ssl/certs/ca-certificates.crt /ssl-certs/ca-certificates.crt
+          elif [ "{{ .Values.global.customCA.existingConfigMap.overrideCAList }}" = "true" ]; then
+            cp /custom-ca/ca-certificates.crt /ssl-certs/ca-certificates.crt
+          else
+            cat /etc/ssl/certs/ca-certificates.crt /custom-ca/ca-certificates.crt > /ssl-certs/ca-certificates.crt
+          fi
+      securityContext:
+        runAsGroup: 1001
+        readOnlyRootFilesystem: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: custom-ca
+          mountPath: /custom-ca
+          readOnly: true
+        - name: ssl-certs
+          mountPath: /ssl-certs
+  ## @skip vector.extraVolumes The truefoundry-mtls volume is only read when vector.mtls.enabled is true; it is
+  ## marked optional so the pod still starts when the secret is absent. custom-ca is optional for the same
+  ## reason when global.customCA is off. The Vector chart renders this list as literal YAML, so secretName
+  ## and configMap.name cannot follow globals automatically. They must match what the gateway mounts:
+  ## global.mTLS.externalMtlsSecret (else tlsSecretName), and global.customCA.existingConfigMap.name (else
+  ## tfy-llm-gateway-custom-ca). The chart fails the render when they differ. Helm replaces this whole
+  ## list, so an override must keep tfy-credentials, truefoundry-mtls, custom-ca, and ssl-certs.
+  extraVolumes:
+    - name: tfy-credentials
+      secret:
+        secretName: truefoundry-creds
+        items:
+          - key: TFY_API_KEY
+            path: TFY_API_KEY
+    - name: truefoundry-mtls
+      secret:
+        secretName: truefoundry-internal-tls
+        optional: true
+    - name: custom-ca
+      configMap:
+        name: tfy-llm-gateway-custom-ca
+        optional: true
+    - name: ssl-certs
+      emptyDir:
+        sizeLimit: 10Mi
+  ## @skip vector.extraVolumeMounts
+  extraVolumeMounts:
+    - name: tfy-credentials
+      mountPath: /etc/vector-secrets
+      readOnly: true
+    - name: truefoundry-mtls
+      mountPath: /etc/tls/truefoundry
+      readOnly: true
+    - name: ssl-certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+  ## @skip vector.readinessProbe
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8686
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  ## @skip vector.livenessProbe
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8686
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+  ## vector.podMonitor PodMonitor for Vector internal metrics
+  podMonitor:
+    ## @param vector.podMonitor.enabled Enable PodMonitor
+    enabled: true
+    ## @param vector.podMonitor.port Metrics port name
+    port: prom-exporter
+    ## @param vector.podMonitor.path Metrics path
+    path: /metrics
+    ## @param vector.podMonitor.interval Scrape interval
+    interval: 30s
+    ## kube-prometheus-stack only selects PodMonitors carrying its release label.
+    ## @param vector.podMonitor.additionalLabels [object] Additional PodMonitor labels
+    additionalLabels:
+      release: prometheus
