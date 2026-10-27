@@ -90,10 +90,18 @@ networkPolicy:
   mode: perComponent
   metricsFromNamespaces:
     - namespace: prometheus
+  components:
+    tfyWorkflowAdmin:
+      name: tfy-workflow-admin
+      rules:
+        - ports: [8089]
+          from:
+            - servicefoundry-server
+          fromNamespaces:
+            - namespace: ingress-nginx
+              podSelector:
+                app.kubernetes.io/name: ingress-nginx
 ```
-
-If your gateway isn't the TrueFoundry Istio gateway (`istio: tfy-istio-ingress` in `istio-system`),
-also set `extraIngress` as described in [Routes that bypass tfy-proxy](#routes-that-bypass-tfy-proxy).
 
 Check the allow-lists against flow logs on a non-production control plane before you enable them in
 production.
@@ -116,69 +124,110 @@ works this way). Two more lists open ports to callers outside the release (see
 
 For rules the chart cannot express (ipBlock, matchExpressions), set `extraIngress` on the component. They are added as raw
 [NetworkPolicy](https://kubernetes.io/docs/reference/kubernetes-api/policy-resources/network-policy-v1/#NetworkPolicySpec)
-rules and are not validated. `extraIngress` is added to the component's default `rules`; setting `rules`
-replaces them.
-
-#### Routes that bypass tfy-proxy
-
-tfy-proxy `8080` is open to any source, but some gateway routes go straight to other components, which
-in `perComponent` mode only admit callers in this release:
-
-- `tfy-workflow-admin` 8089: the chart's VirtualService (`global.virtualservice.enabled`), Ingress and
-  HTTPRoute route Flyte gRPC (`/flyteidl.service.AdminService/`) to it directly.
-- `servicefoundry-server` 3000: VirtualServices outside this chart can route to it directly, e.g. an
-  auth-server VirtualService that sends `/mcp/oauth2/callback` through a gateway.
-
-By default, `extraIngress` on both components admits the TrueFoundry Istio gateway: pods labelled
-`istio: tfy-istio-ingress` in namespace `istio-system`. No other gateway is admitted: not the tailnet
-or ALB Istio gateways (`tfy-istio-ingress-tailnet`, `tfy-istio-ingress-alb`,
-`tfy-istio-ingress-ctl-alb`), ingress-nginx, or an ALB in IP target mode. Routes through those fail
-with an upstream connect error or timeout from the gateway; the UI and API, which go through tfy-proxy,
-keep working.
-
-To admit other gateways, set `extraIngress` on both components. Use a `namespaceSelector` +
-`podSelector` peer for gateway pods, or an `ipBlock` for a load balancer that connects from its own
-addresses (an AWS ALB in IP target mode uses its subnet CIDRs). A list you set **replaces** the default
-(Helm doesn't merge lists), so repeat the `tfy-istio-ingress` entry if you still route through it.
-`extraIngress: []` admits no gateway.
-
-```yaml
-networkPolicy:
-  components:
-    tfyWorkflowAdmin:
-      extraIngress:
-        - ports:
-            - port: 8089
-              protocol: TCP
-          from:
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: istio-system
-              podSelector:
-                matchExpressions:
-                  - key: istio
-                    operator: In
-                    values: [tfy-istio-ingress, tfy-istio-ingress-tailnet, tfy-istio-ingress-ctl-alb]
-            - ipBlock:
-                cidr: 10.0.0.0/24   # ALB subnet
-    servicefoundryServer:
-      extraIngress:
-        - ports:
-            - port: 3000
-              protocol: TCP
-          from:
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: istio-system
-              podSelector:
-                matchLabels:
-                  istio: tfy-istio-ingress-alb
-```
+rules and are not validated.
 
 `networkPolicy.allowedIngressFrom` and `networkPolicy.extraIngress` work only in `legacy` mode; in
 `perComponent` mode render fails if either is set. Move their entries to
 `components.<component>.rules[].fromNamespaces` or `components.<component>.extraIngress`.
 
+#### Contributing: keep the call graph current
+
+`networkPolicy.components` is the control plane's call graph, and a pod without an entry accepts no
+traffic in `perComponent` mode. In the same PR that adds a component or a call between components:
+
+- add a `networkPolicy.components` entry for a new workload (its `app.kubernetes.io/name` and ingress
+  `rules`);
+- for a new call, add the caller to the callee's `from`, on the right port.
+
+`ci/test-networkpolicy-ingress.sh` enforces this: every `from` caller must have a component entry, every
+call found in the rendered manifests must be admitted, and every release workload must be selected by a
+component ingress policy.
+
+### NetworkPolicy settings
+
+Namespace entries match the `kubernetes.io/metadata.name` label, which Kubernetes 1.21+ sets
+automatically. `podSelector` is a `matchLabels` map; without it, every pod in the namespace matches.
+
+#### Ingress from outside the release
+
+These apply whenever `networkPolicy.enabled` is true. Each adds a rule to the component's
+`ing-<component>` policy.
+
+| Key | Type | Default | Opens |
+|-----|------|---------|-------|
+| `networkPolicy.metricsFromNamespaces` | list of `{namespace, podSelector?}` | `[]` | Each component's `metricsPorts` to these namespaces |
+| `networkPolicy.sidecarMetricsPorts` | list of TCP ports | `[]` | These ports on **every** component, to the same scrapers as `metricsPorts` |
+| `networkPolicy.agentFromNamespaces` | list of `{namespace, podSelector?}` | `[]` | Each component's `agentPorts` to these namespaces |
+Check the allow-lists against flow logs on a non-production control plane before you enable them in
+production.
+
+### Per-component rules
+
+Each entry in `networkPolicy.components` selects pods by `app.kubernetes.io/name` and creates one
+ingress policy. Each ingress rule may set:
+
+- `ports`: TCP ports on the target
+- `from`: callers in this release, by `app.kubernetes.io/name`
+- `fromNamespaces`: callers in other namespaces (`namespace`, optional `podSelector`)
+
+With neither `from` nor `fromNamespaces`, any source may connect on those ports (tfy-proxy `8080`
+works this way). Two more lists open ports to callers outside the release (see
+[NetworkPolicy settings](#networkpolicy-settings)):
+
+- `metricsPorts`, opened to `networkPolicy.metricsFromNamespaces` for Prometheus scraping.
+- `agentPorts`, opened to `networkPolicy.agentFromNamespaces` for a tfy-agent on the same cluster.
+
+For rules the chart cannot express (ipBlock, matchExpressions), set `extraIngress` on the component. They are added as raw
+[NetworkPolicy](https://kubernetes.io/docs/reference/kubernetes-api/policy-resources/network-policy-v1/#NetworkPolicySpec)
+rules and are not validated.
+
+`metricsPorts` by component (the ports their ServiceMonitors / PodMonitors scrape):
+`networkPolicy.allowedIngressFrom` and `networkPolicy.extraIngress` work only in `legacy` mode; in
+`perComponent` mode render fails if either is set. Move their entries to
+`components.<component>.rules[].fromNamespaces` or `components.<component>.extraIngress`.
+
+| Component | Port(s) |
+|-----------|---------|
+| tfy-proxy | 2019 |
+| servicefoundry-server | 3000 |
+| mlfoundry-server | 5000 |
+| deltafusion-ingestor | 8000 |
+| deltafusion-query-server | 8080 |
+| sfy-manifest-service | 8080 |
+| tfy-controller | 8123 |
+| tfy-k8s-controller | 3002 |
+| tfy-otel-collector | 8888 |
+| tfy-nats (prom-exporter) | 7777 |
+| tfy-llm-gateway | 8787 |
+| vector | 9598 |
+| kube-state-metrics | 8080, 8081 |
+
+`agentPorts`: `tfy-controller` 8123 and `tfy-nats` 8080 (NATS websocket).
+
+**If missing:**
+- `metricsFromNamespaces`: a Prometheus outside the release can't scrape anything, and its targets show
+  as down. The `truefoundryMonitoring` Prometheus is allowed automatically.
+- `sidecarMetricsPorts`: with Istio metrics merging, scrapes of `:15020` fail.
+- `agentFromNamespaces`: a tfy-agent on the control-plane cluster that dials `tfy-nats:8080` or
+  `tfy-controller:8123` directly is cut off, and its cluster shows as disconnected. Agents that connect
+  through tfy-proxy, including all agents on other clusters, need no entry.
+
+Examples:
+
+```yaml
+networkPolicy:
+  enabled: true
+  # Prometheus Operator (kube-prometheus-stack) in the "monitoring" namespace
+  metricsFromNamespaces:
+    - namespace: monitoring
+      podSelector:
+        app.kubernetes.io/name: prometheus
+  # Istio sidecars with metrics merging
+  sidecarMetricsPorts: [15020]
+  # tfy-agent installed on the control-plane cluster in "tfy-agent"
+  agentFromNamespaces:
+    - namespace: tfy-agent
+```
 #### Contributing: keep the call graph current
 
 `networkPolicy.components` is the control plane's call graph, and a pod without an entry accepts no
@@ -223,7 +272,6 @@ These apply whenever `networkPolicy.enabled` is true. Each adds a rule to the co
 | tfy-otel-collector | 8888 |
 | tfy-nats (prom-exporter) | 7777 |
 | tfy-llm-gateway | 8787 |
-| trueforge | 8790 |
 | vector | 9598 |
 | kube-state-metrics | 8080, 8081 |
 
@@ -242,6 +290,9 @@ Examples:
 ```yaml
 networkPolicy:
   enabled: true
+  # Namespace-only selector: every pod in "observability" may scrape (e.g. VictoriaMetrics agents)
+  metricsFromNamespaces:
+    - namespace: observability
   # Prometheus Operator (kube-prometheus-stack) in the "monitoring" namespace
   metricsFromNamespaces:
     - namespace: monitoring
@@ -573,7 +624,7 @@ trueforge:
 | `global.truefoundryImagePullConfigJSON`                                      | JSON config for image pull secret                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `""`                                                                                                               |
 | `global.tenantName`                                                          | Name of the tenant                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `""`                                                                                                               |
 | `global.controlPlaneURL`                                                     | URL of the control plane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `http://tfy-proxy:8080`                                                                                            |
-| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `0.180.7`                                                                                                          |
+| `global.controlPlaneChartVersion`                                            | Version of control-plane chart                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `0.179.36`                                                                                                         |
 | `global.multitenant.enabled`                                                 | Enable multitenant env injection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `false`                                                                                                            |
 | `global.existingTruefoundryCredsSecret`                                      | Non-empty skips rendering the `truefoundry-creds` Secret; pre-create it (that exact name) with DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME and TFY_API_KEY (and LICENSE_JWT if applicable)                                                                                                                                                                                                                                                                                                                                                                                                                         | `""`                                                                                                               |
 | `global.ingress.enabled`                                                     | Bool to enable ingress for the control plane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `false`                                                                                                            |
@@ -624,6 +675,7 @@ trueforge:
 | `global.proxy.trueforge.port`                                                | TrueForge port for service routing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `8790`                                                                                                             |
 | `global.proxy.tfyOtelCollector.host`                                         | OTEL collector host for OTEL collector service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `{{ .Release.Name }}-tfy-otel-collector`                                                                           |
 | `global.proxy.tfyOtelCollector.port`                                         | OTEL collector port for OTEL collector service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `4318`                                                                                                             |
+| `global.proxy.tfyOtelCollector.ingestorProxyPort`                            | Agent session ingest proxy port                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `4319`                                                                                                             |
 | `global.proxy.proxyServerHost`                                               | Proxy server host for service routing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | `{{ .Release.Name }}-tfy-controller`                                                                               |
 | `global.proxy.tfyProxyHost`                                                  | tfy proxy host for service routing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `{{ .Release.Name }}-tfy-proxy`                                                                                    |
 | `global.proxy.cors.enabled`                                                  | Enable CORS headers on the proxy. When enabled with an empty allowedOrigins list (or ["*"]), all origins are allowed. When specific origins are listed, only those are allowed.                                                                                                                                                                                                                                                                                                                                                                                                                                   | `true`                                                                                                             |
@@ -714,9 +766,9 @@ trueforge:
 
 ### metricsV2 Metrics v2 frontend feature flag
 
-| Name                | Description                    | Value   |
-| ------------------- | ------------------------------ | ------- |
-| `metricsV2.enabled` | Enable the metrics v2 frontend | `false` |
+| Name                | Description                    | Value  |
+| ------------------- | ------------------------------ | ------ |
+| `metricsV2.enabled` | Enable the metrics v2 frontend | `true` |
 
 ### networkPolicy Optional NetworkPolicies scoped to the control-plane namespace only.
 
@@ -801,7 +853,7 @@ trueforge:
 | `mlfoundryServer.deploymentAnnotations`                       | Deployment-specific annotations for the mlfoundry server                                                     | `{}`                                  |
 | `mlfoundryServer.image.registry`                              | Registry for the mlfoundry server image (overrides global.registry if specified)                             | `""`                                  |
 | `mlfoundryServer.image.repository`                            | Image repository for the mlfoundry server (without registry)                                                 | `tfy-private-images/mlfoundry-server` |
-| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                                                           | `v0.180.0`                            |
+| `mlfoundryServer.image.tag`                                   | Image tag for the mlfoundry server                                                                           | `v0.179.0`                            |
 | `mlfoundryServer.environmentName`                             | Environment name for the mlfoundry server                                                                    | `default`                             |
 | `mlfoundryServer.envSecretName`                               | Secret name for the mlfoundry server environment variables                                                   | `mlfoundry-server-env-secret`         |
 | `mlfoundryServer.imagePullPolicy`                             | Image pull policy for the mlfoundry server                                                                   | `IfNotPresent`                        |
@@ -918,7 +970,7 @@ trueforge:
 | `servicefoundryServer.deploymentAnnotations`                        | Deployment-specific annotations for the servicefoundry server                                                                                                                           | `{}`                                                    |
 | `servicefoundryServer.image.registry`                               | Registry for the servicefoundry server image (overrides global.registry if specified)                                                                                                   | `""`                                                    |
 | `servicefoundryServer.image.repository`                             | Image repository for the servicefoundry server (without registry)                                                                                                                       | `tfy-private-images/servicefoundry-server`              |
-| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.180.2`                                              |
+| `servicefoundryServer.image.tag`                                    | Image tag for the servicefoundry server                                                                                                                                                 | `v0.179.20`                                             |
 | `servicefoundryServer.environmentName`                              | Environment name for the servicefoundry server                                                                                                                                          | `default`                                               |
 | `servicefoundryServer.envSecretName`                                | Secret name for the servicefoundry server environment variables                                                                                                                         | `servicefoundry-server-env-secret`                      |
 | `servicefoundryServer.tfyK8sSecretName`                             | Secret name for K8s secrets mounted at /opt/truefoundry/tfy-k8s-secrets. If set, the secret is mounted as a volume; if empty, no volume is attached.                                    | `""`                                                    |
@@ -999,7 +1051,7 @@ trueforge:
 | `sparkHistoryServer.annotations`                        | Annotations for the spark history server                                                              | `{}`                                      |
 | `sparkHistoryServer.image.registry`                     | Registry for the spark history server image (overrides global.registry if specified)                  | `""`                                      |
 | `sparkHistoryServer.image.repository`                   | Image repository for the spark history server (without registry)                                      | `tfy-private-images/spark-history-server` |
-| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                                                                | `v0.180.0`                                |
+| `sparkHistoryServer.image.tag`                          | Image tag for the spark history server                                                                | `v0.179.0`                                |
 | `sparkHistoryServer.environmentName`                    | Environment name for the spark history server                                                         | `default`                                 |
 | `sparkHistoryServer.envSecretName`                      | Secret name for the spark history server environment variables                                        | `spark-history-server-env-secret`         |
 | `sparkHistoryServer.imagePullPolicy`                    | Image pull policy for the spark history server                                                        | `IfNotPresent`                            |
@@ -1053,7 +1105,7 @@ trueforge:
 | `tfyK8sController.annotations`                                 | Annotations for the tfyK8sController                                                                                                                          | `{}`                                    |
 | `tfyK8sController.image.registry`                              | Registry for the tfyK8sController image (overrides global.registry if specified)                                                                              | `""`                                    |
 | `tfyK8sController.image.repository`                            | Image repository for the tfyK8sController (without registry)                                                                                                  | `tfy-private-images/tfy-k8s-controller` |
-| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                                                                                                            | `v0.180.1`                              |
+| `tfyK8sController.image.tag`                                   | Image tag for the tfyK8sController                                                                                                                            | `v0.179.3`                              |
 | `tfyK8sController.environmentName`                             | Environment name for tfyK8sController                                                                                                                         | `default`                               |
 | `tfyK8sController.envSecretName`                               | Secret name for the tfyK8sController environment variables                                                                                                    | `tfy-k8s-controller-env-secret`         |
 | `tfyK8sController.imagePullPolicy`                             | Image pull policy for the tfyK8sController                                                                                                                    | `IfNotPresent`                          |
@@ -1111,7 +1163,7 @@ trueforge:
 | `sfyManifestService.tolerations`                                 | Tolerations specific to the sfy manifest service                                                                                                              | `[]`                                      |
 | `sfyManifestService.image.registry`                              | Registry for the sfy manifest service image (overrides global.registry if specified)                                                                          | `""`                                      |
 | `sfyManifestService.image.repository`                            | Image repository for the sfy manifest service (without registry)                                                                                              | `tfy-private-images/sfy-manifest-service` |
-| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                                                                                                                        | `v0.180.0`                                |
+| `sfyManifestService.image.tag`                                   | Image tag for the sfy manifest service                                                                                                                        | `v0.179.0`                                |
 | `sfyManifestService.environmentName`                             | Environment name for the sfy manifest service                                                                                                                 | `default`                                 |
 | `sfyManifestService.envSecretName`                               | Secret name for the sfy manifest service environment variables                                                                                                | `sfy-manifest-service-env-secret`         |
 | `sfyManifestService.imagePullPolicy`                             | Image pull policy for the sfy manifest service                                                                                                                | `IfNotPresent`                            |
@@ -1170,7 +1222,7 @@ trueforge:
 | `tfyInfraManager.tolerations`                                 | Tolerations specific to the tfy infra manager                                                                                                                 | `[]`                                   |
 | `tfyInfraManager.image.registry`                              | Registry for the tfy infra manager image (overrides global.registry if specified)                                                                             | `""`                                   |
 | `tfyInfraManager.image.repository`                            | Image repository for the tfy infra manager image (without registry)                                                                                           | `tfy-private-images/tfy-infra-manager` |
-| `tfyInfraManager.image.tag`                                   | Image tag for the tfy infra manager image                                                                                                                     | `v0.180.0`                             |
+| `tfyInfraManager.image.tag`                                   | Image tag for the tfy infra manager image                                                                                                                     | `v0.179.0`                             |
 | `tfyInfraManager.environmentName`                             | Environment name for the tfy infra manager                                                                                                                    | `default`                              |
 | `tfyInfraManager.envSecretName`                               | Secret name for the tfy infra manager environment variables                                                                                                   | `tfy-infra-manager-env-secret`         |
 | `tfyInfraManager.imagePullPolicy`                             | Image pull policy for the tfy infra manager                                                                                                                   | `IfNotPresent`                         |
@@ -1472,7 +1524,7 @@ fi
 | `tfyController.annotations`                                 | Annotations for the tfyController                                                                                                                             | `{}`                                |
 | `tfyController.image.registry`                              | Registry for the tfyController image (overrides global.registry if specified)                                                                                 | `""`                                |
 | `tfyController.image.repository`                            | Image repository for the tfyController (without registry)                                                                                                     | `tfy-private-images/tfy-controller` |
-| `tfyController.image.tag`                                   | Image tag for the tfyController                                                                                                                               | `v0.180.0`                          |
+| `tfyController.image.tag`                                   | Image tag for the tfyController                                                                                                                               | `v0.179.0`                          |
 | `tfyController.environmentName`                             | Environment name for the tfyController                                                                                                                        | `default`                           |
 | `tfyController.envSecretName`                               | Secret name for the tfyController environment variables                                                                                                       | `sfy-manifest-service-env-secret`   |
 | `tfyController.imagePullPolicy`                             | Image pull policy for the tfyController                                                                                                                       | `IfNotPresent`                      |
@@ -1527,7 +1579,7 @@ fi
 | `tfyWorkflowAdmin.annotations`                        | Annotations for the tfyWorkflowAdmin                                                                                          | `{}`                                    |
 | `tfyWorkflowAdmin.image.registry`                     | Registry for the tfyWorkflowAdmin image (overrides global.registry if specified)                                              | `""`                                    |
 | `tfyWorkflowAdmin.image.repository`                   | Image repository for the tfyWorkflowAdmin (without registry)                                                                  | `tfy-private-images/tfy-workflow-admin` |
-| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                                                                            | `v0.180.0`                              |
+| `tfyWorkflowAdmin.image.tag`                          | Image tag for the tfyWorkflowAdmin                                                                                            | `v0.179.0`                              |
 | `tfyWorkflowAdmin.environmentName`                    | Environment name for the tfyWorkflowAdmin                                                                                     | `default`                               |
 | `tfyWorkflowAdmin.envSecretName`                      | Secret name for the tfyWorkflowAdmin environment variables                                                                    | `tfy-workflow-admin-env-secret`         |
 | `tfyWorkflowAdmin.imagePullPolicy`                    | Image pull policy for the tfyWorkflowAdmin                                                                                    | `IfNotPresent`                          |
@@ -1623,7 +1675,9 @@ fi
 | `tfy-llm-gateway.commonAnnotations`              | Annotations for the tfy-llm-gateway                                                    | `{}`                                     |
 | `tfy-llm-gateway.gatewayId`                      | Unique gateway identifier populated as GATEWAY_ID                                      | `default`                                |
 | `tfy-llm-gateway.env`                            | Environment variables for tfy-llm-gateway                                              | `{}`                                     |
-| `tfy-llm-gateway.proxy.image.tag`                | Tag for the gateway TLS sidecar (tfy-proxy)                                            | `v0.180.0`                               |
+| `tfy-llm-gateway.proxy.image.tag`                | Tag for the gateway TLS sidecar (tfy-proxy)                                            | `v0.179.8`                               |
+| `tfy-llm-gateway.sandbox.devMode.enabled`        | Run tfy-sandbox-server with the bundled gateway                                        | `false`                                  |
+| `tfy-llm-gateway.agentsLtsWriteJob.enabled`      | Agents LTS write CronJob (superseded by TrueForge)                                     | `false`                                  |
 | `tfy-llm-gateway.enableOtelBuffer`               | Deploy tfy-otel-buffer and export gateway traces through it. See README "OTEL buffer". | `true`                                   |
 
 ### redis Shared control-plane Redis (bundled)
@@ -1732,7 +1786,7 @@ fi
 | `deltaFusionIngestor.enabled`                                     | Bool to enable the DeltaFusion Ingestor                                                    | `true`                                    |
 | `deltaFusionIngestor.image.registry`                              | Registry for the DeltaFusion Ingestor image (overrides global.image.registry if specified) | `""`                                      |
 | `deltaFusionIngestor.image.repository`                            | Image repository for the DeltaFusion Ingestor (without registry)                           | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.180.1`                                |
+| `deltaFusionIngestor.image.tag`                                   | Image tag for the DeltaFusion Ingestor                                                     | `v0.179.3`                                |
 | `deltaFusionIngestor.image.optimized`                             | Use optimized image tag for the DeltaFusion Ingestor                                       | `false`                                   |
 | `deltaFusionIngestor.image.pullPolicy`                            | Image pull policy for the DeltaFusion Ingestor                                             | `IfNotPresent`                            |
 | `deltaFusionIngestor.statefulsetLabels`                           | Labels to apply to the DeltaFusion Ingestor statefulset                                    | `{}`                                      |
@@ -1802,7 +1856,7 @@ fi
 | `deltaFusionCompaction.enabled`                                     | Bool to enable the compaction cron job. Only applies if deltaFusionIngestor.enabled is true                                                                                                     | `true`                                    |
 | `deltaFusionCompaction.image.registry`                              | Registry for the deltaFusionCompaction image (overrides global.image.registry if specified)                                                                                                     | `""`                                      |
 | `deltaFusionCompaction.image.repository`                            | Image repository for the deltaFusionCompaction image (without registry)                                                                                                                         | `tfy-private-images/deltafusion-ingestor` |
-| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                                                         | `v0.180.1`                                |
+| `deltaFusionCompaction.image.tag`                                   | Image tag for the deltaFusionCompaction                                                                                                                                                         | `v0.179.3`                                |
 | `deltaFusionCompaction.image.pullPolicy`                            | Image pull policy for the deltaFusionCompaction                                                                                                                                                 | `IfNotPresent`                            |
 | `deltaFusionCompaction.image.optimized`                             | Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)                                 | `auto`                                    |
 | `deltaFusionCompaction.schedule`                                    | Schedule for the deltaFusionCompaction cron job                                                                                                                                                 | `*/30 * * * *`                            |
@@ -1854,7 +1908,7 @@ fi
 | `deltaFusionQueryServer.optimized`                                   | AVX-512 scheduling and image mode. One of "auto" (default), "true" (force required affinity plus optimized image), "false" (disable). | `auto`                                        |
 | `deltaFusionQueryServer.image.registry`                              | Registry for the deltaFusionQueryServer image (overrides global.registry if specified)                                                | `""`                                          |
 | `deltaFusionQueryServer.image.repository`                            | Image repository for the deltaFusionQueryServer (without registry)                                                                    | `tfy-private-images/deltafusion-query-server` |
-| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                              | `v0.180.3`                                    |
+| `deltaFusionQueryServer.image.tag`                                   | Image tag for the deltaFusionQueryServer                                                                                              | `v0.179.4`                                    |
 | `deltaFusionQueryServer.environmentName`                             | Environment name for the deltaFusionQueryServer                                                                                       | `default`                                     |
 | `deltaFusionQueryServer.envSecretName`                               | Secret name for the deltaFusionQueryServer environment variables                                                                      | `deltafusion-query-env-secret`                |
 | `deltaFusionQueryServer.imagePullPolicy`                             | Image pull policy for the deltaFusionQueryServer                                                                                      | `IfNotPresent`                                |
@@ -1918,7 +1972,7 @@ fi
 | `tfyProxy.annotations`                                   | Annotations for the tfyProxy                                                                                                                                                                                                                                       | `{}`                               |
 | `tfyProxy.image.registry`                                | Registry for the tfyProxy image (overrides global.registry if specified)                                                                                                                                                                                           | `""`                               |
 | `tfyProxy.image.repository`                              | Image repository for the tfyProxy (without registry)                                                                                                                                                                                                               | `tfy-private-images/tfy-proxy`     |
-| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                                                                                                                                                                                                         | `v0.180.0`                         |
+| `tfyProxy.image.tag`                                     | Image tag for the tfyProxy                                                                                                                                                                                                                                         | `v0.179.8`                         |
 | `tfyProxy.logLevel`                                      | Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)                                                                                                                                                                               | `info`                             |
 | `tfyProxy.clientIp.enabled`                              | Trust upstream proxies and preserve the real client IP in outbound X-Forwarded-For.                                                                                                                                                                                | `false`                            |
 | `tfyProxy.clientIp.trustedProxies`                       | CIDR ranges (or a Caddy shortcut like `private_ranges`) whose forwarding headers Caddy trusts.                                                                                                                                                                     | `private_ranges`                   |

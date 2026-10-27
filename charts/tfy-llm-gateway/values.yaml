@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.180.4"
+  gatewayChartVersion: "0.179.10"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -141,7 +141,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.180.4
+  tag: v0.179.10
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -359,7 +359,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.180.0"
+    tag: "v0.179.8"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -491,6 +491,7 @@ env:
   TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
+  TRUEFORGE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
   CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
@@ -508,6 +509,75 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Sandbox configuration
+sandbox:
+  ## sandbox.devMode devMode sandbox configuration
+  devMode:
+    ## @param sandbox.devMode.enabled Bool to enable the tfy-sandbox-server subchart.
+    enabled: false
+## @section agentsLtsWriteJob Agents LTS write CronJob
+agentsLtsWriteJob:
+  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job.
+  enabled: false
+  ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
+  resourceTier: ""
+  ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
+  schedule: "*/30 * * * *"
+  ## @param agentsLtsWriteJob.timeZone Time zone for the agents LTS write cron job
+  timeZone: UTC
+  ## @param agentsLtsWriteJob.concurrencyPolicy Concurrency policy for the agents LTS write cron job
+  concurrencyPolicy: Forbid
+  ## @param agentsLtsWriteJob.startingDeadlineSeconds Starting deadline seconds for the agents LTS write cron job
+  startingDeadlineSeconds: 300
+  ## @param agentsLtsWriteJob.restartPolicy Restart policy for the agents LTS write cron job
+  restartPolicy: Never
+  ## @param agentsLtsWriteJob.backoffLimit Backoff limit for the agents LTS write cron job
+  backoffLimit: 2
+  ## @param agentsLtsWriteJob.activeDeadlineSeconds Max TTL in seconds for the agents LTS write job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
+  ## @param agentsLtsWriteJob.ttlSecondsAfterFinished TTL seconds after finished for the agents LTS write cron job
+  ttlSecondsAfterFinished: 604800
+  ## @param agentsLtsWriteJob.successfulJobsHistoryLimit Successful jobs history limit for the agents LTS write cron job
+  successfulJobsHistoryLimit: 1
+  ## @param agentsLtsWriteJob.failedJobsHistoryLimit Failed jobs history limit for the agents LTS write cron job
+  failedJobsHistoryLimit: 5
+  ## @skip agentsLtsWriteJob.command
+  command:
+    - "npm"
+    - "run"
+    - "agents-jobs:write-to-lts"
+  ## @param agentsLtsWriteJob.envSecretName Environment secret name for 2-part ${k8s-secret/...} refs
+  envSecretName: tfy-llm-gateway-env-secret
+  ## @param agentsLtsWriteJob.imagePullPolicy Image pull policy for the agents LTS write cron job
+  imagePullPolicy: IfNotPresent
+  ## @param agentsLtsWriteJob.podSecurityContext [object] Security context for the agents LTS write cron job pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param agentsLtsWriteJob.securityContext [object] Security context for the agents LTS write cron job container
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+  ## @param agentsLtsWriteJob.serviceAccount.name Optional service account override (defaults to the gateway service account)
+  serviceAccount:
+    name: ""
+  ## @param agentsLtsWriteJob.resources Resource requests/limits override (merged over resourceTier defaults)
+  resources: {}
+  ## @param agentsLtsWriteJob.env [object] Environment variables for the agents LTS write cron job (job code supplies defaults for LTS_*/LOG_LEVEL/SENTRY/etc.)
+  env:
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
 
 ## Redis dependency configuration
 redis:
@@ -647,7 +717,7 @@ externalRedis:
 ## @section networkPolicy Optional NetworkPolicies scoped to the LLM gateway pods.
 ## Two policies when enabled: a deny-by-default ingress policy allowing only the configured sources
 ## (e.g. the istio ingress gateway), and an egress policy that allows DNS (UDP + TCP 53), pods of this release
-## (gateway, redis — matched by app.kubernetes.io/instance), and external destinations
+## (gateway, redis, sandbox — matched by app.kubernetes.io/instance), and external destinations
 ## such as LLM providers over both IPv4 (0.0.0.0/0) and IPv6 (::/0) — minus any ranges listed in
 ## deniedEgressCIDRs (empty by default).
 ## Extra destinations (other namespaces, specific CIDRs) can be added via extraEgress. Each policy can be toggled
