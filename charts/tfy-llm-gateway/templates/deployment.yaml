@@ -37,11 +37,7 @@ spec:
       dnsConfig:
         {{- toYaml .Values.dnsConfig | nindent 8 }}
       {{- end }}
-      {{- with (include "tfy-llm-gateway.serviceAccountName" .) }}
-      serviceAccountName: {{ . }}
-      {{- else }}
-      automountServiceAccountToken: false
-      {{- end }}
+      serviceAccountName: {{ include "tfy-llm-gateway.serviceAccountName" . }}
       {{- with (include "tfy-llm-gateway.podSecurityContext" (dict "local" .Values.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
         {{- . | nindent 8 }}

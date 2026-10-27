@@ -166,7 +166,7 @@ Expand the name of the chart.
 {{- if .Values.sfyManifestService.serviceAccount.name -}}
 {{- .Values.sfyManifestService.serviceAccount.name -}}
 {{- else -}}
-{{- include "truefoundry.restrictedServiceAccountName" . -}}
+{{- .Values.global.serviceAccount.name -}}
 {{- end -}}
 {{- end }}
 
