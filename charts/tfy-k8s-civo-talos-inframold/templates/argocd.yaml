@@ -20,7 +20,7 @@ spec:
   source:
     chart: argo-cd
     repoURL: {{ if (.Values.global | default dict).repoURL }}{{ (.Values.global | default dict).repoURL }}/argo-helm{{ else }}https://argoproj.github.io/argo-helm{{ end }}
-    targetRevision: 9.5.11
+    targetRevision: 10.10.5
     helm:
       values: |-
         {{- if .Values.argocd.valuesOverride }}
@@ -142,7 +142,7 @@ spec:
           {{- end }}
         redis:
           image:
-            repository: tfy.jfrog.io/tfy-images/docker/library/redis
+            repository: tfy.jfrog.io/tfy-images/redis
           resources:
             requests:
               cpu: 100m
@@ -154,7 +154,7 @@ spec:
               ephemeral-storage: 512Mi
           {{- if .Values.registry }}
           image:
-            repository: {{ .Values.registry }}/docker/library/redis
+            repository: {{ .Values.registry }}/tfy-images/redis
           {{- end }}
           {{- if $mergedTolerations }}
           tolerations:
