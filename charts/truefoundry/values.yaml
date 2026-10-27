@@ -24,7 +24,7 @@ global:
   controlPlaneURL: >-
     http://tfy-proxy:8080
   ## @param global.controlPlaneChartVersion Version of control-plane chart
-  controlPlaneChartVersion: 0.180.7
+  controlPlaneChartVersion: 0.179.36
   ## global.multitenant Multitenant control plane configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -171,6 +171,8 @@ global:
         {{ .Release.Name }}-tfy-otel-collector
       ## @param global.proxy.tfyOtelCollector.port OTEL collector port for OTEL collector service
       port: 4318
+      ## @param global.proxy.tfyOtelCollector.ingestorProxyPort Agent session ingest proxy port
+      ingestorProxyPort: 4319
     ## @skip global.proxy.proxyServerControlPlaneToComputePlaneRoutesEnabled
     proxyServerControlPlaneToComputePlaneRoutesEnabled: true
     ## @param global.proxy.proxyServerHost Proxy server host for service routing
@@ -450,7 +452,7 @@ devMode:
 ## @section metricsV2 Metrics v2 frontend feature flag
 metricsV2:
   ## @param metricsV2.enabled Enable the metrics v2 frontend
-  enabled: false
+  enabled: true
 ###################################################################################################################
 #################### Network policy for Truefoundry Control Plane(truefoundry namespace) ##########################
 ###################################################################################################################
@@ -499,7 +501,6 @@ networkPolicy:
   ## A rule has TCP `ports` and its callers: `from` (component names in this release) and/or `fromNamespaces`
   ## ({namespace, podSelector}). With neither, any source may connect on those ports.
   ## `metricsPorts` are opened to metricsFromNamespaces and `agentPorts` to agentFromNamespaces.
-  ## `extraIngress` takes raw NetworkPolicy ingress rules (any peer, including ipBlock) and is added to `rules`.
   ## When you add a call path, add the caller to the callee's `from`.
   components:
     tfyProxy:
@@ -507,9 +508,6 @@ networkPolicy:
       metricsPorts: [2019]
       rules:
         - ports: [8080]
-    ## VirtualServices outside this chart can route here directly, bypassing tfy-proxy: e.g. an auth-server
-    ## VirtualService sends /mcp/oauth2/callback through a gateway to servicefoundry-server:3000. extraIngress
-    ## (added to rules) admits the TrueFoundry Istio gateway by default; see tfyWorkflowAdmin for how to change it.
     servicefoundryServer:
       name: servicefoundry-server
       metricsPorts: [3000]
@@ -535,17 +533,6 @@ networkPolicy:
             - s3proxy
             ## Replicas call each other through the Service.
             - servicefoundry-server
-      extraIngress:
-        - ports:
-            - port: 3000
-              protocol: TCP
-          from:
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: istio-system
-              podSelector:
-                matchLabels:
-                  istio: tfy-istio-ingress
     mlfoundryServer:
       name: mlfoundry-server
       metricsPorts: [5000]
@@ -577,13 +564,8 @@ networkPolicy:
             - servicefoundry-server
             - tfy-proxy
             - tfy-k8s-controller
-    ## The chart's VirtualService, Ingress and HTTPRoute send /flyteidl.service.AdminService/ (Flyte gRPC) here,
-    ## bypassing tfy-proxy. extraIngress, which is added to rules, admits the TrueFoundry Istio gateway by default:
-    ## pods labelled istio: tfy-istio-ingress in istio-system. If you route through another gateway (the tailnet or
-    ## ALB Istio gateways, ingress-nginx, an ALB in IP target mode), set extraIngress here and on servicefoundryServer.
-    ## A list you set replaces the default, so repeat the tfy-istio-ingress entry if you still use it;
-    ## extraIngress: [] admits no gateway. Add flyte-propeller's namespace to fromNamespaces if it calls
-    ## workflow-admin in-cluster.
+    ## The Ingress routes /flyteidl.service.AdminService/ here: add your ingress controller's namespace to fromNamespaces,
+    ## and flyte-propeller's namespace if it calls workflow-admin in-cluster.
     tfyWorkflowAdmin:
       name: tfy-workflow-admin
       rules:
@@ -593,40 +575,9 @@ networkPolicy:
             ## The workflow-admin scheduler calls the server.
             - tfy-workflow-admin
           fromNamespaces: []
-      extraIngress:
-        - ports:
-            - port: 8089
-              protocol: TCP
-          from:
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: istio-system
-              podSelector:
-                matchLabels:
-                  istio: tfy-istio-ingress
-      ## Override example (use port 3000 on servicefoundryServer):
-      # extraIngress:
-      #   - ports:
-      #       - port: 8089
-      #         protocol: TCP
-      #     from:
-      #       - namespaceSelector:
-      #           matchLabels:
-      #             kubernetes.io/metadata.name: istio-system
-      #         podSelector:
-      #           matchExpressions:
-      #             - key: istio
-      #               operator: In
-      #               values: [tfy-istio-ingress, tfy-istio-ingress-tailnet, tfy-istio-ingress-alb, tfy-istio-ingress-ctl-alb]
-      #       - namespaceSelector:
-      #           matchLabels:
-      #             kubernetes.io/metadata.name: ingress-nginx
-      #         podSelector:
-      #           matchLabels:
-      #             app.kubernetes.io/name: ingress-nginx
-      #       ## AWS ALB in IP target mode: the ALB's subnet CIDRs
-      #       - ipBlock:
-      #           cidr: 10.0.0.0/24
+          # - namespace: ingress-nginx
+          #   podSelector:
+          #     app.kubernetes.io/name: ingress-nginx
     sfyManifestService:
       name: sfy-manifest-service
       metricsPorts: [8080]
@@ -989,7 +940,7 @@ mlfoundryServer:
     ## @param mlfoundryServer.image.repository Image repository for the mlfoundry server (without registry)
     repository: "tfy-private-images/mlfoundry-server"
     ## @param mlfoundryServer.image.tag Image tag for the mlfoundry server
-    tag: "v0.180.0"
+    tag: "v0.179.0"
   ## @skip mlfoundryServer.replicaCount Number of replicas for the mlfoundry server
   # replicaCount: 1
   ## @param mlfoundryServer.environmentName Environment name for the mlfoundry server
@@ -1323,7 +1274,7 @@ servicefoundryServer:
     ## @param servicefoundryServer.image.repository Image repository for the servicefoundry server (without registry)
     repository: "tfy-private-images/servicefoundry-server"
     ## @param servicefoundryServer.image.tag Image tag for the servicefoundry server
-    tag: "v0.180.2"
+    tag: "v0.179.20"
   ## @param servicefoundryServer.environmentName Environment name for the servicefoundry server
   environmentName: default
   ## @param servicefoundryServer.envSecretName Secret name for the servicefoundry server environment variables
@@ -1598,7 +1549,7 @@ sparkHistoryServer:
     ## @param sparkHistoryServer.image.repository Image repository for the spark history server (without registry)
     repository: "tfy-private-images/spark-history-server"
     ## @param sparkHistoryServer.image.tag Image tag for the spark history server
-    tag: "v0.180.0"
+    tag: "v0.179.0"
   ## @param sparkHistoryServer.environmentName Environment name for the spark history server
   environmentName: default
   ## @param sparkHistoryServer.envSecretName Secret name for the spark history server environment variables
@@ -1751,7 +1702,7 @@ tfyK8sController:
     ## @param tfyK8sController.image.repository Image repository for the tfyK8sController (without registry)
     repository: "tfy-private-images/tfy-k8s-controller"
     ## @param tfyK8sController.image.tag Image tag for the tfyK8sController
-    tag: "v0.180.1"
+    tag: "v0.179.3"
   ## @param tfyK8sController.environmentName Environment name for tfyK8sController
   environmentName: default
   ## @param tfyK8sController.envSecretName Secret name for the tfyK8sController environment variables
@@ -1918,7 +1869,7 @@ sfyManifestService:
     ## @param sfyManifestService.image.repository Image repository for the sfy manifest service (without registry)
     repository: "tfy-private-images/sfy-manifest-service"
     ## @param sfyManifestService.image.tag Image tag for the sfy manifest service
-    tag: "v0.180.0"
+    tag: "v0.179.0"
   ## @skip sfyManifestService.replicaCount Number of replicas for the sfy manifest service
   # replicaCount: 1
   ## @param sfyManifestService.environmentName Environment name for the sfy manifest service
@@ -2098,7 +2049,7 @@ tfyInfraManager:
     ## @param tfyInfraManager.image.repository Image repository for the tfy infra manager image (without registry)
     repository: "tfy-private-images/tfy-infra-manager"
     ## @param tfyInfraManager.image.tag Image tag for the tfy infra manager image
-    tag: "v0.180.0"
+    tag: "v0.179.0"
   ## @skip tfyInfraManager.replicaCount Number of replicas for the tfy infra manager
   # replicaCount: 1
   ## @param tfyInfraManager.environmentName Environment name for the tfy infra manager
@@ -2226,7 +2177,7 @@ tfyInfraManager:
     TLS_ENABLED: '{{ .Values.global.mTLS.enabled }}'
     TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
     TLS_DIR: /etc/tls/truefoundry
-    TLS_MUTUAL_EXEMPT_PATHS: ''
+    TLS_MUTUAL_EXEMPT_PATHS: '/api/health,/api/version'
 ###################################################################################################################
 ######################################### Tfy Build ###############################################################
 ###################################################################################################################
@@ -2835,7 +2786,7 @@ tfyController:
     ## @param tfyController.image.repository Image repository for the tfyController (without registry)
     repository: "tfy-private-images/tfy-controller"
     ## @param tfyController.image.tag Image tag for the tfyController
-    tag: v0.180.0
+    tag: v0.179.0
   ## @param tfyController.environmentName Environment name for the tfyController
   environmentName: default
   ## @param tfyController.envSecretName Secret name for the tfyController environment variables
@@ -2978,6 +2929,7 @@ tfyController:
     TLS_ENABLED: "{{ .Values.global.mTLS.enabled }}"
     TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
     TLS_DIR: "/etc/tls/truefoundry"
+    TLS_MUTUAL_EXEMPT_PATHS: /healthy,/metrics
     TFY_API_KEYS_TO_VERIFY: ${k8s-secret/truefoundry-creds-rotate/TFY_API_KEYS_TO_VERIFY}
     CLIENT_IP_HEADER: CF-Connecting-IP
 ###################################################################################################################
@@ -2998,7 +2950,7 @@ tfyWorkflowAdmin:
     ## @param tfyWorkflowAdmin.image.repository Image repository for the tfyWorkflowAdmin (without registry)
     repository: "tfy-private-images/tfy-workflow-admin"
     ## @param tfyWorkflowAdmin.image.tag Image tag for the tfyWorkflowAdmin
-    tag: v0.180.0
+    tag: v0.179.0
   ## @skip tfyWorkflowAdmin.replicaCount Number of replicas for the tfyWorkflowAdmin
   # replicaCount: 1
   ## @param tfyWorkflowAdmin.environmentName Environment name for the tfyWorkflowAdmin
@@ -3484,12 +3436,22 @@ tfy-llm-gateway:
     ## tfy-llm-gateway.proxy.image Image override for the TLS sidecar
     image:
       ## @param tfy-llm-gateway.proxy.image.tag Tag for the gateway TLS sidecar (tfy-proxy)
-      tag: "v0.180.0"
+      tag: "v0.179.8"
   ## tfy-llm-gateway.redis Redis subchart overrides for the LLM gateway
   redis:
     ## @skip tfy-llm-gateway.redis.networkPolicy NetworkPolicy configuration for the gateway's Redis (disabled)
     networkPolicy:
       enabled: false
+  ## tfy-llm-gateway.sandbox Keep the gateway-bundled sandbox off on the control
+  ## plane (dedicated unprivileged identity / ingress not wired yet).
+  sandbox:
+    devMode:
+      ## @param tfy-llm-gateway.sandbox.devMode.enabled Run tfy-sandbox-server with the bundled gateway
+      enabled: false
+  ## Schedule dispatch is owned by the TrueForge controller; keep legacy LTS off.
+  agentsLtsWriteJob:
+    ## @param tfy-llm-gateway.agentsLtsWriteJob.enabled Agents LTS write CronJob (superseded by TrueForge)
+    enabled: false
   ## @param tfy-llm-gateway.enableOtelBuffer Deploy tfy-otel-buffer and export gateway traces through it. See README "OTEL buffer".
   enableOtelBuffer: true
   ## Overrides for the tfy-otel-buffer subchart (additionalSinks, buffer, forward, persistence, resources, …).
@@ -3921,7 +3883,7 @@ deltaFusionIngestor:
     ## @param deltaFusionIngestor.image.repository Image repository for the DeltaFusion Ingestor (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionIngestor.image.tag Image tag for the DeltaFusion Ingestor
-    tag: "v0.180.1"
+    tag: "v0.179.3"
     ## @param deltaFusionIngestor.image.optimized Use optimized image tag for the DeltaFusion Ingestor
     optimized: false
     ## @param deltaFusionIngestor.image.pullPolicy Image pull policy for the DeltaFusion Ingestor
@@ -4116,7 +4078,7 @@ deltaFusionCompaction:
     ## @param deltaFusionCompaction.image.repository Image repository for the deltaFusionCompaction image (without registry)
     repository: "tfy-private-images/deltafusion-ingestor"
     ## @param deltaFusionCompaction.image.tag Image tag for the deltaFusionCompaction
-    tag: "v0.180.1"
+    tag: "v0.179.3"
     ## @param deltaFusionCompaction.image.pullPolicy Image pull policy for the deltaFusionCompaction
     pullPolicy: IfNotPresent
     ## @param deltaFusionCompaction.image.optimized Use optimized image tag for the deltaFusionCompaction (set to "auto" to automatically enable if Karpenter is available, true to force enable, false to disable)
@@ -4219,7 +4181,7 @@ deltaFusionCompaction:
         COMPACTION_TABLES: "gateway_request_metrics,gateway_model_metrics,gateway_real_model_metrics,gateway_virtual_model_metrics,gateway_mcp_metrics,gateway_guardrail_metrics,gateway_config_metrics"
     agents:
       env:
-        COMPACTION_TABLES: "gateway_feedbacks,gateway_agent_metrics"
+        COMPACTION_TABLES: "gateway_feedbacks,gateway_agent_metrics,agent_session_turns,agent_session_events"
   ## @param deltaFusionCompaction.extraVolumes Extra volumes for the deltaFusionCompaction cron job
   extraVolumes: []
   ## @param deltaFusionCompaction.extraVolumeMounts Extra volume mounts for the deltaFusionCompaction cron job
@@ -4319,7 +4281,7 @@ deltaFusionQueryServer:
     ## @param deltaFusionQueryServer.image.repository Image repository for the deltaFusionQueryServer (without registry)
     repository: "tfy-private-images/deltafusion-query-server"
     ## @param deltaFusionQueryServer.image.tag Image tag for the deltaFusionQueryServer
-    tag: v0.180.3
+    tag: v0.179.4
     ## @skip deltaFusionQueryServer.image.optimized DEPRECATED: Use deltaFusionQueryServer.optimized (top-level) instead.
     ## Only consulted as a fallback when deltaFusionQueryServer.optimized is empty/unset.
     optimized: ""
@@ -4542,7 +4504,7 @@ tfyProxy:
     ## @param tfyProxy.image.repository Image repository for the tfyProxy (without registry)
     repository: "tfy-private-images/tfy-proxy"
     ## @param tfyProxy.image.tag Image tag for the tfyProxy
-    tag: "v0.180.0"
+    tag: "v0.179.8"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
   ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.
