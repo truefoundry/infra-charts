@@ -76,7 +76,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param aws-eks-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.18.1
+    version: v1.20.1
     ## @skip aws-eks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -94,6 +94,8 @@ aws-eks-gpu-operator:
   devicePlugin:
     ## @param aws-eks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @param aws-eks-gpu-operator.devicePlugin.version Version of the device plugin.
+    version: v0.20.1
     ## @skip aws-eks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
@@ -362,7 +364,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param aws-eks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 4.4.2-1-ubuntu22.04
+    version: 4.6.1-1-ubuntu24.04
     ## @param aws-eks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -377,7 +379,7 @@ aws-eks-gpu-operator:
     ## @param aws-eks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter. Requires tfy-karpenter-config >= 0.18 to operate safely because of Nvidia GSP issues
     enabled: true
     ## @param aws-eks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 4.4.2-4.7.0-distroless
+    version: 4.6.1-4.8.4-distroless
     serviceMonitor:
       ## @param aws-eks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
       enabled: true
@@ -666,9 +668,6 @@ gcp-gke-standard-dcgm-exporter:
   ##
   tolerations:
     - operator: "Exists"
-  ## @param gcp-gke-standard-dcgm-exporter.mapPodsMetrics Enable mapping of pod metrics.
-  ##
-  mapPodsMetrics: true
   ## Security context configuration.
   ##
   ## @param gcp-gke-standard-dcgm-exporter.securityContext.privileged Set the container to privileged mode.
@@ -905,7 +904,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param azure-aks-gpu-operator.toolkit.version Version of the toolkit. Note for Aure Linux change `-ubuntu20.04` to `-ubi8`. However at the time of writing Azure Linux only supports V100 and T4 GPUs
-    version: v1.18.1
+    version: v1.20.1
     ## @skip azure-aks-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -930,6 +929,8 @@ azure-aks-gpu-operator:
   devicePlugin:
     ## @param azure-aks-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @param azure-aks-gpu-operator.devicePlugin.version Version of the device plugin.
+    version: v0.20.1
     ## @skip azure-aks-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
@@ -969,7 +970,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param azure-aks-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 4.4.2-1-ubuntu22.04
+    version: 4.6.1-1-ubuntu24.04
     ## @param azure-aks-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -984,7 +985,7 @@ azure-aks-gpu-operator:
     ## @param azure-aks-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param azure-aks-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 4.4.2-4.7.0-distroless
+    version: 4.6.1-4.8.4-distroless
     serviceMonitor:
       ## @param azure-aks-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
       enabled: true
@@ -1204,6 +1205,8 @@ civo-talos-gpu-operator:
   devicePlugin:
     ## @param civo-talos-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @param civo-talos-gpu-operator.devicePlugin.version Version of the device plugin.
+    version: v0.20.1
     ## @skip civo-talos-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
@@ -1243,7 +1246,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 4.4.2-1-ubuntu22.04
+    version: 4.6.1-1-ubuntu24.04
     ## @param civo-talos-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -1258,7 +1261,7 @@ civo-talos-gpu-operator:
     ## @param civo-talos-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param civo-talos-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 4.4.2-4.7.0-distroless
+    version: 4.6.1-4.8.4-distroless
     serviceMonitor:
       ## @param civo-talos-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
       enabled: true
@@ -1543,7 +1546,7 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.toolkit.enabled Enable/Disable nvidia container toolkit installation.
     enabled: true
     ## @param generic-gpu-operator.toolkit.version Version of the toolkit.
-    version: v1.18.1
+    version: v1.20.1
     ## @skip generic-gpu-operator.toolkit.env
     env:
       - name: ACCEPT_NVIDIA_VISIBLE_DEVICES_ENVVAR_WHEN_UNPRIVILEGED
@@ -1561,6 +1564,8 @@ generic-gpu-operator:
   devicePlugin:
     ## @param generic-gpu-operator.devicePlugin.enabled Enable/Disable nvidia device plugin installation.
     enabled: true
+    ## @param generic-gpu-operator.devicePlugin.version Version of the device plugin.
+    version: v0.20.1
     ## @skip generic-gpu-operator.devicePlugin.env
     env:
       - name: PASS_DEVICE_SPECS
@@ -1600,7 +1605,7 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.dcgm.enabled Enabled/Disable standalone DCGM.
     enabled: false
     ## @param generic-gpu-operator.dcgm.version Image tag for DCGM container. Find all image tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/cloud-native/containers/dcgm/tags
-    version: 4.4.2-1-ubuntu22.04
+    version: 4.6.1-1-ubuntu24.04
     ## @param generic-gpu-operator.dcgm.resources [object] Resources for the standalone DCGM container.
     resources:
       requests:
@@ -1615,7 +1620,7 @@ generic-gpu-operator:
     ## @param generic-gpu-operator.dcgmExporter.enabled Enabled/Disable DCGM Exporter.
     enabled: true
     ## @param generic-gpu-operator.dcgmExporter.version Image tag version for DCGM Exporter. Find all tags at https://catalog.ngc.nvidia.com/orgs/nvidia/teams/k8s/containers/dcgm-exporter/tags
-    version: 4.4.2-4.7.0-distroless
+    version: 4.6.1-4.8.4-distroless
     serviceMonitor:
       ## @param generic-gpu-operator.dcgmExporter.serviceMonitor.enabled Enable or disable ServiceMonitor for DCGM Exporter.
       enabled: true
