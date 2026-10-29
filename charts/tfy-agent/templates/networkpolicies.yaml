@@ -37,26 +37,6 @@ spec:
     - Egress
   egress:
     - {}
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "intra-instance") }}
-  labels:
-    {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
-  {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
-  annotations:
-    {{- . | nindent 4 }}
-  {{- end }}
-spec:
-  podSelector:
-    {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 4 }}
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            {{- include "tfy-agent.networkPolicy.podSelector" . | nindent 12 }}
 {{- if and .Values.sdsServer.enabled $sdsIngressFrom }}
 ---
 apiVersion: networking.k8s.io/v1

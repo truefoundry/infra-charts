@@ -40,17 +40,16 @@ This application has two parts.
 
 ## Network policies
 
-Set `networkPolicy.enabled: true` to create NetworkPolicies on the same model as the truefoundry chart. They select this release's tfy-agent, tfy-agent-proxy and sds-server pods (`app.kubernetes.io/instance: <release>` and their `app.kubernetes.io/name`):
+Set `networkPolicy.enabled: true` to create NetworkPolicies on the same model as the truefoundry chart, without its in-release mesh (tfy-agent, tfy-agent-proxy and sds-server never call each other). They select this release's tfy-agent, tfy-agent-proxy and sds-server pods (`app.kubernetes.io/instance: <release>` and their `app.kubernetes.io/name`):
 
 | Policy | Purpose |
 |--------|---------|
 | `<release>-default-deny-ingress` | Block all ingress to the release's pods by default |
 | `<release>-allow-all-egress` | Allow all egress (API server, NATS, control plane, DNS) |
-| `<release>-intra-instance` | Allow ingress between the release's pods, any port |
 | `<release>-sds-server-clients` | Allow sds-server's port (8000) from `networkPolicy.sdsServer.ingressFrom`; by default every namespace, because its clients are Envoy sidecars and gateways in workload namespaces |
 | `<release>-ingress-external` | One policy for cross-namespace sources (`allowedIngressFrom`) and raw rules (`extraIngress`); only rendered when either is set |
 
-With nothing else configured, tfy-agent accepts traffic only from the release's own pods, so Alertmanager can no longer post to `/alerts` and Prometheus can no longer scrape `/metrics`. List those callers when you enable the policies. Policy names longer than 63 characters are shortened to a 54-character prefix plus a hash.
+With nothing else configured, nothing can reach tfy-agent or tfy-agent-proxy, so Alertmanager can no longer post to `/alerts` and Prometheus can no longer scrape `/metrics`. List those callers when you enable the policies. Policy names longer than 63 characters are shortened to a 54-character prefix plus a hash.
 
 Minimal setup, with Prometheus and Alertmanager in the `prometheus` namespace:
 
@@ -402,14 +401,14 @@ If your control plane URL is using self-signed CA certificate, follow these step
 
 ### networkPolicy NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
 
-| Name                                  | Description                                                                                                                                                                                                                                                                  | Value   |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `networkPolicy.enabled`               | Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server                                                                                                                                                                                                         | `false` |
-| `networkPolicy.labels`                | Extra labels on NetworkPolicy objects (merged with global.labels)                                                                                                                                                                                                            | `{}`    |
-| `networkPolicy.annotations`           | Extra annotations on NetworkPolicy objects (merged with global.annotations)                                                                                                                                                                                                  | `{}`    |
-| `networkPolicy.allowedIngressFrom`    | Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, only the release's own pods can reach it. | `[]`    |
-| `networkPolicy.extraIngress`          | Raw NetworkPolicyIngressRule entries appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors). Not validated by the chart.                                         | `[]`    |
-| `networkPolicy.sdsServer.ingressFrom` | NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to leave only the in-release mesh.                         | `[]`    |
+| Name                                  | Description                                                                                                                                                                                                                                                     | Value   |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `networkPolicy.enabled`               | Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server                                                                                                                                                                                            | `false` |
+| `networkPolicy.labels`                | Extra labels on NetworkPolicy objects (merged with global.labels)                                                                                                                                                                                               | `{}`    |
+| `networkPolicy.annotations`           | Extra annotations on NetworkPolicy objects (merged with global.annotations)                                                                                                                                                                                     | `{}`    |
+| `networkPolicy.allowedIngressFrom`    | Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, nothing can reach tfy-agent. | `[]`    |
+| `networkPolicy.extraIngress`          | Raw NetworkPolicyIngressRule entries appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors). Not validated by the chart.                            | `[]`    |
+| `networkPolicy.sdsServer.ingressFrom` | NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to block all ingress to sds-server.           | `[]`    |
 
 ### eso (external-secrets operator) configuration parameters
 

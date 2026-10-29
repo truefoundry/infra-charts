@@ -850,9 +850,10 @@ sdsServer:
       whenUnsatisfiable: ScheduleAnyway
 
 ## @section networkPolicy NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
-## Same model as the truefoundry chart: default-deny ingress, allow-all egress, an in-release mesh, and one
-## policy for cross-namespace sources. Policies select this release's tfy-agent, tfy-agent-proxy and sds-server
-## pods only; the external-secrets and reloader subchart pods are not selected.
+## Same model as the truefoundry chart (default-deny ingress, allow-all egress, one policy for cross-namespace
+## sources) without its in-release mesh: tfy-agent, tfy-agent-proxy and sds-server never call each other.
+## Policies select this release's tfy-agent, tfy-agent-proxy and sds-server pods only; the external-secrets and
+## reloader subchart pods are not selected.
 ## Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
 ##
 networkPolicy:
@@ -862,7 +863,7 @@ networkPolicy:
   labels: {}
   ## @param networkPolicy.annotations Extra annotations on NetworkPolicy objects (merged with global.annotations)
   annotations: {}
-  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, only the release's own pods can reach it.
+  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, nothing can reach tfy-agent.
   allowedIngressFrom: []
   ## Example: allow everything in the monitoring namespace (Prometheus and Alertmanager)
   ## - namespace: prometheus
@@ -891,7 +892,7 @@ networkPolicy:
   ##             operator: In
   ##             values: [alertmanager, prometheus]
   sdsServer:
-    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to leave only the in-release mesh.
+    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to block all ingress to sds-server.
     ingressFrom:
       - namespaceSelector: {}
     ## Example: only TrueFoundry workload namespaces
