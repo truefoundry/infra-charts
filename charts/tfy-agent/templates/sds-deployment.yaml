@@ -1,4 +1,5 @@
 {{- if .Values.sdsServer.enabled -}}
+{{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.sdsServer.securityContext "global" .Values.global.containerSecurityContext) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,6 +25,11 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "sds-server.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.sdsServer.serviceAccount.automountServiceAccountToken }}
+      {{- with (include "tfy-agent.podSecurityContext" (dict "local" .Values.sdsServer.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "tfy-agent.customCA.useDirectMount" .) "false") }}
       initContainers:
         {{- include "tfy-agent.customCA.initContainer" . | nindent 8 }}
@@ -59,6 +65,10 @@ spec:
         - image: {{ .Values.sdsServer.image.repository }}:{{ .Values.sdsServer.image.tag }}
           imagePullPolicy: {{ .Values.sdsServer.image.pullPolicy }}
           name: sds-server
+          {{- with $containerSC }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
           command:
             {{- with .Values.sdsServer.command }}
             {{- toYaml . | nindent 12 }}

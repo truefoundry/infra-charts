@@ -22,6 +22,30 @@ global:
   serviceAccount:
     name: ""
     labels: {}
+  ## global.podSecurityContext Pod security context defaults for tfyAgent, tfyAgentProxy and sdsServer.
+  ## A component's own podSecurityContext overrides single fields.
+  podSecurityContext:
+    ## @param global.podSecurityContext.enabled Apply pod security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    enabled: true
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for component pods
+    runAsNonRoot: true
+    seccompProfile:
+      ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
+      type: RuntimeDefault
+  ## global.containerSecurityContext Container security context defaults for tfyAgent, tfyAgentProxy and sdsServer.
+  ## A component's own securityContext overrides single fields. With readOnlyRootFilesystem, tfyAgent gets
+  ## emptyDir volumes for the paths it writes (/tmp, /app/.kube, /app/yamls); tfyAgentProxy and sdsServer write nothing.
+  containerSecurityContext:
+    ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    enabled: true
+    ## @param global.containerSecurityContext.readOnlyRootFilesystem Default readOnlyRootFilesystem for component containers
+    readOnlyRootFilesystem: true
+    ## @param global.containerSecurityContext.allowPrivilegeEscalation Default allowPrivilegeEscalation for component containers
+    allowPrivilegeEscalation: false
+    capabilities:
+      ## @param global.containerSecurityContext.capabilities.drop [array] Linux capabilities dropped from component containers
+      drop:
+        - ALL
   ## global.customCA Custom CA certificate configuration. When enabled, a CA bundle is mounted
   ## into the tfyAgent, tfyAgentProxy and sdsServer pods so they can trust private/self-signed
   ## certificates (e.g. when the control plane sits behind a corporate TLS proxy).
@@ -321,19 +345,31 @@ tfyAgent:
     timeoutSeconds: 5
     initialDelaySeconds: 30
 
-  ## SecurityContext holds pod-level security attributes and common container settings.
-  ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ## @param tfyAgent.podSecurityContext [object] Pod security context for tfyAgent, merged over global.podSecurityContext. The image's user (appuser) is not numeric, so runAsNonRoot needs runAsUser.
+  ##
+  podSecurityContext:
+    runAsUser: 1001
+    runAsGroup: 1001
 
-  ## @param tfyAgent.securityContext Security Context for the tfyAgent container
+  ## @param tfyAgent.securityContext [object] Container security context for tfyAgent, merged over global.containerSecurityContext. Set `enabled: false` to drop it.
   ##
   securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+
+  ## tfyAgent.emptyDir Size limits for the emptyDirs tfyAgent gets while its root filesystem is read-only.
+  ## They count against resources.limits.ephemeral-storage (256Mi), as do container logs (up to 50Mi with the
+  ## kubelet's default rotation) and, with global.customCA, the ssl-certs emptyDir (10Mi). Raise them together.
+  ## Set a sizeLimit to "" to leave that emptyDir unbounded.
+  emptyDir:
+    tmp:
+      ## @param tfyAgent.emptyDir.tmp.sizeLimit Size limit for the /tmp emptyDir, which holds kubectl's discovery and HTTP cache (KUBECACHEDIR)
+      sizeLimit: 160Mi
+    kube:
+      ## @param tfyAgent.emptyDir.kube.sizeLimit Size limit for the /app/.kube emptyDir (the generated kubeconfig)
+      sizeLimit: 2Mi
+    yamls:
+      ## @param tfyAgent.emptyDir.yamls.sizeLimit Size limit for the /app/yamls emptyDir (manifests written for each kubectl apply and deleted after it)
+      sizeLimit: 8Mi
 
   ## If specified, the pod's tolerations.
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -493,19 +529,16 @@ tfyAgentProxy:
       memory: 180Mi
       ephemeral-storage: 200M
 
-  ## SecurityContext holds pod-level security attributes and common container settings.
-  ## This defaults to non root user with uid 1000 and gid 2000. *v1.PodSecurityContext  false
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  ## @param tfyAgentProxy.podSecurityContext [object] Pod security context for tfyAgentProxy, merged over global.podSecurityContext. The image runs as root by default; 65532 is its built-in nonroot user.
   ##
-  ## @param tfyAgentProxy.securityContext Security Context for the tfyAgentProxy container
+  podSecurityContext:
+    runAsUser: 65532
+    runAsGroup: 65532
+
+  ## @param tfyAgentProxy.securityContext [object] Container security context for tfyAgentProxy, merged over global.containerSecurityContext. Set `enabled: false` to drop it.
   ##
   securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
 
   ## If specified, the pod's tolerations.
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -684,6 +717,16 @@ sdsServer:
     ##
     automountServiceAccountToken: false
 
+  ## @param sdsServer.podSecurityContext [object] Pod security context for sdsServer, merged over global.podSecurityContext
+  ##
+  podSecurityContext:
+    runAsUser: 65532
+    runAsGroup: 65532
+
+  ## @param sdsServer.securityContext [object] Container security context for sdsServer, merged over global.containerSecurityContext. Set `enabled: false` to drop it.
+  ##
+  securityContext: {}
+
   ## @param sdsServer.extraVolumes Additional volumes for sdsServer
   ##
   extraVolumes: []
@@ -805,6 +848,58 @@ sdsServer:
       maxSkew: 1
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
+
+## @section networkPolicy NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+## Same model as the truefoundry chart (default-deny ingress, allow-all egress, one policy for cross-namespace
+## sources) without its in-release mesh: tfy-agent, tfy-agent-proxy and sds-server never call each other.
+## Policies select this release's tfy-agent, tfy-agent-proxy and sds-server pods only; the external-secrets and
+## reloader subchart pods are not selected.
+## Requires a CNI that enforces NetworkPolicy; it is inert otherwise.
+##
+networkPolicy:
+  ## @param networkPolicy.enabled Create NetworkPolicies for tfy-agent, tfy-agent-proxy and sds-server
+  enabled: false
+  ## @param networkPolicy.labels Extra labels on NetworkPolicy objects (merged with global.labels)
+  labels: {}
+  ## @param networkPolicy.annotations Extra annotations on NetworkPolicy objects (merged with global.annotations)
+  annotations: {}
+  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, nothing can reach tfy-agent.
+  allowedIngressFrom: []
+  ## Example: allow everything in the monitoring namespace (Prometheus and Alertmanager)
+  ## - namespace: prometheus
+  ## Example: allow only specific pods in a namespace
+  ## - namespace: prometheus
+  ##   podSelector:
+  ##     app.kubernetes.io/name: alertmanager
+  ## - namespace: prometheus
+  ##   podSelector:
+  ##     app.kubernetes.io/name: prometheus
+  ## @param networkPolicy.extraIngress Raw NetworkPolicyIngressRule entries appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors). Not validated by the chart.
+  extraIngress: []
+  ## Example: allow a CIDR (e.g. a VPN or the node network) on tfy-agent's port only
+  ## - from:
+  ##     - ipBlock:
+  ##         cidr: 10.0.0.0/8
+  ##   ports:
+  ##     - port: 3000
+  ##       protocol: TCP
+  ## Example: allow pods matching an expression from any namespace
+  ## - from:
+  ##     - namespaceSelector: {}
+  ##       podSelector:
+  ##         matchExpressions:
+  ##           - key: app.kubernetes.io/name
+  ##             operator: In
+  ##             values: [alertmanager, prometheus]
+  sdsServer:
+    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to block all ingress to sds-server.
+    ingressFrom:
+      - namespaceSelector: {}
+    ## Example: only TrueFoundry workload namespaces
+    ## ingressFrom:
+    ##   - namespaceSelector:
+    ##       matchLabels:
+    ##         truefoundry.com/managed-by: servicefoundry
 
 ## @section eso (external-secrets operator) configuration parameters
 ##
