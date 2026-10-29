@@ -48,4 +48,6 @@ Tfy-squid-proxy is a Helm chart that facilitates the deployment and management o
 | `tolerations`                                | Tolerations                                                    | `[]`                      |
 | `affinity`                                   | Affinity                                                       | `{}`                      |
 | `nodeSelector`                               | Node selector                                                  | `{}`                      |
+| `containerSecurityContext`                   | Container Security Context                                     | `{}`                      |
+| `podSecurityContext`                         | Pod Security Context                                           | `{}`                      |
 
