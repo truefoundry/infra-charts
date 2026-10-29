@@ -862,23 +862,43 @@ networkPolicy:
   labels: {}
   ## @param networkPolicy.annotations Extra annotations on NetworkPolicy objects (merged with global.annotations)
   annotations: {}
-  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts).
+  ## @param networkPolicy.allowedIngressFrom Cross-namespace ingress sources. `namespace` is required; omit `podSelector` to allow all pods in that namespace. List every caller of tfy-agent (Prometheus scraping /metrics, Alertmanager posting to /alerts); with this empty, only the release's own pods can reach it.
   allowedIngressFrom: []
+  ## Example: allow everything in the monitoring namespace (Prometheus and Alertmanager)
+  ## - namespace: prometheus
+  ## Example: allow only specific pods in a namespace
   ## - namespace: prometheus
   ##   podSelector:
   ##     app.kubernetes.io/name: alertmanager
-  ## @param networkPolicy.extraIngress Raw ingress rules appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors)
+  ## - namespace: prometheus
+  ##   podSelector:
+  ##     app.kubernetes.io/name: prometheus
+  ## @param networkPolicy.extraIngress Raw NetworkPolicyIngressRule entries appended to the ingress-external policy, for sources allowedIngressFrom cannot express (ipBlock, port restrictions, matchExpressions, same-namespace podSelectors). Not validated by the chart.
   extraIngress: []
+  ## Example: allow a CIDR (e.g. a VPN or the node network) on tfy-agent's port only
   ## - from:
   ##     - ipBlock:
   ##         cidr: 10.0.0.0/8
   ##   ports:
   ##     - port: 3000
   ##       protocol: TCP
+  ## Example: allow pods matching an expression from any namespace
+  ## - from:
+  ##     - namespaceSelector: {}
+  ##       podSelector:
+  ##         matchExpressions:
+  ##           - key: app.kubernetes.io/name
+  ##             operator: In
+  ##             values: [alertmanager, prometheus]
   sdsServer:
-    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Its clients are Envoy sidecars and gateways in workload namespaces, so the default allows every namespace. Set to [] to leave only the in-release mesh.
+    ## @param networkPolicy.sdsServer.ingressFrom [array] NetworkPolicyPeer entries allowed to reach sds-server's service port. Default: every namespace (`- namespaceSelector: {}`), because its clients are Envoy sidecars and gateways in workload namespaces. Set to [] to leave only the in-release mesh.
     ingressFrom:
       - namespaceSelector: {}
+    ## Example: only TrueFoundry workload namespaces
+    ## ingressFrom:
+    ##   - namespaceSelector:
+    ##       matchLabels:
+    ##         truefoundry.com/managed-by: servicefoundry
 
 ## @section eso (external-secrets operator) configuration parameters
 ##

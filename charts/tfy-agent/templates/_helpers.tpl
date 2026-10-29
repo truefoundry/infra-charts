@@ -735,6 +735,16 @@ matchExpressions:
       - sds-server
 {{- end -}}
 
+{{- define "tfy-agent.networkPolicyName" -}}
+{{- $full := printf "%s-%s" (include "tfy-agent.fullname" .context) .suffix -}}
+{{- if le (len $full) 63 -}}
+{{- $full -}}
+{{- else -}}
+{{- /* Plain truncation can make two suffixes collide; keep a readable prefix plus a hash of the full name. */ -}}
+{{- printf "%s-%s" ($full | trunc 54 | trimSuffix "-") ($full | sha256sum | trunc 8) -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "tfy-agent.networkPolicy.labels" -}}
 {{- $base := include "chart.labels" (dict "context" .) | fromYaml }}
 {{- toYaml (mergeOverwrite $base (deepCopy (.Values.networkPolicy.labels | default dict))) }}

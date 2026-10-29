@@ -1,6 +1,5 @@
 {{- if .Values.networkPolicy.enabled }}
 {{- $np := .Values.networkPolicy }}
-{{- $fullname := include "tfy-agent.fullname" . }}
 {{- $ingressFrom := $np.allowedIngressFrom | default list }}
 {{- $extraIngress := $np.extraIngress | default list }}
 {{- $sdsIngressFrom := dig "sdsServer" "ingressFrom" list $np }}
@@ -8,7 +7,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ $fullname }}-default-deny-ingress
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "default-deny-ingress") }}
   labels:
     {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
   {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
@@ -24,7 +23,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ $fullname }}-allow-all-egress
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "allow-all-egress") }}
   labels:
     {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
   {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
@@ -42,7 +41,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ $fullname }}-intra-instance
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "intra-instance") }}
   labels:
     {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
   {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
@@ -63,7 +62,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ $fullname }}-sds-server-clients
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "sds-server-clients") }}
   labels:
     {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
   {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
@@ -89,7 +88,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ $fullname }}-ingress-external
+  name: {{ include "tfy-agent.networkPolicyName" (dict "context" $ "suffix" "ingress-external") }}
   labels:
     {{- include "tfy-agent.networkPolicy.labels" . | nindent 4 }}
   {{- with (include "tfy-agent.networkPolicy.annotations" .) }}
