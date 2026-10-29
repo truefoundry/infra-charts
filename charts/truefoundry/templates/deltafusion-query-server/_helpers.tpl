@@ -301,6 +301,7 @@ Resources
   */}}
 {{- define "deltafusion-query-server.parseEnv" -}}
 {{- include "truefoundry.storage-credentials" . }}
+TRUEFOUNDRY_CONTROL_PLANE_VERSION: "{{ .Values.global.controlPlaneChartVersion }}"
 IMAGE_TAG: "{{ .Values.deltaFusionQueryServer.image.tag }}"
 PORT: "{{ .Values.deltaFusionQueryServer.service.port }}"
 {{ tpl (.Values.deltaFusionQueryServer.env | toYaml) . }}
