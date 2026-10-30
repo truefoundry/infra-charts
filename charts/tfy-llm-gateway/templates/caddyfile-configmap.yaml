@@ -23,7 +23,7 @@ data:
     :{{ .Values.proxy.containerPort }} {
       tls /etc/caddy/tls/tls.crt /etc/caddy/tls/tls.key
 
-      reverse_proxy 127.0.0.1:{{ .Values.service.port }} {
+      reverse_proxy 127.0.0.1:{{ include "tfy-llm-gateway.port" . }} {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
