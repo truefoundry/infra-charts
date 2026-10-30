@@ -142,6 +142,10 @@ gatewayId: ""
 envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
+## @param extraArgs [array] Extra arguments for the gateway process, appended to the image
+## ENTRYPOINT. The image sets no CMD, so these extend the command rather than replace it.
+## `--port=<n>` is prepended automatically from `service.port`, so it does not belong here.
+extraArgs: []
 ## @param nameOverride Name override
 nameOverride: ""
 ## @param podAnnotations Pod annotations
@@ -176,8 +180,8 @@ healthcheck:
   enabled: true
   ## healthcheck.readiness Readiness probe configuration
   readiness:
-    ## @param healthcheck.readiness.port Port to probe
-    port: 8787
+    ## @param healthcheck.readiness.port Port the readiness probe checks. Empty falls back to the gateway port.
+    port: ""
     ## @param healthcheck.readiness.path Path to probe
     path: /
     ## @param healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
@@ -194,8 +198,8 @@ healthcheck:
     failureThreshold: 3
   ## healthcheck.liveness Liveness probe configuration
   liveness:
-    ## @param healthcheck.liveness.port Port to probe
-    port: 8787
+    ## @param healthcheck.liveness.port Port the liveness probe checks. Empty falls back to the gateway port.
+    port: ""
     ## @param healthcheck.liveness.path Path to probe
     path: /
     ## @param healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
@@ -305,7 +309,9 @@ istio:
 service:
   ## @param service.type Service type
   type: ClusterIP
-  ## @param service.port Service port
+  ## @param service.port Port the gateway runs on -- the only port knob in this chart.
+  ## It drives the process (passed as `--port=<n>`), containerPort, the probes, the
+  ## Service and the ingress/route backends, so one value moves them all together.
   port: 8787
   ## @param service.annotations Service annotations
   annotations: {}
@@ -314,9 +320,9 @@ service:
 ## Proxy configuration (tfy-proxy / Caddy).
 ## When `proxy.tls.enabled` is true, the proxy terminates TLS on
 ## `proxy.containerPort` (default 8081) using the cert in `proxy.tls.secretName`,
-## and reverse-proxies to the gateway on loopback. The ClusterIP service.port
-## (default 8787) forwards to that proxy port; the gateway container itself
-## stays plaintext and listens on service.port.
+## and reverse-proxies to the gateway on loopback. The ClusterIP Service port
+## forwards to that proxy port; the gateway container itself stays plaintext and
+## listens on the gateway port (`port`, else service.port).
 ##
 ## IMPORTANT — Ingress wiring (when ingress.enabled is true):
 ## TLS is terminated INSIDE the pod, so your ingress controller must forward
