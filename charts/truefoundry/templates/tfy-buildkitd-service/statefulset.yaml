@@ -37,12 +37,9 @@ spec:
               {{- include "tfy-buildkitd-service.selectorLabels" . | nindent 14 }}
       containers:
         - name: tfy-buildkitd-service
-          {{- $buildkitdSecurityContext := .Values.tfyBuildkitdService.securityContext | default dict }}
-          {{- if ternary $buildkitdSecurityContext.enabled true (hasKey $buildkitdSecurityContext "enabled") }}
-          {{- with (omit $buildkitdSecurityContext "enabled") }}
+          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyBuildkitdService.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- . | nindent 12 }}
           {{- end }}
           image: "{{ .Values.tfyBuildkitdService.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuildkitdService.image.repository }}:{{ .Values.tfyBuildkitdService.image.tag }}"
           imagePullPolicy: {{ .Values.tfyBuildkitdService.image.pullPolicy }}
