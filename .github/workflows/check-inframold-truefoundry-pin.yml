@@ -1,0 +1,33 @@
+# Guarantees that on every release/truefoundry-X.Y.Z branch (and PRs into
+# one), inframold's truefoundry targetRevision + artifacts-manifest images
+# match the truefoundry chart version on that branch.
+#
+# Without this, release branches cut from main keep main's latest inframold
+# pin (e.g. 0.180.0 images on a 0.166.17 release branch), which breaks
+# airgap/upgrade tooling that reads inframold artifacts-manifest.json from
+# the release ref.
+name: Check inframold truefoundry pin
+
+on:
+  pull_request:
+    branches:
+      - "release/truefoundry-[0-9]*"
+  push:
+    branches:
+      - "release/truefoundry-[0-9]*"
+
+jobs:
+  check-pin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Verify inframold is pinned to this branch's truefoundry version
+        run: |
+          python3 scripts/generate-artifacts-manifest/pin_inframold_truefoundry_version.py --check
