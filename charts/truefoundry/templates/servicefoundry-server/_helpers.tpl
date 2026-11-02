@@ -201,17 +201,6 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 
 {{/*
-  Ask TFY inline agent config is mounted when tfyConfigs, TrueForge, and askTfyAgent are enabled.
-  */}}
-{{- define "servicefoundry-server.askTfyEnabled" -}}
-{{- $tc := .Values.tfyConfigs | default dict -}}
-{{- $askTfy := $tc.configs.askTfyAgent | default dict -}}
-{{- if and .Values.servicefoundryServer.enabled $tc.enabled .Values.trueforge.enabled (default true $askTfy.enabled) (tpl .Values.servicefoundryServer.configs.askTfyAgent .) -}}
-true
-{{- end -}}
-{{- end }}
-
-{{/*
   Parse env from template
   */}}
 {{- define "servicefoundry-server.parseEnv" -}}
@@ -273,17 +262,6 @@ true
 - name: DEFAULT_POLICIES_CONFIG_PATH
   value: /opt/truefoundry/configs/default-policies/default-policies.yaml
 {{- end }}
-{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
-{{- $askTfy := (.Values.tfyConfigs.configs.askTfyAgent | default dict) }}
-- name: ASK_TFY_AGENT_CONFIG_PATH
-  value: /opt/truefoundry/configs/ask-tfy-agent/ask-tfy-agent.yaml
-- name: ASK_TFY_WEB_SEARCH_ENABLED
-  value: {{ ($askTfy.webSearchEnabled | default false) | quote }}
-{{- if $askTfy.skillsRef }}
-- name: ASK_TFY_SKILLS_REF
-  value: {{ $askTfy.skillsRef | quote }}
-{{- end }}
-{{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
 - name: LLM_CODE_SNIPPET_TEMPLATE_DIRECTORY
   value: /opt/truefoundry/configs/llm-gateway/code-snippet
@@ -322,10 +300,6 @@ true
 - name: GRAFANA_ENDPOINT
   value: {{ printf "http://%s.%s/admin/grafana" $grafanaSvc $ns | quote }}
 {{- end }}
-{{- if (include "truefoundry.providesKek" .) }}
-- name: CREDENTIAL_ENCRYPTION_KEK_FILE_PATH
-  value: "/opt/truefoundry/secrets/kek/TFY_CREDENTIALS_KEK"
-{{- end }}
 - name: K8S_SERVICE_ACCOUNT_NAME
   valueFrom:
     fieldRef:
@@ -358,9 +332,6 @@ true
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
   {{- $volumes = append $volumes (dict "name" "configs-default-policies" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.defaultPolicies .))) }}
-{{- end }}
-{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
-  {{- $volumes = append $volumes (dict "name" "configs-ask-tfy-agent" "configMap" (dict "name" (tpl .Values.servicefoundryServer.configs.askTfyAgent .))) }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
@@ -403,13 +374,6 @@ true
 {{- if .Values.servicefoundryServer.tfyK8sSecretName }}
   {{- $volumes = append $volumes (dict "name" "tfy-k8s-secrets" "secret" (dict "secretName" (tpl .Values.servicefoundryServer.tfyK8sSecretName .))) }}
 {{- end }}
-{{- /* No `optional: true` here, unlike the mTLS volume: a missing KEK file reads to the server as
-       "no key configured" and it would boot writing plaintext, so the pod should stay in
-       ContainerCreating until the bootstrap job creates the secret. Skipped when extraVolumes
-       already names it, so installs that wired the KEK by hand do not upgrade into a duplicate. */}}
-{{- if and (include "truefoundry.providesKek" .) (not (include "truefoundry.listHasName" (dict "list" .Values.servicefoundryServer.extraVolumes "name" "tfy-credentials-kek"))) }}
-  {{- $volumes = append $volumes (dict "name" "tfy-credentials-kek" "secret" (dict "secretName" "truefoundry-encryption-creds" "defaultMode" 420)) }}
-{{- end }}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $volumes = concat $volumes $caData.items -}}
@@ -430,9 +394,6 @@ true
   {{- $tfyConfigsEnabled = .Values.tfyConfigs.enabled -}}
 {{- end -}}
 {{- $volumeMounts = append $volumeMounts (dict "name" "tmp-dir" "mountPath" "/tmp") -}}
-{{- if and (include "truefoundry.providesKek" .) (not (include "truefoundry.listHasName" (dict "list" .Values.servicefoundryServer.extraVolumeMounts "name" "tfy-credentials-kek"))) }}
-  {{- $volumeMounts = append $volumeMounts (dict "name" "tfy-credentials-kek" "mountPath" "/opt/truefoundry/secrets/kek" "readOnly" true) }}
-{{- end }}
 {{- if .Values.servicefoundryServer.extraVolumeMounts }}
   {{- range .Values.servicefoundryServer.extraVolumeMounts }}
     {{- $volumeMounts = append $volumeMounts . }}
@@ -452,9 +413,6 @@ true
 {{- end }}
 {{- if and $tfyConfigsEnabled (tpl .Values.servicefoundryServer.configs.defaultPolicies .) }}
   {{- $volumeMounts = append $volumeMounts (dict "name" "configs-default-policies" "mountPath" "/opt/truefoundry/configs/default-policies") }}
-{{- end }}
-{{- if eq (include "servicefoundry-server.askTfyEnabled" .) "true" }}
-  {{- $volumeMounts = append $volumeMounts (dict "name" "configs-ask-tfy-agent" "mountPath" "/opt/truefoundry/configs/ask-tfy-agent") }}
 {{- end }}
 {{- if and $tfyConfigsEnabled .Values.servicefoundryServer.configs.codeSnippetTemplates.enabled }}
   {{- if (tpl .Values.servicefoundryServer.configs.codeSnippetTemplates.chat .) }}
