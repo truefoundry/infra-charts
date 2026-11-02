@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.180.4"
+  gatewayChartVersion: "0.174.4"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -53,31 +53,18 @@ global:
   wif:
     ## @param global.wif.enabled Bool to create Role + RoleBinding(s) granting llm-gateway service account permission to create ServiceAccount tokens (TokenRequest API) for Workload Identity Federation.
     enabled: false
-  ## global.podSecurityContext Pod security context defaults for every component. A component's own
-  ## podSecurityContext overrides single fields. Under the truefoundry chart, its global.podSecurityContext applies.
+  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
   podSecurityContext:
-    ## @param global.podSecurityContext.enabled Apply pod security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for component pods
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
     runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default user ID for component pods
+    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
     runAsUser: 1001
-    seccompProfile:
-      ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
-      type: RuntimeDefault
-  ## global.containerSecurityContext Container security context defaults for every component. A component's own
-  ## securityContext overrides single fields. Under the truefoundry chart, its global.containerSecurityContext applies.
+  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
   containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
+    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
     enabled: true
-    ## @param global.containerSecurityContext.readOnlyRootFilesystem Default readOnlyRootFilesystem for component containers
-    readOnlyRootFilesystem: true
-    ## @param global.containerSecurityContext.allowPrivilegeEscalation Default allowPrivilegeEscalation for component containers
-    allowPrivilegeEscalation: false
-    capabilities:
-      ## @param global.containerSecurityContext.capabilities.drop [array] Linux capabilities dropped from component containers
-      drop:
-        - ALL
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -141,7 +128,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.180.4
+  tag: v0.174.4
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -359,7 +346,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.180.0"
+    tag: "v0.174.3"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -491,6 +478,7 @@ env:
   TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
+  TRUEFORGE_URL: "{{ .Values.global.controlPlaneURL }}/trueforge"
   CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
@@ -508,6 +496,75 @@ oidc:
   enabled: false
   ## @param oidc.config OIDC configuration
   config: {}
+## Sandbox configuration
+sandbox:
+  ## sandbox.devMode devMode sandbox configuration
+  devMode:
+    ## @param sandbox.devMode.enabled Bool to enable the tfy-sandbox-server subchart.
+    enabled: false
+## @section agentsLtsWriteJob Agents LTS write CronJob
+agentsLtsWriteJob:
+  ## @param agentsLtsWriteJob.enabled Bool to enable the agents LTS write cron job.
+  enabled: false
+  ## @param agentsLtsWriteJob.resourceTier Resource tier override for the agents LTS write cron job (empty falls back to global.resourceTier)
+  resourceTier: ""
+  ## @param agentsLtsWriteJob.schedule Schedule for the agents LTS write cron job
+  schedule: "*/30 * * * *"
+  ## @param agentsLtsWriteJob.timeZone Time zone for the agents LTS write cron job
+  timeZone: UTC
+  ## @param agentsLtsWriteJob.concurrencyPolicy Concurrency policy for the agents LTS write cron job
+  concurrencyPolicy: Forbid
+  ## @param agentsLtsWriteJob.startingDeadlineSeconds Starting deadline seconds for the agents LTS write cron job
+  startingDeadlineSeconds: 300
+  ## @param agentsLtsWriteJob.restartPolicy Restart policy for the agents LTS write cron job
+  restartPolicy: Never
+  ## @param agentsLtsWriteJob.backoffLimit Backoff limit for the agents LTS write cron job
+  backoffLimit: 2
+  ## @param agentsLtsWriteJob.activeDeadlineSeconds Max TTL in seconds for the agents LTS write job - job is killed after this duration (default 6h)
+  activeDeadlineSeconds: 21600
+  ## @param agentsLtsWriteJob.ttlSecondsAfterFinished TTL seconds after finished for the agents LTS write cron job
+  ttlSecondsAfterFinished: 604800
+  ## @param agentsLtsWriteJob.successfulJobsHistoryLimit Successful jobs history limit for the agents LTS write cron job
+  successfulJobsHistoryLimit: 1
+  ## @param agentsLtsWriteJob.failedJobsHistoryLimit Failed jobs history limit for the agents LTS write cron job
+  failedJobsHistoryLimit: 5
+  ## @skip agentsLtsWriteJob.command
+  command:
+    - "npm"
+    - "run"
+    - "agents-jobs:write-to-lts"
+  ## @param agentsLtsWriteJob.envSecretName Environment secret name for 2-part ${k8s-secret/...} refs
+  envSecretName: tfy-llm-gateway-env-secret
+  ## @param agentsLtsWriteJob.imagePullPolicy Image pull policy for the agents LTS write cron job
+  imagePullPolicy: IfNotPresent
+  ## @param agentsLtsWriteJob.podSecurityContext [object] Security context for the agents LTS write cron job pods
+  podSecurityContext:
+    ## Enable/disable this to override the global.podSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    runAsUser: 1001
+  ## @param agentsLtsWriteJob.securityContext [object] Security context for the agents LTS write cron job container
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+  ## @param agentsLtsWriteJob.serviceAccount.name Optional service account override (defaults to the gateway service account)
+  serviceAccount:
+    name: ""
+  ## @param agentsLtsWriteJob.resources Resource requests/limits override (merged over resourceTier defaults)
+  resources: {}
+  ## @param agentsLtsWriteJob.env [object] Environment variables for the agents LTS write cron job (job code supplies defaults for LTS_*/LOG_LEVEL/SENTRY/etc.)
+  env:
+    TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+    TENANT_NAME: "{{ .Values.global.tenantName }}"
+    GATEWAY_VERSION: "{{ .Values.global.gatewayChartVersion }}"
+    CONTROL_PLANE_URL: "{{ .Values.global.controlPlaneURL }}"
+    AUTH_SERVER_URL: https://auth.truefoundry.com
 
 ## Redis dependency configuration
 redis:
@@ -640,63 +697,3 @@ externalRedis:
       username: ""
       ## @param externalRedis.sentinel.auth.password Sentinel password
       password: ""
-
-###################################################################################################################
-####################################### NetworkPolicy #############################################################
-###################################################################################################################
-## @section networkPolicy Optional NetworkPolicies scoped to the LLM gateway pods.
-## Two policies when enabled: a deny-by-default ingress policy allowing only the configured sources
-## (e.g. the istio ingress gateway), and an egress policy that allows DNS (UDP + TCP 53), pods of this release
-## (gateway, redis — matched by app.kubernetes.io/instance), and external destinations
-## such as LLM providers over both IPv4 (0.0.0.0/0) and IPv6 (::/0) — minus any ranges listed in
-## deniedEgressCIDRs (empty by default).
-## Extra destinations (other namespaces, specific CIDRs) can be added via extraEgress. Each policy can be toggled
-## independently via ingress.enabled / egress.enabled (both default true, so networkPolicy.enabled turns both on).
-## This is self-contained: nothing outside this chart switches these policies on, and enabling them changes
-## nothing elsewhere. Installed as a subchart, set it under the alias, e.g. tfy-llm-gateway.networkPolicy.enabled.
-## NOTE: NetworkPolicies are additive across the namespace. If something else already applies a broader policy to
-## these pods (for example a namespace-wide allow-all egress selecting every pod), the union applies and these
-## rules will not narrow it.
-networkPolicy:
-  ## @param networkPolicy.enabled Create the gateway NetworkPolicies. Off by default; nothing renders unless this is true.
-  enabled: false
-  ## @param networkPolicy.labels [object] Extra labels on NetworkPolicy objects (merged with global.labels)
-  labels: {}
-  ## @param networkPolicy.annotations [object] Extra annotations on NetworkPolicy objects (merged with global.annotations)
-  annotations: {}
-  ## networkPolicy.ingress Ingress rules for the gateway pods
-  ingress:
-    ## @param networkPolicy.ingress.enabled Create the ingress NetworkPolicy. On by default, but only renders when networkPolicy.enabled is true. WARNING: enabling it with an empty allowedIngressFrom denies all ingress (ingress controllers, Prometheus scrapes, same-namespace clients) — populate allowedIngressFrom before turning networkPolicy on. Set it to false if something else already governs ingress to these pods.
-    enabled: true
-    ## @param networkPolicy.ingress.allowedIngressFrom [array] Ingress sources. Set `namespace` for a cross-namespace source (omit `podSelector` to allow the whole namespace), or omit `namespace` and set `podSelector` to allow specific pods in this namespace.
-    allowedIngressFrom: []
-    # - namespace: istio-system
-    #   podSelector:
-    #     app.kubernetes.io/name: tfy-istio-ingress
-    ## @param networkPolicy.ingress.extraIngress [array] Raw ingress rules appended verbatim to the ingress policy
-    extraIngress: []
-  ## networkPolicy.egress Egress rules for the gateway pods
-  egress:
-    ## @param networkPolicy.egress.enabled Create the egress NetworkPolicy.
-    enabled: true
-    ## @param networkPolicy.egress.deniedEgressCIDRs [array] CIDRs the external egress rules must NOT reach. Empty by default (external rules reach everything). Populate with in-cluster pod/service and private-network ranges to block them, e.g. 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10, fd00::/8.
-    ## Both address families go in this one list. Entries are split by family and subtracted from the matching rule — IPv4 from 0.0.0.0/0, IPv6 from ::/0 — because an ipBlock's `except` entries must fall inside its `cidr`.
-    ## NOTE: if you deny the private ranges, don't deny 169.254.0.0/16 — cloud metadata identity (GKE Workload Identity 169.254.169.254, EKS Pod Identity 169.254.170.23) lives there. Same for fd00:ec2::254/128 on IPv6 EKS.
-    ## NOTE: on a dual-stack cluster, denying a range in only one family leaves it reachable over the other. If you deny 10.0.0.0/8, deny the cluster's IPv6 pod/service CIDRs too.
-    deniedEgressCIDRs: []
-    ## @param networkPolicy.egress.extraEgress [array] Raw egress rules appended verbatim to the egress policy. Use this to allow extra destinations (other namespaces, specific CIDRs such as the Kubernetes API server for global.wif.enabled, etc.).
-    extraEgress: []
-
-## @section OTEL buffer
-## tfy-otel-buffer buffers gateway traces on disk and forwards them to the control plane
-## tfy-otel-collector to improve reliability of traces. On by default; set to false to export
-## traces to the control plane directly. Requires global.controlPlaneURL when enabled.
-## The gateway exports to http://tfy-otel-buffer.<namespace>.svc.cluster.local:4318/v1/traces, or
-## https:// with mTLS when global.mTLS.enabled is true.
-## @param enableOtelBuffer Bool to deploy tfy-otel-buffer and export gateway traces to it
-enableOtelBuffer: true
-## Overrides for the tfy-otel-buffer subchart (charts/tfy-otel-buffer/values.yaml), for example
-## additionalSinks, buffer, forward, persistence, and resources. global.* is shared with the gateway.
-## @skip tfy-otel-buffer
-tfy-otel-buffer:
-  additionalSinks: {}
