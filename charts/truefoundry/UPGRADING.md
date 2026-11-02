@@ -351,49 +351,6 @@ networkPolicy:
     - namespace: tfy-agent
 ```
 
-**Routes that bypass tfy-proxy (changed in perComponent mode).** The chart's VirtualService, Ingress
-and HTTPRoute send Flyte gRPC (`/flyteidl.service.AdminService/`) straight to `tfy-workflow-admin:8089`,
-and VirtualServices outside the chart can route straight to `servicefoundry-server:3000` (e.g. an
-auth-server VirtualService for `/mcp/oauth2/callback`). Those components otherwise admit only callers
-in this release. With `mode: perComponent`, the default `extraIngress` on `tfyWorkflowAdmin` (8089) and
-`servicefoundryServer` (3000) now admits the TrueFoundry Istio gateway: pods labelled
-`istio: tfy-istio-ingress` in `istio-system`. Earlier versions admitted no gateway there.
-
-- **Through `tfy-istio-ingress`**: nothing to set. If you added the same entry to `extraIngress`
-  yourself, you can drop it.
-- **Through other gateways** (the tailnet or ALB Istio gateways `tfy-istio-ingress-tailnet`,
-  `tfy-istio-ingress-alb` and `tfy-istio-ingress-ctl-alb`, ingress-nginx, or an ALB in IP target mode):
-  set `extraIngress` on both components. Your list **replaces** the default (Helm doesn't merge lists),
-  so repeat the `tfy-istio-ingress` entry if you also route through it.
-- **To admit no gateway**: set `extraIngress: []` on both components.
-
-```yaml
-networkPolicy:
-  components:
-    tfyWorkflowAdmin:           # same shape on servicefoundryServer with port 3000
-      extraIngress:
-        - ports:
-            - port: 8089
-              protocol: TCP
-          from:
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: istio-system
-              podSelector:
-                matchExpressions:
-                  - key: istio
-                    operator: In
-                    values: [tfy-istio-ingress, tfy-istio-ingress-tailnet, tfy-istio-ingress-alb, tfy-istio-ingress-ctl-alb]
-            - namespaceSelector:
-                matchLabels:
-                  kubernetes.io/metadata.name: ingress-nginx
-              podSelector:
-                matchLabels:
-                  app.kubernetes.io/name: ingress-nginx
-            - ipBlock:
-                cidr: 10.0.0.0/24   # ALB subnet
-```
-
 **Roll back.** `mode: legacy` (or an empty `mode`) returns to the earlier policies.
 `networkPolicy.enabled: false` removes all of them.
 
