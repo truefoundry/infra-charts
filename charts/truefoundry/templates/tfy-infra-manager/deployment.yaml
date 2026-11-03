@@ -21,11 +21,9 @@ spec:
         {{- include "tfy-infra-manager.podLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "tfy-infra-manager.serviceAccountName" . }}
-      {{- if .Values.tfyInfraManager.podSecurityContext.enabled }}
-      {{- with .Values.tfyInfraManager.podSecurityContext }}
+      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyInfraManager.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
-        {{- toYaml (omit . "enabled") | nindent 8 }}
-      {{- end }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "truefoundry.customCA.useDirectMount" .) "false") }}
       initContainers:
@@ -33,11 +31,9 @@ spec:
       {{- end }}
       containers:
         - name: "tfy-infra-manager"
-          {{- if .Values.tfyInfraManager.securityContext.enabled }}
-          {{- with .Values.tfyInfraManager.securityContext }}
+          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyInfraManager.securityContext "global" .Values.global.containerSecurityContext)) }}
           securityContext:
-            {{- toYaml (omit . "enabled") | nindent 12 }}
-          {{- end }}
+            {{- . | nindent 12 }}
           {{- end }}
           env:
             {{- include "tfy-infra-manager.env" . | trim | nindent 12 }}

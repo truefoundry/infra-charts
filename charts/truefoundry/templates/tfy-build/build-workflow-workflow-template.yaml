@@ -226,6 +226,10 @@ spec:
             {{- end}}
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command: [bash]
         source: |
           #!/bin/bash
@@ -321,6 +325,10 @@ spec:
       {{- end }}
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command: [bash]
         env:
           - name: BUILD_SOURCE
@@ -492,6 +500,10 @@ spec:
       {{- end }}
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command: [bash]
         env: 
           - name: BUILD_SOURCE
@@ -592,6 +604,10 @@ spec:
             {{- end}}
       script:
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command: [bash]
         env:
           - name: CALLBACK_URL
@@ -700,6 +716,10 @@ spec:
       script:
         command: [bash]
         image: {{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sociIndexBuildAndPush.image.tag }}
+        {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         env:
           - name: DOCKER_REGISTRY_URL
             value: "{{`{{inputs.parameters.dockerRegistryURL}}`}}"

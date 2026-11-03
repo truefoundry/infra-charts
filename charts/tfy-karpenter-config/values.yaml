@@ -79,15 +79,19 @@ karpenter:
     ## @param karpenter.defaultNodePool.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
-      - nodes: 10%
+      - nodes: "100%"
         reasons:
-        - "Underutilized"
-        - "Empty"
+        - Empty
+      - nodes: "10%"
+        reasons:
+        - Underutilized
       - nodes: "1"
         reasons:
-        - "Drifted"
+        - Drifted
       consolidateAfter: 15m
       consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.defaultNodePool.expireAfter Duration after which nodes are expired and replaced. Set to "Never" to disable.
+    expireAfter: 720h
     ## @param karpenter.defaultNodePool.capacityTypes [array] Capacity types for the default node pool
     capacityTypes:
     - spot
@@ -176,15 +180,19 @@ karpenter:
     ## @param karpenter.gpuNodePool.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
-      - nodes: 10%
+      - nodes: "100%"
         reasons:
-        - "Underutilized"
-        - "Empty"
+        - Empty
+      - nodes: "10%"
+        reasons:
+        - Underutilized
       - nodes: "1"
         reasons:
-        - "Drifted"
+        - Drifted
       consolidateAfter: 5m
       consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.gpuNodePool.expireAfter Duration after which nodes are expired and replaced. Set to "Never" to disable.
+    expireAfter: 720h
     ## @param karpenter.gpuNodePool.capacityTypes [array] Capacity types for the GPU node pool
     capacityTypes:
     - spot
@@ -297,15 +305,19 @@ karpenter:
     ## @param karpenter.controlPlaneNodePool.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
-      - nodes: 10%
+      - nodes: "100%"
         reasons:
-        - "Underutilized"
-        - "Empty"
+        - Empty
+      - nodes: "10%"
+        reasons:
+        - Underutilized
       - nodes: "1"
         reasons:
-        - "Drifted"
+        - Drifted
       consolidateAfter: 1h
       consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.controlPlaneNodePool.expireAfter Duration after which nodes are expired and replaced. Set to "Never" to disable.
+    expireAfter: 720h
     ## @param karpenter.controlPlaneNodePool.capacityTypes [array] Capacity types for the control plane node pool
     capacityTypes:
     - on-demand
@@ -397,15 +409,19 @@ karpenter:
     ## @param karpenter.inferentiaNodePool.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
-      - nodes: 10%
+      - nodes: "100%"
         reasons:
-        - "Underutilized"
-        - "Empty"
+        - Empty
+      - nodes: "10%"
+        reasons:
+        - Underutilized
       - nodes: "1"
         reasons:
-        - "Drifted"
+        - Drifted
       consolidateAfter: 5m
       consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.inferentiaNodePool.expireAfter Duration after which nodes are expired and replaced. Set to "Never" to disable.
+    expireAfter: 720h
     ## @param karpenter.inferentiaNodePool.capacityTypes [array] Capacity types for the Inferentia node pool
     capacityTypes:
     - spot
@@ -449,15 +465,19 @@ karpenter:
     ## @param karpenter.critical.disruption [object] Consolidation policy for disruption
     disruption:
       budgets:
-      - nodes: 10%
+      - nodes: "100%"
         reasons:
-        - "Underutilized"
-        - "Empty"
+        - Empty
+      - nodes: "10%"
+        reasons:
+        - Underutilized
       - nodes: "1"
         reasons:
-        - "Drifted"
+        - Drifted
       consolidateAfter: 1h
       consolidationPolicy: WhenEmptyOrUnderutilized
+    ## @param karpenter.critical.expireAfter Duration after which nodes are expired and replaced. Set to "Never" to disable.
+    expireAfter: 720h
     ## @param karpenter.critical.capacityTypes [array] Capacity types for the critical node pool
     capacityTypes:
     - on-demand

@@ -10,6 +10,13 @@ metadata:
     {{- include "servicefoundry-server.deploymentAnnotations" . | nindent 4 }}
 spec:
   replicas: {{- include "servicefoundry-server.replicas" . | indent 1 }}
+  {{- if .Values.servicefoundryServer.rollout.enabled }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.servicefoundryServer.rollout.maxSurge | quote }}
+      maxUnavailable: {{ .Values.servicefoundryServer.rollout.maxUnavailable }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "truefoundry.selectorLabels" (dict "context" . "name" "servicefoundry-server") | nindent 6 }}

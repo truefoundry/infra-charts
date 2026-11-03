@@ -176,8 +176,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-otel-collector.serviceAccountName" -}}
+{{- $restricted := .Values.global.restrictedServiceAccount | default dict -}}
 {{- if .Values.serviceAccount.name -}}
 {{- .Values.serviceAccount.name -}}
+{{- else if $restricted.enabled -}}
+{{- $restricted.name | default "truefoundry-restricted" -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end }}

@@ -191,8 +191,10 @@ Expand the name of the chart.
 {{- define "tfy-proxy.serviceAccountName" -}}
 {{- if .Values.tfyProxy.serviceAccount.create -}}
 {{- default (include "tfy-proxy.fullname" .) "tfy-proxy" }}
+{{- else if .Values.tfyProxy.serviceAccount.name -}}
+{{- .Values.tfyProxy.serviceAccount.name -}}
 {{- else -}}
-{{- .Values.global.serviceAccount.name -}}
+{{- include "truefoundry.restrictedServiceAccountName" . -}}
 {{- end -}}
 {{- end }}
 
@@ -467,14 +469,16 @@ limits:
   over mesh mTLS. Browsers hit tfy-proxy with public TLS only; the proxy->NATS
   hop must present the mesh client cert when websocket.tls.verify is enabled
   (same CA mount as (internal_mtls)). Rendered when global.mTLS.enabled and
-  tfyNats.config.websocket.tls.enabled. Without tls, Caddy's plaintext hop
-  fails against an HTTPS websocket listener; without tls_client_auth, NATS
-  rejects with "certificate required".
+  either global.mTLS.nats.websocketTLS (which also turns TLS on in the NATS
+  subchart) or a hand-set tfyNats.config.websocket.tls.enabled. Without tls,
+  Caddy's plaintext hop fails against an HTTPS websocket listener; without
+  tls_client_auth, NATS rejects with "certificate required".
   Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
 */}}
 {{- define "tfy-proxy.natsUpstreamOpts" -}}
 {{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
-{{- $wsTls := and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) -}}
+{{- $globalWsTls := (((.Values.global.mTLS).nats).websocketTLS) | default false -}}
+{{- $wsTls := and .Values.global.mTLS.enabled (or $globalWsTls ($natsWsTls.enabled | default false)) -}}
 {{- if or .Values.global.proxy.rewriteUpstreamHost $wsTls }} {
           {{- if .Values.global.proxy.rewriteUpstreamHost }}
           header_up Host {http.reverse_proxy.upstream.hostport}

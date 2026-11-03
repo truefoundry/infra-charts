@@ -100,7 +100,7 @@ Common labels.
 {{- if .Values.tfyInfraManager.serviceAccount.name -}}
 {{- .Values.tfyInfraManager.serviceAccount.name -}}
 {{- else -}}
-{{- .Values.global.serviceAccount.name -}}
+{{- include "truefoundry.restrictedServiceAccountName" . -}}
 {{- end -}}
 {{- end }}
 
@@ -177,7 +177,9 @@ limits:
 
 {{- define "tfy-infra-manager.volumes" -}}
 {{- $userVolumes := .Values.tfyInfraManager.extraVolumes | default (list) -}}
-{{- $final := $userVolumes -}}
+{{- $limits := (fromYaml (include "tfy-infra-manager.resources" .)).limits | default dict -}}
+{{- $tmpSizeLimit := dig "emptyDir" "tmpdir" "sizeLimit" "" .Values.tfyInfraManager | default (index $limits "ephemeral-storage") -}}
+{{- $final := prepend $userVolumes (dict "name" "tmp-dir" "emptyDir" (dict "sizeLimit" $tmpSizeLimit)) -}}
 {{- $caData := include "truefoundry.customCA.volumeItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}
@@ -191,7 +193,7 @@ limits:
 
 {{- define "tfy-infra-manager.volumeMounts" -}}
 {{- $userMounts := .Values.tfyInfraManager.extraVolumeMounts | default (list) -}}
-{{- $final := $userMounts -}}
+{{- $final := prepend $userMounts (dict "name" "tmp-dir" "mountPath" "/tmp") -}}
 {{- $caData := include "truefoundry.customCA.volumeMountItems" . | fromJson -}}
 {{- if $caData.items -}}
 {{- $final = concat $final $caData.items -}}

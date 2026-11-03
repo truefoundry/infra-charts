@@ -70,6 +70,10 @@ data:
           - name: build-container
             image: {{ .Values.tfyBuild.jobTemplate.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.jobTemplate.image.repository }}:{{ .Values.tfyBuild.jobTemplate.image.tag }}
             command: ["bash"]
+            {{- with .Values.tfyBuild.truefoundryWorkflows.securityContext }}
+            securityContext:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
             env:
             - name: BUILD_SOURCE
               value: "{{ "{{ .BUILD_SOURCE }}" }}"

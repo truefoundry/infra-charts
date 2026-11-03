@@ -1,0 +1,16 @@
+{{- if and .Values.global.customCA.enabled .Values.global.customCA.certificate (not .Values.global.customCA.existingConfigMap.name) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tfy-otel-buffer.customCA.configMapName" . }}
+  namespace: {{ include "tfy-otel-buffer.namespace" . }}
+  labels:
+    {{- include "tfy-otel-buffer.labels" . | nindent 4 }}
+  {{- with .Values.global.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  ca-certificates.crt: |
+    {{- .Values.global.customCA.certificate | nindent 4 }}
+{{- end }}

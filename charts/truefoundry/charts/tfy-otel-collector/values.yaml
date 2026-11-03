@@ -41,18 +41,31 @@ global:
     registry: "tfy.jfrog.io"
   ## @param global.namespaceOverride Namespace override (defaults to .Release.Namespace if not set)
   namespaceOverride: ""
-  ## global.podSecurityContext Pod security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.podSecurityContext` when installed under truefoundry.
+  ## global.podSecurityContext Pod security context defaults for every component. A component's own
+  ## podSecurityContext overrides single fields. Under the truefoundry chart, its global.podSecurityContext applies.
   podSecurityContext:
-    ## @param global.podSecurityContext.enabled Toggle pod security contexts for all components; a component can override with its own `enabled`.
+    ## @param global.podSecurityContext.enabled Apply pod security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
     enabled: true
-    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for all component pods; a component can override per field.
+    ## @param global.podSecurityContext.runAsNonRoot Default runAsNonRoot for component pods
     runAsNonRoot: true
-    ## @param global.podSecurityContext.runAsUser Default runAsUser (UID) for all component pods; a component can override per field.
+    ## @param global.podSecurityContext.runAsUser Default user ID for component pods
     runAsUser: 1001
-  ## global.containerSecurityContext Container security context defaults for all components (each overrides per field; `enabled: false` disables everywhere). Overridden by the parent chart's `global.containerSecurityContext` when installed under truefoundry.
+    seccompProfile:
+      ## @param global.podSecurityContext.seccompProfile.type Default seccomp profile for component pods
+      type: RuntimeDefault
+  ## global.containerSecurityContext Container security context defaults for every component. A component's own
+  ## securityContext overrides single fields. Under the truefoundry chart, its global.containerSecurityContext applies.
   containerSecurityContext:
-    ## @param global.containerSecurityContext.enabled Toggle container security contexts for all components; a component can override with its own `enabled`.
+    ## @param global.containerSecurityContext.enabled Apply container security contexts. Set to false to turn them off for all components; a component can set its own `enabled`.
     enabled: true
+    ## @param global.containerSecurityContext.readOnlyRootFilesystem Default readOnlyRootFilesystem for component containers
+    readOnlyRootFilesystem: true
+    ## @param global.containerSecurityContext.allowPrivilegeEscalation Default allowPrivilegeEscalation for component containers
+    allowPrivilegeEscalation: false
+    capabilities:
+      ## @param global.containerSecurityContext.capabilities.drop [array] Linux capabilities dropped from component containers
+      drop:
+        - ALL
   ## global.customCA Custom CA certificate configuration
   customCA:
     ## @param global.customCA.enabled Bool to enable custom CA certificate injection
@@ -130,7 +143,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.179.0
+  tag: v0.180.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -249,8 +262,6 @@ service:
   type: ClusterIP
   ## @param service.port Service port (OTLP HTTP)
   port: 4318
-  ## @param service.ingestorProxyPort Agent session ingest proxy port
-  ingestorProxyPort: 4319
   ## @param service.annotations Service annotations
   annotations: {}
   ## @param service.labels Service labels
@@ -259,7 +270,7 @@ service:
 serviceAccount:
   ## @param serviceAccount.create Create service account
   create: false
-  ## @param serviceAccount.annotations Service account annotations
+  ## @param serviceAccount.annotations Annotations for this chart's own service account. Used only when create and name are set; under the truefoundry chart, render fails otherwise.
   annotations: {}
   ## @param serviceAccount.labels Service account labels
   labels: {}

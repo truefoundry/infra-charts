@@ -11,6 +11,9 @@ spec:
         {{- .Values.karpenter.defaultNodePool.labels | toYaml | nindent 8 }}
     {{- end }}
     spec:
+      {{- if .Values.karpenter.defaultNodePool.expireAfter }}
+      expireAfter: {{ .Values.karpenter.defaultNodePool.expireAfter | quote }}
+      {{- end }}
       nodeClassRef:
         group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
         kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
