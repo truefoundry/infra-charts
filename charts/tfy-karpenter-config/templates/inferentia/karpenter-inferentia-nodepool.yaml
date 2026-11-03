@@ -13,6 +13,9 @@ spec:
       {{- end }}
     {{- end }}
     spec:
+      {{- if .Values.karpenter.inferentiaNodePool.expireAfter }}
+      expireAfter: {{ .Values.karpenter.inferentiaNodePool.expireAfter | quote }}
+      {{- end }}
       requirements:
         {{- if .Values.karpenter.inferentiaNodePool.capacityTypes }}
         - key: karpenter.sh/capacity-type
