@@ -889,3 +889,14 @@ Renders "true" or "".
 true
 {{- end -}}
 {{- end -}}
+
+{{/*
+The port the tfy-llm-gateway subchart runs on: its `service.port`, which is the
+subchart's single port knob and drives its process, Service and probes alike.
+tfy-proxy dials that Service, so it derives the port from here instead of
+repeating the default.
+*/}}
+{{- define "truefoundry.llmGateway.port" -}}
+{{- $gw := index .Values "tfy-llm-gateway" | default dict -}}
+{{- ($gw.service | default dict).port | default 8787 -}}
+{{- end -}}
