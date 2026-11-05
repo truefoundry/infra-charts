@@ -31670,6 +31670,29 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-llm-gateway-0.179.0/tfy-llm-gateway-0.179.0.tgz
     version: 0.179.0
   - apiVersion: v2
+    created: "2026-11-05T06:50:24.800702422Z"
+    dependencies:
+    - condition: redis.enabled
+      name: redis
+      repository: ""
+      version: 24.0.0
+    - condition: sandbox.devMode.enabled
+      name: tfy-sandbox-server
+      repository: oci://tfy.jfrog.io/tfy-helm
+      version: 0.3.3
+    - condition: vector.enabled
+      name: vector
+      repository: https://helm.vector.dev
+      version: 0.58.0
+    description: Truefoundry LLM Gateway deployment chart
+    digest: a9586ebf1697576b34a362a19fced10bb6cf3e09986b7ea49cdf1bf90fea6d6e
+    maintainers:
+    - name: truefoundry
+    name: tfy-llm-gateway
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-llm-gateway-0.178.10/tfy-llm-gateway-0.178.10.tgz
+    version: 0.178.10
+  - apiVersion: v2
     created: "2026-10-30T14:09:54.500629702Z"
     dependencies:
     - condition: redis.enabled
@@ -48545,6 +48568,62 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.179.0/truefoundry-0.179.0.tgz
     version: 0.179.0
+  - apiVersion: v2
+    created: "2026-11-05T06:50:25.165870063Z"
+    dependencies:
+    - alias: tfyNats
+      condition: tfyNats.enabled
+      name: nats
+      repository: https://nats-io.github.io/k8s/helm/charts/
+      version: 2.14.2
+    - condition: devMode.enabled
+      name: postgresql
+      repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
+      version: 18.1.1
+    - condition: redis.enabled
+      name: redis
+      repository: oci://tfy.jfrog.io/tfy-mirror/bitnamicharts
+      version: 24.0.0
+    - alias: extraResources
+      condition: extraResources.enabled
+      name: tfy-manifests-template
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.2.0
+    - condition: tfy-llm-gateway.enabled
+      name: tfy-llm-gateway
+      repository: oci://tfy.jfrog.io/tfy-helm
+      tags:
+      - llmGateway
+      version: 0.178.10
+    - condition: trueforge.enabled
+      name: trueforge
+      repository: oci://tfy.jfrog.io/tfy-helm
+      version: 0.178.3
+    - condition: tfy-otel-collector.enabled
+      name: tfy-otel-collector
+      repository: file://charts/tfy-otel-collector
+      tags:
+      - tracing
+      - llmGatewayRequestLogging
+      version: 0.178.2
+    - alias: victoriaMetricsMonitoring
+      condition: victoriaMetricsMonitoring.enabled
+      name: tfy-victoria-metrics-config
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.1.3
+    - alias: truefoundryMonitoring
+      condition: truefoundryMonitoring.enabled
+      name: truefoundry-monitoring
+      repository: https://truefoundry.github.io/infra-charts/
+      version: 0.1.6
+    description: TrueFoundry Control Plane Components
+    digest: 856c2cf2cd48632da2b2b4f31c7f56eb906c4b033b0217ae64b2268525c957b1
+    maintainers:
+    - name: truefoundry
+    name: truefoundry
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-0.178.26/truefoundry-0.178.26.tgz
+    version: 0.178.26
   - apiVersion: v2
     created: "2026-11-02T11:47:26.638860823Z"
     dependencies:
@@ -78912,4 +78991,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-monitoring-0.1.0/truefoundry-monitoring-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-05T06:44:21.296657752Z"
+generated: "2026-11-05T06:50:25.17057998Z"
