@@ -1,6 +1,6 @@
 {{- if .Values.httpRoute.enabled -}}
 {{- $serviceName := include "tfy-llm-gateway.fullname" . -}}
-{{- $servicePort := .Values.service.port -}}
+{{- $servicePort := include "tfy-llm-gateway.port" . -}}
 {{- $timeouts := dict -}}
 {{- with .Values.httpRoute.timeouts -}}
   {{- with .request }}{{- $_ := set $timeouts "request" . }}{{- end -}}
