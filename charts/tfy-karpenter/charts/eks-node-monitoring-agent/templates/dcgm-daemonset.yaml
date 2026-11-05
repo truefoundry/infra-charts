@@ -37,7 +37,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ .Chart.Name }}-dcgm
-          image: {{ .Values.dcgmAgent.image.override | default (include "eks-node-monitoring-agent.image" .) }}
+          image: {{ template "dcgm-exporter.image" . }}
           imagePullPolicy: {{ .Values.dcgmAgent.image.pullPolicy }}
           command: ["/usr/bin/nv-hostengine"]
           args: ["-n", "-b", "ALL"]
