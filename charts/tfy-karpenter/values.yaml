@@ -17,19 +17,19 @@ eks-node-monitoring-agent:
         memory: 200Mi
 
   dcgmAgent:
-    ## @param eks-node-monitoring-agent.dcgmAgent.image.override Override the image for the dcgm-exporter
+    ## @param eks-node-monitoring-agent.dcgmAgent.image.override Override the image for the dcgm-server. Defaults to the eks-node-monitoring-agent image
     ##
     image:
-      override: quay.io/tfy-images/eks/observability/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04
+      override: ""
     ## @param eks-node-monitoring-agent.dcgmAgent.resources [object] Resources for eks-node-monitoring-agent
     ##
     resources:
       requests:
         cpu: 10m
-        memory: 30Mi
+        memory: 64Mi
       limits:
         cpu: 250m
-        memory: 100Mi
+        memory: 512Mi
     ## @param eks-node-monitoring-agent.dcgmAgent.tolerations [array] Tolerations for eks-node-monitoring-agent
     ##
     tolerations:

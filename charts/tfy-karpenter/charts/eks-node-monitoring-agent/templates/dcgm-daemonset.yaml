@@ -37,10 +37,17 @@ spec:
       priorityClassName: {{ .Values.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ .Chart.Name }}-dcgm
-          image: {{ template "dcgm-exporter.image" . }}
+          image: {{ .Values.dcgmAgent.image.override | default (include "eks-node-monitoring-agent.image" .) }}
           imagePullPolicy: {{ .Values.dcgmAgent.image.pullPolicy }}
-          command: ["/bin/sh"]
-          args: ["-c", "nv-hostengine -n -b ALL || true; sleep infinity"]
+          command: ["/usr/bin/nv-hostengine"]
+          args: ["-n", "-b", "ALL"]
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: compute,utility,compat32
+            - name: NVIDIA_DISABLE_REQUIRE
+              value: "true"
           {{- with .Values.dcgmAgent.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
