@@ -67,11 +67,25 @@ Expand the name of the chart.
 
 {{/*
   Pod Annotations - merges commonAnnotations with pod-specific annotations
+  checksum/config rolls the pods when the Caddyfile changes: it is mounted via
+  subPath, so the kubelet never refreshes it and Caddy only reads it at startup.
+  Skipped for existingProxyConfigMapName, whose content the chart cannot see.
   */}}
 {{- define "tfy-proxy.podAnnotations" -}}
 {{- $commonAnnotations := include "tfy-proxy.commonAnnotations" . | fromYaml }}
 {{- $podAnnotations := mergeOverwrite (deepCopy .Values.global.podAnnotations) $commonAnnotations .Values.tfyProxy.podAnnotations }}
+{{- if not .Values.tfyProxy.existingProxyConfigMapName }}
+{{- $_ := set $podAnnotations "checksum/config" (include "tfy-proxy.configChecksum" .) }}
+{{- end }}
 {{- toYaml $podAnnotations }}
+{{- end }}
+
+{{/*
+  sha256 of the rendered ConfigMap data only, so label and annotation changes
+  (helm.sh/chart, app.kubernetes.io/version, global.labels) do not roll the pods
+  */}}
+{{- define "tfy-proxy.configChecksum" -}}
+{{- pick (include (print $.Template.BasePath "/tfy-proxy/configmap.yaml") . | fromYaml) "data" | toYaml | sha256sum -}}
 {{- end }}
 
 {{/*
