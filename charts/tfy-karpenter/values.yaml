@@ -6,9 +6,12 @@ eks-node-monitoring-agent:
   imagePullSecrets: []
   nodeAgent:
     image:
+      ## @param eks-node-monitoring-agent.nodeAgent.image.registry Registry for the eks-node-monitoring-agent image
+      ##
+      registry: quay.io
       ## @param eks-node-monitoring-agent.nodeAgent.image.repository Repository for the eks-node-monitoring-agent image
       ##
-      repository: quay.io/tfy-images/eks/eks-node-monitoring-agent
+      repository: tfy-images/eks/eks-node-monitoring-agent
       ## @param eks-node-monitoring-agent.nodeAgent.image.tag Tag for the eks-node-monitoring-agent image
       ##
       tag: v1.7.1-eksbuild.1
@@ -24,6 +27,9 @@ eks-node-monitoring-agent:
 
   dcgmAgent:
     image:
+      ## @param eks-node-monitoring-agent.dcgmAgent.image.registry Registry for the dcgm-server image. Empty uses the nodeAgent registry
+      ##
+      registry: ""
       ## @param eks-node-monitoring-agent.dcgmAgent.image.repository Repository for the dcgm-server image. Empty uses the nodeAgent image
       ##
       repository: ""
