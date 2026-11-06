@@ -37,7 +37,7 @@ spec:
       priorityClassName: {{ .Values.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ .Chart.Name }}-dcgm
-          image: {{ template "dcgm-exporter.image" . }}
+          image: {{ template "dcgm-server.image" . }}
           imagePullPolicy: {{ .Values.dcgmAgent.image.pullPolicy }}
           command: ["/usr/bin/nv-hostengine"]
           args: ["-n", "-b", "ALL"]

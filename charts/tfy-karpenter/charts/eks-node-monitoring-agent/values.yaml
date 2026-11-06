@@ -106,9 +106,12 @@ nodeAgent:
 ##
 dcgmAgent:
   image:
-    ## @param dcgmAgent.image.tag Tag for the image
+    ## @param dcgmAgent.image.tag Tag that pins dcgm-server to a standalone eks/observability/dcgm-exporter image. Empty uses the nodeAgent image
     ##
-    tag: 3.3.7-3.5.0-ubuntu22.04
+    tag: ""
+    ## @param dcgmAgent.image.override Full image override for the dcgm-server DaemonSet
+    ##
+    override: ""
     ## @param dcgmAgent.image.domain Domain for the image
     ##
     domain: amazonaws.com

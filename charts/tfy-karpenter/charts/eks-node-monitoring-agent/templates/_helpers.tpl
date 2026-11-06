@@ -64,14 +64,16 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
-Get the current dcgm-exporter image for a region.
-We use the dcgm-exporter image from the eks/observability.
+Get the image for the dcgm-server DaemonSet.
+Defaults to the eks-node-monitoring-agent image; override or tag pins a standalone dcgm-exporter image.
 */}}
-{{- define "dcgm-exporter.image" -}}
+{{- define "dcgm-server.image" -}}
 {{- if .Values.dcgmAgent.image.override }}
 {{- .Values.dcgmAgent.image.override }}
-{{- else }}
+{{- else if .Values.dcgmAgent.image.tag }}
 {{- printf "%s.dkr.%s.%s.%s/eks/observability/dcgm-exporter:%s" .Values.dcgmAgent.image.account .Values.dcgmAgent.image.endpoint .Values.dcgmAgent.image.region .Values.dcgmAgent.image.domain .Values.dcgmAgent.image.tag -}}
+{{- else }}
+{{- include "eks-node-monitoring-agent.image" . }}
 {{- end -}}
 {{- end -}}
 
