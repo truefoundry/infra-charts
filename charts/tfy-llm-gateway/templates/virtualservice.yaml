@@ -1,6 +1,6 @@
 {{- if .Values.istio.virtualservice.enabled -}}
 {{- $serviceName := include "tfy-llm-gateway.fullname" . -}}
-{{- $servicePort := .Values.service.port -}}
+{{- $servicePort := include "tfy-llm-gateway.port" . -}}
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -31,7 +31,7 @@ spec:
     - destination:
         host: {{ include "tfy-llm-gateway.fullname" . }}.{{ include "global.namespace" . }}.svc.cluster.local
         port:
-          number: {{ .Values.service.port }}
+          number: {{ $servicePort }}
     {{- if .Values.istio.virtualservice.retries.enabled }}
     retries:
       attempts: {{ .Values.istio.virtualservice.retries.attempts }}
