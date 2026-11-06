@@ -76,37 +76,37 @@ This Helm chart package, provided by TrueFoundry, contains configurations and re
 
 ### tfySignedURLServer configurations
 
-| Name                                                      | Description                                   | Value                                           |
-| --------------------------------------------------------- | --------------------------------------------- | ----------------------------------------------- |
-| `tfySignedURLServer.enabled`                              | to enable the tfySignedURLServer              | `true`                                          |
-| `tfySignedURLServer.serviceAccountName`                   | to set the service account name               | `flytepropeller`                                |
-| `tfySignedURLServer.tolerations`                          | to set the tolerations                        | `[]`                                            |
-| `tfySignedURLServer.labels`                               | to set the labels for signed url server       | `{}`                                            |
-| `tfySignedURLServer.annotations`                          | to set the annotations for signed url server  | `{}`                                            |
-| `tfySignedURLServer.image.repository`                     | to set the image repository                   | `tfy.jfrog.io/tfy-images/tfy-signed-url-server` |
-| `tfySignedURLServer.image.tag`                            | to set the image tag                          | `0.0.1`                                         |
-| `tfySignedURLServer.replicaCount`                         | to set the replica count                      | `2`                                             |
-| `tfySignedURLServer.imagePullPolicy`                      | to set the image pull policy                  | `IfNotPresent`                                  |
-| `tfySignedURLServer.nameOverride`                         | Override name for the tfySignedURLServer      | `""`                                            |
-| `tfySignedURLServer.fullnameOverride`                     | Full name override for the tfySignedURLServer | `""`                                            |
-| `tfySignedURLServer.envSecretName`                        | to set the environment secret name            | `tfy-signed-url-server-env`                     |
-| `tfySignedURLServer.podAnnotations`                       | to set the pod annotations                    | `{}`                                            |
-| `tfySignedURLServer.podSecurityContext`                   | to set the pod security context               | `{}`                                            |
-| `tfySignedURLServer.commonLabels`                         | to set the common labels                      | `{}`                                            |
-| `tfySignedURLServer.securityContext`                      | to set the security context                   | `{}`                                            |
-| `tfySignedURLServer.resources.limits.cpu`                 | to set the cpu limit                          | `100m`                                          |
-| `tfySignedURLServer.resources.limits.memory`              | to set the memory limit                       | `200Mi`                                         |
-| `tfySignedURLServer.resources.limits.ephemeral-storage`   | to set the ephemeral storage limit            | `256Mi`                                         |
-| `tfySignedURLServer.resources.requests.cpu`               | to set the cpu request                        | `100m`                                          |
-| `tfySignedURLServer.resources.requests.memory`            | to set the memory request                     | `100Mi`                                         |
-| `tfySignedURLServer.resources.requests.ephemeral-storage` | to set the ephemeral storage request          | `128Mi`                                         |
-| `tfySignedURLServer.nodeSelector`                         | to set the node selector                      | `{}`                                            |
-| `tfySignedURLServer.affinity`                             | to set the affinity                           | `{}`                                            |
-| `tfySignedURLServer.topologySpreadConstraints`            | to set the topology spread constraints        | `{}`                                            |
-| `tfySignedURLServer.service.type`                         | to set the service type                       | `ClusterIP`                                     |
-| `tfySignedURLServer.service.port`                         | to set the service port                       | `3001`                                          |
-| `tfySignedURLServer.service.annotations`                  | to set the annotations                        | `{}`                                            |
-| `tfySignedURLServer.imagePullSecrets`                     | to set the image pull secrets                 | `[]`                                            |
-| `tfySignedURLServer.extraVolumes`                         | to set the extra volumes                      | `[]`                                            |
-| `tfySignedURLServer.extraVolumeMounts`                    | to set the extra volume mounts                | `[]`                                            |
-| `tfySignedURLServer.env`                                  | to set the environment variables              | `{}`                                            |
+| Name                                                      | Description                                   | Value                                      |
+| --------------------------------------------------------- | --------------------------------------------- | ------------------------------------------ |
+| `tfySignedURLServer.enabled`                              | to enable the tfySignedURLServer              | `true`                                     |
+| `tfySignedURLServer.serviceAccountName`                   | to set the service account name               | `flytepropeller`                           |
+| `tfySignedURLServer.tolerations`                          | to set the tolerations                        | `[]`                                       |
+| `tfySignedURLServer.labels`                               | to set the labels for signed url server       | `{}`                                       |
+| `tfySignedURLServer.annotations`                          | to set the annotations for signed url server  | `{}`                                       |
+| `tfySignedURLServer.image.repository`                     | to set the image repository                   | `quay.io/tfy-images/tfy-signed-url-server` |
+| `tfySignedURLServer.image.tag`                            | to set the image tag                          | `0.0.1`                                    |
+| `tfySignedURLServer.replicaCount`                         | to set the replica count                      | `2`                                        |
+| `tfySignedURLServer.imagePullPolicy`                      | to set the image pull policy                  | `IfNotPresent`                             |
+| `tfySignedURLServer.nameOverride`                         | Override name for the tfySignedURLServer      | `""`                                       |
+| `tfySignedURLServer.fullnameOverride`                     | Full name override for the tfySignedURLServer | `""`                                       |
+| `tfySignedURLServer.envSecretName`                        | to set the environment secret name            | `tfy-signed-url-server-env`                |
+| `tfySignedURLServer.podAnnotations`                       | to set the pod annotations                    | `{}`                                       |
+| `tfySignedURLServer.podSecurityContext`                   | to set the pod security context               | `{}`                                       |
+| `tfySignedURLServer.commonLabels`                         | to set the common labels                      | `{}`                                       |
+| `tfySignedURLServer.securityContext`                      | to set the security context                   | `{}`                                       |
+| `tfySignedURLServer.resources.limits.cpu`                 | to set the cpu limit                          | `100m`                                     |
+| `tfySignedURLServer.resources.limits.memory`              | to set the memory limit                       | `200Mi`                                    |
+| `tfySignedURLServer.resources.limits.ephemeral-storage`   | to set the ephemeral storage limit            | `256Mi`                                    |
+| `tfySignedURLServer.resources.requests.cpu`               | to set the cpu request                        | `100m`                                     |
+| `tfySignedURLServer.resources.requests.memory`            | to set the memory request                     | `100Mi`                                    |
+| `tfySignedURLServer.resources.requests.ephemeral-storage` | to set the ephemeral storage request          | `128Mi`                                    |
+| `tfySignedURLServer.nodeSelector`                         | to set the node selector                      | `{}`                                       |
+| `tfySignedURLServer.affinity`                             | to set the affinity                           | `{}`                                       |
+| `tfySignedURLServer.topologySpreadConstraints`            | to set the topology spread constraints        | `{}`                                       |
+| `tfySignedURLServer.service.type`                         | to set the service type                       | `ClusterIP`                                |
+| `tfySignedURLServer.service.port`                         | to set the service port                       | `3001`                                     |
+| `tfySignedURLServer.service.annotations`                  | to set the annotations                        | `{}`                                       |
+| `tfySignedURLServer.imagePullSecrets`                     | to set the image pull secrets                 | `[]`                                       |
+| `tfySignedURLServer.extraVolumes`                         | to set the extra volumes                      | `[]`                                       |
+| `tfySignedURLServer.extraVolumeMounts`                    | to set the extra volume mounts                | `[]`                                       |
+| `tfySignedURLServer.env`                                  | to set the environment variables              | `{}`                                       |
