@@ -65,25 +65,19 @@ Create the name of the service account to use
 
 {{/*
 Get the image for the dcgm-server DaemonSet.
-Defaults to the eks-node-monitoring-agent image; override or tag pins a standalone dcgm-exporter image.
+Empty repository uses the eks-node-monitoring-agent image.
 */}}
 {{- define "dcgm-server.image" -}}
-{{- if .Values.dcgmAgent.image.override }}
-{{- .Values.dcgmAgent.image.override }}
-{{- else if .Values.dcgmAgent.image.tag }}
-{{- printf "%s.dkr.%s.%s.%s/eks/observability/dcgm-exporter:%s" .Values.dcgmAgent.image.account .Values.dcgmAgent.image.endpoint .Values.dcgmAgent.image.region .Values.dcgmAgent.image.domain .Values.dcgmAgent.image.tag -}}
-{{- else }}
-{{- include "eks-node-monitoring-agent.image" . }}
+{{- if .Values.dcgmAgent.image.repository -}}
+{{- printf "%s:%s" .Values.dcgmAgent.image.repository (.Values.dcgmAgent.image.tag | default .Values.nodeAgent.image.tag) -}}
+{{- else -}}
+{{- include "eks-node-monitoring-agent.image" . -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Get the current NMA image for a region.
+Get the eks-node-monitoring-agent image.
 */}}
 {{- define "eks-node-monitoring-agent.image" -}}
-{{- if .Values.nodeAgent.image.override }}
-{{- .Values.nodeAgent.image.override }}
-{{- else }}
-{{- printf "%s.dkr.%s.%s.%s/eks/eks-node-monitoring-agent:%s" .Values.nodeAgent.image.account .Values.nodeAgent.image.endpoint .Values.nodeAgent.image.region .Values.nodeAgent.image.domain .Values.nodeAgent.image.tag }}
-{{- end -}}
+{{- printf "%s:%s" (required "nodeAgent.image.repository is required" .Values.nodeAgent.image.repository) .Values.nodeAgent.image.tag -}}
 {{- end -}}

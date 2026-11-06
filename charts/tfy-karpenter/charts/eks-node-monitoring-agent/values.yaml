@@ -35,21 +35,12 @@ updateStrategy:
 ##
 nodeAgent:
   image:
+    ## @param nodeAgent.image.repository Repository for the image
+    ##
+    repository: quay.io/tfy-images/eks/eks-node-monitoring-agent
     ## @param nodeAgent.image.tag Tag for the image
     ##
-    tag: v1.5.1-eksbuild.1
-    ## @param nodeAgent.image.domain Domain for the image
-    ##
-    domain: amazonaws.com
-    ## @param nodeAgent.image.region Region for the image
-    ##
-    region: us-west-2
-    ## @param nodeAgent.image.endpoint Endpoint for the image
-    ##
-    endpoint: ecr
-    ## @param nodeAgent.image.account Account for the image
-    ##
-    account: "602401143452"
+    tag: v1.7.1-eksbuild.1
     ## @param nodeAgent.image.pullPolicy Pull policy for the image
     ##
     pullPolicy: IfNotPresent
@@ -106,24 +97,12 @@ nodeAgent:
 ##
 dcgmAgent:
   image:
-    ## @param dcgmAgent.image.tag Tag that pins dcgm-server to a standalone eks/observability/dcgm-exporter image. Empty uses the nodeAgent image
+    ## @param dcgmAgent.image.repository Repository for the dcgm-server image. Empty uses the nodeAgent image
+    ##
+    repository: ""
+    ## @param dcgmAgent.image.tag Tag for the dcgm-server image. Empty uses the nodeAgent tag
     ##
     tag: ""
-    ## @param dcgmAgent.image.override Full image override for the dcgm-server DaemonSet
-    ##
-    override: ""
-    ## @param dcgmAgent.image.domain Domain for the image
-    ##
-    domain: amazonaws.com
-    ## @param dcgmAgent.image.region Region for the image
-    ##
-    region: us-west-2
-    ## @param dcgmAgent.image.endpoint Endpoint for the image
-    ##
-    endpoint: ecr
-    ## @param dcgmAgent.image.account Account for the image
-    ##
-    account: "602401143452"
     ## @param dcgmAgent.image.pullPolicy Pull policy for the image
     ##
     pullPolicy: IfNotPresent
