@@ -4545,6 +4545,8 @@ tfyProxy:
     tag: "v0.180.0"
   ## @param tfyProxy.logLevel Log level for the tfyProxy (possible values: debug, info, warn, error, panic, fatal)
   logLevel: info
+  ## @param tfyProxy.readBodyIdle Caddy read_body_idle for request-body reads. -1s disables it. A positive duration such as 1m restores the idle limit.
+  readBodyIdle: -1s
   ## tfyProxy.clientIp Real client IP preservation. Caddy v2.7+ trusts nothing by default and rewrites outbound X-Forwarded-For to only the immediate socket peer, so downstream services see the istio-gateway pod IP instead of the real client.
   clientIp:
     ## @param tfyProxy.clientIp.enabled Trust upstream proxies and preserve the real client IP in outbound X-Forwarded-For.
