@@ -9,6 +9,9 @@ spec:
       labels:
         {{- .Values.karpenter.controlPlaneNodePool.labels | toYaml | nindent 8 }}
     spec:
+      {{- if .Values.karpenter.controlPlaneNodePool.expireAfter }}
+      expireAfter: {{ .Values.karpenter.controlPlaneNodePool.expireAfter | quote }}
+      {{- end }}
       nodeClassRef:
         group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
         kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}

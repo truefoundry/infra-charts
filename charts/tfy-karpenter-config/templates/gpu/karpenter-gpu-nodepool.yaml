@@ -23,6 +23,9 @@ spec:
         {{- .Values.karpenter.gpuNodePool.labels | toYaml | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.karpenter.gpuNodePool.expireAfter }}
+      expireAfter: {{ .Values.karpenter.gpuNodePool.expireAfter | quote }}
+      {{- end }}
       nodeClassRef:
         group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
         kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}

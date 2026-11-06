@@ -9,6 +9,9 @@ spec:
       labels:
         {{- .Values.karpenter.critical.labels | toYaml | nindent 8 }}
     spec:
+      {{- if .Values.karpenter.critical.expireAfter }}
+      expireAfter: {{ .Values.karpenter.critical.expireAfter | quote }}
+      {{- end }}
       nodeClassRef:
         group: {{ include "tfyKarpenterConfig.nodeClassGroup" . }}
         kind: {{ include "tfyKarpenterConfig.nodeClassKind" . }}
