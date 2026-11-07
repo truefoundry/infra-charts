@@ -1,0 +1,11 @@
+# Writable root on tfyAgent (no emptyDirs, no KUBECACHEDIR) with the custom CA initContainer.
+tfyAgent:
+  securityContext:
+    readOnlyRootFilesystem: false
+global:
+  customCA:
+    enabled: true
+    certificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIBszCCAVmgAwIBAgIUJ8TestOnlyNotARealCertificate0wCgYIKoZIzj0EAwIw
+      -----END CERTIFICATE-----
