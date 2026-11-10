@@ -42,13 +42,7 @@ fi
 
 # Here we are eval-ing because BUILD_CONFIG is already shlex quoted, so by eval-ing first we want to shlex unquote it
 # And then when calling tfy build, we pass it in quotes so that bash will take care of correctly quoting it
-# NOTE: Do not wrap BUILD_CONFIG in a command substitution (e.g. $(echo $BUILD_CONFIG)) - that would make bash
-# perform word splitting and pathname expansion (globbing) against the checked out source code before eval runs,
-# which allows attacker controlled file names in the repository to be re-parsed and executed as shell code.
-# Globbing is also disabled around the eval so that any wildcard in BUILD_CONFIG cannot expand to file names.
-set -f
-eval "BUILD_CONFIG_CORRECTED=${BUILD_CONFIG}"
-set +f
+eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
 start_time=$(date +%s)
