@@ -191,10 +191,8 @@ Expand the name of the chart.
 {{- define "tfy-proxy.serviceAccountName" -}}
 {{- if .Values.tfyProxy.serviceAccount.create -}}
 {{- default (include "tfy-proxy.fullname" .) "tfy-proxy" }}
-{{- else if .Values.tfyProxy.serviceAccount.name -}}
-{{- .Values.tfyProxy.serviceAccount.name -}}
 {{- else -}}
-{{- include "truefoundry.restrictedServiceAccountName" . -}}
+{{- .Values.global.serviceAccount.name -}}
 {{- end -}}
 {{- end }}
 
@@ -469,65 +467,18 @@ limits:
   over mesh mTLS. Browsers hit tfy-proxy with public TLS only; the proxy->NATS
   hop must present the mesh client cert when websocket.tls.verify is enabled
   (same CA mount as (internal_mtls)). Rendered when global.mTLS.enabled and
-  either global.mTLS.nats.websocketTLS (which also turns TLS on in the NATS
-  subchart) or a hand-set tfyNats.config.websocket.tls.enabled. Without tls,
-  Caddy's plaintext hop fails against an HTTPS websocket listener; without
-  tls_client_auth, NATS rejects with "certificate required".
+  tfyNats.config.websocket.tls.enabled. Without tls, Caddy's plaintext hop
+  fails against an HTTPS websocket listener; without tls_client_auth, NATS
+  rejects with "certificate required".
   Usage: reverse_proxy host:port{{- include "tfy-proxy.withNatsWebsocketTls" . }}
 */}}
-{{- define "tfy-proxy.natsUpstreamOpts" -}}
+{{- define "tfy-proxy.withNatsWebsocketTls" -}}
 {{- $natsWsTls := (((((.Values.tfyNats).config).websocket).tls) | default dict) -}}
-{{- $globalWsTls := (((.Values.global.mTLS).nats).websocketTLS) | default false -}}
-{{- $wsTls := and .Values.global.mTLS.enabled (or $globalWsTls ($natsWsTls.enabled | default false)) -}}
-{{- if or .Values.global.proxy.rewriteUpstreamHost $wsTls }} {
-          {{- if .Values.global.proxy.rewriteUpstreamHost }}
-          header_up Host {http.reverse_proxy.upstream.hostport}
-          header_up X-Forwarded-Host {http.request.host}
-          {{- end }}
-          {{- if $wsTls }}
+{{- if and .Values.global.mTLS.enabled ($natsWsTls.enabled | default false) }} {
           transport http {
             tls
             tls_trusted_ca_certs /etc/tls/truefoundry/ca.crt
             tls_client_auth /etc/tls/truefoundry/tls.crt /etc/tls/truefoundry/tls.key
           }
-          {{- end }}
         }{{- end }}
 {{- end }}
-
-{{/*
-  Resolve CORS allowedOrigins via tpl.
-  Default values use "{{ .Values.global.controlPlaneURL }}".
-  Set to [] or ["*"] to allow all origins.
-*/}}
-{{- define "tfy-proxy.cors.allowedOrigins" -}}
-{{- $origins := list -}}
-{{- range (.Values.global.proxy.cors.allowedOrigins | default list) }}
-{{- $resolved := trim (tpl (toString .) $) -}}
-{{- if $resolved -}}
-{{- $origins = append $origins $resolved -}}
-{{- end -}}
-{{- end -}}
-{{- $origins | toYaml -}}
-{{- end -}}
-
-{{/*
-  Build a regex alternation from resolved CORS allowedOrigins.
-  Returns empty string when the list is empty (caller should allow all).
-*/}}
-{{- define "tfy-proxy.cors.allowedOriginsRegex" -}}
-{{- $allowedOrigins := include "tfy-proxy.cors.allowedOrigins" . | fromYamlArray -}}
-{{- $regexParts := list -}}
-{{- range $allowedOrigins }}
-{{- $origin := . -}}
-{{- if eq $origin "*" -}}
-{{- $regexParts = append $regexParts ".*" -}}
-{{- else if contains "://" $origin -}}
-{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
-{{- $regexParts = append $regexParts $escaped -}}
-{{- else -}}
-{{- $escaped := $origin | replace "." "\\\\." | replace "*\\\\." ".*\\\\." -}}
-{{- $regexParts = append $regexParts (printf "https?://%s" $escaped) -}}
-{{- end -}}
-{{- end -}}
-{{- $regexParts | join "|" -}}
-{{- end -}}
