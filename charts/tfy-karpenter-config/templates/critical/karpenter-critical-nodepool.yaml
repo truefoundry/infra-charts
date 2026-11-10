@@ -45,10 +45,8 @@ spec:
           operator: In
           values:
           - linux
-        {{- if .Values.karpenter.critical.excludeGpuInstances }}
         - key: {{ include "tfyKarpenterConfig.instanceGpuCountRequirementKey" . }}
           operator: DoesNotExist
-        {{- end }}
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
