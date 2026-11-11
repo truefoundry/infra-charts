@@ -21,11 +21,6 @@ spec:
   failedJobsHistoryLimit: {{ .Values.deltaFusionCompaction.failedJobsHistoryLimit }}
   successfulJobsHistoryLimit: {{ .Values.deltaFusionCompaction.successfulJobsHistoryLimit }}
   jobTemplate:
-    metadata:
-      labels:
-        {{- include "deltafusion-compaction.cronJobLabels" . | nindent 8 }}
-      annotations:
-        {{- include "deltafusion-compaction.cronJobAnnotations" . | nindent 8 }}
     spec:
       backoffLimit: {{ .Values.deltaFusionCompaction.backoffLimit }}
       activeDeadlineSeconds: {{ .Values.deltaFusionCompaction.activeDeadlineSeconds }}
