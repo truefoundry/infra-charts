@@ -177,6 +177,14 @@ karpenter.k8s.aws/instance-gpu-count
 {{- end -}}
 {{- end -}}
 
+{{- define "tfyKarpenterConfig.instanceAcceleratorCountRequirementKey" -}}
+{{- if .Values.karpenter.eksAutoMode.enabled -}}
+eks.amazonaws.com/instance-accelerator-count
+{{- else -}}
+karpenter.k8s.aws/instance-accelerator-count
+{{- end -}}
+{{- end -}}
+
 {{- define "tfyKarpenterConfig.instanceConstraintValues" -}}
 {{- $values := .values -}}
 {{- $eksAutoModeEnabled := .eksAutoModeEnabled -}}
