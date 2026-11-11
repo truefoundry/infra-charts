@@ -9,9 +9,12 @@ cd "$ROOT"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+# CI rewrites tfy-llm-gateway to file://../tfy-llm-gateway before running this script
+# (truefoundry-chart-checks.yaml) so local gateway/buffer templates are exercised.
 if [[ ! -d charts ]] || ! ls charts/*.tgz >/dev/null 2>&1; then
   helm dependency build . >/dev/null
 fi
+
 
 fail=0
 check() { # label, python script, files...
@@ -34,11 +37,11 @@ for kind, name in [tuple(x.split("/")) for x in sys.argv[2].split()]:
 print(f"ok: {sys.argv[3]}")
 '
 
-# Gateway Deployment name, expected buffer name, then the rendered file.
+# Gateway Deployment name, expected buffer name, release name, then the rendered file.
 ENDPOINT='
 import sys, yaml
-gateway, buffer = sys.argv[1], sys.argv[2]
-docs = [d for d in yaml.safe_load_all(open(sys.argv[3])) if d]
+gateway, buffer, release = sys.argv[1], sys.argv[2], sys.argv[3]
+docs = [d for d in yaml.safe_load_all(open(sys.argv[4])) if d]
 dep = next(d for d in docs if d["kind"] == "Deployment" and d["metadata"]["name"] == gateway)
 env = {e["name"]: e.get("value") for c in dep["spec"]["template"]["spec"]["containers"] for e in c.get("env") or []}
 url = env.get("TFY_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "")
@@ -47,7 +50,12 @@ assert url == want, f"{url!r} != {want!r}"
 sts = next(d for d in docs if d["kind"] == "StatefulSet" and d["metadata"]["name"] == buffer)
 assert sts["spec"]["serviceName"] == f"{buffer}-headless", sts["spec"]["serviceName"]
 assert [c["metadata"]["name"] for c in sts["spec"]["volumeClaimTemplates"]] == ["data"]
-print(f"ok: gateway exports to {want}")
+cm = next(d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == f"{buffer}-config")
+cfg = yaml.safe_load(cm["data"]["config.yaml"])
+sink_uri = cfg["sinks"]["tfy_otel_traces"]["protocol"]["uri"]
+want_sink = f"http://{release}-tfy-proxy:8080/api/otel/v1/traces"
+assert sink_uri == want_sink, f"sink uri {sink_uri!r} != {want_sink!r}"
+print(f"ok: gateway exports to {want}; buffer sinks to {want_sink}")
 '
 
 # 1) release "tfy" with the log collector on: the log collector is tfy-vector and the buffer
@@ -57,7 +65,7 @@ helm template tfy . -n truefoundry "${BUF[@]}" >"$TMP/b1.yaml" 2>"$TMP/b1.err" \
 check "buffer names, release tfy" "$NODUPS" "$TMP/b1.yaml" \
   "DaemonSet/tfy-vector StatefulSet/tfy-otel-buffer ServiceAccount/tfy-otel-buffer Service/tfy-otel-buffer Service/tfy-otel-buffer-headless ConfigMap/tfy-otel-buffer-config" \
   "release tfy: log collector tfy-vector, buffer tfy-otel-buffer, no duplicates"
-check "gateway exporter endpoint" "$ENDPOINT" tfy-tfy-llm-gateway tfy-otel-buffer "$TMP/b1.yaml"
+check "gateway exporter endpoint" "$ENDPOINT" tfy-tfy-llm-gateway tfy-otel-buffer tfy "$TMP/b1.yaml"
 
 # 2) the gateway's exporter follows tfy-otel-buffer.fullnameOverride
 helm template tfy . -n truefoundry "${BUF[@]}" --set tfy-llm-gateway.tfy-otel-buffer.fullnameOverride=tfy-llm-gateway-otel-buffer \
@@ -65,7 +73,7 @@ helm template tfy . -n truefoundry "${BUF[@]}" --set tfy-llm-gateway.tfy-otel-bu
 check "buffer fullnameOverride" "$NODUPS" "$TMP/b2.yaml" \
   "StatefulSet/tfy-llm-gateway-otel-buffer Service/tfy-llm-gateway-otel-buffer Service/tfy-llm-gateway-otel-buffer-headless" \
   "release tfy + tfy-otel-buffer.fullnameOverride: no duplicates"
-check "gateway exporter endpoint (override)" "$ENDPOINT" tfy-tfy-llm-gateway tfy-llm-gateway-otel-buffer "$TMP/b2.yaml"
+check "gateway exporter endpoint (override)" "$ENDPOINT" tfy-tfy-llm-gateway tfy-llm-gateway-otel-buffer tfy "$TMP/b2.yaml"
 
 # 3) buffer off: no buffer objects, and the gateway keeps its default exporter
 helm template tfy . -n truefoundry --set truefoundryMonitoring.enabled=true --set tags.llmGateway=true \
