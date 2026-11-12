@@ -20,11 +20,16 @@ http://<release-name>-tfy-sandbox-server:8080
 
 ### Configuration values for tfy-sandbox-server
 
+Set `global.clusterDomain` for clusters whose DNS domain is not `cluster.local`.
+Parent charts can use `tfy-sandbox-server.serviceFQDN` with the sandbox subchart's
+scope to build its service URL; it honours `global.namespaceOverride` as well.
+
 | Name                                               | Description                                                                                                                                                                                                                                        | Value                           |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | `global.imagePullSecrets`                          | Existing truefoundry image pull secret name                                                                                                                                                                                                        | `[]`                            |
 | `global.image.registry`                            | Global image registry override                                                                                                                                                                                                                     | `tfy.jfrog.io`                  |
 | `global.namespaceOverride`                         | Namespace override (defaults to .Release.Namespace if not set)                                                                                                                                                                                     | `""`                            |
+| `global.clusterDomain`                             | Kubernetes cluster domain used for in-cluster FQDNs | `cluster.local` |
 | `global.affinity`                                  | Affinity rules for pod scheduling on a node                                                                                                                                                                                                        | `{}`                            |
 | `global.labels`                                    | Global labels                                                                                                                                                                                                                                      | `{}`                            |
 | `global.annotations`                               | Global annotations                                                                                                                                                                                                                                 | `{}`                            |
