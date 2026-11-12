@@ -1,6 +1,6 @@
 # tfy-otel-buffer helm chart by Truefoundry
 
-Disk-buffered delivery of AI Gateway traces. The gateway exports traces over OTLP to tfy-otel-buffer, which writes them to a disk buffer on a PersistentVolume per replica and forwards them to the control plane tfy-otel-collector (`<global.controlPlaneURL>/api/otel/v1/traces`), retrying until delivery succeeds. The same traces can also be sent to additional OTLP destinations with `additionalSinks`.
+Disk-buffered delivery of AI Gateway traces. The gateway exports traces over OTLP to tfy-otel-buffer, which writes them to a disk buffer on a PersistentVolume per replica and forwards them to the control plane tfy-otel-collector (`<forward.controlPlaneURL or global.controlPlaneURL>/api/otel/v1/traces`), retrying until delivery succeeds. The same traces can also be sent to additional OTLP destinations with `additionalSinks`.
 
 Replicas default to soft hostname topology spread and a PodDisruptionBudget (`maxUnavailable: 30%`) so a single node drain (for example Karpenter consolidation) cannot take every replica at once.
 
@@ -10,7 +10,7 @@ This chart is a subchart of `tfy-llm-gateway`. It is deployed by default (`enabl
 
 In the gateway namespace:
 
-- `global.controlPlaneURL` is set.
+- `forward.controlPlaneURL` or `global.controlPlaneURL` is set.
 - The `truefoundry-creds` Secret with the `TFY_API_KEY` key.
 - A StorageClass that can provision `ReadWriteOnce` volumes (3 PVCs of `22Gi` with the defaults).
 
@@ -65,7 +65,7 @@ tfy-otel-buffer:
 
 | Name                                               | Description                                                                                                                      | Value                      |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `global.controlPlaneURL`                           | Control plane URL. Traces are forwarded to <controlPlaneURL>/api/otel/v1/traces (tfy-otel-collector).                            | `""`                       |
+| `global.controlPlaneURL`                           | Control plane URL used when `forward.controlPlaneURL` is empty. Traces go to <url>/api/otel/v1/traces (tfy-otel-collector).      | `""`                       |
 | `global.namespaceOverride`                         | Namespace override (defaults to the release namespace)                                                                           | `""`                       |
 | `global.imagePullSecrets`                          | Image pull secrets, used when imagePullSecrets is empty                                                                          | `[]`                       |
 | `global.truefoundryImagePullConfigJSON`            | When set (truefoundry chart creates truefoundry-image-pull-secret from it), that secret is used if no other pull secrets are set | `""`                       |
@@ -103,6 +103,7 @@ tfy-otel-buffer:
 | `buffer.maxSizeBytes`                         | Disk buffer for the control plane sink (tfy_otel_traces), per replica. Default 15 GiB.                                                           | `16106127360`                                                                     |
 | `buffer.whenFull`                             | Behavior when the control plane buffer is full: drop_newest or block                                                                             | `drop_newest`                                                                     |
 | `buffer.headroomBytes`                        | Disk kept free on each volume for buffer overhead. Default 2 GiB.                                                                                | `2147483648`                                                                      |
+| `forward.controlPlaneURL`                     | Override for the control-plane base URL (supports Helm templating). Empty uses `global.controlPlaneURL`.                                         | `""`                                                                              |
 | `forward.compression`                         | Compression for the control plane export: gzip, none, snappy, zlib, or zstd                                                                      | `gzip`                                                                            |
 | `forward.timeoutSecs`                         | Request timeout in seconds                                                                                                                       | `60`                                                                              |
 | `forward.retryInitialBackoffSecs`             | Initial retry backoff in seconds                                                                                                                 | `1`                                                                               |
