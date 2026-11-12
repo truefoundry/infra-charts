@@ -45,6 +45,10 @@ spec:
           operator: In
           values:
           - linux
+        - key: {{ include "tfyKarpenterConfig.instanceGpuCountRequirementKey" . }}
+          operator: DoesNotExist
+        - key: {{ include "tfyKarpenterConfig.instanceAcceleratorCountRequirementKey" . }}
+          operator: DoesNotExist
         - key: {{ include "tfyKarpenterConfig.instanceGenerationRequirementKey" . }}
           operator: Gt
           values:
