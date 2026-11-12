@@ -119,8 +119,8 @@ true
 {{- end -}}
 
 {{- define "tfy-otel-buffer.validate" -}}
-{{- if not .Values.global.controlPlaneURL -}}
-{{- fail "global.controlPlaneURL is required: traces are forwarded to <global.controlPlaneURL>/api/otel/v1/traces" -}}
+{{- if and (not .Values.forward.controlPlaneURL) (not .Values.global.controlPlaneURL) -}}
+{{- fail "forward.controlPlaneURL or global.controlPlaneURL is required: traces are forwarded to <url>/api/otel/v1/traces" -}}
 {{- end -}}
 {{- if and .Values.global.customCA.enabled (not .Values.global.customCA.certificate) (not .Values.global.customCA.existingConfigMap.name) -}}
 {{- fail "global.customCA.enabled is true but neither global.customCA.certificate nor global.customCA.existingConfigMap.name is set. Provide one of them." -}}
