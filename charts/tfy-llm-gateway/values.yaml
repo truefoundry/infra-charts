@@ -7,7 +7,7 @@ global:
   ## @param global.controlPlaneChartVersion Control plane version
   controlPlaneChartVersion: "0.98.2"
   ## @param global.gatewayChartVersion Gateway version
-  gatewayChartVersion: "0.180.4"
+  gatewayChartVersion: "0.185.1"
   ## global.multitenant Multitenant configuration
   multitenant:
     ## @param global.multitenant.enabled Enable multitenant env injection
@@ -119,21 +119,36 @@ global:
       repository: "tfy-mirror/alpine"
       ## @param global.customCA.image.tag Tag for the CA certificates initContainer image
       tag: "3.21"
-  ## global.mTLS mTLS certificate mounted into the gateway pod. When installed under the
-  ## truefoundry umbrella chart this is overridden by the parent's global.mTLS (the bootstrap
-  ## job there issues the certificate). Set enabled here only when installing this chart
-  ## standalone and supplying the certificate secret via externalMtlsSecret.
+  ## global.mTLS mTLS certificate mounted into the gateway pod (and served by tfy-otel-buffer).
+  ## Installed standalone, this chart's bootstrap job issues and renews the certificate, unless
+  ## externalMtlsSecret supplies one. Under the truefoundry umbrella chart the parent sets
+  ## global.mTLS (issuer included), its own bootstrap job issues the certificate, and this
+  ## chart's job is skipped.
   mTLS:
     ## @param global.mTLS.enabled Bool to mount the mTLS certificate into the gateway and serve/probe over HTTPS
     enabled: false
+    ## @param global.mTLS.issuer Which chart's bootstrap job issues the certificate. This chart's job runs only when this is "gateway"; the truefoundry parent chart sets it to "truefoundry", which skips it. Leave as "gateway" when installing this chart on its own.
+    issuer: "gateway"
     ## @param global.mTLS.tlsSecretName Secret (mounted at /etc/tls/truefoundry) holding ca.crt + tls.key + tls.crt
     tlsSecretName: "truefoundry-internal-tls"
-    ## @param global.mTLS.externalMtlsSecret Use an existing secret with this name instead of the bootstrap-created one. Required when installing this chart standalone with mTLS enabled.
+    ## @param global.mTLS.externalMtlsSecret Use an existing secret with this name instead of the bootstrap-created one. When set, no bootstrap job runs.
     ## The secret is expected to contain the following keys, mounted at /etc/tls/truefoundry:
     ##   tls.crt  - the leaf certificate (PEM)
     ##   tls.key  - the leaf private key (PEM)
     ##   ca.crt   - the CA certificate used to verify peers (PEM)
     externalMtlsSecret: ""
+    ## @param global.mTLS.caSecretName Secret holding the root CA (ca.crt + ca.key). Read only by the bootstrap job, never mounted by a workload. Back it up: losing it means every peer has to be reissued.
+    caSecretName: "truefoundry-internal-ca"
+    ## @param global.mTLS.caDays Root CA validity in days (default ~10y)
+    caDays: 3650
+    ## @param global.mTLS.leafDays Leaf cert validity in days (default ~3y)
+    leafDays: 1095
+    ## @param global.mTLS.renewBeforeDays Reissue the leaf when it expires within this many days (default ~6mo)
+    renewBeforeDays: 180
+    ## @param global.mTLS.forceRenew Reissue the leaf on every bootstrap run regardless of remaining validity. Must be the boolean true; any other value is ignored. Use to roll the cert after changing leafDays or the SAN list; set back to false once the new cert is in place, otherwise every helm upgrade rotates it.
+    forceRenew: false
+    ## @param global.mTLS.extraDnsNames Extra DNS SANs appended to the leaf cert issued by the bootstrap job (namespace service wildcards are added automatically). Ignored when the certificate comes from elsewhere.
+    extraDnsNames: []
 ## Image configuration for llm-gateway
 image:
   ## @param image.registry Image registry for tfyLLMGateway (defaults to global.image.registry if not set)
@@ -141,7 +156,7 @@ image:
   ## @param image.repository Image repository for tfyLLMGateway
   repository: tfy-private-images/tfy-llm-gateway
   ## @param image.tag Image tag for the tfyLLMGateway
-  tag: v0.180.4
+  tag: v0.185.1
 ## @param fullnameOverride Full name override for the tfy-llm-gateway
 fullnameOverride: ""
 ## @skip replicaCount Number of replicas
@@ -155,6 +170,10 @@ gatewayId: ""
 envSecretName: tfy-llm-gateway-env-secret
 ## @param imagePullPolicy Image pull policy
 imagePullPolicy: IfNotPresent
+## @param extraArgs [array] Extra arguments for the gateway process, appended to the image
+## ENTRYPOINT. The image sets no CMD, so these extend the command rather than replace it.
+## `--port=<n>` is prepended automatically from `service.port`, so it does not belong here.
+extraArgs: []
 ## @param nameOverride Name override
 nameOverride: ""
 ## @param podAnnotations Pod annotations
@@ -189,8 +208,8 @@ healthcheck:
   enabled: true
   ## healthcheck.readiness Readiness probe configuration
   readiness:
-    ## @param healthcheck.readiness.port Port to probe
-    port: 8787
+    ## @param healthcheck.readiness.port Port the readiness probe checks. Empty falls back to the gateway port.
+    port: ""
     ## @param healthcheck.readiness.path Path to probe
     path: /
     ## @param healthcheck.readiness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
@@ -207,8 +226,8 @@ healthcheck:
     failureThreshold: 3
   ## healthcheck.liveness Liveness probe configuration
   liveness:
-    ## @param healthcheck.liveness.port Port to probe
-    port: 8787
+    ## @param healthcheck.liveness.port Port the liveness probe checks. Empty falls back to the gateway port.
+    port: ""
     ## @param healthcheck.liveness.path Path to probe
     path: /
     ## @param healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS); forced to HTTPS when global.mTLS.enabled
@@ -318,7 +337,9 @@ istio:
 service:
   ## @param service.type Service type
   type: ClusterIP
-  ## @param service.port Service port
+  ## @param service.port Port the gateway runs on -- the only port knob in this chart.
+  ## It drives the process (passed as `--port=<n>`), containerPort, the probes, the
+  ## Service and the ingress/route backends, so one value moves them all together.
   port: 8787
   ## @param service.annotations Service annotations
   annotations: {}
@@ -327,9 +348,9 @@ service:
 ## Proxy configuration (tfy-proxy / Caddy).
 ## When `proxy.tls.enabled` is true, the proxy terminates TLS on
 ## `proxy.containerPort` (default 8081) using the cert in `proxy.tls.secretName`,
-## and reverse-proxies to the gateway on loopback. The ClusterIP service.port
-## (default 8787) forwards to that proxy port; the gateway container itself
-## stays plaintext and listens on service.port.
+## and reverse-proxies to the gateway on loopback. The ClusterIP Service port
+## forwards to that proxy port; the gateway container itself stays plaintext and
+## listens on the gateway port (`port`, else service.port).
 ##
 ## IMPORTANT — Ingress wiring (when ingress.enabled is true):
 ## TLS is terminated INSIDE the pod, so your ingress controller must forward
@@ -359,7 +380,7 @@ proxy:
     ## @param proxy.image.repository Repository for the proxy image
     repository: tfy-private-images/tfy-proxy
     ## @param proxy.image.tag Tag for the proxy image (defaults to the gateway image.tag when empty)
-    tag: "v0.180.0"
+    tag: "v0.185.1"
   ## @param proxy.resources [object] Resource requests/limits for the proxy container
   resources:
     requests:
@@ -491,7 +512,6 @@ env:
   TLS_MUTUAL: "{{ .Values.global.mTLS.enabled }}"
   TLS_DIR: /etc/tls/truefoundry
   TLS_MUTUAL_EXEMPT_PATHS: /,/health,/api/llm/health,/metrics
-  CORS_ALLOWED_ORIGINS: "{{ .Values.global.controlPlaneURL }}"
 ## serviceMonitor [object] Service monitor configuration
 serviceMonitor:
   ## @param serviceMonitor.enabled Enable service monitor
@@ -641,6 +661,84 @@ externalRedis:
       ## @param externalRedis.sentinel.auth.password Sentinel password
       password: ""
 
+###################################################################################################################
+####################################### Bootstrap job #############################################################
+###################################################################################################################
+## @section bootstrap mTLS certificate bootstrap job.
+## A pre-install/pre-upgrade hook (PreSync for Argo) that issues and renews the certificate the gateway
+## mounts at /etc/tls/truefoundry, the same way the truefoundry chart's bootstrap job
+## does for the control plane. It keeps the root CA (with its key) in global.mTLS.caSecretName, which no
+## workload mounts, and the leaf in global.mTLS.tlsSecretName. On every run it reuses the existing CA and
+## reissues the leaf only when it is missing, expiring within global.mTLS.renewBeforeDays, signed by a
+## different CA, or missing a SAN the chart now expects.
+## There is no enabled switch: the job runs when global.mTLS.enabled is true, global.mTLS.issuer is
+## "gateway" and global.mTLS.externalMtlsSecret is empty. Under the truefoundry umbrella chart the
+## parent sets issuer to "truefoundry", so its own job issues the certificate and this one never runs;
+## two jobs writing the same secret would fight over it.
+## This section configures the job itself (image, scheduling, RBAC); what it issues lives under global.mTLS.
+bootstrap:
+  ## bootstrap.image Image for the bootstrap job (needs kubectl and openssl)
+  image:
+    ## @param bootstrap.image.registry Registry for the bootstrap image (defaults to global.image.registry)
+    registry: ""
+    ## @param bootstrap.image.repository Bootstrap image repository (without registry)
+    repository: "tfy-images/truefoundry-bootstrap"
+    ## @param bootstrap.image.tag Bootstrap image tag
+    tag: "0.1.9"
+  ## @param bootstrap.imagePullPolicy Image pull policy for the bootstrap job
+  imagePullPolicy: "IfNotPresent"
+  ## @param bootstrap.imagePullSecrets Image pull secrets for the bootstrap job (defaults to the gateway's)
+  imagePullSecrets: []
+  ## bootstrap.serviceAccount Service account for the bootstrap job
+  serviceAccount:
+    ## @param bootstrap.serviceAccount.create Create the service account. Set to false to bring your own, named below.
+    create: true
+    ## @param bootstrap.serviceAccount.name Service account name (defaults to <fullname>-bootstrap)
+    name: ""
+    ## @param bootstrap.serviceAccount.labels Service account labels
+    labels: {}
+    ## @param bootstrap.serviceAccount.annotations Service account annotations
+    annotations: {}
+  ## bootstrap.rbac Role + RoleBinding granting the job read/write on secrets in this namespace
+  rbac:
+    ## @param bootstrap.rbac.create Create the Role and RoleBinding. Set to false only if you grant the service account those permissions yourself.
+    create: true
+  ## @param bootstrap.resources [object] Resources for the bootstrap container (defaults to 100m/128Mi requests, 500m/512Mi limits)
+  resources: {}
+  ## @param bootstrap.podSecurityContext [object] Pod security context. Inherits global.podSecurityContext; set fields here (or `enabled: false`) to override.
+  podSecurityContext: {}
+  ## @param bootstrap.securityContext [object] Container security context for the bootstrap container
+  securityContext:
+    ## Enable/disable this to override the global.containerSecurityContext
+    # enabled: true
+    runAsNonRoot: true
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  ## @param bootstrap.emptyDir [object] emptyDir size limits (default: workdir.sizeLimit=100Mi)
+  emptyDir:
+    workdir:
+      sizeLimit: ""
+  ## @param bootstrap.backoffLimit Job backoff limit
+  backoffLimit: 2
+  ## @param bootstrap.extraEnvVars Extra environment variables for the bootstrap container
+  extraEnvVars: []
+  ## @param bootstrap.commonLabels [object] Common labels for the bootstrap job components
+  commonLabels: {}
+  ## @param bootstrap.commonAnnotations [object] Common annotations for the bootstrap job components
+  commonAnnotations: {}
+  ## @param bootstrap.podLabels [object] Pod labels for the bootstrap job
+  podLabels: {}
+  ## @param bootstrap.podAnnotations [object] Pod annotations for the bootstrap job
+  podAnnotations: {}
+  ## @param bootstrap.nodeSelector [object] Node selector for the bootstrap job (merged over global.nodeSelector)
+  nodeSelector: {}
+  ## @param bootstrap.affinity [object] Affinity for the bootstrap job (defaults to global.affinity)
+  affinity: {}
+  ## @param bootstrap.tolerations [array] Tolerations for the bootstrap job (defaults to global.tolerations)
+  tolerations: []
 ###################################################################################################################
 ####################################### NetworkPolicy #############################################################
 ###################################################################################################################
