@@ -237,6 +237,41 @@ false
 {{- end -}}
 
 {{/*
+  Init container that chowns the sandbox PVC to podSecurityContext.runAsUser:fsGroup.
+  Used when volumePermissions.enabled is true (upgrade from root-owned files, or CSI
+  drivers that do not honour fsGroup).
+*/}}
+{{- define "tfy-sandbox-server.volumePermissions.initContainer" -}}
+{{- if .Values.volumePermissions.enabled }}
+{{- $podSC := omit (.Values.podSecurityContext | default dict) "enabled" }}
+{{- $uid := $podSC.runAsUser | default 1000 }}
+{{- $gid := $podSC.fsGroup | default ($podSC.runAsGroup | default 1000) }}
+{{- $img := .Values.volumePermissions.image | default dict }}
+{{- $registry := $img.registry | default .Values.global.image.registry }}
+{{/* Always force runAsNonRoot: false — pod-level runAsNonRoot: true would otherwise reject this UID 0 init. */}}
+{{- $initSC := mergeOverwrite (.Values.volumePermissions.securityContext | default dict) (dict "runAsNonRoot" false) }}
+- name: volume-permissions
+  image: "{{ $registry }}/{{ $img.repository }}:{{ $img.tag }}"
+  imagePullPolicy: {{ .Values.imagePullPolicy }}
+  securityContext:
+    {{- toYaml $initSC | nindent 4 }}
+  {{- with .Values.volumePermissions.resources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  command:
+    - sh
+    - -ec
+    - |
+      echo "chown -R {{ $uid }}:{{ $gid }} {{ .Values.persistence.mountPath }}"
+      chown -R {{ $uid }}:{{ $gid }} {{ .Values.persistence.mountPath | quote }}
+  volumeMounts:
+    - name: sandbox-data
+      mountPath: {{ .Values.persistence.mountPath }}
+{{- end }}
+{{- end -}}
+
+{{/*
   Custom CA initContainer (only when not using direct mount)
 */}}
 {{- define "tfy-sandbox-server.customCA.initContainer" -}}
