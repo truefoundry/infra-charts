@@ -1,8 +1,24 @@
+# tfy-proxy restarts when its Caddyfile changes
+
+tfy-proxy pods now carry a `checksum/config` annotation: a hash of the Caddyfile the chart renders.
+When an upgrade changes that Caddyfile, for example by turning on `trueforge.enabled`, changing
+`tfyProxy.useMcpV2` or editing CORS origins, the pods roll on their own and load the new routes.
+Previously they kept running the old Caddyfile until someone ran `kubectl rollout restart`, because
+the file is mounted with `subPath` and Caddy reads it only at startup.
+
+- Upgrades that leave the Caddyfile unchanged, including label-only changes and chart version
+  bumps, do not roll the proxy on account of this annotation.
+- With `tfyProxy.existingProxyConfigMapName`, the chart cannot see your ConfigMap, so no annotation
+  is added. Restart tfy-proxy yourself after changing it.
+
+---
+
 # LLM gateway OTEL buffer (tfy-otel-buffer)
 
 `tfy-llm-gateway.enableOtelBuffer` is **true by default**. On upgrade, the chart deploys
 `tfy-otel-buffer` and the gateway exports traces to it over OTLP; the buffer forwards to
-`<global.controlPlaneURL>/api/otel/v1/traces`. That requires `global.controlPlaneURL` and a
+`http://<release>-tfy-proxy:8080/api/otel/v1/traces` (set via
+`tfy-llm-gateway.tfy-otel-buffer.forward.controlPlaneURL`). That requires a
 StorageClass that can provision the buffer PVCs (defaults: 3×22Gi ReadWriteOnce).
 
 To keep exporting traces to the control plane directly (previous default behavior):

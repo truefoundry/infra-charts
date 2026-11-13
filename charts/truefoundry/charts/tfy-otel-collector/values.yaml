@@ -110,8 +110,15 @@ global:
       tag: "5"
 
 ## @param env [object] Environment variables for the tfyOtelCollector
+## GOMEMLIMIT is injected automatically as 80% of the resolved resources.limits.memory
+## (tier defaults or overrides). Set env.GOMEMLIMIT to override the derived value.
+## Set TFY_MEMORY_LIMITER_ENABLED=false to omit the memory_limiter processor from pipelines.
+## TFY_MEMORY_LIMITER_LIMIT_PERCENTAGE / SPIKE_LIMIT_PERCENTAGE tune soft/hard limits (spike must be < limit).
 env:
   TFY_API_KEY: ${k8s-secret/truefoundry-creds/TFY_API_KEY}
+  TFY_MEMORY_LIMITER_ENABLED: "true"
+  TFY_MEMORY_LIMITER_LIMIT_PERCENTAGE: "80"
+  TFY_MEMORY_LIMITER_SPIKE_LIMIT_PERCENTAGE: "20"
   SENTRY_AUTH_SERVER_URL: https://auth.truefoundry.com
   TENANT_NAME: "{{ .Values.global.tenantName }}"
   SENTRY_ENABLED: '{{ include "truefoundry.sentryEnabled" . }}'
@@ -135,6 +142,9 @@ env:
   TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
   CLIENT_IP_HEADER: CF-Connecting-IP
+  MODEL_METRICS_INGEST_MODE: '{{ if and .Values.global.modelMetricsMigration .Values.global.modelMetricsMigration.complete }}split{{ else }}dual{{ end }}'
+  DELTAFUSION_INGESTOR_IDLE_CONN_TIMEOUT: 0s
+  DELTAFUSION_INGESTOR_DISABLE_KEEP_ALIVES: 'false'
 
 ## Image configuration for otel-collector
 image:
@@ -143,7 +153,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.180.0
+  tag: v0.185.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
@@ -227,6 +237,8 @@ healthcheck:
     ## @param healthcheck.liveness.scheme HTTP probe scheme (HTTP or HTTPS)
     scheme: HTTP
 ## @skip resources [object] Resource configuration
+## When limits.memory is set (or comes from resourceTier defaults), the chart sets
+## GOMEMLIMIT to 80% of that limit unless env.GOMEMLIMIT is provided.
 # resources:
 #  limits:
 #      cpu: 200m
