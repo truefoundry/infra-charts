@@ -1,4 +1,5 @@
-{{- if (index .Values "trueforge" "enabled") }}
+{{- include "truefoundry.validateAskTfy" . }}
+{{- if eq (include "truefoundry.trueforgeInstalled" .) "true" }}
 {{- if ne .Values.global.mTLS.enabled (index .Values "trueforge" "mtls" "enabled") }}
 {{- fail "global.mTLS.enabled and trueforge.mtls.enabled must have the same value" }}
 {{- end }}
