@@ -245,3 +245,25 @@ Node Selector for tfy-squid-proxy deployment
 []
 {{- end }}
 {{- end }}
+
+{{/*
+Container Security Context for tfy-squid-proxy deployment
+*/}}
+{{- define "tfy-squid-proxy.containerSecurityContext" -}}
+{{- if .Values.containerSecurityContext -}}
+{{- toYaml .Values.containerSecurityContext }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
+
+{{/*
+Pod Security Context for tfy-squid-proxy deployment
+*/}}
+{{- define "tfy-squid-proxy.podSecurityContext" -}}
+{{- if .Values.podSecurityContext -}}
+{{- toYaml .Values.podSecurityContext }}
+{{- else -}}
+{}
+{{- end }}
+{{- end }}
