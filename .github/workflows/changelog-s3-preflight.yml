@@ -38,23 +38,24 @@ jobs:
               --duration-seconds 900 \
               > "/tmp/assume-${REGION}.json" 2>"/tmp/assume-${REGION}.err"; then
               echo "ASSUME_OK ${REGION}"
-              python3 - "$REGION" <<'PY'
-          import json, sys, os, subprocess
-          r = sys.argv[1]
-          c = json.load(open(f"/tmp/assume-{r}.json"))["Credentials"]
-          env = dict(os.environ, **{
-              "AWS_ACCESS_KEY_ID": c["AccessKeyId"],
-              "AWS_SECRET_ACCESS_KEY": c["SecretAccessKey"],
-              "AWS_SESSION_TOKEN": c["SessionToken"],
-              "AWS_REGION": r})
-          def run(label, *args):
-              p = subprocess.run(["aws", "--region", r, "--no-cli-pager", *args],
-                                 capture_output=True, text=True, env=env)
-              o = (p.stdout or p.stderr)[:600]
-              print(f"[{label}] rc={p.returncode} {o}")
-          run("identity", "sts", "get-caller-identity")
-          run("buckets", "s3api", "list-buckets", "--query", "Buckets[].Name")
-          PY
+              python3 - "$REGION" <<'PY2''
+              import json, sys, os, subprocess
+              r = sys.argv[1]
+              c = json.load(open(f"/tmp/assume-{r}.json"))["Credentials"]
+              env = dict(os.environ, **{
+                  "AWS_ACCESS_KEY_ID": c["AccessKeyId"],
+                  "AWS_SECRET_ACCESS_KEY": c["SecretAccessKey"],
+                  "AWS_SESSION_TOKEN": c["SessionToken"],
+                  "AWS_REGION": r})
+              def run(label, *args):
+                  p = subprocess.run(["aws", "--region", r, "--no-cli-pager", *args],
+                                     capture_output=True, text=True, env=env)
+                  o = (p.stdout or p.stderr)[:800]
+                  print(f"[{label}] rc={p.returncode} {o}")
+              run("changelog-list", "s3api", "list-objects-v2", "--bucket", "tfy-euwe1-production-control-plane-changelog", "--max-keys", "10", "--query", "Contents[].Key")
+              run("changelog-get", "s3api", "get-object", "--bucket", "tfy-euwe1-production-control-plane-changelog", "--key", "index.html", "/tmp/idx.html")
+              print("[changelog-get-body]", open("/tmp/idx.html").read()[:200] if os.path.exists("/tmp/idx.html") else "none")
+              PY2
             else
               echo "ASSUME_FAIL ${REGION}"
               tail -c 300 "/tmp/assume-${REGION}.err" | tr -d '\n'; echo
