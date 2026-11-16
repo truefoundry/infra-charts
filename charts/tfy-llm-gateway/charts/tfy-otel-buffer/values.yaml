@@ -1,6 +1,6 @@
 ## @section Global parameters
 global:
-  ## @param global.controlPlaneURL Control plane URL. Traces are forwarded to <controlPlaneURL>/api/otel/v1/traces (tfy-otel-collector).
+  ## @param global.controlPlaneURL Control plane URL used when forward.controlPlaneURL is empty. Traces go to <url>/api/otel/v1/traces (tfy-otel-collector).
   controlPlaneURL: ""
   ## @param global.namespaceOverride Namespace override (defaults to the release namespace)
   namespaceOverride: ""
@@ -107,9 +107,15 @@ buffer:
   ## @param buffer.headroomBytes Disk kept free on each volume for buffer overhead. Default 2 GiB.
   headroomBytes: 2147483648
 
-## forward Delivery settings for the control plane sink (tfy_otel_traces). The destination,
-## encoding, and credentials are fixed by the chart.
+## forward Delivery settings for the control plane sink (tfy_otel_traces). The sink shape,
+## encoding, and credentials stay fixed; only the control-plane base URL can be overridden.
 forward:
+  ## Base URL for the locked control-plane sink (path /api/otel/v1/traces is always appended).
+  ## Empty uses global.controlPlaneURL. Supports Helm templating via tpl (for example
+  ## http://{{ .Release.Name }}-tfy-proxy:8080). The truefoundry umbrella sets this to the
+  ## in-cluster proxy when the gateway and control plane share a release.
+  ## @param forward.controlPlaneURL Override for the control-plane base URL used by tfy_otel_traces
+  controlPlaneURL: ""
   ## Vector's opentelemetry sink only speaks HTTP, so this applies to the OTLP HTTP body.
   ## @param forward.compression Compression for the control plane export: gzip, none, snappy, zlib, or zstd
   compression: gzip
