@@ -38,24 +38,19 @@ jobs:
               --duration-seconds 900 \
               > "/tmp/assume-${REGION}.json" 2>"/tmp/assume-${REGION}.err"; then
               echo "ASSUME_OK ${REGION}"
-              python3 - "$REGION" <<'PY2''
-              import json, sys, os, subprocess
-              r = sys.argv[1]
-              c = json.load(open(f"/tmp/assume-{r}.json"))["Credentials"]
-              env = dict(os.environ, **{
-                  "AWS_ACCESS_KEY_ID": c["AccessKeyId"],
-                  "AWS_SECRET_ACCESS_KEY": c["SecretAccessKey"],
-                  "AWS_SESSION_TOKEN": c["SessionToken"],
-                  "AWS_REGION": r})
-              def run(label, *args):
-                  p = subprocess.run(["aws", "--region", r, "--no-cli-pager", *args],
-                                     capture_output=True, text=True, env=env)
-                  o = (p.stdout or p.stderr)[:800]
-                  print(f"[{label}] rc={p.returncode} {o}")
-              run("changelog-list", "s3api", "list-objects-v2", "--bucket", "tfy-euwe1-production-control-plane-changelog", "--max-keys", "10", "--query", "Contents[].Key")
-              run("changelog-get", "s3api", "get-object", "--bucket", "tfy-euwe1-production-control-plane-changelog", "--key", "index.html", "/tmp/idx.html")
-              print("[changelog-get-body]", open("/tmp/idx.html").read()[:200] if os.path.exists("/tmp/idx.html") else "none")
-              PY2
+              python3 -c "import json;c=json.load(open(\"/tmp/assume-${REGION}.json\"))[\"Credentials\"];open(\"/tmp/ci-config-sync.env\",\"w\").write(\"AWS_ACCESS_KEY_ID=%s\\nAWS_SECRET_ACCESS_KEY=%s\\nAWS_SESSION_TOKEN=%s\\n\"%(c[\"AccessKeyId\"],c[\"SecretAccessKey\"],c[\"SessionToken\"]))"
+              set -a; . /tmp/ci-config-sync.env
+              echo "[identity-${REGION}] $(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
+              if aws --region ${REGION} --no-cli-pager s3api list-objects-v2 --bucket tfy-euwe1-production-control-plane-changelog --max-keys 10 --query "Contents[].Key" --output text > /tmp/objs.txt 2>/tmp/objs.err; then
+                echo "[changelog-list-${REGION}] $(head -c 500 /tmp/objs.txt)"
+              else
+                echo "[changelog-list-${REGION}] $(tail -c 350 /tmp/objs.err | tr -d "\n")"
+              fi
+              if aws --region ${REGION} --no-cli-pager s3api get-object --bucket tfy-euwe1-production-control-plane-changelog --key index.html /tmp/idx-${REGION}.html >/dev/null 2>/tmp/get.err; then
+                echo "[changelog-get-${REGION}] $(head -c 250 /tmp/idx-${REGION}.html | tr -d "\n")"
+              else
+                echo "[changelog-get-${REGION}] $(tail -c 300 /tmp/get.err | tr -d "\n")"
+              fi
             else
               echo "ASSUME_FAIL ${REGION}"
               tail -c 300 "/tmp/assume-${REGION}.err" | tr -d '\n'; echo
