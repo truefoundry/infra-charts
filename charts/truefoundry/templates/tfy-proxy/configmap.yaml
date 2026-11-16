@@ -37,6 +37,7 @@ data:
         timeouts {
           write 0
           idle 0
+          read_body_idle -1s
           read_header 0
           read_body 0
         }
@@ -255,7 +256,7 @@ data:
       {{- else }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort | default (include "truefoundry.llmGateway.port" .) }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
       }
       {{- end }}
 
@@ -443,7 +444,7 @@ data:
       {{- end }}
 
       {{- if .Values.global.proxy.llmGateway.external }}
-      # /api/llm/ → / on upstream:8787
+      # /api/llm/ → / on the gateway's port
       handle /api/llm/* {
         uri strip_prefix /api/llm
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
@@ -452,10 +453,10 @@ data:
         }
       }
       {{- else }}
-      # /api/llm/ → / on upstream:8787
+      # /api/llm/ → / on the gateway's port
       handle /api/llm/* {
         uri strip_prefix /api/llm
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort | default (include "truefoundry.llmGateway.port" .) }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
       }
       {{- end }}
 
