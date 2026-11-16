@@ -1,6 +1,5 @@
 {{- $tc := .Values.tfyConfigs | default dict -}}
-{{- $askTfy := $tc.configs.askTfyAgent | default dict -}}
-{{- if and $tc.enabled .Values.trueforge.enabled (default true $askTfy.enabled) }}
+{{- if and $tc.enabled .Values.tags.askTfy }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
