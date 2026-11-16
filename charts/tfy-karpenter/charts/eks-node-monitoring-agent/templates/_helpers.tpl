@@ -64,24 +64,32 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
-Get the current dcgm-exporter image for a region.
-We use the dcgm-exporter image from the eks/observability.
+Get the image for the dcgm-server DaemonSet.
+Empty repository uses the eks-node-monitoring-agent image.
 */}}
-{{- define "dcgm-exporter.image" -}}
-{{- if .Values.dcgmAgent.image.override }}
-{{- .Values.dcgmAgent.image.override }}
-{{- else }}
-{{- printf "%s.dkr.%s.%s.%s/eks/observability/dcgm-exporter:%s" .Values.dcgmAgent.image.account .Values.dcgmAgent.image.endpoint .Values.dcgmAgent.image.region .Values.dcgmAgent.image.domain .Values.dcgmAgent.image.tag -}}
+{{- define "dcgm-server.image" -}}
+{{- if .Values.dcgmAgent.image.repository -}}
+{{- $registry := .Values.dcgmAgent.image.registry | default .Values.nodeAgent.image.registry -}}
+{{- $tag := .Values.dcgmAgent.image.tag | default .Values.nodeAgent.image.tag -}}
+{{- if $registry -}}
+{{- printf "%s/%s:%s" $registry .Values.dcgmAgent.image.repository $tag -}}
+{{- else -}}
+{{- printf "%s:%s" .Values.dcgmAgent.image.repository $tag -}}
+{{- end -}}
+{{- else -}}
+{{- include "eks-node-monitoring-agent.image" . -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Get the current NMA image for a region.
+Get the eks-node-monitoring-agent image.
 */}}
 {{- define "eks-node-monitoring-agent.image" -}}
-{{- if .Values.nodeAgent.image.override }}
-{{- .Values.nodeAgent.image.override }}
-{{- else }}
-{{- printf "%s.dkr.%s.%s.%s/eks/eks-node-monitoring-agent:%s" .Values.nodeAgent.image.account .Values.nodeAgent.image.endpoint .Values.nodeAgent.image.region .Values.nodeAgent.image.domain .Values.nodeAgent.image.tag }}
+{{- $repo := required "nodeAgent.image.repository is required" .Values.nodeAgent.image.repository -}}
+{{- $tag := required "nodeAgent.image.tag is required" .Values.nodeAgent.image.tag -}}
+{{- if .Values.nodeAgent.image.registry -}}
+{{- printf "%s/%s:%s" .Values.nodeAgent.image.registry $repo $tag -}}
+{{- else -}}
+{{- printf "%s:%s" $repo $tag -}}
 {{- end -}}
 {{- end -}}

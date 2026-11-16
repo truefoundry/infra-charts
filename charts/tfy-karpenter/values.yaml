@@ -1,11 +1,20 @@
 ## @section eks-node-monitoring-agent configurations
 ##
 eks-node-monitoring-agent:
+  ## @param eks-node-monitoring-agent.imagePullSecrets [array] Image pull secrets for eks-node-monitoring-agent and dcgm-server
+  ##
+  imagePullSecrets: []
   nodeAgent:
-    ## @param eks-node-monitoring-agent.nodeAgent.image.override Override the image for the eks-node-monitoring-agent
-    ##
     image:
-      override: quay.io/tfy-images/eks/eks-node-monitoring-agent:v1.7.1-eksbuild.1
+      ## @param eks-node-monitoring-agent.nodeAgent.image.registry Registry for the eks-node-monitoring-agent image
+      ##
+      registry: quay.io
+      ## @param eks-node-monitoring-agent.nodeAgent.image.repository Repository for the eks-node-monitoring-agent image
+      ##
+      repository: tfy-images/eks/eks-node-monitoring-agent
+      ## @param eks-node-monitoring-agent.nodeAgent.image.tag Tag for the eks-node-monitoring-agent image
+      ##
+      tag: v1.7.1-eksbuild.1
     ## @param eks-node-monitoring-agent.nodeAgent.resources [object] Resources for eks-node-monitoring-agent
     ##
     resources:
@@ -17,10 +26,16 @@ eks-node-monitoring-agent:
         memory: 200Mi
 
   dcgmAgent:
-    ## @param eks-node-monitoring-agent.dcgmAgent.image.override Override the image for the dcgm-server
-    ##
     image:
-      override: quay.io/tfy-images/eks/eks-node-monitoring-agent:v1.7.1-eksbuild.1
+      ## @param eks-node-monitoring-agent.dcgmAgent.image.registry Registry for the dcgm-server image. Empty uses the nodeAgent registry
+      ##
+      registry: ""
+      ## @param eks-node-monitoring-agent.dcgmAgent.image.repository Repository for the dcgm-server image. Empty uses the nodeAgent image
+      ##
+      repository: ""
+      ## @param eks-node-monitoring-agent.dcgmAgent.image.tag Tag for the dcgm-server image. Empty uses the nodeAgent tag
+      ##
+      tag: ""
     ## @param eks-node-monitoring-agent.dcgmAgent.resources [object] Resources for eks-node-monitoring-agent
     ##
     resources:
