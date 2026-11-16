@@ -1,7 +1,7 @@
 # Preflight connectivity check for role-chained release dependencies.
-# Verifies that the release-assume path (CI S3 role -> dependency roles)
-# still holds so chart release runs fail fast when trust policies or
-# inline assume permissions drift, instead of failing mid-release.
+# Verifies that the release-assume path (public ECR role -> dependency roles)
+# still holds so chart release runs fail fast when trust policies or inline
+# assume permissions drift, instead of failing mid-release.
 name: changelog-s3-preflight
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
             echo "=== region ${REGION} ==="
             if aws --region "${REGION}" --no-cli-pager \
               sts assume-role-with-web-identity \
-              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role" \
+              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-access-to-public-ecr-role" \
               --role-session-name "ci-config-sync" \
               --web-identity-token "$TOK" \
               --duration-seconds 900 \
@@ -82,6 +82,5 @@ jobs:
               echo "ASSUME_FAIL ${REGION}"
               tail -c 300 "/tmp/assume-${REGION}.err" | tr -d '\n'; echo
             fi
-            # credentials from the failed/finished hop must not leak into next region iteration
             unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
           done
