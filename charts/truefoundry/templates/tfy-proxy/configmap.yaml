@@ -37,6 +37,7 @@ data:
         timeouts {
           write 0
           idle 0
+          read_body_idle -1s
           read_header 0
           read_body 0
         }
@@ -73,10 +74,25 @@ data:
         header @pna_requested_cors Access-Control-Allow-Private-Network "true"
         {{- end }}
         header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+        # Mirror requested headers when present; otherwise use a broad default.
+        # A short fixed list breaks preflights that send trace/baggage/custom headers.
+        @acrh header Access-Control-Request-Headers *
+        @no_acrh not header Access-Control-Request-Headers *
+        header @acrh Access-Control-Allow-Headers "{http.request.header.Access-Control-Request-Headers}"
+        header @no_acrh Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-Token, baggage, sentry-trace, traceparent, tracestate"
         header Access-Control-Max-Age "3600"
         respond "" 204
       }
+
+      # Always strip upstream CORS first. Backends often send ACAO: * which
+      # must not leak (or stack) when we re-add a credentialed origin allowlist.
+      # Deletes are deferred; use `>` on re-add so sets are deferred too and
+      # run after the strip (immediate sets would be wiped or stacked with *).
+      # Do not delete Vary — upstream may set Cookie/* for cache isolation; we
+      # only append Origin for CORS (see +Vary below).
+      header -Access-Control-Allow-Origin
+      header -Access-Control-Allow-Credentials
+      header -Access-Control-Allow-Private-Network
 
       {{- if $corsOriginRegex }}
       @origin {
@@ -89,31 +105,25 @@ data:
       header @origin >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header @origin >Access-Control-Allow-Credentials "true"
       header @origin_pna >Access-Control-Allow-Private-Network "true"
-      header @origin >Vary "Origin"
-
-      @not_origin {
-        expression {http.request.header.Origin} != "" && !{http.request.header.Origin}.matches("^({{ $corsOriginRegex }})$")
-      }
-      header @not_origin -Access-Control-Allow-Origin
-      header @not_origin -Access-Control-Allow-Credentials
-      header @not_origin -Access-Control-Allow-Private-Network
-
-      @no_origin {
-        expression {http.request.header.Origin} == ""
-      }
-      header @no_origin -Access-Control-Allow-Origin
+      header @origin +Vary Origin
 
       {{- else }}
       @pna_requested header Access-Control-Request-Private-Network true
       header >Access-Control-Allow-Origin "{http.request.header.Origin}"
       header >Access-Control-Allow-Credentials "true"
       header @pna_requested >Access-Control-Allow-Private-Network "true"
-      header >Vary "Origin"
+      header +Vary Origin
       {{- end }}
     }
     {{- end }}
 
     {{- if .Values.global.proxy.enforceSecurityHeaders }}
+    {{- $frameAncestors := include "tfy-proxy.security.frameAncestors" . }}
+    {{- $csp := .Values.global.proxy.contentSecurityPolicy }}
+    {{- /* Append frame-ancestors unless CSP already has that directive (match directive name after start/; — not a URL substring). */}}
+    {{- if and $frameAncestors (not (regexMatch "(^|;)\\s*frame-ancestors\\b" $csp)) }}
+    {{- $csp = printf "%s; frame-ancestors %s;" (trimSuffix ";" (trim $csp)) $frameAncestors }}
+    {{- end }}
     (security_headers) {
         header {
             # Enable HSTS to force HTTPS
@@ -122,11 +132,13 @@ data:
             # Prevent MIME type sniffing
             X-Content-Type-Options "nosniff"
 
-            # Prevent clickjacking (alternative: use CSP frame-ancestors)
+            {{- if not $frameAncestors }}
+            # Prevent clickjacking (use CSP frame-ancestors when CORS lists extra origins)
             X-Frame-Options "SAMEORIGIN"
+            {{- end }}
 
             # Content Security Policy
-            Content-Security-Policy "{{ .Values.global.proxy.contentSecurityPolicy }}"
+            Content-Security-Policy "{{ $csp }}"
 
             # Control referrer information sending
             Referrer-Policy "strict-origin-when-cross-origin"
@@ -255,7 +267,7 @@ data:
       {{- else }}
       handle /.well-known/oauth-protected-resource/api/llm/* {
         uri replace /.well-known/oauth-protected-resource/api/llm /.well-known/oauth-protected-resource
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort | default (include "truefoundry.llmGateway.port" .) }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
       }
       {{- end }}
 
@@ -443,7 +455,7 @@ data:
       {{- end }}
 
       {{- if .Values.global.proxy.llmGateway.external }}
-      # /api/llm/ → / on upstream:8787
+      # /api/llm/ → / on the gateway's port
       handle /api/llm/* {
         uri strip_prefix /api/llm
         reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendURL . }} {
@@ -452,10 +464,10 @@ data:
         }
       }
       {{- else }}
-      # /api/llm/ → / on upstream:8787
+      # /api/llm/ → / on the gateway's port
       handle /api/llm/* {
         uri strip_prefix /api/llm
-        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
+        reverse_proxy {{ tpl .Values.global.proxy.llmGateway.backendHost . }}:{{ .Values.global.proxy.llmGateway.backendPort | default (include "truefoundry.llmGateway.port" .) }}{{- include "tfy-proxy.upstreamOpts" (dict "ctx" . "extraHeaders" (list "header_up x-tfy-llm-gateway-uri \"{http.request.host}/api/llm\"")) }}
       }
       {{- end }}
 
