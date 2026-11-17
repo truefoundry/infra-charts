@@ -50,7 +50,8 @@ jobs:
           echo "ARN=$(aws --region ${REGION} --no-cli-pager sts get-caller-identity --query Arn --output text)"
           export AWS_REGION="${REGION}"
           echo "=== versioning ==="
-          aws --no-cli-pager s3api get-bucket-versioning --bucket "$BUCKET" --output json 2>&1 | head -c 300; echo
+          aws --no-cli-pager s3api get-bucket-versioning --bucket "$BUCKET" --output json 2>&1 | head -c 300 || true
+          echo
           snap () {
             aws --no-cli-pager s3api list-objects-v2 --bucket "$BUCKET" \
               --query 'Contents[].[Key,Size,ETag]' --output text 2>/tmp/snap.err | LC_ALL=C sort > "$1"
@@ -58,6 +59,7 @@ jobs:
           }
           echo "=== snapshot before ==="
           snap /tmp/before.txt
+          cat /tmp/snap.err 2>/dev/null | tail -c 200 || true
           if grep -qF "$KEY" /tmp/before.txt; then echo "KEY_PRESENT_BEFORE=yes"; else echo "KEY_PRESENT_BEFORE=no"; fi
           printf '{"schemaVersion":1,"version":"9999.0.0","releasedAt":"2026-11-17T00:00:00Z","changes":[]}' > /tmp/obj.json
           echo "LOCAL_SHA=$(sha256sum /tmp/obj.json | cut -d' ' -f1)"
@@ -86,16 +88,19 @@ jobs:
           DM="$(python3 -c 'import json;print(json.load(open("/tmp/del.json")).get("VersionId") or "")' 2>/dev/null || true)"
           if [ -n "$DM" ]; then
             echo "DELETE_MARKER_VERSION=$DM"
-            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$DM" >/dev/null 2>&1 && echo "MARKER_PURGED"
+            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$DM" >/dev/null 2>&1 && echo "MARKER_PURGED" || echo "MARKER_PURGE_FAIL"
           fi
           if [ -n "${VID:-}" ]; then
             echo "=== purge object version ==="
-            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$VID" --output json 2>&1 | head -c 300; echo
+            aws --no-cli-pager s3api delete-object --bucket "$BUCKET" --key "$KEY" --version-id "$VID" --output json 2>&1 | head -c 300 || true
+            echo
           fi
           echo "=== versions remaining for key ==="
-          aws --no-cli-pager s3api list-object-versions --bucket "$BUCKET" --prefix "$KEY" --output json 2>&1 | head -c 600; echo
+          aws --no-cli-pager s3api list-object-versions --bucket "$BUCKET" --prefix "$KEY" --output json 2>&1 | head -c 600 || true
+          echo
           echo "=== get after ==="
-          aws --no-cli-pager s3api get-object --bucket "$BUCKET" --key "$KEY" /tmp/gone.json 2>&1 | tail -c 300; echo
+          aws --no-cli-pager s3api get-object --bucket "$BUCKET" --key "$KEY" /tmp/gone.json 2>&1 | tail -c 300 || true
+          echo
           echo "=== snapshot after ==="
           snap /tmp/after.txt
           echo "=== diff ==="
