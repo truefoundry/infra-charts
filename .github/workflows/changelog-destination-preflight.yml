@@ -21,6 +21,7 @@ jobs:
       - name: Check release CI role scope
         run: |
           set -uo pipefail
+          set +e
           REGION=eu-west-1
           ROLE_ARN=arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role
           TOK="$(curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
