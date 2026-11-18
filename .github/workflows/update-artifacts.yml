@@ -7,7 +7,9 @@ on:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-runner-group
+      labels: ubuntu-24-4-core
     outputs:
       relevant: ${{ steps.filter.outputs.relevant }}
     steps:
@@ -29,7 +31,9 @@ jobs:
   update-artifacts:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-runner-group
+      labels: ubuntu-24-4-core
     permissions:
       contents: write
       id-token: write
@@ -131,7 +135,9 @@ jobs:
   artifact-generation-gate:
     needs: [ changes, update-artifacts ]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-runner-group
+      labels: ubuntu-24-4-core
     steps:
       - name: Verify Required jobs
         run: |
