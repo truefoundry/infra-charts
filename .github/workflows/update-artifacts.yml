@@ -9,7 +9,7 @@ jobs:
   changes:
     runs-on:
       group: large-runner-group
-      labels: ubuntu-24-4-core
+      labels: "gh-large-linux-2c."
     outputs:
       relevant: ${{ steps.filter.outputs.relevant }}
     steps:
@@ -33,7 +33,7 @@ jobs:
     if: needs.changes.outputs.relevant == 'true'
     runs-on:
       group: large-runner-group
-      labels: ubuntu-24-4-core
+      labels: "gh-large-linux-2c."
     permissions:
       contents: write
       id-token: write
@@ -137,7 +137,7 @@ jobs:
     if: always()
     runs-on:
       group: large-runner-group
-      labels: ubuntu-24-4-core
+      labels: "gh-large-linux-2c."
     steps:
       - name: Verify Required jobs
         run: |
