@@ -7,9 +7,7 @@ on:
 
 jobs:
   changes:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     outputs:
       relevant: ${{ steps.filter.outputs.relevant }}
     steps:
@@ -31,9 +29,7 @@ jobs:
   update-artifacts:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
