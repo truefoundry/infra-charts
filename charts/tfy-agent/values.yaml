@@ -163,6 +163,8 @@ config:
   ## Kubernetes Workload Identity Federation for control-plane auth (in addition to cluster token).
   ## Enable this only after the TrueFoundry cluster resource has identity_provider_mapping.enabled=true
   ## with claims matching this chart's service account (namespace + name).
+  ## When enabled, tfy-agent, tfy-agent-proxy, and sds-server share the agent SA
+  ## so one WIF mapping covers all control-plane connections.
   ##
   workloadIdentity:
     ## @param config.workloadIdentity.enabled Mount a projected SA JWT and send it as x-tfy-workload-token

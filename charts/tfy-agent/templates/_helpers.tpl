@@ -360,6 +360,19 @@ Create the name of the service account to use for tfy-agent-proxy
 {{- end }}
 
 {{/*
+SA used by the proxy pod. When workload identity is enabled, share tfy-agent's SA
+so the projected JWT matches the cluster WIF claims (and keep proxy ClusterRoles
+bound to that same SA).
+*/}}
+{{- define "tfy-agent-proxy.podServiceAccountName" -}}
+{{- if .Values.config.workloadIdentity.enabled }}
+{{- include "tfy-agent.serviceAccountName" . }}
+{{- else }}
+{{- include "tfy-agent-proxy.serviceAccountName" . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use for sds-server
 */}}
 {{- define "sds-server.serviceAccountName" -}}
