@@ -24,7 +24,12 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.config.workloadIdentity.enabled }}
+      {{/* Same SA as tfy-agent so projected JWT claims match the cluster WIF mapping. */}}
+      serviceAccountName: {{ include "tfy-agent.serviceAccountName" . }}
+      {{- else }}
       serviceAccountName: {{ include "sds-server.serviceAccountName" . }}
+      {{- end }}
       automountServiceAccountToken: {{ .Values.sdsServer.serviceAccount.automountServiceAccountToken }}
       {{- with (include "tfy-agent.podSecurityContext" (dict "local" .Values.sdsServer.podSecurityContext "global" .Values.global.podSecurityContext)) }}
       securityContext:
@@ -44,6 +49,15 @@ spec:
         {{- end }}
         {{- if .Values.global.customCA.enabled }}
         {{- include "tfy-agent.customCA.volumes" . | nindent 8 }}
+        {{- end }}
+        {{- if .Values.config.workloadIdentity.enabled }}
+        - name: workload-identity-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: {{ .Values.config.workloadIdentity.tokenFileName | quote }}
+                  expirationSeconds: {{ .Values.config.workloadIdentity.expirationSeconds }}
+                  audience: {{ .Values.config.workloadIdentity.audience | quote }}
         {{- end }}
         {{- if gt (len .Values.clustersConfig) 1 }}
         - name: clusters-config
@@ -81,6 +95,10 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" . }}
+            {{- if .Values.config.workloadIdentity.enabled }}
+            - name: WORKLOAD_IDENTITY_TOKEN_FILE
+              value: {{ printf "%s/%s" .Values.config.workloadIdentity.mountPath .Values.config.workloadIdentity.tokenFileName | quote }}
+            {{- end }}
             {{- if gt (len .Values.clustersConfig) 1 }}
             - name: MULTI_LOGICAL_CLUSTER_ENABLED
               value: "true"
@@ -103,10 +121,15 @@ spec:
             {{- with .Values.sdsServer.resources }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- if or .Values.global.customCA.enabled (gt (len .Values.clustersConfig) 1) }}
+          {{- if or .Values.global.customCA.enabled .Values.config.workloadIdentity.enabled (gt (len .Values.clustersConfig) 1) }}
           volumeMounts:
             {{- if .Values.global.customCA.enabled }}
             {{- include "tfy-agent.customCA.volumeMounts" . | nindent 12 }}
+            {{- end }}
+            {{- if .Values.config.workloadIdentity.enabled }}
+            - name: workload-identity-token
+              mountPath: {{ .Values.config.workloadIdentity.mountPath | quote }}
+              readOnly: true
             {{- end }}
             {{- if gt (len .Values.clustersConfig) 1 }}
             - name: clusters-config

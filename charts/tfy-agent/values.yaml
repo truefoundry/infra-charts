@@ -160,6 +160,22 @@ config:
   #   - default
   #   - namespace-1
 
+  ## Kubernetes Workload Identity Federation for control-plane auth (in addition to cluster token).
+  ## Enable this only after the TrueFoundry cluster resource has identity_provider_mapping.enabled=true
+  ## with claims matching this chart's service account (namespace + name).
+  ##
+  workloadIdentity:
+    ## @param config.workloadIdentity.enabled Mount a projected SA JWT and send it as x-tfy-workload-token
+    enabled: false
+    ## @param config.workloadIdentity.audience JWT audience; must match the Kubernetes Identity Provider audiences in TrueFoundry
+    audience: truefoundry
+    ## @param config.workloadIdentity.expirationSeconds Projected token lifetime (kubelet rotates before expiry)
+    expirationSeconds: 3600
+    ## @param config.workloadIdentity.mountPath Directory where the token file is mounted
+    mountPath: /var/run/secrets/tfy
+    ## @param config.workloadIdentity.tokenFileName File name under mountPath
+    tokenFileName: token
+
   ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
   ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
   ## provide tokenSecretKey matching a key in that existing Secret.
