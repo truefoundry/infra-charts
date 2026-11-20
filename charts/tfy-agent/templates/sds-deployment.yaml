@@ -95,6 +95,11 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" . }}
+                  optional: {{ if and .Values.config.workloadIdentity.enabled .Values.config.clusterFqn }}true{{ else }}false{{ end }}
+            {{- if .Values.config.clusterFqn }}
+            - name: CLUSTER_FQN
+              value: {{ .Values.config.clusterFqn | quote }}
+            {{- end }}
             {{- if .Values.config.workloadIdentity.enabled }}
             - name: WORKLOAD_IDENTITY_TOKEN_FILE
               value: {{ printf "%s/%s" .Values.config.workloadIdentity.mountPath .Values.config.workloadIdentity.tokenFileName | quote }}

@@ -91,13 +91,17 @@ global:
 ## Parameters to configure tfyAgent and tfyAgentProxy
 ##
 config:
-  ## @param config.clusterToken Token to connect to the control plane
+  ## @param config.clusterToken Token to connect to the control plane. Optional when config.workloadIdentity.enabled and config.clusterFqn are set.
   ##
   clusterToken: ""
 
   ## @param config.clusterTokenSecret Secret of token to connect to control plane, secret key must be `CLUSTER_TOKEN`. This overrides config.clusterToken
   ##
   clusterTokenSecret: ""
+
+  ## @param config.clusterFqn Cluster FQN (tenant:name). Required when clusterToken is omitted (WIF-only); always sent as x-tfy-cluster-fqn.
+  ##
+  clusterFqn: ""
 
   ## @param config.controlPlaneURL URL of the control plane to connect agent (format: `https://`)
   ##
@@ -160,8 +164,9 @@ config:
   #   - default
   #   - namespace-1
 
-  ## Kubernetes Workload Identity Federation for control-plane auth (in addition to cluster token).
-  ## Enable this only after the TrueFoundry cluster resource has identity_provider_mapping.enabled=true
+  ## Kubernetes Workload Identity Federation for control-plane auth.
+  ## Dual-mode: keep clusterToken and enable this. Later: omit clusterToken and set clusterFqn only.
+  ## Enable only after the TrueFoundry cluster has identity_provider_mapping.enabled=true
   ## with claims matching this chart's service account (namespace + name).
   ## When enabled, tfy-agent, tfy-agent-proxy, and sds-server share the agent SA
   ## so one WIF mapping covers all control-plane connections.

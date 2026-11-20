@@ -92,6 +92,11 @@ spec:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
+                  optional: {{ if and .Values.config.workloadIdentity.enabled .Values.config.clusterFqn }}true{{ else }}false{{ end }}
+            {{- if .Values.config.clusterFqn }}
+            - name: CLUSTER_FQN
+              value: {{ .Values.config.clusterFqn | quote }}
+            {{- end }}
             {{- if gt (len .Values.clustersConfig) 1 }}
             - name: MULTI_LOGICAL_CLUSTER_ENABLED
               value: "true"
