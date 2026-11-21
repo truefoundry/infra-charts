@@ -923,8 +923,17 @@ networkPolicy:
     ##   - namespaceSelector:
     ##       matchLabels:
     ##         truefoundry.com/managed-by: servicefoundry
+  externalSecrets:
+    ## @param networkPolicy.externalSecrets.ingressFrom [array] NetworkPolicyPeer entries allowed to call tfy-agent's secret proxy (ESO webhook). Default: same namespace as this release (bundled ESO). Set to [] to block.
+    ingressFrom:
+      - podSelector: {}
+    ## Example: allow ESO from every namespace
+    ## ingressFrom:
+    ##   - namespaceSelector: {}
 
 ## @section eso (external-secrets operator) configuration parameters
+## ClusterSecretStore webhooks call tfy-agent (/v1/control-plane/secret); the agent
+## attaches CLUSTER_TOKEN and/or WIF and proxies to SFY. ESO does not hold CP credentials.
 ##
 external-secrets-operator:
   ## @param external-secrets-operator.enabled Bool value to deploy the external-secrets operator subchart. Disable this to use your own External Secrets Operator. Disabling it would still create a secret store for the agent.
