@@ -360,6 +360,19 @@ Create the name of the service account to use for tfy-agent-proxy
 {{- end }}
 
 {{/*
+SA used by the proxy pod. When workload identity is enabled, share tfy-agent's SA
+so the projected JWT matches the cluster WIF claims (and keep proxy ClusterRoles
+bound to that same SA).
+*/}}
+{{- define "tfy-agent-proxy.podServiceAccountName" -}}
+{{- if .Values.config.workloadIdentity.enabled }}
+{{- include "tfy-agent.serviceAccountName" . }}
+{{- else }}
+{{- include "tfy-agent-proxy.serviceAccountName" . }}
+{{- end }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use for sds-server
 */}}
 {{- define "sds-server.serviceAccountName" -}}
@@ -415,11 +428,28 @@ Resolved CONTROL_PLANE_URL: external base URL when set, otherwise in-cluster clu
 {{- end }}
 
 {{/*
-Webhook URL for the ClusterSecretStore control-plane secret provider.
+In-cluster tfy-agent service base URL (scheme://name.namespace.svc:port).
+*/}}
+{{- define "tfy-agent.serviceUrl" -}}
+{{- printf "http://%s.%s.svc:%v" (include "tfy-agent.fullname" .) .Release.Namespace .Values.tfyAgent.service.port -}}
+{{- end }}
+
+{{/*
+Webhook URL for the ClusterSecretStore: ESO → tfy-agent → SFY.
+Agent attaches CLUSTER_TOKEN / WIF; ESO does not hold control-plane credentials.
 Uses external-secrets templating (not Helm) for .remoteRef.key.
 */}}
 {{- define "tfy-agent.clusterSecretStore.webhookUrl" -}}
-{{- printf "%s/api/svc/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.controlPlaneBaseURL" .) "{{ .remoteRef.key }}" -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key }}" -}}
+{{- end }}
+
+{{/*
+Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
+*/}}
+{{- define "tfy-agent.clusterSecretStore.webhookUrlForStore" -}}
+{{- $storeName := .storeName -}}
+{{- $root := .root -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key }}" ($storeName | urlquery) -}}
 {{- end }}
 
 {{/*
