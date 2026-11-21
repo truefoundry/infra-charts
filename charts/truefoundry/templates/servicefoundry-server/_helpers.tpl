@@ -201,12 +201,11 @@ GLOBAL_BUILDERS_BUILDKIT_URLS: {{ $urls | trimPrefix ","  }}
 
 
 {{/*
-  Ask TFY inline agent config is mounted when tfyConfigs, TrueForge, and askTfyAgent are enabled.
+  Ask TFY inline agent config is mounted when tfyConfigs and tags.askTfy are enabled.
   */}}
 {{- define "servicefoundry-server.askTfyEnabled" -}}
 {{- $tc := .Values.tfyConfigs | default dict -}}
-{{- $askTfy := $tc.configs.askTfyAgent | default dict -}}
-{{- if and .Values.servicefoundryServer.enabled $tc.enabled .Values.trueforge.enabled (default true $askTfy.enabled) (tpl .Values.servicefoundryServer.configs.askTfyAgent .) -}}
+{{- if and .Values.servicefoundryServer.enabled $tc.enabled .Values.tags.askTfy (tpl .Values.servicefoundryServer.configs.askTfyAgent .) -}}
 true
 {{- end -}}
 {{- end }}
