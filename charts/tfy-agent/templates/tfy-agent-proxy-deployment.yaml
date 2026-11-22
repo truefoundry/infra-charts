@@ -53,12 +53,14 @@ spec:
               value: "/proxy/cluster/connect"
             {{- end }}
             {{- end }}
+            {{- if or (eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true") (le (len .Values.clustersConfig) 1) }}
             - name: CLUSTER_TOKEN
               valueFrom:
                 secretKeyRef:
                   key: CLUSTER_TOKEN
                   name: {{ include "tfy-agent.secretName" .}}
-                  optional: {{ if and .Values.config.workloadIdentity.enabled .Values.config.clusterFqn }}true{{ else }}false{{ end }}
+                  optional: {{ if or .Values.config.workloadIdentity.enabled (gt (len .Values.clustersConfig) 1) }}true{{ else }}false{{ end }}
+            {{- end }}
             {{- if .Values.config.clusterFqn }}
             - name: CLUSTER_FQN
               value: {{ .Values.config.clusterFqn | quote }}
@@ -100,9 +102,11 @@ spec:
             - name: clusters-config
               mountPath: /etc/tfy-agent/logical-clusters
               readOnly: true
+            {{- if eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true" }}
             - name: cluster-tokens
               mountPath: /etc/tfy-agent/logical-cluster-tokens
               readOnly: true
+            {{- end }}
             {{- end }}
       {{- with .Values.tfyAgentProxy.nodeSelector }}
       nodeSelector:
@@ -128,9 +132,11 @@ spec:
         - name: clusters-config
           configMap:
             name: {{ include "tfy-agent.fullname" . }}-clusters-config
+        {{- if eq (include "tfy-agent.clustersConfig.hasAnyToken" .) "true" }}
         - name: cluster-tokens
           secret:
             secretName: {{ include "tfy-agent.secretName" . }}
+        {{- end }}
         {{- end }}
       {{- with .Values.tfyAgentProxy.affinity }}
       affinity:

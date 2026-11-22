@@ -186,6 +186,8 @@ config:
   ## @param clustersConfig Logical clusters served by this agent. Multi-logical-cluster mode is enabled automatically when this list has more than one entry.
   ## Tokens are written to the chart-managed Secret. When config.clusterTokenSecret is set, omit token and
   ## provide tokenSecretKey matching a key in that existing Secret.
+  ## Tokenless WIF (per entry): set fqn (tenant:name) and enable config.workloadIdentity; omit token/tokenSecretKey.
+  ## Dual-mode: keep token/tokenSecretKey and enable config.workloadIdentity (same projected JWT for all entries).
   ## When namespaces is a concrete list, the tenant ClusterSecretStore is restricted to those namespaces
   ## via spec.conditions. namespaces: ["*"] leaves the store usable from every namespace.
   ##
@@ -199,6 +201,11 @@ clustersConfig: []
 #     tenantName: tenant-a
 #     namespaces: ["*"]
 #     # clusterSecretStoreName: custom-store
+#   - name: team-b-wif-only
+#     fqn: tenant-b:cluster-b
+#     controlPlaneURL: https://tenant-b.example.com
+#     tenantName: tenant-b
+#     namespaces: ["*"]
 
 ## @param nameOverride String to override partial name passed in helm install command
 ##
