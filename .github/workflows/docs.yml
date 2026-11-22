@@ -8,6 +8,9 @@ on:
       - 'charts/**'
 jobs:
   update-readme-metadata:
+    # The bot token only covers this repo and fork PRs get no secrets, so it
+    # can't push to a fork's branch.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on:
       group: public-runner-group
       labels: "gh-pb-runners-2c"
@@ -16,12 +19,19 @@ jobs:
     steps:
       - name: Install readme-generator-for-helm
         run: npm install -g @bitnami/readme-generator-for-helm
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.INFRA_CHARTS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.INFRA_CHARTS_BOT_PRIVATE_KEY }}
+          # Current repo only (the default); just what the push needs.
+          permission-contents: write
       - name: Checkout charts
         uses: actions/checkout@v4
         with:
           ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          token: ${{ secrets.TFY_GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
       - name: Execute readme-generator-for-helm
         env:
           DIFF_URL: '${{github.event.pull_request.diff_url}}'

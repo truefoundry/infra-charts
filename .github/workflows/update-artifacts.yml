@@ -30,7 +30,8 @@ jobs:
 
   update-artifacts:
     needs: changes
-    if: needs.changes.outputs.relevant == 'true'
+    # Same-repo PRs only: the bot token can't push to a fork's branch.
+    if: needs.changes.outputs.relevant == 'true' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on:
       group: public-runner-group
       labels: "gh-pb-runners-2c"
@@ -44,12 +45,20 @@ jobs:
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
 
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.INFRA_CHARTS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.INFRA_CHARTS_BOT_PRIVATE_KEY }}
+          # Current repo only (the default); just what the push needs.
+          permission-contents: write
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.TFY_GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Kubectl
         uses: azure/setup-kubectl@v3
