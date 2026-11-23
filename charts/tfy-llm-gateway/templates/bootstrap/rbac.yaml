@@ -1,0 +1,34 @@
+{{- if and (eq (include "tfy-llm-gateway.bootstrap.enabled" .) "true") .Values.bootstrap.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "tfy-llm-gateway.bootstrap.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-llm-gateway.bootstrap.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.bootstrap.commonAnnotations" . | nindent 4 }}
+rules:
+  # The CA secret and the leaf secret: read to decide whether a renewal is due, write to issue.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "tfy-llm-gateway.bootstrap.fullname" . }}
+  namespace: {{ include "global.namespace" . }}
+  labels:
+    {{- include "tfy-llm-gateway.bootstrap.commonLabels" . | nindent 4 }}
+  annotations:
+    {{- include "tfy-llm-gateway.bootstrap.commonAnnotations" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "tfy-llm-gateway.bootstrap.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "tfy-llm-gateway.bootstrap.serviceAccountName" . }}
+    namespace: {{ include "global.namespace" . }}
+{{- end }}
