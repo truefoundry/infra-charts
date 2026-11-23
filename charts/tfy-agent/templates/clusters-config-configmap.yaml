@@ -12,7 +12,7 @@ data:
   logical-clusters.yaml: |
     clusters:
     {{- range $index, $cluster := .Values.clustersConfig }}
-      {{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster) | fromJson }}
+      {{- $resolved := include "tfy-agent.clustersConfig.resolved" (dict "index" $index "cluster" $cluster "root" $) | fromJson }}
       - name: {{ index $resolved "name" | quote }}
         {{- if index $resolved "fqn" }}
         fqn: {{ index $resolved "fqn" | quote }}
@@ -23,6 +23,8 @@ data:
         controlPlaneURL: {{ index $resolved "controlPlaneURL" | quote }}
         tenantName: {{ index $resolved "tenantName" | quote }}
         clusterSecretStoreName: {{ index $resolved "clusterSecretStoreName" | quote }}
+        workloadIdentity:
+          enabled: {{ index $resolved "workloadIdentityEnabled" }}
         namespaces:
         {{- range $namespace := index $resolved "namespaces" }}
           - {{ $namespace | quote }}
