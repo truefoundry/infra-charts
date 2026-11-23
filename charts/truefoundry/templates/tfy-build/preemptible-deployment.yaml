@@ -24,10 +24,6 @@ spec:
     spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: preemptible
-      {{- with (include "truefoundry.podSecurityContext" (dict "local" .Values.tfyBuild.preemptibleDeployment.podSecurityContext "global" .Values.global.podSecurityContext)) }}
-      securityContext:
-        {{- . | nindent 8 }}
-      {{- end }}
       {{- with .Values.tfyBuild.preemptibleDeployment.extraVolumes }}
       volumes:
           {{- toYaml . | nindent 8 }}
@@ -36,10 +32,6 @@ spec:
         - name: alpine
           image: {{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.registry | default .Values.global.image.registry }}/{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.repository }}:{{ .Values.tfyBuild.truefoundryWorkflows.sfyBuilder.image.tag }}
           command: ["tail", "-f", "/dev/null"]
-          {{- with (include "truefoundry.containerSecurityContext" (dict "local" .Values.tfyBuild.preemptibleDeployment.securityContext "global" .Values.global.containerSecurityContext)) }}
-          securityContext:
-            {{- . | nindent 12 }}
-          {{- end }}
           {{- with .Values.tfyBuild.preemptibleDeployment.extraEnvs }}
           env:
               {{- toYaml . | nindent 12 }}

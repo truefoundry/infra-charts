@@ -176,11 +176,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   Create the name of the service account to use
   */}}
 {{- define "tfy-otel-collector.serviceAccountName" -}}
-{{- $restricted := .Values.global.restrictedServiceAccount | default dict -}}
 {{- if .Values.serviceAccount.name -}}
 {{- .Values.serviceAccount.name -}}
-{{- else if $restricted.enabled -}}
-{{- $restricted.name | default "truefoundry-restricted" -}}
 {{- else -}}
 {{- .Values.global.serviceAccount.name -}}
 {{- end }}
@@ -284,11 +281,11 @@ Deployment Volumes
 */}}
 {{- define "tfy-otel-collector.volumes" -}}
 {{- $tier := .Values.global.resourceTier | default "medium" }}
-{{- $ephemeralLimit := "2Gi" }}
+{{- $ephemeralLimit := "1024Mi" }}
 {{- if eq $tier "small" }}
   {{- $ephemeralLimit = "512Mi" }}
 {{- else if eq $tier "large" }}
-  {{- $ephemeralLimit = "4Gi" }}
+  {{- $ephemeralLimit = "2048Mi" }}
 {{- end }}
 {{- if and .Values.resources .Values.resources.limits (index .Values.resources.limits "ephemeral-storage") }}
   {{- $ephemeralLimit = index .Values.resources.limits "ephemeral-storage" }}
@@ -363,23 +360,23 @@ limits:
 {{- define "tfy-otel-collector.defaultResources.medium" }}
 requests:
   cpu: 200m
-  memory: 1Gi
-  ephemeral-storage: 1Gi
+  memory: 512Mi
+  ephemeral-storage: 512Mi
 limits:
   cpu: 400m
-  memory: 2Gi
-  ephemeral-storage: 2Gi
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.defaultResources.large" }}
 requests:
   cpu: 500m
-  memory: 2Gi
-  ephemeral-storage: 2Gi
+  memory: 1024Mi
+  ephemeral-storage: 1024Mi
 limits:
   cpu: 1000m
-  memory: 4Gi
-  ephemeral-storage: 4Gi
+  memory: 2048Mi
+  ephemeral-storage: 2048Mi
 {{- end }}
 
 {{- define "tfy-otel-collector.replicas" }}

@@ -1,21 +1,7 @@
-{{- if and .Values.networkPolicy.enabled (eq (include "truefoundry.networkPolicyMode" .) "perComponent") }}
-{{- range $legacy := list "allowedIngressFrom" "extraIngress" }}
-{{- if index $.Values.networkPolicy $legacy }}
-{{- fail (printf "networkPolicy.%s is only read in networkPolicy.mode: legacy. Move its entries to networkPolicy.components.<component>.rules[].fromNamespaces or .extraIngress and unset it, or set networkPolicy.mode: legacy." $legacy) }}
-{{- end }}
-{{- end }}
-{{- $root := . }}
+{{- if .Values.networkPolicy.enabled }}
 {{- $instance := .Release.Name }}
-{{- $components := .Values.networkPolicy.components | default dict }}
-{{- $metricsNS := .Values.networkPolicy.metricsFromNamespaces | default list }}
-{{- $monitoring := .Values.truefoundryMonitoring | default dict }}
-{{- if and $monitoring.enabled (dig "prometheus" "enabled" false $monitoring) }}
-{{- /* The bundled Prometheus runs in this namespace but its pods are labelled by
-       prometheus-operator, not with this release's instance label. */}}
-{{- $bundledProm := dict "app.kubernetes.io/name" "prometheus" "app.kubernetes.io/managed-by" "prometheus-operator" }}
-{{- $metricsNS = append $metricsNS (dict "namespace" (include "global.namespace" .) "podSelector" $bundledProm) }}
-{{- end }}
-{{- $agentNS := .Values.networkPolicy.agentFromNamespaces | default list }}
+{{- $ingressFrom := .Values.networkPolicy.allowedIngressFrom | default list }}
+{{- $extraIngress := .Values.networkPolicy.extraIngress | default list }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -50,52 +36,60 @@ spec:
     - Egress
   egress:
     - {}
-{{- range $key, $comp := $components }}
-{{- if and (kindIs "map" $comp) $comp.name }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ include "truefoundry.networkPolicyName" (dict "context" $root "suffix" (printf "ing-%s" $comp.name)) }}
-  namespace: {{ include "global.namespace" $root }}
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "intra-instance") }}
+  namespace: {{ include "global.namespace" . }}
   annotations:
-    {{- include "networkPolicy.annotations" $root | nindent 4 }}
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
   labels:
-    {{- include "networkPolicy.labels" $root | nindent 4 }}
+    {{- include "networkPolicy.labels" . | nindent 4 }}
 spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/instance: {{ $instance | quote }}
-      app.kubernetes.io/name: {{ $comp.name | quote }}
   policyTypes:
     - Ingress
-  {{- $rules := $comp.rules | default list }}
-  {{- $extra := $comp.extraIngress | default list }}
-  {{- $metricsPorts := $comp.metricsPorts | default list }}
-  {{- if and $metricsNS $metricsPorts }}
-  {{- $rules = append $rules (dict "ports" $metricsPorts "fromNamespaces" $metricsNS) }}
-  {{- end }}
-  {{- /* Istio (and similar) expose merged metrics on a sidecar port (often 15020). */}}
-  {{- $sidecarMetricsPorts := dig "sidecarMetricsPorts" list $root.Values.networkPolicy -}}
-  {{- if and $metricsNS $sidecarMetricsPorts }}
-  {{- $rules = append $rules (dict "ports" $sidecarMetricsPorts "fromNamespaces" $metricsNS) }}
-  {{- end }}
-  {{- $agentPorts := $comp.agentPorts | default list }}
-  {{- if and $agentNS $agentPorts }}
-  {{- $rules = append $rules (dict "ports" $agentPorts "fromNamespaces" $agentNS) }}
-  {{- end }}
-  {{- if or $rules $extra }}
   ingress:
-    {{- range $rules }}
-    {{- $rendered := include "truefoundry.networkPolicyIngressRule" (dict "rule" . "instance" $instance) | trim }}
-    {{- if $rendered }}
-    - {{ $rendered | nindent 6 | trim }}
-    {{- end }}
-    {{- end }}
-    {{- with $extra }}
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: {{ $instance | quote }}
+{{- if $ingressFrom }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "truefoundry.networkPolicyName" (dict "context" . "suffix" "ingress-external") }}
+  namespace: {{ include "global.namespace" . }}
+  annotations:
+    {{- include "networkPolicy.annotations" . | nindent 4 }}
+  labels:
+    {{- include "networkPolicy.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ $instance | quote }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+{{- range $ingressFrom }}
+{{- if .namespace }}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace | quote }}
+          {{- with .podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+{{- end }}
+{{- end }}
+    {{- with $extraIngress }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
