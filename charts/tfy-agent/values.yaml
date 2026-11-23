@@ -937,9 +937,14 @@ networkPolicy:
     ##       matchLabels:
     ##         truefoundry.com/managed-by: servicefoundry
   externalSecrets:
-    ## @param networkPolicy.externalSecrets.ingressFrom [array] NetworkPolicyPeer entries allowed to call tfy-agent's secret proxy (ESO webhook). Default: same namespace as this release (bundled ESO). Set to [] to block.
+    ## @param networkPolicy.externalSecrets.ingressFrom [array] NetworkPolicyPeer entries allowed to call tfy-agent's secret proxy (ESO webhook). Default: External Secrets Operator pods in this release namespace only (not every pod). Set to [] to block. Enable networkPolicy.enabled when using ClusterSecretStore webhooks.
     ingressFrom:
-      - podSelector: {}
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: external-secrets
+    ## Example: allow every pod in this namespace (not recommended for the secret proxy)
+    ## ingressFrom:
+    ##   - podSelector: {}
     ## Example: allow ESO from every namespace
     ## ingressFrom:
     ##   - namespaceSelector: {}

@@ -375,16 +375,14 @@ workloadIdentity.enabled (multi-cluster per-entry WIF).
 {{- end }}
 
 {{/*
-SA used by the proxy pod. When workload identity is enabled, share tfy-agent's SA
-so the projected JWT matches the cluster WIF claims (and keep proxy ClusterRoles
-bound to that same SA).
+SA used by the proxy pod and its ClusterRoleBindings.
+Always the proxy SA — never share tfy-agent's SA under WIF. Sharing would bind the
+proxy's cluster-admin (non-strictMode) ClusterRole to the agent's automounted token.
+Configure cluster WIF claims for the proxy SA (or use dual-mode cluster token) so
+remotedialer JWTs still match; agent control-plane WIF uses the agent SA separately.
 */}}
 {{- define "tfy-agent-proxy.podServiceAccountName" -}}
-{{- if eq (include "tfy-agent.workloadIdentity.mountEnabled" .) "true" }}
-{{- include "tfy-agent.serviceAccountName" . }}
-{{- else }}
 {{- include "tfy-agent-proxy.serviceAccountName" . }}
-{{- end }}
 {{- end }}
 
 {{/*
@@ -452,10 +450,11 @@ In-cluster tfy-agent service base URL (scheme://name.namespace.svc:port).
 {{/*
 Webhook URL for the ClusterSecretStore: ESO → tfy-agent → SFY.
 Agent attaches CLUSTER_TOKEN / WIF; ESO does not hold control-plane credentials.
-Uses external-secrets templating (not Helm) for .remoteRef.key.
+Uses external-secrets templating (not Helm) for .remoteRef.key — urlquery so
+keys cannot inject additional query params (e.g. cluster_secret_store=...).
 */}}
 {{- define "tfy-agent.clusterSecretStore.webhookUrl" -}}
-{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key }}" -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s" (include "tfy-agent.serviceUrl" .) "{{ .remoteRef.key | urlquery }}" -}}
 {{- end }}
 
 {{/*
@@ -464,7 +463,7 @@ Multi-logical-cluster webhook URL; routes via cluster_secret_store query param.
 {{- define "tfy-agent.clusterSecretStore.webhookUrlForStore" -}}
 {{- $storeName := .storeName -}}
 {{- $root := .root -}}
-{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key }}" ($storeName | urlquery) -}}
+{{- printf "%s/v1/control-plane/secret?secret_ref=%s&cluster_secret_store=%s" (include "tfy-agent.serviceUrl" $root) "{{ .remoteRef.key | urlquery }}" ($storeName | urlquery) -}}
 {{- end }}
 
 {{/*
