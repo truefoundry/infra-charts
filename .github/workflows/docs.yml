@@ -1,49 +1,99 @@
 name: '[CI/CD] Update README metadata'
 
+# Regenerates chart READMEs with readme-generator-for-helm. When they are out of
+# date, it hands the new files to bot-commit.yml, which pushes them onto the PR
+# branch.
+#
+# This job runs the PR's own code, from a fork as often as not, so it holds no
+# write token and no allow-listed IP, and must never get either: a pull_request
+# run executes the PR's copy of this file. It uploads what it generated as the
+# `bot-commit` artifact and fails, so the PR can't merge with stale READMEs. The
+# bot's commit runs this again, and that run passes.
+#
+# bot-commit.yml is named after this workflow's `name:` above. Renaming either
+# one silently stops the bot commits.
 on:
   pull_request:
     branches:
       - 'main'
     paths:
       - 'charts/**'
+
+permissions:
+  contents: read
+
 jobs:
   update-readme-metadata:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest
     steps:
       - name: Install readme-generator-for-helm
         run: npm install -g @bitnami/readme-generator-for-helm
-      - name: Checkout charts
-        uses: actions/checkout@v4
-        with:
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
-          token: ${{ secrets.TFY_GITHUB_TOKEN }}
-      - name: Execute readme-generator-for-helm
+
+      # Anonymous: infra-charts is public, so no token and no allow-listed IP.
+      # GITHUB_SHA is the PR's merge commit and its first parent is the base tip,
+      # so it gives the PR's changed files. The READMEs are regenerated on the
+      # PR's head, because that is the commit the bot builds on.
+      - name: Check out the PR head (anonymous)
         env:
-          DIFF_URL: '${{github.event.pull_request.diff_url}}'
-          TEMP_FILE: '${{runner.temp}}/pr-${{github.event.number}}.diff'
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # This request doesn't consume API calls.
-          curl -Lkso $TEMP_FILE $DIFF_URL
-          files_changed="$(sed -nr 's/[\-\+]{3} [ab]\/(.*)/\1/p' $TEMP_FILE | sort | uniq)"
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=2 origin "+${GITHUB_SHA}:refs/remotes/origin/merge"
+          git fetch -q --no-tags --depth=1 origin "+${HEAD_SHA}:refs/remotes/origin/head"
+          git checkout -q --detach origin/head
+
+      - name: Execute readme-generator-for-helm
+        run: |
+          files_changed="$(git diff --name-only origin/merge^1 origin/merge)"
           # Adding || true to avoid "Process exited with code 1" errors
-          charts_dirs_changed="$(echo "$files_changed" | xargs dirname | grep '^charts/' | awk -F/ 'NF >= 2 {print $1"/"$2}'| sort -u | uniq || true)"
+          charts_dirs_changed="$(echo "$files_changed" | xargs -r dirname | grep '^charts/' | awk -F/ 'NF >= 2 {print $1"/"$2}' | sort -u || true)"
           for chart in ${charts_dirs_changed}; do
-            if [ "${chart}" != "charts/tfy-grafana" ]; then
+            if [ ! -f "${chart}/values.yaml" ]; then
+              echo "Skipping ${chart}: no values.yaml (chart removed?)"
+            elif [ "${chart}" != "charts/tfy-grafana" ]; then
               echo "Updating README.md for ${chart}"
               readme-generator --values "${chart}/values.yaml" --readme "${chart}/README.md" --schema "/tmp/schema.json"
             else
               echo "Skipping README.md update for ${chart}"
             fi
           done
-      - name: Configure Git and push changes
+
+      - name: Collect updated READMEs
+        id: readmes
         run: |
-          if git status -s | grep charts; then
-              git config user.name "$GITHUB_ACTOR"
-              git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-              git add . && git commit -am "Update README.md with readme-generator-for-helm" --signoff && git push
+          changed="$(git diff --name-only -- 'charts/*/README.md')"
+          if [ -z "$changed" ]; then
+            echo "READMEs are up to date."
+            exit 0
           fi
+          while IFS= read -r f; do
+            if [ -L "$f" ]; then
+              echo "::error::${f} is a symlink. Not collecting it."
+              exit 1
+            fi
+            mkdir -p "${RUNNER_TEMP}/bot-commit/$(dirname "$f")"
+            cp "$f" "${RUNNER_TEMP}/bot-commit/${f}"
+            echo "Out of date: ${f}"
+          done <<< "$changed"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Hand the READMEs to bot-commit.yml
+        if: steps.readmes.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-commit
+          path: ${{ runner.temp }}/bot-commit
+          retention-days: 1
+
+      - name: Fail until the bot commits
+        if: steps.readmes.outputs.changed == 'true'
+        env:
+          FORK: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          if [ "$FORK" = "true" ]; then
+            echo "::error::READMEs are out of date. Run readme-generator-for-helm on the changed charts and push the result. The bot can't push to a fork."
+          else
+            echo "::error::READMEs were out of date. bot-commit.yml is pushing the regenerated files to this branch, and this check passes on that commit."
+          fi
+          exit 1
