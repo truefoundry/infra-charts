@@ -9,7 +9,6 @@ metadata:
   annotations:
     {{- include "tfy-agent-proxy.commonAnnotations" . | nindent 4 }}
 rules:
-  {{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
   {{- if not .Values.config.allowedNamespaces }}
   - apiGroups: [""]
     resources: ["namespaces"]
@@ -52,11 +51,6 @@ rules:
     resources: ["ec2nodeclasses", "nodepools", "nodeoverlays"]
     verbs: ["list"]
 
-  {{- else }}
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
-  {{- end }}
   {{- range $rule := .Values.tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules }}
   - apiGroups: {{ $rule.apiGroups | toJson }}
     resources: {{ $rule.resources | toJson }}
