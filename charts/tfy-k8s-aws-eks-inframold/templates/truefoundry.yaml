@@ -15,7 +15,7 @@ spec:
     server: https://kubernetes.default.svc
   project: tfy-apps
   source:
-    targetRevision: 0.184.1
+    targetRevision: 0.185.0
     repoURL: {{ (.Values.global | default dict).repoURL | default "tfy.jfrog.io/tfy-helm" }}
     chart: truefoundry
     helm:
@@ -53,6 +53,7 @@ spec:
           existingTruefoundryCredsSecret: {{ .Values.truefoundry.existingTruefoundryCredsSecret }}
           {{- else }}
           tfyApiKey: {{ .Values.truefoundry.tfyApiKey }}
+          licenseJwt: {{ .Values.truefoundry.licenseJwt }}
           database:
             host: {{ .Values.truefoundry.database.host }}
             name: {{ .Values.truefoundry.database.name }}
@@ -130,9 +131,6 @@ spec:
             affinity: {}
             {{- end }}
         {{- end }}
-
-        truefoundryFrontendApp:
-          enabled: false
 
         tfyNats:
           podTemplate:
