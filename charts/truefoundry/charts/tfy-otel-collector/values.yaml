@@ -135,6 +135,7 @@ env:
   TLS_MUTUAL: '{{ .Values.global.mTLS.enabled }}'
   TLS_DIR: /etc/tls/truefoundry
   CLIENT_IP_HEADER: CF-Connecting-IP
+  MODEL_METRICS_INGEST_MODE: '{{ if and .Values.global.modelMetricsMigration .Values.global.modelMetricsMigration.complete }}split{{ else }}dual{{ end }}'
 
 ## Image configuration for otel-collector
 image:
@@ -143,7 +144,7 @@ image:
   ## @param image.repository Image repository for tfyOTELCollector
   repository: tfy-private-images/tfy-otel-collector
   ## @param image.tag Image tag for the tfyOTELCollector
-  tag: v0.180.0
+  tag: v0.184.0
 
 ## @param imagePullSecrets [array] List of secrets to pull images
 imagePullSecrets: []
