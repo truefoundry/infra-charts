@@ -204,6 +204,29 @@ Ephemeral Storage Limit
 {{/*
 Default Resources
 cpu limit is not set explicitly. We want to allow it to use up to the node limits
+
+Rules:
+1. CACHE_MEMORY_MB(45%) + QUERY_MEMORY_POOL_MB(55%) = 80% of Memory Requests
+2. TOKIO_WORKER_THREADS = cpu requests + 1
+3. DATAFUSION_EXECUTION_TARGET_PARTITIONS = TOKIO_WORKER_THREADS - 1
+4. CACHE_DISK_MB(50%) + QUERY_SPILL_DISK_SIZE_MB(30%) = ephemeral storage (80%)
+5. CACHE_BLOCK_SIZE_MB = 128 / 512 / 1024 (small / medium / large)
+
+TODO: tier expectations — concurrent dashboard users, LLM request volume, p99 latency
+
+|                          | small  | medium | large  |
+| CPU request              | 1      | 6      | 14     |
+| Memory request           | 4000M  | 28000M | 56000M |
+| Memory limit             | 8000M  | 32000M | 64000M |
+| Ephemeral storage request| 5000M  | 40000M | 80000M |
+| CACHE_MEMORY_MB (45% of 80%)    | 1440  | 10080 | 20160 |
+| QUERY_MEMORY_POOL_MB(55% of 80%)| 1760  | 12320 | 24640 |
+| TOKIO_WORKER_THREADS     | 2      | 7      | 15     |
+| DATAFUSION_EXECUTION_TARGET_PARTITIONS | 1 | 6 | 14 |
+| CACHE_DISK_MB (50%)      | 2500   | 20000  | 40000  |
+| QUERY_SPILL_DISK_SIZE_MB (30%) | 1500 | 12000 | 24000 |
+| CACHE_BLOCK_SIZE_MB      | 128    | 512    | 1024   |
+| DATAFUSION_EXECUTION_BATCH_SIZE | 20000 | 20000 | 20000 |
 */}}
 {{- define "deltafusion-query-server.defaultResources.small" }}
 requests:
@@ -217,7 +240,7 @@ limits:
 
 {{- define "deltafusion-query-server.defaultResources.medium" }}
 requests:
-  cpu: 7
+  cpu: 6
   memory: 28000M
   ephemeral-storage: 40000M
 limits:
@@ -227,7 +250,7 @@ limits:
 
 {{- define "deltafusion-query-server.defaultResources.large" }}
 requests:
-  cpu: 15
+  cpu: 14
   memory: 56000M
   ephemeral-storage: 80000M
 limits:
@@ -237,32 +260,37 @@ limits:
 
 
 {{/*
-Resource Tied Envs
-partitions is (cpu request + 1) x 4
-cache is 60% of memory limit
-query is 40% of memory limit
-spill is 40% of ephemeral storage requests
+Resource Tied Envs — see default resources comment for rules and tier table
 */}}
 {{- define "deltafusion-query-server.resourceTiedEnvs" }}
 {{- $tier := include "deltafusion-query-server.resourceTier" . }}
 {{- if eq $tier "small" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "8"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "1"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
-CACHE_MEMORY_MB: "4800"
-QUERY_MEMORY_POOL_MB: "3200"
-QUERY_SPILL_DISK_SIZE_MB: "2000"
+TOKIO_WORKER_THREADS: "2"
+CACHE_MEMORY_MB: "1440"
+QUERY_MEMORY_POOL_MB: "1760"
+CACHE_DISK_MB: "2500"
+QUERY_SPILL_DISK_SIZE_MB: "1500"
+CACHE_BLOCK_SIZE_MB: "128"
 {{- else if eq $tier "medium" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "32"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "6"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
-CACHE_MEMORY_MB: "19200"
-QUERY_MEMORY_POOL_MB: "12800"
-QUERY_SPILL_DISK_SIZE_MB: "16000"
+TOKIO_WORKER_THREADS: "7"
+CACHE_MEMORY_MB: "10080"
+QUERY_MEMORY_POOL_MB: "12320"
+CACHE_DISK_MB: "20000"
+QUERY_SPILL_DISK_SIZE_MB: "12000"
+CACHE_BLOCK_SIZE_MB: "512"
 {{- else if eq $tier "large" }}
-DATAFUSION_EXECUTION_TARGET_PARTITIONS: "64"
+DATAFUSION_EXECUTION_TARGET_PARTITIONS: "14"
 DATAFUSION_EXECUTION_BATCH_SIZE: "20000"
-CACHE_MEMORY_MB: "38400"
-QUERY_MEMORY_POOL_MB: "25600"
-QUERY_SPILL_DISK_SIZE_MB: "32000"
+TOKIO_WORKER_THREADS: "15"
+CACHE_MEMORY_MB: "20160"
+QUERY_MEMORY_POOL_MB: "24640"
+CACHE_DISK_MB: "40000"
+QUERY_SPILL_DISK_SIZE_MB: "24000"
+CACHE_BLOCK_SIZE_MB: "1024"
 {{- end }}
 {{- end }}
 
