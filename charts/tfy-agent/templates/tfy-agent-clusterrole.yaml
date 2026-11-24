@@ -10,7 +10,7 @@ metadata:
     {{- include "tfy-agent.commonAnnotations" . | nindent 4 }}
 rules:
   - apiGroups: [""]
-    resources: ["namespaces", "pods", "resourcequotas", "nodes", "events"]
+    resources: ["namespaces", "pods", "nodes", "events"]
     verbs: ["list", "watch"]
   - apiGroups: ["apps"]
     resources: ["replicasets", "deployments"]
@@ -20,9 +20,6 @@ rules:
     verbs: ["list", "watch"]
   - apiGroups: ["argoproj.io"]
     resources: ["applications", "rollouts", "workflowtemplates", "workflows"]
-    verbs: ["list", "watch"]
-  - apiGroups: ["kubeflow.org"]
-    resources: ["notebooks"]
     verbs: ["list", "watch"]
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkapplications"]

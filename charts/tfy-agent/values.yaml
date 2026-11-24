@@ -611,13 +611,14 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
     enable: true
 
-    ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules.
+    ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules (default). Set false only to grant cluster-admin-like * /* /*.
     ## This field is ignored, if `config.allowedNamespaces` is not empty.
     ## if `config.allowedNamespaces` is not empty, we only add required authz rules.
     ##
+    ## Strict rules never grant secrets get/list/watch/delete or pods create.
     ## Check templates/tfy-agent-proxy-clusterrolebinding-cs.yaml and
     ## `templates/tfy-agent-proxy-clusterrolebinding-ns.yaml` files for more details.
-    strictMode: false
+    strictMode: true
 
     ## @param tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules Additional rules to add to the cluster role for cluster-scoped resources.
     clusterScopedAdditionalClusterRoleRules: []

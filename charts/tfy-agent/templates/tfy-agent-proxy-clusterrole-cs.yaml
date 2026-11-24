@@ -17,7 +17,7 @@ rules:
   {{- end }}
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
-    verbs: ["get", "list"]
+    verbs: ["list"]
 
   {{/* This allows us to list statefulsets and deployments under a helm chart to allow pausing workloads */}}
   - apiGroups: ["apps"]
@@ -44,11 +44,6 @@ rules:
 
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["list"]
-
-  {{/* Cluster-wide list for ExternalSecret discovery across namespaces */}}
-  - apiGroups: ["external-secrets.io"]
-    resources: ["externalsecrets"]
     verbs: ["list"]
 
   {{/* This allows us to read Karpenter configuration and status to troubleshoot cluster auto scaling issues */}}
