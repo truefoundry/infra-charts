@@ -1,6 +1,5 @@
 {{- if .Values.tfyAgentProxy.enabled -}}
 {{- if .Values.tfyAgentProxy.clusterRole.enable -}}
-{{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -15,16 +14,12 @@ rules:
     verbs: ["patch", "delete"]
 
   - apiGroups: [""]
-    resources: ["resourcequotas", "serviceaccounts"]
+    resources: ["resourcequotas"]
     verbs: ["list", "get", "delete", "patch", "create"]
 
   - apiGroups: [""]
     resources: ["resourcequotas/status"]
     verbs: ["get"]
-
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "patch"]
 
   - apiGroups: [""]
     resources: ["pods/eviction"]
@@ -82,10 +77,6 @@ rules:
     resources: ["workflows"]
     verbs: ["create", "get", "patch"]
 
-  - apiGroups: ["kubeflow.org"]
-    resources: ["notebooks"]
-    verbs: ["get", "update", "delete"]
-
   {{/* This allows us to create intercepts for redirection / shadowing traffic */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
@@ -109,6 +100,5 @@ rules:
   - apiGroups: ["external-secrets.io"]
     resources: ["externalsecrets"]
     verbs: ["get", "list", "create", "patch", "delete"]
-{{- end }}
 {{- end }}
 {{- end }}

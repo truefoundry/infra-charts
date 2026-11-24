@@ -152,8 +152,8 @@ config:
 
   ## @param config.allowedNamespaces A list of namespaces the control plane will have access to for namespaced resources.
   ## If this list is empty, the control plane can access namespaced resources cluster-wide.
-  ## If this list is non-empty, the control plane cannot create namespaces in the cluster.
-  ## Please check the `tfyAgentProxy.clusterRole.strictMode` field if you plan to use this.
+  ## If this list is non-empty, the control plane cannot create namespaces in the cluster
+  ## and namespaced RBAC is RoleBound only to the listed namespaces.
   allowedNamespaces: []
   # Example:
   # allowedNamespaces:
@@ -611,15 +611,9 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.clusterRole.enable Create cluster role.
     enable: true
 
-    ## @param tfyAgentProxy.clusterRole.strictMode Only add required authz rules.
-    ## This field is ignored, if `config.allowedNamespaces` is not empty.
-    ## if `config.allowedNamespaces` is not empty, we only add required authz rules.
-    ##
-    ## Check templates/tfy-agent-proxy-clusterrolebinding-cs.yaml and
-    ## `templates/tfy-agent-proxy-clusterrolebinding-ns.yaml` files for more details.
-    strictMode: false
-
     ## @param tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules Additional rules to add to the cluster role for cluster-scoped resources.
+    ## Check templates/tfy-agent-proxy-clusterrole-cs.yaml and
+    ## templates/tfy-agent-proxy-clusterrole-ns.yaml for the default authz rules.
     clusterScopedAdditionalClusterRoleRules: []
     # Example:
     # - apiGroups: [""]

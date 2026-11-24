@@ -19,13 +19,8 @@ This application has two parts.
 
 ### TFY Agent Proxy
 
-- By default, the TFY Agent Proxy enables the control plane to access all resources on the compute cluster.
-- If you want to give minimum authorization, please set the field `tfyAgentProxy.clusterRole.strictMode` to `true`.
-
-#### Strict Mode
-
-- In this mode, we set up minimum required authorization rules for the control plane to function correctly.
-- If you give a list of allowed namespaces using the `config.allowedNamespaces` field, we will always run on strict mode, regardless of the value of the `tfyAgentProxy.clusterRole.strictMode` field.
+- The TFY Agent Proxy uses minimum required authorization rules for the control plane to function correctly.
+- Full cluster-admin style access (`*/*/*`) is not supported.
 
 ##### Cluster Scope resource access
 
@@ -340,7 +335,6 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgentProxy.extraVolumes`                                        | Extra volume for tfyAgentProxy container                                                                                                              | `[]`                                       |
 | `tfyAgentProxy.extraVolumeMounts`                                   | Extra volume mount for tfyAgentProxy container                                                                                                        | `[]`                                       |
 | `tfyAgentProxy.clusterRole.enable`                                  | Create cluster role.                                                                                                                                  | `true`                                     |
-| `tfyAgentProxy.clusterRole.strictMode`                              | Only add required authz rules.                                                                                                                        | `false`                                    |
 | `tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules` | Additional rules to add to the cluster role for cluster-scoped resources.                                                                             | `[]`                                       |
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namspace.
