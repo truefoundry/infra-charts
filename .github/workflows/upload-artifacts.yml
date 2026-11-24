@@ -86,10 +86,13 @@ jobs:
           password: ${{ steps.jfrog.outputs.oidc-token }}
           registry: tfy.jfrog.io
 
+      # Pull-only role: logging in only raises the public ECR pull rate limit.
+      # The push role (PUBLIC_ECR_IAM_ROLE_ARN, sync-image.yaml) does not trust
+      # this repo's pull_request runs, and must not.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PUBLIC_ECR_PULL_ROLE_ARN }}
           aws-region: us-east-1
 
       # this is to prevent rate limiting errors when pulling base images from public ECR

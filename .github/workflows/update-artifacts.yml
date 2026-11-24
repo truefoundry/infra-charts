@@ -90,10 +90,13 @@ jobs:
           password: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PRIVATE_READONLY_PASSWORD }}
           registry: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
 
+      # Pull-only role: logging in only raises the public ECR pull rate limit.
+      # The push role (PUBLIC_ECR_IAM_ROLE_ARN, sync-image.yaml) does not trust
+      # this repo's pull_request runs, and must not.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PUBLIC_ECR_PULL_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
