@@ -27,11 +27,18 @@ on:
 permissions:
   contents: read
 
-# One push at a time per PR branch. docs.yml and update-artifacts.yml can both
-# produce a commit for the same push; the second finds the branch has moved and
-# skips, and the bot's first commit re-runs both of them.
+# One run at a time per PR branch AND producer. GitHub keeps only one pending
+# run per concurrency group and cancels the older pending one even with
+# cancel-in-progress: false, so a group shared by both producers could drop a
+# README commit in favour of a manifests run, or the reverse. Per producer, a
+# newer pending run is for the same or a newer head, so dropping the older one
+# loses nothing.
+#
+# The two producers' runs can therefore push to the same branch at once. The
+# second push is rejected as non-fast-forward and the run skips; the first
+# push re-runs both producers on the new head, which regenerate its files.
 concurrency:
-  group: bot-commit-${{ github.event.workflow_run.head_branch }}
+  group: bot-commit-${{ github.event.workflow_run.head_branch }}-${{ github.event.workflow_run.workflow_id }}
   cancel-in-progress: false
 
 jobs:
@@ -165,7 +172,16 @@ jobs:
               -c user.email="${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com" \
               commit -q -a --signoff -m "$MESSAGE"
 
-          # No force. If the branch moved since the fetch, this is rejected and
-          # the run for the newer commit regenerates.
-          git push -q origin "HEAD:refs/heads/${BRANCH}"
+          # No force. If the branch moved since the fetch (another bot run or
+          # the author), this is rejected and the run for the newer commit
+          # regenerates. Only a rejection for another reason fails the job.
+          if ! git push -q origin "HEAD:refs/heads/${BRANCH}"; then
+            now="$(git ls-remote origin "refs/heads/${BRANCH}" | cut -f1)"
+            if [ -n "$now" ] && [ "$now" != "$HEAD_SHA" ]; then
+              echo "::notice::${BRANCH} moved to ${now} during this run. Not committing; the run for the newer commit will."
+              exit 0
+            fi
+            echo "::error::Push to ${BRANCH} was rejected."
+            exit 1
+          fi
           echo "Pushed '${MESSAGE}' to ${BRANCH}."
