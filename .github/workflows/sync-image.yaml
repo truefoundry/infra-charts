@@ -20,12 +20,17 @@ env:
 
 jobs:
   sync:
-    runs-on:
-      group: public-runner-group
-      labels: "gh-pb-runners-2c"
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # Anonymous: infra-charts is public, so the checkout needs no token and works
+      # from any IP. A token-authenticated checkout is filtered by the org IP allow
+      # list, and ubuntu-latest has no allow-listed address.
+      - name: Check out (anonymous)
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - name: Set up Python
         uses: actions/setup-python@v5

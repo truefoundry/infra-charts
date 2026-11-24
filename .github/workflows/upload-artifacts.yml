@@ -24,9 +24,7 @@ jobs:
           - tfy-k8s-azure-aks-inframold
           - tfy-k8s-gcp-gke-standard-inframold
           - tfy-k8s-generic-inframold
-    runs-on:
-      group: public-runner-group
-      labels: "gh-pb-runners-2c"
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
@@ -34,11 +32,15 @@ jobs:
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
+      # Anonymous: infra-charts is public, so the checkout needs no token and works
+      # from any IP. A token-authenticated checkout is filtered by the org IP allow
+      # list, and ubuntu-latest has no allow-listed address.
+      - name: Check out (anonymous)
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - name: Setup Kubectl
         id: install-kubectl

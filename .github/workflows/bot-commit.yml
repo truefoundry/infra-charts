@@ -1,0 +1,171 @@
+name: Bot commit
+
+# Pushes the commits that docs.yml and update-artifacts.yml generate for a PR:
+# regenerated chart READMEs and inframold artifacts-manifest.json files.
+#
+# Those two run on pull_request, which executes the PR's own copy of the
+# workflow, so they get no write token and no allow-listed IP. Any credential
+# they could mint, anyone with write access could mint from a branch without a
+# merge. They upload what they generated as the `bot-commit` artifact instead.
+#
+# workflow_run always runs THIS file as it is on main, so only this job can reach
+# the bot's App key (the infra-charts-bot environment, main only) and the
+# Tailscale identity pinned to this file. Everything in the artifact came from
+# the PR's code and is treated as data: only the paths its producer may write,
+# only onto the commit it built, never with force.
+#
+# The push uses an App token rather than GITHUB_TOKEN because a GITHUB_TOKEN
+# push starts no workflows, so the PR's checks would never run on the bot's
+# commit.
+on:
+  workflow_run:
+    workflows:
+      - "[CI/CD] Update README metadata"
+      - Generate Inframold Charts Artifacts Manifest
+    types: [completed]
+
+permissions:
+  contents: read
+
+# One push at a time per PR branch. docs.yml and update-artifacts.yml can both
+# produce a commit for the same push; the second finds the branch has moved and
+# skips, and the bot's first commit re-runs both of them.
+concurrency:
+  group: bot-commit-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  push:
+    # Same-repo PRs only: the App is installed on this repo, not on forks. A fork
+    # PR's failing check tells its author to regenerate the files and push them.
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment: infra-charts-bot
+    permissions:
+      actions: read   # download the artifact from the producer run
+      id-token: write # Tailscale federated identity
+    steps:
+      # FIRST STEP: the artifact download, the App token mint and the push all
+      # call GitHub with a token, which the org IP allow list filters. The
+      # credential only matches this file on main, in this environment.
+      - name: Join the tailnet for GitHub egress
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        with:
+          oauth-client-id: ${{ vars.TS_CI_BOT_COMMIT_CLIENT_ID }}
+          audience: ${{ vars.TS_CI_BOT_COMMIT_AUDIENCE }}
+          tags: tag:ci-github-egress
+          hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
+
+      # Most producer runs have nothing to commit and upload no artifact.
+      - name: Download the bot commit
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: bot-commit
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/bot-commit
+
+      - name: Check the files
+        id: files
+        if: steps.download.outcome == 'success'
+        env:
+          WORKFLOW: ${{ github.event.workflow_run.name }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DIR: ${{ runner.temp }}/bot-commit
+        run: |
+          # What may be committed depends on WHICH workflow produced the
+          # artifact, never on anything inside it.
+          case "$WORKFLOW" in
+            "[CI/CD] Update README metadata")
+              allowed='^charts/[A-Za-z0-9_-][A-Za-z0-9._-]*/README\.md$'
+              message='Update README.md with readme-generator-for-helm'
+              ;;
+            "Generate Inframold Charts Artifacts Manifest")
+              allowed='^charts/tfy-k8s-[a-z0-9-]+-inframold/artifacts-manifest\.json$'
+              message='[CI] Update charts artifacts manifest files'
+              ;;
+            *)
+              echo "::error::No bot commit is defined for workflow '${WORKFLOW}'."
+              exit 1
+              ;;
+          esac
+
+          if [[ "$BRANCH" == -* ]] || [ "$BRANCH" = "$DEFAULT_BRANCH" ] \
+             || ! git check-ref-format "refs/heads/${BRANCH}"; then
+            echo "::error::Refusing to push to branch '${BRANCH}'."
+            exit 1
+          fi
+
+          if [ -n "$(find "$DIR" ! -type f ! -type d -print -quit)" ]; then
+            echo "::error::The artifact holds something other than regular files."
+            exit 1
+          fi
+          files="$(cd "$DIR" && find . -type f | sed 's|^\./||' | sort)"
+          if [ -z "$files" ]; then
+            echo "::error::The artifact holds no files."
+            exit 1
+          fi
+          while IFS= read -r f; do
+            if ! [[ "$f" =~ $allowed ]]; then
+              echo "::error::Refusing to commit '${f}': ${WORKFLOW} may only write files matching ${allowed}."
+              exit 1
+            fi
+          done <<< "$files"
+
+          echo "message=${message}" >> "$GITHUB_OUTPUT"
+
+      - name: Mint the bot's App token
+        id: app-token
+        if: steps.files.outcome == 'success'
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.INFRA_CHARTS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.INFRA_CHARTS_BOT_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Commit and push
+        if: steps.files.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          MESSAGE: ${{ steps.files.outputs.message }}
+          DIR: ${{ runner.temp }}/bot-commit
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::${auth}"
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic ${auth}"
+
+          # Only onto the commit the producer built. If the branch has moved,
+          # the run for the newer commit regenerates and commits instead.
+          git fetch -q --no-tags --depth=1 origin "+refs/heads/${BRANCH}:refs/remotes/origin/pr"
+          tip="$(git rev-parse refs/remotes/origin/pr)"
+          if [ "$tip" != "$HEAD_SHA" ]; then
+            echo "::notice::${BRANCH} has moved from ${HEAD_SHA} to ${tip}. Not committing; the run for the newer commit will."
+            exit 0
+          fi
+          git checkout -q --detach "$tip"
+
+          cp -R "${DIR}/." .
+          if git diff --quiet; then
+            echo "${BRANCH} already has these files. Nothing to commit."
+            exit 0
+          fi
+
+          bot_id="$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)"
+          git -c user.name="${APP_SLUG}[bot]" \
+              -c user.email="${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com" \
+              commit -q -a --signoff -m "$MESSAGE"
+
+          # No force. If the branch moved since the fetch, this is rejected and
+          # the run for the newer commit regenerates.
+          git push -q origin "HEAD:refs/heads/${BRANCH}"
+          echo "Pushed '${MESSAGE}' to ${BRANCH}."
