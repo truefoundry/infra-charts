@@ -8,8 +8,8 @@ on:
 jobs:
   changes:
     runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+      group: public-runner-group
+      labels: "gh-pb-runners-2c"
     outputs:
       relevant: ${{ steps.filter.outputs.relevant }}
     steps:
@@ -32,14 +32,12 @@ jobs:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'
     runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+      group: public-runner-group
+      labels: "gh-pb-runners-2c"
     permissions:
       contents: write
       id-token: write
     env:
-      ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-      ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
 
