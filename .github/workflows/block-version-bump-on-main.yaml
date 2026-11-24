@@ -38,9 +38,7 @@ jobs:
     # dependence on GitHub's "skipped check satisfies required checks"
     # semantics, which differ between skip mechanisms and have changed
     # historically.
-    runs-on:
-      group: public-runner-group
-      labels: "gh-pb-runners-2c"
+    runs-on: ubuntu-latest
     steps:
       # The pipeline's own promote-to-main PRs are the ONE sanctioned way these
       # chart versions reach main — pass those explicitly. helm-charts'
@@ -68,15 +66,19 @@ jobs:
             echo "exempt=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout
+      # Anonymous: this runs the PR's code, from a fork as often as not, so it
+      # gets no token and no allow-listed IP. infra-charts is public, so it
+      # needs neither. The merge commit to read the PR's Chart.yaml, and the
+      # base commit to compare it with.
+      - name: Check out (anonymous)
         if: ${{ steps.promote.outputs.exempt == 'false' }}
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Fetch PR base commit
-        if: ${{ steps.promote.outputs.exempt == 'false' }}
-        run: git fetch --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci" "+${BASE_SHA}:refs/remotes/origin/base"
+          git checkout -q --detach origin/ci
 
       - name: Fail if Chart.yaml version changed
         if: ${{ steps.promote.outputs.exempt == 'false' }}
