@@ -17,17 +17,20 @@ permissions:
 
 env:
   ARTIFACTORY_REGISTRY: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_REGISTRY_URL }}
-  ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-  ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
 
 jobs:
   sync:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # Anonymous: infra-charts is public, so the checkout needs no token and works
+      # from any IP. A token-authenticated checkout is filtered by the org IP allow
+      # list, and ubuntu-latest has no allow-listed address.
+      - name: Check out (anonymous)
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,11 +43,22 @@ jobs:
           sudo apt-get install -y skopeo
           python -m pip install --upgrade pip pyyaml
 
+      # Short-lived token over GitHub OIDC (github-jfrog-public, in
+      # ubermold-truefoundry/jfrog/oidc.tf) instead of a stored password.
+      - name: Set up JFrog CLI (OIDC)
+        id: jfrog
+        uses: jfrog/setup-jfrog-cli@76f97e1f8bb39a6bc22052265732581d73325212 # v4.16.0
+        env:
+          JF_URL: https://tfy.jfrog.io
+        with:
+          oidc-provider-name: github-jfrog-public
+          oidc-audience: jfrog-github
+
       - name: Log in to JFrog Artifactory
         uses: docker/login-action@v3
         with:
-          username: ${{ env.ARTIFACTORY_USERNAME }}
-          password: ${{ env.ARTIFACTORY_PASSWORD }}
+          username: ${{ steps.jfrog.outputs.oidc-user }}
+          password: ${{ steps.jfrog.outputs.oidc-token }}
           registry: ${{ env.ARTIFACTORY_REGISTRY }}
 
       - name: Configure AWS credentials

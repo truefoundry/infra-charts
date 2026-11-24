@@ -24,23 +24,23 @@ jobs:
           - tfy-k8s-azure-aks-inframold
           - tfy-k8s-gcp-gke-standard-inframold
           - tfy-k8s-generic-inframold
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
     env:
-      ARTIFACTORY_USERNAME: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_USERNAME }}
-      ARTIFACTORY_PASSWORD: ${{ secrets.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_PASSWORD }}
       ARTIFACTORY_REPOSITORY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_REPOSITORY }}
       ARTIFACTORY_HELM_REGISTRY_URL: ${{ vars.TRUEFOUNDRY_ARTIFACTORY_PUBLIC_HELM_REGISTRY }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
+      # Anonymous: infra-charts is public, so the checkout needs no token and works
+      # from any IP. A token-authenticated checkout is filtered by the org IP allow
+      # list, and ubuntu-latest has no allow-listed address.
+      - name: Check out (anonymous)
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - name: Setup Kubectl
         id: install-kubectl
@@ -68,17 +68,31 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Short-lived token over GitHub OIDC (github-jfrog-public, in
+      # ubermold-truefoundry/jfrog/oidc.tf) instead of a stored password.
+      - name: Set up JFrog CLI (OIDC)
+        id: jfrog
+        uses: jfrog/setup-jfrog-cli@76f97e1f8bb39a6bc22052265732581d73325212 # v4.16.0
+        env:
+          JF_URL: https://tfy.jfrog.io
+        with:
+          oidc-provider-name: github-jfrog-public
+          oidc-audience: jfrog-github
+
       - name: Log in to JFrog Artifactory private
         uses: docker/login-action@v3
         with:
-          username: ${{ env.ARTIFACTORY_USERNAME }}
-          password: ${{ env.ARTIFACTORY_PASSWORD }}
+          username: ${{ steps.jfrog.outputs.oidc-user }}
+          password: ${{ steps.jfrog.outputs.oidc-token }}
           registry: tfy.jfrog.io
 
+      # Pull-only role: logging in only raises the public ECR pull rate limit.
+      # The push role (PUBLIC_ECR_IAM_ROLE_ARN, sync-image.yaml) does not trust
+      # this repo's pull_request runs, and must not.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.PUBLIC_ECR_IAM_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PUBLIC_ECR_PULL_ROLE_ARN }}
           aws-region: us-east-1
 
       # this is to prevent rate limiting errors when pulling base images from public ECR
