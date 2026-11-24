@@ -26,12 +26,17 @@ permissions:
 
 jobs:
   publish_release_and_sync_to_s3:
-    runs-on:
-      group: large-runner-group
-      labels: "gh-large-linux-2c."
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
+      # Anonymous: infra-charts is public, so the checkout needs no token and works
+      # from any IP. A token-authenticated checkout is filtered by the org IP allow
+      # list, and ubuntu-latest has no allow-listed address.
+      - name: Check out (anonymous)
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags --depth=1 origin "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
