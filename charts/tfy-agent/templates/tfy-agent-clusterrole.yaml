@@ -21,9 +21,11 @@ rules:
   - apiGroups: ["argoproj.io"]
     resources: ["applications", "rollouts", "workflowtemplates", "workflows"]
     verbs: ["list", "watch"]
+  {{- if .Values.tfyAgentProxy.clusterRole.enableSpark }}
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkapplications"]
     verbs: ["list", "watch"]
+  {{- end }}
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
     verbs: ["list", "watch"]

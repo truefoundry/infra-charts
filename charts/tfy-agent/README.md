@@ -21,7 +21,12 @@ This application has two parts.
 
 - The proxy ServiceAccount is **never** granted cluster-admin (`apiGroups/resources/verbs: *`). Only the enumerated least-privilege rules are applied.
 - Rules never grant `secrets` `get`/`list`/`watch`/`delete`, or `pods` `create`. Secrets may only be created/patched (server-side apply); pods are not created by the proxy (Argo CD / controllers own that).
+- Note: Kubernetes returns the full object (including `data`) on Secret patch responses, so `patch` is not a complete “no-read” guarantee. Prefer `config.allowedNamespaces` to limit where Secret apply is allowed.
 - `tfyAgentProxy.clusterRole.strictMode` is deprecated and ignored (kept for backward-compatible values files).
+- Optional feature permissions (default `true`; set `false` to drop those rules):
+  - `tfyAgentProxy.clusterRole.enableSpark` — SparkApplication / SparkConnect / Spark-UI VirtualService (+ agent SparkApplication list/watch)
+  - `tfyAgentProxy.clusterRole.enableIntercepts` — EnvoyFilter for traffic intercept / shadow
+  - `tfyAgentProxy.clusterRole.enableAlerts` — PrometheusRule / AlertmanagerConfig / ExternalSecret for alert configs
 
 ##### Cluster Scope resource access
 
@@ -337,6 +342,9 @@ If your control plane URL is using self-signed CA certificate, follow these step
 | `tfyAgentProxy.extraVolumeMounts`                                   | Extra volume mount for tfyAgentProxy container                                                                                                        | `[]`                                       |
 | `tfyAgentProxy.clusterRole.enable`                                  | Create cluster role.                                                                                                                                  | `true`                                     |
 | `tfyAgentProxy.clusterRole.strictMode`                              | Deprecated. Ignored — proxy never grants cluster-admin (* /* /*); only least-privilege rules are applied.                                             | `true`                                     |
+| `tfyAgentProxy.clusterRole.enableSpark`                             | Grant SparkApplication / SparkConnect / Spark-UI VirtualService proxy permissions (and agent SparkApplication list/watch).                            | `true`                                     |
+| `tfyAgentProxy.clusterRole.enableIntercepts`                        | Grant EnvoyFilter permissions for traffic intercept / shadow.                                                                                         | `true`                                     |
+| `tfyAgentProxy.clusterRole.enableAlerts`                            | Grant PrometheusRule / AlertmanagerConfig / ExternalSecret permissions for alert configs.                                                             | `true`                                     |
 | `tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules` | Additional rules to add to the cluster role for cluster-scoped resources.                                                                             | `[]`                                       |
 
 ### resourceQuota Add a ResourceQuota to enable priority class in a namspace.

@@ -614,12 +614,22 @@ tfyAgentProxy:
     ## @param tfyAgentProxy.clusterRole.strictMode Deprecated. Ignored — proxy never grants cluster-admin (* /* /*); only least-privilege rules are applied.
     ## Kept for backward compatibility with existing values files.
     ##
-    ## Rules never grant secrets get/list/watch/delete or pods create.
-    ## Use config.allowedNamespaces to scope namespaced access; use
-    ## clusterScopedAdditionalClusterRoleRules to add extra cluster-scoped rules.
+    ## Secrets: create/patch only (no get/list/watch/delete). Patch responses can still
+    ## include Secret data — use config.allowedNamespaces to limit blast radius.
+    ## Pods: no create. Workloads are created by Argo CD / controllers.
+    ## Use clusterScopedAdditionalClusterRoleRules to add extra cluster-scoped rules.
     ## Check templates/tfy-agent-proxy-clusterrole-cs.yaml and
     ## templates/tfy-agent-proxy-clusterrole-ns.yaml for the full rule set.
     strictMode: true
+
+    ## @param tfyAgentProxy.clusterRole.enableSpark Grant SparkApplication / SparkConnect / Spark-UI VirtualService proxy permissions (and agent SparkApplication list/watch).
+    enableSpark: true
+
+    ## @param tfyAgentProxy.clusterRole.enableIntercepts Grant EnvoyFilter permissions for traffic intercept / shadow.
+    enableIntercepts: true
+
+    ## @param tfyAgentProxy.clusterRole.enableAlerts Grant PrometheusRule / AlertmanagerConfig / ExternalSecret permissions for alert configs.
+    enableAlerts: true
 
     ## @param tfyAgentProxy.clusterRole.clusterScopedAdditionalClusterRoleRules Additional rules to add to the cluster role for cluster-scoped resources.
     clusterScopedAdditionalClusterRoleRules: []

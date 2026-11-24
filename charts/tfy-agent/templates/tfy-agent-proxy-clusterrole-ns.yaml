@@ -18,7 +18,11 @@ rules:
     resources: ["serviceaccounts"]
     verbs: ["list"]
 
-  {{/* SSA only — never grant get/list/watch/delete on secrets */}}
+  {{/*
+    SSA create/patch for workspace SA token secrets and (when enableAlerts) alert-manager secrets.
+    Note: patch responses include Secret data, so this is not a full "no-read" guarantee —
+    prefer config.allowedNamespaces to limit blast radius.
+  */}}
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "patch"]
@@ -53,9 +57,16 @@ rules:
     resources: ["statefulsets/scale", "deployments/scale"]
     verbs: ["patch"]
 
+  {{- if .Values.tfyAgentProxy.clusterRole.enableAlerts }}
   - apiGroups: ["monitoring.coreos.com"]
     resources: ["prometheusrules", "alertmanagerconfigs"]
     verbs: ["create", "delete", "patch"]
+
+  {{/* SSA of ExternalSecrets for alert-manager */}}
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["create", "patch"]
+  {{- end }}
 
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
@@ -90,11 +101,14 @@ rules:
     resources: ["notebooks"]
     verbs: ["get", "update"]
 
+  {{- if .Values.tfyAgentProxy.clusterRole.enableIntercepts }}
   {{/* This allows us to create intercepts for redirection / shadowing traffic */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
     verbs: ["get", "create", "patch", "delete"]
+  {{- end }}
 
+  {{- if .Values.tfyAgentProxy.clusterRole.enableSpark }}
   {{/* This allows us to apply VirtualService for Spark UI when applying a SparkApplication (Spark Job Run) */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["virtualservices"]
@@ -109,10 +123,6 @@ rules:
   - apiGroups: ["sparkoperator.k8s.io"]
     resources: ["sparkconnects"]
     verbs: ["delete"]
-
-  {{/* SSA of ExternalSecrets for alert-manager (no read/list/delete) */}}
-  - apiGroups: ["external-secrets.io"]
-    resources: ["externalsecrets"]
-    verbs: ["create", "patch"]
+  {{- end }}
 {{- end }}
 {{- end }}
