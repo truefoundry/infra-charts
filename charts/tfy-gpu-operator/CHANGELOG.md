@@ -4,7 +4,7 @@
 
 - Update NVIDIA GPU Operator to v26.7.2
 - Update GKE standalone DCGM Exporter chart to 4.8.4
-- Align toolkit (`v1.20.1`), device plugin (`v0.20.1`), DCGM (`4.6.1-1-ubuntu24.04`), and DCGM Exporter (`4.6.1-4.8.4-distroless`) pins with GPU Operator v26.7.2
+- Align toolkit (`v1.20.2`), device plugin (`v0.20.2`), DCGM (`4.6.1-1-ubuntu24.04`), and DCGM Exporter (`4.6.1-4.8.4-distroless`) pins (toolkit/device plugin ahead of operator defaults for 26.7.3 component fixes)
 - Remove unused GKE `mapPodsMetrics` value (no-op in upstream dcgm-exporter)
 
 If you are applying this chart using ArgoCD, you need to apply the following CRDs:
