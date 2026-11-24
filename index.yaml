@@ -39,6 +39,27 @@ entries:
     version: 0.1.1-rc.1
   tfy-agent:
   - apiVersion: v2
+    created: "2026-11-24T12:53:01.663400216Z"
+    dependencies:
+    - alias: external-secrets-operator
+      condition: external-secrets-operator.enabled
+      name: external-secrets
+      repository: https://charts.external-secrets.io
+      version: 2.13.0
+    - condition: reloader.enabled
+      name: reloader
+      repository: https://stakater.github.io/stakater-charts
+      version: 2.2.18
+    description: Truefoundry workload agent for k8s clusters
+    digest: c399a98f29d079b73173dfab21dbb267de88e27e512769fe7684440351396e0b
+    maintainers:
+    - name: truefoundry
+    name: tfy-agent
+    type: application
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-agent-0.2.111/tfy-agent-0.2.111.tgz
+    version: 0.2.111
+  - apiVersion: v2
     created: "2026-11-04T06:43:02.879683161Z"
     dependencies:
     - alias: external-secrets-operator
@@ -3764,6 +3785,43 @@ entries:
     - https://github.com/truefoundry/infra-charts/releases/download/tfy-gateway-api-crd-0.1.0/tfy-gateway-api-crd-0.1.0.tgz
     version: 0.1.0
   tfy-gpu-operator:
+  - apiVersion: v2
+    created: "2026-11-24T12:53:01.955516066Z"
+    dependencies:
+    - alias: aws-eks-gpu-operator
+      condition: clusterType.awsEks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v26.7.2
+    - alias: gcp-gke-standard-dcgm-exporter
+      condition: clusterType.gcpGkeStandard
+      name: dcgm-exporter
+      repository: https://nvidia.github.io/dcgm-exporter/helm-charts
+      version: 4.8.4
+    - alias: azure-aks-gpu-operator
+      condition: clusterType.azureAks
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v26.7.2
+    - alias: civo-talos-gpu-operator
+      condition: clusterType.civoTalos
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v26.7.2
+    - alias: generic-gpu-operator
+      condition: clusterType.generic
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v26.7.2
+    description: TrueFoundry GPU Operator chart that wraps the NVIDIA GPU Operator
+      chart with sensible defaults
+    digest: 237621b2c4105011f15f9d04ef7b054912b60d4f253ffcb573ec57fdd0196d05
+    maintainers:
+    - name: truefoundry
+    name: tfy-gpu-operator
+    urls:
+    - https://github.com/truefoundry/infra-charts/releases/download/tfy-gpu-operator-0.6.0-rc.1/tfy-gpu-operator-0.6.0-rc.1.tgz
+    version: 0.6.0-rc.1
   - apiVersion: v2
     created: "2026-09-17T09:20:59.202963626Z"
     dependencies:
@@ -85894,4 +85952,4 @@ entries:
     urls:
     - https://github.com/truefoundry/infra-charts/releases/download/truefoundry-monitoring-0.1.0/truefoundry-monitoring-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-24T12:51:14.057755587Z"
+generated: "2026-11-24T12:53:01.958489655Z"
