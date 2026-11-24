@@ -42,17 +42,15 @@ fi
 
 # Here we are eval-ing because BUILD_CONFIG is already shlex quoted, so by eval-ing first we want to shlex unquote it
 # And then when calling tfy build, we pass it in quotes so that bash will take care of correctly quoting it
-# NOTE: Do not wrap BUILD_CONFIG in a command substitution (e.g. $(echo $BUILD_CONFIG)) - that would make bash
-# perform word splitting and pathname expansion (globbing) against the checked out source code before eval runs,
-# which allows attacker controlled file names in the repository to be re-parsed and executed as shell code.
-# Globbing is also disabled around the eval so that any wildcard in BUILD_CONFIG cannot expand to file names.
-set -f
-eval "BUILD_CONFIG_CORRECTED=${BUILD_CONFIG}"
-set +f
+eval "BUILD_CONFIG_CORRECTED=$(echo $BUILD_CONFIG)"
 build_secrets=$(echo "$TFY_BUILD_SECRETS" | jq -r '.[] | "--secret id=" + .id + ",src=/truefoundry-build-secrets/" + .id')
 
 start_time=$(date +%s)
-tfy build $build_secrets --build-config="$BUILD_CONFIG_CORRECTED" --name="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max${REGISTRY_INSECURE_OPTS}" --cache-from=type=registry,ref="${IMAGE}:cache-latest${REGISTRY_INSECURE_OPTS}" --build-context tfy-secrets=/var/run/secrets/ --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true${REGISTRY_INSECURE_OPTS}
+# NOTE: Do not add a build context (or any other mount) that exposes the build pod's
+# /var/run/secrets directory to the build. It contains the pod's projected Kubernetes
+# service account token, which would then be readable from within user supplied
+# Dockerfiles/builds. Only the explicitly requested build secrets ($build_secrets) are passed.
+tfy build $build_secrets --build-config="$BUILD_CONFIG_CORRECTED" --name="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:$DOCKER_TAG" --tag="${IMAGE}:latest" --cache-to="type=registry,ref=${IMAGE}:cache-latest,image-manifest=true,mode=max${REGISTRY_INSECURE_OPTS}" --cache-from=type=registry,ref="${IMAGE}:cache-latest${REGISTRY_INSECURE_OPTS}" --builder=remote-kubernetes --output=type=image,push=true,compression=gzip,compression-level=0,force-compression=true${REGISTRY_INSECURE_OPTS}
 end_time=$(date +%s)
 build_time=$((end_time - start_time))
 echo "Time taken to build the image: $build_time seconds"
