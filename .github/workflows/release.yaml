@@ -36,14 +36,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      # FIRST STEP, DELIBERATELY. Every GitHub call below (both checkouts,
-      # chart-releaser, gh api, the gh-pages push) authenticates with
-      # GITHUB_TOKEN, which the org IP allow list filters, and ubuntu-latest
-      # has no allow-listed address. Joining the tailnet sends GitHub traffic
-      # out through the app connector's allow-listed IP; the tag reaches that
-      # connector and nothing else.
+      # FIRST STEP, DELIBERATELY. Every GitHub call below (App token mint,
+      # checkouts, chart-releaser, gh api, the gh-pages push) hits the API,
+      # which the org IP allow list filters, and ubuntu-latest has no
+      # allow-listed address. Joining the tailnet sends GitHub traffic out
+      # through the app connector's allow-listed IP.
       #
-      # Two credentials, because this runs on main AND on
+      # Two Tailscale credentials, because this runs on main AND on
       # release/truefoundry-* and a Tailscale claim rule can't OR two refs.
       # Each only matches this file on its own ref, so a dispatch from any
       # other branch stops here.
@@ -55,10 +54,26 @@ jobs:
           tags: tag:ci-github-egress
           hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
 
+      # Anonymous first: repo is public, and the local composite action needs
+      # the tree on disk. Re-auth with the App token after minting.
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - id: app-token
+        uses: ./.github/actions/create-release-app-token
+        with:
+          app-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
+      - name: Export GitHub App token
+        run: |
+          echo "GH_TOKEN=${{ steps.app-token.outputs.token }}" >> "$GITHUB_ENV"
+          echo "GITHUB_TOKEN=${{ steps.app-token.outputs.token }}" >> "$GITHUB_ENV"
+          auth="$(printf 'x-access-token:%s' "${{ steps.app-token.outputs.token }}" | base64 -w0)"
+          echo "::add-mask::${auth}"
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${auth}"
 
       - name: Configure Git
         run: |
@@ -113,12 +128,12 @@ jobs:
           helm repo add tailscale https://pkgs.tailscale.com/helmcharts
           helm repo add vector https://helm.vector.dev
           helm repo update
-      # GITHUB_TOKEN, not a personal access token: everything here writes to
-      # this repo only, and nothing needs to start another workflow.
+      # Release GitHub App token (not GITHUB_TOKEN / PAT): tags, releases,
+      # and gh-pages writes for this repo.
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         env:
-          CR_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          CR_TOKEN: ${{ steps.app-token.outputs.token }}
           CR_SKIP_EXISTING: true
           # Never let a newly-created release take the repo's "Latest" badge
           # implicitly — GitHub defaults it to the newest-CREATED release, so
@@ -131,8 +146,6 @@ jobs:
       # highest-semver FINAL truefoundry release, regardless of creation
       # order (chart-releaser above never sets it).
       - name: Mark highest truefoundry release as Latest
-        env:
-          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: |
           # `|| true` on the grep: zero matching tags is a legitimate state
           # (fresh repo, or only RC/other-chart releases exist) handled by the
@@ -153,6 +166,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: gh-pages
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -167,3 +181,4 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: 'Update index.html'
+          token: ${{ steps.app-token.outputs.token }}

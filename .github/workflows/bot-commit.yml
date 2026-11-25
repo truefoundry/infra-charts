@@ -65,6 +65,16 @@ jobs:
           tags: tag:ci-github-egress
           hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
 
+      # Dedicated infra-charts-bot App (not GITHUB_TOKEN): download-artifact and
+      # the push both need a token that can trigger follow-up checks. Mint
+      # once up front so neither step uses github.token.
+      - name: Mint the bot's App token
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          client-id: ${{ vars.INFRA_CHARTS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.INFRA_CHARTS_BOT_PRIVATE_KEY }}
+
       # Most producer runs have nothing to commit and upload no artifact.
       - name: Download the bot commit
         id: download
@@ -73,7 +83,7 @@ jobs:
         with:
           name: bot-commit
           run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
+          github-token: ${{ steps.app-token.outputs.token }}
           path: ${{ runner.temp }}/bot-commit
 
       - name: Check the files
@@ -125,15 +135,6 @@ jobs:
           done <<< "$files"
 
           echo "message=${message}" >> "$GITHUB_OUTPUT"
-
-      - name: Mint the bot's App token
-        id: app-token
-        if: steps.files.outcome == 'success'
-        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
-        with:
-          client-id: ${{ vars.INFRA_CHARTS_BOT_CLIENT_ID }}
-          private-key: ${{ secrets.INFRA_CHARTS_BOT_PRIVATE_KEY }}
-          permission-contents: write
 
       - name: Commit and push
         if: steps.files.outcome == 'success'

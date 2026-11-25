@@ -15,9 +15,9 @@ jobs:
   stale:
     runs-on: ubuntu-latest
     steps:
-      # actions/stale calls the GitHub API with GITHUB_TOKEN, which the org IP
-      # allow list filters. The credential only matches this file on main,
-      # which is where scheduled runs run.
+      # actions/stale calls the GitHub API with the App token, which the org
+      # IP allow list filters. The Tailscale credential only matches this
+      # file on main, which is where scheduled runs run.
       - name: Join the tailnet for GitHub egress
         uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
         with:
@@ -26,9 +26,20 @@ jobs:
           tags: tag:ci-github-egress
           hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
 
+      # Local composite needs the tree; public repo → anonymous checkout.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - id: app-token
+        uses: ./.github/actions/create-release-app-token
+        with:
+          app-id: ${{ secrets.RELEASE_GITHUB_APP_ID }}
+          private-key: ${{ secrets.RELEASE_GITHUB_APP_PRIVATE_KEY }}
+
       - uses: actions/stale@v9
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ steps.app-token.outputs.token }}
           stale-pr-message: 'This PR will be automatically closed as it has been stale for 4 days. Please comment if you feel this is still relevant.'
           close-pr-message: 'This PR has been closed as it has been stale for 7 days. Please reopen if you feel this is still relevant.'
           days-before-pr-stale: '4'

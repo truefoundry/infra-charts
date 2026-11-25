@@ -1,0 +1,38 @@
+name: Create release GitHub App token
+description: >
+  Mint a short-lived installation token for the org release GitHub App.
+  Scoped to the whole truefoundry installation (cross-repo release flow).
+  Requires org/repo secrets RELEASE_GITHUB_APP_ID and RELEASE_GITHUB_APP_PRIVATE_KEY.
+  See .github/actions/create-release-app-token/SETUP.md.
+
+inputs:
+  app-id:
+    description: GitHub App ID (or Client ID)
+    required: true
+  private-key:
+    description: GitHub App private key PEM
+    required: true
+  owner:
+    description: Installation owner (org). Defaults to truefoundry for cross-repo access.
+    required: false
+    default: truefoundry
+
+outputs:
+  token:
+    description: Installation access token
+    value: ${{ steps.mint.outputs.token }}
+  installation-id:
+    description: Installation ID
+    value: ${{ steps.mint.outputs.installation-id }}
+
+runs:
+  using: composite
+  steps:
+    - id: mint
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.private-key }}
+        # owner without repositories → all repos the App install can access.
+        # Token inherits the installation's full permissions (no permission-* narrow).
+        owner: ${{ inputs.owner }}
