@@ -194,10 +194,62 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-  Create the env file
+  Convert a Kubernetes memory quantity to bytes.
+  Input must be a valid k8s memory resource value (e.g. 512Mi, 2Gi).
+  Suffix handling follows k8s quantity semantics (cf. upstream opentelemetry-collector helm chart).
+  */}}
+{{- define "tfy-otel-collector.convertMemToBytes" }}
+{{- $raw := . -}}
+{{- $mem := lower . -}}
+{{- if hasSuffix "ei" $mem -}}
+  {{- $mem = mulf (trimSuffix "ei" $mem | float64) 0x1p60 -}}
+{{- else if hasSuffix "e" $mem -}}
+  {{- $mem = mulf (trimSuffix "e" $mem | float64) 1e18 -}}
+{{- else if hasSuffix "pi" $mem -}}
+  {{- $mem = mulf (trimSuffix "pi" $mem | float64) 0x1p50 -}}
+{{- else if hasSuffix "p" $mem -}}
+  {{- $mem = mulf (trimSuffix "p" $mem | float64) 1e15 -}}
+{{- else if hasSuffix "ti" $mem -}}
+  {{- $mem = mulf (trimSuffix "ti" $mem | float64) 0x1p40 -}}
+{{- else if hasSuffix "t" $mem -}}
+  {{- $mem = mulf (trimSuffix "t" $mem | float64) 1e12 -}}
+{{- else if hasSuffix "gi" $mem -}}
+  {{- $mem = mulf (trimSuffix "gi" $mem | float64) 0x1p30 -}}
+{{- else if hasSuffix "g" $mem -}}
+  {{- $mem = mulf (trimSuffix "g" $mem | float64) 1e9 -}}
+{{- else if hasSuffix "mi" $mem -}}
+  {{- $mem = mulf (trimSuffix "mi" $mem | float64) 0x1p20 -}}
+{{- else if and (hasSuffix "m" $raw) (not (hasSuffix "mi" $mem)) -}}
+  {{- $mem = divf (trimSuffix "m" $mem | float64) 1e3 -}}
+{{- else if hasSuffix "m" $mem -}}
+  {{- $mem = mulf (trimSuffix "m" $mem | float64) 1e6 -}}
+{{- else if hasSuffix "ki" $mem -}}
+  {{- $mem = mulf (trimSuffix "ki" $mem | float64) 0x1p10 -}}
+{{- else if hasSuffix "k" $mem -}}
+  {{- $mem = mulf (trimSuffix "k" $mem | float64) 1e3 -}}
+{{- else -}}
+  {{- $mem = $mem | float64 -}}
+{{- end }}
+{{- $mem }}
+{{- end }}
+
+{{/*
+  GOMEMLIMIT = 80% of the given memory limit (OTel collector README / upstream helm chart).
+  Converts the limit to bytes, applies 80%, then to MiB (÷ 1024²) for Go's GOMEMLIMIT.
+  Returns a Go-compatible quantity like "1638MiB".
+  */}}
+{{- define "tfy-otel-collector.gomemlimit" }}
+{{- $memlimitBytes := include "tfy-otel-collector.convertMemToBytes" . | mulf 0.8 -}}
+{{- printf "%dMiB" (divf $memlimitBytes 0x1p20 | floor | int64) -}}
+{{- end }}
+
+{{/*
+  Create the env file.
+  Injects GOMEMLIMIT as 80% of resolved resources.limits.memory unless env.GOMEMLIMIT is set.
   */}}
 {{- define "tfy-otel-collector.env" }}
-{{- range $key, $val := (include "tfy-otel-collector.parseEnv" .) | fromYaml }}
+{{- $parsed := (include "tfy-otel-collector.parseEnv" .) | fromYaml }}
+{{- range $key, $val := $parsed }}
 {{- if and $val (contains "${k8s-secret" ($val | toString)) }}
 {{- if eq (regexSplit "/" $val -1 | len) 2 }}
 - name: {{ $key }}
@@ -219,6 +271,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- else }}
 - name: {{ $key }}
   value: {{ $val | quote }}
+{{- end }}
+{{- end }}
+{{- if not (hasKey $parsed "GOMEMLIMIT") }}
+{{- $resources := include "tfy-otel-collector.resources" . | fromYaml }}
+{{- $memLimit := dig "limits" "memory" "" $resources }}
+{{- if $memLimit }}
+- name: GOMEMLIMIT
+  value: {{ include "tfy-otel-collector.gomemlimit" $memLimit | quote }}
 {{- end }}
 {{- end }}
 {{- end }}
