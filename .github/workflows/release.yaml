@@ -31,10 +31,30 @@ concurrency:
 jobs:
   release:
     permissions:
-      contents: write # to push chart release and create a release (helm/chart-releaser-action)
+      contents: write # tags, releases and the gh-pages index (helm/chart-releaser-action)
+      id-token: write # Tailscale federated identity
 
     runs-on: ubuntu-latest
     steps:
+      # FIRST STEP, DELIBERATELY. Every GitHub call below (both checkouts,
+      # chart-releaser, gh api, the gh-pages push) authenticates with
+      # GITHUB_TOKEN, which the org IP allow list filters, and ubuntu-latest
+      # has no allow-listed address. Joining the tailnet sends GitHub traffic
+      # out through the app connector's allow-listed IP; the tag reaches that
+      # connector and nothing else.
+      #
+      # Two credentials, because this runs on main AND on
+      # release/truefoundry-* and a Tailscale claim rule can't OR two refs.
+      # Each only matches this file on its own ref, so a dispatch from any
+      # other branch stops here.
+      - name: Join the tailnet for GitHub egress
+        uses: tailscale/github-action@306e68a486fd2350f2bfc3b19fcd143891a4a2d8 # v4.1.2
+        with:
+          oauth-client-id: ${{ github.ref == 'refs/heads/main' && vars.TS_CI_RELEASE_MAIN_CLIENT_ID || vars.TS_CI_RELEASE_BRANCH_CLIENT_ID }}
+          audience: ${{ github.ref == 'refs/heads/main' && vars.TS_CI_RELEASE_MAIN_AUDIENCE || vars.TS_CI_RELEASE_BRANCH_AUDIENCE }}
+          tags: tag:ci-github-egress
+          hostname: gh-${{ github.event.repository.name }}-${{ github.job }}-${{ github.run_id }}
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -93,10 +113,12 @@ jobs:
           helm repo add tailscale https://pkgs.tailscale.com/helmcharts
           helm repo add vector https://helm.vector.dev
           helm repo update
+      # GITHUB_TOKEN, not a personal access token: everything here writes to
+      # this repo only, and nothing needs to start another workflow.
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         env:
-          CR_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
+          CR_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           CR_SKIP_EXISTING: true
           # Never let a newly-created release take the repo's "Latest" badge
           # implicitly — GitHub defaults it to the newest-CREATED release, so
@@ -110,7 +132,7 @@ jobs:
       # order (chart-releaser above never sets it).
       - name: Mark highest truefoundry release as Latest
         env:
-          GH_TOKEN: '${{ secrets.TRUEFOUNDRY_HELM_TOKEN }}'
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: |
           # `|| true` on the grep: zero matching tags is a legitimate state
           # (fresh repo, or only RC/other-chart releases exist) handled by the

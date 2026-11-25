@@ -12,10 +12,18 @@ jobs:
   validate-chart-template:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      # Anonymous: this runs the PR's code, from a fork as often as not, so it
+      # gets no token and no allow-listed IP. infra-charts is public, so it
+      # needs neither. Full history of the base branch and the merge commit,
+      # because ct list-changed diffs against their merge base.
+      - name: Check out (anonymous)
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch -q --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}" "+${GITHUB_SHA}:refs/remotes/origin/ci"
+          git checkout -q --detach origin/ci
 
       - name: Install Helm
         uses: azure/setup-helm@v4.3.0

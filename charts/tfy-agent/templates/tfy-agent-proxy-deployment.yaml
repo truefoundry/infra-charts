@@ -1,4 +1,5 @@
 {{- if .Values.tfyAgentProxy.enabled }}
+{{- $containerSC := include "tfy-agent.containerSecurityContext" (dict "local" .Values.tfyAgentProxy.securityContext "global" .Values.global.containerSecurityContext) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,14 +25,20 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "tfy-agent-proxy.serviceAccountName" . }}
+      {{- with (include "tfy-agent.podSecurityContext" (dict "local" .Values.tfyAgentProxy.podSecurityContext "global" .Values.global.podSecurityContext)) }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
       {{- if and .Values.global.customCA.enabled (eq (include "tfy-agent.customCA.useDirectMount" .) "false") }}
       initContainers:
         {{- include "tfy-agent.customCA.initContainer" . | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}-proxy
+          {{- with $containerSC }}
           securityContext:
-            {{- toYaml .Values.tfyAgentProxy.securityContext | nindent 12 }}
+            {{- . | nindent 12 }}
+          {{- end }}
           env:
             {{- if .Values.config.controlPlaneURL }}
             - name: CONTROL_PLANE_URL

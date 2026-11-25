@@ -1,6 +1,5 @@
 {{- if .Values.tfyAgentProxy.enabled -}}
 {{- if .Values.tfyAgentProxy.clusterRole.enable -}}
-{{- if or .Values.config.allowedNamespaces .Values.tfyAgentProxy.clusterRole.strictMode }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -14,14 +13,16 @@ rules:
     resources: ["namespaces"]
     verbs: ["patch", "delete"]
 
+  {{/* Workspace UI lists ServiceAccounts; workloads SAs are created by Argo CD */}}
   - apiGroups: [""]
-    resources: ["resourcequotas", "serviceaccounts"]
-    verbs: ["list", "get", "delete", "patch", "create"]
+    resources: ["serviceaccounts"]
+    verbs: ["list"]
 
-  - apiGroups: [""]
-    resources: ["resourcequotas/status"]
-    verbs: ["get"]
-
+  {{/*
+    SSA create/patch for workspace SA token secrets and (when enableAlerts) alert-manager secrets.
+    Note: patch responses include Secret data, so this is not a full "no-read" guarantee —
+    prefer config.allowedNamespaces to limit blast radius.
+  */}}
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "patch"]
@@ -30,13 +31,22 @@ rules:
     resources: ["pods/eviction"]
     verbs: ["create"]
 
+  {{/* No pods create — workloads are created by Argo CD / controllers */}}
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["delete", "get"]
 
   - apiGroups: [""]
-    resources: ["pods/log", "events", "services", "persistentvolumes"]
-    verbs: ["get", "list"]
+    resources: ["pods/log"]
+    verbs: ["get"]
+
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list"]
+
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get"]
 
   {{/* This allows us to access tfy-istio-ingress service status under the istio-system namespace */}}
   - apiGroups: [""]
@@ -47,20 +57,20 @@ rules:
     resources: ["statefulsets/scale", "deployments/scale"]
     verbs: ["patch"]
 
-  - apiGroups: ["monitoring.coreos.com"]
-    resources: ["prometheuses"]
-    verbs: ["patch"]
+  {{- if .Values.tfyAgentProxy.clusterRole.enableAlerts }}
   - apiGroups: ["monitoring.coreos.com"]
     resources: ["prometheusrules", "alertmanagerconfigs"]
-    verbs: ["get", "create", "delete", "patch"]
+    verbs: ["create", "delete", "patch"]
+
+  {{/* SSA of ExternalSecrets for alert-manager */}}
+  - apiGroups: ["external-secrets.io"]
+    resources: ["externalsecrets"]
+    verbs: ["create", "patch"]
+  {{- end }}
 
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
-    verbs: ["patch", "get"]
-
-  - apiGroups: ["apps"]
-    resources: ["statefulsets"]
-    verbs: ["get", "create", "delete", "patch"]
+    verbs: ["get", "list"]
 
   - apiGroups: ["keda.sh"]
     resources: ["scaledobjects"]
@@ -68,7 +78,7 @@ rules:
 
   - apiGroups: ["argoproj.io"]
     resources: ["applications"]
-    verbs: ["*"]
+    verbs: ["get", "create", "patch", "delete"]
 
   - apiGroups: ["argoproj.io"]
     resources: ["rollouts/scale", "rollouts/status"]
@@ -82,33 +92,37 @@ rules:
     resources: ["workflows"]
     verbs: ["create", "get", "patch"]
 
+  {{/* Suspend/resume scheduled jobs */}}
+  - apiGroups: ["argoproj.io"]
+    resources: ["cronworkflows"]
+    verbs: ["patch"]
+
   - apiGroups: ["kubeflow.org"]
     resources: ["notebooks"]
-    verbs: ["get", "update", "delete"]
+    verbs: ["get", "update"]
 
+  {{- if .Values.tfyAgentProxy.clusterRole.enableIntercepts }}
   {{/* This allows us to create intercepts for redirection / shadowing traffic */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["envoyfilters"]
-    verbs: ["create", "patch", "delete"]
+    verbs: ["get", "create", "patch", "delete"]
+  {{- end }}
 
-  - apiGroups: ["flyte.lyft.com"]
-    resources: ["flyteworkflows"]
-    verbs: ["create", "patch", "get", "delete"]
-
+  {{- if .Values.tfyAgentProxy.clusterRole.enableSpark }}
   {{/* This allows us to apply VirtualService for Spark UI when applying a SparkApplication (Spark Job Run) */}}
   - apiGroups: ["networking.istio.io"]
     resources: ["virtualservices"]
     verbs: ["create", "patch"]
 
-  {{/* This allows us to apply/delete SparkApplication (Spark Job Run) and SparkConnect (Spark Notebook) */}}
+  {{/* This allows us to apply/delete SparkApplication (Spark Job Run) */}}
   - apiGroups: ["sparkoperator.k8s.io"]
-    resources: ["sparkapplications", "sparkconnects"]
+    resources: ["sparkapplications"]
     verbs: ["create", "get", "delete"]
 
-  {{/* This allows us to manage ExternalSecrets for workloads */}}
-  - apiGroups: ["external-secrets.io"]
-    resources: ["externalsecrets"]
-    verbs: ["get", "list", "create", "patch", "delete"]
-{{- end }}
+  {{/* SparkConnect cleanup for Spark Notebook */}}
+  - apiGroups: ["sparkoperator.k8s.io"]
+    resources: ["sparkconnects"]
+    verbs: ["delete"]
+  {{- end }}
 {{- end }}
 {{- end }}
