@@ -1,3 +1,10 @@
+{{- /* Opt out with TFY_MEMORY_LIMITER_ENABLED=false (default: enabled). */}}
+{{- $memoryLimiterEnabled := true }}
+{{- if and .Values.env (hasKey .Values.env "TFY_MEMORY_LIMITER_ENABLED") }}
+  {{- if eq (lower (printf "%v" (index .Values.env "TFY_MEMORY_LIMITER_ENABLED"))) "false" }}
+    {{- $memoryLimiterEnabled = false }}
+  {{- end }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -20,8 +27,6 @@ data:
         client_ip_header: ${env:CLIENT_IP_HEADER:-CF-Connecting-IP}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
         servicefoundry_request_retry_interval: ${env:SFY_SERVER_REQUEST_RETRY_INTERVAL:-10s}
-        stage_log_enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        stage_metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
       healthcheckv2:
         use_v2: true
         component_health:
@@ -45,8 +50,7 @@ data:
             key_file: /etc/tls/truefoundry/tls.key
           {{- end }}
       # Tags otelhttp http.server.request.duration with low-cardinality `endpoint`.
-      tfyhttpendpoint:
-        request_body_size_enabled: ${env:TFY_REQUEST_BODY_SIZE_ENABLED:-false}
+      tfyhttpendpoint: {}
 
     receivers:
       otlp:
@@ -84,6 +88,8 @@ data:
         deltafusion_ingestor_request_timeout: ${env:DELTAFUSION_INGESTOR_REQUEST_TIMEOUT:-60s}
         deltafusion_ingestor_request_max_retries: ${env:DELTAFUSION_INGESTOR_REQUEST_MAX_RETRIES:-2}
         deltafusion_ingestor_request_retry_interval: ${env:DELTAFUSION_INGESTOR_REQUEST_RETRY_INTERVAL:-10s}
+        deltafusion_ingestor_idle_conn_timeout: ${env:DELTAFUSION_INGESTOR_IDLE_CONN_TIMEOUT:-0s}
+        deltafusion_ingestor_disable_keep_alives: ${env:DELTAFUSION_INGESTOR_DISABLE_KEEP_ALIVES:-false}
         servicefoundry_base_url: ${env:SFY_SERVER_BASE_URL}
         servicefoundry_request_timeout: ${env:SFY_SERVER_REQUEST_TIMEOUT:-30s}
         servicefoundry_request_max_retries: ${env:SFY_SERVER_REQUEST_MAX_RETRIES:-2}
@@ -112,7 +118,6 @@ data:
         tfy_otel_exporter_ticker_interval: ${env:TFY_OTEL_EXPORTER_TICKER_INTERVAL:-200ms}
         sfy_error_log_enabled: ${env:SFY_ERROR_LOG_ENABLED:-false}
         sfy_error_log_min_interval: ${env:SFY_ERROR_LOG_MIN_INTERVAL:-60s}
-        otel_export_latency_metrics_enabled: ${env:TFY_OTEL_EXPORT_LATENCY_METRICS_ENABLED:-false}
         tfy_api_key: ${env:TFY_API_KEY}
         cache_soft_ttl: 5m
         cache_hard_ttl: 1h
@@ -140,37 +145,15 @@ data:
       # Fan-out after shared processors so batch/filter/etc. run once.
       forward:
     processors:
+      # First in pipelines when TFY_MEMORY_LIMITER_ENABLED!=false (default enabled).
+      # limit_percentage uses cgroup/available memory (container-friendly); GOMEMLIMIT should be ~80% of pod limit.
+      {{- if $memoryLimiterEnabled }}
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: ${env:TFY_MEMORY_LIMITER_LIMIT_PERCENTAGE:-80}
+        spike_limit_percentage: ${env:TFY_MEMORY_LIMITER_SPIKE_LIMIT_PERCENTAGE:-20}
+      {{- end }}
       tfytelemetryprocessor: {}
-      # downstream_ms(earlier) - downstream_ms(later), same request_id, is time in the processor between them.
-      # offset_ms is time since the HTTP handler started. TFY_STAGE_LOG_ENABLED=false skips the logs.
-      tfystage/before_tfytelemetry:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: tfytelemetryprocessor
-      tfystage/before_resource:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: resource
-      tfystage/before_filter:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: filter
-      tfystage/before_groupbyattrs:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: groupbyattrs
-      tfystage/before_transform:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: transform
-      tfystage/before_batch:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: batch
-      tfystage/before_drop_gen_ai:
-        enabled: ${env:TFY_STAGE_LOG_ENABLED:-false}
-        metrics_enabled: ${env:TFY_STAGE_METRICS_ENABLED:-false}
-        span_name: transform/drop_gen_ai
       batch:
         timeout: 2s
         send_batch_size: 200
@@ -274,27 +257,6 @@ data:
                 aggregation:
                   explicit_bucket_histogram:
                     boundaries: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 20, 30, 45, 60]
-            - selector:
-                instrument_name: tfy_otel_collector_handler_stage_duration
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15, 20, 30, 45, 60]
-            - selector:
-                instrument_name: tfy_otel_collector_traces_export_duration_ms
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 15000, 30000, 60000]
-            - selector:
-                instrument_name: tfy_otel_collector_request_body_size
-                meter_name: tfy-otel-collector
-              stream:
-                aggregation:
-                  explicit_bucket_histogram:
-                    boundaries: [1024, 8192, 65536, 262144, 1048576, 4194304, 16777216, 67108864]
           readers:
             - pull:
                 exporter:
@@ -309,17 +271,17 @@ data:
         # Shared ingest path — processors (incl. batch) run once, then forward fans out.
         traces:
           receivers: [otlp]
-          processors: [tfystage/before_tfytelemetry, tfytelemetryprocessor, tfystage/before_resource, resource, tfystage/before_filter, filter, tfystage/before_groupbyattrs, groupbyattrs, tfystage/before_transform, transform, tfystage/before_batch, batch]
+          processors: [{{ if $memoryLimiterEnabled }}memory_limiter, {{ end }}tfytelemetryprocessor, resource, filter, groupbyattrs, transform, batch] # optional memory_limiter → tfytelemetryprocessor (per-tenant metrics, reads auth ctx before batch) → resource → filter → groupbyattrs → transform (defaults) → batch
           exporters: [forward]
         traces/deltafusion:
           receivers: [forward]
-          processors: [tfystage/before_drop_gen_ai, transform/drop_gen_ai]
+          processors: [transform/drop_gen_ai]
           exporters: [tfydeltafusionexporter]
         traces/otel:
           receivers: [forward]
           exporters: [tfytracesexporter]
         metrics:
           receivers: [otlp]
-          processors: [resource/metrics, transform/metrics, filter/metrics]
+          processors: [{{ if $memoryLimiterEnabled }}memory_limiter, {{ end }}resource/metrics, transform/metrics, filter/metrics]
           exporters: [tfymetricsexporter]
 
